@@ -1,0 +1,40 @@
+:root {
+  --fond: #1b1b1f;
+  --texte: #e8e6e3;
+  --accent: #f2b33d;
+  --carte: #2a2a30;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: dark;
+  color: var(--texte);
+  background: var(--fond);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fond);
+}
+
+.accueil {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+.accueil h1 {
+  color: var(--accent);
+}
+
+.pioches {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pioches li {
+  background: var(--carte);
+  padding: 12px 16px;
+  border-radius: 8px;
+}
