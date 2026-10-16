@@ -1,10 +1,9 @@
 // Le contenu du sac (au fond de la mine, on ne peut pas vendre : seulement regarder).
 
-import { BLOCS, TORCHES_PAR_CHARBON, type IdBloc } from '../jeu/donnees'
-import { bonusVente, fabriquerTorches, quantite, type EtatJeu } from '../jeu/mineur'
-import type { Action } from '../usePartie'
+import { BLOCS, type IdBloc } from '../jeu/donnees'
+import { bonusVente, type EtatJeu } from '../jeu/mineur'
 
-export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
+export function Inventaire({ etat }: { etat: EtatJeu }) {
   // Les objets les plus précieux en premier.
   const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
 
@@ -26,11 +25,6 @@ export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Act
           ))}
         </ul>
       )}
-      <div className="boutons">
-        <button className="bouton bouton-petit" disabled={quantite(etat, 'charbon') < 1} onClick={() => jouer(fabriquerTorches)}>
-          🕯️ Fabriquer {TORCHES_PAR_CHARBON} torches · 1 charbon
-        </button>
-      </div>
     </div>
   )
 }

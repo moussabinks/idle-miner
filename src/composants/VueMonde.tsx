@@ -13,7 +13,6 @@ import {
   indexBlocActuel,
   piocheEquipee,
   positionFront,
-  vision,
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action, Gain } from '../usePartie'
@@ -42,11 +41,6 @@ function Case({ bloc, profondeur, classe = '' }: { bloc: CaseMine; profondeur: n
   return <div className={`case bloc bloc-${bloc} ${roche} ${classe}`} />
 }
 
-// Une torche dessinée en CSS (un bâton et une flamme).
-function Torche() {
-  return <span className="torche-css" aria-hidden="true" />
-}
-
 // Une rangée de la mine : l'étiquette, la place de l'échelle et de l'ascenseur, puis 6 cases.
 function Rangee({ profondeur, classe = '', children }: { profondeur: number; classe?: string; children: ReactNode }) {
   return (
@@ -61,13 +55,11 @@ function Rangee({ profondeur, classe = '', children }: { profondeur: number; cla
 
 // Une rangée déjà creusée. « memo » évite de la redessiner si rien n'a changé :
 // il peut y en avoir plus de 100.
-const RangeeCreusee = memo(function RangeeCreusee({ profondeur, torche }: { profondeur: number; torche: boolean }) {
+const RangeeCreusee = memo(function RangeeCreusee({ profondeur }: { profondeur: number }) {
   return (
     <Rangee profondeur={profondeur} classe="creusee">
       {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
-        <div key={colonne} className="case vide">
-          {colonne === 0 && torche && <Torche />}
-        </div>
+        <div key={colonne} className="case vide" />
       ))}
     </Rangee>
   )
@@ -154,7 +146,6 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
 
   const P = etat.profondeur
   const front = positionFront(etat)
-  const nbVisibles = vision(etat)
   const indexActuel = indexBlocActuel(etat)
   const duree = Math.max(0.08, dureeBlocActuel(etat))
   const couleurPioche = estCassee(etat) ? null : piocheEquipee(etat).couleur
@@ -199,19 +190,15 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
       continue
     }
     const blocs: CaseMine[] = rang === 0 ? etat.coucheActuelle : (etat.couchesDessous[rang - 1] ?? Array(LARGEUR_MINE).fill(null))
-    const visible = rang < nbVisibles
+    // Lumière naturelle : plus une couche est loin sous le mineur, plus elle est sombre.
     rangeesDuBas.push(
-      <Rangee key={d} profondeur={d} classe={`${visible ? '' : 'noir'} ${rang === 0 ? 'couche-en-cours' : ''}`}>
+      <Rangee key={d} profondeur={d} classe={`${rang === 0 ? 'couche-en-cours' : `ombre-${rang}`}`}>
         {blocs.map((bloc, colonne) => {
           const enCours = rang === 0 && colonne === indexActuel && !etat.victoire
           const classe = enCours ? (enMinage ? 'en-cours casse' : 'en-cours') : ''
           return (
             <div key={colonne} className="emplacement" style={enCours ? { ['--duree' as string]: `${duree}s` } : undefined}>
-              {visible ? (
-                <Case key={enCours ? etat.stats.blocsCasses : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
-              ) : (
-                <div className="case cache" />
-              )}
+              <Case key={enCours ? etat.stats.blocsCasses : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
             </div>
           )
         })}
@@ -251,7 +238,7 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
 
         {/* Tout ce qui a déjà été creusé, depuis l'entrée du puits. */}
         {Array.from({ length: Math.max(0, front - 1) }, (_, i) => (
-          <RangeeCreusee key={i + 1} profondeur={i + 1} torche={etat.torchesPosees.includes(i + 1)} />
+          <RangeeCreusee key={i + 1} profondeur={i + 1} />
         ))}
 
         {/* Le front de taille, où se tient le mineur. */}
@@ -259,7 +246,6 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
           <Rangee profondeur={front} classe="creusee front">
             {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
               <div key={colonne} className="case vide">
-                {colonne === 0 && etat.torchesPosees.includes(front) && <Torche />}
                 {auFront && colonne === colonneAffichee && (
                   <div ref={joueurRef} className="porte-joueur">
                     <Personnage couleurPioche={couleurPioche} action={enMinage ? 'creuse' : 'repos'} versLaGauche={versLaGauche} />

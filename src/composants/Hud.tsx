@@ -1,4 +1,4 @@
-// Le bandeau du haut : argent, profondeur, pioche, sac, torches...
+// Le bandeau du haut : argent, profondeur, pioche, sac, seaux...
 
 import { LISTE_ENCHANTEMENTS, ENCHANTEMENTS, zoneDe } from '../jeu/donnees'
 import {
@@ -45,11 +45,12 @@ export function Hud({ etat }: { etat: EtatJeu }) {
           texte={cassee ? 'Cassée !' : `${durabiliteRestante(etat)} / ${pioche.durabilite}`}
           couleur={cassee ? 'rouge' : 'vert'}
         />
-        {enchantements.length > 0 && (
-          <span className="hud-enchants">
-            {enchantements.map((id) => `${ENCHANTEMENTS[id].nom} ${chiffreRomain(etat.enchantements[id])}`).join(' · ')}
-          </span>
-        )}
+        {/* Toujours présente (même vide) pour que le bandeau garde la même hauteur. */}
+        <span className="hud-enchants">
+          {enchantements.length > 0
+            ? enchantements.map((id) => `${ENCHANTEMENTS[id].nom} ${chiffreRomain(etat.enchantements[id])}`).join(' · ')
+            : 'Aucun enchantement'}
+        </span>
       </div>
 
       <div className="hud-case hud-sac">
@@ -58,7 +59,6 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       </div>
 
       <div className="hud-case hud-petits">
-        <span title="Torches">🕯️ {etat.torches}</span>
         <span title="Seaux d'eau">🪣 {etat.seaux}</span>
         {etat.ascenseur.niveau > 0 && <span title="Niveau de l'ascenseur">🛗 {etat.ascenseur.niveau}</span>}
         {etat.prestige > 0 && <span title="Prestige (+25 % sur les ventes par niveau)">⭐ {etat.prestige}</span>}

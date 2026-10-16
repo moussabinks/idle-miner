@@ -19,7 +19,6 @@ import {
   envoyerAscenseur,
   equiper,
   estCassee,
-  fabriquerTorches,
   indexBlocActuel,
   arreterSurEchelle,
   nbDansSac,
@@ -27,7 +26,6 @@ import {
   positionFront,
   reparer,
   vendre,
-  vision,
   vitesse,
   type EtatJeu,
 } from './mineur'
@@ -67,13 +65,12 @@ function coucheDe(etat: EtatJeu, bloc: EtatJeu['coucheActuelle'][number]) {
 }
 
 describe('début de partie', () => {
-  it('commence à la surface avec une pioche en bois, 0 $ et 6 torches', () => {
+  it('commence à la surface avec une pioche en bois et 0 $', () => {
     const etat = creerPartie(aleatoireAvecGraine(42))
     expect(etat.position).toBe(0)
     expect(etat.profondeur).toBe(2) // le premier mètre est l'entrée du puits
     expect(etat.pioches).toEqual({ 0: 0 })
     expect(etat.argent).toBe(0)
-    expect(etat.torches).toBe(6)
     expect(etat.coucheActuelle).toHaveLength(LARGEUR_MINE)
   })
 })
@@ -134,16 +131,6 @@ describe('minage', () => {
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, toujours(0.5))
     expect(etat.victoire).toBe(true)
     expect(etat.profondeur).toBe(128)
-  })
-
-  it('pose une torche tous les 5 m', () => {
-    const etat = nouvellePartie()
-    placerAuFront(etat, 4)
-    coucheDe(etat, 'pierre')
-    for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
-    expect(etat.profondeur).toBe(5)
-    expect(etat.torches).toBe(5)
-    expect(etat.torchesPosees).toEqual([5])
   })
 })
 
@@ -400,13 +387,6 @@ describe('boutique et enchantements', () => {
     expect(etat.argent).toBe(0)
   })
 
-  it('fabrique 4 torches avec 1 charbon', () => {
-    const etat = nouvellePartie()
-    etat.inventaire = { charbon: 1 }
-    fabriquerTorches(etat)
-    expect(etat.torches).toBe(10)
-  })
-
   it('enchante avec des lapis et des émeraudes (coût × niveau)', () => {
     const etat = partieALaSurface()
     etat.inventaire = { lapis: 12, emeraude: 3 }
@@ -426,16 +406,7 @@ describe('boutique et enchantements', () => {
   })
 })
 
-describe('vision, prestige et succès', () => {
-  it('voit 5 couches près d’une torche, 2 dans le noir', () => {
-    const etat = nouvellePartie()
-    placerAuFront(etat, 12)
-    etat.torchesPosees = [10]
-    expect(vision(etat)).toBe(5)
-    placerAuFront(etat, 17)
-    expect(vision(etat)).toBe(2)
-  })
-
+describe('prestige et succès', () => {
   it('le prestige recommence en gardant les succès', () => {
     const etat = nouvellePartie()
     etat.stats.blocsCasses = 1

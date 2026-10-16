@@ -150,11 +150,6 @@
     linear-gradient(135deg, #3a3a3a, #1f1f1f);
 }
 
-/* Un bloc invisible (pas assez de lumière). */
-.case.cache {
-  background: #060608;
-}
-
 /* Une case déjà creusée. */
 .case.vide {
   background: rgb(0 0 0 / 0.35);

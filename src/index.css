@@ -115,6 +115,14 @@ h2 {
 .hud-enchants {
   font-size: 0.7rem;
   color: var(--violet);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Le bandeau a une hauteur fixe : rien ne bouge en dessous quand il change. */
+.hud-case {
+  height: 78px;
 }
 
 .hud-petits {
@@ -218,10 +226,6 @@ h2 {
   overflow: visible;
 }
 
-.rangee.noir .etiquette {
-  opacity: 0.35;
-}
-
 .etiquette {
   font-size: 0.68rem;
   color: var(--texte-doux);
@@ -317,39 +321,11 @@ h2 {
   place-items: end center;
 }
 
-/* Une torche dessinée en CSS : un bâton et une flamme qui vacille. */
-.torche-css {
-  position: relative;
-  width: 6px;
-  height: 45%;
-  margin: auto 0 4px 4px;
-  background: linear-gradient(#8a5a2b, #5c3a1a);
-  border-radius: 1px;
-  align-self: end;
-}
-
-.torche-css::before {
-  content: '';
-  position: absolute;
-  left: -2px;
-  top: -9px;
-  width: 10px;
-  height: 11px;
-  border-radius: 50% 50% 40% 40%;
-  background: radial-gradient(circle at 50% 70%, #fff6b0, #ffb347 55%, #e05a00);
-  box-shadow: 0 0 12px 4px rgb(255 170 60 / 0.55);
-  animation: vacille 1.3s ease-in-out infinite;
-}
-
-.rangee .case.vide:has(.torche-css) {
-  display: flex;
-}
-
-@keyframes vacille {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  40% { opacity: 0.8; transform: scale(0.9); }
-  70% { opacity: 0.95; transform: scale(1.08); }
-}
+/* Lumière naturelle : les couches sous le mineur s'assombrissent avec la distance. */
+.rangee.ombre-1 .case { filter: brightness(0.85); }
+.rangee.ombre-2 .case { filter: brightness(0.68); }
+.rangee.ombre-3 .case { filter: brightness(0.52); }
+.rangee.ombre-4 .case { filter: brightness(0.38); }
 
 /* Les « +X $ » qui s'envolent. */
 .gains {
@@ -672,18 +648,29 @@ h2 {
 
 /* ---------------------------------------------------------- Boutons */
 
+/* La barre de boutons : une grille fixe de 2 rangées de 4 boutons, qui ne bouge jamais. */
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  width: calc(20px + 44px + 18px + 22px + 6 * var(--taille-case) + 8 * 3px);
+  max-width: 100%;
 }
 
 .actions .bouton {
-  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  touch-action: none; /* pas de zoom ni de défilement quand on maintient ▲ ▼ sur mobile */
+  user-select: none;
 }
 
 .aide-clavier {
   margin: 0;
+  min-height: 2.6em; /* la même hauteur quel que soit le texte */
   font-size: 0.75rem;
   color: var(--texte-doux);
   text-align: center;
@@ -1068,6 +1055,13 @@ h2 {
 
 /* ----------------------------------------------------------- Mobile */
 
+/* Sur un petit écran, on cache les emojis des boutons pour que le texte tienne. */
+@media (max-width: 480px) {
+  .actions .emoji-bouton {
+    display: none;
+  }
+}
+
 @media (max-width: 860px) {
   .plateau {
     grid-template-columns: 1fr;
@@ -1100,7 +1094,6 @@ h2 {
   .personnage,
   .personnage .pioche,
   .nuage,
-  .torche-css::before,
   .foreuse-tourne .comptoir,
   .gain,
   .toast,

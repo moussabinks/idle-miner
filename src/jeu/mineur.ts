@@ -10,14 +10,13 @@ import { choisir, entierEntre, type Aleatoire } from './aleatoire'
 import {
   BLOCS,
   BONUS_PRESTIGE,
-  ECART_TORCHES,
+  COUCHES_VISIBLES_DESSOUS,
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
   MINERAIS_COFFRE,
   MULTIPLICATEUR_ACHAT,
   NIVEAUX_ASCENSEUR,
   PIOCHES,
-  PORTEE_TORCHE,
   LARGEUR_MINE,
   PRIX_PLANCHE,
   PRIX_SEAU,
@@ -25,10 +24,6 @@ import {
   REPARATION_PAR_UNITE,
   SACS,
   SECONDES_PAR_METRE_ECHELLE,
-  TORCHES_DEPART,
-  TORCHES_PAR_CHARBON,
-  VISION_ECLAIREE,
-  VISION_SOMBRE,
   VITESSE_MAINS_NUES,
   dureeCasse,
   type IdBloc,
@@ -38,8 +33,8 @@ import {
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
 
-// Nombre de couches gardées en mémoire sous la couche en cours (pour la vision).
-export const COUCHES_EN_AVANCE = VISION_ECLAIREE - 1
+// Nombre de couches gardées en mémoire (et affichées) sous la couche en cours.
+export const COUCHES_EN_AVANCE = COUCHES_VISIBLES_DESSOUS
 
 export type Inventaire = Partial<Record<IdBloc, number>>
 
@@ -93,8 +88,6 @@ export type EtatJeu = {
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   seaux: number
-  torches: number
-  torchesPosees: number[] // profondeurs où une torche est posée
   prestige: number
   succes: string[] // identifiants des succès débloqués (gardés au prestige)
   stats: Statistiques
@@ -144,8 +137,6 @@ export function creerPartie(
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
     seaux: 0,
-    torches: TORCHES_DEPART,
-    torchesPosees: [],
     prestige,
     succes: [...succes],
     stats: {
@@ -236,16 +227,6 @@ export function aLaSurface(etat: EtatJeu): boolean {
 // Le joueur est au front de taille, prêt à creuser.
 export function auFond(etat: EtatJeu): boolean {
   return etat.position === positionFront(etat) && !enMouvement(etat)
-}
-
-export function estEclaire(etat: EtatJeu): boolean {
-  if (etat.profondeur <= 6) return true
-  return etat.torchesPosees.some((d) => d <= etat.profondeur && etat.profondeur - d <= PORTEE_TORCHE)
-}
-
-// Nombre de couches visibles (la couche en cours comprise).
-export function vision(etat: EtatJeu): number {
-  return estEclaire(etat) ? VISION_ECLAIREE : VISION_SOMBRE
 }
 
 // Le prochain bloc à casser : celui sous le mineur, sinon le plus proche de lui.
@@ -438,16 +419,6 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   etat.coucheActuelle = etat.couchesDessous.shift() ?? genererCouche(suivante, aleatoire)
   const profondeurAGenerer = suivante + COUCHES_EN_AVANCE
   etat.couchesDessous.push(profondeurAGenerer < PROFONDEUR_BEDROCK ? genererCouche(profondeurAGenerer, aleatoire) : [])
-
-  // Une torche est posée automatiquement tous les 5 m.
-  if (suivante % ECART_TORCHES === 0) {
-    if (etat.torches > 0) {
-      etat.torches -= 1
-      etat.torchesPosees.push(suivante)
-    } else {
-      messages.push('🕯️ Plus de torches : il fait noir ! Fabrique-en avec du charbon.')
-    }
-  }
 
   return messages
 }
@@ -712,13 +683,6 @@ export function acheterSeau(etat: EtatJeu): string[] {
   etat.argent -= PRIX_SEAU
   etat.seaux += 1
   return ["🪣 Seau d'eau acheté."]
-}
-
-export function fabriquerTorches(etat: EtatJeu): string[] {
-  if (quantite(etat, 'charbon') < 1) return []
-  retirer(etat, 'charbon', 1)
-  etat.torches += TORCHES_PAR_CHARBON
-  return [`🕯️ +${TORCHES_PAR_CHARBON} torches.`]
 }
 
 // ---------------------------------------------------------------------------

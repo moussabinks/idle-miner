@@ -15,7 +15,6 @@ import {
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
-  TORCHES_PAR_CHARBON,
   type Cout,
   type IdBloc,
 } from '../jeu/donnees'
@@ -51,7 +50,6 @@ import {
   devisReparation,
   enchanter,
   equiper,
-  fabriquerTorches,
   peutAcheterPioche,
   peutEnchanter,
   peutReparer,
@@ -218,7 +216,7 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-// Le bazar : sacs à dos, seaux d'eau et torches.
+// Le bazar : sacs à dos et seaux d'eau.
 export function PanneauBazar({ etat, jouer }: PropsPanneau) {
   const prixSac = prixProchainSac(etat)
   const prochainSac = SACS[etat.niveauSac + 1]
@@ -249,17 +247,6 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
         </div>
       </div>
 
-      <div className="ligne-achat">
-        <strong>🕯️ Torches</strong>
-        <span className="discret">
-          Une torche est posée tous les 5 m pour y voir clair. 1 charbon = {TORCHES_PAR_CHARBON} torches. Tu en as {etat.torches}.
-        </span>
-        <div className="boutons">
-          <Bouton actif={quantite(etat, 'charbon') > 0} onClick={() => jouer(fabriquerTorches)}>
-            Fabriquer · 1 ⚫ charbon
-          </Bouton>
-        </div>
-      </div>
     </div>
   )
 }

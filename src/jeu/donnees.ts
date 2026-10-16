@@ -133,12 +133,8 @@ export const SACS = [
 ]
 
 export const PRIX_SEAU = 25
-export const TORCHES_PAR_CHARBON = 4
-export const TORCHES_DEPART = 6
-export const ECART_TORCHES = 5 // une torche est posée tous les 5 m
-export const PORTEE_TORCHE = 6 // une torche éclaire jusqu'à 6 m sous elle
-export const VISION_ECLAIREE = 5 // couches visibles avec de la lumière
-export const VISION_SOMBRE = 2 // couches visibles dans le noir
+// On voit toujours les 4 couches sous la couche en cours (lumière naturelle, sans torches).
+export const COUCHES_VISIBLES_DESSOUS = 4
 
 // ---------------------------------------------------------------------------
 // Surface, échelle et ascenseur

@@ -47,6 +47,8 @@ Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées autom
 - **Marché** : « Vendre tout » vend tout le sac sauf les objets décochés (`nonAVendre`).
 - **Ascenseur** : construit puis amélioré **dans la mine** (module en bas à gauche) avec du fer et de la redstone, 4 niveaux (capacité 32 à 256 objets, plus rapide à chaque niveau). Il remonte le sac quand il est plein, le vend et redescend au niveau du joueur.
 - **Foreuse** (prestige 1+) : derrière une barrière avec cadenas au prestige 0. On l'active une fois (30 fer + 10 redstone), elle reste active aux prestiges suivants. Elle consomme du charbon (1 charbon = 20 s), creuse seule (elle descend d'un mètre tous les 6 blocs) et remplit un chariot qu'on vend ou qu'on vide dans le sac. Améliorations : vitesse de forage et taille du chariot. Elle continue de creuser quand le jeu est fermé (8 h au plus).
+- **Pas de torches** (retirées le 16/10) : lumière naturelle, on voit toujours les 4 couches sous la couche en cours, de plus en plus sombres.
+- **Barre de boutons fixe** : toujours les mêmes 8 boutons à la même place (◀ ▲ ▼ ▶ / Creuser x10 Village Front) ; ceux qui ne servent pas sont grisés. Le bandeau du haut a aussi une hauteur fixe.
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
 - `src/jeu/` (logique pure, testée avec Vitest) :
@@ -95,3 +97,4 @@ Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées autom
 - **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).
 - **2026-10-16** : surface avec stands, échelle, déplacements au clavier, « Vendre tout » avec objets à décocher, ascenseur à redstone, personnage taupe en SVG.
 - **2026-10-16** : mine à -128 m, vue unique qui défile avec l'échelle sur toute la hauteur, ascenseur à niveaux (fer + redstone) utilisable dans la mine, icônes pixel art au village, foreuse au prestige 1.
+- **2026-10-16** : barre de boutons à positions fixes, suppression des torches (lumière naturelle).

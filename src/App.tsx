@@ -197,7 +197,7 @@ function App() {
           </button>
         </nav>
         <div className="panneau-contenu" role="tabpanel">
-          {ongletMine === 'sac' && <Inventaire etat={etat} jouer={jouer} />}
+          {ongletMine === 'sac' && <Inventaire etat={etat} />}
           {ongletMine === 'pioches' && <PanneauPioches etat={etat} jouer={jouer} />}
         </div>
       </section>
@@ -222,90 +222,70 @@ function App() {
             gains={gains}
           />
 
+          {/* La barre de boutons : toujours les mêmes 8 boutons, toujours à la même place.
+              Ceux qui ne servent pas à l'endroit où l'on est sont simplement grisés. */}
           <div className="actions">
-            {etat.victoire && (
+            <button
+              className="bouton"
+              onClick={() => (enVille ? marcherVers(positionSurface - 1) : deplacerAuFront(-1))}
+              disabled={enVille ? positionSurface === 0 : !auFront || etat.victoire || etat.colonneMineur === 0}
+              aria-label="Aller à gauche"
+            >
+              ◀
+            </button>
+            {/* ▲ ▼ sont « à maintenir » : on grimpe tant qu'on appuie (pratique sur mobile). */}
+            <button
+              className="bouton"
+              onPointerDown={() => appuiBoutonEchelle(-1)}
+              onPointerUp={relacheBoutonEchelle}
+              onPointerLeave={relacheBoutonEchelle}
+              disabled={enVille}
+              aria-label="Monter l'échelle (maintenir)"
+            >
+              ▲
+            </button>
+            <button
+              className="bouton"
+              onPointerDown={() => appuiBoutonEchelle(+1)}
+              onPointerUp={relacheBoutonEchelle}
+              onPointerLeave={relacheBoutonEchelle}
+              disabled={auFront || etat.victoire}
+              aria-label="Descendre l'échelle (maintenir)"
+            >
+              ▼
+            </button>
+            <button
+              className="bouton"
+              onClick={() => (enVille ? marcherVers(positionSurface + 1) : deplacerAuFront(+1))}
+              disabled={enVille ? positionSurface === STANDS.length - 1 : !auFront || etat.victoire || etat.colonneMineur === LARGEUR_MINE - 1}
+              aria-label="Aller à droite"
+            >
+              ▶
+            </button>
+
+            {/* Le même emplacement sert à creuser, à arrêter, ou à passer prestige. */}
+            {etat.victoire ? (
               <button className="bouton bouton-principal" onClick={faireLePrestige}>
-                ⭐ Passer prestige {etat.prestige + 1}
+                <span className="emoji-bouton">⭐ </span>Prestige
+              </button>
+            ) : enMinage ? (
+              <button className="bouton bouton-stop" onClick={arreter}>
+                <span className="emoji-bouton">⏹️ </span>Arrêter
+              </button>
+            ) : (
+              <button className="bouton bouton-principal" onClick={() => creuser(1)} disabled={!auFront}>
+                <span className="emoji-bouton">⛏️ </span>Creuser
               </button>
             )}
-            {enVille && (
-              <>
-                <button className="bouton" onClick={() => marcherVers(positionSurface - 1)} aria-label="Aller à gauche">
-                  ◀
-                </button>
-                <button className="bouton" onClick={() => marcherVers(positionSurface + 1)} aria-label="Aller à droite">
-                  ▶
-                </button>
-                {!etat.victoire && (
-                  <button className="bouton bouton-principal" onClick={allerAuFront}>
-                    ⏬ Descendre
-                  </button>
-                )}
-              </>
-            )}
-            {!enVille && (
-              <>
-                {/* Boutons « à maintenir » : on grimpe tant qu'on appuie (pratique sur mobile). */}
-                <button
-                  className="bouton"
-                  onPointerDown={() => appuiBoutonEchelle(-1)}
-                  onPointerUp={relacheBoutonEchelle}
-                  onPointerLeave={relacheBoutonEchelle}
-                  aria-label="Monter l'échelle (maintenir)"
-                >
-                  ▲
-                </button>
-                <button
-                  className="bouton"
-                  onPointerDown={() => appuiBoutonEchelle(+1)}
-                  onPointerUp={relacheBoutonEchelle}
-                  onPointerLeave={relacheBoutonEchelle}
-                  disabled={auFront}
-                  aria-label="Descendre l'échelle (maintenir)"
-                >
-                  ▼
-                </button>
-              </>
-            )}
-            {auFront && !etat.victoire && (
-              <>
-                <button className="bouton" onClick={() => deplacerAuFront(-1)} disabled={etat.colonneMineur === 0} aria-label="Aller à gauche">
-                  ◀
-                </button>
-                <button
-                  className="bouton"
-                  onClick={() => deplacerAuFront(+1)}
-                  disabled={etat.colonneMineur === LARGEUR_MINE - 1}
-                  aria-label="Aller à droite"
-                >
-                  ▶
-                </button>
-                {enMinage ? (
-                  <button className="bouton bouton-stop" onClick={arreter}>
-                    ⏹️ Arrêter
-                  </button>
-                ) : (
-                  <>
-                    <button className="bouton bouton-principal" onClick={() => creuser(1)}>
-                      ⛏️ Creuser
-                    </button>
-                    <button className="bouton" onClick={() => creuser(10)}>
-                      ⛏️ x10
-                    </button>
-                  </>
-                )}
-              </>
-            )}
-            {!enVille && (
-              <button className="bouton" onClick={allerAuVillage}>
-                ⏫ Village
-              </button>
-            )}
-            {!enVille && !auFront && !etat.victoire && (
-              <button className="bouton" onClick={allerAuFront}>
-                ⏬ Front
-              </button>
-            )}
+            <button className="bouton" onClick={() => creuser(10)} disabled={!auFront || enMinage || etat.victoire}>
+              <span className="emoji-bouton">⛏️ </span>x10
+            </button>
+            <button className="bouton" onClick={allerAuVillage} disabled={enVille}>
+              <span className="emoji-bouton">⏫ </span>Village
+            </button>
+            <button className="bouton" onClick={allerAuFront} disabled={auFront || etat.victoire}>
+              <span className="emoji-bouton">⏬ </span>Front
+            </button>
           </div>
           <p className="aide-clavier">
             {enVille

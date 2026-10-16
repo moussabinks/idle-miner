@@ -17,7 +17,6 @@ import {
   enchanter,
   envoyerAscenseur,
   estCassee,
-  fabriquerTorches,
   peutAcheterPioche,
   peutAmeliorerAscenseur,
   peutEnchanter,
@@ -26,7 +25,6 @@ import {
   positionFront,
   prixProchainSac,
   prochainNiveauAscenseur,
-  quantite,
   reparer,
   sacPlein,
   vendre,
@@ -127,9 +125,6 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
 
     // Toujours retourner au front de taille avant de creuser (au début, on part du village).
     if (etat.position !== positionFront(etat)) voyager(positionFront(etat))
-
-    // Des torches pour y voir clair (ça se fabrique partout).
-    if (etat.torches < 2 && quantite(etat, 'charbon') > 0) fabriquerTorches(etat)
 
     // Comme un joueur qui clique sur « Creuser x10 » : 10 couches d'affilée,
     // en s'arrêtant si le sac est plein (mais toujours au moins un bloc, pour

@@ -94,6 +94,10 @@ function migrer(donnees: unknown): unknown {
     delete etat.trajet
   }
 
+  // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
+  delete etat.torches
+  delete etat.torchesPosees
+
   return etat
 }
 
