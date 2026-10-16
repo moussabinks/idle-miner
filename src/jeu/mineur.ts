@@ -10,22 +10,20 @@ import { choisir, entierEntre, type Aleatoire } from './aleatoire'
 import {
   BLOCS,
   BONUS_PRESTIGE,
-  DUREE_MIN_ECHELLE,
   ECART_TORCHES,
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
   MINERAIS_COFFRE,
   MULTIPLICATEUR_ACHAT,
+  NIVEAUX_ASCENSEUR,
   PIOCHES,
   PORTEE_TORCHE,
   LARGEUR_MINE,
-  PRIX_ASCENSEUR,
   PRIX_PLANCHE,
   PRIX_SEAU,
   PROFONDEUR_BEDROCK,
   REPARATION_PAR_UNITE,
   SACS,
-  SECONDES_PAR_METRE_ASCENSEUR,
   SECONDES_PAR_METRE_ECHELLE,
   TORCHES_DEPART,
   TORCHES_PAR_CHARBON,
@@ -35,6 +33,7 @@ import {
   dureeCasse,
   type IdBloc,
   type IdEnchantement,
+  type NiveauAscenseur,
   type Pioche,
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
@@ -54,23 +53,30 @@ export type Statistiques = {
   diamantsTrouves: number
 }
 
-// Où se trouve le joueur.
-export type Lieu = 'surface' | 'mine'
-
-// Un trajet à l'échelle en cours (null quand on ne bouge pas).
-export type Trajet = { vers: Lieu; tempsRestant: number; tempsTotal: number }
-
 export type Ascenseur = {
-  possede: boolean
+  niveau: number // 0 = pas encore construit
   chargement: Inventaire // ce qu'il remonte en ce moment
   tempsRestant: number // 0 = il attend au niveau du joueur
   tempsTotal: number // durée de l'aller-retour en cours
 }
 
+export type Foreuse = {
+  active: boolean // activée une fois pour toutes (avec du fer et de la redstone)
+  carburant: number // secondes de forage restantes (le charbon brûlé)
+  niveauVitesse: number // index dans NIVEAUX_FORAGE
+  niveauChariot: number // index dans NIVEAUX_CHARIOT
+  chariot: Inventaire // ce que la foreuse a remonté
+  profondeur: number // profondeur atteinte par la foreuse
+  progression: number // fraction du prochain bloc foré (0 à 1)
+  blocsFores: number
+}
+
 export type EtatJeu = {
   version: number
-  lieu: Lieu
-  trajet: Trajet | null
+  // Position du joueur sur l'échelle, en mètres : 0 = au village, profondeur - 1 = au front de taille.
+  // C'est un nombre à virgule pendant qu'il grimpe.
+  position: number
+  cible: number // là où le joueur se dirige sur l'échelle
   colonneMineur: number // où se tient le mineur au-dessus de la couche en cours (0 à 5)
   argent: number
   profondeur: number // profondeur de la couche en cours, en mètres (1 = juste sous l'herbe)
@@ -83,6 +89,7 @@ export type EtatJeu = {
   inventaire: Inventaire // le contenu du sac
   nonAVendre: IdBloc[] // objets décochés au marché : « Vendre tout » les garde
   ascenseur: Ascenseur
+  foreuse: Foreuse
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   seaux: number
@@ -94,24 +101,37 @@ export type EtatJeu = {
   victoire: boolean
 }
 
-export const VERSION_ETAT = 2
+export const VERSION_ETAT = 3
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
 // ---------------------------------------------------------------------------
 
-export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[] = [], nonAVendre: IdBloc[] = []): EtatJeu {
+// Le premier mètre est l'entrée du puits, déjà creusée : on commence à creuser à -2 m.
+export const PROFONDEUR_DEPART = 2
+
+export function nouvelleForeuse(): Foreuse {
+  return { active: false, carburant: 0, niveauVitesse: 0, niveauChariot: 0, chariot: {}, profondeur: 1, progression: 0, blocsFores: 0 }
+}
+
+export function creerPartie(
+  aleatoire: Aleatoire,
+  prestige = 0,
+  succes: string[] = [],
+  nonAVendre: IdBloc[] = [],
+  foreuse: Foreuse = nouvelleForeuse(),
+): EtatJeu {
   const couchesDessous: IdBloc[][] = []
-  for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(1 + i, aleatoire))
+  for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
 
   return {
     version: VERSION_ETAT,
-    lieu: 'surface', // on commence au village, devant le puits
-    trajet: null,
+    position: 0, // on commence au village
+    cible: 0,
     colonneMineur: 0,
     argent: 0,
-    profondeur: 1,
-    coucheActuelle: genererCouche(1, aleatoire),
+    profondeur: PROFONDEUR_DEPART,
+    coucheActuelle: genererCouche(PROFONDEUR_DEPART, aleatoire),
     couchesDessous,
     enGalerie: false,
     pioches: { 0: 0 }, // la pioche en bois est offerte
@@ -119,7 +139,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[]
     meilleure: 0,
     inventaire: {},
     nonAVendre: [...nonAVendre],
-    ascenseur: { possede: false, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
+    ascenseur: { niveau: 0, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
+    foreuse: structuredClone(foreuse),
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
     seaux: 0,
@@ -141,8 +162,9 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[]
 }
 
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
+// On garde les succès, les objets décochés au marché et la foreuse.
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
-  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre)
+  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre, etat.foreuse)
 }
 
 // ---------------------------------------------------------------------------
@@ -197,18 +219,27 @@ export function quantite(etat: EtatJeu, bloc: IdBloc): number {
   return etat.inventaire[bloc] ?? 0
 }
 
-// Le joueur est à la surface (et pas en train de grimper) : il peut vendre et acheter.
-export function aLaSurface(etat: EtatJeu): boolean {
-  return etat.lieu === 'surface' && etat.trajet === null
+// La position du front de taille : juste au-dessus de la couche qu'on creuse.
+export function positionFront(etat: EtatJeu): number {
+  return etat.profondeur - 1
 }
 
-// Le joueur est au fond de la mine, prêt à creuser.
+export function enMouvement(etat: EtatJeu): boolean {
+  return etat.position !== etat.cible
+}
+
+// Le joueur est au village (et ne bouge pas) : il peut vendre et acheter.
+export function aLaSurface(etat: EtatJeu): boolean {
+  return etat.position === 0 && !enMouvement(etat)
+}
+
+// Le joueur est au front de taille, prêt à creuser.
 export function auFond(etat: EtatJeu): boolean {
-  return etat.lieu === 'mine' && etat.trajet === null
+  return etat.position === positionFront(etat) && !enMouvement(etat)
 }
 
 export function estEclaire(etat: EtatJeu): boolean {
-  if (etat.profondeur <= 3) return true
+  if (etat.profondeur <= 6) return true
   return etat.torchesPosees.some((d) => d <= etat.profondeur && etat.profondeur - d <= PORTEE_TORCHE)
 }
 
@@ -245,29 +276,29 @@ export function dureeBlocActuel(etat: EtatJeu): number {
 // Petits outils sur l'inventaire
 // ---------------------------------------------------------------------------
 
-function ajouter(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
+export function ajouter(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
   if (nombre <= 0) return
   etat.inventaire[bloc] = quantite(etat, bloc) + nombre
 }
 
-function retirer(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
+export function retirer(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
   const reste = quantite(etat, bloc) - nombre
   if (reste > 0) etat.inventaire[bloc] = reste
   else delete etat.inventaire[bloc] // on nettoie les zéros
 }
 
 // Met des objets dans le sac s'il reste de la place. Renvoie le nombre qui n'a pas tenu.
-function ramasser(etat: EtatJeu, bloc: IdBloc, nombre: number): number {
+export function ramasser(etat: EtatJeu, bloc: IdBloc, nombre: number): number {
   const rentre = Math.min(nombre, placeLibre(etat))
   ajouter(etat, bloc, rentre)
   return nombre - rentre
 }
 
-function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
+export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
   return Object.entries(materiaux).every(([bloc, nombre]) => quantite(etat, bloc as IdBloc) >= (nombre ?? 0))
 }
 
-function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
+export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
   for (const [bloc, nombre] of Object.entries(materiaux)) retirer(etat, bloc as IdBloc, nombre ?? 0)
 }
 
@@ -387,6 +418,8 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   // On arrive sur la bedrock : victoire !
   if (suivante >= PROFONDEUR_BEDROCK) {
     etat.profondeur = PROFONDEUR_BEDROCK
+    etat.position = positionFront(etat)
+    etat.cible = etat.position
     etat.coucheActuelle = []
     etat.couchesDessous = []
     etat.victoire = true
@@ -394,8 +427,14 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     return messages
   }
 
-  // On descend d'un mètre : la première couche du dessous devient la couche en cours.
+  // On descend d'un mètre : la première couche du dessous devient la couche en cours,
+  // et le mineur descend avec elle.
+  const joueurAuFront = auFond(etat)
   etat.profondeur = suivante
+  if (joueurAuFront) {
+    etat.position = positionFront(etat)
+    etat.cible = etat.position
+  }
   etat.coucheActuelle = etat.couchesDessous.shift() ?? genererCouche(suivante, aleatoire)
   const profondeurAGenerer = suivante + COUCHES_EN_AVANCE
   etat.couchesDessous.push(profondeurAGenerer < PROFONDEUR_BEDROCK ? genererCouche(profondeurAGenerer, aleatoire) : [])
@@ -458,113 +497,125 @@ export function vendre(etat: EtatJeu): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Déplacements : à gauche et à droite dans la mine, et l'échelle
+// Déplacements : à gauche et à droite au front, en haut et en bas sur l'échelle
 // ---------------------------------------------------------------------------
 
-// Déplace le mineur d'une case (sens = -1 pour la gauche, +1 pour la droite).
+// Déplace le mineur d'une case au front de taille (sens = -1 pour la gauche, +1 pour la droite).
 export function deplacerMineur(etat: EtatJeu, sens: number): string[] {
   if (!auFond(etat)) return []
   etat.colonneMineur = Math.min(LARGEUR_MINE - 1, Math.max(0, etat.colonneMineur + sens))
   return []
 }
 
-// Temps pour monter (ou descendre) toute l'échelle depuis la profondeur actuelle.
+// Choisit où aller sur l'échelle (0 = village, positionFront = front de taille).
+// Le joueur y va ensuite petit à petit (voir avancerTemps).
+export function allerA(etat: EtatJeu, position: number): string[] {
+  if (etat.victoire && position > etat.position) return []
+  etat.cible = Math.min(positionFront(etat), Math.max(0, Math.round(position)))
+  return []
+}
+
+// Arrête le joueur sur le prochain barreau (quand on relâche la flèche).
+// S'il est pile sur un barreau, il avance quand même d'un barreau : un appui
+// très court fait donc toujours bouger d'un mètre.
+export function arreterSurEchelle(etat: EtatJeu): string[] {
+  const p = etat.position
+  if (etat.cible < p) etat.cible = Math.max(etat.cible, Number.isInteger(p) ? p - 1 : Math.floor(p))
+  if (etat.cible > p) etat.cible = Math.min(etat.cible, Number.isInteger(p) ? p + 1 : Math.ceil(p))
+  return []
+}
+
+// Temps pour parcourir toute l'échelle depuis le front de taille.
 export function dureeEchelle(etat: EtatJeu): number {
-  return Math.max(DUREE_MIN_ECHELLE, etat.profondeur * SECONDES_PAR_METRE_ECHELLE)
+  return positionFront(etat) * SECONDES_PAR_METRE_ECHELLE
 }
 
-export function monterALaSurface(etat: EtatJeu): string[] {
-  if (!auFond(etat)) return []
-  const duree = dureeEchelle(etat)
-  etat.trajet = { vers: 'surface', tempsRestant: duree, tempsTotal: duree }
+// Fait grimper le joueur vers sa cible pendant quelques secondes.
+export function avancerSurEchelle(etat: EtatJeu, secondes: number): string[] {
+  if (!enMouvement(etat)) return []
+  const pas = secondes / SECONDES_PAR_METRE_ECHELLE
+  if (Math.abs(etat.cible - etat.position) <= pas) etat.position = etat.cible
+  else etat.position += Math.sign(etat.cible - etat.position) * pas
+
+  if (etat.position !== etat.cible) return []
+  if (etat.position === 0) return ['☀️ Te voilà au village !']
+  if (etat.position === positionFront(etat)) return [`⛏️ Au front de taille, à -${etat.profondeur} m.`]
   return []
 }
 
-export function descendreDansLaMine(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat) || etat.victoire) return []
-  const duree = dureeEchelle(etat)
-  etat.trajet = { vers: 'mine', tempsRestant: duree, tempsTotal: duree }
-  return []
-}
-
-// Profondeur où se trouve le joueur en ce moment (il peut être sur l'échelle).
-export function profondeurDuJoueur(etat: EtatJeu): number {
-  if (etat.trajet === null) return etat.lieu === 'surface' ? 0 : etat.profondeur
-  const avancement = 1 - etat.trajet.tempsRestant / etat.trajet.tempsTotal
-  const depart = etat.trajet.vers === 'surface' ? etat.profondeur : 0
-  const arrivee = etat.trajet.vers === 'surface' ? 0 : etat.profondeur
-  return Math.round(depart + (arrivee - depart) * avancement)
-}
-
 // ---------------------------------------------------------------------------
-// L'ascenseur automatique
+// L'ascenseur automatique (construit et amélioré avec du fer et de la redstone)
 // ---------------------------------------------------------------------------
 
-export function peutAcheterAscenseur(etat: EtatJeu): boolean {
-  return (
-    !etat.ascenseur.possede &&
-    etat.argent >= PRIX_ASCENSEUR.argent &&
-    quantite(etat, 'redstone') >= PRIX_ASCENSEUR.redstone
-  )
+// Les caractéristiques du niveau actuel (null s'il n'est pas construit).
+export function niveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
+  return NIVEAUX_ASCENSEUR[etat.ascenseur.niveau - 1] ?? null
 }
 
-export function acheterAscenseur(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat) || !peutAcheterAscenseur(etat)) return []
-  etat.argent -= PRIX_ASCENSEUR.argent
-  retirer(etat, 'redstone', PRIX_ASCENSEUR.redstone)
-  etat.ascenseur.possede = true
-  return ['🛗 Ascenseur construit ! Il remonte ton sac au marché quand il est plein.']
+// Le prochain niveau à construire (null s'il est au max).
+export function prochainNiveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
+  return NIVEAUX_ASCENSEUR[etat.ascenseur.niveau] ?? null
+}
+
+export function peutAmeliorerAscenseur(etat: EtatJeu): boolean {
+  const prochain = prochainNiveauAscenseur(etat)
+  if (prochain === null) return false
+  return quantite(etat, 'fer') >= prochain.fer && quantite(etat, 'redstone') >= prochain.redstone
+}
+
+// Construit l'ascenseur (niveau 1) ou l'améliore. Ça se fait directement dans la mine.
+export function ameliorerAscenseur(etat: EtatJeu): string[] {
+  const prochain = prochainNiveauAscenseur(etat)
+  if (prochain === null || !peutAmeliorerAscenseur(etat) || etat.ascenseur.tempsRestant > 0) return []
+  retirer(etat, 'fer', prochain.fer)
+  retirer(etat, 'redstone', prochain.redstone)
+  etat.ascenseur.niveau = prochain.niveau
+  if (prochain.niveau === 1) return ['🛗 Ascenseur construit ! Il remonte ton sac au marché quand il est plein.']
+  return [`🛗 Ascenseur amélioré au niveau ${prochain.niveau} : ${prochain.capacite} objets par voyage.`]
 }
 
 // L'ascenseur attend au niveau du joueur, prêt à partir.
 export function ascenseurDisponible(etat: EtatJeu): boolean {
-  return etat.ascenseur.possede && etat.ascenseur.tempsRestant === 0
+  return etat.ascenseur.niveau > 0 && etat.ascenseur.tempsRestant === 0
 }
 
-// Charge l'ascenseur avec le sac (sauf les objets décochés) et l'envoie au marché.
+// Charge l'ascenseur avec le sac (sauf les objets décochés, et dans la limite de sa
+// capacité, les objets les plus précieux d'abord) et l'envoie au marché.
 export function envoyerAscenseur(etat: EtatJeu): string[] {
-  if (!auFond(etat) || !ascenseurDisponible(etat)) return []
-  const chargement = objetsAVendre(etat)
+  const niveau = niveauAscenseur(etat)
+  if (niveau === null || !auFond(etat) || !ascenseurDisponible(etat)) return []
+
+  const chargement: Inventaire = {}
+  let place = niveau.capacite
+  const objets = (Object.entries(objetsAVendre(etat)) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  for (const [bloc, nombre] of objets) {
+    const pris = Math.min(nombre, place)
+    if (pris <= 0) break
+    chargement[bloc] = pris
+    retirer(etat, bloc, pris)
+    place -= pris
+  }
   if (Object.keys(chargement).length === 0) return []
-  for (const [bloc, nombre] of Object.entries(chargement)) retirer(etat, bloc as IdBloc, nombre ?? 0)
+
   // Aller jusqu'à la surface, puis retour au niveau du joueur.
-  const duree = Math.max(DUREE_MIN_ECHELLE, 2 * etat.profondeur * SECONDES_PAR_METRE_ASCENSEUR)
-  etat.ascenseur = { possede: true, chargement, tempsRestant: duree, tempsTotal: duree }
+  const duree = Math.max(1, 2 * positionFront(etat) * niveau.secondesParMetre)
+  etat.ascenseur = { niveau: etat.ascenseur.niveau, chargement, tempsRestant: duree, tempsTotal: duree }
   return ['🛗 L’ascenseur remonte ton chargement au marché.']
 }
 
-// ---------------------------------------------------------------------------
-// Le temps qui passe : trajet à l'échelle et voyage de l'ascenseur
-// ---------------------------------------------------------------------------
-
-export function avancerTemps(etat: EtatJeu, secondes: number): string[] {
-  const messages: string[] = []
-
-  // L'échelle.
-  if (etat.trajet !== null) {
-    etat.trajet.tempsRestant -= secondes
-    if (etat.trajet.tempsRestant <= 0) {
-      etat.lieu = etat.trajet.vers
-      etat.trajet = null
-      messages.push(etat.lieu === 'surface' ? '☀️ Te voilà à la surface !' : `⛏️ De retour au fond, à -${etat.profondeur} m.`)
-    }
-  }
-
-  // L'ascenseur : il vend son chargement en arrivant en haut (à mi-parcours).
+// Fait voyager l'ascenseur. Il vend son chargement en arrivant en haut (à mi-parcours).
+export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   const ascenseur = etat.ascenseur
-  if (ascenseur.tempsRestant > 0) {
-    ascenseur.tempsRestant = Math.max(0, ascenseur.tempsRestant - secondes)
-    const arriveEnHaut = ascenseur.tempsRestant <= ascenseur.tempsTotal / 2
-    if (arriveEnHaut && Object.keys(ascenseur.chargement).length > 0) {
-      const gain = valeurDe(etat, ascenseur.chargement)
-      ascenseur.chargement = {}
-      etat.argent += gain
-      etat.stats.argentGagne += gain
-      messages.push(`🛗 L’ascenseur a vendu ton chargement : +${gain} $`)
-    }
-  }
+  if (ascenseur.tempsRestant <= 0) return []
+  ascenseur.tempsRestant = Math.max(0, ascenseur.tempsRestant - secondes)
+  const arriveEnHaut = ascenseur.tempsRestant <= ascenseur.tempsTotal / 2
+  if (!arriveEnHaut || Object.keys(ascenseur.chargement).length === 0) return []
 
-  return messages
+  const gain = valeurDe(etat, ascenseur.chargement)
+  ascenseur.chargement = {}
+  etat.argent += gain
+  etat.stats.argentGagne += gain
+  return [`🛗 L’ascenseur a vendu ton chargement : +${gain} $`]
 }
 
 // ---------------------------------------------------------------------------

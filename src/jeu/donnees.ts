@@ -1,5 +1,6 @@
 // Données du jeu : pioches, blocs, sacs, enchantements, zones et constantes.
-// Les valeurs viennent de docs/idle_miner_v1.md (version notebook Python).
+// Les valeurs viennent de docs/idle_miner_v1.md (version notebook Python),
+// avec une mine deux fois plus profonde (bedrock à -128 m au lieu de -64 m).
 
 // ---------------------------------------------------------------------------
 // Blocs
@@ -83,16 +84,16 @@ export type Pioche = {
 }
 
 export const PIOCHES: Pioche[] = [
-  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 15, durabilite: 60, prix: 5, materiaux: {}, reparation: 'planche', couleur: '#b5834a' },
-  { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 30, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre', couleur: '#8f8f8f' },
-  { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 48, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer', couleur: '#e6e6e6' },
-  { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 60, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant', couleur: '#4ee8dc' },
+  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 30, durabilite: 60, prix: 5, materiaux: {}, reparation: 'planche', couleur: '#b5834a' },
+  { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 60, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre', couleur: '#8f8f8f' },
+  { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 96, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer', couleur: '#e6e6e6' },
+  { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 116, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant', couleur: '#4ee8dc' },
   {
     niveau: 4,
     nom: 'Netherite',
     emoji: '🔥',
     vitesse: 9,
-    profMax: 64,
+    profMax: 128,
     durabilite: 800,
     prix: 3000,
     materiaux: { debris: 4, or: 4 },
@@ -118,7 +119,10 @@ export const VITESSE_MAINS_NUES = 1
 // ---------------------------------------------------------------------------
 
 export const LARGEUR_MINE = 6 // blocs par couche
-export const PROFONDEUR_BEDROCK = 64
+export const PROFONDEUR_BEDROCK = 128
+
+// Sous cette profondeur, la roche devient de la deepslate et tout est plus long à casser.
+export const PROFONDEUR_DEEPSLATE = 80
 
 // Les sacs : la taille et le prix de chaque niveau (le premier est gratuit).
 export const SACS = [
@@ -142,12 +146,55 @@ export const VISION_SOMBRE = 2 // couches visibles dans le noir
 
 // Temps pour monter (ou descendre) un mètre à l'échelle, en secondes.
 export const SECONDES_PAR_METRE_ECHELLE = 0.15
-export const DUREE_MIN_ECHELLE = 1 // même près de la surface, il faut un peu de temps
 
-// L'ascenseur automatique : il se paie avec de la redstone (en plus de l'argent).
-export const PRIX_ASCENSEUR = { argent: 250, redstone: 10 }
-// Temps pour qu'il parcoure un mètre (il est plus rapide que l'échelle).
-export const SECONDES_PAR_METRE_ASCENSEUR = 0.08
+// L'ascenseur automatique : il se construit puis s'améliore avec du fer et de la redstone.
+// Chaque niveau remonte plus d'objets par voyage, et plus vite.
+export type NiveauAscenseur = {
+  niveau: number
+  fer: number
+  redstone: number
+  capacite: number // objets remontés par voyage
+  secondesParMetre: number // temps pour parcourir un mètre
+}
+
+export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
+  { niveau: 1, fer: 10, redstone: 5, capacite: 32, secondesParMetre: 0.1 },
+  { niveau: 2, fer: 40, redstone: 15, capacite: 64, secondesParMetre: 0.07 },
+  { niveau: 3, fer: 80, redstone: 30, capacite: 128, secondesParMetre: 0.05 },
+  { niveau: 4, fer: 150, redstone: 60, capacite: 256, secondesParMetre: 0.03 },
+]
+
+// ---------------------------------------------------------------------------
+// La foreuse (débloquée au prestige 1)
+// ---------------------------------------------------------------------------
+
+export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
+
+// On l'active une seule fois (elle reste active après les prestiges suivants).
+export const COUT_ACTIVATION_FOREUSE: Cout = { materiaux: { fer: 30, redstone: 10 } }
+export const PRESTIGE_FOREUSE = 1
+
+// Un charbon fait tourner la foreuse pendant 20 secondes.
+export const SECONDES_PAR_CHARBON = 20
+
+// Vitesse de forage (blocs par seconde) et coût de chaque niveau.
+export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
+  { vitesse: 0.5, cout: { materiaux: {} } },
+  { vitesse: 1, cout: { argent: 1000, materiaux: { fer: 30 } } },
+  { vitesse: 2, cout: { argent: 4000, materiaux: { redstone: 30, or: 10 } } },
+  { vitesse: 4, cout: { argent: 12000, materiaux: { diamant: 10 } } },
+]
+
+// Taille du chariot (en objets) et coût de chaque niveau.
+export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
+  { capacite: 200, cout: { materiaux: {} } },
+  { capacite: 500, cout: { argent: 800, materiaux: {} } },
+  { capacite: 1000, cout: { argent: 3000, materiaux: { fer: 50 } } },
+  { capacite: 2500, cout: { argent: 9000, materiaux: { or: 20 } } },
+]
+
+// La foreuse descend d'un mètre tous les 6 blocs forés.
+export const BLOCS_FORES_PAR_METRE = 6
 
 // Bonus de vente par niveau de prestige (+25 %).
 export const BONUS_PRESTIGE = 0.25
@@ -204,12 +251,12 @@ export const LISTE_ENCHANTEMENTS: IdEnchantement[] = ['efficacite', 'fortune', '
 export type Zone = { nom: string; profMax: number; classe: string }
 
 export const ZONES: Zone[] = [
-  { nom: 'Surface', profMax: 3, classe: 'zone-surface' },
-  { nom: 'Cavernes', profMax: 15, classe: 'zone-cavernes' },
-  { nom: 'Mines', profMax: 30, classe: 'zone-mines' },
-  { nom: 'Profondeurs', profMax: 40, classe: 'zone-profondeurs' },
-  { nom: 'Deepslate', profMax: 52, classe: 'zone-deepslate' },
-  { nom: 'Abîmes', profMax: 64, classe: 'zone-abimes' },
+  { nom: 'Surface', profMax: 6, classe: 'zone-surface' },
+  { nom: 'Cavernes', profMax: 30, classe: 'zone-cavernes' },
+  { nom: 'Mines', profMax: 60, classe: 'zone-mines' },
+  { nom: 'Profondeurs', profMax: 80, classe: 'zone-profondeurs' },
+  { nom: 'Deepslate', profMax: 104, classe: 'zone-deepslate' },
+  { nom: 'Abîmes', profMax: 128, classe: 'zone-abimes' },
 ]
 
 export function zoneDe(profondeur: number): Zone {
@@ -222,8 +269,8 @@ export function zoneDe(profondeur: number): Zone {
 
 export const VITESSE_JEU = 0.45
 
-// Durée (en secondes) pour casser un bloc.
+// Durée (en secondes) pour casser un bloc (x1,5 dans la deepslate).
 export function dureeCasse(durete: number, profondeur: number, vitesse: number): number {
-  const malusProfondeur = profondeur > 40 ? 1.5 : 1
+  const malusProfondeur = profondeur > PROFONDEUR_DEEPSLATE ? 1.5 : 1
   return ((durete * malusProfondeur) / vitesse) * VITESSE_JEU
 }

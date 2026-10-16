@@ -19,8 +19,8 @@ export const SUCCES: Succes[] = [
   { id: 'pioche_fer', emoji: '⚙️', titre: 'Âge du fer', description: 'Débloquer la pioche en fer', condition: (e) => e.meilleure >= 2 },
   { id: 'pioche_diamant', emoji: '💎', titre: 'Diamants !', description: 'Débloquer la pioche en diamant', condition: (e) => e.meilleure >= 3 },
   { id: 'pioche_netherite', emoji: '🔥', titre: 'Increvable', description: 'Débloquer la pioche en netherite', condition: (e) => e.meilleure >= 4 },
-  { id: 'profondeurs', emoji: '🕳️', titre: 'Spéléologue', description: 'Descendre à -30 m', condition: (e) => e.profondeur >= 30 },
-  { id: 'abimes', emoji: '🌑', titre: 'Dans les abîmes', description: 'Descendre à -53 m', condition: (e) => e.profondeur >= 53 },
+  { id: 'profondeurs', emoji: '🕳️', titre: 'Spéléologue', description: 'Descendre à -60 m', condition: (e) => e.profondeur >= 60 },
+  { id: 'abimes', emoji: '🌑', titre: 'Dans les abîmes', description: 'Descendre à -105 m', condition: (e) => e.profondeur >= 105 },
   { id: 'premier_diamant', emoji: '💠', titre: "Ça brille !", description: 'Trouver un diamant', condition: (e) => e.stats.diamantsTrouves >= 1 },
   { id: 'coffre', emoji: '🧰', titre: 'Chasseur de trésors', description: 'Ouvrir un coffre', condition: (e) => e.stats.coffresOuverts >= 1 },
   { id: 'geode', emoji: '🔮', titre: 'Géologue', description: 'Casser une géode', condition: (e) => e.stats.geodesCassees >= 1 },
@@ -33,7 +33,7 @@ export const SUCCES: Succes[] = [
     description: 'Mettre tous les enchantements au max',
     condition: (e) => !peutEncoreEnchanter(e),
   },
-  { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: 'Atteindre la bedrock à -64 m', condition: (e) => e.victoire },
+  { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: 'Atteindre la bedrock à -128 m', condition: (e) => e.victoire },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

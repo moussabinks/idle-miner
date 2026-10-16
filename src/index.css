@@ -13,7 +13,8 @@
   --vert: #5cc95c;
   --rouge: #e5534b;
   --violet: #a77be8;
-  --taille-case: min(64px, calc((100vw - 136px) / 6));
+  --taille-case: min(56px, calc((100vw - 176px) / 6));
+  --pas: calc(var(--taille-case) + 3px);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
@@ -171,31 +172,50 @@ h2 {
   min-width: 0;
 }
 
-/* ------------------------------------------------------------- Mine */
+/* ------------------------------------------------------------ Monde */
 
-.mine {
+/* Le monde : le village en haut, puis le puits creusé. On le fait défiler. */
+.monde {
   position: relative;
-  padding: 10px;
+  width: calc(20px + 44px + 18px + 22px + 6 * var(--taille-case) + 8 * 3px);
+  max-width: 100%;
+  height: min(70vh, 640px);
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 12px;
   border: 3px solid #000;
+  background: #0b0a0c;
   box-shadow: inset 0 0 40px rgb(0 0 0 / 0.7);
-  transition: background 1.2s ease;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a58 transparent;
 }
 
-/* L'ambiance s'assombrit avec la profondeur. */
-.zone-surface { background: linear-gradient(#4f8fd8, #3c6a3a 30%, #4a3423); }
-.zone-cavernes { background: linear-gradient(#3b3b42, #2b2b31); }
-.zone-mines { background: linear-gradient(#2e2a26, #1f1c1a); }
-.zone-profondeurs { background: linear-gradient(#202028, #16161c); }
-.zone-deepslate { background: linear-gradient(#17171d, #0e0e12); }
-.zone-abimes { background: linear-gradient(#120a10, #050305); box-shadow: inset 0 0 60px rgb(120 20 20 / 0.35); }
-
+/* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 6 cases. */
 .rangee {
   display: grid;
-  grid-template-columns: 44px 14px repeat(6, var(--taille-case));
+  grid-template-columns: 44px 18px 22px repeat(6, var(--taille-case));
   gap: 3px;
   margin-bottom: 3px;
   align-items: center;
+}
+
+/* La couleur du puits change avec les zones. */
+.rangee.zone-surface { --fond-zone: #4a3423; }
+.rangee.zone-cavernes { --fond-zone: #34343b; }
+.rangee.zone-mines { --fond-zone: #2b2724; }
+.rangee.zone-profondeurs { --fond-zone: #1f1f27; }
+.rangee.zone-deepslate { --fond-zone: #17171d; }
+.rangee.zone-abimes { --fond-zone: #1a0b10; }
+
+.rangee.creusee .case.vide {
+  background: var(--fond-zone);
+  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.55);
+}
+
+.rangee.front .case.vide {
+  display: grid;
+  place-items: end center;
+  overflow: visible;
 }
 
 .rangee.noir .etiquette {
@@ -203,101 +223,150 @@ h2 {
 }
 
 .etiquette {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--texte-doux);
   text-align: right;
-  padding-right: 6px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rangee.front .etiquette,
+.rangee.couche-en-cours .etiquette {
+  color: var(--accent);
 }
 
 .emplacement {
   position: relative;
 }
 
-.tunnel {
+/* Le puits : tout ce qu'on a creusé, avec l'échelle et l'ascenseur. */
+.puits-mine {
   position: relative;
+  padding: 0 10px 10px;
 }
 
-.tunnel .case.vide {
-  display: grid;
-  place-items: center;
-  background: rgb(0 0 0 / 0.45);
-}
-
-.tunnel.ciel .case.vide {
-  background: linear-gradient(#7fb8f0, #a9d3f5 70%, #5aa33c 70%, #3f7d2a);
-  box-shadow: none;
-}
-
-.torche {
+/* L'échelle sur toute la hauteur du puits (de l'entrée jusqu'au front de taille). */
+.echelle-longue {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  font-size: 0.8rem;
-  animation: vacille 1.3s ease-in-out infinite;
-}
-
-@keyframes vacille {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #ffb347); }
-  40% { opacity: 0.8; filter: drop-shadow(0 0 3px #ffb347); }
-  70% { opacity: 0.95; filter: drop-shadow(0 0 8px #ffcc66); }
-}
-
-/* La colonne de l'échelle, à gauche de la mine. */
-.echelle {
-  align-self: stretch;
-  margin: -2px 0;
+  top: -14px;
+  left: calc(10px + 44px + 3px);
+  width: 18px;
   background:
-    repeating-linear-gradient(transparent 0 7px, #9c6b35 7px 10px),
+    repeating-linear-gradient(transparent 0 7px, #b07a3f 7px 10px),
     linear-gradient(90deg, #7a4f22 0 3px, transparent 3px calc(100% - 3px), #7a4f22 calc(100% - 3px));
   border-radius: 2px;
+  pointer-events: none;
 }
 
-.rangee.noir .echelle {
-  opacity: 0.25;
+/* Le rail de l'ascenseur (en pointillés tant qu'il n'est pas construit). */
+.rail-ascenseur {
+  position: absolute;
+  top: -14px;
+  left: calc(10px + 44px + 3px + 18px + 3px);
+  width: 22px;
+  border: 1px dashed rgb(255 255 255 / 0.15);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
-/* L'ascenseur, à droite de la mine. */
-.rangee.avec-ascenseur {
-  grid-template-columns: 44px 14px repeat(6, var(--taille-case)) 20px;
-}
-
-.cage-ascenseur {
-  position: relative;
-  align-self: stretch;
-  margin: -2px 0;
+.rail-ascenseur.construit {
+  border: none;
   background:
-    linear-gradient(90deg, transparent 45%, #555 45% 55%, transparent 55%),
-    linear-gradient(90deg, #3b3b44 0 2px, rgb(0 0 0 / 0.4) 2px calc(100% - 2px), #3b3b44 calc(100% - 2px));
+    linear-gradient(90deg, transparent 45%, #6a6a74 45% 55%, transparent 55%),
+    linear-gradient(90deg, #3b3b44 0 2px, rgb(0 0 0 / 0.35) 2px calc(100% - 2px), #3b3b44 calc(100% - 2px));
 }
 
 .cabine {
   position: absolute;
-  inset: 15% 1px 0;
+  left: calc(10px + 44px + 3px + 18px + 3px);
+  width: 22px;
+  height: var(--taille-case);
   border-radius: 3px;
   background: linear-gradient(#d9a441, #9a6b1f);
   border: 2px solid #4a3410;
   box-shadow: 0 0 8px rgb(255 200 80 / 0.5);
+  transition: top 0.1s linear;
+  z-index: 2;
 }
 
-.bandeau-ascenseur {
-  margin: 6px 0 0;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #9fd4ff;
+/* Un petit tas de blocs dans la cabine quand elle est chargée. */
+.cabine-chargee {
+  position: absolute;
+  inset: auto 3px 3px;
+  height: 35%;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #8a8a8a, #5f5f5f);
+}
+
+/* Le joueur pendant qu'il grimpe à l'échelle. */
+.joueur-echelle {
+  position: absolute;
+  left: calc(10px + 44px + 3px + 9px - var(--taille-case) / 2);
+  width: var(--taille-case);
+  height: var(--taille-case);
+  transition: top 0.1s linear;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+
+.porte-joueur {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: end center;
+}
+
+/* Une torche dessinée en CSS : un bâton et une flamme qui vacille. */
+.torche-css {
+  position: relative;
+  width: 6px;
+  height: 45%;
+  margin: auto 0 4px 4px;
+  background: linear-gradient(#8a5a2b, #5c3a1a);
+  border-radius: 1px;
+  align-self: end;
+}
+
+.torche-css::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: -9px;
+  width: 10px;
+  height: 11px;
+  border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(circle at 50% 70%, #fff6b0, #ffb347 55%, #e05a00);
+  box-shadow: 0 0 12px 4px rgb(255 170 60 / 0.55);
+  animation: vacille 1.3s ease-in-out infinite;
+}
+
+.rangee .case.vide:has(.torche-css) {
+  display: flex;
+}
+
+@keyframes vacille {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  40% { opacity: 0.8; transform: scale(0.9); }
+  70% { opacity: 0.95; transform: scale(1.08); }
 }
 
 /* Les « +X $ » qui s'envolent. */
 .gains {
-  position: absolute;
-  right: 8px;
-  top: 0;
+  position: sticky;
+  bottom: 60px;
+  height: 0;
+  margin-left: auto;
+  margin-right: 16px;
+  width: 0;
   pointer-events: none;
+  z-index: 5;
 }
 
 .gain {
   position: absolute;
   right: 0;
+  bottom: 0;
   white-space: nowrap;
   font-weight: 800;
   color: var(--accent);
@@ -311,10 +380,46 @@ h2 {
 }
 
 .bandeau-galerie {
-  margin: 8px 0 0;
+  margin: 0;
+  padding: 4px 10px;
   text-align: center;
   font-size: 0.8rem;
   color: var(--accent);
+}
+
+/* Le module de l'ascenseur, collé en bas à gauche de la vue de la mine. */
+.module-ascenseur {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin: 0 8px 8px;
+  max-width: 330px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgb(20 20 26 / 0.94);
+  border: 2px solid #4a3410;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.6);
+  font-size: 0.82rem;
+}
+
+.module-titre,
+.module-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.module-titre strong {
+  color: #e8b45a;
+}
+
+.module-etat {
+  color: #9fd4ff;
 }
 
 /* ------------------------------------------------------- Personnage */
@@ -368,17 +473,13 @@ h2 {
   to { rotate: 6deg; translate: 0 -2px; }
 }
 
-/* ---------------------------------------------------------- Surface */
+/* ----------------------------------------------------------- Village */
 
-.surface {
+.village {
   position: relative;
   overflow: hidden;
-  width: calc(44px + 14px + 6 * var(--taille-case) + 7 * 3px + 20px);
-  max-width: 100%;
-  padding: 10px;
-  border-radius: 12px;
-  border: 3px solid #000;
-  background: linear-gradient(#5aa2e6, #a8d4f5 62%, #6bb34a 62%, #4b8a31 80%, #6b4a2a 80%);
+  padding: 10px 10px 0;
+  background: linear-gradient(#5aa2e6, #a8d4f5 60%, #6bb34a 60%, #4b8a31 82%, #6b4a2a 82%);
 }
 
 .soleil {
@@ -414,7 +515,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
-  margin-top: 70px;
+  margin-top: 64px;
 }
 
 .stand {
@@ -426,6 +527,10 @@ h2 {
   border: none;
   padding: 0;
   cursor: pointer;
+}
+
+.stand:disabled {
+  cursor: default;
 }
 
 .stand-nom {
@@ -454,7 +559,7 @@ h2 {
 }
 
 .auvent {
-  height: 34%;
+  height: 32%;
   border-radius: 4px 4px 0 0;
   background: repeating-linear-gradient(90deg, var(--auvent, #d43b3b) 0 8px, #f5efe0 8px 16px);
   box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
@@ -464,21 +569,48 @@ h2 {
   flex: 1;
   display: grid;
   place-items: center;
-  font-size: calc(var(--taille-case) * 0.4);
-  background: linear-gradient(#b07a3f, #8a5a2b);
+  background:
+    repeating-linear-gradient(transparent 0 7px, rgb(0 0 0 / 0.18) 7px 8px),
+    linear-gradient(#b07a3f, #8a5a2b);
   border: 2px solid #5a3a1a;
   border-top: none;
+}
+
+.icone-pixel {
+  image-rendering: pixelated;
+  filter: drop-shadow(1px 1px 0 rgb(0 0 0 / 0.35));
 }
 
 .stand-marche { --auvent: #d43b3b; }
 .stand-forgeron { --auvent: #5b5b66; }
 .stand-bazar { --auvent: #2f8f4a; }
 .stand-enchanteur { --auvent: #7a4cc2; }
-.stand-atelier { --auvent: #d08a1a; }
+.stand-foreuse { --auvent: #d08a1a; }
 
-.stand:hover .echoppe,
-.stand:hover .puits {
+.stand:hover:not(:disabled) .echoppe,
+.stand:hover:not(:disabled) .puits {
   filter: brightness(1.15);
+}
+
+/* La foreuse bloquée : une barrière en bois et un cadenas. */
+.stand-verrouille .echoppe {
+  filter: grayscale(0.7) brightness(0.75);
+}
+
+.barriere {
+  position: absolute;
+  inset: 40% -4px 8%;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(#8a5a2b, #8a5a2b) 0 25% / 100% 4px no-repeat,
+    linear-gradient(#8a5a2b, #8a5a2b) 0 70% / 100% 4px no-repeat,
+    repeating-linear-gradient(90deg, #6b4420 0 5px, transparent 5px 14px);
+}
+
+/* La foreuse qui tourne : le comptoir tremble un peu. */
+.foreuse-tourne .comptoir {
+  animation: tremble 0.15s linear infinite;
 }
 
 .puits {
@@ -525,73 +657,17 @@ h2 {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 4px;
+  padding-bottom: 14px;
 }
 
 .sol-case {
   aspect-ratio: 1;
+  max-height: var(--taille-case);
+  margin: 0 auto;
+  width: 100%;
   display: grid;
   place-items: end center;
-}
-
-/* ----------------------------------------------------------- Échelle */
-
-.vue-echelle {
-  width: calc(44px + 14px + 6 * var(--taille-case) + 7 * 3px + 20px);
-  max-width: 100%;
-  min-height: 360px;
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 16px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 3px solid #000;
-  background: linear-gradient(#2b2a2f, #141317);
-}
-
-.puits-vertical {
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #0b0a0c;
-}
-
-.barreaux {
-  position: absolute;
-  inset: -40px 22px;
-  background:
-    repeating-linear-gradient(transparent 0 16px, #a7743c 16px 21px),
-    linear-gradient(90deg, #7a4f22 0 5px, transparent 5px calc(100% - 5px), #7a4f22 calc(100% - 5px));
-  animation: defile 0.5s linear infinite;
-}
-
-.descend .barreaux {
-  animation-direction: reverse;
-}
-
-@keyframes defile {
-  from { transform: translateY(0); }
-  to { transform: translateY(21px); }
-}
-
-.grimpeur {
-  position: absolute;
-  inset: 30% 6px auto;
-  aspect-ratio: 1;
-}
-
-.echelle-infos {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-
-.echelle-profondeur {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------- Boutons */
@@ -736,6 +812,16 @@ h2 {
   border-radius: 99px;
   background: #000;
   color: var(--accent);
+}
+
+.badge-vert {
+  color: var(--vert);
+}
+
+.titre-stand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .boutons {
@@ -1013,9 +1099,9 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
   .personnage,
   .personnage .pioche,
-  .barreaux,
   .nuage,
-  .torche,
+  .torche-css::before,
+  .foreuse-tourne .comptoir,
   .gain,
   .toast,
   .victoire-trophee {

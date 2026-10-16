@@ -5,10 +5,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from './jeu/aleatoire'
 import { LARGEUR_MINE } from './jeu/donnees'
+import { nbDansChariot } from './jeu/foreuse'
 import {
   ascenseurDisponible,
   auFond,
-  avancerTemps,
   casserBloc,
   creerPartie,
   dureeBlocActuel,
@@ -17,8 +17,9 @@ import {
   sacPlein,
   type EtatJeu,
 } from './jeu/mineur'
-import { charger, effacer, sauvegarder } from './jeu/sauvegarde'
+import { charger, effacer, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
+import { avancerTemps, tempsQuiPasse } from './jeu/temps'
 
 export type Toast = { id: number; texte: string; succes: boolean }
 export type Gain = { id: number; montant: number }
@@ -29,17 +30,33 @@ export type Action = (etat: EtatJeu) => string[]
 const DUREE_TOAST = 3500 // ms
 const DUREE_GAIN = 1200 // ms
 const DUREE_MIN_BLOC = 80 // ms, pour que l'animation reste visible
-const INTERVALLE_HORLOGE = 100 // ms entre deux mises à jour de l'échelle et de l'ascenseur
+const INTERVALLE_HORLOGE = 100 // ms entre deux mises à jour (échelle, ascenseur, foreuse)
+const ABSENCE_MAX = 8 * 60 * 60 // la foreuse travaille au plus 8 h pendant que le jeu est fermé
 
 let prochainId = 1
+const ID_MESSAGE_ABSENCE = 0
 
-function chargerOuCreer(): EtatJeu {
-  return charger(window.localStorage) ?? creerPartie(aleatoireNavigateur)
+// Charge la partie. Si le jeu était fermé, on rattrape le temps passé (la foreuse
+// a continué de creuser) et on prépare un message pour le dire au joueur.
+function chargerOuCreer(): { etat: EtatJeu; messageAbsence: string | null } {
+  const etat = charger(window.localStorage)
+  if (etat === null) return { etat: creerPartie(aleatoireNavigateur), messageAbsence: null }
+
+  const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage))
+  const avant = nbDansChariot(etat)
+  avancerTemps(etat, absence, aleatoireNavigateur)
+  const fores = nbDansChariot(etat) - avant
+  const messageAbsence = fores > 0 ? `⚙️ Pendant ton absence, la foreuse a remonté ${fores} blocs.` : null
+  return { etat, messageAbsence }
 }
 
 export function usePartie() {
-  const [etat, setEtat] = useState<EtatJeu>(chargerOuCreer)
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [depart] = useState(chargerOuCreer)
+  const [etat, setEtat] = useState<EtatJeu>(depart.etat)
+  // Au démarrage, on affiche le message de la foreuse si le joueur était absent.
+  const [toasts, setToasts] = useState<Toast[]>(() =>
+    depart.messageAbsence ? [{ id: ID_MESSAGE_ABSENCE, texte: depart.messageAbsence, succes: false }] : [],
+  )
   const [gains, setGains] = useState<Gain[]>([])
   const [blocsRestants, setBlocsRestants] = useState(0)
 
@@ -105,7 +122,7 @@ export function usePartie() {
         afficherToasts([
           {
             id: prochainId++,
-            texte: apres.ascenseur.possede ? '🎒 Sac plein ! Attends le retour de l’ascenseur.' : '🎒 Sac plein ! Remonte vendre au marché (↑).',
+            texte: apres.ascenseur.niveau > 0 ? '🎒 Sac plein ! Attends le retour de l’ascenseur.' : '🎒 Sac plein ! Remonte vendre au marché (↑).',
             succes: false,
           },
         ])
@@ -114,19 +131,25 @@ export function usePartie() {
     return () => clearTimeout(minuteur)
   }, [blocsRestants, etat, jouer, afficherToasts])
 
-  // L'horloge : fait avancer le trajet à l'échelle et le voyage de l'ascenseur.
-  const tempsQuiPasse = etat.trajet !== null || etat.ascenseur.tempsRestant > 0
+  // ... et on le retire au bout de quelques secondes.
   useEffect(() => {
-    if (!tempsQuiPasse) return
+    const minuteur = setTimeout(() => setToasts((liste) => liste.filter((t) => t.id !== ID_MESSAGE_ABSENCE)), 2 * DUREE_TOAST)
+    return () => clearTimeout(minuteur)
+  }, [])
+
+  // L'horloge : fait grimper le joueur, voyager l'ascenseur et creuser la foreuse.
+  const leTempsPasse = tempsQuiPasse(etat)
+  useEffect(() => {
+    if (!leTempsPasse) return
     let derniereFois = performance.now()
     const horloge = setInterval(() => {
       const maintenant = performance.now()
       const secondes = (maintenant - derniereFois) / 1000
       derniereFois = maintenant
-      jouer((e) => avancerTemps(e, secondes))
+      jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
     }, INTERVALLE_HORLOGE)
     return () => clearInterval(horloge)
-  }, [tempsQuiPasse, jouer])
+  }, [leTempsPasse, jouer])
 
   // Sauvegarde automatique à chaque changement.
   useEffect(() => {

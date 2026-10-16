@@ -2,17 +2,18 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
-  acheterAscenseur,
   acheterPioche,
   acheterSac,
   apercuVente,
+  allerA,
+  ameliorerAscenseur,
   ascenseurDisponible,
-  avancerTemps,
   basculerVente,
   casserBloc,
+  aLaSurface,
+  auFond,
   creerPartie,
   deplacerMineur,
-  descendreDansLaMine,
   devisReparation,
   enchanter,
   envoyerAscenseur,
@@ -20,10 +21,10 @@ import {
   estCassee,
   fabriquerTorches,
   indexBlocActuel,
-  monterALaSurface,
+  arreterSurEchelle,
   nbDansSac,
   prestige,
-  profondeurDuJoueur,
+  positionFront,
   reparer,
   vendre,
   vision,
@@ -31,21 +32,32 @@ import {
   type EtatJeu,
 } from './mineur'
 import { verifierSucces } from './succes'
+import { avancerTemps as avancerTempsAvecAleatoire } from './temps'
+
+const avancerTemps = (etat: EtatJeu, secondes: number) => avancerTempsAvecAleatoire(etat, secondes, aleatoireAvecGraine(1))
 
 // Un « aléatoire » qui renvoie toujours la même valeur : pratique pour tester une règle précise.
 const toujours = (valeur: number): Aleatoire => () => valeur
 
-// Une partie neuve, avec le joueur déjà au fond de la mine.
+// Place le front de taille à une profondeur donnée, avec le joueur dessus.
+function placerAuFront(etat: EtatJeu, profondeur: number) {
+  etat.profondeur = profondeur
+  etat.position = positionFront(etat)
+  etat.cible = etat.position
+}
+
+// Une partie neuve, avec le joueur déjà au front de taille.
 function nouvellePartie(): EtatJeu {
   const etat = creerPartie(aleatoireAvecGraine(42))
-  etat.lieu = 'mine'
+  placerAuFront(etat, etat.profondeur)
   return etat
 }
 
-// Le même joueur, mais à la surface (pour vendre et acheter).
+// Le même joueur, mais au village (pour vendre et acheter).
 function partieALaSurface(): EtatJeu {
   const etat = nouvellePartie()
-  etat.lieu = 'surface'
+  etat.position = 0
+  etat.cible = 0
   return etat
 }
 
@@ -57,11 +69,11 @@ function coucheDe(etat: EtatJeu, bloc: EtatJeu['coucheActuelle'][number]) {
 describe('début de partie', () => {
   it('commence à la surface avec une pioche en bois, 0 $ et 6 torches', () => {
     const etat = creerPartie(aleatoireAvecGraine(42))
-    expect(etat.lieu).toBe('surface')
+    expect(etat.position).toBe(0)
+    expect(etat.profondeur).toBe(2) // le premier mètre est l'entrée du puits
     expect(etat.pioches).toEqual({ 0: 0 })
     expect(etat.argent).toBe(0)
     expect(etat.torches).toBe(6)
-    expect(etat.profondeur).toBe(1)
     expect(etat.coucheActuelle).toHaveLength(LARGEUR_MINE)
   })
 })
@@ -80,16 +92,16 @@ describe('minage', () => {
     const etat = nouvellePartie()
     const dessous = etat.couchesDessous[0]
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
-    expect(etat.profondeur).toBe(2)
+    expect(etat.profondeur).toBe(3)
     expect(etat.coucheActuelle).toEqual(dessous)
   })
 
   it('creuse une galerie à la profondeur max de la pioche', () => {
     const etat = nouvellePartie()
-    etat.profondeur = PIOCHES[0].profMax
+    placerAuFront(etat, PIOCHES[0].profMax)
     coucheDe(etat, 'pierre')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
-    expect(etat.profondeur).toBe(15)
+    expect(etat.profondeur).toBe(30)
     expect(etat.enGalerie).toBe(true)
     expect(etat.coucheActuelle.every((b) => b !== null)).toBe(true)
   })
@@ -117,16 +129,16 @@ describe('minage', () => {
     const etat = nouvellePartie()
     etat.pioches[4] = 0
     etat.niveauPioche = 4
-    etat.profondeur = 63
+    placerAuFront(etat, 127)
     coucheDe(etat, 'deepslate')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, toujours(0.5))
     expect(etat.victoire).toBe(true)
-    expect(etat.profondeur).toBe(64)
+    expect(etat.profondeur).toBe(128)
   })
 
   it('pose une torche tous les 5 m', () => {
     const etat = nouvellePartie()
-    etat.profondeur = 4
+    placerAuFront(etat, 4)
     coucheDe(etat, 'pierre')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
     expect(etat.profondeur).toBe(5)
@@ -155,7 +167,7 @@ describe('blocs spéciaux', () => {
 
   it('le coffre donne de l’argent et un minerai', () => {
     const etat = nouvellePartie()
-    etat.profondeur = 20
+    placerAuFront(etat, 20)
     coucheDe(etat, 'coffre')
     casserBloc(etat, toujours(0))
     // Avec l'aléatoire au minimum : 20 $ + 20 m × 3 $.
@@ -210,34 +222,63 @@ describe('vente', () => {
 })
 
 describe('échelle et déplacements', () => {
-  it('monte à la surface en un temps qui dépend de la profondeur', () => {
+  it('descend avec le front de taille quand une couche est finie', () => {
     const etat = nouvellePartie()
-    etat.profondeur = 20
-    monterALaSurface(etat)
-    expect(etat.trajet?.tempsTotal).toBeCloseTo(3) // 20 m × 0,15 s
-    avancerTemps(etat, 1.5)
-    expect(etat.lieu).toBe('mine')
-    expect(profondeurDuJoueur(etat)).toBe(10) // à mi-chemin
-    avancerTemps(etat, 1.5)
-    expect(etat.lieu).toBe('surface')
-    expect(etat.trajet).toBeNull()
+    const avant = etat.position
+    for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
+    expect(etat.position).toBe(avant + 1)
   })
 
-  it('ne creuse pas pendant qu’on grimpe ni à la surface', () => {
+  it('remonte au village en un temps qui dépend de la profondeur', () => {
     const etat = nouvellePartie()
-    monterALaSurface(etat)
-    expect(casserBloc(etat, toujours(0))).toEqual([])
+    placerAuFront(etat, 21) // le front est à 20 m sous le village
+    allerA(etat, 0)
+    avancerTemps(etat, 1.5)
+    expect(etat.position).toBeCloseTo(10) // 1,5 s à 0,15 s par mètre
+    avancerTemps(etat, 1.5)
+    expect(etat.position).toBe(0)
+    expect(aLaSurface(etat)).toBe(true)
+  })
+
+  it('avance tant qu’on garde la flèche appuyée, et s’arrête sur le barreau suivant', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 21) // front à 20 m
+    allerA(etat, 0) // on appuie sur ↑
+    avancerTemps(etat, 0.5) // 3,33 m parcourus
+    arreterSurEchelle(etat) // on relâche
+    expect(etat.cible).toBe(16)
+    avancerTemps(etat, 10)
+    expect(etat.position).toBe(16)
+  })
+
+  it('bouge d’un barreau avec un appui très court', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 21)
+    allerA(etat, 0)
+    arreterSurEchelle(etat)
+    expect(etat.cible).toBe(19)
+    allerA(etat, 100) // on ne descend jamais sous le front de taille
+    expect(etat.cible).toBe(20)
+  })
+
+  it('ne creuse que depuis le front de taille', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 10)
+    allerA(etat, 5)
+    expect(casserBloc(etat, toujours(0))).toEqual([]) // il est sur l'échelle
     avancerTemps(etat, 100)
     expect(casserBloc(etat, toujours(0))).toEqual([])
     expect(etat.stats.blocsCasses).toBe(0)
   })
 
-  it('redescend au fond, à la même profondeur', () => {
+  it('redescend au front, à la même profondeur', () => {
     const etat = partieALaSurface()
-    etat.profondeur = 12
-    descendreDansLaMine(etat)
+    placerAuFront(etat, 12)
+    etat.position = 0
+    etat.cible = 0
+    allerA(etat, positionFront(etat))
     avancerTemps(etat, 100)
-    expect(etat.lieu).toBe('mine')
+    expect(auFond(etat)).toBe(true)
     expect(etat.profondeur).toBe(12)
   })
 
@@ -263,31 +304,42 @@ describe('échelle et déplacements', () => {
 })
 
 describe('ascenseur', () => {
-  it('s’achète à la surface avec de la redstone', () => {
-    const etat = partieALaSurface()
-    etat.argent = 300
-    etat.inventaire = { redstone: 12 }
-    acheterAscenseur(etat)
-    expect(etat.ascenseur.possede).toBe(true)
-    expect(etat.argent).toBe(50)
-    expect(etat.inventaire).toEqual({ redstone: 2 })
+  it('se construit puis s’améliore avec du fer et de la redstone, directement dans la mine', () => {
+    const etat = nouvellePartie()
+    etat.inventaire = { fer: 60, redstone: 25 }
+    ameliorerAscenseur(etat) // niveau 1 : 10 fer + 5 redstone
+    expect(etat.ascenseur.niveau).toBe(1)
+    ameliorerAscenseur(etat) // niveau 2 : 40 fer + 15 redstone
+    expect(etat.ascenseur.niveau).toBe(2)
+    expect(etat.inventaire).toEqual({ fer: 10, redstone: 5 })
+    ameliorerAscenseur(etat) // niveau 3 : pas assez de fer
+    expect(etat.ascenseur.niveau).toBe(2)
   })
 
   it('remonte le sac, le vend en haut et redescend au niveau du joueur', () => {
     const etat = nouvellePartie()
-    etat.ascenseur.possede = true
-    etat.profondeur = 25
+    etat.ascenseur.niveau = 1
+    placerAuFront(etat, 26) // le front est à 25 m sous le village
     etat.inventaire = { fer: 10, diamant: 2 }
     etat.nonAVendre = ['diamant']
     envoyerAscenseur(etat)
     expect(etat.inventaire).toEqual({ diamant: 2 })
-    expect(etat.ascenseur.tempsTotal).toBeCloseTo(4) // 2 × 25 m × 0,08 s
+    expect(etat.ascenseur.tempsTotal).toBeCloseTo(5) // 2 × 25 m × 0,1 s
     expect(ascenseurDisponible(etat)).toBe(false)
 
-    avancerTemps(etat, 2) // arrivé en haut : il vend
+    avancerTemps(etat, 2.5) // arrivé en haut : il vend
     expect(etat.argent).toBe(120)
-    avancerTemps(etat, 2) // redescendu
+    avancerTemps(etat, 2.5) // redescendu
     expect(ascenseurDisponible(etat)).toBe(true)
+  })
+
+  it('ne prend pas plus que sa capacité, les objets les plus précieux d’abord', () => {
+    const etat = nouvellePartie()
+    etat.ascenseur.niveau = 1 // 32 objets par voyage
+    etat.inventaire = { pierre: 30, diamant: 5 }
+    envoyerAscenseur(etat)
+    expect(etat.ascenseur.chargement).toEqual({ diamant: 5, pierre: 27 })
+    expect(etat.inventaire).toEqual({ pierre: 3 })
   })
 })
 
@@ -377,10 +429,10 @@ describe('boutique et enchantements', () => {
 describe('vision, prestige et succès', () => {
   it('voit 5 couches près d’une torche, 2 dans le noir', () => {
     const etat = nouvellePartie()
-    etat.profondeur = 12
+    placerAuFront(etat, 12)
     etat.torchesPosees = [10]
     expect(vision(etat)).toBe(5)
-    etat.profondeur = 17
+    placerAuFront(etat, 17)
     expect(vision(etat)).toBe(2)
   })
 

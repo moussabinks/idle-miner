@@ -1,44 +1,34 @@
 // La page du jeu : elle assemble les composants, relie les boutons et le clavier aux actions.
 //
 // Clavier :
-//   à la surface : ← → pour aller d'un stand à l'autre, ↓ (ou Espace) au puits pour descendre ;
-//   dans la mine : ← → pour se déplacer, ↓ (ou Espace) pour creuser, ↑ pour remonter à l'échelle.
+//   au village : ← → pour aller d'un stand à l'autre, ↓ pour descendre dans le puits ;
+//   sur l'échelle : ↑ pour monter, ↓ pour descendre (on avance tant que la touche est appuyée) ;
+//   au front de taille : ← → pour se déplacer, ↓ ou Espace pour creuser, ↑ pour remonter.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Hud } from './composants/Hud'
+import { IconePixel } from './composants/IconePixel'
 import { Inventaire } from './composants/Inventaire'
 import {
-  PanneauAtelier,
   PanneauBazar,
   PanneauEnchanter,
+  PanneauForeuse,
   PanneauMarche,
   PanneauPioches,
   PanneauSucces,
 } from './composants/Panneaux'
+import { POSITION_PUITS, STANDS } from './composants/stands'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
-import { VueEchelle } from './composants/VueEchelle'
-import { VueMine } from './composants/VueMine'
-import { POSITION_PUITS, STANDS } from './composants/stands'
-import { VueSurface } from './composants/VueSurface'
+import { VueMonde } from './composants/VueMonde'
 import { LARGEUR_MINE } from './jeu/donnees'
-import {
-  aLaSurface,
-  ascenseurDisponible,
-  auFond,
-  deplacerMineur,
-  descendreDansLaMine,
-  dureeEchelle,
-  envoyerAscenseur,
-  monterALaSurface,
-  objetsAVendre,
-} from './jeu/mineur'
+import { aLaSurface, allerA, arreterSurEchelle, auFond, deplacerMineur, dureeEchelle, positionFront } from './jeu/mineur'
 import { SUCCES } from './jeu/succes'
 import { usePartie } from './usePartie'
 
 type OngletMine = 'sac' | 'pioches'
 
-const DUREE_PAS = 250 // ms : durée de l'animation de marche à la surface
+const DUREE_PAS = 250 // ms : durée de l'animation de marche au village
 
 function App() {
   const { etat, toasts, gains, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie()
@@ -49,14 +39,14 @@ function App() {
   const [enMarche, setEnMarche] = useState(false)
 
   const enVille = aLaSurface(etat)
-  const enBas = auFond(etat)
+  const auFront = auFond(etat)
   const stand = STANDS[positionSurface]
 
   // En sortant du puits, on arrive... devant le puits.
-  const [dernierLieu, setDernierLieu] = useState(etat.lieu)
-  if (dernierLieu !== etat.lieu) {
-    setDernierLieu(etat.lieu)
-    if (etat.lieu === 'surface') setPositionSurface(POSITION_PUITS)
+  const [etaitAuVillage, setEtaitAuVillage] = useState(enVille)
+  if (etaitAuVillage !== enVille) {
+    setEtaitAuVillage(enVille)
+    if (enVille) setPositionSurface(POSITION_PUITS)
   }
 
   // --- Les actions des boutons et du clavier -------------------------------
@@ -70,46 +60,85 @@ function App() {
     setTimeout(() => setEnMarche(false), DUREE_PAS)
   }
 
-  function descendre() {
-    setPositionSurface(POSITION_PUITS)
-    jouer(descendreDansLaMine)
-  }
-
-  function remonter() {
+  // Commencer à monter (sens = -1) ou à descendre (sens = +1) l'échelle.
+  // On avance jusqu'à ce que la touche (ou le bouton) soit relâchée.
+  function commencerEchelle(sens: number) {
     arreter()
-    jouer(monterALaSurface)
+    if (enVille) setPositionSurface(POSITION_PUITS) // on entre dans le puits
+    jouer((e) => allerA(e, sens < 0 ? 0 : positionFront(e)))
   }
 
-  function deplacerDansLaMine(sens: number) {
+  function finirEchelle() {
+    jouer(arreterSurEchelle)
+  }
+
+  // Les boutons ▲ ▼ : on grimpe tant que le bouton est appuyé.
+  const boutonEchelleAppuye = useRef(false)
+  function appuiBoutonEchelle(sens: number) {
+    boutonEchelleAppuye.current = true
+    commencerEchelle(sens)
+  }
+  function relacheBoutonEchelle() {
+    if (!boutonEchelleAppuye.current) return
+    boutonEchelleAppuye.current = false
+    finirEchelle()
+  }
+
+  function allerAuVillage() {
+    arreter()
+    jouer((e) => allerA(e, 0))
+  }
+
+  function allerAuFront() {
+    setPositionSurface(POSITION_PUITS)
+    jouer((e) => allerA(e, positionFront(e)))
+  }
+
+  function deplacerAuFront(sens: number) {
     setVersLaGauche(sens < 0)
     jouer((e) => deplacerMineur(e, sens))
   }
 
-  // Le clavier. On relit tout à chaque rendu : c'est simple et largement assez rapide.
+  // Le clavier. On le rebranche à chaque rendu : c'est simple et largement assez rapide.
   useEffect(() => {
-    function auClavier(evenement: KeyboardEvent) {
+    function toucheAppuyee(evenement: KeyboardEvent) {
       if (evenement.target instanceof HTMLInputElement) return
       const touche = evenement.key
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(touche)) return
       evenement.preventDefault()
+      // Une touche gardée appuyée se répète : pour l'échelle, seul le premier appui compte.
+      const repetition = evenement.repeat
 
       if (enVille) {
         if (touche === 'ArrowLeft') marcherVers(positionSurface - 1)
         if (touche === 'ArrowRight') marcherVers(positionSurface + 1)
-        if ((touche === 'ArrowDown' || touche === ' ') && positionSurface === POSITION_PUITS) descendre()
-      } else if (enBas && !etat.victoire) {
-        if (touche === 'ArrowLeft') deplacerDansLaMine(-1)
-        if (touche === 'ArrowRight') deplacerDansLaMine(+1)
-        if (touche === 'ArrowUp') remonter()
+        if (touche === 'ArrowDown' && !repetition && !etat.victoire) commencerEchelle(+1)
+      } else if (auFront && !etat.victoire) {
+        if (touche === 'ArrowLeft') deplacerAuFront(-1)
+        if (touche === 'ArrowRight') deplacerAuFront(+1)
+        if (touche === 'ArrowUp' && !repetition) commencerEchelle(-1)
         if ((touche === 'ArrowDown' || touche === ' ') && !enMinage) creuser(1)
+      } else {
+        // Sur l'échelle.
+        if (touche === 'ArrowUp' && !repetition) commencerEchelle(-1)
+        if (touche === 'ArrowDown' && !repetition) commencerEchelle(+1)
       }
     }
-    window.addEventListener('keydown', auClavier)
-    return () => window.removeEventListener('keydown', auClavier)
+
+    function toucheRelachee(evenement: KeyboardEvent) {
+      if (evenement.key === 'ArrowUp' || evenement.key === 'ArrowDown') finirEchelle()
+    }
+
+    window.addEventListener('keydown', toucheAppuyee)
+    window.addEventListener('keyup', toucheRelachee)
+    return () => {
+      window.removeEventListener('keydown', toucheAppuyee)
+      window.removeEventListener('keyup', toucheRelachee)
+    }
   })
 
   function demanderRecommencer() {
-    if (window.confirm('Effacer ta partie et tout recommencer (succès compris) ?')) {
+    if (window.confirm('Effacer ta partie et tout recommencer (succès et foreuse compris) ?')) {
       recommencer()
       setVictoireFermee(false)
       setPositionSurface(POSITION_PUITS)
@@ -119,17 +148,8 @@ function App() {
   function faireLePrestige() {
     passerPrestige()
     setVictoireFermee(false)
+    setPositionSurface(POSITION_PUITS)
   }
-
-  const chargementPossible = Object.keys(objetsAVendre(etat)).length > 0
-
-  // --- La vue de gauche : surface, échelle ou mine ------------------------
-
-  let vue
-  if (etat.trajet !== null) vue = <VueEchelle etat={etat} />
-  else if (enVille)
-    vue = <VueSurface etat={etat} position={positionSurface} versLaGauche={versLaGauche} enMarche={enMarche} onAller={marcherVers} />
-  else vue = <VueMine etat={etat} enMinage={enMinage} versLaGauche={versLaGauche} gains={gains} />
 
   // --- Le panneau de droite : le stand où l'on est, ou le sac dans la mine --
 
@@ -137,22 +157,24 @@ function App() {
   if (enVille) {
     panneau = (
       <section className="carte panneau">
-        <h2>
-          {stand.emoji} {stand.nom}
+        <h2 className="titre-stand">
+          {stand.icone && <IconePixel nom={stand.icone} taille={28} />}
+          {stand.nom}
         </h2>
         <p className="discret">{stand.description}</p>
         {stand.id === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {stand.id === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {stand.id === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
         {stand.id === 'enchanteur' && <PanneauEnchanter etat={etat} jouer={jouer} />}
-        {stand.id === 'atelier' && <PanneauAtelier etat={etat} jouer={jouer} />}
+        {stand.id === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
         {stand.id === 'puits' && (
           <div className="liste-cartes">
             <p>
-              Ton front de taille est à <strong>-{etat.profondeur} m</strong>. Descendre prend {Math.ceil(dureeEchelle(etat))} s.
+              Ton front de taille est à <strong>-{etat.profondeur} m</strong>. Il faut {Math.ceil(dureeEchelle(etat))} s pour y descendre à
+              l'échelle.
             </p>
-            <button className="bouton bouton-principal" onClick={descendre} disabled={etat.victoire}>
-              🪜 Descendre dans la mine
+            <button className="bouton bouton-principal" onClick={allerAuFront} disabled={etat.victoire}>
+              ⏬ Descendre au front de taille
             </button>
           </div>
         )}
@@ -189,14 +211,24 @@ function App() {
 
       <main className="plateau">
         <div className="colonne-mine">
-          {vue}
+          <VueMonde
+            etat={etat}
+            jouer={jouer}
+            enMinage={enMinage}
+            enMarche={enMarche}
+            versLaGauche={versLaGauche}
+            positionSurface={positionSurface}
+            onAllerStand={marcherVers}
+            gains={gains}
+          />
 
           <div className="actions">
-            {etat.victoire ? (
+            {etat.victoire && (
               <button className="bouton bouton-principal" onClick={faireLePrestige}>
                 ⭐ Passer prestige {etat.prestige + 1}
               </button>
-            ) : enVille ? (
+            )}
+            {enVille && (
               <>
                 <button className="bouton" onClick={() => marcherVers(positionSurface - 1)} aria-label="Aller à gauche">
                   ◀
@@ -204,18 +236,45 @@ function App() {
                 <button className="bouton" onClick={() => marcherVers(positionSurface + 1)} aria-label="Aller à droite">
                   ▶
                 </button>
-                <button className="bouton bouton-principal" onClick={descendre}>
-                  🪜 Descendre
+                {!etat.victoire && (
+                  <button className="bouton bouton-principal" onClick={allerAuFront}>
+                    ⏬ Descendre
+                  </button>
+                )}
+              </>
+            )}
+            {!enVille && (
+              <>
+                {/* Boutons « à maintenir » : on grimpe tant qu'on appuie (pratique sur mobile). */}
+                <button
+                  className="bouton"
+                  onPointerDown={() => appuiBoutonEchelle(-1)}
+                  onPointerUp={relacheBoutonEchelle}
+                  onPointerLeave={relacheBoutonEchelle}
+                  aria-label="Monter l'échelle (maintenir)"
+                >
+                  ▲
+                </button>
+                <button
+                  className="bouton"
+                  onPointerDown={() => appuiBoutonEchelle(+1)}
+                  onPointerUp={relacheBoutonEchelle}
+                  onPointerLeave={relacheBoutonEchelle}
+                  disabled={auFront}
+                  aria-label="Descendre l'échelle (maintenir)"
+                >
+                  ▼
                 </button>
               </>
-            ) : enBas ? (
+            )}
+            {auFront && !etat.victoire && (
               <>
-                <button className="bouton" onClick={() => deplacerDansLaMine(-1)} disabled={etat.colonneMineur === 0} aria-label="Aller à gauche">
+                <button className="bouton" onClick={() => deplacerAuFront(-1)} disabled={etat.colonneMineur === 0} aria-label="Aller à gauche">
                   ◀
                 </button>
                 <button
                   className="bouton"
-                  onClick={() => deplacerDansLaMine(+1)}
+                  onClick={() => deplacerAuFront(+1)}
                   disabled={etat.colonneMineur === LARGEUR_MINE - 1}
                   aria-label="Aller à droite"
                 >
@@ -235,29 +294,25 @@ function App() {
                     </button>
                   </>
                 )}
-                <button className="bouton" onClick={remonter}>
-                  🪜 Remonter
-                </button>
-                {etat.ascenseur.possede && (
-                  <button
-                    className="bouton bouton-vendre"
-                    disabled={!ascenseurDisponible(etat) || !chargementPossible}
-                    onClick={() => jouer(envoyerAscenseur)}
-                  >
-                    🛗 Envoyer
-                  </button>
-                )}
               </>
-            ) : (
-              <button className="bouton" disabled>
-                🪜 Sur l'échelle…
+            )}
+            {!enVille && (
+              <button className="bouton" onClick={allerAuVillage}>
+                ⏫ Village
+              </button>
+            )}
+            {!enVille && !auFront && !etat.victoire && (
+              <button className="bouton" onClick={allerAuFront}>
+                ⏬ Front
               </button>
             )}
           </div>
           <p className="aide-clavier">
             {enVille
-              ? '⌨️ ← → pour te déplacer · ↓ au puits pour descendre'
-              : '⌨️ ← → pour te déplacer · ↓ ou Espace pour creuser · ↑ pour remonter'}
+              ? '⌨️ ← → pour aller d’un stand à l’autre · ↓ pour descendre dans le puits'
+              : auFront
+                ? '⌨️ ← → pour te déplacer · ↓ ou Espace pour creuser · ↑ pour remonter l’échelle'
+                : '⌨️ ↑ ↓ pour monter ou descendre l’échelle (garde la touche appuyée)'}
           </p>
         </div>
 

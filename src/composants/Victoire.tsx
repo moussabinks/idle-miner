@@ -22,7 +22,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
       <div className="carte victoire">
         <div className="victoire-trophee">🏆</div>
         <h2 id="titre-victoire">Bedrock atteinte !</h2>
-        <p>Tu as creusé jusqu'à -64 m. Bravo, mineur !</p>
+        <p>Tu as creusé jusqu'à -128 m. Bravo, mineur !</p>
         <ul className="victoire-stats">
           <li>
             <strong>{etat.stats.blocsCasses.toLocaleString('fr-FR')}</strong> blocs cassés
@@ -39,6 +39,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
         </ul>
         <p className="discret">
           Prestige : tu recommences à zéro, mais toutes tes ventes rapportent +{bonusSuivant} %. Tes succès sont conservés.
+          {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvre !'}
         </p>
         <div className="boutons boutons-centre">
           <button className="bouton bouton-principal" onClick={onPrestige}>

@@ -38,12 +38,15 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-Depuis la v2 de l'état (`VERSION_ETAT = 2`), le jeu a une **surface** : on ne vend et n'achète qu'au village, et il faut remonter à l'échelle (plus c'est profond, plus c'est long). Les anciennes sauvegardes (v1) sont migrées automatiquement.
+Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées automatiquement) :
 
-- **Surface** : 6 stands de gauche à droite (Marché, Forgeron, Bazar, Enchanteur, Atelier, Puits). On se déplace avec ← →, ↓ au puits pour descendre.
-- **Mine** : ← → pour se déplacer (on casse le bloc sous le mineur), ↓ ou Espace pour creuser, ↑ pour remonter.
-- **Marché** : « Vendre tout » vend tout le sac sauf les objets décochés (`nonAVendre`, gardé dans la sauvegarde).
-- **Ascenseur** (Atelier, 250 $ + 10 redstone) : quand le sac est plein, il remonte le chargement, le vend au marché et redescend au niveau du joueur.
+- **Mine à -128 m** (deux fois la v1) : profondeurs des zones, minerais et pioches multipliées par 2. Débris antiques plus rares (poids 1, sous -104 m). La redstone apparaît dès -40 m.
+- **Une seule vue qui défile** : le village en haut, puis tout le puits creusé depuis le début. L'échelle et le rail de l'ascenseur longent le puits sur la gauche, et la caméra suit le joueur.
+- **Position du joueur** : `position` en mètres (0 = village, `profondeur - 1` = front de taille). ↑ / ↓ : on avance tant que la touche est appuyée, et on s'arrête au barreau suivant en la relâchant (0,15 s par mètre).
+- **Village** : Puits (à gauche, au-dessus de l'échelle), Marché, Forgeron, Bazar, Enchanteur, Foreuse. Icônes en pixel art (`IconePixel.tsx`) à la place des emojis.
+- **Marché** : « Vendre tout » vend tout le sac sauf les objets décochés (`nonAVendre`).
+- **Ascenseur** : construit puis amélioré **dans la mine** (module en bas à gauche) avec du fer et de la redstone, 4 niveaux (capacité 32 à 256 objets, plus rapide à chaque niveau). Il remonte le sac quand il est plein, le vend et redescend au niveau du joueur.
+- **Foreuse** (prestige 1+) : derrière une barrière avec cadenas au prestige 0. On l'active une fois (30 fer + 10 redstone), elle reste active aux prestiges suivants. Elle consomme du charbon (1 charbon = 20 s), creuse seule (elle descend d'un mètre tous les 6 blocs) et remplit un chariot qu'on vend ou qu'on vide dans le sac. Améliorations : vitesse de forage et taille du chariot. Elle continue de creuser quand le jeu est fermé (8 h au plus).
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
 - `src/jeu/` (logique pure, testée avec Vitest) :
@@ -52,9 +55,10 @@ Depuis la v2 de l'état (`VERSION_ETAT = 2`), le jeu a une **surface** : on ne v
   - `mine.ts` : génération des couches pondérée selon la profondeur.
   - `mineur.ts` : l'état de la partie (`EtatJeu`, un objet JSON) et toutes les actions (casser, vendre, réparer, acheter, enchanter, prestige).
   - `succes.ts` : les 16 succès. `sauvegarde.ts` : `localStorage`.
-  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties en remontant vendre et acheter, puis construit l'ascenseur. Médiane ≈ 1 100 blocs pour la bedrock, environ 6 à 9 min de jeu simulé, pioche en fer vers -30 m.
+  - `foreuse.ts` : la foreuse. `temps.ts` : le temps qui passe (échelle, ascenseur, foreuse).
+  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties en remontant vendre et acheter, et construit l'ascenseur vers -60 m. Médiane ≈ 1 800 blocs pour la bedrock (-128 m), environ 19 min de jeu simulé (contre 8 min avant).
 - `src/usePartie.ts` : le hook React qui relie la logique à l'écran (minage animé, toasts, sauvegarde auto).
-- `src/composants/` : vues de la surface, de l'échelle et de la mine, personnage, HUD, sac, panneaux des stands, succès, toasts, écran de victoire.
+- `src/composants/` : `VueMonde` (village + puits + échelle + ascenseur), `ModuleAscenseur`, personnage, icônes pixel, HUD, sac, panneaux des stands (dont la foreuse), succès, toasts, écran de victoire.
 - `src/blocs.css` : tous les blocs et animations en CSS. `src/index.css` : mise en page (desktop et mobile).
 
 ### Choix faits là où la spec v1 ne disait rien
@@ -66,18 +70,21 @@ Depuis la v2 de l'état (`VERSION_ETAT = 2`), le jeu a une **surface** : on ne v
 - Racheter une pioche neuve coûte le même prix (matériaux compris) que la débloquer.
 - Pioche cassée : on mine à mains nues, mais la profondeur max reste celle de la pioche équipée.
 - La liste des 16 succès a été réinventée (la v1 ne la détaillait pas).
-- Prix de l'ascenseur (250 $ + 10 redstone), vitesse de l'échelle (0,15 s/m) et de l'ascenseur (0,08 s/m) : valeurs choisies par nous, à ajuster.
+- Valeurs choisies par nous, à ajuster après de vraies parties : niveaux de l'ascenseur (10 fer + 5 redstone pour le construire, puis 40/15, 80/30, 150/60), vitesse de l'échelle (0,15 s/m), coûts et niveaux de la foreuse.
+- Une nouvelle partie commence à -2 m : le premier mètre est l'entrée du puits.
 
 ## 5. Feuille de route
 
 1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, fin de partie (victoire, prestige, succès).
 2. **Brancher Vercel** (décision A/B ci-dessus).
 3. **Polish** : sons, meilleure ambiance par zone, éventuellement des sprites.
-4. Ajuster l'équilibrage après de vraies parties (le bot donne une partie de 3 à 5 min de minage pur).
+4. Ajuster l'équilibrage après de vraies parties (le bot donne environ 19 min jusqu'à la bedrock).
+5. Idées en attente (proposées le 16/10) : améliorations des pioches au forgeron, points de prestige, couches dures, étais de mine.
 
 ## 6. Décisions de design (héritées de la v1)
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques, pas de quêtes du marchand.
+  - Exception (16/10) : la foreuse du prestige 1, qui creuse seule tant qu'on lui donne du charbon.
 - ✅ Le joueur n'est jamais bloqué : pioches rachetables, minage à mains nues, galeries horizontales.
 - 🆕 Nouveau par rapport à la v1 : la sauvegarde. Elle avait été refusée dans le notebook, mais elle devient indispensable sur le web.
 
@@ -87,3 +94,4 @@ Depuis la v2 de l'état (`VERSION_ETAT = 2`), le jeu a une **surface** : on ne v
 - **2026-10-16** : ajout de ce fichier `CONTEXTE.md` au dépôt.
 - **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).
 - **2026-10-16** : surface avec stands, échelle, déplacements au clavier, « Vendre tout » avec objets à décocher, ascenseur à redstone, personnage taupe en SVG.
+- **2026-10-16** : mine à -128 m, vue unique qui défile avec l'échelle sur toute la hauteur, ascenseur à niveaux (fer + redstone) utilisable dans la mine, icônes pixel art au village, foreuse au prestige 1.

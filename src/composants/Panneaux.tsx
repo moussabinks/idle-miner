@@ -1,5 +1,5 @@
-// Les panneaux des stands de la surface (Marché, Forgeron, Bazar, Enchanteur,
-// Atelier) et le panneau des succès.
+// Les panneaux des stands du village (Marché, Forgeron, Bazar, Enchanteur,
+// Foreuse) et le panneau des succès.
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import type { ReactNode } from 'react'
@@ -7,16 +7,39 @@ import {
   BLOCS,
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
+  COUT_ACTIVATION_FOREUSE,
+  NIVEAUX_CHARIOT,
+  NIVEAUX_FORAGE,
   PIOCHES,
-  PRIX_ASCENSEUR,
+  PRESTIGE_FOREUSE,
   PRIX_SEAU,
+  SECONDES_PAR_CHARBON,
   SACS,
   TORCHES_PAR_CHARBON,
+  type Cout,
   type IdBloc,
 } from '../jeu/donnees'
 import {
+  activerForeuse,
+  ameliorerChariot,
+  ameliorerForage,
+  capaciteChariot,
+  chariotPlein,
+  foreuseDebloquee,
+  foreuseEnMarche,
+  nbDansChariot,
+  peutActiverForeuse,
+  peutPayer,
+  prochainNiveauChariot,
+  prochainNiveauForage,
+  remplirForeuse,
+  valeurChariot,
+  vendreChariot,
+  viderChariotDansSac,
+  vitesseForage,
+} from '../jeu/foreuse'
+import {
   aLaSurface,
-  acheterAscenseur,
   acheterPioche,
   acheterSac,
   acheterSeau,
@@ -29,7 +52,6 @@ import {
   enchanter,
   equiper,
   fabriquerTorches,
-  peutAcheterAscenseur,
   peutAcheterPioche,
   peutEnchanter,
   peutReparer,
@@ -244,31 +266,139 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-// L'atelier : on y construit l'ascenseur automatique.
-export function PanneauAtelier({ etat, jouer }: PropsPanneau) {
+// Le prix d'une amélioration : « 1 000 $ + 0/30 fer ».
+function PrixCout({ etat, cout }: { etat: EtatJeu; cout: Cout }) {
+  return (
+    <span className="materiaux">
+      {cout.argent !== undefined && <span className={etat.argent >= cout.argent ? 'ok' : 'manque'}>{cout.argent.toLocaleString('fr-FR')} $</span>}
+      {Object.entries(cout.materiaux).map(([bloc, nombre]) => (
+        <Materiau key={bloc} etat={etat} bloc={bloc as IdBloc} nombre={nombre ?? 0} />
+      ))}
+    </span>
+  )
+}
+
+// La foreuse : débloquée au prestige 1, activée une fois, puis nourrie au charbon.
+export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
+  const foreuse = etat.foreuse
+
+  if (!foreuseDebloquee(etat)) {
+    return (
+      <div className="liste-cartes">
+        <div className="ligne-achat verrouille">
+          <strong>🔒 Fermé par une barrière</strong>
+          <span className="discret">
+            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-128 m) puis passe prestige pour y installer une foreuse
+            qui creuse toute seule.
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!foreuse.active) {
+    return (
+      <div className="liste-cartes">
+        <div className="ligne-achat">
+          <strong>Activer la foreuse</strong>
+          <span className="discret">
+            Une fois activée, elle le reste pour toujours (même après les prochains prestiges). Ensuite, elle creuse toute seule tant qu'elle a du
+            charbon et remonte ce qu'elle trouve dans son chariot.
+          </span>
+          <div className="boutons">
+            <PrixCout etat={etat} cout={COUT_ACTIVATION_FOREUSE} />
+            <Bouton actif={peutActiverForeuse(etat)} onClick={() => jouer(activerForeuse)}>
+              Activer
+            </Bouton>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const enMarche = foreuseEnMarche(etat)
+  const forage = prochainNiveauForage(etat)
+  const chariot = prochainNiveauChariot(etat)
+  const charbon = quantite(etat, 'charbon')
+  const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+
   return (
     <div className="liste-cartes">
       <div className="ligne-achat">
-        <strong>🛗 Ascenseur automatique</strong>
+        <div className="ligne-titre">
+          <strong>État</strong>
+          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>
+            {enMarche ? 'En marche' : chariotPlein(etat) ? 'Chariot plein' : 'Plus de charbon'}
+          </span>
+        </div>
         <span className="discret">
-          Quand ton sac est plein, l'ascenseur remonte tes blocs jusqu'au marché, les vend (sauf ceux que tu as décochés),
-          puis redescend jusqu'à toi. Tu n'as plus besoin de remonter pour vendre !
+          Profondeur de forage : -{foreuse.profondeur} m · {vitesseForage(etat)} bloc(s) par seconde · {foreuse.blocsFores.toLocaleString('fr-FR')} blocs
+          forés
         </span>
-        {etat.ascenseur.possede ? (
-          <span className="ok">Ascenseur construit ✔</span>
-        ) : (
-          <div className="boutons">
-            <span className="materiaux">
-              <Materiau etat={etat} bloc="redstone" nombre={PRIX_ASCENSEUR.redstone} />
-            </span>
-            <Bouton actif={peutAcheterAscenseur(etat)} onClick={() => jouer(acheterAscenseur)}>
-              Construire · {PRIX_ASCENSEUR.argent} $
-            </Bouton>
-          </div>
+        <Barre
+          valeur={foreuse.carburant}
+          max={Math.max(foreuse.carburant, 10 * SECONDES_PAR_CHARBON)}
+          texte={`Charbon : ${Math.ceil(foreuse.carburant)} s`}
+          couleur="or"
+        />
+        <div className="boutons">
+          <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon}</span>
+          <Bouton actif={charbon >= 1} onClick={() => jouer((e) => remplirForeuse(e, 1))}>
+            +1
+          </Bouton>
+          <Bouton actif={charbon >= 10} onClick={() => jouer((e) => remplirForeuse(e, 10))}>
+            +10
+          </Bouton>
+          <Bouton actif={charbon >= 1} onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
+            Tout
+          </Bouton>
+        </div>
+      </div>
+
+      <div className="ligne-achat">
+        <strong>Chariot</strong>
+        <Barre valeur={nbDansChariot(etat)} max={capaciteChariot(etat)} texte={`${nbDansChariot(etat)} / ${capaciteChariot(etat)}`} couleur="violet" />
+        {contenu.length > 0 && (
+          <span className="discret">{contenu.map(([id, nombre]) => `${nombre} ${BLOCS[id].nom.toLowerCase()}`).join(' · ')}</span>
         )}
-        {!etat.ascenseur.possede && (
-          <span className="discret">💡 La redstone se trouve sous -30 m. Pense à la décocher au marché pour la garder.</span>
-        )}
+        <div className="boutons">
+          <Bouton actif={valeurChariot(etat) > 0} onClick={() => jouer(vendreChariot)}>
+            💰 Vendre le chariot
+          </Bouton>
+          <Bouton actif={contenu.length > 0} onClick={() => jouer(viderChariotDansSac)}>
+            🎒 Mettre dans le sac
+          </Bouton>
+        </div>
+      </div>
+
+      <div className="ligne-achat">
+        <strong>Améliorations</strong>
+        <div className="boutons">
+          <span className="discret">Vitesse : {NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s</span>
+          {forage ? (
+            <>
+              <PrixCout etat={etat} cout={forage.cout} />
+              <Bouton actif={peutPayer(etat, forage.cout)} onClick={() => jouer(ameliorerForage)}>
+                → {forage.vitesse} bloc/s
+              </Bouton>
+            </>
+          ) : (
+            <span className="ok">max</span>
+          )}
+        </div>
+        <div className="boutons">
+          <span className="discret">Chariot : {NIVEAUX_CHARIOT[foreuse.niveauChariot].capacite} places</span>
+          {chariot ? (
+            <>
+              <PrixCout etat={etat} cout={chariot.cout} />
+              <Bouton actif={peutPayer(etat, chariot.cout)} onClick={() => jouer(ameliorerChariot)}>
+                → {chariot.capacite} places
+              </Bouton>
+            </>
+          ) : (
+            <span className="ok">max</span>
+          )}
+        </div>
       </div>
     </div>
   )

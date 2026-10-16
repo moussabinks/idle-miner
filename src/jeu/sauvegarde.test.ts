@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { casserBloc, creerPartie } from './mineur'
-import { CLE_SAUVEGARDE, charger, effacer, sauvegarder, type Stockage } from './sauvegarde'
+import { CLE_SAUVEGARDE, charger, effacer, sauvegarder, secondesDepuisSauvegarde, type Stockage } from './sauvegarde'
 
 // Un faux localStorage, en mémoire.
 function fauxStockage(): Stockage & { donnees: Map<string, string> } {
@@ -33,15 +33,38 @@ describe('sauvegarde', () => {
     expect(charger(stockage)).toBeNull()
   })
 
-  it('met à jour une sauvegarde de la version 1', () => {
+  it('met à jour une sauvegarde de la version 1 (jusqu’à la version 3)', () => {
     const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1)), version: 1 }
-    for (const champ of ['lieu', 'trajet', 'colonneMineur', 'nonAVendre', 'ascenseur']) delete ancienne[champ]
+    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1)), version: 1, profondeur: 10 }
+    for (const champ of ['position', 'cible', 'colonneMineur', 'nonAVendre', 'ascenseur', 'foreuse']) delete ancienne[champ]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage)
-    expect(etat?.version).toBe(2)
-    expect(etat?.lieu).toBe('mine')
-    expect(etat?.ascenseur.possede).toBe(false)
+    expect(etat?.version).toBe(3)
+    expect(etat?.position).toBe(9) // au front de taille, comme avant
+    expect(etat?.ascenseur.niveau).toBe(0)
+    expect(etat?.foreuse.active).toBe(false)
+  })
+
+  it('met à jour une sauvegarde de la version 2 avec un ascenseur', () => {
+    const stockage = fauxStockage()
+    const ancienne: Record<string, unknown> = {
+      ...creerPartie(aleatoireAvecGraine(1)),
+      version: 2,
+      lieu: 'surface',
+      trajet: null,
+      ascenseur: { possede: true, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
+    }
+    for (const champ of ['position', 'cible', 'foreuse']) delete ancienne[champ]
+    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
+    const etat = charger(stockage)
+    expect(etat?.position).toBe(0)
+    expect(etat?.ascenseur.niveau).toBe(1)
+  })
+
+  it('compte le temps passé depuis la dernière sauvegarde', () => {
+    const stockage = fauxStockage()
+    sauvegarder(stockage, creerPartie(aleatoireAvecGraine(1)), 1_000_000)
+    expect(secondesDepuisSauvegarde(stockage, 1_060_000)).toBe(60)
   })
 
   it('efface la sauvegarde', () => {

@@ -1,6 +1,6 @@
 # Idle Miner — version web
 
-Idle game de minage inspiré de Minecraft : on creuse, on vend, on achète de meilleures pioches pour descendre jusqu'à la bedrock (-64 m).
+Idle game de minage inspiré de Minecraft : on creuse, on vend, on achète de meilleures pioches pour descendre jusqu'à la bedrock (-128 m depuis le 16/10, contre -64 m dans la v1).
 C'est le portage web du notebook Python décrit dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md). **Cette spec est la référence pour les règles et l'équilibrage** (pioches, blocs, enchantements, prestige, succès).
 L'état d'avancement, les décisions en attente et la feuille de route sont dans [CONTEXTE.md](CONTEXTE.md) : le lire en début de session et le mettre à jour à chaque étape importante.
 
@@ -22,7 +22,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - `src/jeu/` : **logique du jeu en TypeScript pur, sans React ni DOM.** Données (`donnees.ts`), génération de la mine, état du mineur, règles. Tout doit être testable sans navigateur.
 - `src/` (le reste) : composants React. Ils lisent l'état du jeu et appellent ses actions, et ne contiennent pas de règles du jeu.
 - L'aléatoire passe par une fonction injectable, pour qu'on puisse avoir des tests déterministes.
-- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère : la bedrock vers 900 à 1 250 blocs.
+- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère (mine à -128 m) : la bedrock vers 1 500 à 2 500 blocs, soit 15 à 30 minutes de jeu.
 
 ## Conventions
 
@@ -34,4 +34,5 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 ## Choix de design hérités de la v1 (à respecter)
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques (PNJ), pas de quêtes du marchand.
+  - Exception décidée le 16/10 : la **foreuse** (débloquée au prestige 1, alimentée au charbon) creuse toute seule.
 - On ne doit jamais être bloqué : pioches rachetables, minage à mains nues si la pioche est cassée, galeries horizontales à la profondeur max.

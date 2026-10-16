@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { LARGEUR_MINE } from './donnees'
-import { genererCouche, poidsDesBlocs, tirerBloc } from './mine'
+import { genererCouche, poidsDesBlocs, tirerBloc, tirerBlocNormal } from './mine'
 
 function blocsPossibles(profondeur: number) {
   return poidsDesBlocs(profondeur).map((c) => c.valeur)
@@ -9,31 +9,38 @@ function blocsPossibles(profondeur: number) {
 
 describe('génération de la mine', () => {
   it('a de la terre en surface, de la pierre puis de la deepslate', () => {
-    expect(blocsPossibles(2)).toContain('terre')
-    expect(blocsPossibles(10)).toContain('pierre')
-    expect(blocsPossibles(45)).toContain('deepslate')
-    expect(blocsPossibles(45)).not.toContain('pierre')
+    expect(blocsPossibles(5)).toContain('terre')
+    expect(blocsPossibles(20)).toContain('pierre')
+    expect(blocsPossibles(90)).toContain('deepslate')
+    expect(blocsPossibles(90)).not.toContain('pierre')
   })
 
   it("ne met les minerais qu'à la bonne profondeur", () => {
-    expect(blocsPossibles(15)).not.toContain('charbon')
-    expect(blocsPossibles(16)).toContain('fer')
-    expect(blocsPossibles(30)).not.toContain('diamant')
-    expect(blocsPossibles(31)).toContain('diamant')
-    expect(blocsPossibles(52)).not.toContain('debris')
-    expect(blocsPossibles(53)).toContain('debris')
+    expect(blocsPossibles(30)).not.toContain('charbon')
+    expect(blocsPossibles(31)).toContain('fer')
+    expect(blocsPossibles(40)).not.toContain('redstone')
+    expect(blocsPossibles(41)).toContain('redstone')
+    expect(blocsPossibles(60)).not.toContain('diamant')
+    expect(blocsPossibles(61)).toContain('diamant')
+    expect(blocsPossibles(104)).not.toContain('debris')
+    expect(blocsPossibles(105)).toContain('debris')
   })
 
   it('place les blocs spéciaux à partir de leur profondeur', () => {
-    expect(blocsPossibles(8)).not.toContain('coffre')
-    expect(blocsPossibles(9)).toContain('coffre')
-    expect(blocsPossibles(21)).toContain('lave')
-    expect(blocsPossibles(26)).toContain('geode')
+    expect(blocsPossibles(16)).not.toContain('coffre')
+    expect(blocsPossibles(17)).toContain('coffre')
+    expect(blocsPossibles(41)).toContain('lave')
+    expect(blocsPossibles(51)).toContain('geode')
+  })
+
+  it('la foreuse ne tire jamais de bloc spécial', () => {
+    const aleatoire = aleatoireAvecGraine(5)
+    for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode']).not.toContain(tirerBlocNormal(60, aleatoire))
   })
 
   it('génère des couches de 6 blocs, toujours les mêmes avec la même graine', () => {
-    const a = genererCouche(35, aleatoireAvecGraine(7))
-    const b = genererCouche(35, aleatoireAvecGraine(7))
+    const a = genererCouche(70, aleatoireAvecGraine(7))
+    const b = genererCouche(70, aleatoireAvecGraine(7))
     expect(a).toHaveLength(LARGEUR_MINE)
     expect(a).toEqual(b)
   })
@@ -43,7 +50,7 @@ describe('génération de la mine', () => {
     let pierre = 0
     let diamant = 0
     for (let i = 0; i < 5000; i++) {
-      const bloc = tirerBloc(35, aleatoire)
+      const bloc = tirerBloc(70, aleatoire)
       if (bloc === 'pierre') pierre++
       if (bloc === 'diamant') diamant++
     }
