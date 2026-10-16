@@ -38,25 +38,35 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
+Depuis la v2 de l'état (`VERSION_ETAT = 2`), le jeu a une **surface** : on ne vend et n'achète qu'au village, et il faut remonter à l'échelle (plus c'est profond, plus c'est long). Les anciennes sauvegardes (v1) sont migrées automatiquement.
+
+- **Surface** : 6 stands de gauche à droite (Marché, Forgeron, Bazar, Enchanteur, Atelier, Puits). On se déplace avec ← →, ↓ au puits pour descendre.
+- **Mine** : ← → pour se déplacer (on casse le bloc sous le mineur), ↓ ou Espace pour creuser, ↑ pour remonter.
+- **Marché** : « Vendre tout » vend tout le sac sauf les objets décochés (`nonAVendre`, gardé dans la sauvegarde).
+- **Ascenseur** (Atelier, 250 $ + 10 redstone) : quand le sac est plein, il remonte le chargement, le vend au marché et redescend au niveau du joueur.
+- **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
+
 - `src/jeu/` (logique pure, testée avec Vitest) :
   - `donnees.ts` : blocs, pioches, sacs, enchantements, zones et constantes de la spec v1.
   - `aleatoire.ts` : aléatoire injectable (`Math.random` en jeu, générateur à graine dans les tests).
   - `mine.ts` : génération des couches pondérée selon la profondeur.
   - `mineur.ts` : l'état de la partie (`EtatJeu`, un objet JSON) et toutes les actions (casser, vendre, réparer, acheter, enchanter, prestige).
   - `succes.ts` : les 16 succès. `sauvegarde.ts` : `localStorage`.
-  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties. Médiane ≈ 1 000 blocs pour la bedrock, pioche en fer vers -30 m.
+  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties en remontant vendre et acheter, puis construit l'ascenseur. Médiane ≈ 1 100 blocs pour la bedrock, environ 6 à 9 min de jeu simulé, pioche en fer vers -30 m.
 - `src/usePartie.ts` : le hook React qui relie la logique à l'écran (minage animé, toasts, sauvegarde auto).
-- `src/composants/` : vue de la mine, HUD, inventaire, panneaux (Pioches, Boutique, Enchanter, Succès), toasts, écran de victoire.
+- `src/composants/` : vues de la surface, de l'échelle et de la mine, personnage, HUD, sac, panneaux des stands, succès, toasts, écran de victoire.
 - `src/blocs.css` : tous les blocs et animations en CSS. `src/index.css` : mise en page (desktop et mobile).
 
 ### Choix faits là où la spec v1 ne disait rien
 
 - Sac plein : le bloc est cassé mais perdu, et le minage « x10 » s'arrête tout seul.
 - Le seau d'eau est consommé quand il éteint une lave.
-- La vente garde les lapis et émeraudes **seulement à hauteur de ce qu'il reste à payer** en enchantements.
+- « Vendre tout » vend vraiment tout : c'est au joueur de décocher ce qu'il veut garder (demande du 16/10).
+- Fabriquer des torches et changer de pioche se fait partout ; vendre, acheter, réparer et enchanter seulement à la surface.
 - Racheter une pioche neuve coûte le même prix (matériaux compris) que la débloquer.
 - Pioche cassée : on mine à mains nues, mais la profondeur max reste celle de la pioche équipée.
 - La liste des 16 succès a été réinventée (la v1 ne la détaillait pas).
+- Prix de l'ascenseur (250 $ + 10 redstone), vitesse de l'échelle (0,15 s/m) et de l'ascenseur (0,08 s/m) : valeurs choisies par nous, à ajuster.
 
 ## 5. Feuille de route
 
@@ -76,3 +86,4 @@ Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 - **2026-10-15** : choix de la stack, installation des outils sur le Mac, création du squelette et du dépôt GitHub privé. Ajout du collaborateur `N04H2004`.
 - **2026-10-16** : ajout de ce fichier `CONTEXTE.md` au dépôt.
 - **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).
+- **2026-10-16** : surface avec stands, échelle, déplacements au clavier, « Vendre tout » avec objets à décocher, ascenseur à redstone, personnage taupe en SVG.

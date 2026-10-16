@@ -1,4 +1,5 @@
-// Les panneaux d'achat : Pioches, Boutique, Enchanter et Succès.
+// Les panneaux des stands de la surface (Marché, Forgeron, Bazar, Enchanteur,
+// Atelier) et le panneau des succès.
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import type { ReactNode } from 'react'
@@ -7,27 +8,35 @@ import {
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
   PIOCHES,
+  PRIX_ASCENSEUR,
   PRIX_SEAU,
   SACS,
   TORCHES_PAR_CHARBON,
   type IdBloc,
 } from '../jeu/donnees'
 import {
+  aLaSurface,
+  acheterAscenseur,
   acheterPioche,
   acheterSac,
   acheterSeau,
+  apercuVente,
+  basculerVente,
+  bonusVente,
   chiffreRomain,
   coutEnchantement,
   devisReparation,
   enchanter,
   equiper,
   fabriquerTorches,
+  peutAcheterAscenseur,
   peutAcheterPioche,
   peutEnchanter,
   peutReparer,
   prixProchainSac,
   quantite,
   reparer,
+  vendre,
   type DevisReparation,
   type EtatJeu,
 } from '../jeu/mineur'
@@ -68,9 +77,52 @@ function texteDevis(devis: DevisReparation): string {
 
 // ---------------------------------------------------------------------------
 
-export function PanneauPioches({ etat, jouer }: PropsPanneau) {
+// Le marché : « Vendre tout » vend tout le sac, sauf ce qu'on décoche.
+export function PanneauMarche({ etat, jouer }: PropsPanneau) {
+  const gain = apercuVente(etat)
+  // Les objets les plus précieux en premier.
+  const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+
   return (
     <div className="liste-cartes">
+      <p className="discret">Décoche ce que tu veux garder (pour une pioche, un enchantement, l'ascenseur…).</p>
+      {piles.length === 0 ? (
+        <p className="discret">Ton sac est vide. Va creuser !</p>
+      ) : (
+        <ul className="liste-vente">
+          {piles.map(([id, nombre]) => {
+            const aVendre = !etat.nonAVendre.includes(id)
+            return (
+              <li key={id} className={aVendre ? '' : 'garde'}>
+                <label>
+                  <input type="checkbox" checked={aVendre} onChange={() => jouer((e) => basculerVente(e, id))} />
+                  <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+                  <span className="inventaire-nom">{BLOCS[id].nom}</span>
+                  <span className="inventaire-nombre">×{nombre}</span>
+                  <span className="inventaire-valeur">
+                    {aVendre ? `${Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $` : '🔒 gardé'}
+                  </span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <button className="bouton bouton-vendre" disabled={gain === 0} onClick={() => jouer(vendre)}>
+        💰 Vendre tout {gain > 0 && `· +${gain.toLocaleString('fr-FR')} $`}
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+// Le forgeron. Au fond de la mine, on peut seulement changer de pioche.
+export function PanneauPioches({ etat, jouer }: PropsPanneau) {
+  const enVille = aLaSurface(etat)
+  return (
+    <div className="liste-cartes">
+      {!enVille && <p className="discret">⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface.</p>}
       {PIOCHES.map((pioche) => {
         const possedee = pioche.niveau in etat.pioches
         const equipee = pioche.niveau === etat.niveauPioche
@@ -124,14 +176,16 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
                   Équiper
                 </Bouton>
               )}
-              {possedee && usure > 0 && (
+              {enVille && possedee && usure > 0 && (
                 <Bouton actif={peutReparer(etat, pioche.niveau)} onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
                   🔧 Réparer · {texteDevis(devis)}
                 </Bouton>
               )}
-              <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
-                {prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'} · {pioche.prix.toLocaleString('fr-FR')} $
-              </Bouton>
+              {enVille && (
+                <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
+                  {prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'} · {pioche.prix.toLocaleString('fr-FR')} $
+                </Bouton>
+              )}
             </div>
           </div>
         )
@@ -142,7 +196,8 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-export function PanneauBoutique({ etat, jouer }: PropsPanneau) {
+// Le bazar : sacs à dos, seaux d'eau et torches.
+export function PanneauBazar({ etat, jouer }: PropsPanneau) {
   const prixSac = prixProchainSac(etat)
   const prochainSac = SACS[etat.niveauSac + 1]
 
@@ -182,6 +237,38 @@ export function PanneauBoutique({ etat, jouer }: PropsPanneau) {
             Fabriquer · 1 ⚫ charbon
           </Bouton>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+// L'atelier : on y construit l'ascenseur automatique.
+export function PanneauAtelier({ etat, jouer }: PropsPanneau) {
+  return (
+    <div className="liste-cartes">
+      <div className="ligne-achat">
+        <strong>🛗 Ascenseur automatique</strong>
+        <span className="discret">
+          Quand ton sac est plein, l'ascenseur remonte tes blocs jusqu'au marché, les vend (sauf ceux que tu as décochés),
+          puis redescend jusqu'à toi. Tu n'as plus besoin de remonter pour vendre !
+        </span>
+        {etat.ascenseur.possede ? (
+          <span className="ok">Ascenseur construit ✔</span>
+        ) : (
+          <div className="boutons">
+            <span className="materiaux">
+              <Materiau etat={etat} bloc="redstone" nombre={PRIX_ASCENSEUR.redstone} />
+            </span>
+            <Bouton actif={peutAcheterAscenseur(etat)} onClick={() => jouer(acheterAscenseur)}>
+              Construire · {PRIX_ASCENSEUR.argent} $
+            </Bouton>
+          </div>
+        )}
+        {!etat.ascenseur.possede && (
+          <span className="discret">💡 La redstone se trouve sous -30 m. Pense à la décocher au marché pour la garder.</span>
+        )}
       </div>
     </div>
   )

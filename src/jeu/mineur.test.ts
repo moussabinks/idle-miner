@@ -2,18 +2,28 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
+  acheterAscenseur,
   acheterPioche,
   acheterSac,
+  apercuVente,
+  ascenseurDisponible,
+  avancerTemps,
+  basculerVente,
   casserBloc,
   creerPartie,
+  deplacerMineur,
+  descendreDansLaMine,
   devisReparation,
   enchanter,
+  envoyerAscenseur,
   equiper,
   estCassee,
   fabriquerTorches,
+  indexBlocActuel,
+  monterALaSurface,
   nbDansSac,
   prestige,
-  quantitesReservees,
+  profondeurDuJoueur,
   reparer,
   vendre,
   vision,
@@ -25,8 +35,18 @@ import { verifierSucces } from './succes'
 // Un « aléatoire » qui renvoie toujours la même valeur : pratique pour tester une règle précise.
 const toujours = (valeur: number): Aleatoire => () => valeur
 
+// Une partie neuve, avec le joueur déjà au fond de la mine.
 function nouvellePartie(): EtatJeu {
-  return creerPartie(aleatoireAvecGraine(42))
+  const etat = creerPartie(aleatoireAvecGraine(42))
+  etat.lieu = 'mine'
+  return etat
+}
+
+// Le même joueur, mais à la surface (pour vendre et acheter).
+function partieALaSurface(): EtatJeu {
+  const etat = nouvellePartie()
+  etat.lieu = 'surface'
+  return etat
 }
 
 // Remplit la couche en cours avec un seul type de bloc.
@@ -35,8 +55,9 @@ function coucheDe(etat: EtatJeu, bloc: EtatJeu['coucheActuelle'][number]) {
 }
 
 describe('début de partie', () => {
-  it('commence avec une pioche en bois, 0 $ et 6 torches à -1 m', () => {
-    const etat = nouvellePartie()
+  it('commence à la surface avec une pioche en bois, 0 $ et 6 torches', () => {
+    const etat = creerPartie(aleatoireAvecGraine(42))
+    expect(etat.lieu).toBe('surface')
     expect(etat.pioches).toEqual({ 0: 0 })
     expect(etat.argent).toBe(0)
     expect(etat.torches).toBe(6)
@@ -151,26 +172,36 @@ describe('blocs spéciaux', () => {
 })
 
 describe('vente', () => {
-  it('vend tout le sac', () => {
-    const etat = nouvellePartie()
-    etat.inventaire = { pierre: 10, fer: 2 }
+  it('« Vendre tout » vend tout le sac, diamants compris', () => {
+    const etat = partieALaSurface()
+    etat.inventaire = { pierre: 10, fer: 2, diamant: 1 }
     vendre(etat)
-    expect(etat.argent).toBe(10 + 24)
+    expect(etat.argent).toBe(10 + 24 + 100)
     expect(etat.inventaire).toEqual({})
   })
 
-  it('garde les diamants pour la pioche en diamant, et les lapis pour les enchantements', () => {
-    const etat = nouvellePartie()
-    etat.meilleure = 2
-    etat.inventaire = { diamant: 5, lapis: 3 }
-    expect(quantitesReservees(etat).diamant).toBe(3)
+  it('garde les objets décochés', () => {
+    const etat = partieALaSurface()
+    etat.inventaire = { pierre: 10, diamant: 3, lapis: 2 }
+    basculerVente(etat, 'diamant')
+    basculerVente(etat, 'lapis')
+    expect(apercuVente(etat)).toBe(10)
     vendre(etat)
-    expect(etat.inventaire).toEqual({ diamant: 3, lapis: 3 })
-    expect(etat.argent).toBe(200)
+    expect(etat.inventaire).toEqual({ diamant: 3, lapis: 2 })
+    basculerVente(etat, 'lapis') // on recoche le lapis
+    expect(etat.nonAVendre).toEqual(['diamant'])
+  })
+
+  it('ne vend rien au fond de la mine', () => {
+    const etat = nouvellePartie()
+    etat.inventaire = { pierre: 10 }
+    vendre(etat)
+    expect(etat.argent).toBe(0)
+    expect(etat.inventaire).toEqual({ pierre: 10 })
   })
 
   it('applique le bonus de prestige (+25 % par niveau)', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.prestige = 2
     etat.inventaire = { pierre: 10 }
     vendre(etat)
@@ -178,9 +209,91 @@ describe('vente', () => {
   })
 })
 
+describe('échelle et déplacements', () => {
+  it('monte à la surface en un temps qui dépend de la profondeur', () => {
+    const etat = nouvellePartie()
+    etat.profondeur = 20
+    monterALaSurface(etat)
+    expect(etat.trajet?.tempsTotal).toBeCloseTo(3) // 20 m × 0,15 s
+    avancerTemps(etat, 1.5)
+    expect(etat.lieu).toBe('mine')
+    expect(profondeurDuJoueur(etat)).toBe(10) // à mi-chemin
+    avancerTemps(etat, 1.5)
+    expect(etat.lieu).toBe('surface')
+    expect(etat.trajet).toBeNull()
+  })
+
+  it('ne creuse pas pendant qu’on grimpe ni à la surface', () => {
+    const etat = nouvellePartie()
+    monterALaSurface(etat)
+    expect(casserBloc(etat, toujours(0))).toEqual([])
+    avancerTemps(etat, 100)
+    expect(casserBloc(etat, toujours(0))).toEqual([])
+    expect(etat.stats.blocsCasses).toBe(0)
+  })
+
+  it('redescend au fond, à la même profondeur', () => {
+    const etat = partieALaSurface()
+    etat.profondeur = 12
+    descendreDansLaMine(etat)
+    avancerTemps(etat, 100)
+    expect(etat.lieu).toBe('mine')
+    expect(etat.profondeur).toBe(12)
+  })
+
+  it('se déplace à gauche et à droite et casse le bloc sous le mineur', () => {
+    const etat = nouvellePartie()
+    etat.coucheActuelle = ['pierre', 'pierre', 'pierre', 'pierre', 'fer', 'pierre']
+    deplacerMineur(etat, +1)
+    deplacerMineur(etat, -1)
+    deplacerMineur(etat, -1) // bloqué au bord
+    expect(etat.colonneMineur).toBe(0)
+    for (let i = 0; i < 4; i++) deplacerMineur(etat, +1)
+    casserBloc(etat, toujours(0))
+    expect(etat.inventaire).toEqual({ fer: 1 })
+    expect(etat.coucheActuelle[4]).toBeNull()
+  })
+
+  it('va au bloc le plus proche si la case sous le mineur est déjà creusée', () => {
+    const etat = nouvellePartie()
+    etat.coucheActuelle = ['pierre', null, null, 'fer', null, 'terre']
+    etat.colonneMineur = 2
+    expect(indexBlocActuel(etat)).toBe(3)
+  })
+})
+
+describe('ascenseur', () => {
+  it('s’achète à la surface avec de la redstone', () => {
+    const etat = partieALaSurface()
+    etat.argent = 300
+    etat.inventaire = { redstone: 12 }
+    acheterAscenseur(etat)
+    expect(etat.ascenseur.possede).toBe(true)
+    expect(etat.argent).toBe(50)
+    expect(etat.inventaire).toEqual({ redstone: 2 })
+  })
+
+  it('remonte le sac, le vend en haut et redescend au niveau du joueur', () => {
+    const etat = nouvellePartie()
+    etat.ascenseur.possede = true
+    etat.profondeur = 25
+    etat.inventaire = { fer: 10, diamant: 2 }
+    etat.nonAVendre = ['diamant']
+    envoyerAscenseur(etat)
+    expect(etat.inventaire).toEqual({ diamant: 2 })
+    expect(etat.ascenseur.tempsTotal).toBeCloseTo(4) // 2 × 25 m × 0,08 s
+    expect(ascenseurDisponible(etat)).toBe(false)
+
+    avancerTemps(etat, 2) // arrivé en haut : il vend
+    expect(etat.argent).toBe(120)
+    avancerTemps(etat, 2) // redescendu
+    expect(ascenseurDisponible(etat)).toBe(true)
+  })
+})
+
 describe('pioches et réparation', () => {
   it('débloque la pioche suivante et l’équipe', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.argent = 50
     acheterPioche(etat, 1)
     expect(etat.argent).toBe(10)
@@ -189,7 +302,7 @@ describe('pioches et réparation', () => {
   })
 
   it('ne saute pas de niveau et demande les matériaux', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.argent = 10000
     expect(acheterPioche(etat, 2)).toEqual([])
     etat.meilleure = 2
@@ -201,7 +314,7 @@ describe('pioches et réparation', () => {
   })
 
   it('peut racheter et rééquiper une ancienne pioche', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.argent = 50
     acheterPioche(etat, 1)
     equiper(etat, 0)
@@ -212,7 +325,7 @@ describe('pioches et réparation', () => {
   })
 
   it('répare 25 % par unité et achète le matériau manquant au double du prix', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.pioches = { 2: 250 }
     etat.niveauPioche = 2
     etat.inventaire = { fer: 1 }
@@ -228,7 +341,7 @@ describe('pioches et réparation', () => {
 
 describe('boutique et enchantements', () => {
   it('achète un sac plus grand', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.argent = 80
     acheterSac(etat)
     expect(etat.niveauSac).toBe(1)
@@ -243,7 +356,7 @@ describe('boutique et enchantements', () => {
   })
 
   it('enchante avec des lapis et des émeraudes (coût × niveau)', () => {
-    const etat = nouvellePartie()
+    const etat = partieALaSurface()
     etat.inventaire = { lapis: 12, emeraude: 3 }
     enchanter(etat, 'efficacite') // niveau I : 4 lapis + 1 émeraude
     enchanter(etat, 'efficacite') // niveau II : 8 lapis + 2 émeraudes

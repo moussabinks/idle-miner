@@ -5,7 +5,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from './jeu/aleatoire'
 import { LARGEUR_MINE } from './jeu/donnees'
-import { casserBloc, creerPartie, dureeBlocActuel, prestige, sacPlein, type EtatJeu } from './jeu/mineur'
+import {
+  ascenseurDisponible,
+  auFond,
+  avancerTemps,
+  casserBloc,
+  creerPartie,
+  dureeBlocActuel,
+  envoyerAscenseur,
+  prestige,
+  sacPlein,
+  type EtatJeu,
+} from './jeu/mineur'
 import { charger, effacer, sauvegarder } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 
@@ -18,6 +29,7 @@ export type Action = (etat: EtatJeu) => string[]
 const DUREE_TOAST = 3500 // ms
 const DUREE_GAIN = 1200 // ms
 const DUREE_MIN_BLOC = 80 // ms, pour que l'animation reste visible
+const INTERVALLE_HORLOGE = 100 // ms entre deux mises à jour de l'échelle et de l'ascenseur
 
 let prochainId = 1
 
@@ -80,16 +92,41 @@ export function usePartie() {
 
   // Minage animé : on casse un bloc, on attend sa durée, puis le suivant.
   useEffect(() => {
-    if (blocsRestants <= 0 || etat.victoire) return
+    if (blocsRestants <= 0 || etat.victoire || !auFond(etat)) return
     const duree = Math.max(DUREE_MIN_BLOC, dureeBlocActuel(etat) * 1000)
     const minuteur = setTimeout(() => {
-      const apres = jouer((e) => casserBloc(e, aleatoireNavigateur))
-      // On s'arrête tout seul si le sac est plein ou si on a gagné.
-      if (sacPlein(apres) || apres.victoire) setBlocsRestants(0)
-      else setBlocsRestants((n) => n - 1)
+      let apres = jouer((e) => casserBloc(e, aleatoireNavigateur))
+      // Sac plein : l'ascenseur (s'il est là) emporte tout au marché.
+      if (sacPlein(apres) && ascenseurDisponible(apres)) apres = jouer(envoyerAscenseur)
+
+      if (apres.victoire) setBlocsRestants(0)
+      else if (sacPlein(apres)) {
+        setBlocsRestants(0)
+        afficherToasts([
+          {
+            id: prochainId++,
+            texte: apres.ascenseur.possede ? '🎒 Sac plein ! Attends le retour de l’ascenseur.' : '🎒 Sac plein ! Remonte vendre au marché (↑).',
+            succes: false,
+          },
+        ])
+      } else setBlocsRestants((n) => n - 1)
     }, duree)
     return () => clearTimeout(minuteur)
-  }, [blocsRestants, etat, jouer])
+  }, [blocsRestants, etat, jouer, afficherToasts])
+
+  // L'horloge : fait avancer le trajet à l'échelle et le voyage de l'ascenseur.
+  const tempsQuiPasse = etat.trajet !== null || etat.ascenseur.tempsRestant > 0
+  useEffect(() => {
+    if (!tempsQuiPasse) return
+    let derniereFois = performance.now()
+    const horloge = setInterval(() => {
+      const maintenant = performance.now()
+      const secondes = (maintenant - derniereFois) / 1000
+      derniereFois = maintenant
+      jouer((e) => avancerTemps(e, secondes))
+    }, INTERVALLE_HORLOGE)
+    return () => clearInterval(horloge)
+  }, [tempsQuiPasse, jouer])
 
   // Sauvegarde automatique à chaque changement.
   useEffect(() => {

@@ -79,13 +79,14 @@ export type Pioche = {
   materiaux: Partial<Record<IdBloc, number>>
   // Matériau utilisé pour la réparer. 'planche' n'existe pas dans le sac : on l'achète.
   reparation: IdBloc | 'planche'
+  couleur: string // couleur du fer de la pioche, pour dessiner le personnage
 }
 
 export const PIOCHES: Pioche[] = [
-  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 15, durabilite: 60, prix: 5, materiaux: {}, reparation: 'planche' },
-  { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 30, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre' },
-  { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 48, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer' },
-  { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 60, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant' },
+  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 15, durabilite: 60, prix: 5, materiaux: {}, reparation: 'planche', couleur: '#b5834a' },
+  { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 30, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre', couleur: '#8f8f8f' },
+  { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 48, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer', couleur: '#e6e6e6' },
+  { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 60, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant', couleur: '#4ee8dc' },
   {
     niveau: 4,
     nom: 'Netherite',
@@ -96,6 +97,7 @@ export const PIOCHES: Pioche[] = [
     prix: 3000,
     materiaux: { debris: 4, or: 4 },
     reparation: 'debris',
+    couleur: '#6b5568',
   },
 ]
 
@@ -133,6 +135,19 @@ export const ECART_TORCHES = 5 // une torche est posée tous les 5 m
 export const PORTEE_TORCHE = 6 // une torche éclaire jusqu'à 6 m sous elle
 export const VISION_ECLAIREE = 5 // couches visibles avec de la lumière
 export const VISION_SOMBRE = 2 // couches visibles dans le noir
+
+// ---------------------------------------------------------------------------
+// Surface, échelle et ascenseur
+// ---------------------------------------------------------------------------
+
+// Temps pour monter (ou descendre) un mètre à l'échelle, en secondes.
+export const SECONDES_PAR_METRE_ECHELLE = 0.15
+export const DUREE_MIN_ECHELLE = 1 // même près de la surface, il faut un peu de temps
+
+// L'ascenseur automatique : il se paie avec de la redstone (en plus de l'argent).
+export const PRIX_ASCENSEUR = { argent: 250, redstone: 10 }
+// Temps pour qu'il parcoure un mètre (il est plus rapide que l'échelle).
+export const SECONDES_PAR_METRE_ASCENSEUR = 0.08
 
 // Bonus de vente par niveau de prestige (+25 %).
 export const BONUS_PRESTIGE = 0.25

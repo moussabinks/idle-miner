@@ -22,7 +22,14 @@ describe('bot de simulation (équilibrage)', () => {
 
   it("n'est jamais extrêmement long ou court", () => {
     expect(blocsTries[0]).toBeGreaterThan(600)
-    expect(blocsTries[blocsTries.length - 1]).toBeLessThan(1600)
+    expect(blocsTries[blocsTries.length - 1]).toBeLessThan(1800)
+  })
+
+  it('remonte à la surface et achète l’ascenseur', () => {
+    for (const partie of parties) {
+      expect(partie.allersRetours).toBeGreaterThan(3)
+      expect(partie.etat.ascenseur.possede).toBe(true)
+    }
   })
 
   it('achète la pioche en fer entre -15 et -30 m (souvent vers -26/-30 m)', () => {

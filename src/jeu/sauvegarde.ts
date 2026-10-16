@@ -26,7 +26,7 @@ export function charger(stockage: Stockage): EtatJeu | null {
   try {
     const texte = stockage.getItem(CLE_SAUVEGARDE)
     if (texte === null) return null
-    const donnees = JSON.parse(texte)
+    const donnees = migrer(JSON.parse(texte))
     return estUnEtatValide(donnees) ? donnees : null
   } catch {
     return null
@@ -39,6 +39,27 @@ export function effacer(stockage: Stockage): void {
   } catch {
     // Rien à faire.
   }
+}
+
+// Met à jour une sauvegarde d'une ancienne version du jeu.
+function migrer(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancien = donnees as Record<string, unknown>
+
+  // Version 1 -> 2 : la surface, l'échelle, le marché et l'ascenseur.
+  // L'ancien joueur reprend au fond de la mine, là où il était.
+  if (ancien.version === 1) {
+    return {
+      ...ancien,
+      version: 2,
+      lieu: 'mine',
+      trajet: null,
+      colonneMineur: 0,
+      nonAVendre: [],
+      ascenseur: { possede: false, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
+    }
+  }
+  return donnees
 }
 
 // Vérifie rapidement que les données ressemblent bien à une partie de cette version.
@@ -55,6 +76,9 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.inventaire === 'object' &&
     typeof etat.enchantements === 'object' &&
     typeof etat.stats === 'object' &&
-    Array.isArray(etat.succes)
+    Array.isArray(etat.succes) &&
+    (etat.lieu === 'surface' || etat.lieu === 'mine') &&
+    Array.isArray(etat.nonAVendre) &&
+    typeof etat.ascenseur === 'object'
   )
 }

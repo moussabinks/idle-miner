@@ -13,7 +13,7 @@
   --vert: #5cc95c;
   --rouge: #e5534b;
   --violet: #a77be8;
-  --taille-case: min(64px, calc((100vw - 92px) / 6));
+  --taille-case: min(64px, calc((100vw - 136px) / 6));
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
@@ -192,7 +192,7 @@ h2 {
 
 .rangee {
   display: grid;
-  grid-template-columns: 44px repeat(6, var(--taille-case));
+  grid-template-columns: 44px 14px repeat(6, var(--taille-case));
   gap: 3px;
   margin-bottom: 3px;
   align-items: center;
@@ -229,21 +229,6 @@ h2 {
   box-shadow: none;
 }
 
-.mineur {
-  font-size: calc(var(--taille-case) * 0.62);
-  line-height: 1;
-  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 0.6));
-}
-
-.mineur-actif {
-  animation: coup 0.3s ease-in-out infinite;
-}
-
-@keyframes coup {
-  0%, 100% { transform: rotate(0); }
-  50% { transform: rotate(14deg) translateY(2px); }
-}
-
 .torche {
   position: absolute;
   top: 2px;
@@ -256,6 +241,50 @@ h2 {
   0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #ffb347); }
   40% { opacity: 0.8; filter: drop-shadow(0 0 3px #ffb347); }
   70% { opacity: 0.95; filter: drop-shadow(0 0 8px #ffcc66); }
+}
+
+/* La colonne de l'échelle, à gauche de la mine. */
+.echelle {
+  align-self: stretch;
+  margin: -2px 0;
+  background:
+    repeating-linear-gradient(transparent 0 7px, #9c6b35 7px 10px),
+    linear-gradient(90deg, #7a4f22 0 3px, transparent 3px calc(100% - 3px), #7a4f22 calc(100% - 3px));
+  border-radius: 2px;
+}
+
+.rangee.noir .echelle {
+  opacity: 0.25;
+}
+
+/* L'ascenseur, à droite de la mine. */
+.rangee.avec-ascenseur {
+  grid-template-columns: 44px 14px repeat(6, var(--taille-case)) 20px;
+}
+
+.cage-ascenseur {
+  position: relative;
+  align-self: stretch;
+  margin: -2px 0;
+  background:
+    linear-gradient(90deg, transparent 45%, #555 45% 55%, transparent 55%),
+    linear-gradient(90deg, #3b3b44 0 2px, rgb(0 0 0 / 0.4) 2px calc(100% - 2px), #3b3b44 calc(100% - 2px));
+}
+
+.cabine {
+  position: absolute;
+  inset: 15% 1px 0;
+  border-radius: 3px;
+  background: linear-gradient(#d9a441, #9a6b1f);
+  border: 2px solid #4a3410;
+  box-shadow: 0 0 8px rgb(255 200 80 / 0.5);
+}
+
+.bandeau-ascenseur {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #9fd4ff;
 }
 
 /* Les « +X $ » qui s'envolent. */
@@ -288,6 +317,283 @@ h2 {
   color: var(--accent);
 }
 
+/* ------------------------------------------------------- Personnage */
+
+.personnage {
+  width: 92%;
+  height: 92%;
+  overflow: visible;
+  filter: drop-shadow(2px 3px 0 rgb(0 0 0 / 0.45));
+}
+
+.personnage.vers-la-gauche {
+  transform: scaleX(-1);
+}
+
+.personnage .pioche {
+  transform-origin: 47.5px 40.5px;
+}
+
+.personnage .lampe {
+  filter: drop-shadow(0 0 3px #fff3a0);
+}
+
+/* En train de creuser : la pioche frappe le bloc. */
+.personnage-creuse .pioche {
+  animation: frappe 0.32s ease-in-out infinite;
+}
+
+@keyframes frappe {
+  0%, 100% { transform: rotate(-35deg); }
+  55% { transform: rotate(40deg); }
+}
+
+/* En train de marcher : petits sauts. */
+.personnage-marche {
+  animation: pas 0.25s ease-in-out;
+}
+
+@keyframes pas {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -12%; }
+}
+
+/* Sur l'échelle : il se balance. */
+.personnage-grimpe {
+  animation: grimpe 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes grimpe {
+  from { rotate: -6deg; translate: 0 2px; }
+  to { rotate: 6deg; translate: 0 -2px; }
+}
+
+/* ---------------------------------------------------------- Surface */
+
+.surface {
+  position: relative;
+  overflow: hidden;
+  width: calc(44px + 14px + 6 * var(--taille-case) + 7 * 3px + 20px);
+  max-width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 3px solid #000;
+  background: linear-gradient(#5aa2e6, #a8d4f5 62%, #6bb34a 62%, #4b8a31 80%, #6b4a2a 80%);
+}
+
+.soleil {
+  position: absolute;
+  top: 14px;
+  right: 22px;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: #ffe35c;
+  box-shadow: 0 0 24px #ffe35c;
+}
+
+.nuage {
+  position: absolute;
+  height: 14px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 14px -8px 0 #fff, 28px 0 0 #fff;
+  opacity: 0.9;
+  animation: nuage 40s linear infinite;
+}
+
+.nuage-1 { top: 22px; left: -60px; width: 40px; }
+.nuage-2 { top: 54px; left: -60px; width: 30px; animation-delay: -18s; animation-duration: 55s; }
+
+@keyframes nuage {
+  to { transform: translateX(560px); }
+}
+
+.rue {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 70px;
+}
+
+.stand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.stand-nom {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(0.5rem, 1.8vw, 0.68rem);
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.55);
+  white-space: nowrap;
+}
+
+.stand-actif .stand-nom {
+  background: var(--accent);
+  color: #1b1206;
+}
+
+.echoppe {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.auvent {
+  height: 34%;
+  border-radius: 4px 4px 0 0;
+  background: repeating-linear-gradient(90deg, var(--auvent, #d43b3b) 0 8px, #f5efe0 8px 16px);
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+}
+
+.comptoir {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--taille-case) * 0.4);
+  background: linear-gradient(#b07a3f, #8a5a2b);
+  border: 2px solid #5a3a1a;
+  border-top: none;
+}
+
+.stand-marche { --auvent: #d43b3b; }
+.stand-forgeron { --auvent: #5b5b66; }
+.stand-bazar { --auvent: #2f8f4a; }
+.stand-enchanteur { --auvent: #7a4cc2; }
+.stand-atelier { --auvent: #d08a1a; }
+
+.stand:hover .echoppe,
+.stand:hover .puits {
+  filter: brightness(1.15);
+}
+
+.puits {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.puits-toit {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 0;
+  height: 28%;
+  background: linear-gradient(#8a5a2b, #6b4420);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.puits-echelle {
+  position: absolute;
+  left: 38%;
+  right: 38%;
+  top: 25%;
+  bottom: 20%;
+  background:
+    repeating-linear-gradient(transparent 0 5px, #c48b4a 5px 7px),
+    linear-gradient(90deg, #9c6b35 0 2px, #1a1410 2px calc(100% - 2px), #9c6b35 calc(100% - 2px));
+}
+
+.puits-margelle {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 0;
+  height: 34%;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 10px, rgb(0 0 0 / 0.25) 10px 11px),
+    linear-gradient(#a3a3a3, #6f6f6f);
+  border: 2px solid #3d3d3d;
+}
+
+.sol {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sol-case {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: end center;
+}
+
+/* ----------------------------------------------------------- Échelle */
+
+.vue-echelle {
+  width: calc(44px + 14px + 6 * var(--taille-case) + 7 * 3px + 20px);
+  max-width: 100%;
+  min-height: 360px;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 3px solid #000;
+  background: linear-gradient(#2b2a2f, #141317);
+}
+
+.puits-vertical {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0b0a0c;
+}
+
+.barreaux {
+  position: absolute;
+  inset: -40px 22px;
+  background:
+    repeating-linear-gradient(transparent 0 16px, #a7743c 16px 21px),
+    linear-gradient(90deg, #7a4f22 0 5px, transparent 5px calc(100% - 5px), #7a4f22 calc(100% - 5px));
+  animation: defile 0.5s linear infinite;
+}
+
+.descend .barreaux {
+  animation-direction: reverse;
+}
+
+@keyframes defile {
+  from { transform: translateY(0); }
+  to { transform: translateY(21px); }
+}
+
+.grimpeur {
+  position: absolute;
+  inset: 30% 6px auto;
+  aspect-ratio: 1;
+}
+
+.echelle-infos {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.echelle-profondeur {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------------------------------------------------------- Boutons */
 
 .actions {
@@ -298,6 +604,13 @@ h2 {
 
 .actions .bouton {
   flex: 1 1 auto;
+}
+
+.aide-clavier {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+  text-align: center;
 }
 
 .bouton {
@@ -474,8 +787,61 @@ h2 {
   font-size: 1.4rem;
 }
 
+/* Le marché : liste à cocher */
+.liste-vente {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+
+.liste-vente label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--carte-claire);
+  border: 1px solid var(--bordure);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.liste-vente input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--vert);
+  cursor: pointer;
+}
+
+.liste-vente li.garde label,
+.inventaire li.garde {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.panneau > h2 {
+  margin-bottom: 2px;
+}
+
+.panneau > .discret {
+  margin: 0 0 12px;
+}
+
+.succes-repliable summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.inventaire .boutons {
+  margin-top: 10px;
+}
+
 /* Inventaire */
 .inventaire ul {
+  margin-bottom: 0;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -645,7 +1011,10 @@ h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mineur-actif,
+  .personnage,
+  .personnage .pioche,
+  .barreaux,
+  .nuage,
   .torche,
   .gain,
   .toast,

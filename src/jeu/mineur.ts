@@ -10,6 +10,7 @@ import { choisir, entierEntre, type Aleatoire } from './aleatoire'
 import {
   BLOCS,
   BONUS_PRESTIGE,
+  DUREE_MIN_ECHELLE,
   ECART_TORCHES,
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
@@ -17,11 +18,15 @@ import {
   MULTIPLICATEUR_ACHAT,
   PIOCHES,
   PORTEE_TORCHE,
+  LARGEUR_MINE,
+  PRIX_ASCENSEUR,
   PRIX_PLANCHE,
   PRIX_SEAU,
   PROFONDEUR_BEDROCK,
   REPARATION_PAR_UNITE,
   SACS,
+  SECONDES_PAR_METRE_ASCENSEUR,
+  SECONDES_PAR_METRE_ECHELLE,
   TORCHES_DEPART,
   TORCHES_PAR_CHARBON,
   VISION_ECLAIREE,
@@ -49,8 +54,24 @@ export type Statistiques = {
   diamantsTrouves: number
 }
 
+// Où se trouve le joueur.
+export type Lieu = 'surface' | 'mine'
+
+// Un trajet à l'échelle en cours (null quand on ne bouge pas).
+export type Trajet = { vers: Lieu; tempsRestant: number; tempsTotal: number }
+
+export type Ascenseur = {
+  possede: boolean
+  chargement: Inventaire // ce qu'il remonte en ce moment
+  tempsRestant: number // 0 = il attend au niveau du joueur
+  tempsTotal: number // durée de l'aller-retour en cours
+}
+
 export type EtatJeu = {
   version: number
+  lieu: Lieu
+  trajet: Trajet | null
+  colonneMineur: number // où se tient le mineur au-dessus de la couche en cours (0 à 5)
   argent: number
   profondeur: number // profondeur de la couche en cours, en mètres (1 = juste sous l'herbe)
   coucheActuelle: (IdBloc | null)[] // null = bloc déjà cassé
@@ -60,6 +81,8 @@ export type EtatJeu = {
   niveauPioche: number // la pioche équipée
   meilleure: number // plus haut niveau de pioche débloqué
   inventaire: Inventaire // le contenu du sac
+  nonAVendre: IdBloc[] // objets décochés au marché : « Vendre tout » les garde
+  ascenseur: Ascenseur
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   seaux: number
@@ -71,18 +94,21 @@ export type EtatJeu = {
   victoire: boolean
 }
 
-export const VERSION_ETAT = 1
+export const VERSION_ETAT = 2
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
 // ---------------------------------------------------------------------------
 
-export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[] = []): EtatJeu {
+export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[] = [], nonAVendre: IdBloc[] = []): EtatJeu {
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(1 + i, aleatoire))
 
   return {
     version: VERSION_ETAT,
+    lieu: 'surface', // on commence au village, devant le puits
+    trajet: null,
+    colonneMineur: 0,
     argent: 0,
     profondeur: 1,
     coucheActuelle: genererCouche(1, aleatoire),
@@ -92,6 +118,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[]
     niveauPioche: 0,
     meilleure: 0,
     inventaire: {},
+    nonAVendre: [...nonAVendre],
+    ascenseur: { possede: false, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
     seaux: 0,
@@ -114,7 +142,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, succes: string[]
 
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
-  return creerPartie(aleatoire, etat.prestige + 1, etat.succes)
+  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre)
 }
 
 // ---------------------------------------------------------------------------
@@ -169,16 +197,36 @@ export function quantite(etat: EtatJeu, bloc: IdBloc): number {
   return etat.inventaire[bloc] ?? 0
 }
 
-// Nombre de couches visibles (la couche en cours comprise).
-export function vision(etat: EtatJeu): number {
-  if (etat.profondeur <= 3) return VISION_ECLAIREE
-  const eclaire = etat.torchesPosees.some((d) => d <= etat.profondeur && etat.profondeur - d <= PORTEE_TORCHE)
-  return eclaire ? VISION_ECLAIREE : VISION_SOMBRE
+// Le joueur est à la surface (et pas en train de grimper) : il peut vendre et acheter.
+export function aLaSurface(etat: EtatJeu): boolean {
+  return etat.lieu === 'surface' && etat.trajet === null
 }
 
-// Le prochain bloc à casser dans la couche en cours.
+// Le joueur est au fond de la mine, prêt à creuser.
+export function auFond(etat: EtatJeu): boolean {
+  return etat.lieu === 'mine' && etat.trajet === null
+}
+
+export function estEclaire(etat: EtatJeu): boolean {
+  if (etat.profondeur <= 3) return true
+  return etat.torchesPosees.some((d) => d <= etat.profondeur && etat.profondeur - d <= PORTEE_TORCHE)
+}
+
+// Nombre de couches visibles (la couche en cours comprise).
+export function vision(etat: EtatJeu): number {
+  return estEclaire(etat) ? VISION_ECLAIREE : VISION_SOMBRE
+}
+
+// Le prochain bloc à casser : celui sous le mineur, sinon le plus proche de lui.
+// Renvoie -1 si la couche est finie.
 export function indexBlocActuel(etat: EtatJeu): number {
-  return etat.coucheActuelle.findIndex((b) => b !== null)
+  let meilleur = -1
+  etat.coucheActuelle.forEach((bloc, colonne) => {
+    if (bloc === null) return
+    const distance = Math.abs(colonne - etat.colonneMineur)
+    if (meilleur === -1 || distance < Math.abs(meilleur - etat.colonneMineur)) meilleur = colonne
+  })
+  return meilleur
 }
 
 export function blocActuel(etat: EtatJeu): IdBloc | null {
@@ -238,8 +286,9 @@ export function nbDrops(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): numb
 export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
   const index = indexBlocActuel(etat)
-  if (etat.victoire || index === -1) return messages
+  if (etat.victoire || !auFond(etat) || index === -1) return messages
   const bloc = etat.coucheActuelle[index] as IdBloc
+  etat.colonneMineur = index // le mineur se place au-dessus du bloc
 
   etat.stats.tempsMinage += dureeBlocActuel(etat)
   etat.stats.blocsCasses += 1
@@ -314,7 +363,7 @@ function recolter(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   const nombre = nbDrops(etat, bloc, aleatoire)
   if (bloc === 'diamant') etat.stats.diamantsTrouves += nombre
   const perdus = ramasser(etat, bloc, nombre)
-  if (perdus > 0) messages.push('🎒 Sac plein ! Vends pour faire de la place.')
+  if (perdus > 0) messages.push('🎒 Sac plein ! Remonte vendre au marché (ou envoie l’ascenseur).')
   return messages
 }
 
@@ -368,54 +417,154 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 // Vente
 // ---------------------------------------------------------------------------
 
-// Ce que la vente garde de côté : les matériaux de la prochaine pioche, et les
-// lapis et émeraudes encore nécessaires pour les enchantements.
-export function quantitesReservees(etat: EtatJeu): Inventaire {
-  const reserve: Inventaire = {}
-
-  const prochaine = PIOCHES[etat.meilleure + 1]
-  if (prochaine) {
-    for (const [bloc, nombre] of Object.entries(prochaine.materiaux)) reserve[bloc as IdBloc] = nombre
-  }
-
-  let lapis = 0
-  let emeraudes = 0
-  for (const id of LISTE_ENCHANTEMENTS) {
-    const e = ENCHANTEMENTS[id]
-    for (let n = etat.enchantements[id] + 1; n <= e.niveauMax; n++) {
-      lapis += e.lapisParNiveau * n
-      emeraudes += e.emeraudesParNiveau * n
-    }
-  }
-  if (lapis > 0) reserve.lapis = lapis
-  if (emeraudes > 0) reserve.emeraude = emeraudes
-
-  return reserve
+// Valeur d'un lot d'objets au marché (avec le bonus de prestige).
+export function valeurDe(etat: EtatJeu, objets: Inventaire): number {
+  let total = 0
+  for (const [id, nombre] of Object.entries(objets)) total += (nombre ?? 0) * BLOCS[id as IdBloc].prix
+  return Math.round(total * bonusVente(etat))
 }
 
-// Ce que rapporterait la vente, et ce qu'elle vendrait.
-export function apercuVente(etat: EtatJeu): { gain: number; vendus: Inventaire } {
-  const reserve = quantitesReservees(etat)
-  const vendus: Inventaire = {}
-  let gain = 0
+// Ce que « Vendre tout » mettrait en vente : tout le sac, sauf les objets décochés.
+export function objetsAVendre(etat: EtatJeu): Inventaire {
+  const objets: Inventaire = {}
   for (const [id, nombre] of Object.entries(etat.inventaire)) {
     const bloc = id as IdBloc
-    const aVendre = Math.max(0, (nombre ?? 0) - (reserve[bloc] ?? 0))
-    if (aVendre > 0) {
-      vendus[bloc] = aVendre
-      gain += aVendre * BLOCS[bloc].prix
-    }
+    if (!etat.nonAVendre.includes(bloc) && (nombre ?? 0) > 0) objets[bloc] = nombre
   }
-  return { gain: Math.round(gain * bonusVente(etat)), vendus }
+  return objets
 }
 
+export function apercuVente(etat: EtatJeu): number {
+  return valeurDe(etat, objetsAVendre(etat))
+}
+
+// Coche ou décoche un objet au marché.
+export function basculerVente(etat: EtatJeu, bloc: IdBloc): string[] {
+  if (etat.nonAVendre.includes(bloc)) etat.nonAVendre = etat.nonAVendre.filter((b) => b !== bloc)
+  else etat.nonAVendre.push(bloc)
+  return []
+}
+
+// « Vendre tout » au marché de la surface.
 export function vendre(etat: EtatJeu): string[] {
-  const { gain, vendus } = apercuVente(etat)
+  if (!aLaSurface(etat)) return ['⬆️ Le marché est à la surface : remonte par l’échelle.']
+  const objets = objetsAVendre(etat)
+  const gain = valeurDe(etat, objets)
   if (gain === 0) return ['Rien à vendre pour le moment.']
-  for (const [bloc, nombre] of Object.entries(vendus)) retirer(etat, bloc as IdBloc, nombre ?? 0)
+  for (const [bloc, nombre] of Object.entries(objets)) retirer(etat, bloc as IdBloc, nombre ?? 0)
   etat.argent += gain
   etat.stats.argentGagne += gain
   return [`💰 Vente : +${gain} $`]
+}
+
+// ---------------------------------------------------------------------------
+// Déplacements : à gauche et à droite dans la mine, et l'échelle
+// ---------------------------------------------------------------------------
+
+// Déplace le mineur d'une case (sens = -1 pour la gauche, +1 pour la droite).
+export function deplacerMineur(etat: EtatJeu, sens: number): string[] {
+  if (!auFond(etat)) return []
+  etat.colonneMineur = Math.min(LARGEUR_MINE - 1, Math.max(0, etat.colonneMineur + sens))
+  return []
+}
+
+// Temps pour monter (ou descendre) toute l'échelle depuis la profondeur actuelle.
+export function dureeEchelle(etat: EtatJeu): number {
+  return Math.max(DUREE_MIN_ECHELLE, etat.profondeur * SECONDES_PAR_METRE_ECHELLE)
+}
+
+export function monterALaSurface(etat: EtatJeu): string[] {
+  if (!auFond(etat)) return []
+  const duree = dureeEchelle(etat)
+  etat.trajet = { vers: 'surface', tempsRestant: duree, tempsTotal: duree }
+  return []
+}
+
+export function descendreDansLaMine(etat: EtatJeu): string[] {
+  if (!aLaSurface(etat) || etat.victoire) return []
+  const duree = dureeEchelle(etat)
+  etat.trajet = { vers: 'mine', tempsRestant: duree, tempsTotal: duree }
+  return []
+}
+
+// Profondeur où se trouve le joueur en ce moment (il peut être sur l'échelle).
+export function profondeurDuJoueur(etat: EtatJeu): number {
+  if (etat.trajet === null) return etat.lieu === 'surface' ? 0 : etat.profondeur
+  const avancement = 1 - etat.trajet.tempsRestant / etat.trajet.tempsTotal
+  const depart = etat.trajet.vers === 'surface' ? etat.profondeur : 0
+  const arrivee = etat.trajet.vers === 'surface' ? 0 : etat.profondeur
+  return Math.round(depart + (arrivee - depart) * avancement)
+}
+
+// ---------------------------------------------------------------------------
+// L'ascenseur automatique
+// ---------------------------------------------------------------------------
+
+export function peutAcheterAscenseur(etat: EtatJeu): boolean {
+  return (
+    !etat.ascenseur.possede &&
+    etat.argent >= PRIX_ASCENSEUR.argent &&
+    quantite(etat, 'redstone') >= PRIX_ASCENSEUR.redstone
+  )
+}
+
+export function acheterAscenseur(etat: EtatJeu): string[] {
+  if (!aLaSurface(etat) || !peutAcheterAscenseur(etat)) return []
+  etat.argent -= PRIX_ASCENSEUR.argent
+  retirer(etat, 'redstone', PRIX_ASCENSEUR.redstone)
+  etat.ascenseur.possede = true
+  return ['🛗 Ascenseur construit ! Il remonte ton sac au marché quand il est plein.']
+}
+
+// L'ascenseur attend au niveau du joueur, prêt à partir.
+export function ascenseurDisponible(etat: EtatJeu): boolean {
+  return etat.ascenseur.possede && etat.ascenseur.tempsRestant === 0
+}
+
+// Charge l'ascenseur avec le sac (sauf les objets décochés) et l'envoie au marché.
+export function envoyerAscenseur(etat: EtatJeu): string[] {
+  if (!auFond(etat) || !ascenseurDisponible(etat)) return []
+  const chargement = objetsAVendre(etat)
+  if (Object.keys(chargement).length === 0) return []
+  for (const [bloc, nombre] of Object.entries(chargement)) retirer(etat, bloc as IdBloc, nombre ?? 0)
+  // Aller jusqu'à la surface, puis retour au niveau du joueur.
+  const duree = Math.max(DUREE_MIN_ECHELLE, 2 * etat.profondeur * SECONDES_PAR_METRE_ASCENSEUR)
+  etat.ascenseur = { possede: true, chargement, tempsRestant: duree, tempsTotal: duree }
+  return ['🛗 L’ascenseur remonte ton chargement au marché.']
+}
+
+// ---------------------------------------------------------------------------
+// Le temps qui passe : trajet à l'échelle et voyage de l'ascenseur
+// ---------------------------------------------------------------------------
+
+export function avancerTemps(etat: EtatJeu, secondes: number): string[] {
+  const messages: string[] = []
+
+  // L'échelle.
+  if (etat.trajet !== null) {
+    etat.trajet.tempsRestant -= secondes
+    if (etat.trajet.tempsRestant <= 0) {
+      etat.lieu = etat.trajet.vers
+      etat.trajet = null
+      messages.push(etat.lieu === 'surface' ? '☀️ Te voilà à la surface !' : `⛏️ De retour au fond, à -${etat.profondeur} m.`)
+    }
+  }
+
+  // L'ascenseur : il vend son chargement en arrivant en haut (à mi-parcours).
+  const ascenseur = etat.ascenseur
+  if (ascenseur.tempsRestant > 0) {
+    ascenseur.tempsRestant = Math.max(0, ascenseur.tempsRestant - secondes)
+    const arriveEnHaut = ascenseur.tempsRestant <= ascenseur.tempsTotal / 2
+    if (arriveEnHaut && Object.keys(ascenseur.chargement).length > 0) {
+      const gain = valeurDe(etat, ascenseur.chargement)
+      ascenseur.chargement = {}
+      etat.argent += gain
+      etat.stats.argentGagne += gain
+      messages.push(`🛗 L’ascenseur a vendu ton chargement : +${gain} $`)
+    }
+  }
+
+  return messages
 }
 
 // ---------------------------------------------------------------------------
@@ -452,7 +601,7 @@ export function peutReparer(etat: EtatJeu, niveau = etat.niveauPioche): boolean 
 }
 
 export function reparer(etat: EtatJeu, niveau = etat.niveauPioche): string[] {
-  if (!peutReparer(etat, niveau)) return []
+  if (!aLaSurface(etat) || !peutReparer(etat, niveau)) return []
   const devis = devisReparation(etat, niveau)
   const pioche = PIOCHES[niveau]
   if (pioche.reparation !== 'planche') retirer(etat, pioche.reparation, devis.dansLeSac)
@@ -473,7 +622,7 @@ export function peutAcheterPioche(etat: EtatJeu, niveau: number): boolean {
 }
 
 export function acheterPioche(etat: EtatJeu, niveau: number): string[] {
-  if (!peutAcheterPioche(etat, niveau)) return []
+  if (!aLaSurface(etat) || !peutAcheterPioche(etat, niveau)) return []
   const pioche = PIOCHES[niveau]
   const nouvelle = niveau > etat.meilleure
   etat.argent -= pioche.prix
@@ -501,14 +650,14 @@ export function prixProchainSac(etat: EtatJeu): number | null {
 
 export function acheterSac(etat: EtatJeu): string[] {
   const prix = prixProchainSac(etat)
-  if (prix === null || etat.argent < prix) return []
+  if (!aLaSurface(etat) || prix === null || etat.argent < prix) return []
   etat.argent -= prix
   etat.niveauSac += 1
   return [`🎒 Nouveau sac : ${tailleSac(etat)} places !`]
 }
 
 export function acheterSeau(etat: EtatJeu): string[] {
-  if (etat.argent < PRIX_SEAU) return []
+  if (!aLaSurface(etat) || etat.argent < PRIX_SEAU) return []
   etat.argent -= PRIX_SEAU
   etat.seaux += 1
   return ["🪣 Seau d'eau acheté."]
@@ -544,7 +693,7 @@ export function peutEncoreEnchanter(etat: EtatJeu): boolean {
 
 export function enchanter(etat: EtatJeu, id: IdEnchantement): string[] {
   const cout = coutEnchantement(etat, id)
-  if (cout === null || !peutEnchanter(etat, id)) return []
+  if (!aLaSurface(etat) || cout === null || !peutEnchanter(etat, id)) return []
   retirer(etat, 'lapis', cout.lapis)
   retirer(etat, 'emeraude', cout.emeraudes)
   etat.enchantements[id] += 1

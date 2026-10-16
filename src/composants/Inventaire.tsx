@@ -1,41 +1,36 @@
-// Le contenu du sac, avec la valeur de chaque pile.
+// Le contenu du sac (au fond de la mine, on ne peut pas vendre : seulement regarder).
 
-import { BLOCS, type IdBloc } from '../jeu/donnees'
-import { bonusVente, quantitesReservees, type EtatJeu } from '../jeu/mineur'
+import { BLOCS, TORCHES_PAR_CHARBON, type IdBloc } from '../jeu/donnees'
+import { bonusVente, fabriquerTorches, quantite, type EtatJeu } from '../jeu/mineur'
+import type { Action } from '../usePartie'
 
-export function Inventaire({ etat }: { etat: EtatJeu }) {
-  const reserve = quantitesReservees(etat)
+export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
   // Les objets les plus précieux en premier.
-  const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(
-    ([a], [b]) => BLOCS[b].prix - BLOCS[a].prix,
-  )
+  const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
 
   return (
-    <section className="carte inventaire">
-      <h2>🎒 Inventaire</h2>
+    <div className="inventaire">
       {piles.length === 0 ? (
         <p className="discret">Ton sac est vide. Creuse !</p>
       ) : (
         <ul>
-          {piles.map(([id, nombre]) => {
-            const garde = Math.min(nombre, reserve[id] ?? 0)
-            return (
-              <li key={id}>
-                <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-                <span className="inventaire-nom">{BLOCS[id].nom}</span>
-                <span className="inventaire-nombre">×{nombre}</span>
-                <span className="inventaire-valeur">
-                  {garde > 0 ? (
-                    <span title="Gardé pour une pioche ou un enchantement">🔒 {garde}</span>
-                  ) : (
-                    `${Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $`
-                  )}
-                </span>
-              </li>
-            )
-          })}
+          {piles.map(([id, nombre]) => (
+            <li key={id} className={etat.nonAVendre.includes(id) ? 'garde' : ''}>
+              <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+              <span className="inventaire-nom">{BLOCS[id].nom}</span>
+              <span className="inventaire-nombre">×{nombre}</span>
+              <span className="inventaire-valeur">
+                {etat.nonAVendre.includes(id) ? '🔒' : `${Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $`}
+              </span>
+            </li>
+          ))}
         </ul>
       )}
-    </section>
+      <div className="boutons">
+        <button className="bouton bouton-petit" disabled={quantite(etat, 'charbon') < 1} onClick={() => jouer(fabriquerTorches)}>
+          🕯️ Fabriquer {TORCHES_PAR_CHARBON} torches · 1 charbon
+        </button>
+      </div>
+    </div>
   )
 }

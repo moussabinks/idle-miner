@@ -2,11 +2,13 @@
 
 import { LISTE_ENCHANTEMENTS, ENCHANTEMENTS, zoneDe } from '../jeu/donnees'
 import {
+  aLaSurface,
   chiffreRomain,
   durabiliteRestante,
   estCassee,
   nbDansSac,
   piocheEquipee,
+  profondeurDuJoueur,
   tailleSac,
   vitesse,
   type EtatJeu,
@@ -17,6 +19,7 @@ export function Hud({ etat }: { etat: EtatJeu }) {
   const pioche = piocheEquipee(etat)
   const cassee = estCassee(etat)
   const zone = zoneDe(etat.profondeur)
+  const enVille = aLaSurface(etat)
   const enchantements = LISTE_ENCHANTEMENTS.filter((id) => etat.enchantements[id] > 0)
 
   return (
@@ -27,8 +30,14 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       </div>
 
       <div className="hud-case">
-        <span className="hud-titre">{zone.nom}</span>
-        <strong>📏 -{etat.profondeur} m</strong>
+        <span className="hud-titre">{etat.trajet !== null ? "Sur l'échelle" : enVille ? `Front à -${etat.profondeur} m` : zone.nom}</span>
+        <strong>
+          {etat.trajet !== null
+            ? `🪜 ${profondeurDuJoueur(etat) === 0 ? 'Surface' : `-${profondeurDuJoueur(etat)} m`}`
+            : enVille
+              ? '☀️ Surface'
+              : `📏 -${etat.profondeur} m`}
+        </strong>
       </div>
 
       <div className="hud-case hud-pioche">
@@ -56,6 +65,7 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       <div className="hud-case hud-petits">
         <span title="Torches">🕯️ {etat.torches}</span>
         <span title="Seaux d'eau">🪣 {etat.seaux}</span>
+        {etat.ascenseur.possede && <span title="Ascenseur automatique">🛗</span>}
         {etat.prestige > 0 && <span title="Prestige (+25 % sur les ventes par niveau)">⭐ {etat.prestige}</span>}
       </div>
     </header>
