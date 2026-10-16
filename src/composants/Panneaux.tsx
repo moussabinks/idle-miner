@@ -1,0 +1,253 @@
+// Les panneaux d'achat : Pioches, Boutique, Enchanter et Succès.
+// Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
+
+import type { ReactNode } from 'react'
+import {
+  BLOCS,
+  ENCHANTEMENTS,
+  LISTE_ENCHANTEMENTS,
+  PIOCHES,
+  PRIX_SEAU,
+  SACS,
+  TORCHES_PAR_CHARBON,
+  type IdBloc,
+} from '../jeu/donnees'
+import {
+  acheterPioche,
+  acheterSac,
+  acheterSeau,
+  chiffreRomain,
+  coutEnchantement,
+  devisReparation,
+  enchanter,
+  equiper,
+  fabriquerTorches,
+  peutAcheterPioche,
+  peutEnchanter,
+  peutReparer,
+  prixProchainSac,
+  quantite,
+  reparer,
+  type DevisReparation,
+  type EtatJeu,
+} from '../jeu/mineur'
+import { SUCCES } from '../jeu/succes'
+import type { Action } from '../usePartie'
+import { Barre } from './Barre'
+
+type PropsPanneau = {
+  etat: EtatJeu
+  jouer: (action: Action) => void
+}
+
+function Bouton({ actif, onClick, children }: { actif: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button className="bouton bouton-petit" disabled={!actif} onClick={onClick}>
+      {children}
+    </button>
+  )
+}
+
+// Affiche « 3/4 💎 Diamant » en rouge s'il en manque.
+function Materiau({ etat, bloc, nombre }: { etat: EtatJeu; bloc: IdBloc; nombre: number }) {
+  const possede = quantite(etat, bloc)
+  return (
+    <span className={possede >= nombre ? 'ok' : 'manque'}>
+      {Math.min(possede, nombre)}/{nombre} {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
+    </span>
+  )
+}
+
+// « 2 Fer », « 48 $ » ou « 24 $ + 1 Fer » selon ce qu'il faut pour réparer.
+function texteDevis(devis: DevisReparation): string {
+  const morceaux: string[] = []
+  if (devis.cout > 0) morceaux.push(`${devis.cout} $`)
+  if (devis.dansLeSac > 0) morceaux.push(`${devis.dansLeSac} ${devis.materiau}`)
+  return morceaux.join(' + ')
+}
+
+// ---------------------------------------------------------------------------
+
+export function PanneauPioches({ etat, jouer }: PropsPanneau) {
+  return (
+    <div className="liste-cartes">
+      {PIOCHES.map((pioche) => {
+        const possedee = pioche.niveau in etat.pioches
+        const equipee = pioche.niveau === etat.niveauPioche
+        const debloquee = pioche.niveau <= etat.meilleure
+        const prochaine = pioche.niveau === etat.meilleure + 1
+        const usure = etat.pioches[pioche.niveau] ?? 0
+        const devis = devisReparation(etat, pioche.niveau)
+
+        if (!debloquee && !prochaine) {
+          return (
+            <div key={pioche.niveau} className="ligne-achat verrouille">
+              <strong>🔒 Pioche en {pioche.nom}</strong>
+              <span className="discret">Débloque d'abord la pioche précédente.</span>
+            </div>
+          )
+        }
+
+        return (
+          <div key={pioche.niveau} className={`ligne-achat ${equipee ? 'equipee' : ''}`}>
+            <div className="ligne-titre">
+              <strong>
+                {pioche.emoji} Pioche en {pioche.nom}
+              </strong>
+              {equipee && <span className="badge">Équipée</span>}
+            </div>
+            <span className="discret">
+              Vitesse x{pioche.vitesse} · jusqu'à -{pioche.profMax} m · durabilité {pioche.durabilite}
+            </span>
+
+            {possedee && (
+              <Barre
+                valeur={pioche.durabilite - usure}
+                max={pioche.durabilite}
+                texte={usure >= pioche.durabilite ? 'Cassée' : `${pioche.durabilite - usure} / ${pioche.durabilite}`}
+                couleur={usure >= pioche.durabilite ? 'rouge' : 'vert'}
+              />
+            )}
+
+            {prochaine && Object.keys(pioche.materiaux).length > 0 && (
+              <span className="materiaux">
+                Il faut :{' '}
+                {Object.entries(pioche.materiaux).map(([bloc, nombre]) => (
+                  <Materiau key={bloc} etat={etat} bloc={bloc as IdBloc} nombre={nombre ?? 0} />
+                ))}
+              </span>
+            )}
+
+            <div className="boutons">
+              {possedee && !equipee && (
+                <Bouton actif onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
+                  Équiper
+                </Bouton>
+              )}
+              {possedee && usure > 0 && (
+                <Bouton actif={peutReparer(etat, pioche.niveau)} onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
+                  🔧 Réparer · {texteDevis(devis)}
+                </Bouton>
+              )}
+              <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
+                {prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'} · {pioche.prix.toLocaleString('fr-FR')} $
+              </Bouton>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+export function PanneauBoutique({ etat, jouer }: PropsPanneau) {
+  const prixSac = prixProchainSac(etat)
+  const prochainSac = SACS[etat.niveauSac + 1]
+
+  return (
+    <div className="liste-cartes">
+      <div className="ligne-achat">
+        <strong>🎒 Sac plus grand</strong>
+        <span className="discret">
+          {prochainSac ? `${SACS[etat.niveauSac].taille} → ${prochainSac.taille} places` : `Tu as le plus grand sac (${SACS[etat.niveauSac].taille} places).`}
+        </span>
+        {prixSac !== null && (
+          <div className="boutons">
+            <Bouton actif={etat.argent >= prixSac} onClick={() => jouer(acheterSac)}>
+              Acheter · {prixSac.toLocaleString('fr-FR')} $
+            </Bouton>
+          </div>
+        )}
+      </div>
+
+      <div className="ligne-achat">
+        <strong>🪣 Seau d'eau</strong>
+        <span className="discret">Transforme une lave en obsidienne (60 $) au lieu de brûler ton sac. Tu en as {etat.seaux}.</span>
+        <div className="boutons">
+          <Bouton actif={etat.argent >= PRIX_SEAU} onClick={() => jouer(acheterSeau)}>
+            Acheter · {PRIX_SEAU} $
+          </Bouton>
+        </div>
+      </div>
+
+      <div className="ligne-achat">
+        <strong>🕯️ Torches</strong>
+        <span className="discret">
+          Une torche est posée tous les 5 m pour y voir clair. 1 charbon = {TORCHES_PAR_CHARBON} torches. Tu en as {etat.torches}.
+        </span>
+        <div className="boutons">
+          <Bouton actif={quantite(etat, 'charbon') > 0} onClick={() => jouer(fabriquerTorches)}>
+            Fabriquer · 1 ⚫ charbon
+          </Bouton>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
+  return (
+    <div className="liste-cartes">
+      <p className="discret">
+        Les enchantements s'appliquent à toutes tes pioches. Tu as {quantite(etat, 'lapis')} 🔷 lapis et {quantite(etat, 'emeraude')} 💚 émeraudes.
+      </p>
+      {LISTE_ENCHANTEMENTS.map((id) => {
+        const e = ENCHANTEMENTS[id]
+        const niveau = etat.enchantements[id]
+        const cout = coutEnchantement(etat, id)
+        return (
+          <div key={id} className="ligne-achat">
+            <div className="ligne-titre">
+              <strong>✨ {e.nom}</strong>
+              <span className="badge">
+                {niveau === 0 ? 'Aucun' : chiffreRomain(niveau)} / {chiffreRomain(e.niveauMax)}
+              </span>
+            </div>
+            <span className="discret">{e.description}</span>
+            {cout === null ? (
+              <span className="ok">Niveau max atteint !</span>
+            ) : (
+              <div className="boutons">
+                <span className="materiaux">
+                  <Materiau etat={etat} bloc="lapis" nombre={cout.lapis} />
+                  <Materiau etat={etat} bloc="emeraude" nombre={cout.emeraudes} />
+                </span>
+                <Bouton actif={peutEnchanter(etat, id)} onClick={() => jouer((x) => enchanter(x, id))}>
+                  Enchanter {chiffreRomain(niveau + 1)}
+                </Bouton>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+export function PanneauSucces({ etat }: { etat: EtatJeu }) {
+  return (
+    <>
+      <p className="discret">
+        {etat.succes.length} / {SUCCES.length} succès débloqués (ils restent après un prestige).
+      </p>
+      <ul className="grille-succes">
+        {SUCCES.map((s) => {
+          const obtenu = etat.succes.includes(s.id)
+          return (
+            <li key={s.id} className={obtenu ? 'obtenu' : ''}>
+              <span className="succes-emoji">{obtenu ? s.emoji : '🔒'}</span>
+              <strong>{s.titre}</strong>
+              <span className="discret">{s.description}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+}

@@ -36,21 +36,34 @@
 
 ## 4. État actuel du code
 
-- ✅ Squelette Vite + React + TS. Les tests, le build et le lint passent.
-- ✅ `src/jeu/donnees.ts` : les 5 pioches (Bois → Netherite) et `dureeCasse()`, testés dans `donnees.test.ts`.
-- ✅ `src/App.tsx` : page d'accueil provisoire qui liste les pioches.
-- ❌ Le jeu lui-même n'est pas encore codé.
+Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-## 5. Feuille de route (proposition)
+- `src/jeu/` (logique pure, testée avec Vitest) :
+  - `donnees.ts` : blocs, pioches, sacs, enchantements, zones et constantes de la spec v1.
+  - `aleatoire.ts` : aléatoire injectable (`Math.random` en jeu, générateur à graine dans les tests).
+  - `mine.ts` : génération des couches pondérée selon la profondeur.
+  - `mineur.ts` : l'état de la partie (`EtatJeu`, un objet JSON) et toutes les actions (casser, vendre, réparer, acheter, enchanter, prestige).
+  - `succes.ts` : les 16 succès. `sauvegarde.ts` : `localStorage`.
+  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties. Médiane ≈ 1 000 blocs pour la bedrock, pioche en fer vers -30 m.
+- `src/usePartie.ts` : le hook React qui relie la logique à l'écran (minage animé, toasts, sauvegarde auto).
+- `src/composants/` : vue de la mine, HUD, inventaire, panneaux (Pioches, Boutique, Enchanter, Succès), toasts, écran de victoire.
+- `src/blocs.css` : tous les blocs et animations en CSS. `src/index.css` : mise en page (desktop et mobile).
 
-1. **Données** : blocs, sacs, enchantements, zones et succès, repris de la spec v1.
-2. **Mine** : génération des couches pondérée selon la profondeur, avec un aléatoire injectable.
-3. **Mineur** : inventaire, pioches et usure, vente, réparation, achats.
-4. **Bot de simulation** : un test qui joue une partie complète et vérifie la bedrock en 900 à 1 250 blocs.
-5. **UI** : vue de la mine, minage animé, boutons, panneaux (Pioches, Boutique, Enchanter, Succès), toasts.
-6. **Sauvegarde** dans `localStorage`.
-7. **Fin de partie** : victoire à la bedrock, prestige et succès.
-8. **Polish** : ambiance par zone, animations, sons, version mobile.
+### Choix faits là où la spec v1 ne disait rien
+
+- Sac plein : le bloc est cassé mais perdu, et le minage « x10 » s'arrête tout seul.
+- Le seau d'eau est consommé quand il éteint une lave.
+- La vente garde les lapis et émeraudes **seulement à hauteur de ce qu'il reste à payer** en enchantements.
+- Racheter une pioche neuve coûte le même prix (matériaux compris) que la débloquer.
+- Pioche cassée : on mine à mains nues, mais la profondeur max reste celle de la pioche équipée.
+- La liste des 16 succès a été réinventée (la v1 ne la détaillait pas).
+
+## 5. Feuille de route
+
+1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, fin de partie (victoire, prestige, succès).
+2. **Brancher Vercel** (décision A/B ci-dessus).
+3. **Polish** : sons, meilleure ambiance par zone, éventuellement des sprites.
+4. Ajuster l'équilibrage après de vraies parties (le bot donne une partie de 3 à 5 min de minage pur).
 
 ## 6. Décisions de design (héritées de la v1)
 
@@ -62,3 +75,4 @@
 
 - **2026-10-15** : choix de la stack, installation des outils sur le Mac, création du squelette et du dépôt GitHub privé. Ajout du collaborateur `N04H2004`.
 - **2026-10-16** : ajout de ce fichier `CONTEXTE.md` au dépôt.
+- **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).
