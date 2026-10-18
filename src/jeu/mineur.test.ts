@@ -412,12 +412,12 @@ describe('boutique et enchantements', () => {
 })
 
 describe('assistant (Emmanuel Macron)', () => {
-  it('s’embauche au village pour 2 000 $', () => {
+  it('s’embauche au village pour 1 000 $', () => {
     const etat = partieALaSurface()
-    etat.argent = 1999
+    etat.argent = 999
     embaucherAssistant(etat)
     expect(etat.assistant.embauche).toBe(false)
-    etat.argent = 2500
+    etat.argent = 1500
     embaucherAssistant(etat)
     expect(etat.assistant.embauche).toBe(true)
     expect(etat.argent).toBe(500)

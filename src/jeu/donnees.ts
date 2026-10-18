@@ -175,7 +175,7 @@ export const PRESTIGE_FOREUSE = 1
 // ---------------------------------------------------------------------------
 
 // Prix de l'embauche (une seule fois par partie).
-export const PRIX_ASSISTANT = 2000
+export const PRIX_ASSISTANT = 1000
 
 // Un charbon fait tourner la foreuse pendant 20 secondes.
 export const SECONDES_PAR_CHARBON = 20
