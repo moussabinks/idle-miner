@@ -7,7 +7,9 @@ import { aleatoireNavigateur } from './jeu/aleatoire'
 import { LARGEUR_MINE } from './jeu/donnees'
 import { nbDansChariot } from './jeu/foreuse'
 import {
+  appelerAscenseur,
   ascenseurDisponible,
+  ascenseurEnMouvement,
   auFond,
   casserBloc,
   casserBlocAssistant,
@@ -17,6 +19,8 @@ import {
   envoyerAscenseur,
   indexBlocActuel,
   indexBlocAssistant,
+  nbSurQuai,
+  peutStocker,
   prestige,
   sacPlein,
   type EtatJeu,
@@ -146,24 +150,27 @@ export function usePartie() {
   const travailAssistant = useRef<Travail>({ cle: '', temps: 0 })
 
   // Après chaque bloc cassé : on compte, et on gère le sac plein.
+  // Avec l'ascenseur, on ne s'arrête pas : les blocs en trop attendent sur son quai.
   const apresUnBloc = useCallback(
     (apres: EtatJeu) => {
-      // Sac plein : l'ascenseur (s'il est là) emporte tout au marché.
-      if (sacPlein(apres) && ascenseurDisponible(apres)) apres = jouer(envoyerAscenseur)
-
-      if (apres.victoire) changerBlocsRestants(0)
-      else if (sacPlein(apres)) {
+      if (!auFond(apres)) {
+        // Le mineur n'est plus au front (un monstre l'a assommé, par exemple).
+        changerBlocsRestants(0)
+      } else if (!peutStocker(apres)) {
         changerBlocsRestants(0)
         afficherToasts([
           {
             id: prochainId++,
-            texte: apres.ascenseur.niveau > 0 ? '🎒 Sac plein ! Attends le retour de l’ascenseur.' : '🎒 Sac plein ! Remonte vendre au marché (↑).',
+            texte:
+              apres.ascenseur.niveau > 0
+                ? '🎒 Sac et quai pleins ! Attends le retour de l’ascenseur.'
+                : '🎒 Sac plein ! Remonte vendre au marché (↑).',
             succes: false,
           },
         ])
       } else changerBlocsRestants(blocsRestantsRef.current - 1)
     },
-    [jouer, changerBlocsRestants, afficherToasts],
+    [changerBlocsRestants, afficherToasts],
   )
 
   // Un « tic » de l'horloge : le temps passe pour tout le monde.
@@ -174,10 +181,17 @@ export function usePartie() {
 
       // Le minage (seulement si on a demandé de creuser, et au front de taille).
       if (blocsRestantsRef.current <= 0) return
-      const etatActuel = etatRef.current
-      if (etatActuel.victoire || !auFond(etatActuel)) {
+      let etatActuel = etatRef.current
+      if (!auFond(etatActuel)) {
         changerBlocsRestants(0)
         return
+      }
+
+      // Sac plein (ou quai pas vide) : la cabine emporte tout au marché si elle est là,
+      // sinon on l'appelle. Pendant ce temps, on continue de creuser.
+      const aRemonter = sacPlein(etatActuel) || nbSurQuai(etatActuel) > 0
+      if (aRemonter && etatActuel.ascenseur.niveau > 0 && !ascenseurEnMouvement(etatActuel)) {
+        etatActuel = ascenseurDisponible(etatActuel) ? jouer(envoyerAscenseur) : jouer(appelerAscenseur)
       }
 
       // Le joueur avance sur son bloc.

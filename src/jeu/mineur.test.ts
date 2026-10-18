@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
+  acheterEpee,
   acheterPioche,
   acheterSac,
   apercuVente,
   allerA,
   ameliorerAscenseur,
+  appelerAscenseur,
   ascenseurDisponible,
   basculerVente,
   casserBloc,
@@ -27,6 +29,7 @@ import {
   indexBlocActuel,
   arreterSurEchelle,
   nbDansSac,
+  prendreAscenseur,
   prestige,
   positionFront,
   reparer,
@@ -47,6 +50,13 @@ function placerAuFront(etat: EtatJeu, profondeur: number) {
   etat.profondeur = profondeur
   etat.position = positionFront(etat)
   etat.cible = etat.position
+}
+
+// Construit l'ascenseur (au niveau donné), avec sa cabine là où se trouve le joueur.
+function construireAscenseur(etat: EtatJeu, niveau: number) {
+  etat.ascenseur.niveau = niveau
+  etat.ascenseur.position = etat.position
+  etat.ascenseur.cible = etat.position
 }
 
 // Une partie neuve, avec le joueur déjà au front de taille.
@@ -127,7 +137,7 @@ describe('minage', () => {
     expect(messages.join()).toContain('Sac plein')
   })
 
-  it('atteint la bedrock avec la pioche en netherite', () => {
+  it('atteint la bedrock avec la pioche en netherite, et peut continuer de creuser au-dessus', () => {
     const etat = nouvellePartie()
     etat.pioches[4] = 0
     etat.niveauPioche = 4
@@ -135,7 +145,12 @@ describe('minage', () => {
     coucheDe(etat, 'deepslate')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, toujours(0.5))
     expect(etat.victoire).toBe(true)
-    expect(etat.profondeur).toBe(128)
+    expect(etat.profondeur).toBe(127) // la bedrock est juste en dessous
+    expect(etat.enGalerie).toBe(true)
+    // On continue de creuser des galeries sur la dernière couche.
+    const avant = etat.stats.blocsCasses
+    casserBloc(etat, toujours(0.5))
+    expect(etat.stats.blocsCasses).toBe(avant + 1)
   })
 })
 
@@ -204,12 +219,19 @@ describe('vente', () => {
     expect(etat.inventaire).toEqual({ pierre: 10 })
   })
 
-  it('applique le bonus de prestige (+25 % par niveau)', () => {
+  it('applique le bonus de prestige (+15 % par niveau)', () => {
     const etat = partieALaSurface()
     etat.prestige = 2
-    etat.inventaire = { pierre: 10 }
+    etat.inventaire = { pierre: 100 }
     vendre(etat)
-    expect(etat.argent).toBe(15)
+    expect(etat.argent).toBe(130)
+  })
+
+  it('le prestige rend aussi les pioches plus rapides (+10 % par niveau)', () => {
+    const etat = nouvellePartie()
+    const vitesseDeBase = vitesse(etat)
+    etat.prestige = 3
+    expect(vitesse(etat)).toBeCloseTo(vitesseDeBase * 1.3)
   })
 })
 
@@ -308,30 +330,121 @@ describe('ascenseur', () => {
     expect(etat.ascenseur.niveau).toBe(2)
   })
 
-  it('remonte le sac, le vend en haut et redescend au niveau du joueur', () => {
+  it('remonte le sac, le vend en haut et redescend au front de taille', () => {
     const etat = nouvellePartie()
-    etat.ascenseur.niveau = 1
     placerAuFront(etat, 26) // le front est à 25 m sous le village
+    construireAscenseur(etat, 1)
     etat.inventaire = { fer: 10, diamant: 2 }
-    etat.nonAVendre = ['diamant']
+    etat.ascenseur.garder = ['diamant'] // décoché : il reste dans le sac
     envoyerAscenseur(etat)
     expect(etat.inventaire).toEqual({ diamant: 2 })
-    expect(etat.ascenseur.tempsTotal).toBeCloseTo(5) // 2 × 25 m × 0,1 s
     expect(ascenseurDisponible(etat)).toBe(false)
 
-    avancerTemps(etat, 2.5) // arrivé en haut : il vend
+    avancerTemps(etat, 2.5) // 25 m à 0,1 s par mètre : arrivé en haut, il vend
     expect(etat.argent).toBe(120)
-    avancerTemps(etat, 2.5) // redescendu
+    avancerTemps(etat, 2.5) // redescendu jusqu'au joueur
     expect(ascenseurDisponible(etat)).toBe(true)
   })
 
   it('ne prend pas plus que sa capacité, les objets les plus précieux d’abord', () => {
     const etat = nouvellePartie()
-    etat.ascenseur.niveau = 1 // 32 objets par voyage
+    construireAscenseur(etat, 1) // 32 objets par voyage
     etat.inventaire = { pierre: 30, diamant: 5 }
     envoyerAscenseur(etat)
     expect(etat.ascenseur.chargement).toEqual({ diamant: 5, pierre: 27 })
     expect(etat.inventaire).toEqual({ pierre: 3 })
+  })
+
+  it('emmène le mineur au village, avec les minerais cochés', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 51) // front à 50 m
+    construireAscenseur(etat, 1)
+    etat.inventaire = { fer: 10, lapis: 4 }
+    etat.ascenseur.garder = ['lapis']
+    prendreAscenseur(etat, 0)
+    avancerTemps(etat, 2.5)
+    expect(etat.position).toBeCloseTo(25) // à mi-chemin, avec la cabine
+    avancerTemps(etat, 2.5)
+    expect(aLaSurface(etat)).toBe(true)
+    expect(etat.argent).toBe(120) // le fer a été vendu en arrivant
+    expect(etat.inventaire).toEqual({ lapis: 4 })
+    // L'échelle aurait pris 50 × 0,15 = 7,5 s : l'ascenseur est plus rapide.
+  })
+
+  it('se laisse appeler, puis redescend le mineur au front', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 31)
+    construireAscenseur(etat, 1)
+    etat.position = 0
+    etat.cible = 0
+    appelerAscenseur(etat)
+    avancerTemps(etat, 10)
+    expect(ascenseurDisponible(etat)).toBe(true)
+    prendreAscenseur(etat, positionFront(etat))
+    avancerTemps(etat, 10)
+    expect(auFond(etat)).toBe(true)
+  })
+
+  it('suit le front de taille quand on descend', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 10)
+    construireAscenseur(etat, 1)
+    coucheDe(etat, 'pierre')
+    for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
+    expect(etat.ascenseur.position).toBe(10)
+    expect(ascenseurDisponible(etat)).toBe(true)
+  })
+
+  it('garde les blocs sur son quai quand le sac est plein : on ne perd rien', () => {
+    const etat = nouvellePartie()
+    construireAscenseur(etat, 1)
+    etat.inventaire = { pierre: 32 }
+    coucheDe(etat, 'fer')
+    casserBloc(etat, toujours(0))
+    expect(etat.ascenseur.quai).toEqual({ fer: 1 })
+    envoyerAscenseur(etat)
+    expect(etat.ascenseur.chargement.fer).toBe(1) // le quai part en premier
+  })
+})
+
+describe('donjons et épée', () => {
+  it('sans épée, le monstre assomme le mineur : sac vidé, retour au village', () => {
+    const etat = nouvellePartie()
+    etat.inventaire = { fer: 5, diamant: 1 }
+    coucheDe(etat, 'pierre')
+    etat.coucheActuelle[0] = 'donjon'
+    etat.colonneMineur = 0
+    const messages = casserBloc(etat, toujours(0))
+    expect(messages.join()).toContain('zombie')
+    expect(etat.inventaire).toEqual({})
+    expect(aLaSurface(etat)).toBe(true)
+  })
+
+  it('avec une épée, on bat le monstre et on gagne un butin', () => {
+    const etat = partieALaSurface()
+    etat.argent = 200
+    acheterEpee(etat)
+    expect(etat.epee).toBe(true)
+    expect(etat.argent).toBe(50)
+    placerAuFront(etat, 20)
+    etat.inventaire = { fer: 5 }
+    coucheDe(etat, 'pierre')
+    etat.coucheActuelle[0] = 'donjon'
+    etat.colonneMineur = 0
+    casserBloc(etat, toujours(0))
+    expect(etat.stats.monstresVaincus).toBe(1)
+    expect(etat.argent).toBe(50 + 40 + 20 * 3)
+    expect(nbDansSac(etat)).toBe(5 + 2)
+  })
+
+  it('l’assistant laisse les donjons au joueur', () => {
+    const etat = nouvellePartie()
+    etat.assistant.embauche = true
+    coucheDe(etat, null)
+    etat.coucheActuelle[0] = 'pierre'
+    etat.coucheActuelle[9] = 'donjon'
+    etat.colonneMineur = 0
+    expect(indexBlocAssistant(etat)).toBe(-1)
   })
 })
 

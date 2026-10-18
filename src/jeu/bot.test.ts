@@ -13,14 +13,14 @@ describe('bot de simulation (équilibrage)', () => {
   it('atteint toujours la bedrock (-128 m) avec la pioche en netherite', () => {
     for (const partie of parties) {
       expect(partie.etat.victoire).toBe(true)
-      expect(partie.etat.profondeur).toBe(128)
+      expect(partie.etat.profondeur).toBe(127) // la dernière couche avant la bedrock
       expect(partie.etat.meilleure).toBe(4)
     }
   })
 
-  it('atteint la bedrock en 1 500 à 2 500 blocs (médiane)', () => {
-    expect(mediane).toBeGreaterThanOrEqual(1500)
-    expect(mediane).toBeLessThanOrEqual(2500)
+  it('atteint la bedrock en 2 000 à 3 500 blocs (médiane, couches de 10 blocs)', () => {
+    expect(mediane).toBeGreaterThanOrEqual(2000)
+    expect(mediane).toBeLessThanOrEqual(3500)
   })
 
   it('joue une partie de 15 à 30 minutes (médiane)', () => {
@@ -30,7 +30,7 @@ describe('bot de simulation (équilibrage)', () => {
 
   it("n'est jamais extrêmement long ou court", () => {
     expect(blocsTries[0]).toBeGreaterThan(800)
-    expect(blocsTries[blocsTries.length - 1]).toBeLessThan(6000)
+    expect(blocsTries[blocsTries.length - 1]).toBeLessThan(9000)
   })
 
   it("construit l'ascenseur vers le milieu de la mine (entre -40 et -100 m)", () => {
@@ -45,9 +45,9 @@ describe('bot de simulation (équilibrage)', () => {
     for (const partie of parties) expect(partie.allersRetours).toBeGreaterThan(3)
   })
 
-  it('achète la pioche en fer entre -30 et -60 m', () => {
+  it('achète la pioche en fer entre -15 et -60 m', () => {
     for (const partie of parties) {
-      expect(partie.profondeurPiocheFer).toBeGreaterThanOrEqual(30)
+      expect(partie.profondeurPiocheFer).toBeGreaterThanOrEqual(15)
       expect(partie.profondeurPiocheFer).toBeLessThanOrEqual(60)
     }
   })

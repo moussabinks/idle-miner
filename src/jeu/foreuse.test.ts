@@ -47,12 +47,12 @@ describe('foreuse', () => {
     expect(foreuseEnMarche(etat)).toBe(false)
   })
 
-  it('descend d’un mètre tous les 6 blocs', () => {
+  it('descend d’un mètre tous les 10 blocs (une couche)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
     remplirForeuse(etat, 3) // 30 blocs
     avancerTemps(etat, 100, aleatoireAvecGraine(2))
-    expect(etat.foreuse.profondeur).toBe(6)
+    expect(etat.foreuse.profondeur).toBe(4)
   })
 
   it('s’arrête quand le chariot est plein', () => {
@@ -70,7 +70,7 @@ describe('foreuse', () => {
     etat.foreuse.chariot = { pierre: 40, diamant: 2 }
     etat.nonAVendre = ['diamant']
     vendreChariot(etat)
-    expect(etat.argent).toBe(Math.round(40 * 1.25)) // bonus du prestige 1
+    expect(etat.argent).toBe(Math.round(40 * 1.15)) // bonus du prestige 1 (+15 %)
     expect(etat.foreuse.chariot).toEqual({ diamant: 2 })
     viderChariotDansSac(etat)
     expect(etat.inventaire).toEqual({ diamant: 2 })

@@ -1,6 +1,6 @@
 // L'écran de victoire, quand on atteint la bedrock.
 
-import { BONUS_PRESTIGE } from '../jeu/donnees'
+import { BONUS_PRESTIGE, BONUS_VITESSE_PRESTIGE } from '../jeu/donnees'
 import type { EtatJeu } from '../jeu/mineur'
 
 type Props = {
@@ -16,7 +16,8 @@ function formaterTemps(secondes: number): string {
 }
 
 export function Victoire({ etat, onPrestige, onFermer }: Props) {
-  const bonusSuivant = Math.round((etat.prestige + 1) * BONUS_PRESTIGE * 100)
+  const bonusVente = Math.round((etat.prestige + 1) * BONUS_PRESTIGE * 100)
+  const bonusVitesse = Math.round((etat.prestige + 1) * BONUS_VITESSE_PRESTIGE * 100)
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-victoire">
       <div className="carte victoire">
@@ -38,7 +39,8 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           </li>
         </ul>
         <p className="discret">
-          Prestige : tu recommences à zéro, mais toutes tes ventes rapportent +{bonusSuivant} %. Tes succès sont conservés.
+          Prestige : tu recommences à zéro, mais tes ventes rapportent +{bonusVente} % et tes pioches vont {bonusVitesse} % plus vite. Tes
+          succès sont conservés. Tu peux aussi continuer à creuser ici pour tester tes enchantements, et passer prestige plus tard au puits.
           {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvre !'}
         </p>
         <div className="boutons boutons-centre">
@@ -46,7 +48,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
             ⭐ Passer prestige {etat.prestige + 1}
           </button>
           <button className="bouton" onClick={onFermer}>
-            Admirer la bedrock
+            Continuer à creuser
           </button>
         </div>
       </div>

@@ -21,6 +21,7 @@ export function Hud({ etat }: { etat: EtatJeu }) {
   const zone = zoneDe(etat.profondeur)
   const enVille = aLaSurface(etat)
   const auFront = auFond(etat)
+  const dansLaCabine = etat.ascenseur.passager
   const enchantements = LISTE_ENCHANTEMENTS.filter((id) => etat.enchantements[id] > 0)
 
   return (
@@ -31,8 +32,12 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       </div>
 
       <div className="hud-case">
-        <span className="hud-titre">{enVille ? `Front à -${etat.profondeur} m` : auFront ? zone.nom : "Sur l'échelle"}</span>
-        <strong>{enVille ? '☀️ Village' : auFront ? `📏 -${etat.profondeur} m` : `🪜 -${Math.round(etat.position)} m`}</strong>
+        <span className="hud-titre">
+          {enVille ? `Front à -${etat.profondeur} m` : auFront ? zone.nom : dansLaCabine ? "Dans l'ascenseur" : "Sur l'échelle"}
+        </span>
+        <strong>
+          {enVille ? '☀️ Village' : auFront ? `📏 -${etat.profondeur} m` : `${dansLaCabine ? '🛗' : '🪜'} -${Math.round(etat.position)} m`}
+        </strong>
       </div>
 
       <div className="hud-case hud-pioche">
@@ -62,7 +67,10 @@ export function Hud({ etat }: { etat: EtatJeu }) {
         <span title="Seaux d'eau">🪣 {etat.seaux}</span>
         {etat.ascenseur.niveau > 0 && <span title="Niveau de l'ascenseur">🛗 {etat.ascenseur.niveau}</span>}
         {etat.assistant.embauche && <span title="Emmanuel Macron creuse avec toi">🇫🇷</span>}
-        {etat.prestige > 0 && <span title="Prestige (+25 % sur les ventes par niveau)">⭐ {etat.prestige}</span>}
+        {etat.epee && <span title="Tu as une épée contre les monstres des donjons">⚔️</span>}
+        {etat.prestige > 0 && (
+          <span title={`Prestige ${etat.prestige} : ventes +${15 * etat.prestige} %, pioches +${10 * etat.prestige} % plus rapides`}>⭐ {etat.prestige}</span>
+        )}
       </div>
     </header>
   )

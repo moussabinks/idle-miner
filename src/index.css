@@ -13,7 +13,19 @@
   --vert: #5cc95c;
   --rouge: #e5534b;
   --violet: #a77be8;
-  --taille-case: min(56px, calc((100vw - 176px) / 6));
+  /* Taille d'une case de la mine (10 cases par couche), et largeur de toute la vue. */
+  /* Les colonnes autour des 10 cases : étiquette, échelle, ascenseur, et puits de la foreuse. */
+  --col-etiquette: 44px;
+  --col-echelle: 18px;
+  --col-ascenseur: 22px;
+  --col-foreuse: 28px;
+  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse));
+  --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
+  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 13 * 3px);
+  /* Où commencent l'échelle, l'ascenseur et la foreuse (depuis le bord gauche du puits). */
+  --x-echelle: calc(10px + var(--col-etiquette) + 3px);
+  --x-ascenseur: calc(var(--x-echelle) + var(--col-echelle) + 3px);
+  --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
   --pas: calc(var(--taille-case) + 3px);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -185,7 +197,7 @@ h2 {
 /* Le monde : le village en haut, puis le puits creusé. On le fait défiler. */
 .monde {
   position: relative;
-  width: calc(20px + 44px + 18px + 22px + 6 * var(--taille-case) + 8 * 3px);
+  width: var(--largeur-monde);
   max-width: 100%;
   height: min(70vh, 640px);
   overflow-y: auto;
@@ -201,7 +213,7 @@ h2 {
 /* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 6 cases. */
 .rangee {
   display: grid;
-  grid-template-columns: 44px 18px 22px repeat(6, var(--taille-case));
+  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse);
   gap: 3px;
   margin-bottom: 3px;
   align-items: center;
@@ -253,8 +265,8 @@ h2 {
 .echelle-longue {
   position: absolute;
   top: -14px;
-  left: calc(10px + 44px + 3px);
-  width: 18px;
+  left: var(--x-echelle);
+  width: var(--col-echelle);
   background:
     repeating-linear-gradient(transparent 0 7px, #b07a3f 7px 10px),
     linear-gradient(90deg, #7a4f22 0 3px, transparent 3px calc(100% - 3px), #7a4f22 calc(100% - 3px));
@@ -266,8 +278,8 @@ h2 {
 .rail-ascenseur {
   position: absolute;
   top: -14px;
-  left: calc(10px + 44px + 3px + 18px + 3px);
-  width: 22px;
+  left: var(--x-ascenseur);
+  width: var(--col-ascenseur);
   border: 1px dashed rgb(255 255 255 / 0.15);
   border-radius: 2px;
   pointer-events: none;
@@ -282,8 +294,8 @@ h2 {
 
 .cabine {
   position: absolute;
-  left: calc(10px + 44px + 3px + 18px + 3px);
-  width: 22px;
+  left: var(--x-ascenseur);
+  width: var(--col-ascenseur);
   height: var(--taille-case);
   border-radius: 3px;
   background: linear-gradient(#d9a441, #9a6b1f);
@@ -302,10 +314,117 @@ h2 {
   background: linear-gradient(135deg, #8a8a8a, #5f5f5f);
 }
 
+/* Le mineur dans la cabine (il dépasse un peu, la cabine est étroite). */
+.passager {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--taille-case);
+  height: var(--taille-case);
+  transform: translateX(-50%);
+}
+
+.cabine-occupee {
+  box-shadow: 0 0 14px rgb(255 210 90 / 0.9);
+}
+
+/* -------------------------------------------- La foreuse (prestige 1) */
+
+/* Son puits, à droite de la mine. */
+.puits-foreuse {
+  position: absolute;
+  top: -14px;
+  left: var(--x-foreuse);
+  width: var(--col-foreuse);
+  background:
+    linear-gradient(90deg, #2a2620 0 3px, rgb(0 0 0 / 0.55) 3px calc(100% - 3px), #2a2620 calc(100% - 3px)),
+    repeating-linear-gradient(transparent 0 12px, rgb(255 255 255 / 0.04) 12px 14px);
+  pointer-events: none;
+}
+
+/* La tête de la foreuse : un corps jaune et noir (bandes de chantier) et une mèche. */
+.tete-foreuse {
+  position: absolute;
+  left: var(--x-foreuse);
+  width: var(--col-foreuse);
+  height: var(--taille-case);
+  z-index: 2;
+  transition: top 0.3s linear;
+}
+
+.foreuse-corps {
+  position: absolute;
+  inset: 0 0 42%;
+  border-radius: 4px 4px 2px 2px;
+  border: 2px solid #111;
+  background: repeating-linear-gradient(45deg, #f5c518 0 6px, #161616 6px 12px);
+  box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.25);
+}
+
+.foreuse-meche {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 18px;
+  height: 46%;
+  transform: translateX(-50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: repeating-linear-gradient(-60deg, #c9ced6 0 4px, #6a6f78 4px 8px);
+}
+
+.tete-foreuse-eteinte {
+  filter: grayscale(0.6) brightness(0.7);
+}
+
+/* En marche : la mèche tourne et la foreuse vibre. */
+.tete-foreuse-tourne .foreuse-corps {
+  animation: tremble 0.15s linear infinite;
+}
+
+.tete-foreuse-tourne .foreuse-meche {
+  animation: meche 0.25s linear infinite;
+}
+
+@keyframes meche {
+  from { background-position: 0 0; }
+  to { background-position: 0 16px; }
+}
+
+/* Des petits cailloux projetés pendant le forage. */
+.foreuse-debris i {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: #9a8f80;
+  animation: debris 0.6s ease-out infinite;
+}
+
+.foreuse-debris i:nth-child(2) { animation-delay: 0.2s; --sens: -1; }
+.foreuse-debris i:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes debris {
+  from { opacity: 1; transform: translate(0, 0); }
+  to { opacity: 0; transform: translate(calc(var(--sens, 1) * 12px), -10px); }
+}
+
+.foreuse-etiquette {
+  position: absolute;
+  top: -14px;
+  right: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #f5c518;
+  white-space: nowrap;
+  text-shadow: 1px 1px 0 #000;
+}
+
 /* Le joueur pendant qu'il grimpe à l'échelle. */
 .joueur-echelle {
   position: absolute;
-  left: calc(10px + 44px + 3px + 9px - var(--taille-case) / 2);
+  left: calc(var(--x-echelle) + var(--col-echelle) / 2 - var(--taille-case) / 2);
   width: var(--taille-case);
   height: var(--taille-case);
   transition: top 0.1s linear;
@@ -356,11 +475,57 @@ h2 {
 }
 
 .bandeau-galerie {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgb(10 10 14 / 0.85);
   margin: 0;
   padding: 4px 10px;
   text-align: center;
   font-size: 0.8rem;
   color: var(--accent);
+}
+
+/* L'indicateur de la foreuse, collé en haut à droite de la vue de la mine. */
+.indicateur-foreuse {
+  position: sticky;
+  top: 6px;
+  float: right;
+  margin: 6px 6px -40px 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 8px;
+  border: 2px solid #111;
+  background: rgb(20 20 26 / 0.92);
+  color: #f5c518;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.indicateur-foreuse .mini-foreuse {
+  position: relative;
+  width: 18px;
+  height: 24px;
+}
+
+.mini-foreuse .foreuse-corps {
+  inset: 0 0 45%;
+}
+
+.mini-foreuse .foreuse-meche {
+  width: 12px;
+}
+
+.indicateur-foreuse.tourne .foreuse-meche {
+  animation: meche 0.25s linear infinite;
+}
+
+.indicateur-foreuse.tourne .foreuse-corps {
+  animation: tremble 0.15s linear infinite;
 }
 
 /* Le module de l'ascenseur, collé en bas à gauche de la vue de la mine. */
@@ -381,6 +546,42 @@ h2 {
   font-size: 0.82rem;
 }
 
+.module-boutons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.module-boutons .bouton {
+  padding-left: 2px;
+  padding-right: 2px;
+  font-size: 0.74rem;
+}
+
+.choix-chargement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+.choix-chargement label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.choix-chargement label.garde {
+  opacity: 0.5;
+}
+
+.module-ascenseur .lien {
+  text-align: left;
+  font-size: 0.78rem;
+}
+
 .module-titre,
 .module-ligne {
   display: flex;
@@ -388,6 +589,15 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+button.module-titre {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
 .module-titre strong {
@@ -451,11 +661,12 @@ h2 {
 
 /* ----------------------------------------------------------- Village */
 
+/* Le village : plus large que l'écran, la vue suit le mineur. */
 .village {
   position: relative;
+  height: 250px;
   overflow: hidden;
-  padding: 10px 10px 0;
-  background: linear-gradient(#5aa2e6, #a8d4f5 60%, #6bb34a 60%, #4b8a31 82%, #6b4a2a 82%);
+  background: linear-gradient(#4f97e0, #a8d4f5 75%, #cfe9f8);
 }
 
 .soleil {
@@ -476,60 +687,112 @@ h2 {
   border-radius: 4px;
   box-shadow: 14px -8px 0 #fff, 28px 0 0 #fff;
   opacity: 0.9;
-  animation: nuage 40s linear infinite;
+  animation: nuage 50s linear infinite;
+  z-index: 1;
 }
 
 .nuage-1 { top: 22px; left: -60px; width: 40px; }
-.nuage-2 { top: 54px; left: -60px; width: 30px; animation-delay: -18s; animation-duration: 55s; }
+.nuage-2 { top: 54px; left: -60px; width: 30px; animation-delay: -18s; animation-duration: 65s; }
 
 @keyframes nuage {
-  to { transform: translateX(560px); }
+  to { transform: translateX(760px); }
 }
 
-.rue {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 64px;
+/* Les collines du fond (elles défilent plus lentement que le reste). */
+.collines {
+  position: absolute;
+  left: 0;
+  bottom: 70px;
+  height: 120px;
+  width: 100%;
 }
 
+.colline {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(#8cc56a, #6aa04c);
+  box-shadow: inset 0 6px 0 rgb(255 255 255 / 0.12);
+}
+
+.colline:nth-child(even) {
+  background: linear-gradient(#7ab85c, #5b9142);
+}
+
+/* Le monde du village (tout ce qui défile avec le mineur). */
+.village-monde {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  transition: transform 0.05s linear;
+}
+
+/* Le sol : l'herbe, le chemin de terre et la terre en dessous. */
+.sol-village {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
+  background:
+    radial-gradient(circle at 20% 60%, rgb(0 0 0 / 0.15) 0 2px, transparent 3px) 0 26px / 28px 18px repeat-x,
+    radial-gradient(circle at 70% 40%, rgb(255 255 255 / 0.18) 0 2px, transparent 3px) 0 28px / 34px 18px repeat-x,
+    linear-gradient(
+      #5aa83c 0 6px,
+      #4b9133 6px 24px,
+      #c9a46a 24px 26px,
+      #d8b47a 26px 48px,
+      #b48a50 48px 50px,
+      #7a5230 50px
+    );
+}
+
+/* Les stands sont posés sur l'herbe, derrière le chemin. */
 .stand {
+  position: absolute;
+  bottom: 52px;
+  width: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  z-index: 2;
 }
 
 .stand:disabled {
   cursor: default;
 }
 
-.stand-nom {
+/* Le petit panneau en bois avec le nom du stand. */
+.panneau-bois {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: clamp(0.5rem, 1.8vw, 0.68rem);
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgb(0 0 0 / 0.55);
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #fff4dc;
+  background: linear-gradient(#9c6b35, #7a4f22);
+  border: 1px solid #3d2710;
   white-space: nowrap;
+  text-shadow: 1px 1px 0 #3d2710;
 }
 
-.stand-actif .stand-nom {
+.stand-actif .panneau-bois {
   background: var(--accent);
   color: #1b1206;
+  text-shadow: none;
+  box-shadow: 0 0 10px rgb(242 179 61 / 0.8);
 }
 
 .echoppe {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1;
+  width: 64px;
+  height: 64px;
   display: flex;
   flex-direction: column;
 }
@@ -561,44 +824,24 @@ h2 {
 .stand-forgeron { --auvent: #5b5b66; }
 .stand-bazar { --auvent: #2f8f4a; }
 .stand-enchanteur { --auvent: #7a4cc2; }
-.stand-foreuse { --auvent: #d08a1a; }
 
 .stand:hover:not(:disabled) .echoppe,
-.stand:hover:not(:disabled) .puits {
+.stand:hover:not(:disabled) .puits,
+.stand:hover:not(:disabled) .derrick {
   filter: brightness(1.15);
 }
 
-/* La foreuse bloquée : une barrière en bois et un cadenas. */
-.stand-verrouille .echoppe {
-  filter: grayscale(0.7) brightness(0.75);
-}
-
-.barriere {
-  position: absolute;
-  inset: 40% -4px 8%;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(#8a5a2b, #8a5a2b) 0 25% / 100% 4px no-repeat,
-    linear-gradient(#8a5a2b, #8a5a2b) 0 70% / 100% 4px no-repeat,
-    repeating-linear-gradient(90deg, #6b4420 0 5px, transparent 5px 14px);
-}
-
-/* La foreuse qui tourne : le comptoir tremble un peu. */
-.foreuse-tourne .comptoir {
-  animation: tremble 0.15s linear infinite;
-}
-
+/* Le puits */
 .puits {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1;
+  width: 58px;
+  height: 64px;
 }
 
 .puits-toit {
   position: absolute;
-  left: 8%;
-  right: 8%;
+  left: 4%;
+  right: 4%;
   top: 0;
   height: 28%;
   background: linear-gradient(#8a5a2b, #6b4420);
@@ -618,8 +861,8 @@ h2 {
 
 .puits-margelle {
   position: absolute;
-  left: 4%;
-  right: 4%;
+  left: 2%;
+  right: 2%;
   bottom: 0;
   height: 34%;
   border-radius: 3px;
@@ -629,21 +872,159 @@ h2 {
   border: 2px solid #3d3d3d;
 }
 
-.sol {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 4px;
-  padding-bottom: 14px;
+/* La foreuse du village : une tour de forage jaune et noire. */
+.derrick {
+  position: relative;
+  width: 64px;
+  height: 76px;
 }
 
-.sol-case {
-  aspect-ratio: 1;
-  max-height: var(--taille-case);
-  margin: 0 auto;
-  width: 100%;
+.derrick-tour {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  bottom: 22px;
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(-45deg, #f5c518 0 5px, #161616 5px 10px);
+}
+
+.derrick-moteur {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 20px;
+  border-radius: 3px;
+  border: 2px solid #111;
+  background: linear-gradient(#f5c518, #c8960c);
+}
+
+.derrick-meche {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 14px;
+  transform: translateX(-50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: repeating-linear-gradient(-60deg, #c9ced6 0 3px, #6a6f78 3px 6px);
+}
+
+.derrick-tourne .derrick-moteur {
+  animation: tremble 0.15s linear infinite;
+}
+
+.derrick-tourne .derrick-meche {
+  animation: meche 0.25s linear infinite;
+}
+
+/* Bloquée au prestige 0 : grisée, derrière une barrière avec un cadenas. */
+.stand-verrouille .derrick-tour,
+.stand-verrouille .derrick-moteur {
+  filter: grayscale(0.7) brightness(0.75);
+}
+
+.barriere {
+  position: absolute;
+  inset: 34% -6px 0;
   display: grid;
-  place-items: end center;
+  place-items: center;
+  background:
+    linear-gradient(#8a5a2b, #8a5a2b) 0 30% / 100% 4px no-repeat,
+    linear-gradient(#8a5a2b, #8a5a2b) 0 72% / 100% 4px no-repeat,
+    repeating-linear-gradient(90deg, #6b4420 0 5px, transparent 5px 14px);
+}
+
+/* Le mineur, sur le chemin. */
+.joueur-village {
+  position: absolute;
+  bottom: 26px;
+  width: 44px;
+  height: 44px;
+  z-index: 3;
+}
+
+/* Les décorations */
+.decor {
+  position: absolute;
+  pointer-events: none;
+}
+
+.decor-fond {
+  bottom: 54px;
+  z-index: 1;
+}
+
+.decor-devant {
+  bottom: 6px;
+  z-index: 4;
+}
+
+/* Un arbre : un tronc et un feuillage en blocs, comme dans Minecraft. */
+.decor-arbre {
+  bottom: 70px;
+  width: 44px;
+  height: 70px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(#6b4420, #4f3015) 50% 100% / 10px 28px no-repeat,
+    linear-gradient(#3f8a2e, #2d6a20) 50% 0 / 44px 46px no-repeat;
+  border-radius: 6px 6px 0 0;
+  z-index: 0;
+}
+
+/* Les hautes herbes : trois brins qui se balancent doucement. */
+.decor-herbe {
+  width: 14px;
+  height: 18px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(75deg, transparent 40%, #3f8f2c 41% 59%, transparent 60%) 0 0 / 7px 100% no-repeat,
+    linear-gradient(90deg, transparent 38%, #4fa83a 39% 61%, transparent 62%) 50% 0 / 6px 100% no-repeat,
+    linear-gradient(105deg, transparent 40%, #3a8228 41% 59%, transparent 60%) 100% 0 / 7px 100% no-repeat;
+  transform-origin: bottom center;
+  animation: herbe 3s ease-in-out infinite alternate;
+}
+
+.decor-herbe:nth-of-type(3n) {
+  animation-delay: -1.2s;
+  height: 22px;
+}
+
+@keyframes herbe {
+  from { transform: translateX(-50%) skewX(-6deg); }
+  to { transform: translateX(-50%) skewX(6deg); }
+}
+
+/* Une fleur : une tige et une tête colorée. */
+.decor-fleur {
+  width: 8px;
+  height: 16px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(circle, var(--couleur) 0 3px, transparent 4px) 50% 0 / 8px 8px no-repeat,
+    linear-gradient(#3a8228, #3a8228) 50% 100% / 2px 10px no-repeat;
+}
+
+.decor-rocher {
+  width: 18px;
+  height: 10px;
+  border-radius: 8px 10px 3px 3px;
+  background: linear-gradient(#a3a3a3, #6f6f6f);
+  box-shadow: inset 2px 2px 0 rgb(255 255 255 / 0.2);
+}
+
+/* Un bout de barrière en bois. */
+.decor-barriere {
+  bottom: 54px;
+  width: 52px;
+  height: 18px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(#9c6b35, #9c6b35) 0 4px / 100% 3px no-repeat,
+    linear-gradient(#9c6b35, #9c6b35) 0 11px / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, #7a4f22 0 4px, transparent 4px 16px);
 }
 
 /* ---------------------------------------------------------- Boutons */
@@ -653,7 +1034,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  width: calc(20px + 44px + 18px + 22px + 6 * var(--taille-case) + 8 * 3px);
+  width: var(--largeur-monde);
   max-width: 100%;
 }
 
@@ -903,6 +1284,24 @@ h2 {
   margin: 0 0 12px;
 }
 
+/* Au puits, après la bedrock. */
+.carte-prestige {
+  border-color: var(--accent);
+}
+
+.bouton-aller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.titre-avec-icone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* La carte de l'assistant, au puits. */
 .carte-assistant {
   flex-direction: row;
@@ -1072,8 +1471,20 @@ h2 {
 
 /* ----------------------------------------------------------- Mobile */
 
-/* Sur un petit écran, on cache les emojis des boutons pour que le texte tienne. */
+/* Sur un petit écran, on cache les emojis des boutons pour que le texte tienne,
+   et on rétrécit les colonnes autour de la mine pour que les blocs soient plus grands. */
 @media (max-width: 480px) {
+  :root {
+    --col-etiquette: 26px;
+    --col-echelle: 12px;
+    --col-ascenseur: 14px;
+    --col-foreuse: 16px;
+  }
+
+  .etiquette {
+    font-size: 0.55rem;
+  }
+
   .actions .emoji-bouton {
     display: none;
   }
@@ -1111,7 +1522,14 @@ h2 {
   .personnage,
   .personnage .pioche,
   .nuage,
-  .foreuse-tourne .comptoir,
+  .decor-herbe,
+  .indicateur-foreuse .foreuse-meche,
+  .indicateur-foreuse .foreuse-corps,
+  .foreuse-debris i,
+  .tete-foreuse-tourne .foreuse-corps,
+  .tete-foreuse-tourne .foreuse-meche,
+  .derrick-tourne .derrick-moteur,
+  .derrick-tourne .derrick-meche,
   .gain,
   .toast,
   .victoire-trophee {

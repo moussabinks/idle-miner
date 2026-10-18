@@ -2,7 +2,7 @@
 // Chaque dessin est une liste de lignes : une lettre = un pixel, '.' = transparent.
 // Les couleurs de chaque lettre sont dans PALETTE.
 
-export type NomIcone = 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'cadenas'
+export type NomIcone = 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'cadenas' | 'zombie' | 'epee'
 
 const PALETTE: Record<string, string> = {
   K: '#1a1a1a', // contour
@@ -20,6 +20,10 @@ const PALETTE: Record<string, string> = {
   C: '#4ee8dc', // diamant
   O: '#2a1a3a', // obsidienne
   D: '#efe6cf', // papier
+  Z: '#4f9a3a', // peau de zombie
+  z: '#2f6a22', // peau de zombie (ombre)
+  E: '#ff3030', // yeux rouges
+  T: '#2a8f9a', // t-shirt du zombie
 }
 
 const DESSINS: Record<NomIcone, string[]> = {
@@ -97,6 +101,36 @@ const DESSINS: Record<NomIcone, string[]> = {
     '.....KGK....',
     '.....KwK....',
     '......K.....',
+  ],
+  // La tête d'un zombie (le monstre des donjons)
+  zombie: [
+    '.KKKKKKKKKK.',
+    'KzzZZZZZZzzK',
+    'KZZZZZZZZZZK',
+    'KZZZZZZZZZZK',
+    'KZKKZZZZKKZK',
+    'KZKEZZZZEKZK',
+    'KZZZZzzZZZZK',
+    'KZZZzKKzZZZK',
+    'KZZKKKKKKZZK',
+    'KzZZZZZZZZzK',
+    '.KTTTTTTTTK.',
+    '.KKKKKKKKKK.',
+  ],
+  // Une épée en fer
+  epee: [
+    '.........KKK',
+    '........KwwK',
+    '.......KwGK.',
+    '......KwGK..',
+    '.....KwGK...',
+    '.KK.KwGK....',
+    '.KyKwGK.....',
+    '..KyGK......',
+    '..KyyK......',
+    '.KBKKyK.....',
+    'KBBK.KK.....',
+    'KKK.........',
   ],
   // Un cadenas
   cadenas: [

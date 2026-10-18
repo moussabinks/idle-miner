@@ -25,6 +25,7 @@ export type IdBloc =
   | 'lave'
   | 'coffre'
   | 'geode'
+  | 'donjon'
 
 export type TypeBloc = {
   id: IdBloc
@@ -33,7 +34,7 @@ export type TypeBloc = {
   prix: number // prix de vente en $ (0 = ne se vend pas)
   durete: number // temps de base pour le casser
   minerai: boolean // true = profite de l'enchantement Fortune
-  special: boolean // true = ne va pas dans le sac (lave, coffre, géode)
+  special: boolean // true = ne va pas dans le sac (lave, coffre, géode, donjon)
 }
 
 export const BLOCS: Record<IdBloc, TypeBloc> = {
@@ -56,6 +57,8 @@ export const BLOCS: Record<IdBloc, TypeBloc> = {
   lave: { id: 'lave', nom: 'Lave', emoji: '🔥', prix: 0, durete: 1, minerai: false, special: true },
   coffre: { id: 'coffre', nom: 'Coffre', emoji: '🧰', prix: 0, durete: 2.5, minerai: false, special: true },
   geode: { id: 'geode', nom: 'Géode', emoji: '🔮', prix: 0, durete: 1.5, minerai: false, special: true },
+  // Un donjon, avec un monstre dedans : il faut une épée pour le vaincre.
+  donjon: { id: 'donjon', nom: 'Donjon', emoji: '🧟', prix: 0, durete: 2, minerai: false, special: true },
 }
 
 // Les minerais qu'un coffre peut contenir (un au hasard).
@@ -118,7 +121,7 @@ export const VITESSE_MAINS_NUES = 1
 // Mine, sac et boutique
 // ---------------------------------------------------------------------------
 
-export const LARGEUR_MINE = 6 // blocs par couche
+export const LARGEUR_MINE = 10 // blocs par couche
 export const PROFONDEUR_BEDROCK = 128
 
 // Sous cette profondeur, la roche devient de la deepslate et tout est plus long à casser.
@@ -133,6 +136,9 @@ export const SACS = [
 ]
 
 export const PRIX_SEAU = 25
+
+// L'épée (chez le forgeron) : sans elle, le monstre d'un donjon t'assomme.
+export const PRIX_EPEE = 150
 // On voit toujours les 4 couches sous la couche en cours (lumière naturelle, sans torches).
 export const COUCHES_VISIBLES_DESSOUS = 4
 
@@ -196,11 +202,13 @@ export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 2500, cout: { argent: 9000, materiaux: { or: 20 } } },
 ]
 
-// La foreuse descend d'un mètre tous les 6 blocs forés.
-export const BLOCS_FORES_PAR_METRE = 6
+// La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
+export const BLOCS_FORES_PAR_METRE = 10
 
-// Bonus de vente par niveau de prestige (+25 %).
-export const BONUS_PRESTIGE = 0.25
+// Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
+// +15 % sur les ventes et +10 % de vitesse pour toutes les pioches.
+export const BONUS_PRESTIGE = 0.15
+export const BONUS_VITESSE_PRESTIGE = 0.1
 
 // ---------------------------------------------------------------------------
 // Enchantements (formules de Minecraft)

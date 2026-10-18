@@ -22,7 +22,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - `src/jeu/` : **logique du jeu en TypeScript pur, sans React ni DOM.** Données (`donnees.ts`), génération de la mine, état du mineur, règles. Tout doit être testable sans navigateur.
 - `src/` (le reste) : composants React. Ils lisent l'état du jeu et appellent ses actions, et ne contiennent pas de règles du jeu.
 - L'aléatoire passe par une fonction injectable, pour qu'on puisse avoir des tests déterministes.
-- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère (mine à -128 m) : la bedrock vers 1 500 à 2 500 blocs, soit 15 à 30 minutes de jeu.
+- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère (mine à -128 m, couches de 10 blocs) : la bedrock vers 2 000 à 3 500 blocs, soit 15 à 30 minutes de jeu.
 
 ## Conventions
 

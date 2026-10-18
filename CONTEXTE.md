@@ -38,19 +38,22 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-Depuis la v4 de l'état (`VERSION_ETAT = 4`, anciennes sauvegardes migrées automatiquement) :
+Depuis la v5 de l'état (`VERSION_ETAT = 5`, anciennes sauvegardes migrées automatiquement) :
 
-- **Mine à -128 m** (deux fois la v1) : profondeurs des zones, minerais et pioches multipliées par 2. Débris antiques plus rares (poids 1, sous -104 m). La redstone apparaît dès -40 m.
-- **Une seule vue qui défile** : le village en haut, puis tout le puits creusé depuis le début. L'échelle et le rail de l'ascenseur longent le puits sur la gauche, et la caméra suit le joueur.
-- **Position du joueur** : `position` en mètres (0 = village, `profondeur - 1` = front de taille). ↑ / ↓ : on avance tant que la touche est appuyée, et on s'arrête au barreau suivant en la relâchant (0,15 s par mètre).
-- **Village** : Puits (à gauche, au-dessus de l'échelle), Marché, Forgeron, Bazar, Enchanteur, Foreuse. Icônes en pixel art (`IconePixel.tsx`) à la place des emojis.
+- **Mine à -128 m, couches de 10 blocs.** Zones, minerais et pioches à l'échelle de 128 m. Un peu de charbon et de fer dès -7 m. Débris antiques rares (poids 1, sous -104 m). Redstone dès -40 m.
+- **Bedrock** : en finissant la couche -127 m avec la netherite, on gagne (succès + écran de victoire une seule fois), mais on **continue de creuser** des galeries à -127 m. Le prestige se fait quand on veut, au Puits.
+- **Une seule vue qui défile** : le village en haut, puis tout le puits creusé. L'échelle et le rail de l'ascenseur à gauche, le puits de la foreuse à droite. La caméra suit le joueur (directement pendant qu'il bouge, en douceur pour les sauts).
+- **Village** (`VueVillage.tsx`, `useMarcheVillage.ts`) : un monde de 44 tuiles plus large que l'écran, avec chemin, hautes herbes, fleurs, arbres, barrières et collines (défilement plus lent). On marche avec ← → (garder la touche) ou en cliquant sur un stand. Stands le long du chemin : Puits, Marché, Forgeron, Bazar, Enchanteur, Foreuse.
+- **Position du joueur** : `position` en mètres (0 = village, `profondeur - 1` = front de taille). Échelle : 0,15 s par mètre.
+- **Ascenseur** (module en bas à gauche de la mine, repliable) : une vraie cabine qui monte et descend (`position`, `cible`). Construit puis amélioré avec du fer et de la redstone (4 niveaux). On peut **monter dedans** (vers le village ou le front, avec les minerais cochés, vendus à l'arrivée), l'**appeler**, ou l'**envoyer seul** vendre. Les boutons Village / Front le prennent s'il est là. Quand le sac est plein, les blocs attendent sur son **quai** : le minage ne s'arrête plus.
+- **Donjons** (rares, sous -12 m) avec un zombie. Avec l'**épée** (Forgeron, 150 $) : butin. Sans : sac perdu et réveil au village. L'assistant laisse les donjons au joueur.
+- **Prestige** : +15 % sur les ventes et +10 % de vitesse des pioches, par niveau (cumulés).
+- **Foreuse** (prestige 1+) : activée une fois (30 fer + 10 redstone), au charbon (1 charbon = 20 s), elle descend d'un mètre tous les 10 blocs. On la voit forer dans son puits (jaune et noir, animée), avec un indicateur toujours visible en haut de la mine. Elle continue quand le jeu est fermé (8 h au plus).
 - **Marché** : « Vendre tout » vend tout le sac sauf les objets décochés (`nonAVendre`).
-- **Ascenseur** : construit puis amélioré **dans la mine** (module en bas à gauche) avec du fer et de la redstone, 4 niveaux (capacité 32 à 256 objets, plus rapide à chaque niveau). Il remonte le sac quand il est plein, le vend et redescend au niveau du joueur.
-- **Foreuse** (prestige 1+) : derrière une barrière avec cadenas au prestige 0. On l'active une fois (30 fer + 10 redstone), elle reste active aux prestiges suivants. Elle consomme du charbon (1 charbon = 20 s), creuse seule (elle descend d'un mètre tous les 6 blocs) et remplit un chariot qu'on vend ou qu'on vide dans le sac. Améliorations : vitesse de forage et taille du chariot. Elle continue de creuser quand le jeu est fermé (8 h au plus).
-- **Pas de torches** (retirées le 16/10) : lumière naturelle, on voit toujours les 4 couches sous la couche en cours, de plus en plus sombres.
-- **Barre de boutons fixe** : toujours les mêmes 8 boutons à la même place (◀ ▲ ▼ ▶ / Creuser x10 Village Front) ; ceux qui ne servent pas sont grisés. Le bandeau du haut a aussi une hauteur fixe.
-- **Assistant Emmanuel Macron** (caricature SVG, `PersonnageMacron.tsx`) : s'embauche au Puits pour 1 000 $ (2 000 $ au départ, baissé le 18/10). Pendant que le joueur creuse, il casse en même temps un autre bloc de la couche (le dernier bloc reste au joueur), avec la même pioche que le joueur (même couleur, même vitesse) sans l'user. Environ +50 % de vitesse de minage. Il repart au prestige.
-- **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms). Avant, le minage repartait de zéro à chaque changement d'état (il bloquait pendant que l'ascenseur voyageait).
+- **Pas de torches** : lumière naturelle, les 4 couches sous la couche en cours sont visibles et de plus en plus sombres.
+- **Barre de boutons fixe** : toujours les mêmes 8 boutons à la même place (◀ ▲ ▼ ▶ / Creuser x10 Village Front).
+- **Assistant Emmanuel Macron** (caricature SVG, `PersonnageMacron.tsx`) : 1 000 $ au Puits. Il casse un autre bloc de la couche pendant que le joueur creuse, avec la même pioche (sans l'user). Il repart au prestige.
+- **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms).
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
 - `src/jeu/` (logique pure, testée avec Vitest) :
@@ -60,7 +63,7 @@ Depuis la v4 de l'état (`VERSION_ETAT = 4`, anciennes sauvegardes migrées auto
   - `mineur.ts` : l'état de la partie (`EtatJeu`, un objet JSON) et toutes les actions (casser, vendre, réparer, acheter, enchanter, prestige).
   - `succes.ts` : les 16 succès. `sauvegarde.ts` : `localStorage`.
   - `foreuse.ts` : la foreuse. `temps.ts` : le temps qui passe (échelle, ascenseur, foreuse).
-  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties en remontant vendre et acheter, et construit l'ascenseur vers -60 m. Médiane ≈ 1 800 blocs pour la bedrock (-128 m), environ 19 min de jeu simulé (contre 8 min avant).
+  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties (il prend l'ascenseur, achète l'épée). Médiane ≈ 2 400 blocs pour la bedrock (couches de 10), environ 19 min de jeu simulé.
 - `src/usePartie.ts` : le hook React qui relie la logique à l'écran (minage animé, toasts, sauvegarde auto).
 - `src/composants/` : `VueMonde` (village + puits + échelle + ascenseur), `ModuleAscenseur`, personnage, icônes pixel, HUD, sac, panneaux des stands (dont la foreuse), succès, toasts, écran de victoire.
 - `src/blocs.css` : tous les blocs et animations en CSS. `src/index.css` : mise en page (desktop et mobile).
@@ -102,3 +105,4 @@ Depuis la v4 de l'état (`VERSION_ETAT = 4`, anciennes sauvegardes migrées auto
 - **2026-10-16** : mine à -128 m, vue unique qui défile avec l'échelle sur toute la hauteur, ascenseur à niveaux (fer + redstone) utilisable dans la mine, icônes pixel art au village, foreuse au prestige 1.
 - **2026-10-16** : barre de boutons à positions fixes, suppression des torches (lumière naturelle).
 - **2026-10-18** : assistant Emmanuel Macron (2 000 $), horloge unique pour le minage (corrige le minage bloqué pendant les voyages de l'ascenseur). Sauvegarde v4.
+- **2026-10-18** : on continue de creuser à la bedrock, plus de charbon/fer près de la surface, ascenseur qui emmène le mineur (avec choix des minerais et quai), prestige +15 % ventes / +10 % vitesse, village large où l'on se promène, couches de 10 blocs, donjons avec zombie et épée, foreuse visible en action. Sauvegarde v5.

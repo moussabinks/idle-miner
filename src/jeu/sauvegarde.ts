@@ -99,6 +99,61 @@ function migrer(donnees: unknown): unknown {
     etat = { ...etat, version: 4, assistant: { embauche: false, colonne: 5 } }
   }
 
+  // Version 4 -> 5 : couches de 10 blocs, ascenseur qui emmène le mineur, épée et donjons,
+  // et on peut continuer de creuser à la bedrock.
+  if (etat.version === 4) {
+    const largeur = 10
+    let profondeur = etat.profondeur as number
+    let coucheActuelle = etat.coucheActuelle as (string | null)[]
+    let couchesDessous = etat.couchesDessous as string[][]
+    let position = etat.position as number
+    let cible = etat.cible as number
+    let enGalerie = etat.enGalerie as boolean
+
+    // Les couches passent de 6 à 10 blocs : on complète en répétant leurs blocs.
+    const elargir = <T,>(couche: T[], remplissage: (i: number) => T): T[] =>
+      couche.length === 0 ? couche : Array.from({ length: largeur }, (_, i) => (i < couche.length ? couche[i] : remplissage(i)))
+    coucheActuelle = elargir(coucheActuelle, () => null)
+    couchesDessous = couchesDessous.map((couche) => elargir(couche, (i) => couche[i % couche.length]))
+
+    // Avant, la partie s'arrêtait sur la bedrock (-128 m) : on remonte d'un mètre pour continuer.
+    if (profondeur >= 128) {
+      profondeur = 127
+      coucheActuelle = Array(largeur).fill('deepslate')
+      couchesDessous = [[], [], [], []]
+      enGalerie = true
+      position = Math.min(position, profondeur - 1)
+      cible = Math.min(cible, profondeur - 1)
+    }
+
+    const ancienAscenseur = etat.ascenseur as { niveau: number }
+    const stats = etat.stats as Record<string, unknown>
+    etat = {
+      ...etat,
+      version: 5,
+      profondeur,
+      coucheActuelle,
+      couchesDessous,
+      position,
+      cible,
+      enGalerie,
+      colonneMineur: Math.min(etat.colonneMineur as number, largeur - 1),
+      assistant: { ...(etat.assistant as object), colonne: largeur - 1 },
+      ascenseur: {
+        niveau: ancienAscenseur.niveau,
+        position: profondeur - 1, // la cabine attend au front de taille
+        cible: profondeur - 1,
+        chargement: {},
+        passager: false,
+        retourAuFront: false,
+        quai: {},
+        garder: [],
+      },
+      epee: false,
+      stats: { ...stats, monstresVaincus: 0 },
+    }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -126,6 +181,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.nonAVendre) &&
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
-    typeof etat.assistant === 'object'
+    typeof etat.assistant === 'object' &&
+    typeof etat.epee === 'boolean'
   )
 }

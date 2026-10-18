@@ -4,12 +4,15 @@
 // il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, PIOCHES, PRIX_SEAU, type IdBloc } from './donnees'
+import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, PIOCHES, PRIX_EPEE, PRIX_SEAU, type IdBloc } from './donnees'
 import {
   acheterPioche,
   acheterSac,
   acheterSeau,
+  acheterEpee,
   allerA,
+  appelerAscenseur,
+  ascenseurEnMouvement,
   ameliorerAscenseur,
   ascenseurDisponible,
   casserBloc,
@@ -17,12 +20,15 @@ import {
   enchanter,
   envoyerAscenseur,
   estCassee,
+  niveauAscenseur,
   peutAcheterPioche,
   peutAmeliorerAscenseur,
   peutEnchanter,
   peutEncoreEnchanter,
   peutReparer,
   positionFront,
+  prendreAscenseur,
+  peutStocker,
   prixProchainSac,
   prochainNiveauAscenseur,
   reparer,
@@ -65,12 +71,29 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
   let allersRetours = 0
   let temps = 0
 
-  // Laisse passer le temps jusqu'à ce que le joueur arrive au bout de l'échelle.
+  // Laisse passer un peu de temps (l'ascenseur et l'échelle avancent).
+  function attendre(secondes: number): void {
+    temps += secondes
+    avancerTemps(etat, secondes, aleatoireTemps)
+  }
+
+  // Attend que la cabine de l'ascenseur s'arrête.
+  function attendreAscenseur(): void {
+    const niveau = niveauAscenseur(etat)
+    while (niveau !== null && ascenseurEnMouvement(etat)) {
+      attendre(Math.abs(etat.ascenseur.cible - etat.ascenseur.position) * niveau.secondesParMetre + 0.01)
+    }
+  }
+
+  // Va quelque part dans le puits : en ascenseur s'il est là, sinon à l'échelle.
   function voyager(position: number): void {
+    if (etat.ascenseur.niveau > 0) attendreAscenseur()
+    if (ascenseurDisponible(etat) && prendreAscenseur(etat, position).length > 0) {
+      attendreAscenseur()
+      return
+    }
     allerA(etat, position)
-    const duree = Math.abs(etat.cible - etat.position) * 0.15 + 0.01
-    temps += duree
-    avancerTemps(etat, duree, aleatoireTemps)
+    attendre(Math.abs(etat.cible - etat.position) * 0.15 + 0.01)
   }
 
   // Faut-il remonter ? Pour vendre (si l'ascenseur ne le fait pas), ou pour dépenser son argent.
@@ -96,22 +119,25 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
       while (etat.seaux < 2 && etat.argent >= 2 * PRIX_SEAU) acheterSeau(etat)
     }
     if (estCassee(etat) && peutReparer(etat)) reparer(etat)
+    // Une épée pour les donjons, dès qu'on peut se l'offrir sans se priver.
+    if (!etat.epee && etat.argent >= 2 * PRIX_EPEE) acheterEpee(etat)
   }
 
   while (!etat.victoire && etat.stats.blocsCasses < maxBlocs) {
     // L'ascenseur se construit et s'améliore directement dans la mine.
-    while (peutAmeliorerAscenseur(etat) && etat.ascenseur.tempsRestant === 0) {
+    while (peutAmeliorerAscenseur(etat) && !ascenseurEnMouvement(etat)) {
       ameliorerAscenseur(etat)
       if (profondeurAscenseur === null) profondeurAscenseur = etat.profondeur
     }
 
-    // Il remonte le sac quand il est plein (on l'attend s'il est en route).
-    if (sacPlein(etat) && etat.ascenseur.niveau > 0) {
+    // Il remonte le sac quand il est plein (on l'attend, ou on l'appelle, s'il n'est pas là).
+    if (sacPlein(etat) && etat.ascenseur.niveau > 0 && etat.position > 0) {
+      attendreAscenseur()
       if (!ascenseurDisponible(etat)) {
-        temps += etat.ascenseur.tempsRestant
-        avancerTemps(etat, etat.ascenseur.tempsRestant, aleatoireTemps)
+        appelerAscenseur(etat)
+        attendreAscenseur()
       }
-      etat.nonAVendre = objetsAGarder(etat)
+      etat.ascenseur.garder = objetsAGarder(etat)
       envoyerAscenseur(etat)
     }
 
@@ -129,7 +155,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     // Comme un joueur qui clique sur « Creuser x10 » : 10 couches d'affilée,
     // en s'arrêtant si le sac est plein (mais toujours au moins un bloc, pour
     // avancer même si le sac reste plein d'objets gardés).
-    for (let i = 0; i < BLOCS_PAR_SERIE && !etat.victoire && (i === 0 || !sacPlein(etat)); i++) {
+    for (let i = 0; i < BLOCS_PAR_SERIE && !etat.victoire && (i === 0 || peutStocker(etat)); i++) {
       const tempsAvant = etat.stats.tempsMinage
       casserBloc(etat, aleatoire)
       const duree = etat.stats.tempsMinage - tempsAvant

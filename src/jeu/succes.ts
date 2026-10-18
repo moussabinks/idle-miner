@@ -1,4 +1,4 @@
-// Les 16 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
+// Les 17 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
 // et restent débloqués après un prestige.
 
 import { peutEncoreEnchanter, type EtatJeu } from './mineur'
@@ -24,6 +24,7 @@ export const SUCCES: Succes[] = [
   { id: 'premier_diamant', emoji: '💠', titre: "Ça brille !", description: 'Trouver un diamant', condition: (e) => e.stats.diamantsTrouves >= 1 },
   { id: 'coffre', emoji: '🧰', titre: 'Chasseur de trésors', description: 'Ouvrir un coffre', condition: (e) => e.stats.coffresOuverts >= 1 },
   { id: 'geode', emoji: '🔮', titre: 'Géologue', description: 'Casser une géode', condition: (e) => e.stats.geodesCassees >= 1 },
+  { id: 'monstre', emoji: '⚔️', titre: 'Chasseur de monstres', description: 'Vaincre le monstre d’un donjon', condition: (e) => e.stats.monstresVaincus >= 1 },
   { id: 'pompier', emoji: '🪣', titre: 'Pompier', description: 'Éteindre de la lave avec un seau', condition: (e) => e.stats.lavesEteintes >= 1 },
   { id: 'riche', emoji: '💰', titre: 'Riche', description: 'Gagner 5 000 $ dans une partie', condition: (e) => e.stats.argentGagne >= 5000 },
   {
