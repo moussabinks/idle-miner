@@ -903,6 +903,23 @@ h2 {
   margin: 0 0 12px;
 }
 
+/* La carte de l'assistant, au puits. */
+.carte-assistant {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.portrait-assistant {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  background: linear-gradient(#3a4a7a, #22305a);
+  display: grid;
+  place-items: center;
+}
+
 .succes-repliable summary {
   cursor: pointer;
   font-weight: 700;

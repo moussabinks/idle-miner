@@ -61,6 +61,7 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       <div className="hud-case hud-petits">
         <span title="Seaux d'eau">🪣 {etat.seaux}</span>
         {etat.ascenseur.niveau > 0 && <span title="Niveau de l'ascenseur">🛗 {etat.ascenseur.niveau}</span>}
+        {etat.assistant.embauche && <span title="Emmanuel Macron creuse avec toi">🇫🇷</span>}
         {etat.prestige > 0 && <span title="Prestige (+25 % sur les ventes par niveau)">⭐ {etat.prestige}</span>}
       </div>
     </header>

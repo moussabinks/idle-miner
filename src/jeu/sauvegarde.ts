@@ -94,6 +94,11 @@ function migrer(donnees: unknown): unknown {
     delete etat.trajet
   }
 
+  // Version 3 -> 4 : l'assistant (Emmanuel Macron), pas encore embauché.
+  if (etat.version === 3) {
+    etat = { ...etat, version: 4, assistant: { embauche: false, colonne: 5 } }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -120,6 +125,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.cible === 'number' &&
     Array.isArray(etat.nonAVendre) &&
     typeof etat.ascenseur === 'object' &&
-    typeof etat.foreuse === 'object'
+    typeof etat.foreuse === 'object' &&
+    typeof etat.assistant === 'object'
   )
 }

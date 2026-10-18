@@ -17,6 +17,7 @@ import {
   MULTIPLICATEUR_ACHAT,
   NIVEAUX_ASCENSEUR,
   PIOCHES,
+  PRIX_ASSISTANT,
   LARGEUR_MINE,
   PRIX_PLANCHE,
   PRIX_SEAU,
@@ -55,6 +56,12 @@ export type Ascenseur = {
   tempsTotal: number // durée de l'aller-retour en cours
 }
 
+// L'assistant (Emmanuel Macron) : il creuse un autre bloc de la couche pendant que tu creuses.
+export type Assistant = {
+  embauche: boolean
+  colonne: number // la colonne où il se tient au front de taille
+}
+
 export type Foreuse = {
   active: boolean // activée une fois pour toutes (avec du fer et de la redstone)
   carburant: number // secondes de forage restantes (le charbon brûlé)
@@ -85,6 +92,7 @@ export type EtatJeu = {
   nonAVendre: IdBloc[] // objets décochés au marché : « Vendre tout » les garde
   ascenseur: Ascenseur
   foreuse: Foreuse
+  assistant: Assistant
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   seaux: number
@@ -94,7 +102,7 @@ export type EtatJeu = {
   victoire: boolean
 }
 
-export const VERSION_ETAT = 3
+export const VERSION_ETAT = 4
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -134,6 +142,7 @@ export function creerPartie(
     nonAVendre: [...nonAVendre],
     ascenseur: { niveau: 0, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
     foreuse: structuredClone(foreuse),
+    assistant: { embauche: false, colonne: LARGEUR_MINE - 1 },
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
     seaux: 0,
@@ -303,7 +312,6 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   etat.colonneMineur = index // le mineur se place au-dessus du bloc
 
   etat.stats.tempsMinage += dureeBlocActuel(etat)
-  etat.stats.blocsCasses += 1
 
   // Usure de la pioche (Solidité : 1 chance sur n+1 de l'user).
   if (!estCassee(etat)) {
@@ -316,13 +324,64 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     }
   }
 
-  messages.push(...recolter(etat, bloc, aleatoire))
+  messages.push(...finirBloc(etat, index, bloc, aleatoire))
+  return messages
+}
 
-  // Le bloc est cassé : on passe à la couche suivante si c'était le dernier.
+// Ce qui se passe une fois un bloc cassé (par le joueur ou par l'assistant) :
+// on récolte, puis on passe à la couche suivante si c'était le dernier bloc.
+function finirBloc(etat: EtatJeu, index: number, bloc: IdBloc, aleatoire: Aleatoire): string[] {
+  etat.stats.blocsCasses += 1
+  const messages = recolter(etat, bloc, aleatoire)
   etat.coucheActuelle[index] = null
   if (indexBlocActuel(etat) === -1) messages.push(...passerCoucheSuivante(etat, aleatoire))
-
   return messages
+}
+
+// ---------------------------------------------------------------------------
+// L'assistant : Emmanuel Macron
+// ---------------------------------------------------------------------------
+
+export function peutEmbaucherAssistant(etat: EtatJeu): boolean {
+  return !etat.assistant.embauche && etat.argent >= PRIX_ASSISTANT
+}
+
+// On l'embauche au village, près du puits.
+export function embaucherAssistant(etat: EtatJeu): string[] {
+  if (!aLaSurface(etat) || !peutEmbaucherAssistant(etat)) return []
+  etat.argent -= PRIX_ASSISTANT
+  etat.assistant.embauche = true
+  return ['🇫🇷 Emmanuel Macron rejoint ton équipe : « Je creuse, et en même temps, je creuse ! »']
+}
+
+// Le bloc que l'assistant va casser : le plus proche de lui, mais jamais celui du joueur.
+// Renvoie -1 s'il n'y en a pas (couche finie, ou un seul bloc restant pour le joueur).
+export function indexBlocAssistant(etat: EtatJeu): number {
+  const indexJoueur = indexBlocActuel(etat)
+  let meilleur = -1
+  etat.coucheActuelle.forEach((bloc, colonne) => {
+    if (bloc === null || colonne === indexJoueur) return
+    const distance = Math.abs(colonne - etat.assistant.colonne)
+    if (meilleur === -1 || distance < Math.abs(meilleur - etat.assistant.colonne)) meilleur = colonne
+  })
+  return meilleur
+}
+
+// Temps pour que l'assistant casse son prochain bloc : il a la même pioche que le joueur.
+export function dureeBlocAssistant(etat: EtatJeu): number {
+  const index = indexBlocAssistant(etat)
+  if (index === -1) return 0
+  const bloc = etat.coucheActuelle[index] as IdBloc
+  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat))
+}
+
+// L'assistant casse un bloc. Il a sa propre pioche (comme celle du joueur) : il n'use pas la tienne.
+export function casserBlocAssistant(etat: EtatJeu, aleatoire: Aleatoire): string[] {
+  const index = indexBlocAssistant(etat)
+  if (!etat.assistant.embauche || etat.victoire || !auFond(etat) || index === -1) return []
+  const bloc = etat.coucheActuelle[index] as IdBloc
+  etat.assistant.colonne = index
+  return finirBloc(etat, index, bloc, aleatoire)
 }
 
 // Ce qu'on obtient en cassant un bloc.

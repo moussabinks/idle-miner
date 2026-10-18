@@ -9,8 +9,10 @@ import {
   aLaSurface,
   auFond,
   dureeBlocActuel,
+  dureeBlocAssistant,
   estCassee,
   indexBlocActuel,
+  indexBlocAssistant,
   piocheEquipee,
   positionFront,
   type EtatJeu,
@@ -19,6 +21,7 @@ import type { Action, Gain } from '../usePartie'
 import { IconePixel } from './IconePixel'
 import { ModuleAscenseur } from './ModuleAscenseur'
 import { Personnage } from './Personnage'
+import { PersonnageMacron } from './PersonnageMacron'
 import { STANDS } from './stands'
 
 type Props = {
@@ -156,6 +159,15 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
   // Pendant le minage, le mineur se place au-dessus du bloc qu'il casse.
   const colonneAffichee = enMinage && indexActuel !== -1 ? indexActuel : etat.colonneMineur
 
+  // L'assistant (Emmanuel Macron) : il se place au-dessus du bloc qu'il casse.
+  // S'il tombe sur la même case que le joueur, il se met juste à côté.
+  const assistantLa = etat.assistant.embauche && !etat.victoire
+  const indexAssistant = assistantLa ? indexBlocAssistant(etat) : -1
+  const assistantTravaille = enMinage && indexAssistant !== -1
+  const dureeAssistant = Math.max(0.08, dureeBlocAssistant(etat))
+  let colonneAssistant = assistantTravaille ? indexAssistant : etat.assistant.colonne
+  if (colonneAssistant === colonneAffichee) colonneAssistant = colonneAffichee === 0 ? 1 : colonneAffichee - 1
+
   // La caméra : on fait défiler la vue pour garder le joueur au milieu.
   const repere = auVillage ? -1 : Math.round(etat.position)
   useEffect(() => {
@@ -195,10 +207,19 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
       <Rangee key={d} profondeur={d} classe={`${rang === 0 ? 'couche-en-cours' : `ombre-${rang}`}`}>
         {blocs.map((bloc, colonne) => {
           const enCours = rang === 0 && colonne === indexActuel && !etat.victoire
-          const classe = enCours ? (enMinage ? 'en-cours casse' : 'en-cours') : ''
+          const cibleAssistant = rang === 0 && assistantTravaille && colonne === indexAssistant
+          let classe = ''
+          if (enCours) classe = enMinage ? 'en-cours casse' : 'en-cours'
+          if (cibleAssistant) classe = 'en-cours-assistant casse'
+          const dureeCase = cibleAssistant ? dureeAssistant : duree
           return (
-            <div key={colonne} className="emplacement" style={enCours ? { ['--duree' as string]: `${duree}s` } : undefined}>
-              <Case key={enCours ? etat.stats.blocsCasses : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
+            <div
+              key={colonne}
+              className="emplacement"
+              style={enCours || cibleAssistant ? { ['--duree' as string]: `${dureeCase}s` } : undefined}
+            >
+              {/* La clé change quand un mineur commence ce bloc, pour relancer l'animation de fissure. */}
+              <Case key={enCours ? 'joueur' : cibleAssistant ? 'assistant' : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
             </div>
           )
         })}
@@ -249,6 +270,11 @@ export function VueMonde({ etat, jouer, enMinage, enMarche, versLaGauche, positi
                 {auFront && colonne === colonneAffichee && (
                   <div ref={joueurRef} className="porte-joueur">
                     <Personnage couleurPioche={couleurPioche} action={enMinage ? 'creuse' : 'repos'} versLaGauche={versLaGauche} />
+                  </div>
+                )}
+                {assistantLa && colonne === colonneAssistant && (
+                  <div className="porte-joueur">
+                    <PersonnageMacron couleurPioche={couleurPioche} action={assistantTravaille ? 'creuse' : 'repos'} />
                   </div>
                 )}
               </div>

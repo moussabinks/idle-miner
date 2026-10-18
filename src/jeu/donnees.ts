@@ -170,6 +170,13 @@ export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>>
 export const COUT_ACTIVATION_FOREUSE: Cout = { materiaux: { fer: 30, redstone: 10 } }
 export const PRESTIGE_FOREUSE = 1
 
+// ---------------------------------------------------------------------------
+// L'assistant : Emmanuel Macron vient creuser avec toi
+// ---------------------------------------------------------------------------
+
+// Prix de l'embauche (une seule fois par partie).
+export const PRIX_ASSISTANT = 2000
+
 // Un charbon fait tourner la foreuse pendant 20 secondes.
 export const SECONDES_PAR_CHARBON = 20
 

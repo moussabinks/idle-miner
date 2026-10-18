@@ -33,16 +33,17 @@ describe('sauvegarde', () => {
     expect(charger(stockage)).toBeNull()
   })
 
-  it('met à jour une sauvegarde de la version 1 (jusqu’à la version 3)', () => {
+  it('met à jour une sauvegarde de la version 1 (jusqu’à la version 4)', () => {
     const stockage = fauxStockage()
     const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1)), version: 1, profondeur: 10 }
-    for (const champ of ['position', 'cible', 'colonneMineur', 'nonAVendre', 'ascenseur', 'foreuse']) delete ancienne[champ]
+    for (const champ of ['position', 'cible', 'colonneMineur', 'nonAVendre', 'ascenseur', 'foreuse', 'assistant']) delete ancienne[champ]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage)
-    expect(etat?.version).toBe(3)
+    expect(etat?.version).toBe(4)
     expect(etat?.position).toBe(9) // au front de taille, comme avant
     expect(etat?.ascenseur.niveau).toBe(0)
     expect(etat?.foreuse.active).toBe(false)
+    expect(etat?.assistant.embauche).toBe(false)
   })
 
   it('met à jour une sauvegarde de la version 2 avec un ascenseur', () => {
@@ -54,7 +55,7 @@ describe('sauvegarde', () => {
       trajet: null,
       ascenseur: { possede: true, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
     }
-    for (const champ of ['position', 'cible', 'foreuse']) delete ancienne[champ]
+    for (const champ of ['position', 'cible', 'foreuse', 'assistant']) delete ancienne[champ]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage)
     expect(etat?.position).toBe(0)

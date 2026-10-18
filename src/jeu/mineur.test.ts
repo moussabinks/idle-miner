@@ -12,7 +12,12 @@ import {
   casserBloc,
   aLaSurface,
   auFond,
+  casserBlocAssistant,
   creerPartie,
+  dureeBlocActuel,
+  dureeBlocAssistant,
+  embaucherAssistant,
+  indexBlocAssistant,
   deplacerMineur,
   devisReparation,
   enchanter,
@@ -403,6 +408,47 @@ describe('boutique et enchantements', () => {
     coucheDe(etat, 'fer')
     casserBloc(etat, toujours(0.99))
     expect(etat.inventaire.fer).toBe(4)
+  })
+})
+
+describe('assistant (Emmanuel Macron)', () => {
+  it('s’embauche au village pour 2 000 $', () => {
+    const etat = partieALaSurface()
+    etat.argent = 1999
+    embaucherAssistant(etat)
+    expect(etat.assistant.embauche).toBe(false)
+    etat.argent = 2500
+    embaucherAssistant(etat)
+    expect(etat.assistant.embauche).toBe(true)
+    expect(etat.argent).toBe(500)
+  })
+
+  it('casse un autre bloc que le joueur, avec la même vitesse, sans user la pioche', () => {
+    const etat = nouvellePartie()
+    etat.assistant.embauche = true
+    etat.coucheActuelle = ['pierre', 'pierre', 'pierre', 'pierre', 'pierre', 'fer']
+    etat.colonneMineur = 0
+    expect(indexBlocAssistant(etat)).toBe(5) // il commence à l'autre bout
+    // Le fer est 2 fois plus dur que la pierre : avec la même pioche, il met 2 fois plus de temps.
+    expect(dureeBlocAssistant(etat)).toBeCloseTo(2 * dureeBlocActuel(etat))
+    casserBlocAssistant(etat, toujours(0))
+    expect(etat.inventaire).toEqual({ fer: 1 })
+    expect(etat.coucheActuelle[5]).toBeNull()
+    expect(etat.pioches[0]).toBe(0)
+  })
+
+  it('laisse le dernier bloc de la couche au joueur', () => {
+    const etat = nouvellePartie()
+    etat.assistant.embauche = true
+    etat.coucheActuelle = [null, null, 'pierre', null, null, null]
+    expect(casserBlocAssistant(etat, toujours(0))).toEqual([])
+    expect(etat.coucheActuelle[2]).toBe('pierre')
+  })
+
+  it('ne creuse pas s’il n’est pas embauché', () => {
+    const etat = nouvellePartie()
+    casserBlocAssistant(etat, toujours(0))
+    expect(etat.stats.blocsCasses).toBe(0)
   })
 })
 

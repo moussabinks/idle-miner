@@ -38,7 +38,7 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées automatiquement) :
+Depuis la v4 de l'état (`VERSION_ETAT = 4`, anciennes sauvegardes migrées automatiquement) :
 
 - **Mine à -128 m** (deux fois la v1) : profondeurs des zones, minerais et pioches multipliées par 2. Débris antiques plus rares (poids 1, sous -104 m). La redstone apparaît dès -40 m.
 - **Une seule vue qui défile** : le village en haut, puis tout le puits creusé depuis le début. L'échelle et le rail de l'ascenseur longent le puits sur la gauche, et la caméra suit le joueur.
@@ -49,6 +49,8 @@ Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées autom
 - **Foreuse** (prestige 1+) : derrière une barrière avec cadenas au prestige 0. On l'active une fois (30 fer + 10 redstone), elle reste active aux prestiges suivants. Elle consomme du charbon (1 charbon = 20 s), creuse seule (elle descend d'un mètre tous les 6 blocs) et remplit un chariot qu'on vend ou qu'on vide dans le sac. Améliorations : vitesse de forage et taille du chariot. Elle continue de creuser quand le jeu est fermé (8 h au plus).
 - **Pas de torches** (retirées le 16/10) : lumière naturelle, on voit toujours les 4 couches sous la couche en cours, de plus en plus sombres.
 - **Barre de boutons fixe** : toujours les mêmes 8 boutons à la même place (◀ ▲ ▼ ▶ / Creuser x10 Village Front) ; ceux qui ne servent pas sont grisés. Le bandeau du haut a aussi une hauteur fixe.
+- **Assistant Emmanuel Macron** (caricature SVG, `PersonnageMacron.tsx`) : s'embauche au Puits pour 2 000 $. Pendant que le joueur creuse, il casse en même temps un autre bloc de la couche (le dernier bloc reste au joueur), avec la même pioche que le joueur (même couleur, même vitesse) sans l'user. Environ +50 % de vitesse de minage. Il repart au prestige.
+- **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms). Avant, le minage repartait de zéro à chaque changement d'état (il bloquait pendant que l'ascenseur voyageait).
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
 - `src/jeu/` (logique pure, testée avec Vitest) :
@@ -87,6 +89,7 @@ Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées autom
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques, pas de quêtes du marchand.
   - Exception (16/10) : la foreuse du prestige 1, qui creuse seule tant qu'on lui donne du charbon.
+  - Exception (18/10) : l'assistant Emmanuel Macron, qui creuse avec le joueur pendant qu'il creuse.
 - ✅ Le joueur n'est jamais bloqué : pioches rachetables, minage à mains nues, galeries horizontales.
 - 🆕 Nouveau par rapport à la v1 : la sauvegarde. Elle avait été refusée dans le notebook, mais elle devient indispensable sur le web.
 
@@ -98,3 +101,4 @@ Depuis la v3 de l'état (`VERSION_ETAT = 3`, sauvegardes v1 et v2 migrées autom
 - **2026-10-16** : surface avec stands, échelle, déplacements au clavier, « Vendre tout » avec objets à décocher, ascenseur à redstone, personnage taupe en SVG.
 - **2026-10-16** : mine à -128 m, vue unique qui défile avec l'échelle sur toute la hauteur, ascenseur à niveaux (fer + redstone) utilisable dans la mine, icônes pixel art au village, foreuse au prestige 1.
 - **2026-10-16** : barre de boutons à positions fixes, suppression des torches (lumière naturelle).
+- **2026-10-18** : assistant Emmanuel Macron (2 000 $), horloge unique pour le minage (corrige le minage bloqué pendant les voyages de l'ascenseur). Sauvegarde v4.

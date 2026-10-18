@@ -10,9 +10,13 @@ import {
   ascenseurDisponible,
   auFond,
   casserBloc,
+  casserBlocAssistant,
   creerPartie,
   dureeBlocActuel,
+  dureeBlocAssistant,
   envoyerAscenseur,
+  indexBlocActuel,
+  indexBlocAssistant,
   prestige,
   sacPlein,
   type EtatJeu,
@@ -29,9 +33,25 @@ export type Action = (etat: EtatJeu) => string[]
 
 const DUREE_TOAST = 3500 // ms
 const DUREE_GAIN = 1200 // ms
-const DUREE_MIN_BLOC = 80 // ms, pour que l'animation reste visible
-const INTERVALLE_HORLOGE = 100 // ms entre deux mises à jour (échelle, ascenseur, foreuse)
+const DUREE_MIN_BLOC = 0.08 // secondes, pour que l'animation reste visible
+const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
 const ABSENCE_MAX = 8 * 60 * 60 // la foreuse travaille au plus 8 h pendant que le jeu est fermé
+
+// Le travail d'un mineur sur un bloc : quel bloc (cle), et depuis combien de secondes.
+type Travail = { cle: string; temps: number }
+
+// Fait avancer un mineur sur son bloc. Renvoie true quand le bloc est cassé.
+// Si le mineur a changé de bloc, on repart de zéro.
+function travailler(travail: Travail, cle: string, duree: number, secondes: number): boolean {
+  if (travail.cle !== cle) {
+    travail.cle = cle
+    travail.temps = 0
+  }
+  travail.temps += secondes
+  if (travail.temps < Math.max(DUREE_MIN_BLOC, duree)) return false
+  travail.cle = ''
+  return true
+}
 
 let prochainId = 1
 const ID_MESSAGE_ABSENCE = 0
@@ -107,18 +127,33 @@ export function usePartie() {
     [afficherToasts, afficherGain, changerEtat],
   )
 
-  // Minage animé : on casse un bloc, on attend sa durée, puis le suivant.
+  // ... et on le retire au bout de quelques secondes.
   useEffect(() => {
-    if (blocsRestants <= 0 || etat.victoire || !auFond(etat)) return
-    const duree = Math.max(DUREE_MIN_BLOC, dureeBlocActuel(etat) * 1000)
-    const minuteur = setTimeout(() => {
-      let apres = jouer((e) => casserBloc(e, aleatoireNavigateur))
+    const minuteur = setTimeout(() => setToasts((liste) => liste.filter((t) => t.id !== ID_MESSAGE_ABSENCE)), 2 * DUREE_TOAST)
+    return () => clearTimeout(minuteur)
+  }, [])
+
+  // Le nombre de blocs qu'il reste à casser (« Creuser » ou « x10 »), aussi gardé dans
+  // une référence pour que l'horloge lise toujours la bonne valeur.
+  const blocsRestantsRef = useRef(0)
+  const changerBlocsRestants = useCallback((nombre: number) => {
+    blocsRestantsRef.current = nombre
+    setBlocsRestants(nombre)
+  }, [])
+
+  // Le bloc sur lequel travaille chaque mineur, et depuis combien de temps.
+  const travailJoueur = useRef<Travail>({ cle: '', temps: 0 })
+  const travailAssistant = useRef<Travail>({ cle: '', temps: 0 })
+
+  // Après chaque bloc cassé : on compte, et on gère le sac plein.
+  const apresUnBloc = useCallback(
+    (apres: EtatJeu) => {
       // Sac plein : l'ascenseur (s'il est là) emporte tout au marché.
       if (sacPlein(apres) && ascenseurDisponible(apres)) apres = jouer(envoyerAscenseur)
 
-      if (apres.victoire) setBlocsRestants(0)
+      if (apres.victoire) changerBlocsRestants(0)
       else if (sacPlein(apres)) {
-        setBlocsRestants(0)
+        changerBlocsRestants(0)
         afficherToasts([
           {
             id: prochainId++,
@@ -126,30 +161,60 @@ export function usePartie() {
             succes: false,
           },
         ])
-      } else setBlocsRestants((n) => n - 1)
-    }, duree)
-    return () => clearTimeout(minuteur)
-  }, [blocsRestants, etat, jouer, afficherToasts])
+      } else changerBlocsRestants(blocsRestantsRef.current - 1)
+    },
+    [jouer, changerBlocsRestants, afficherToasts],
+  )
 
-  // ... et on le retire au bout de quelques secondes.
-  useEffect(() => {
-    const minuteur = setTimeout(() => setToasts((liste) => liste.filter((t) => t.id !== ID_MESSAGE_ABSENCE)), 2 * DUREE_TOAST)
-    return () => clearTimeout(minuteur)
-  }, [])
+  // Un « tic » de l'horloge : le temps passe pour tout le monde.
+  const tic = useCallback(
+    (secondes: number) => {
+      // L'échelle, l'ascenseur et la foreuse.
+      if (tempsQuiPasse(etatRef.current)) jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
 
-  // L'horloge : fait grimper le joueur, voyager l'ascenseur et creuser la foreuse.
-  const leTempsPasse = tempsQuiPasse(etat)
+      // Le minage (seulement si on a demandé de creuser, et au front de taille).
+      if (blocsRestantsRef.current <= 0) return
+      const etatActuel = etatRef.current
+      if (etatActuel.victoire || !auFond(etatActuel)) {
+        changerBlocsRestants(0)
+        return
+      }
+
+      // Le joueur avance sur son bloc.
+      const indexJoueur = indexBlocActuel(etatActuel)
+      const cleJoueur = `${etatActuel.profondeur}-${indexJoueur}-${etatActuel.coucheActuelle[indexJoueur]}`
+      if (travailler(travailJoueur.current, cleJoueur, dureeBlocActuel(etatActuel), secondes)) {
+        apresUnBloc(jouer((e) => casserBloc(e, aleatoireNavigateur)))
+      }
+
+      // L'assistant (s'il est embauché) avance sur le sien, en même temps.
+      const etatApres = etatRef.current
+      if (etatApres.assistant.embauche && blocsRestantsRef.current > 0 && auFond(etatApres)) {
+        const indexAssistant = indexBlocAssistant(etatApres)
+        if (indexAssistant !== -1) {
+          const cleAssistant = `${etatApres.profondeur}-${indexAssistant}-${etatApres.coucheActuelle[indexAssistant]}`
+          if (travailler(travailAssistant.current, cleAssistant, dureeBlocAssistant(etatApres), secondes)) {
+            apresUnBloc(jouer((e) => casserBlocAssistant(e, aleatoireNavigateur)))
+          }
+        }
+      }
+    },
+    [jouer, apresUnBloc, changerBlocsRestants],
+  )
+
+  // L'horloge tourne quand quelque chose bouge : échelle, ascenseur, foreuse ou minage.
+  const horlogeActive = tempsQuiPasse(etat) || blocsRestants > 0
   useEffect(() => {
-    if (!leTempsPasse) return
+    if (!horlogeActive) return
     let derniereFois = performance.now()
     const horloge = setInterval(() => {
       const maintenant = performance.now()
       const secondes = (maintenant - derniereFois) / 1000
       derniereFois = maintenant
-      jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
+      tic(secondes)
     }, INTERVALLE_HORLOGE)
     return () => clearInterval(horloge)
-  }, [leTempsPasse, jouer])
+  }, [horlogeActive, tic])
 
   // Sauvegarde automatique à chaque changement.
   useEffect(() => {
@@ -157,24 +222,27 @@ export function usePartie() {
   }, [etat])
 
   // Creuse des couches entières : on finit la couche en cours, puis les suivantes.
-  const creuser = useCallback((nbCouches: number) => {
-    const restantsCouche = etatRef.current.coucheActuelle.filter((b) => b !== null).length
-    setBlocsRestants(restantsCouche + (nbCouches - 1) * LARGEUR_MINE)
-  }, [])
+  const creuser = useCallback(
+    (nbCouches: number) => {
+      const restantsCouche = etatRef.current.coucheActuelle.filter((b) => b !== null).length
+      changerBlocsRestants(restantsCouche + (nbCouches - 1) * LARGEUR_MINE)
+    },
+    [changerBlocsRestants],
+  )
 
-  const arreter = useCallback(() => setBlocsRestants(0), [])
+  const arreter = useCallback(() => changerBlocsRestants(0), [changerBlocsRestants])
 
   const recommencer = useCallback(() => {
-    setBlocsRestants(0)
+    changerBlocsRestants(0)
     effacer(window.localStorage)
     changerEtat(creerPartie(aleatoireNavigateur))
     setToasts([])
-  }, [changerEtat])
+  }, [changerEtat, changerBlocsRestants])
 
   const passerPrestige = useCallback(() => {
-    setBlocsRestants(0)
+    changerBlocsRestants(0)
     changerEtat(prestige(etatRef.current, aleatoireNavigateur))
-  }, [changerEtat])
+  }, [changerEtat, changerBlocsRestants])
 
   return {
     etat,

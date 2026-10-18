@@ -17,12 +17,25 @@ import {
   PanneauPioches,
   PanneauSucces,
 } from './composants/Panneaux'
+import { PersonnageMacron } from './composants/PersonnageMacron'
 import { POSITION_PUITS, STANDS } from './composants/stands'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
 import { VueMonde } from './composants/VueMonde'
-import { LARGEUR_MINE } from './jeu/donnees'
-import { aLaSurface, allerA, arreterSurEchelle, auFond, deplacerMineur, dureeEchelle, positionFront } from './jeu/mineur'
+import { LARGEUR_MINE, PRIX_ASSISTANT } from './jeu/donnees'
+import {
+  aLaSurface,
+  allerA,
+  arreterSurEchelle,
+  auFond,
+  deplacerMineur,
+  dureeEchelle,
+  embaucherAssistant,
+  estCassee,
+  peutEmbaucherAssistant,
+  piocheEquipee,
+  positionFront,
+} from './jeu/mineur'
 import { SUCCES } from './jeu/succes'
 import { usePartie } from './usePartie'
 
@@ -176,6 +189,33 @@ function App() {
             <button className="bouton bouton-principal" onClick={allerAuFront} disabled={etat.victoire}>
               ⏬ Descendre au front de taille
             </button>
+
+            {/* L'assistant : on l'embauche ici, il descend avec nous. */}
+            <div className="ligne-achat carte-assistant">
+              <div className="portrait-assistant">
+                <PersonnageMacron couleurPioche={estCassee(etat) ? null : piocheEquipee(etat).couleur} action="repos" />
+              </div>
+              <div className="liste-cartes">
+                <strong>Emmanuel Macron, assistant mineur</strong>
+                <span className="discret">
+                  Quand tu creuses, il creuse en même temps un autre bloc de la couche, avec la même pioche que toi (sans l'user).
+                  Tout ce qu'il casse va dans ton sac. Il repart au prochain prestige.
+                </span>
+                {etat.assistant.embauche ? (
+                  <span className="ok">Embauché : il t'attend au front de taille.</span>
+                ) : (
+                  <div className="boutons">
+                    <button
+                      className="bouton bouton-petit"
+                      disabled={!peutEmbaucherAssistant(etat)}
+                      onClick={() => jouer(embaucherAssistant)}
+                    >
+                      Embaucher · {PRIX_ASSISTANT.toLocaleString('fr-FR')} $
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </section>

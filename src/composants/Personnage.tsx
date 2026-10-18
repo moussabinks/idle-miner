@@ -11,6 +11,20 @@ type Props = {
   versLaGauche?: boolean
 }
 
+// La pioche tenue dans la main (en 47,5 ; 40,5) : un contour sombre puis la couleur.
+// Elle sert aussi à l'assistant, qui a la même pioche que le joueur.
+export function DessinPioche({ couleur }: { couleur: string }) {
+  return (
+    <g className="pioche">
+      <path d="M47.5 40.5 L57.5 17.5" stroke="#2a1a0c" strokeWidth="4.4" strokeLinecap="round" />
+      <path d="M47.5 40.5 L57.5 17.5" stroke="#9a6532" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M46 16.5 Q57 9 65 22" stroke="#141414" strokeWidth="6.4" fill="none" strokeLinecap="round" />
+      <path d="M46 16.5 Q57 9 65 22" stroke={couleur} strokeWidth="4.2" fill="none" strokeLinecap="round" />
+      <path d="M49 14.2 Q56 10.5 61 14.5" stroke="rgb(255 255 255 / 0.45)" strokeWidth="1" fill="none" strokeLinecap="round" />
+    </g>
+  )
+}
+
 export function Personnage({ couleurPioche, action, versLaGauche = false }: Props) {
   return (
     <svg
@@ -55,16 +69,8 @@ export function Personnage({ couleurPioche, action, versLaGauche = false }: Prop
       <rect x="43.5" y="9" width="5.5" height="6.5" rx="1.2" fill="#3d3d3d" />
       <circle className="lampe" cx="49.5" cy="12.2" r="2.3" fill="#fff6b0" />
 
-      {/* La pioche : un contour sombre puis la couleur (elle pivote autour de la main) */}
-      {couleurPioche !== null && (
-        <g className="pioche">
-          <path d="M47.5 40.5 L57.5 17.5" stroke="#2a1a0c" strokeWidth="4.4" strokeLinecap="round" />
-          <path d="M47.5 40.5 L57.5 17.5" stroke="#9a6532" strokeWidth="2.6" strokeLinecap="round" />
-          <path d="M46 16.5 Q57 9 65 22" stroke="#141414" strokeWidth="6.4" fill="none" strokeLinecap="round" />
-          <path d="M46 16.5 Q57 9 65 22" stroke={couleurPioche} strokeWidth="4.2" fill="none" strokeLinecap="round" />
-          <path d="M49 14.2 Q56 10.5 61 14.5" stroke="rgb(255 255 255 / 0.45)" strokeWidth="1" fill="none" strokeLinecap="round" />
-        </g>
-      )}
+      {/* La pioche (elle pivote autour de la main) */}
+      {couleurPioche !== null && <DessinPioche couleur={couleurPioche} />}
 
       {/* Le bras et la main qui tient la pioche */}
       <ellipse cx="45" cy="43" rx="4" ry="6" fill="#4a4150" stroke="#100d12" strokeWidth="1" transform="rotate(-35 45 43)" />
