@@ -10,6 +10,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - **Vitest** pour les tests (`npm test`), **oxlint** pour le lint (`npm run lint`).
 - Hébergement **Vercel** : chaque push sur `main` déploie la prod, et chaque Pull Request a son lien de preview.
 - Code sur GitHub, à deux développeurs : on passe par des branches et des PR, jamais de push direct sur `main`.
+- **À chaque modification demandée** : une fois les tests, le lint et le build au vert, on crée la Pull Request et on la fusionne dans `main` (demandé le 19/10), pour que Vercel mette la nouvelle version en ligne tout de suite.
 
 ## Commandes
 
