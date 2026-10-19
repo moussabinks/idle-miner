@@ -19,13 +19,15 @@
   --col-echelle: 18px;
   --col-ascenseur: 34px;
   --col-foreuse: 28px;
-  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse));
+  --col-mineurs: 0px; /* la galerie des mineurs employés (élargie quand on en a, voir .avec-mineurs) */
+  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse) + var(--col-mineurs));
   --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
-  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 13 * 3px);
+  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 14 * 3px);
   /* Où commencent l'échelle, l'ascenseur et la foreuse (depuis le bord gauche du puits). */
   --x-echelle: calc(10px + var(--col-etiquette) + 3px);
   --x-ascenseur: calc(var(--x-echelle) + var(--col-echelle) + 3px);
   --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
+  --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
   --pas: calc(var(--taille-case) + 3px);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -218,7 +220,7 @@ h2 {
 /* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 6 cases. */
 .rangee {
   display: grid;
-  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse);
+  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse) var(--col-mineurs);
   gap: 3px;
   margin-bottom: 3px;
   align-items: center;
@@ -1994,4 +1996,96 @@ kbd {
 
 .carte-employe {
   border-left: 4px solid #e07b2a;
+}
+
+/* ------------------------------------------- La galerie des mineurs employés */
+
+/* Quand on a des mineurs, une colonne de plus à droite de la foreuse : on redéclare
+   les tailles qui en dépendent (elles sont calculées à partir de --col-mineurs). */
+.jeu.avec-mineurs {
+  --col-mineurs: 34px;
+  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse) + var(--col-mineurs));
+  --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
+  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 14 * 3px);
+  --pas: calc(var(--taille-case) + 3px);
+  --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
+  --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
+}
+
+@media (max-width: 480px) {
+  .jeu.avec-mineurs {
+    --col-mineurs: 22px;
+  }
+}
+
+/* Le tunnel creusé par les mineurs, jusqu'au plus profond d'entre eux. */
+.galerie-mineurs {
+  position: absolute;
+  top: -14px;
+  left: var(--x-mineurs);
+  width: var(--col-mineurs);
+  background:
+    repeating-linear-gradient(transparent 0 calc(var(--pas) - 3px), rgb(0 0 0 / 0.35) calc(var(--pas) - 3px) var(--pas)),
+    linear-gradient(90deg, #3a2a1c 0 2px, #241a12 2px calc(100% - 2px), #3a2a1c calc(100% - 2px));
+  box-shadow: inset 0 0 6px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+}
+
+/* Un mineur employé : le personnage, son nom, et le bloc qu'il casse sous lui. */
+.mineur-employe {
+  position: absolute;
+  left: var(--x-mineurs);
+  width: var(--col-mineurs);
+  height: var(--taille-case);
+  display: grid;
+  place-items: end center;
+  transition: top 0.12s linear; /* il bouge par petits pas : on adoucit */
+  z-index: 3;
+  pointer-events: none;
+}
+
+.mineur-employe .personnage {
+  width: calc(var(--col-mineurs) + 8px);
+  height: calc(var(--col-mineurs) + 8px);
+}
+
+/* Son nom, en petit au-dessus de la tête. */
+.mineur-nom {
+  position: absolute;
+  top: -12px;
+  right: 0; /* calé à droite : la galerie est au bord de la mine, l'étiquette ne doit pas en sortir */
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 0.65);
+  color: #ffb35c;
+  font-size: 0.55rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Le bloc qu'il est en train de casser, juste sous ses pieds (il tremble).
+   Sélecteur double : il doit passer devant « .case { position: relative } » de blocs.css. */
+.mineur-employe .mineur-bloc {
+  position: absolute;
+  top: 100%;
+  left: 2px;
+  right: 2px;
+  height: calc(var(--taille-case) - 6px);
+  margin-top: 3px;
+  animation: tremble 0.15s linear infinite;
+}
+
+/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */
+.mineur-plus-bas .mineur-nom::after {
+  content: ' ↓';
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mineur-employe {
+    transition: none;
+  }
+
+  .mineur-employe .mineur-bloc {
+    animation: none;
+  }
 }

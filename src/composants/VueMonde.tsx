@@ -4,7 +4,7 @@
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
 import { memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
-import { BLOCS, LARGEUR_MINE, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { BLOCS, LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
@@ -99,7 +99,7 @@ const PIECES_VENTE = Array.from({ length: 12 }, (_, i) => {
 })
 
 // Une rangée de la mine : l'étiquette, la place de l'échelle et de l'ascenseur,
-// les 10 cases, puis la place du puits de la foreuse.
+// les 10 cases, puis la place du puits de la foreuse et celle de la galerie des mineurs.
 function Rangee({ profondeur, classe = '', children }: { profondeur: number; classe?: string; children: ReactNode }) {
   return (
     <div className={`rangee ${zoneDe(profondeur).classe} ${classe}`}>
@@ -108,6 +108,7 @@ function Rangee({ profondeur, classe = '', children }: { profondeur: number; cla
       <div className="place-ascenseur" />
       {children}
       <div className="place-foreuse" />
+      <div className="place-mineurs" />
     </div>
   )
 }
@@ -156,6 +157,46 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
           {foreuse.nombre > 1 && ` ×${foreuse.nombre}`}
         </span>
       </div>
+    </>
+  )
+}
+
+// Les mineurs employés (prestige 2) dans leur galerie, à droite de la foreuse :
+// on les voit descendre, creuser leur bloc, puis remonter vendre leur récolte.
+function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRangee: number }) {
+  if (etat.employes.length === 0) return null
+  // La galerie descend jusqu'au mineur le plus profond (sans dépasser ce qu'on affiche).
+  const plusProfond = Math.max(...etat.employes.map((mineur) => mineur.profondeur))
+  const hauteur = Math.min(plusProfond, derniereRangee)
+
+  return (
+    <>
+      <div className="galerie-mineurs" style={{ height: `calc(var(--pas) * ${hauteur} + 14px)` }} />
+      {etat.employes.map((mineur, index) => {
+        const creuse = mineur.etape === 'creuse'
+        // Quand il creuse, il se tient juste au-dessus du bloc qu'il casse ; sinon, il est sur son trajet.
+        const rangee = creuse ? mineur.profondeur - 1 : Math.round(mineur.position)
+        if (rangee < 1) return null // il est au village, en train de vendre
+        // Plus profond que ce qu'on voit : on le dessine en bas, avec une flèche.
+        const plusBas = rangee > derniereRangee - 1
+        const rangeeAffichee = Math.min(rangee, derniereRangee - 1)
+        return (
+          <div
+            key={index}
+            className={`mineur-employe ${plusBas ? 'mineur-plus-bas' : ''}`}
+            style={{ top: `calc(var(--pas) * ${rangeeAffichee - 1})` }}
+            title={`${mineur.nom} à -${mineur.profondeur} m`}
+          >
+            <span className="mineur-nom">
+              {mineur.nom} -{creuse ? mineur.profondeur : rangee} m
+            </span>
+            <Personnage couleurPioche={PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur} action={creuse ? 'creuse' : 'grimpe'} />
+            {creuse && !plusBas && (
+              <span className={`mineur-bloc case bloc ${mineur.profondeur > 80 ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
+            )}
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -356,6 +397,7 @@ export function VueMonde({
         )}
 
         <PuitsForeuse etat={etat} derniereRangee={derniere} teteRef={foreuseRef} />
+        <GalerieMineurs etat={etat} derniereRangee={derniere} />
 
         {/* Tout ce qui a déjà été creusé, depuis l'entrée du puits. */}
         {Array.from({ length: Math.max(0, front - 1) }, (_, i) => (

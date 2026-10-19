@@ -279,7 +279,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   return (
-    <div className="jeu">
+    <div className={`jeu ${etat.employes.length > 0 ? 'avec-mineurs' : ''}`}>
       <header className="entete">
         <h1 className="titre">⛏️ Idle Miner</h1>
         {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}

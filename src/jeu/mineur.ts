@@ -262,12 +262,32 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   return creerPartie(aleatoire, etat.prestige + 1, {
     succes: etat.succes,
     nonAVendre: etat.nonAVendre,
-    foreuse: etat.foreuse,
+    foreuse: foreuseApresPrestige(etat.foreuse),
     talents: etat.talents,
     niveauAscenseur: etat.ascenseur.niveau,
-    employes: etat.employes,
+    employes: etat.employes.map(employeApresPrestige),
     argentGagneAvant: argentGagneTotal(etat),
   })
+}
+
+// Au prestige, la foreuse garde seulement ses améliorations (activation, vitesse, chariot,
+// nombre de foreuses, options) : plus de charbon, chariot vide, et elle repart de la surface.
+export function foreuseApresPrestige(foreuse: Foreuse): Foreuse {
+  return {
+    ...nouvelleForeuse(),
+    active: foreuse.active,
+    niveauVitesse: foreuse.niveauVitesse,
+    niveauChariot: foreuse.niveauChariot,
+    nombre: foreuse.nombre,
+    rechargeAuto: foreuse.rechargeAuto,
+    nonCoches: [...foreuse.nonCoches],
+  }
+}
+
+// Pareil pour les mineurs employés : ils gardent leur pioche, mais recommencent
+// une galerie depuis la surface, le sac vide.
+export function employeApresPrestige(employe: Employe): Employe {
+  return { ...employe, profondeur: 2, etape: 'descend', position: 0, sac: {}, progression: 0 }
 }
 
 // Tout l'argent gagné depuis le début, prestiges compris (c'est ce que classe le leaderboard).

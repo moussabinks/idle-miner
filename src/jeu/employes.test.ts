@@ -65,11 +65,15 @@ describe('mineurs employés', () => {
     expect(etat.employes[0].niveau).toBe(1)
   })
 
-  it('restent après un prestige', () => {
+  it('restent après un prestige avec leur pioche, mais repartent de la surface', () => {
     const etat = partie(2)
     embaucher(etat)
+    ameliorerEmploye(etat, 0)
+    avancerTemps(etat, 1200, aleatoireAvecGraine(6))
+    expect(etat.employes[0].profondeur).toBeGreaterThan(2)
     const suite = prestige(etat, aleatoireAvecGraine(5))
     expect(suite.employes).toHaveLength(1)
+    expect(suite.employes[0]).toMatchObject({ niveau: 1, profondeur: 2, sac: {}, etape: 'descend' })
   })
 
   it('les talents du patron', () => {
