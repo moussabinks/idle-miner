@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { aLeTalent, BRANCHES, choisirTalent, peutChoisirTalent, pointsDisponibles, TALENTS, type IdBranche, type IdTalent } from '../jeu/talents'
 import type { EtatJeu } from '../jeu/mineur'
 import type { Action } from '../usePartie'
-import { IconePixel, type NomIcone } from './IconePixel'
+import { Icone, type NomIcone } from './Icone'
 
 const ICONES_BRANCHES: Record<IdBranche, NomIcone> = {
   mineur: 'forgeron',
@@ -35,7 +35,7 @@ export function ArbrePrestige({ etat, jouer, onFermer }: Props) {
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-arbre">
       <div className="carte arbre-prestige">
         <h2 id="titre-arbre" className="titre-avec-icone">
-          <IconePixel nom="etoile" taille={26} /> Arbre de prestige
+          <Icone nom="etoile" taille={26} /> Arbre de prestige
         </h2>
         <p className={points > 0 ? 'points-arbre points-a-depenser' : 'points-arbre'}>
           {points > 0 ? `Choisis ta récompense : ${points} point${points > 1 ? 's' : ''} à dépenser` : 'Aucun point à dépenser'}
@@ -48,7 +48,7 @@ export function ArbrePrestige({ etat, jouer, onFermer }: Props) {
           {BRANCHES.map((branche) => (
             <div key={branche.id} className={`branche branche-${branche.id}`}>
               <h3 className="titre-avec-icone">
-                <IconePixel nom={ICONES_BRANCHES[branche.id]} taille={20} /> {branche.nom}
+                <Icone nom={ICONES_BRANCHES[branche.id]} taille={20} /> {branche.nom}
               </h3>
               {TALENTS.filter((t) => t.branche === branche.id).map((t) => {
                 const pris = aLeTalent(etat, t.id)

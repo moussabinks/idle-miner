@@ -40,7 +40,8 @@ export const BLOCS: Record<IdBloc, TypeBloc> = {
   terre: { id: 'terre', nom: 'Terre', emoji: '🟫', prix: 1, durete: 0.5, minerai: false, special: false },
   gravier: { id: 'gravier', nom: 'Gravier', emoji: '🪨', prix: 1, durete: 0.6, minerai: false, special: false },
   pierre: { id: 'pierre', nom: 'Pierre', emoji: '🪨', prix: 1, durete: 1.5, minerai: false, special: false },
-  deepslate: { id: 'deepslate', nom: 'Deepslate', emoji: '⬛', prix: 2, durete: 3, minerai: false, special: false },
+  // La « roche dure » des profondeurs (son identifiant reste « deepslate », pour les sauvegardes).
+  deepslate: { id: 'deepslate', nom: 'Roche dure', emoji: '⬛', prix: 2, durete: 3, minerai: false, special: false },
   charbon: { id: 'charbon', nom: 'Charbon', emoji: '⚫', prix: 5, durete: 3, minerai: true, special: false },
   fer: { id: 'fer', nom: 'Fer', emoji: '🔩', prix: 12, durete: 3, minerai: true, special: false },
   redstone: { id: 'redstone', nom: 'Redstone', emoji: '🔴', prix: 15, durete: 3, minerai: true, special: false },
@@ -121,7 +122,7 @@ export const VITESSE_MAINS_NUES = 1
 export const LARGEUR_MINE = 10 // blocs par couche
 export const PROFONDEUR_BEDROCK = 128
 
-// Sous cette profondeur, la roche devient de la deepslate et tout est plus long à casser.
+// Sous cette profondeur, la roche devient de la roche dure et tout est plus long à casser.
 export const PROFONDEUR_DEEPSLATE = 80
 
 // Les sacs : la taille et le prix de chaque niveau (le premier est gratuit).
@@ -344,7 +345,7 @@ export const ZONES: Zone[] = [
   { nom: 'Cavernes', profMax: 30, classe: 'zone-cavernes' },
   { nom: 'Mines', profMax: 60, classe: 'zone-mines' },
   { nom: 'Profondeurs', profMax: 80, classe: 'zone-profondeurs' },
-  { nom: 'Deepslate', profMax: 104, classe: 'zone-deepslate' },
+  { nom: 'Roche dure', profMax: 104, classe: 'zone-deepslate' },
   { nom: 'Abîmes', profMax: 128, classe: 'zone-abimes' },
 ]
 
@@ -358,7 +359,7 @@ export function zoneDe(profondeur: number): Zone {
 
 export const VITESSE_JEU = 0.45
 
-// Durée (en secondes) pour casser un bloc (x1,5 dans la deepslate).
+// Durée (en secondes) pour casser un bloc (x1,5 dans la roche dure).
 export function dureeCasse(durete: number, profondeur: number, vitesse: number): number {
   const malusProfondeur = profondeur > PROFONDEUR_DEEPSLATE ? 1.5 : 1
   return ((durete * malusProfondeur) / vitesse) * VITESSE_JEU

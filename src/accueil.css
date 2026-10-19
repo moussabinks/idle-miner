@@ -103,9 +103,11 @@
   left: calc(44px + 3.5 * var(--case-illu));
   width: 40px;
   height: 30px;
+  /* Une petite échoppe arrondie, comme au village. */
+  border-radius: 14px 14px 4px 4px;
   background:
     repeating-linear-gradient(90deg, #d43b3b 0 6px, #f5efe0 6px 12px) top / 100% 35% no-repeat,
-    linear-gradient(#b07a3f, #8a5a2b);
+    linear-gradient(#c08a4d, #8a5a2b);
   border: 2px solid #5a3a1a;
   border-bottom: none;
 }
@@ -396,4 +398,11 @@
   .classement-liste .classement-autre {
     display: none;
   }
+}
+
+/* La version du jeu, tout en bas de l'accueil. */
+.accueil-version {
+  text-align: center;
+  font-size: 0.72rem;
+  opacity: 0.7;
 }

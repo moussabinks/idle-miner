@@ -324,7 +324,7 @@ function migrer(donnees: unknown): unknown {
   // Version 5 -> 6 : plus de donjons, d'épée ni d'assistant (retirés le 19/10),
   // et l'arbre de prestige arrive (les prestiges déjà passés donnent leurs points).
   if (etat.version === 5) {
-    // Un ancien donjon redevient un bloc de roche ordinaire (deepslate sous -80 m).
+    // Un ancien donjon redevient un bloc de roche ordinaire (roche dure sous -80 m).
     const profondeur = etat.profondeur as number
     const sansDonjon = (bloc: string | null, prof: number) => (bloc === 'donjon' ? (prof > 80 ? 'deepslate' : 'pierre') : bloc)
     const stats = { ...(etat.stats as Record<string, unknown>) }

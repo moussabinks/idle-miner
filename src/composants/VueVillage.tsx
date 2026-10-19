@@ -6,7 +6,7 @@ import { aleatoireAvecGraine, choisir, entierEntre } from '../jeu/aleatoire'
 import { employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
-import { IconePixel } from './IconePixel'
+import { Icone } from './Icone'
 import { Personnage } from './Personnage'
 import { LONGUEUR_VILLAGE, STANDS, TUILE, standProche } from './stands'
 
@@ -136,7 +136,7 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
                   <span className="derrick-meche" />
                   {verrouille && (
                     <span className="barriere">
-                      <IconePixel nom="cadenas" taille={22} />
+                      <Icone nom="cadenas" taille={22} />
                     </span>
                   )}
                 </span>
@@ -144,10 +144,10 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               {stand.id !== 'puits' && stand.id !== 'foreuse' && (
                 <span className="echoppe" aria-hidden="true">
                   <span className="auvent" />
-                  <span className="comptoir">{stand.icone && <IconePixel nom={stand.icone} taille={28} />}</span>
+                  <span className="comptoir">{stand.icone && <Icone nom={stand.icone} taille={28} />}</span>
                   {verrouille && (
                     <span className="barriere">
-                      <IconePixel nom="cadenas" taille={22} />
+                      <Icone nom="cadenas" taille={22} />
                     </span>
                   )}
                 </span>
