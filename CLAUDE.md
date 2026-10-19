@@ -29,11 +29,11 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - **Tout est en français** : UI, noms de variables et de fonctions, commentaires. Les mots-clés et API de TS/React restent en anglais.
 - Code lisible et commenté pour un public débutant, avec des noms explicites, sans astuces obscures.
 - Visuel : blocs, animations et effets en CSS (gradients, keyframes) tant qu'on n'a pas décidé d'utiliser des sprites.
+- Sons : fabriqués avec Web Audio dans `src/sons.ts` (pas de fichier audio), coupables depuis le bandeau.
 - Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web).
 
 ## Choix de design hérités de la v1 (à respecter)
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques (PNJ), pas de quêtes du marchand.
   - Exception décidée le 16/10 : la **foreuse** (débloquée au prestige 1, alimentée au charbon) creuse toute seule.
-  - Exception décidée le 18/10 : l'**assistant Emmanuel Macron** (1 000 $), qui creuse avec le joueur, seulement pendant que le joueur creuse.
 - On ne doit jamais être bloqué : pioches rachetables, minage à mains nues si la pioche est cassée, galeries horizontales à la profondeur max.

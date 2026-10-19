@@ -154,6 +154,28 @@ function migrer(donnees: unknown): unknown {
     }
   }
 
+  // Version 5 -> 6 : plus de donjons, d'épée ni d'assistant (retirés le 19/10),
+  // et l'arbre de prestige arrive (les prestiges déjà passés donnent leurs points).
+  if (etat.version === 5) {
+    // Un ancien donjon redevient un bloc de roche ordinaire (deepslate sous -80 m).
+    const profondeur = etat.profondeur as number
+    const sansDonjon = (bloc: string | null, prof: number) => (bloc === 'donjon' ? (prof > 80 ? 'deepslate' : 'pierre') : bloc)
+    const stats = { ...(etat.stats as Record<string, unknown>) }
+    delete stats.monstresVaincus
+    etat = {
+      ...etat,
+      version: 6,
+      coucheActuelle: (etat.coucheActuelle as (string | null)[]).map((bloc) => sansDonjon(bloc, profondeur)),
+      couchesDessous: (etat.couchesDessous as string[][]).map((couche, i) => couche.map((bloc) => sansDonjon(bloc, profondeur + 1 + i))),
+      succes: (etat.succes as string[]).filter((id) => id !== 'monstre'),
+      stats,
+      talents: [],
+      peculeRecu: true,
+    }
+    delete etat.assistant
+    delete etat.epee
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -181,7 +203,6 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.nonAVendre) &&
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
-    typeof etat.assistant === 'object' &&
-    typeof etat.epee === 'boolean'
+    Array.isArray(etat.talents)
   )
 }

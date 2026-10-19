@@ -25,7 +25,6 @@ export type IdBloc =
   | 'lave'
   | 'coffre'
   | 'geode'
-  | 'donjon'
 
 export type TypeBloc = {
   id: IdBloc
@@ -34,7 +33,7 @@ export type TypeBloc = {
   prix: number // prix de vente en $ (0 = ne se vend pas)
   durete: number // temps de base pour le casser
   minerai: boolean // true = profite de l'enchantement Fortune
-  special: boolean // true = ne va pas dans le sac (lave, coffre, géode, donjon)
+  special: boolean // true = ne va pas dans le sac (lave, coffre, géode)
 }
 
 export const BLOCS: Record<IdBloc, TypeBloc> = {
@@ -57,8 +56,6 @@ export const BLOCS: Record<IdBloc, TypeBloc> = {
   lave: { id: 'lave', nom: 'Lave', emoji: '🔥', prix: 0, durete: 1, minerai: false, special: true },
   coffre: { id: 'coffre', nom: 'Coffre', emoji: '🧰', prix: 0, durete: 2.5, minerai: false, special: true },
   geode: { id: 'geode', nom: 'Géode', emoji: '🔮', prix: 0, durete: 1.5, minerai: false, special: true },
-  // Un donjon, avec un monstre dedans : il faut une épée pour le vaincre.
-  donjon: { id: 'donjon', nom: 'Donjon', emoji: '🧟', prix: 0, durete: 2, minerai: false, special: true },
 }
 
 // Les minerais qu'un coffre peut contenir (un au hasard).
@@ -137,8 +134,6 @@ export const SACS = [
 
 export const PRIX_SEAU = 25
 
-// L'épée (chez le forgeron) : sans elle, le monstre d'un donjon t'assomme.
-export const PRIX_EPEE = 150
 // On voit toujours les 4 couches sous la couche en cours (lumière naturelle, sans torches).
 export const COUCHES_VISIBLES_DESSOUS = 4
 
@@ -175,13 +170,6 @@ export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>>
 // On l'active une seule fois (elle reste active après les prestiges suivants).
 export const COUT_ACTIVATION_FOREUSE: Cout = { materiaux: { fer: 30, redstone: 10 } }
 export const PRESTIGE_FOREUSE = 1
-
-// ---------------------------------------------------------------------------
-// L'assistant : Emmanuel Macron vient creuser avec toi
-// ---------------------------------------------------------------------------
-
-// Prix de l'embauche (une seule fois par partie).
-export const PRIX_ASSISTANT = 1000
 
 // Un charbon fait tourner la foreuse pendant 20 secondes.
 export const SECONDES_PAR_CHARBON = 20

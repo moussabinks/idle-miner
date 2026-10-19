@@ -4,12 +4,11 @@
 // il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, PIOCHES, PRIX_EPEE, PRIX_SEAU, type IdBloc } from './donnees'
+import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, PIOCHES, PRIX_SEAU, type IdBloc } from './donnees'
 import {
   acheterPioche,
   acheterSac,
   acheterSeau,
-  acheterEpee,
   allerA,
   appelerAscenseur,
   ascenseurEnMouvement,
@@ -119,8 +118,6 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
       while (etat.seaux < 2 && etat.argent >= 2 * PRIX_SEAU) acheterSeau(etat)
     }
     if (estCassee(etat) && peutReparer(etat)) reparer(etat)
-    // Une épée pour les donjons, dès qu'on peut se l'offrir sans se priver.
-    if (!etat.epee && etat.argent >= 2 * PRIX_EPEE) acheterEpee(etat)
   }
 
   while (!etat.victoire && etat.stats.blocsCasses < maxBlocs) {

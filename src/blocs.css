@@ -141,41 +141,6 @@
     var(--roche);
 }
 
-/* Un donjon : de la pierre moussue, avec un zombie qui attend dans l'ombre. */
-.bloc-donjon {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 20% 25%, #4f8a3a 0 10%, transparent 11%),
-    radial-gradient(circle at 75% 70%, #3f7a2e 0 12%, transparent 13%),
-    radial-gradient(circle at 55% 15%, #5a9a40 0 7%, transparent 8%),
-    radial-gradient(circle at 50% 55%, #0b0b0d 0 32%, transparent 34%),
-    repeating-linear-gradient(0deg, #585858 0 3px, #6e6e6e 3px 10px),
-    #626262;
-  box-shadow:
-    inset 3px 3px 0 rgb(255 255 255 / 0.1),
-    inset -3px -3px 0 rgb(0 0 0 / 0.4),
-    0 0 10px rgb(255 40 40 / 0.35);
-}
-
-.monstre {
-  display: grid;
-  place-items: center;
-  width: 60%;
-  animation: monstre 1.4s ease-in-out infinite;
-}
-
-.monstre .icone-pixel {
-  width: 100%;
-  height: auto;
-}
-
-@keyframes monstre {
-  0%, 100% { transform: translateY(1px); filter: drop-shadow(0 0 2px rgb(255 40 40 / 0.6)); }
-  50% { transform: translateY(-1px); filter: drop-shadow(0 0 5px rgb(255 40 40 / 0.9)); }
-}
-
 .bloc-bedrock {
   background:
     radial-gradient(circle at 20% 30%, #555 0 12%, transparent 13%),
@@ -225,25 +190,6 @@
     linear-gradient(100deg, transparent 30%, rgb(0 0 0 / 0.6) 31% 33%, transparent 34%);
 }
 
-/* Le bloc que casse l'assistant : entouré de bleu. */
-.en-cours-assistant {
-  outline: 2px solid #6fa8ff;
-  outline-offset: -2px;
-  z-index: 1;
-}
-
-.en-cours-assistant::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: 0;
-  background:
-    linear-gradient(35deg, transparent 46%, rgb(0 0 0 / 0.75) 47% 50%, transparent 51%),
-    linear-gradient(-50deg, transparent 47%, rgb(0 0 0 / 0.7) 48% 51%, transparent 52%),
-    linear-gradient(100deg, transparent 30%, rgb(0 0 0 / 0.6) 31% 33%, transparent 34%);
-}
-
 .casse {
   animation: tremble 0.12s linear infinite;
 }
@@ -276,7 +222,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .monstre,
   .casse,
   .bloc-lave,
   .bloc-diamant,

@@ -24,24 +24,27 @@ type Props = {
 
 type Decor = { type: 'arbre' | 'herbe' | 'fleur' | 'rocher' | 'barriere'; x: number; devant: boolean; couleur?: string }
 
+// Le décor continue un peu après le dernier stand, pour les écrans larges.
+const LONGUEUR_DECOR = 40
+
 function genererDecor(): Decor[] {
   const aleatoire = aleatoireAvecGraine(2026)
   const decor: Decor[] = []
   const loinDesStands = (x: number, distance: number) => STANDS.every((s) => Math.abs(s.x - x) > distance)
 
   // Des arbres entre les stands.
-  for (let x = 0.5; x < LONGUEUR_VILLAGE; x += 2 + aleatoire() * 2.5) {
-    if (loinDesStands(x, 2.2)) decor.push({ type: 'arbre', x, devant: false })
+  for (let x = 0.5; x < LONGUEUR_DECOR; x += 1.5 + aleatoire() * 2) {
+    if (loinDesStands(x, 1.3)) decor.push({ type: 'arbre', x, devant: false })
   }
   // Des hautes herbes et des fleurs tout le long, derrière et devant le chemin.
-  for (let x = 0.2; x < LONGUEUR_VILLAGE; x += 0.35 + aleatoire() * 0.6) {
+  for (let x = 0.2; x < LONGUEUR_DECOR; x += 0.35 + aleatoire() * 0.6) {
     const devant = aleatoire() < 0.5
     if (aleatoire() < 0.25) decor.push({ type: 'fleur', x, devant, couleur: choisir(aleatoire, ['#e5534b', '#f5d142', '#f2f2f2', '#b48ee8']) })
     else decor.push({ type: 'herbe', x, devant })
   }
   // Quelques rochers et des bouts de barrière.
-  for (let i = 0; i < 6; i++) decor.push({ type: 'rocher', x: entierEntre(aleatoire, 1, LONGUEUR_VILLAGE - 2) + 0.3, devant: true })
-  for (const x of [5.5, 12.5, 19.5, 26.5, 34]) decor.push({ type: 'barriere', x, devant: false })
+  for (let i = 0; i < 3; i++) decor.push({ type: 'rocher', x: entierEntre(aleatoire, 1, LONGUEUR_VILLAGE - 2) + 0.3, devant: true })
+  for (const x of [18.8, 20.6]) decor.push({ type: 'barriere', x, devant: false })
   return decor
 }
 
@@ -64,7 +67,8 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
     return () => observateur.disconnect()
   }, [])
 
-  const largeurMonde = LONGUEUR_VILLAGE * TUILE
+  // Sur un grand écran, le monde prend au moins toute la largeur visible.
+  const largeurMonde = Math.max(LONGUEUR_VILLAGE * TUILE, largeurVue)
   const camera = Math.min(largeurMonde - largeurVue, Math.max(0, x * TUILE - largeurVue / 2))
 
   const auVillage = aLaSurface(etat)

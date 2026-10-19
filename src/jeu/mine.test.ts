@@ -32,13 +32,11 @@ describe('génération de la mine', () => {
     expect(blocsPossibles(17)).toContain('coffre')
     expect(blocsPossibles(41)).toContain('lave')
     expect(blocsPossibles(51)).toContain('geode')
-    expect(blocsPossibles(12)).not.toContain('donjon')
-    expect(blocsPossibles(13)).toContain('donjon')
   })
 
   it('la foreuse ne tire jamais de bloc spécial', () => {
     const aleatoire = aleatoireAvecGraine(5)
-    for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode', 'donjon']).not.toContain(tirerBlocNormal(60, aleatoire))
+    for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode']).not.toContain(tirerBlocNormal(60, aleatoire))
   })
 
   it('génère des couches de 6 blocs, toujours les mêmes avec la même graine', () => {

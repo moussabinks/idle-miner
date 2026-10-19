@@ -12,7 +12,6 @@ import {
   NIVEAUX_FORAGE,
   PIOCHES,
   PRESTIGE_FOREUSE,
-  PRIX_EPEE,
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
@@ -40,7 +39,6 @@ import {
 } from '../jeu/foreuse'
 import {
   aLaSurface,
-  acheterEpee,
   acheterPioche,
   acheterSac,
   acheterSeau,
@@ -65,7 +63,6 @@ import {
 import { SUCCES } from '../jeu/succes'
 import type { Action } from '../usePartie'
 import { Barre } from './Barre'
-import { IconePixel } from './IconePixel'
 
 type PropsPanneau = {
   etat: EtatJeu
@@ -146,29 +143,6 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
   return (
     <div className="liste-cartes">
       {!enVille && <p className="discret">⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface.</p>}
-
-      {/* L'épée : indispensable contre les monstres des donjons. */}
-      {enVille && (
-        <div className={`ligne-achat ${etat.epee ? 'equipee' : ''}`}>
-          <div className="ligne-titre">
-            <strong className="titre-avec-icone">
-              <IconePixel nom="epee" taille={20} /> Épée en fer
-            </strong>
-            {etat.epee && <span className="badge">Achetée</span>}
-          </div>
-          <span className="discret">
-            Des donjons se cachent dans la mine, avec un zombie dedans. Avec une épée, tu le bats et tu gagnes un butin. Sans épée, il
-            t'assomme : tu perds ton sac et tu te réveilles au village.
-          </span>
-          {!etat.epee && (
-            <div className="boutons">
-              <Bouton actif={etat.argent >= PRIX_EPEE} onClick={() => jouer(acheterEpee)}>
-                Acheter · {PRIX_EPEE} $
-              </Bouton>
-            </div>
-          )}
-        </div>
-      )}
 
       {PIOCHES.map((pioche) => {
         const possedee = pioche.niveau in etat.pioches

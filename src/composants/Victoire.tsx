@@ -39,8 +39,8 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           </li>
         </ul>
         <p className="discret">
-          Prestige : tu recommences à zéro, mais tes ventes rapportent +{bonusVente} % et tes pioches vont {bonusVitesse} % plus vite. Tes
-          succès sont conservés. Tu peux aussi continuer à creuser ici pour tester tes enchantements, et passer prestige plus tard au puits.
+          Prestige : tu recommences à zéro, mais tes ventes rapportent +{bonusVente} % et tes pioches vont {bonusVitesse} % plus vite, et tu
+          choisis une récompense dans l'arbre de prestige. Tes succès et tes talents sont conservés. Tu peux aussi continuer à creuser ici pour tester tes enchantements, et passer prestige plus tard au puits.
           {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvre !'}
         </p>
         <div className="boutons boutons-centre">

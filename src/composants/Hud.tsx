@@ -13,9 +13,20 @@ import {
   vitesse,
   type EtatJeu,
 } from '../jeu/mineur'
+import { useState } from 'react'
+import { pointsDisponibles } from '../jeu/talents'
+import { basculerSon, sonActif } from '../sons'
 import { Barre } from './Barre'
 
-export function Hud({ etat }: { etat: EtatJeu }) {
+type Props = {
+  etat: EtatJeu
+  nbVentes: number // change à chaque vente, pour faire sauter le compteur d'argent
+  onOuvrirArbre: () => void
+}
+
+export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
+  const [son, setSon] = useState(sonActif)
+  const points = pointsDisponibles(etat)
   const pioche = piocheEquipee(etat)
   const cassee = estCassee(etat)
   const zone = zoneDe(etat.profondeur)
@@ -28,7 +39,9 @@ export function Hud({ etat }: { etat: EtatJeu }) {
     <header className="hud">
       <div className="hud-case hud-argent">
         <span className="hud-titre">Argent</span>
-        <strong>💵 {etat.argent.toLocaleString('fr-FR')} $</strong>
+        <strong key={nbVentes} className={nbVentes > 0 ? 'argent-saute' : ''}>
+          💵 {etat.argent.toLocaleString('fr-FR')} $
+        </strong>
       </div>
 
       <div className="hud-case">
@@ -66,11 +79,19 @@ export function Hud({ etat }: { etat: EtatJeu }) {
       <div className="hud-case hud-petits">
         <span title="Seaux d'eau">🪣 {etat.seaux}</span>
         {etat.ascenseur.niveau > 0 && <span title="Niveau de l'ascenseur">🛗 {etat.ascenseur.niveau}</span>}
-        {etat.assistant.embauche && <span title="Emmanuel Macron creuse avec toi">🇫🇷</span>}
-        {etat.epee && <span title="Tu as une épée contre les monstres des donjons">⚔️</span>}
         {etat.prestige > 0 && (
-          <span title={`Prestige ${etat.prestige} : ventes +${15 * etat.prestige} %, pioches +${10 * etat.prestige} % plus rapides`}>⭐ {etat.prestige}</span>
+          <button
+            className={`hud-bouton ${points > 0 ? 'a-depenser' : ''}`}
+            onClick={onOuvrirArbre}
+            title={`Prestige ${etat.prestige} : ventes +${15 * etat.prestige} %, pioches +${10 * etat.prestige} % plus rapides. Clique pour ouvrir l'arbre de prestige.`}
+          >
+            ⭐ {etat.prestige}
+            {points > 0 && ` · ${points} point${points > 1 ? 's' : ''} !`}
+          </button>
         )}
+        <button className="hud-bouton" onClick={() => setSon(basculerSon())} title={son ? 'Couper le son' : 'Remettre le son'} aria-label={son ? 'Couper le son' : 'Remettre le son'}>
+          {son ? '🔊' : '🔇'}
+        </button>
       </div>
     </header>
   )

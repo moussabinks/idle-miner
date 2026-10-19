@@ -12,7 +12,6 @@ type Props = {
 }
 
 // La pioche tenue dans la main (en 47,5 ; 40,5) : un contour sombre puis la couleur.
-// Elle sert aussi à l'assistant, qui a la même pioche que le joueur.
 export function DessinPioche({ couleur }: { couleur: string }) {
   return (
     <g className="pioche">

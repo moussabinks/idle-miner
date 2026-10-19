@@ -16,6 +16,7 @@ import {
   type IdBloc,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
+import { multiplicateurCharbon, multiplicateurForage } from './talents'
 import {
   aLaSurface,
   payerMateriaux,
@@ -38,7 +39,7 @@ export function foreuseDebloquee(etat: EtatJeu): boolean {
 }
 
 export function vitesseForage(etat: EtatJeu): number {
-  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse
+  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse * multiplicateurForage(etat)
 }
 
 export function capaciteChariot(etat: EtatJeu): number {
@@ -91,7 +92,7 @@ export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   const mis = Math.min(nombre, quantite(etat, 'charbon'))
   if (mis <= 0) return []
   retirer(etat, 'charbon', mis)
-  etat.foreuse.carburant += mis * SECONDES_PAR_CHARBON
+  etat.foreuse.carburant += mis * SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
   return [`🔥 +${mis} charbon dans la foreuse.`]
 }
 

@@ -18,8 +18,6 @@ import {
   MULTIPLICATEUR_ACHAT,
   NIVEAUX_ASCENSEUR,
   PIOCHES,
-  PRIX_ASSISTANT,
-  PRIX_EPEE,
   LARGEUR_MINE,
   PRIX_PLANCHE,
   PRIX_SEAU,
@@ -35,6 +33,14 @@ import {
   type Pioche,
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
+import {
+  appliquerTalentsDeDepart,
+  bonusVenteTalents,
+  multiplicateurCoffre,
+  multiplicateurEchelle,
+  multiplicateurPioche,
+  type IdTalent,
+} from './talents'
 
 // Nombre de couches gardées en mémoire (et affichées) sous la couche en cours.
 export const COUCHES_EN_AVANCE = COUCHES_VISIBLES_DESSOUS
@@ -49,7 +55,6 @@ export type Statistiques = {
   geodesCassees: number
   lavesEteintes: number
   diamantsTrouves: number
-  monstresVaincus: number
 }
 
 // L'ascenseur : une cabine qui monte et descend le long du puits.
@@ -63,12 +68,6 @@ export type Ascenseur = {
   retourAuFront: boolean // true = après avoir vendu, elle redescend toute seule au front de taille
   quai: Inventaire // les blocs qui attendent au pied de l'ascenseur quand le sac est plein
   garder: IdBloc[] // les objets que l'ascenseur ne prend pas (décochés dans le module)
-}
-
-// L'assistant (Emmanuel Macron) : il creuse un autre bloc de la couche pendant que tu creuses.
-export type Assistant = {
-  embauche: boolean
-  colonne: number // la colonne où il se tient au front de taille
 }
 
 export type Foreuse = {
@@ -101,18 +100,18 @@ export type EtatJeu = {
   nonAVendre: IdBloc[] // objets décochés au marché : « Vendre tout » les garde
   ascenseur: Ascenseur
   foreuse: Foreuse
-  assistant: Assistant
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   seaux: number
-  epee: boolean // une épée pour vaincre les monstres des donjons
   prestige: number
   succes: string[] // identifiants des succès débloqués (gardés au prestige)
   stats: Statistiques
   victoire: boolean
+  talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
+  peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 5
+export const VERSION_ETAT = 6
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -135,11 +134,12 @@ export function creerPartie(
   succes: string[] = [],
   nonAVendre: IdBloc[] = [],
   foreuse: Foreuse = nouvelleForeuse(),
+  talents: IdTalent[] = [],
 ): EtatJeu {
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
 
-  return {
+  const etat: EtatJeu = {
     version: VERSION_ETAT,
     position: 0, // on commence au village
     cible: 0,
@@ -156,11 +156,9 @@ export function creerPartie(
     nonAVendre: [...nonAVendre],
     ascenseur: nouvelAscenseur(),
     foreuse: structuredClone(foreuse),
-    assistant: { embauche: false, colonne: LARGEUR_MINE - 1 },
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
     seaux: 0,
-    epee: false,
     prestige,
     succes: [...succes],
     stats: {
@@ -171,16 +169,20 @@ export function creerPartie(
       geodesCassees: 0,
       lavesEteintes: 0,
       diamantsTrouves: 0,
-      monstresVaincus: 0,
     },
     victoire: false,
+    talents: [...talents],
+    peculeRecu: false,
   }
+  appliquerTalentsDeDepart(etat)
+  return etat
 }
 
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
-// On garde les succès, les objets décochés au marché et la foreuse.
+// On garde les succès, les objets décochés au marché, la foreuse et les talents.
+// Le point de prestige gagné se dépense ensuite dans l'arbre (voir talents.ts).
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
-  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre, etat.foreuse)
+  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre, etat.foreuse, etat.talents)
 }
 
 // ---------------------------------------------------------------------------
@@ -211,7 +213,7 @@ export function bonusVitessePrestige(etat: EtatJeu): number {
 export function vitesse(etat: EtatJeu): number {
   if (estCassee(etat)) return VITESSE_MAINS_NUES
   const bonusEfficacite = 1 + 0.25 * etat.enchantements.efficacite
-  return piocheEquipee(etat).vitesse * bonusEfficacite * bonusVitessePrestige(etat)
+  return piocheEquipee(etat).vitesse * bonusEfficacite * bonusVitessePrestige(etat) * multiplicateurPioche(etat)
 }
 
 export function tailleSac(etat: EtatJeu): number {
@@ -233,7 +235,7 @@ export function sacPlein(etat: EtatJeu): boolean {
 }
 
 export function bonusVente(etat: EtatJeu): number {
-  return 1 + BONUS_PRESTIGE * etat.prestige
+  return 1 + BONUS_PRESTIGE * etat.prestige + bonusVenteTalents(etat)
 }
 
 export function quantite(etat: EtatJeu, bloc: IdBloc): number {
@@ -349,7 +351,7 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   return messages
 }
 
-// Ce qui se passe une fois un bloc cassé (par le joueur ou par l'assistant) :
+// Ce qui se passe une fois un bloc cassé :
 // on récolte, puis on passe à la couche suivante si c'était le dernier bloc.
 function finirBloc(etat: EtatJeu, index: number, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   etat.stats.blocsCasses += 1
@@ -357,53 +359,6 @@ function finirBloc(etat: EtatJeu, index: number, bloc: IdBloc, aleatoire: Aleato
   etat.coucheActuelle[index] = null
   if (indexBlocActuel(etat) === -1) messages.push(...passerCoucheSuivante(etat, aleatoire))
   return messages
-}
-
-// ---------------------------------------------------------------------------
-// L'assistant : Emmanuel Macron
-// ---------------------------------------------------------------------------
-
-export function peutEmbaucherAssistant(etat: EtatJeu): boolean {
-  return !etat.assistant.embauche && etat.argent >= PRIX_ASSISTANT
-}
-
-// On l'embauche au village, près du puits.
-export function embaucherAssistant(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat) || !peutEmbaucherAssistant(etat)) return []
-  etat.argent -= PRIX_ASSISTANT
-  etat.assistant.embauche = true
-  return ['🇫🇷 Emmanuel Macron rejoint ton équipe : « Je creuse, et en même temps, je creuse ! »']
-}
-
-// Le bloc que l'assistant va casser : le plus proche de lui, mais jamais celui du joueur,
-// ni un donjon (c'est au joueur d'affronter le monstre).
-// Renvoie -1 s'il n'y en a pas (couche finie, ou plus que les blocs du joueur).
-export function indexBlocAssistant(etat: EtatJeu): number {
-  const indexJoueur = indexBlocActuel(etat)
-  let meilleur = -1
-  etat.coucheActuelle.forEach((bloc, colonne) => {
-    if (bloc === null || bloc === 'donjon' || colonne === indexJoueur) return
-    const distance = Math.abs(colonne - etat.assistant.colonne)
-    if (meilleur === -1 || distance < Math.abs(meilleur - etat.assistant.colonne)) meilleur = colonne
-  })
-  return meilleur
-}
-
-// Temps pour que l'assistant casse son prochain bloc : il a la même pioche que le joueur.
-export function dureeBlocAssistant(etat: EtatJeu): number {
-  const index = indexBlocAssistant(etat)
-  if (index === -1) return 0
-  const bloc = etat.coucheActuelle[index] as IdBloc
-  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat))
-}
-
-// L'assistant casse un bloc. Il a sa propre pioche (comme celle du joueur) : il n'use pas la tienne.
-export function casserBlocAssistant(etat: EtatJeu, aleatoire: Aleatoire): string[] {
-  const index = indexBlocAssistant(etat)
-  if (!etat.assistant.embauche || !auFond(etat) || index === -1) return []
-  const bloc = etat.coucheActuelle[index] as IdBloc
-  etat.assistant.colonne = index
-  return finirBloc(etat, index, bloc, aleatoire)
 }
 
 // Range des objets : dans le sac, et s'il est plein, sur le quai de l'ascenseur
@@ -420,7 +375,7 @@ export function peutStocker(etat: EtatJeu): boolean {
   return placeLibre(etat) > 0 || placeQuai(etat) > 0
 }
 
-// Les minerais qu'on peut trouver à cette profondeur (pour les coffres et les donjons).
+// Les minerais qu'on peut trouver à cette profondeur (pour les coffres).
 function mineraisDuCoin(etat: EtatJeu): IdBloc[] {
   const minerais = poidsDesBlocs(etat.profondeur)
     .map((c) => c.valeur)
@@ -428,32 +383,9 @@ function mineraisDuCoin(etat: EtatJeu): IdBloc[] {
   return minerais.length > 0 ? minerais : ['charbon']
 }
 
-// Un donjon : le monstre attaque. Avec une épée on gagne un butin, sans épée on est assommé.
-function combattreMonstre(etat: EtatJeu, aleatoire: Aleatoire): string[] {
-  if (etat.epee) {
-    const argent = entierEntre(aleatoire, 40, 80) + etat.profondeur * entierEntre(aleatoire, 3, 6)
-    etat.argent += argent
-    etat.stats.argentGagne += argent
-    etat.stats.monstresVaincus += 1
-    const minerai = choisir(aleatoire, mineraisDuCoin(etat))
-    const nombre = entierEntre(aleatoire, 2, 4)
-    stocker(etat, minerai, nombre)
-    return [`⚔️ Tu as vaincu le zombie du donjon ! Butin : +${argent} $ et ${nombre} ${BLOCS[minerai].nom.toLowerCase()}.`]
-  }
-
-  // Sans épée : le monstre t'assomme, tu perds ton sac et tu te réveilles au village.
-  const perdus = nbDansSac(etat)
-  etat.inventaire = {}
-  etat.position = 0
-  etat.cible = 0
-  return [`💀 Un zombie sort du donjon et t'assomme ! Tu perds ${perdus} objets et tu te réveilles au village. Achète une épée chez le forgeron.`]
-}
-
 // Ce qu'on obtient en cassant un bloc.
 function recolter(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
-
-  if (bloc === 'donjon') return combattreMonstre(etat, aleatoire)
 
   if (bloc === 'lave') {
     if (etat.seaux > 0) {
@@ -475,7 +407,7 @@ function recolter(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   }
 
   if (bloc === 'coffre') {
-    const argent = entierEntre(aleatoire, 20, 60) + etat.profondeur * entierEntre(aleatoire, 3, 8)
+    const argent = (entierEntre(aleatoire, 20, 60) + etat.profondeur * entierEntre(aleatoire, 3, 8)) * multiplicateurCoffre(etat)
     etat.argent += argent
     etat.stats.argentGagne += argent
     etat.stats.coffresOuverts += 1
@@ -630,13 +562,18 @@ export function arreterSurEchelle(etat: EtatJeu): string[] {
 
 // Temps pour parcourir toute l'échelle depuis le front de taille.
 export function dureeEchelle(etat: EtatJeu): number {
-  return positionFront(etat) * SECONDES_PAR_METRE_ECHELLE
+  return positionFront(etat) * secondesParMetre(etat)
+}
+
+// Le temps pour grimper d'un mètre (plus court avec le talent « Grimpeur agile »).
+export function secondesParMetre(etat: EtatJeu): number {
+  return SECONDES_PAR_METRE_ECHELLE * multiplicateurEchelle(etat)
 }
 
 // Fait grimper le joueur vers sa cible pendant quelques secondes.
 export function avancerSurEchelle(etat: EtatJeu, secondes: number): string[] {
   if (!enMouvement(etat) || etat.ascenseur.passager) return []
-  const pas = secondes / SECONDES_PAR_METRE_ECHELLE
+  const pas = secondes / secondesParMetre(etat)
   if (Math.abs(etat.cible - etat.position) <= pas) etat.position = etat.cible
   else etat.position += Math.sign(etat.cible - etat.position) * pas
 
@@ -908,14 +845,6 @@ export function acheterSac(etat: EtatJeu): string[] {
   etat.argent -= prix
   etat.niveauSac += 1
   return [`🎒 Nouveau sac : ${tailleSac(etat)} places !`]
-}
-
-// L'épée, chez le forgeron : on ne l'achète qu'une fois par partie.
-export function acheterEpee(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat) || etat.epee || etat.argent < PRIX_EPEE) return []
-  etat.argent -= PRIX_EPEE
-  etat.epee = true
-  return ['⚔️ Épée achetée : les monstres des donjons n’ont qu’à bien se tenir !']
 }
 
 export function acheterSeau(etat: EtatJeu): string[] {

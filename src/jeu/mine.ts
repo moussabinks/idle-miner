@@ -45,8 +45,6 @@ export function poidsDesBlocs(profondeur: number): { valeur: IdBloc; poids: numb
   if (p > 16) choix.push({ valeur: 'coffre', poids: 0.8 })
   if (p > 40) choix.push({ valeur: 'lave', poids: 1.5 })
   if (p > 50) choix.push({ valeur: 'geode', poids: 1 })
-  // Les donjons sont rares : quelques-uns par partie.
-  if (p > 12) choix.push({ valeur: 'donjon', poids: 0.2 })
 
   return choix
 }
@@ -56,7 +54,7 @@ export function tirerBloc(profondeur: number, aleatoire: Aleatoire): IdBloc {
   return choisirPondere(aleatoire, poidsDesBlocs(profondeur))
 }
 
-// Tire un bloc « normal » (pas de lave, de coffre, de géode ni de donjon) : pour la foreuse.
+// Tire un bloc « normal » (pas de lave, de coffre ni de géode) : pour la foreuse.
 export function tirerBlocNormal(profondeur: number, aleatoire: Aleatoire): IdBloc {
   const choix = poidsDesBlocs(profondeur).filter((c) => !BLOCS[c.valeur].special)
   return choisirPondere(aleatoire, choix)

@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from './jeu/aleatoire'
-import { LARGEUR_MINE } from './jeu/donnees'
+import { BLOCS, LARGEUR_MINE, type IdBloc } from './jeu/donnees'
 import { nbDansChariot } from './jeu/foreuse'
 import {
   appelerAscenseur,
@@ -12,13 +12,10 @@ import {
   ascenseurEnMouvement,
   auFond,
   casserBloc,
-  casserBlocAssistant,
   creerPartie,
   dureeBlocActuel,
-  dureeBlocAssistant,
   envoyerAscenseur,
   indexBlocActuel,
-  indexBlocAssistant,
   nbSurQuai,
   peutStocker,
   prestige,
@@ -28,20 +25,29 @@ import {
 import { charger, effacer, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps, tempsQuiPasse } from './jeu/temps'
+import { evenementsEntre, type Evenement } from './evenements'
+import { sons } from './sons'
 
 export type Toast = { id: number; texte: string; succes: boolean }
-export type Gain = { id: number; montant: number }
+export type Gain = { id: number; montant: number; vente: boolean }
+// Les éclats d'un bloc qui vient de casser, et les minerais rares trouvés (animations).
+export type Eclat = { id: number; colonne: number; bloc: IdBloc }
+export type Trouvaille = { id: number; colonne: number; bloc: IdBloc; nombre: number }
 
 // Une action du jeu : elle modifie l'état et renvoie des messages.
 export type Action = (etat: EtatJeu) => string[]
 
 const DUREE_TOAST = 3500 // ms
 const DUREE_GAIN = 1200 // ms
+const DUREE_VENTE = 1800 // ms, la grosse animation d'une vente
+const DUREE_ECLATS = 600 // ms
+const DUREE_TROUVAILLE = 1800 // ms
+const INTERVALLE_COUPS = 0.22 // secondes entre deux coups de pioche (pour le son)
 const DUREE_MIN_BLOC = 0.08 // secondes, pour que l'animation reste visible
 const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
 const ABSENCE_MAX = 8 * 60 * 60 // la foreuse travaille au plus 8 h pendant que le jeu est fermé
 
-// Le travail d'un mineur sur un bloc : quel bloc (cle), et depuis combien de secondes.
+// Le travail du mineur sur un bloc : quel bloc (cle), et depuis combien de secondes.
 type Travail = { cle: string; temps: number }
 
 // Fait avancer un mineur sur son bloc. Renvoie true quand le bloc est cassé.
@@ -59,6 +65,44 @@ function travailler(travail: Travail, cle: string, duree: number, secondes: numb
 
 let prochainId = 1
 const ID_MESSAGE_ABSENCE = 0
+
+// Joue le son qui va avec chaque événement.
+function jouerSons(evenements: Evenement[]): void {
+  for (const evenement of evenements) {
+    switch (evenement.type) {
+      case 'casse':
+        if (evenement.bloc === 'lave') sons.lave()
+        else if (evenement.bloc === 'coffre') sons.coffre()
+        else if (evenement.bloc === 'geode') sons.geode()
+        sons.casse(BLOCS[evenement.bloc].durete >= 3)
+        break
+      case 'minerai':
+        sons.minerai()
+        break
+      case 'rare':
+        sons.rare()
+        break
+      case 'vente':
+        sons.vente(evenement.montant)
+        break
+      case 'achat':
+        sons.achat()
+        break
+      case 'ding':
+        sons.ding()
+        break
+      case 'pas':
+        sons.pas()
+        break
+      case 'piocheCassee':
+        sons.piocheCassee()
+        break
+      case 'talent':
+        sons.talent()
+        break
+    }
+  }
+}
 
 // Charge la partie. Si le jeu était fermé, on rattrape le temps passé (la foreuse
 // a continué de creuser) et on prépare un message pour le dire au joueur.
@@ -82,6 +126,10 @@ export function usePartie() {
     depart.messageAbsence ? [{ id: ID_MESSAGE_ABSENCE, texte: depart.messageAbsence, succes: false }] : [],
   )
   const [gains, setGains] = useState<Gain[]>([])
+  const [eclats, setEclats] = useState<Eclat[]>([])
+  const [trouvailles, setTrouvailles] = useState<Trouvaille[]>([])
+  // Augmente à chaque vente : le compteur d'argent du bandeau « saute ».
+  const [nbVentes, setNbVentes] = useState(0)
   const [blocsRestants, setBlocsRestants] = useState(0)
 
   // Copie de l'état toujours à jour, pour les minuteurs.
@@ -99,11 +147,31 @@ export function usePartie() {
     }
   }, [])
 
-  const afficherGain = useCallback((montant: number) => {
-    const gain = { id: prochainId++, montant }
+  const afficherGain = useCallback((montant: number, vente: boolean) => {
+    const gain = { id: prochainId++, montant, vente }
     setGains((liste) => [...liste, gain])
-    setTimeout(() => setGains((liste) => liste.filter((g) => g.id !== gain.id)), DUREE_GAIN)
+    setTimeout(() => setGains((liste) => liste.filter((g) => g.id !== gain.id)), vente ? DUREE_VENTE : DUREE_GAIN)
   }, [])
+
+  // Les animations qui vont avec les événements (éclats, minerais rares, ventes).
+  const animer = useCallback(
+    (evenements: Evenement[]) => {
+      for (const evenement of evenements) {
+        if (evenement.type === 'casse') {
+          const eclat = { id: prochainId++, colonne: evenement.colonne, bloc: evenement.bloc }
+          setEclats((liste) => [...liste.slice(-4), eclat])
+          setTimeout(() => setEclats((liste) => liste.filter((e) => e.id !== eclat.id)), DUREE_ECLATS)
+        }
+        if (evenement.type === 'rare') {
+          const trouvaille = { id: prochainId++, colonne: evenement.colonne, bloc: evenement.bloc, nombre: evenement.nombre }
+          setTrouvailles((liste) => [...liste.slice(-2), trouvaille])
+          setTimeout(() => setTrouvailles((liste) => liste.filter((t) => t.id !== trouvaille.id)), DUREE_TROUVAILLE)
+        }
+        if (evenement.type === 'vente') setNbVentes((n) => n + 1)
+      }
+    },
+    [],
+  )
 
   // Remplace l'état de la partie (et le garde dans la référence).
   const changerEtat = useCallback((nouvel: EtatJeu) => {
@@ -123,12 +191,17 @@ export function usePartie() {
         ...messages.map((texte) => ({ id: prochainId++, texte, succes: false })),
         ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
       ])
-      if (copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent)
+      const evenements = evenementsEntre(ancien, copie)
+      const vente = evenements.some((e) => e.type === 'vente')
+      if (copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, vente)
+      jouerSons(evenements)
+      if (succes.length > 0) sons.succes()
+      animer(evenements)
 
       changerEtat(copie)
       return copie
     },
-    [afficherToasts, afficherGain, changerEtat],
+    [afficherToasts, afficherGain, animer, changerEtat],
   )
 
   // ... et on le retire au bout de quelques secondes.
@@ -147,14 +220,13 @@ export function usePartie() {
 
   // Le bloc sur lequel travaille chaque mineur, et depuis combien de temps.
   const travailJoueur = useRef<Travail>({ cle: '', temps: 0 })
-  const travailAssistant = useRef<Travail>({ cle: '', temps: 0 })
 
   // Après chaque bloc cassé : on compte, et on gère le sac plein.
   // Avec l'ascenseur, on ne s'arrête pas : les blocs en trop attendent sur son quai.
   const apresUnBloc = useCallback(
     (apres: EtatJeu) => {
       if (!auFond(apres)) {
-        // Le mineur n'est plus au front (un monstre l'a assommé, par exemple).
+        // Le mineur n'est plus au front.
         changerBlocsRestants(0)
       } else if (!peutStocker(apres)) {
         changerBlocsRestants(0)
@@ -197,20 +269,11 @@ export function usePartie() {
       // Le joueur avance sur son bloc.
       const indexJoueur = indexBlocActuel(etatActuel)
       const cleJoueur = `${etatActuel.profondeur}-${indexJoueur}-${etatActuel.coucheActuelle[indexJoueur]}`
+      // Un « tac » de pioche à intervalles réguliers pendant qu'on casse le bloc.
+      const tempsAvant = travailJoueur.current.cle === cleJoueur ? travailJoueur.current.temps : 0
+      if (Math.floor((tempsAvant + secondes) / INTERVALLE_COUPS) > Math.floor(tempsAvant / INTERVALLE_COUPS)) sons.coup()
       if (travailler(travailJoueur.current, cleJoueur, dureeBlocActuel(etatActuel), secondes)) {
         apresUnBloc(jouer((e) => casserBloc(e, aleatoireNavigateur)))
-      }
-
-      // L'assistant (s'il est embauché) avance sur le sien, en même temps.
-      const etatApres = etatRef.current
-      if (etatApres.assistant.embauche && blocsRestantsRef.current > 0 && auFond(etatApres)) {
-        const indexAssistant = indexBlocAssistant(etatApres)
-        if (indexAssistant !== -1) {
-          const cleAssistant = `${etatApres.profondeur}-${indexAssistant}-${etatApres.coucheActuelle[indexAssistant]}`
-          if (travailler(travailAssistant.current, cleAssistant, dureeBlocAssistant(etatApres), secondes)) {
-            apresUnBloc(jouer((e) => casserBlocAssistant(e, aleatoireNavigateur)))
-          }
-        }
       }
     },
     [jouer, apresUnBloc, changerBlocsRestants],
@@ -256,12 +319,16 @@ export function usePartie() {
   const passerPrestige = useCallback(() => {
     changerBlocsRestants(0)
     changerEtat(prestige(etatRef.current, aleatoireNavigateur))
+    sons.prestige()
   }, [changerEtat, changerBlocsRestants])
 
   return {
     etat,
     toasts,
     gains,
+    eclats,
+    trouvailles,
+    nbVentes,
     enMinage: blocsRestants > 0,
     jouer,
     creuser,

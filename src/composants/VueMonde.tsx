@@ -4,26 +4,22 @@
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
 import { memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
-import { LARGEUR_MINE, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { BLOCS, LARGEUR_MINE, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
   auFond,
   dureeBlocActuel,
-  dureeBlocAssistant,
   estCassee,
   indexBlocActuel,
-  indexBlocAssistant,
   nbSurQuai,
   piocheEquipee,
   positionFront,
   type EtatJeu,
 } from '../jeu/mineur'
-import type { Action, Gain } from '../usePartie'
-import { IconePixel } from './IconePixel'
+import type { Action, Eclat, Gain, Trouvaille } from '../usePartie'
 import { ModuleAscenseur } from './ModuleAscenseur'
 import { Personnage } from './Personnage'
-import { PersonnageMacron } from './PersonnageMacron'
 import { VueVillage } from './VueVillage'
 
 type Props = {
@@ -37,6 +33,8 @@ type Props = {
   enMarcheVillage: boolean
   onAllerStand: (index: number) => void
   gains: Gain[]
+  eclats: Eclat[]
+  trouvailles: Trouvaille[]
 }
 
 type CaseMine = IdBloc | 'bedrock' | null
@@ -45,17 +43,61 @@ type CaseMine = IdBloc | 'bedrock' | null
 function Case({ bloc, profondeur, classe = '' }: { bloc: CaseMine; profondeur: number; classe?: string }) {
   if (bloc === null) return <div className={`case vide ${classe}`} />
   const roche = profondeur > 80 ? 'roche-deepslate' : 'roche-pierre'
+  return <div className={`case bloc bloc-${bloc} ${roche} ${classe}`} />
+}
+
+// Les éclats d'un bloc qui casse : de petits morceaux qui sautent et retombent.
+// Chaque morceau a la texture du bloc ; sa direction est fixée par son numéro.
+const DIRECTIONS_ECLATS = [
+  { dx: -26, dy: -34 },
+  { dx: -12, dy: -46 },
+  { dx: 4, dy: -40 },
+  { dx: 18, dy: -50 },
+  { dx: 30, dy: -30 },
+  { dx: -34, dy: -16 },
+  { dx: 36, dy: -12 },
+]
+
+function Eclats({ bloc, profondeur }: { bloc: IdBloc; profondeur: number }) {
+  const roche = profondeur > 80 ? 'roche-deepslate' : 'roche-pierre'
   return (
-    <div className={`case bloc bloc-${bloc} ${roche} ${classe}`}>
-      {/* Dans un donjon, on voit le monstre qui attend... */}
-      {bloc === 'donjon' && (
-        <span className="monstre">
-          <IconePixel nom="zombie" taille={22} />
-        </span>
-      )}
-    </div>
+    <span className="eclats" aria-hidden="true">
+      {DIRECTIONS_ECLATS.map((d, i) => (
+        <i
+          key={i}
+          className={`eclat bloc-${bloc} ${roche}`}
+          style={{ ['--dx' as string]: `${d.dx}px`, ['--dy' as string]: `${d.dy}px`, ['--tour' as string]: `${(i % 2 ? 1 : -1) * (90 + i * 40)}deg` }}
+        />
+      ))}
+    </span>
   )
 }
+
+// Un minerai rare trouvé : il s'envole en brillant au-dessus du mineur.
+function TrouvailleRare({ trouvaille }: { trouvaille: Trouvaille }) {
+  return (
+    <span className={`trouvaille trouvaille-${trouvaille.bloc}`} aria-hidden="true">
+      <span className="trouvaille-rayons" />
+      <span className={`mini-bloc bloc-${trouvaille.bloc} roche-pierre`} />
+      <span className="trouvaille-texte">
+        +{trouvaille.nombre} {BLOCS[trouvaille.bloc].nom}
+      </span>
+      <span className="etincelles">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </span>
+  )
+}
+
+// Les pièces qui jaillissent d'une vente.
+const PIECES_VENTE = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i / 12) * Math.PI * 2
+  return { dx: Math.round(Math.cos(angle) * (60 + (i % 3) * 18)), dy: Math.round(Math.sin(angle) * (40 + (i % 2) * 16)) - 20 }
+})
 
 // Une rangée de la mine : l'étiquette, la place de l'échelle et de l'ascenseur,
 // les 10 cases, puis la place du puits de la foreuse.
@@ -120,7 +162,19 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
 // Le monde entier
 // ---------------------------------------------------------------------------
 
-export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLaGaucheVillage, enMarcheVillage, onAllerStand, gains }: Props) {
+export function VueMonde({
+  etat,
+  jouer,
+  enMinage,
+  versLaGauche,
+  xVillage,
+  versLaGaucheVillage,
+  enMarcheVillage,
+  onAllerStand,
+  gains,
+  eclats,
+  trouvailles,
+}: Props) {
   const conteneurRef = useRef<HTMLElement>(null)
   const joueurRef = useRef<HTMLDivElement>(null)
   const foreuseRef = useRef<HTMLDivElement>(null)
@@ -147,15 +201,6 @@ export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLa
 
   // Pendant le minage, le mineur se place au-dessus du bloc qu'il casse.
   const colonneAffichee = enMinage && indexActuel !== -1 ? indexActuel : etat.colonneMineur
-
-  // L'assistant (Emmanuel Macron) : il se place au-dessus du bloc qu'il casse.
-  // S'il tombe sur la même case que le joueur, il se met juste à côté.
-  const assistantLa = etat.assistant.embauche
-  const indexAssistant = assistantLa ? indexBlocAssistant(etat) : -1
-  const assistantTravaille = enMinage && indexAssistant !== -1
-  const dureeAssistant = Math.max(0.08, dureeBlocAssistant(etat))
-  let colonneAssistant = assistantTravaille ? indexAssistant : etat.assistant.colonne
-  if (colonneAssistant === colonneAffichee) colonneAssistant = colonneAffichee === 0 ? 1 : colonneAffichee - 1
 
   // La caméra : on fait défiler la vue pour garder le joueur au milieu.
   // Pendant qu'il bouge (échelle ou ascenseur), la vue le suit directement, par petits pas ;
@@ -193,19 +238,12 @@ export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLa
       <Rangee key={d} profondeur={d} classe={`${rang === 0 ? 'couche-en-cours' : `ombre-${rang}`}`}>
         {blocs.map((bloc, colonne) => {
           const enCours = rang === 0 && colonne === indexActuel
-          const cibleAssistant = rang === 0 && assistantTravaille && colonne === indexAssistant
           let classe = ''
           if (enCours) classe = enMinage ? 'en-cours casse' : 'en-cours'
-          if (cibleAssistant) classe = 'en-cours-assistant casse'
-          const dureeCase = cibleAssistant ? dureeAssistant : duree
           return (
-            <div
-              key={colonne}
-              className="emplacement"
-              style={enCours || cibleAssistant ? { ['--duree' as string]: `${dureeCase}s` } : undefined}
-            >
-              {/* La clé change quand un mineur commence ce bloc, pour relancer l'animation de fissure. */}
-              <Case key={enCours ? 'joueur' : cibleAssistant ? 'assistant' : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
+            <div key={colonne} className="emplacement" style={enCours ? { ['--duree' as string]: `${duree}s` } : undefined}>
+              {/* La clé change quand le mineur commence ce bloc, pour relancer l'animation de fissure. */}
+              <Case key={enCours ? 'joueur' : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
             </div>
           )
         })}
@@ -215,6 +253,20 @@ export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLa
 
   return (
     <section ref={conteneurRef} className="monde" aria-label="Le village et la mine">
+      {/* Les grosses ventes : « +X $ » au milieu de l'écran, avec une gerbe de pièces. */}
+      <div className="ventes" aria-hidden="true">
+        {gains
+          .filter((g) => g.vente)
+          .map((g) => (
+            <span key={g.id} className="gain-vente">
+              <span className="gain-vente-texte">+{g.montant.toLocaleString('fr-FR')} $</span>
+              {PIECES_VENTE.map((p, i) => (
+                <i key={i} className="piece" style={{ ['--dx' as string]: `${p.dx}px`, ['--dy' as string]: `${p.dy}px`, animationDelay: `${(i % 4) * 40}ms` }} />
+              ))}
+            </span>
+          ))}
+      </div>
+
       {/* Un petit rappel de la foreuse, toujours visible : on clique pour aller la voir. */}
       {foreuseVisible && (
         <button
@@ -280,11 +332,16 @@ export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLa
                     <Personnage couleurPioche={couleurPioche} action={enMinage ? 'creuse' : 'repos'} versLaGauche={versLaGauche} />
                   </div>
                 )}
-                {assistantLa && colonne === colonneAssistant && (
-                  <div className="porte-joueur">
-                    <PersonnageMacron couleurPioche={couleurPioche} action={assistantTravaille ? 'creuse' : 'repos'} />
-                  </div>
-                )}
+                {eclats
+                  .filter((e) => e.colonne === colonne)
+                  .map((e) => (
+                    <Eclats key={e.id} bloc={e.bloc} profondeur={P} />
+                  ))}
+                {trouvailles
+                  .filter((t) => t.colonne === colonne)
+                  .map((t) => (
+                    <TrouvailleRare key={t.id} trouvaille={t} />
+                  ))}
               </div>
             ))}
           </Rangee>
@@ -301,7 +358,9 @@ export function VueMonde({ etat, jouer, enMinage, versLaGauche, xVillage, versLa
       {!auVillage && <ModuleAscenseur etat={etat} jouer={jouer} />}
 
       <div className="gains" aria-hidden="true">
-        {gains.map((g) => (
+        {gains
+          .filter((g) => !g.vente)
+          .map((g) => (
           <span key={g.id} className="gain">
             +{g.montant} $
           </span>

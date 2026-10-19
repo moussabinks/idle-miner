@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
-  acheterEpee,
   acheterPioche,
   acheterSac,
   apercuVente,
@@ -14,12 +13,7 @@ import {
   casserBloc,
   aLaSurface,
   auFond,
-  casserBlocAssistant,
   creerPartie,
-  dureeBlocActuel,
-  dureeBlocAssistant,
-  embaucherAssistant,
-  indexBlocAssistant,
   deplacerMineur,
   devisReparation,
   enchanter,
@@ -407,47 +401,6 @@ describe('ascenseur', () => {
   })
 })
 
-describe('donjons et épée', () => {
-  it('sans épée, le monstre assomme le mineur : sac vidé, retour au village', () => {
-    const etat = nouvellePartie()
-    etat.inventaire = { fer: 5, diamant: 1 }
-    coucheDe(etat, 'pierre')
-    etat.coucheActuelle[0] = 'donjon'
-    etat.colonneMineur = 0
-    const messages = casserBloc(etat, toujours(0))
-    expect(messages.join()).toContain('zombie')
-    expect(etat.inventaire).toEqual({})
-    expect(aLaSurface(etat)).toBe(true)
-  })
-
-  it('avec une épée, on bat le monstre et on gagne un butin', () => {
-    const etat = partieALaSurface()
-    etat.argent = 200
-    acheterEpee(etat)
-    expect(etat.epee).toBe(true)
-    expect(etat.argent).toBe(50)
-    placerAuFront(etat, 20)
-    etat.inventaire = { fer: 5 }
-    coucheDe(etat, 'pierre')
-    etat.coucheActuelle[0] = 'donjon'
-    etat.colonneMineur = 0
-    casserBloc(etat, toujours(0))
-    expect(etat.stats.monstresVaincus).toBe(1)
-    expect(etat.argent).toBe(50 + 40 + 20 * 3)
-    expect(nbDansSac(etat)).toBe(5 + 2)
-  })
-
-  it('l’assistant laisse les donjons au joueur', () => {
-    const etat = nouvellePartie()
-    etat.assistant.embauche = true
-    coucheDe(etat, null)
-    etat.coucheActuelle[0] = 'pierre'
-    etat.coucheActuelle[9] = 'donjon'
-    etat.colonneMineur = 0
-    expect(indexBlocAssistant(etat)).toBe(-1)
-  })
-})
-
 describe('pioches et réparation', () => {
   it('débloque la pioche suivante et l’équipe', () => {
     const etat = partieALaSurface()
@@ -521,47 +474,6 @@ describe('boutique et enchantements', () => {
     coucheDe(etat, 'fer')
     casserBloc(etat, toujours(0.99))
     expect(etat.inventaire.fer).toBe(4)
-  })
-})
-
-describe('assistant (Emmanuel Macron)', () => {
-  it('s’embauche au village pour 1 000 $', () => {
-    const etat = partieALaSurface()
-    etat.argent = 999
-    embaucherAssistant(etat)
-    expect(etat.assistant.embauche).toBe(false)
-    etat.argent = 1500
-    embaucherAssistant(etat)
-    expect(etat.assistant.embauche).toBe(true)
-    expect(etat.argent).toBe(500)
-  })
-
-  it('casse un autre bloc que le joueur, avec la même vitesse, sans user la pioche', () => {
-    const etat = nouvellePartie()
-    etat.assistant.embauche = true
-    etat.coucheActuelle = ['pierre', 'pierre', 'pierre', 'pierre', 'pierre', 'fer']
-    etat.colonneMineur = 0
-    expect(indexBlocAssistant(etat)).toBe(5) // il commence à l'autre bout
-    // Le fer est 2 fois plus dur que la pierre : avec la même pioche, il met 2 fois plus de temps.
-    expect(dureeBlocAssistant(etat)).toBeCloseTo(2 * dureeBlocActuel(etat))
-    casserBlocAssistant(etat, toujours(0))
-    expect(etat.inventaire).toEqual({ fer: 1 })
-    expect(etat.coucheActuelle[5]).toBeNull()
-    expect(etat.pioches[0]).toBe(0)
-  })
-
-  it('laisse le dernier bloc de la couche au joueur', () => {
-    const etat = nouvellePartie()
-    etat.assistant.embauche = true
-    etat.coucheActuelle = [null, null, 'pierre', null, null, null]
-    expect(casserBlocAssistant(etat, toujours(0))).toEqual([])
-    expect(etat.coucheActuelle[2]).toBe('pierre')
-  })
-
-  it('ne creuse pas s’il n’est pas embauché', () => {
-    const etat = nouvellePartie()
-    casserBlocAssistant(etat, toujours(0))
-    expect(etat.stats.blocsCasses).toBe(0)
   })
 })
 

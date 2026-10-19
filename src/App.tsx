@@ -6,6 +6,7 @@
 //   au front de taille : ← → pour se déplacer, ↓ ou Espace pour creuser, ↑ pour remonter.
 
 import { useEffect, useRef, useState } from 'react'
+import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
 import { IconePixel } from './composants/IconePixel'
 import { Inventaire } from './composants/Inventaire'
@@ -17,12 +18,11 @@ import {
   PanneauPioches,
   PanneauSucces,
 } from './composants/Panneaux'
-import { PersonnageMacron } from './composants/PersonnageMacron'
 import { STANDS, X_PUITS, standProche } from './composants/stands'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
 import { VueMonde } from './composants/VueMonde'
-import { LARGEUR_MINE, PRIX_ASSISTANT } from './jeu/donnees'
+import { LARGEUR_MINE } from './jeu/donnees'
 import {
   aLaSurface,
   allerA,
@@ -34,15 +34,12 @@ import {
   deplacerMineur,
   dureeAscenseur,
   dureeEchelle,
-  embaucherAssistant,
-  estCassee,
-  peutEmbaucherAssistant,
-  piocheEquipee,
   positionFront,
   prendreAscenseur,
   type EtatJeu,
 } from './jeu/mineur'
 import { SUCCES } from './jeu/succes'
+import { pointsDisponibles } from './jeu/talents'
 import { useMarcheVillage } from './useMarcheVillage'
 import { usePartie } from './usePartie'
 
@@ -55,7 +52,8 @@ function voyagerVers(etat: EtatJeu, destination: number): string[] {
 }
 
 function App() {
-  const { etat, toasts, gains, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie()
+  const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie()
+  const [arbreOuvert, setArbreOuvert] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
   const [versLaGauche, setVersLaGauche] = useState(false)
 
@@ -170,10 +168,12 @@ function App() {
     }
   }
 
+  // Après le prestige, on choisit tout de suite sa récompense dans l'arbre.
   function faireLePrestige() {
     passerPrestige()
     setVictoireAffichee(false)
     village.placer(X_PUITS)
+    setArbreOuvert(true)
   }
 
   // --- Le panneau de droite : le stand où l'on est, ou le sac dans la mine --
@@ -215,11 +215,30 @@ function App() {
               <div className="ligne-achat carte-prestige">
                 <strong>🏆 Bedrock atteinte !</strong>
                 <span className="discret">
-                  Passe prestige quand tu veux : tu recommences avec +15 % sur les ventes et des pioches 10 % plus rapides (à chaque prestige).
+                  Passe prestige quand tu veux : tu recommences avec +15 % sur les ventes et des pioches 10 % plus rapides (à chaque prestige),
+                  et tu choisis un talent dans l'arbre de prestige.
                 </span>
                 <button className="bouton bouton-principal" onClick={faireLePrestige}>
                   ⭐ Passer prestige {etat.prestige + 1}
                 </button>
+              </div>
+            )}
+
+            {etat.prestige > 0 && (
+              <div className="ligne-achat">
+                <strong className="titre-avec-icone">
+                  <IconePixel nom="etoile" taille={20} /> Arbre de prestige
+                </strong>
+                <span className="discret">
+                  {pointsDisponibles(etat) > 0
+                    ? `Tu as ${pointsDisponibles(etat)} point(s) à dépenser !`
+                    : `${etat.talents.length} talent(s) débloqué(s). Le prochain prestige te donnera 1 point de plus.`}
+                </span>
+                <div className="boutons">
+                  <button className={`bouton bouton-petit ${pointsDisponibles(etat) > 0 ? 'bouton-principal' : ''}`} onClick={() => setArbreOuvert(true)}>
+                    Ouvrir l'arbre
+                  </button>
+                </div>
               </div>
             )}
 
@@ -240,28 +259,6 @@ function App() {
               )}
             </div>
 
-            {/* L'assistant : on l'embauche ici, il descend avec nous. */}
-            <div className="ligne-achat carte-assistant">
-              <div className="portrait-assistant">
-                <PersonnageMacron couleurPioche={estCassee(etat) ? null : piocheEquipee(etat).couleur} action="repos" />
-              </div>
-              <div className="liste-cartes">
-                <strong>Emmanuel Macron, assistant mineur</strong>
-                <span className="discret">
-                  Quand tu creuses, il creuse en même temps un autre bloc de la couche, avec la même pioche que toi (sans l'user).
-                  Tout ce qu'il casse va dans ton sac. Il repart au prochain prestige.
-                </span>
-                {etat.assistant.embauche ? (
-                  <span className="ok">Embauché : il t'attend au front de taille.</span>
-                ) : (
-                  <div className="boutons">
-                    <button className="bouton bouton-petit" disabled={!peutEmbaucherAssistant(etat)} onClick={() => jouer(embaucherAssistant)}>
-                      Embaucher · {PRIX_ASSISTANT.toLocaleString('fr-FR')} $
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         )}
       </section>
@@ -293,7 +290,7 @@ function App() {
   return (
     <div className="jeu">
       <h1 className="titre">⛏️ Idle Miner</h1>
-      <Hud etat={etat} />
+      <Hud etat={etat} nbVentes={nbVentes} onOuvrirArbre={() => setArbreOuvert(true)} />
 
       <main className="plateau">
         <div className="colonne-mine">
@@ -307,6 +304,8 @@ function App() {
             enMarcheVillage={village.enMarche}
             onAllerStand={(index) => village.allerVers(STANDS[index].x)}
             gains={gains}
+            eclats={eclats}
+            trouvailles={trouvailles}
           />
 
           {/* La barre de boutons : toujours les mêmes 8 boutons, toujours à la même place.
@@ -402,6 +401,7 @@ function App() {
         </button>
       </footer>
 
+      {arbreOuvert && <ArbrePrestige etat={etat} jouer={jouer} onFermer={() => setArbreOuvert(false)} />}
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
       <Toasts toasts={toasts} />
     </div>
