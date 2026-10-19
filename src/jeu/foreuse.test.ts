@@ -7,6 +7,7 @@ import {
   chariotBloqueAuPrestige,
   forageBloqueAuPrestige,
   acheterForeuse,
+  nbForeuses,
   maxForeuses,
   vitesseForage,
   basculerChariot,
@@ -67,7 +68,7 @@ describe('foreuse', () => {
     activerForeuse(etat)
     remplirForeuse(etat, 3) // 30 blocs
     avancerTemps(etat, 100, aleatoireAvecGraine(2))
-    expect(etat.foreuse.profondeur).toBe(4)
+    expect(etat.foreuse.foreuses[0].profondeur).toBe(4)
   })
 
   it('s’arrête quand le chariot est plein', () => {
@@ -110,14 +111,14 @@ describe('foreuse', () => {
     activerForeuse(etat)
     expect(basculerRechargeAuto(etat)).toEqual([]) // pas encore disponible
     expect(etat.foreuse.rechargeAuto).toBe(false)
-    etat.foreuse.niveauVitesse = 2
-    etat.foreuse.profondeur = 40
+    etat.foreuse.foreuses[0].niveauVitesse = 2
+    etat.foreuse.foreuses[0].profondeur = 40
     basculerRechargeAuto(etat)
     expect(etat.foreuse.rechargeAuto).toBe(true)
     remplirForeuse(etat, 1)
     // Une heure plus tard, elle tourne encore grâce au charbon qu'elle a remonté.
     avancerTemps(etat, 3600, aleatoireAvecGraine(4))
-    expect(etat.foreuse.blocsFores).toBeGreaterThan(20 * 2 * 3)
+    expect(etat.foreuse.foreuses[0].blocsFores).toBeGreaterThan(20 * 2 * 3)
   })
 
   it('s’améliore (vitesse et chariot)', () => {
@@ -125,9 +126,9 @@ describe('foreuse', () => {
     activerForeuse(etat)
     etat.argent = 10000
     etat.inventaire = { fer: 10 }
-    ameliorerForage(etat) // 6 000 $ + 10 fer
+    ameliorerForage(etat, 0) // 6 000 $ + 10 fer
     ameliorerChariot(etat) // 3 000 $
-    expect(etat.foreuse.niveauVitesse).toBe(1)
+    expect(etat.foreuse.foreuses[0].niveauVitesse).toBe(1)
     expect(capaciteChariot(etat)).toBe(500)
     expect(etat.argent).toBe(1000)
     expect(etat.inventaire).toEqual({})
@@ -140,43 +141,43 @@ describe('foreuse', () => {
     etat.inventaire = { fer: 100, redstone: 100, diamant: 100, or: 100 }
     // Au prestige 1 (son déblocage) : un seul niveau de plus.
     for (let i = 0; i < 5; i++) {
-      ameliorerForage(etat)
+      ameliorerForage(etat, 0)
       ameliorerChariot(etat)
     }
-    expect(etat.foreuse.niveauVitesse).toBe(1)
+    expect(etat.foreuse.foreuses[0].niveauVitesse).toBe(1)
     expect(etat.foreuse.niveauChariot).toBe(1)
-    expect(forageBloqueAuPrestige(etat)).toBe(2)
+    expect(forageBloqueAuPrestige(etat, 0)).toBe(2)
     expect(chariotBloqueAuPrestige(etat)).toBe(2)
     // Au prestige 4, tout est débloqué.
     etat.prestige = 4
     for (let i = 0; i < 5; i++) {
-      ameliorerForage(etat)
+      ameliorerForage(etat, 0)
       ameliorerChariot(etat)
     }
-    expect(etat.foreuse.niveauVitesse).toBe(4)
+    expect(etat.foreuse.foreuses[0].niveauVitesse).toBe(4)
     expect(etat.foreuse.niveauChariot).toBe(4)
-    expect(forageBloqueAuPrestige(etat)).toBeNull()
+    expect(forageBloqueAuPrestige(etat, 0)).toBeNull()
   })
 
   it('au prestige, elle garde seulement ses améliorations (et l’ascenseur son niveau)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
     etat.foreuse.chariot = { fer: 3 }
-    etat.foreuse.niveauVitesse = 2
+    etat.foreuse.foreuses[0].niveauVitesse = 2
     etat.foreuse.niveauChariot = 1
     etat.ascenseur.niveau = 3
     etat.foreuse.carburant = 500
-    etat.foreuse.profondeur = 90
-    etat.foreuse.blocsFores = 880
+    etat.foreuse.foreuses[0].profondeur = 90
+    etat.foreuse.foreuses[0].blocsFores = 880
     const suite = prestige(etat, aleatoireAvecGraine(3))
     expect(suite.foreuse.active).toBe(true)
     // Plus de charbon, chariot vide, et elle repart de la surface...
     expect(suite.foreuse.chariot).toEqual({})
     expect(suite.foreuse.carburant).toBe(0)
-    expect(suite.foreuse.profondeur).toBe(1)
-    expect(suite.foreuse.blocsFores).toBe(0)
+    expect(suite.foreuse.foreuses[0].profondeur).toBe(1)
+    expect(suite.foreuse.foreuses[0].blocsFores).toBe(0)
     // ... mais ses améliorations restent.
-    expect(suite.foreuse.niveauVitesse).toBe(2)
+    expect(suite.foreuse.foreuses[0].niveauVitesse).toBe(2)
     expect(suite.foreuse.niveauChariot).toBe(1)
     expect(suite.ascenseur.niveau).toBe(3)
     expect(suite.ascenseur.position).toBe(0) // la cabine attend au village
@@ -191,7 +192,7 @@ describe('foreuse', () => {
     expect(maxForeuses(etat)).toBe(2)
     const vitesseUne = vitesseForage(etat)
     acheterForeuse(etat)
-    expect(etat.foreuse.nombre).toBe(2)
+    expect(nbForeuses(etat)).toBe(2)
     expect(vitesseForage(etat)).toBe(2 * vitesseUne)
     expect(acheterForeuse(etat)).toEqual([]) // 2 au prestige 3
     // Deux foreuses brûlent le charbon deux fois plus vite.
@@ -199,5 +200,29 @@ describe('foreuse', () => {
     avancerTemps(etat, 15, aleatoireAvecGraine(2))
     expect(etat.foreuse.carburant).toBe(0)
     expect(nbDansChariot(etat)).toBe(10) // 10 s × (0,5 bloc par seconde × 2 foreuses)
+  })
+
+  it('une foreuse achetée arrive toute neuve : niveau 0, depuis la surface, et s’améliore à part', () => {
+    const etat = partiePrestige1()
+    activerForeuse(etat)
+    etat.prestige = 4
+    etat.argent = 10_000_000
+    etat.inventaire = { fer: 100, redstone: 100, diamant: 100 }
+    // La première foreuse est déjà bien avancée.
+    etat.foreuse.foreuses[0].niveauVitesse = 3
+    etat.foreuse.foreuses[0].profondeur = 80
+    acheterForeuse(etat)
+    expect(etat.foreuse.foreuses[1]).toEqual({ niveauVitesse: 0, profondeur: 1, progression: 0, blocsFores: 0 })
+    // Chacune creuse à sa vitesse, dans son trou.
+    remplirForeuse(etat, 0)
+    etat.foreuse.carburant = 1000
+    avancerTemps(etat, 100, aleatoireAvecGraine(9))
+    expect(etat.foreuse.foreuses[0].profondeur).toBeGreaterThan(80)
+    expect(etat.foreuse.foreuses[1].profondeur).toBeLessThan(20)
+    expect(etat.foreuse.foreuses[0].blocsFores).toBeGreaterThan(etat.foreuse.foreuses[1].blocsFores)
+    // Améliorer la deuxième ne change pas la première.
+    ameliorerForage(etat, 1)
+    expect(etat.foreuse.foreuses[1].niveauVitesse).toBe(1)
+    expect(etat.foreuse.foreuses[0].niveauVitesse).toBe(3)
   })
 })

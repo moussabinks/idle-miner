@@ -44,8 +44,8 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Tes mineurs creusent tout seuls. Quand leur sac est plein, ils remontent (en ascenseur s'il est construit, sinon à l'échelle), vendent
-        leur récolte au marché puis redescendent : pendant ce temps-là, ils ne creusent pas. Ils s'occupent de leur équipement. Ils gardent {Math.round(partSalaire(etat) * 100)} % de leurs ventes comme salaire : le reste est pour toi. Ils
+        Tes mineurs creusent tout seuls. Quand leur sac est plein, ils remontent dans leur propre ascenseur (aussi rapide que le tien,
+        donc améliorer ton ascenseur les aide), vendent leur récolte au marché puis redescendent : pendant ce temps-là, ils ne creusent pas. Ils s'occupent de leur équipement. Ils gardent {Math.round(partSalaire(etat) * 100)} % de leurs ventes comme salaire : le reste est pour toi. Ils
         travaillent même quand le jeu est fermé, et restent après un prestige.
       </p>
 

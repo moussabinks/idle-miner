@@ -3,10 +3,10 @@
 // et la foreuse (au prestige 1) creuse son propre puits sur la droite.
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
-import { memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { Fragment, memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { BLOCS, LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
 import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
-import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
+import { foreuseDebloquee, foreuseEnMarche, nbForeuses, profondeurForeuse } from '../jeu/foreuse'
 import {
   aLaSurface,
   ascenseurEnMouvement,
@@ -133,80 +133,124 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
   if (!foreuseDebloquee(etat)) return null
   const foreuse = etat.foreuse
   const enMarche = foreuseEnMarche(etat)
-  // Si la foreuse est plus profonde que ce qu'on affiche, on la dessine en bas avec une flèche.
-  const profondeurAffichee = Math.min(foreuse.profondeur, derniereRangee)
-  const plusBas = foreuse.profondeur > derniereRangee
+  // Le puits descend jusqu'à la foreuse la plus profonde (sans dépasser ce qu'on affiche).
+  const plusProfonde = profondeurForeuse(etat)
+  const hauteur = Math.min(plusProfonde, derniereRangee)
 
   return (
     <>
-      <div className="puits-foreuse" style={{ height: `calc(var(--pas) * ${profondeurAffichee} + 14px)` }} />
-      <div
-        ref={teteRef}
-        className={`tete-foreuse ${enMarche ? 'tete-foreuse-tourne' : ''} ${foreuse.active ? '' : 'tete-foreuse-eteinte'}`}
-        style={{ top: `calc(var(--pas) * ${profondeurAffichee - 1})` }}
-        title={`Foreuse à -${foreuse.profondeur} m`}
-      >
-        <span className="foreuse-corps" />
-        <span className="foreuse-meche" />
-        {enMarche && (
-          <span className="foreuse-debris" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-        )}
-        <span className="foreuse-etiquette">
-          {plusBas ? `↓ -${foreuse.profondeur} m` : `-${foreuse.profondeur} m`}
-          {foreuse.nombre > 1 && ` ×${foreuse.nombre}`}
-        </span>
-      </div>
+      <div className="puits-foreuse" style={{ height: `calc(var(--pas) * ${hauteur} + 14px)` }} />
+      {/* Chaque foreuse creuse dans le puits, à sa propre profondeur. */}
+      {foreuse.foreuses.map((une, index) => {
+        // Plus profonde que ce qu'on affiche : on la dessine en bas avec une flèche.
+        const profondeurAffichee = Math.min(une.profondeur, derniereRangee)
+        const plusBas = une.profondeur > derniereRangee
+        const numero = foreuse.foreuses.length > 1 ? `n°${index + 1} ` : ''
+        return (
+          <div
+            key={index}
+            // La caméra suit la foreuse la plus profonde quand on clique sur son indicateur.
+            ref={une.profondeur === plusProfonde ? teteRef : undefined}
+            className={`tete-foreuse ${enMarche ? 'tete-foreuse-tourne' : ''} ${foreuse.active ? '' : 'tete-foreuse-eteinte'}`}
+            style={{ top: `calc(var(--pas) * ${profondeurAffichee - 1})` }}
+            title={`Foreuse ${index + 1} à -${une.profondeur} m`}
+          >
+            <span className="foreuse-corps" />
+            <span className="foreuse-meche" />
+            {enMarche && (
+              <span className="foreuse-debris" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            )}
+            <span className="foreuse-etiquette">
+              {numero}
+              {plusBas ? `↓ -${une.profondeur} m` : `-${une.profondeur} m`}
+            </span>
+          </div>
+        )
+      })}
     </>
   )
 }
 
-// Les mineurs employés (prestige 2) dans leur galerie, à droite de la foreuse :
-// on les voit descendre, creuser leur bloc, puis remonter vendre leur récolte.
+// Les mineurs employés (prestige 2) dans leur galerie, à droite de la foreuse. Ils ont leur
+// propre ascenseur : chacun a sa cabine, qu'on voit descendre avec lui, l'attendre juste
+// au-dessus de lui pendant qu'il creuse, puis le remonter au village quand son sac est plein.
 function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRangee: number }) {
   if (etat.employes.length === 0) return null
   // La galerie descend jusqu'au mineur le plus profond (sans dépasser ce qu'on affiche).
   const plusProfond = Math.max(...etat.employes.map((mineur) => mineur.profondeur))
   const hauteur = Math.min(plusProfond, derniereRangee)
+  const unEnRoute = etat.employes.some((mineur) => mineur.etape === 'monte' || mineur.etape === 'descend')
+  // Une rangée affichée : jamais plus bas que la dernière rangée qu'on voit.
+  const dansLaVue = (rangee: number) => Math.min(rangee, derniereRangee - 1)
 
   return (
     <>
       <div className="galerie-mineurs" style={{ height: `calc(var(--pas) * ${hauteur} + 14px)` }} />
+      <span className={`poulie-ascenseur poulie-mineurs ${unEnRoute ? 'tourne' : ''}`} aria-hidden="true" />
       {etat.employes.map((mineur, index) => {
         const creuse = mineur.etape === 'creuse'
-        // Au marché (ou tout en haut de son trajet), il est au village : on ne le dessine pas dans
-        // la mine (le compteur en haut de la mine affiche 💰).
-        if (mineur.etape === 'vend' || (!creuse && mineur.position < 0.5)) return null
-        // Quand il creuse, il se tient juste au-dessus du bloc qu'il casse ; sinon, il est sur son trajet.
-        const rangee = creuse ? mineur.profondeur - 1 : Math.max(1, Math.round(mineur.position))
-        // Plus profond que ce qu'on voit : on le dessine en bas, avec une flèche.
-        const plusBas = rangee > derniereRangee - 1
-        const rangeeAffichee = Math.min(rangee, derniereRangee - 1)
+        const enRoute = mineur.etape === 'monte' || mineur.etape === 'descend'
+        // Où est sa cabine (0 = au village) : avec lui pendant les trajets, juste au-dessus de lui
+        // quand il creuse, et en haut quand il vend au marché.
+        const positionCabine = enRoute ? mineur.position : creuse ? Math.max(0, mineur.profondeur - 2) : 0
+        const cabine = dansLaVue(positionCabine)
+        const cabinePlusBas = positionCabine > derniereRangee - 1
+        // Quand il creuse, il se tient juste au-dessus du bloc qu'il casse.
+        const rangeeMineur = dansLaVue(mineur.profondeur - 1)
+        const mineurPlusBas = mineur.profondeur - 1 > derniereRangee - 1
         // L'indicateur : ce qu'il fait (icône), sa profondeur quand il creuse, sinon le temps restant.
         const detail = creuse ? `-${mineur.profondeur} m` : `${Math.ceil(secondesRestantesEmploye(etat, mineur))} s`
         const remplissage = nbDansSacEmploye(mineur) / tailleSacEmploye(etat, mineur)
+        const etiquette = (plusBas: boolean) => (
+          <span className="mineur-nom">
+            {iconeActiviteEmploye(mineur)} <span className="mineur-prenom">{mineur.nom}</span> {detail}
+            {/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */}
+            {plusBas && ' ↓'}
+            {/* Le remplissage de son sac à dos. */}
+            <span className="mineur-sac" style={{ ['--remplissage' as string]: remplissage }} />
+          </span>
+        )
+        const couleurPioche = PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur
         return (
-          <div
-            key={index}
-            className={`mineur-employe mineur-${mineur.etape} ${plusBas ? 'mineur-plus-bas' : ''}`}
-            style={{ top: `calc(var(--pas) * ${rangeeAffichee - 1})` }}
-            title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
-          >
-            <span className="mineur-nom">
-              {iconeActiviteEmploye(mineur)} <span className="mineur-prenom">{mineur.nom}</span> {detail}
-              {/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */}
-              {plusBas && ' ↓'}
-              {/* Le remplissage de son sac à dos. */}
-              <span className="mineur-sac" style={{ ['--remplissage' as string]: remplissage }} />
-            </span>
-            <Personnage couleurPioche={PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur} action={creuse ? 'creuse' : 'grimpe'} />
-            {creuse && !plusBas && (
-              <span className={`mineur-bloc case bloc ${mineur.profondeur > 80 ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
+          <Fragment key={index}>
+            {/* Le câble, de la poulie jusqu'au toit de sa cabine. */}
+            <span className="cable-ascenseur cable-mineurs" style={{ height: `max(0px, calc(var(--pas) * ${cabine - 1} + 14px))` }} aria-hidden="true" />
+            <div
+              className={`cabine cabine-mineur mineur-${mineur.etape} ${enRoute ? 'cabine-occupee cabine-en-route' : ''}`}
+              style={{ top: `calc(var(--pas) * ${cabine - 1})` }}
+              title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
+            >
+              <span className="cabine-toit" aria-hidden="true">
+                <span className="cabine-lampe" />
+              </span>
+              {/* Pendant les trajets (et au marché), l'étiquette est sur la cabine. */}
+              {!creuse && etiquette(cabinePlusBas)}
+              {enRoute && (
+                <div className="passager">
+                  <Personnage couleurPioche={couleurPioche} action="repos" />
+                </div>
+              )}
+              <span className="cabine-grille" aria-hidden="true" />
+              <span className="cabine-plancher" aria-hidden="true" />
+            </div>
+            {creuse && (
+              <div
+                className={`mineur-employe mineur-creuse ${mineurPlusBas ? 'mineur-plus-bas' : ''}`}
+                style={{ top: `calc(var(--pas) * ${rangeeMineur - 1})` }}
+                title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
+              >
+                {etiquette(mineurPlusBas)}
+                <Personnage couleurPioche={couleurPioche} action="creuse" />
+                {!mineurPlusBas && (
+                  <span className={`mineur-bloc case bloc ${mineur.profondeur > 80 ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
+                )}
+              </div>
             )}
-          </div>
+          </Fragment>
         )
       })}
     </>
@@ -343,7 +387,7 @@ export function VueMonde({
                 <span className="foreuse-corps" />
                 <span className="foreuse-meche" />
               </span>
-              {etat.foreuse.nombre > 1 ? `${etat.foreuse.nombre} foreuses` : 'Foreuse'} -{etat.foreuse.profondeur} m ·{' '}
+              {nbForeuses(etat) > 1 ? `${nbForeuses(etat)} foreuses` : 'Foreuse'} -{profondeurForeuse(etat)} m ·{' '}
               {foreuseEnMarche(etat) ? 'en marche' : 'arrêtée'}
             </button>
           )}

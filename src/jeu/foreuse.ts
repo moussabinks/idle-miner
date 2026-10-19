@@ -30,9 +30,11 @@ import {
   quantite,
   ramasser,
   retirer,
+  uneNouvelleForeuse,
   valeurDe,
   type EtatJeu,
   type Inventaire,
+  type UneForeuse,
 } from './mineur'
 
 // ---------------------------------------------------------------------------
@@ -43,9 +45,24 @@ export function foreuseDebloquee(etat: EtatJeu): boolean {
   return etat.prestige >= PRESTIGE_FOREUSE
 }
 
+// Le nombre de foreuses.
+export function nbForeuses(etat: EtatJeu): number {
+  return etat.foreuse.foreuses.length
+}
+
+// La vitesse d'une foreuse (blocs par seconde), selon son niveau de forage.
+export function vitesseUneForeuse(etat: EtatJeu, une: UneForeuse): number {
+  return NIVEAUX_FORAGE[une.niveauVitesse].vitesse * multiplicateurForage(etat)
+}
+
 // La vitesse de toutes les foreuses ensemble (blocs par seconde).
 export function vitesseForage(etat: EtatJeu): number {
-  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse * multiplicateurForage(etat) * etat.foreuse.nombre
+  return etat.foreuse.foreuses.reduce((total, une) => total + vitesseUneForeuse(etat, une), 0)
+}
+
+// La profondeur de la foreuse la plus profonde (pour l'affichage).
+export function profondeurForeuse(etat: EtatJeu): number {
+  return Math.max(...etat.foreuse.foreuses.map((une) => une.profondeur))
 }
 
 export function capaciteChariot(etat: EtatJeu): number {
@@ -55,7 +72,7 @@ export function capaciteChariot(etat: EtatJeu): number {
 // Combien de secondes les foreuses tournent encore avec le charbon chargé
 // (chaque foreuse brûle son charbon : à 3 foreuses, il part 3 fois plus vite).
 export function secondesDeCharbon(etat: EtatJeu): number {
-  return etat.foreuse.carburant / etat.foreuse.nombre
+  return etat.foreuse.carburant / nbForeuses(etat)
 }
 
 // --- Plusieurs foreuses (prestige 3) ---
@@ -67,16 +84,18 @@ export function maxForeuses(etat: EtatJeu): number {
 }
 
 export function prixProchaineForeuse(etat: EtatJeu): number | null {
-  if (etat.foreuse.nombre >= maxForeuses(etat)) return null
-  return PRIX_FOREUSES_EN_PLUS[etat.foreuse.nombre - 1] ?? null
+  if (nbForeuses(etat) >= maxForeuses(etat)) return null
+  return PRIX_FOREUSES_EN_PLUS[nbForeuses(etat) - 1] ?? null
 }
 
+// Une nouvelle foreuse arrive toute neuve : niveau de forage 0, et elle creuse son propre
+// trou depuis la surface (on l'améliore ensuite comme les autres).
 export function acheterForeuse(etat: EtatJeu): string[] {
   const prix = prixProchaineForeuse(etat)
   if (!aLaSurface(etat) || !etat.foreuse.active || prix === null || etat.argent < prix) return []
   etat.argent -= prix
-  etat.foreuse.nombre += 1
-  return [`⚙️ Nouvelle foreuse ! Tu en as ${etat.foreuse.nombre} qui creusent ensemble.`]
+  etat.foreuse.foreuses.push(uneNouvelleForeuse())
+  return [`⚙️ Nouvelle foreuse ! Elle part de la surface, au premier niveau de forage. Tu en as ${nbForeuses(etat)}.`]
 }
 
 export function nbDansChariot(etat: EtatJeu): number {
@@ -119,8 +138,10 @@ export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   return [`🔥 +${mis} charbon dans la foreuse.`]
 }
 
-export function prochainNiveauForage(etat: EtatJeu) {
-  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse + 1] ?? null
+// Le prochain niveau de forage de la foreuse n° index (null si elle est au maximum).
+export function prochainNiveauForage(etat: EtatJeu, index: number) {
+  const une = etat.foreuse.foreuses[index]
+  return une ? (NIVEAUX_FORAGE[une.niveauVitesse + 1] ?? null) : null
 }
 
 export function prochainNiveauChariot(etat: EtatJeu) {
@@ -129,9 +150,11 @@ export function prochainNiveauChariot(etat: EtatJeu) {
 
 // Le prochain niveau de forage (ou de chariot) est-il bloqué par le prestige ?
 // Renvoie le prestige qu'il faut (null = pas bloqué).
-export function forageBloqueAuPrestige(etat: EtatJeu): number | null {
-  const prochain = etat.foreuse.niveauVitesse + 1
-  if (prochainNiveauForage(etat) === null || prochain <= niveauMaxAuPrestige('forage', etat.prestige)) return null
+export function forageBloqueAuPrestige(etat: EtatJeu, index: number): number | null {
+  const une = etat.foreuse.foreuses[index]
+  if (!une || prochainNiveauForage(etat, index) === null) return null
+  const prochain = une.niveauVitesse + 1
+  if (prochain <= niveauMaxAuPrestige('forage', etat.prestige)) return null
   return prestigePourNiveau('forage', prochain)
 }
 
@@ -141,9 +164,9 @@ export function chariotBloqueAuPrestige(etat: EtatJeu): number | null {
   return prestigePourNiveau('chariot', prochain)
 }
 
-export function peutAmeliorerForage(etat: EtatJeu): boolean {
-  const prochain = prochainNiveauForage(etat)
-  return etat.foreuse.active && prochain !== null && forageBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
+export function peutAmeliorerForage(etat: EtatJeu, index: number): boolean {
+  const prochain = prochainNiveauForage(etat, index)
+  return etat.foreuse.active && prochain !== null && forageBloqueAuPrestige(etat, index) === null && peutPayer(etat, prochain.cout)
 }
 
 export function peutAmeliorerChariot(etat: EtatJeu): boolean {
@@ -151,12 +174,13 @@ export function peutAmeliorerChariot(etat: EtatJeu): boolean {
   return etat.foreuse.active && prochain !== null && chariotBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
 }
 
-export function ameliorerForage(etat: EtatJeu): string[] {
-  const prochain = prochainNiveauForage(etat)
-  if (!aLaSurface(etat) || prochain === null || !peutAmeliorerForage(etat)) return []
+// Améliore la vitesse de la foreuse n° index (chaque foreuse s'améliore séparément).
+export function ameliorerForage(etat: EtatJeu, index: number): string[] {
+  const prochain = prochainNiveauForage(etat, index)
+  if (!aLaSurface(etat) || prochain === null || !peutAmeliorerForage(etat, index)) return []
   payer(etat, prochain.cout)
-  etat.foreuse.niveauVitesse += 1
-  return [`⚙️ Forage plus rapide : ${prochain.vitesse} blocs par seconde.`]
+  etat.foreuse.foreuses[index].niveauVitesse += 1
+  return [`⚙️ Foreuse ${index + 1} plus rapide : ${prochain.vitesse} blocs par seconde.`]
 }
 
 export function ameliorerChariot(etat: EtatJeu): string[] {
@@ -190,9 +214,9 @@ export function cocherToutChariot(etat: EtatJeu, coche: boolean): string[] {
   return []
 }
 
-// Active ou coupe la recharge automatique au charbon (à partir du niveau 3 de forage).
+// Active ou coupe la recharge automatique au charbon (dès qu'une foreuse a le niveau 3 de forage).
 export function rechargeAutoDisponible(etat: EtatJeu): boolean {
-  return etat.foreuse.niveauVitesse >= NIVEAU_RECHARGE_AUTO
+  return etat.foreuse.foreuses.some((une) => une.niveauVitesse >= NIVEAU_RECHARGE_AUTO)
 }
 
 export function basculerRechargeAuto(etat: EtatJeu): string[] {
@@ -249,33 +273,37 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
     // Elle ne fore que tant qu'il reste du charbon, et jusqu'à ce que le chariot soit plein
     // (le charbon n'est pas brûlé pour rien).
     const placeDansChariot = capaciteChariot(etat) - nbDansChariot(etat)
-    const tempsPourRemplir = Math.max(0, (placeDansChariot - foreuse.progression) / vitesseForage(etat))
+    const enCours = foreuse.foreuses.reduce((total, une) => total + une.progression, 0)
+    const tempsPourRemplir = Math.max(0, (placeDansChariot - enCours) / vitesseForage(etat))
     const tempsDeForage = Math.min(reste, secondesDeCharbon(etat), tempsPourRemplir)
     if (tempsDeForage <= 0) break
     reste -= tempsDeForage
-    foreuse.carburant -= tempsDeForage * foreuse.nombre
+    foreuse.carburant -= tempsDeForage * nbForeuses(etat)
     if (foreuse.carburant < 1e-9) foreuse.carburant = 0 // pas de miette de charbon à cause des arrondis
-    foreuse.progression += tempsDeForage * vitesseForage(etat)
 
-    while (foreuse.progression >= 1 && !chariotPlein(etat)) {
-      foreuse.progression -= 1
-      const bloc = tirerBlocNormal(foreuse.profondeur, aleatoire)
-      foreuse.blocsFores += 1
-      // Avec la recharge automatique, le charbon va dans le moteur tant que sa réserve est basse.
-      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < RESERVE_RECHARGE_AUTO) {
-        foreuse.carburant += SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
-      } else {
-        foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
-      }
-      // Elle descend d'un mètre tous les 10 blocs, jusqu'à la bedrock.
-      if (foreuse.blocsFores % BLOCS_FORES_PAR_METRE === 0) {
-        foreuse.profondeur = Math.min(PROFONDEUR_BEDROCK - 1, foreuse.profondeur + 1)
+    // Chaque foreuse avance à sa vitesse, dans son propre trou.
+    for (const une of foreuse.foreuses) {
+      une.progression += tempsDeForage * vitesseUneForeuse(etat, une)
+      while (une.progression >= 1 && !chariotPlein(etat)) {
+        une.progression -= 1
+        const bloc = tirerBlocNormal(une.profondeur, aleatoire)
+        une.blocsFores += 1
+        // Avec la recharge automatique, le charbon va dans le moteur tant que sa réserve est basse.
+        if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < RESERVE_RECHARGE_AUTO) {
+          foreuse.carburant += SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
+        } else {
+          foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
+        }
+        // Elle descend d'un mètre tous les 10 blocs, jusqu'à la bedrock.
+        if (une.blocsFores % BLOCS_FORES_PAR_METRE === 0) {
+          une.profondeur = Math.min(PROFONDEUR_BEDROCK - 1, une.profondeur + 1)
+        }
       }
     }
   }
 
   if (chariotPlein(etat)) {
-    foreuse.progression = 0
+    for (const une of foreuse.foreuses) une.progression = 0
     return ['🛒 Le chariot de la foreuse est plein : viens le vider au village.']
   }
   if (foreuse.carburant <= 0) return ['🔥 La foreuse n’a plus de charbon.']

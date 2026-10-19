@@ -2,7 +2,8 @@
 // du rendement de chaque source (pour l'indicateur « $/s » en haut de l'écran).
 //   - toi, quand tu creuses : la valeur moyenne d'un bloc à ta profondeur, divisée par le
 //     temps moyen pour le casser (Fortune comprise) ;
-//   - la foreuse, quand elle tourne : sa vitesse × la valeur moyenne d'un bloc à sa profondeur ;
+//   - les foreuses, quand elles tournent : pour chacune, sa vitesse × la valeur moyenne d'un
+//     bloc à sa profondeur ;
 //   - chaque mineur employé : ce que rapporte un sac plein (moins son salaire), divisé par la
 //     durée d'un aller-retour complet (creuser, remonter, vendre, redescendre). La vitesse de
 //     l'ascenseur compte donc : plus il est rapide, plus les trajets sont courts.
@@ -10,7 +11,7 @@
 
 import { BLOCS, SECONDES_VENTE_EMPLOYE, dureeCasse, type IdBloc } from './donnees'
 import { secondesParMetreEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
-import { foreuseEnMarche, vitesseForage } from './foreuse'
+import { foreuseEnMarche, vitesseUneForeuse } from './foreuse'
 import { poidsDesBlocs } from './mine'
 import { CHANCE_FORTUNE_PAR_NIVEAU, auFond, bonusVente, vitesse, type EtatJeu } from './mineur'
 import { partSalaire } from './talents'
@@ -53,7 +54,10 @@ function revenuJoueur(etat: EtatJeu): number {
 
 function revenuForeuse(etat: EtatJeu): number {
   if (!foreuseEnMarche(etat)) return 0
-  return vitesseForage(etat) * valeurMoyenneBloc(etat.foreuse.profondeur) * bonusVente(etat)
+  // Chaque foreuse creuse à sa vitesse, à sa propre profondeur.
+  let total = 0
+  for (const une of etat.foreuse.foreuses) total += vitesseUneForeuse(etat, une) * valeurMoyenneBloc(une.profondeur)
+  return total * bonusVente(etat)
 }
 
 function revenuMineurs(etat: EtatJeu): number {

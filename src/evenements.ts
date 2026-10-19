@@ -37,7 +37,8 @@ function ramasse(etat: EtatJeu): Inventaire {
 
 // Un seul nombre qui grandit à chaque amélioration achetée (pour la repérer facilement).
 function totalNiveaux(etat: EtatJeu): number {
-  let total = etat.ascenseur.niveau + etat.foreuse.niveauVitesse + etat.foreuse.niveauChariot + etat.niveauSac + etat.meilleure
+  let total = etat.ascenseur.niveau + etat.foreuse.niveauChariot + etat.niveauSac + etat.meilleure
+  for (const une of etat.foreuse.foreuses) total += une.niveauVitesse
   for (const niveau of Object.values(etat.enchantements)) total += niveau
   for (const mineur of etat.employes) total += mineur.niveau
   return total

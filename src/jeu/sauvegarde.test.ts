@@ -138,7 +138,26 @@ describe('sauvegarde', () => {
     const etat = charger(stockage, '1')
     expect(etat?.talents).toEqual(['negoce'])
     expect(etat?.employes).toEqual([])
-    expect(etat?.foreuse.nombre).toBe(1)
+    expect(etat?.foreuse.foreuses).toHaveLength(1)
+  })
+
+  it('sépare les foreuses d’une ancienne partie (version 11) en gardant ce qu’elles avaient', () => {
+    const stockage = fauxStockage()
+    const partie = creerPartie(aleatoireAvecGraine(1), 3)
+    const { foreuses: _foreuses, ...partage } = partie.foreuse
+    const ancienne = {
+      ...partie,
+      version: 11,
+      foreuse: { ...partage, active: true, niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490, nombre: 2 },
+    }
+    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
+    const etat = charger(stockage, '1')
+    expect(etat?.version).toBe(VERSION_ETAT)
+    expect(etat?.foreuse.foreuses).toEqual([
+      { niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 },
+      { niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 },
+    ])
+    expect('nombre' in (etat?.foreuse ?? {})).toBe(false)
   })
 
   it('compte le temps passé depuis la dernière sauvegarde', () => {
