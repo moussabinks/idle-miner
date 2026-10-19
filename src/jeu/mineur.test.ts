@@ -30,8 +30,9 @@ import {
   auFond,
   creerPartie,
   deplacerMineur,
-  devisReparation,
+  coutReparation,
   enchanter,
+  enchantementBloqueAuPrestige,
   envoyerAscenseur,
   equiper,
   estCassee,
@@ -497,6 +498,20 @@ describe('ascenseur', () => {
     expect(ascenseurDisponible(etat)).toBe(true)
   })
 
+  it('« Remonter » ne monte que le mineur : son sac reste plein, rien n’est vendu', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 26)
+    construireAscenseur(etat, 1)
+    etat.colonneMineur = 0 // déjà au puits, à côté de la cabine
+    etat.inventaire = { fer: 10, diamant: 2 }
+    voyager(etat, 0, false, {})
+    expect(etat.ascenseur.chargement).toEqual({})
+    avancerTemps(etat, 5)
+    expect(etat.position).toBe(0)
+    expect(etat.inventaire).toEqual({ fer: 10, diamant: 2 })
+    expect(etat.argent).toBe(0)
+  })
+
   it('ne prend pas plus que sa capacité, les objets les plus précieux d’abord', () => {
     const etat = nouvellePartie()
     construireAscenseur(etat, 1) // 32 objets par voyage
@@ -591,18 +606,31 @@ describe('pioches et réparation', () => {
     expect(etat.pioches[0]).toBe(0)
   })
 
-  it('répare 25 % par unité et achète le matériau manquant au double du prix', () => {
+  it('répare avec de l’argent (selon l’usure) + 3 minerais de la pioche', () => {
     const etat = partieALaSurface()
+    // Pioche en fer cassée : la moitié de son prix (300 $) + 3 fer.
     etat.pioches = { 2: 250 }
     etat.niveauPioche = 2
-    etat.inventaire = { fer: 1 }
-    const devis = devisReparation(etat)
-    expect(devis).toMatchObject({ unites: 4, dansLeSac: 1, aAcheter: 3, cout: 3 * 24 })
-    etat.argent = 100
+    expect(coutReparation(etat)).toEqual({ argent: 150, materiaux: { fer: 3 } })
+    // À moitié usée : moitié moins d'argent, toujours 3 fer.
+    etat.pioches = { 2: 125 }
+    expect(coutReparation(etat)).toEqual({ argent: 75, materiaux: { fer: 3 } })
+    // Sans les 3 fer, pas de réparation (même avec de l'argent).
+    etat.argent = 1000
+    etat.inventaire = { fer: 2 }
+    expect(reparer(etat)).toEqual([])
+    etat.inventaire = { fer: 5 }
     reparer(etat)
     expect(etat.pioches[2]).toBe(0)
-    expect(etat.argent).toBe(28)
-    expect(etat.inventaire).toEqual({})
+    expect(etat.argent).toBe(925)
+    expect(etat.inventaire).toEqual({ fer: 2 })
+  })
+
+  it('même règle pour la netherite (débris antiques), argent seul pour la pioche en bois', () => {
+    const etat = partieALaSurface()
+    etat.pioches = { 0: 60, 4: 800 }
+    expect(coutReparation(etat, 4)).toEqual({ argent: 1500, materiaux: { debris: 3 } })
+    expect(coutReparation(etat, 0)).toEqual({ argent: 3, materiaux: {} })
   })
 })
 
@@ -623,16 +651,44 @@ describe('boutique et enchantements', () => {
     expect(acheterSac(etat)).toEqual([])
   })
 
-  it('enchante avec de l’argent, des lapis et des émeraudes (coût × niveau)', () => {
+  it('enchante avec de l’argent (× niveau²), des lapis et des émeraudes (× niveau)', () => {
     const etat = partieALaSurface()
-    etat.argent = 1200
+    etat.prestige = 1 // Efficacité II n'est permise qu'à partir du prestige 1
+    etat.argent = 2000
     etat.inventaire = { lapis: 9, emeraude: 3 }
     enchanter(etat, 'efficacite') // niveau I : 400 $ + 3 lapis + 1 émeraude
-    enchanter(etat, 'efficacite') // niveau II : 800 $ + 6 lapis + 2 émeraudes
+    enchanter(etat, 'efficacite') // niveau II : 400 × 4 = 1 600 $ + 6 lapis + 2 émeraudes
     expect(etat.enchantements.efficacite).toBe(2)
     expect(etat.argent).toBe(0)
     expect(etat.inventaire).toEqual({})
-    expect(vitesse(etat)).toBe(2 * 1.5)
+  })
+
+  it('les niveaux d’enchantement se débloquent petit à petit avec les prestiges', () => {
+    const etat = partieALaSurface()
+    etat.argent = 10_000_000
+    etat.inventaire = { lapis: 1000, emeraude: 1000 }
+    const toutEnchanter = () => {
+      for (const id of ['efficacite', 'fortune', 'solidite'] as const) while (enchanter(etat, id).length > 0);
+    }
+    // Prestige 0 : seulement le niveau I de chacun.
+    toutEnchanter()
+    expect(etat.enchantements).toEqual({ efficacite: 1, fortune: 1, solidite: 1 })
+    expect(enchantementBloqueAuPrestige(etat, 'efficacite')).toBe(1)
+    expect(enchantementBloqueAuPrestige(etat, 'fortune')).toBe(2)
+    // Efficacité : un niveau par prestige ; Fortune et Solidité : un tous les 2 prestiges.
+    etat.prestige = 2
+    toutEnchanter()
+    expect(etat.enchantements).toEqual({ efficacite: 3, fortune: 2, solidite: 2 })
+    etat.prestige = 4
+    toutEnchanter()
+    expect(etat.enchantements).toEqual({ efficacite: 5, fortune: 3, solidite: 3 })
+  })
+
+  it('les enchantements sont gardés au prestige', () => {
+    const etat = partieALaSurface()
+    etat.enchantements = { efficacite: 2, fortune: 1, solidite: 1 }
+    const suite = prestige(etat, aleatoireAvecGraine(3))
+    expect(suite.enchantements).toEqual({ efficacite: 2, fortune: 1, solidite: 1 })
   })
 
   it('fortune donne une chance de doubler le minerai : 20 %, 40 %, 60 %', () => {

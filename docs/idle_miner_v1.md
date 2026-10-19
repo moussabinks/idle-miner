@@ -58,6 +58,7 @@
 - **Toutes les pioches déjà débloquées peuvent être rachetées neuves**, et on peut changer de pioche équipée à tout moment (panneau 🧰 Pioches). C'est une demande explicite de l'auteur, pour ne jamais rester bloqué.
 - **Pioche cassée** : on mine **à mains nues** (vitesse x1) et on **garde les blocs** récoltés.
 - **Réparation** : chaque unité de matériau répare 25 % de la pioche (comme l'enclume). Le matériau manquant est acheté automatiquement à 2 fois son prix de vente.
+  - **Version web (19/10)** : remplacé par une règle unique, de l'argent (selon l'usure) + 3 minerais de la pioche, sans achat automatique.
 - **Galerie** : quand la profondeur atteint le `prof_max` de la pioche équipée, on creuse à l'horizontale (une couche neuve à la même profondeur). On n'est donc jamais bloqué.
 
 ### Blocs (dureté inspirée de Minecraft)

@@ -481,20 +481,45 @@ h2 {
   pointer-events: none;
 }
 
-/* La tête de la foreuse : une petite machine orange toute ronde (avec un hublot, un pot
-   d'échappement et un collier en acier) et, dessous, une longue mèche en spirale. */
+/* La tête de la foreuse : une machine orange toute ronde (avec un hublot, un pot
+   d'échappement, un collier en acier et un gyrophare) et, dessous, une longue mèche en
+   spirale. Elle est haute de presque deux cases : sa pointe arrive en bas de sa rangée. */
 .tete-foreuse {
   position: absolute;
   left: var(--x-foreuse);
   width: var(--col-foreuse);
-  height: var(--taille-case);
+  height: calc(var(--taille-case) * 1.8);
+  margin-top: calc(var(--taille-case) * -0.8);
   z-index: 2;
   transition: top 0.3s linear;
 }
 
+/* En marche : un halo orange autour de la machine. */
+.tete-foreuse-tourne {
+  filter: drop-shadow(0 0 5px rgb(255 150 60 / 0.75));
+}
+
+/* Le gyrophare, tout en haut de la machine (il clignote quand elle fore). */
+.foreuse-lumiere {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  width: 40%;
+  height: 6%;
+  transform: translateX(-50%);
+  border-radius: 6px 6px 1px 1px;
+  background: linear-gradient(#ffe066, #f2a60c);
+  border: 1px solid #3a1a08;
+  z-index: 1;
+}
+
+.tete-foreuse-tourne .foreuse-lumiere {
+  animation: gyrophare 0.7s steps(2) infinite;
+}
+
 .foreuse-corps {
   position: absolute;
-  inset: 0 0 46%;
+  inset: 7% 0 44%;
   border-radius: 45% 45% 30% 30% / 55% 55% 35% 35%;
   border: 2px solid #3a1a08;
   background:
@@ -523,7 +548,7 @@ h2 {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 44%;
+  width: 52%;
   height: 50%;
   transform: translateX(-50%);
   border-radius: 0 0 50% 50% / 0 0 100% 100%;
@@ -1151,87 +1176,153 @@ h2 {
   50% { opacity: 0.8; box-shadow: 0 0 9px 3px rgb(255 170 60 / 0.6); }
 }
 
-/* La foreuse du village : une tour de forage en acier (deux pieds en treillis et une poulie
-   tout en haut), posée sur une machine orange toute ronde avec son hublot et sa cheminée. */
+/* La foreuse du village : LA grosse machine du village, plus haute que tous les stands.
+   Une tour de forage en acier (treillis, couronne et gyrophare tout en haut), posée sur
+   une grosse machine orange avec un hublot, une roue dentée et une cheminée. Derrière,
+   un halo doré : elle a de l'allure. En marche, tout s'anime (roue, fumée, gyrophare,
+   halo qui pulse, étincelles à la mèche). */
 .derrick {
   position: relative;
-  width: 64px;
-  height: 76px;
+  width: 100px;
+  height: 128px;
+  margin: 0 -16px; /* plus large que les autres stands */
 }
 
-.derrick-tour {
+/* Le halo doré, derrière la machine. */
+.derrick-aura {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 6px;
-  bottom: 22px;
-  clip-path: polygon(38% 0, 62% 0, 100% 100%, 82% 100%, 50% 12%, 18% 100%, 0 100%);
-  background:
-    repeating-linear-gradient(45deg, transparent 0 5px, #6d7480 5px 7px),
-    repeating-linear-gradient(-45deg, transparent 0 5px, #6d7480 5px 7px),
-    linear-gradient(90deg, #8d939c, #c4c9d0 50%, #8d939c);
-}
-
-/* La poulie, en haut de la tour. */
-.derrick-tour::after {
-  content: '';
-  position: absolute;
-  top: 0;
   left: 50%;
-  width: 10px;
-  height: 10px;
+  bottom: 4px;
+  width: 130px;
+  height: 130px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle, #3a3a40 0 25%, #b9bec6 26%);
+  background: radial-gradient(circle, rgb(255 214 102 / 0.55) 0 20%, rgb(255 170 60 / 0.25) 45%, transparent 70%);
+  pointer-events: none;
 }
 
+.derrick-tourne .derrick-aura {
+  animation: aura-foreuse 1.6s ease-in-out infinite;
+}
+
+@keyframes aura-foreuse {
+  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(0.92); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+
+/* La tour en treillis d'acier, large en bas, avec une couronne en haut. */
+.derrick-tour {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 10px;
+  bottom: 38px;
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  background:
+    /* les traverses horizontales et le treillis en croix */
+    repeating-linear-gradient(transparent 0 12px, #4d535c 12px 14px),
+    repeating-linear-gradient(45deg, transparent 0 7px, #6d7480 7px 9px),
+    repeating-linear-gradient(-45deg, transparent 0 7px, #6d7480 7px 9px),
+    /* les deux montants en acier, sur les bords */
+    linear-gradient(90deg, #4d535c 0 8%, rgb(180 186 196 / 0.35) 8% 92%, #4d535c 92%);
+}
+
+/* La couronne (la poulie du haut) et son gyrophare rouge. */
+.derrick-gyrophare {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 16px;
+  height: 10px;
+  transform: translateX(-50%);
+  border-radius: 8px 8px 2px 2px;
+  background: linear-gradient(#ff6b5b, #c81e1e);
+  border: 2px solid #3a3a40;
+  box-shadow: 0 0 6px rgb(255 80 60 / 0.6);
+  z-index: 1;
+}
+
+.derrick-tourne .derrick-gyrophare {
+  animation: gyrophare 0.8s steps(2) infinite;
+}
+
+@keyframes gyrophare {
+  0% { box-shadow: 0 0 4px rgb(255 80 60 / 0.4); filter: brightness(0.8); }
+  50% { box-shadow: 0 0 16px 4px rgb(255 80 60 / 0.95); filter: brightness(1.3); }
+}
+
+/* La grosse machine orange, toute ronde. */
 .derrick-moteur {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  height: 24px;
-  border-radius: 14px 14px 8px 8px;
-  border: 2px solid #3a1a08;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 40px;
+  border-radius: 22px 22px 12px 12px;
+  border: 3px solid #3a1a08;
   background:
-    radial-gradient(circle at 30% 45%, #e9fbff 0 7%, #7fd3ea 8% 17%, #2a1a10 18% 22%, transparent 23%),
-    linear-gradient(#ffa24d, #e2581f);
-  box-shadow: inset 0 3px 4px rgb(255 255 255 / 0.35);
+    /* le hublot */
+    radial-gradient(circle at 27% 45%, #f1fdff 0 6%, #7fd3ea 7% 15%, #2a1a10 16% 19%, transparent 20%),
+    /* une bande d'acier rivetée */
+    radial-gradient(circle, #e8ecf2 0 1.5px, transparent 2px) 0 calc(100% - 5px) / 10px 6px repeat-x,
+    linear-gradient(transparent 72%, #8d939c 72% 90%, #5d636c 90%),
+    linear-gradient(#ffb15e, #e2581f);
+  box-shadow:
+    inset 0 4px 5px rgb(255 255 255 / 0.4),
+    0 4px 8px rgb(0 0 0 / 0.35);
 }
 
 /* La cheminée de la machine. */
 .derrick-moteur::before {
   content: '';
   position: absolute;
-  top: -9px;
-  right: 9px;
-  width: 6px;
-  height: 9px;
-  border-radius: 3px 3px 0 0;
-  background: linear-gradient(90deg, #5d636c, #b9bec6);
+  top: -14px;
+  right: 14px;
+  width: 9px;
+  height: 14px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(90deg, #4d535c, #c4c9d0 50%, #4d535c);
 }
 
+/* La roue dentée, sur le côté de la machine. */
+.derrick-roue {
+  position: absolute;
+  right: 12px;
+  top: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #3a3a40 0 18%, #c4c9d0 19% 42%, transparent 43%),
+    repeating-conic-gradient(#8d939c 0 15deg, transparent 15deg 30deg);
+}
+
+.derrick-tourne .derrick-roue {
+  animation: poulie 1.2s linear infinite;
+}
+
+/* La mèche en spirale, qui s'enfonce dans le sol. */
 .derrick-meche {
   position: absolute;
   left: 50%;
-  bottom: -8px;
-  width: 9px;
-  height: 14px;
+  bottom: -14px;
+  width: 14px;
+  height: 22px;
   transform: translateX(-50%);
   clip-path: polygon(0 0, 100% 0, 62% 100%, 38% 100%);
   background: repeating-linear-gradient(155deg, #eef2f7 0 3px, #9aa1ab 3px 5px, #5d636c 5px 6px);
 }
 
-/* En marche : de la fumée sort de la cheminée. */
+/* En marche : de la fumée sort de la cheminée, et la machine vibre. */
 .derrick-tourne .derrick-moteur::after {
   content: '';
   position: absolute;
-  top: -16px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
+  top: -24px;
+  right: 11px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  background: rgb(230 230 230 / 0.8);
+  background: rgb(235 235 235 / 0.85);
   animation: fumee 1.1s ease-out infinite;
 }
 
@@ -1245,8 +1336,13 @@ h2 {
 
 /* Bloquée au prestige 0 : grisée, derrière une barrière avec un cadenas. */
 .stand-verrouille .derrick-tour,
-.stand-verrouille .derrick-moteur {
+.stand-verrouille .derrick-moteur,
+.stand-verrouille .derrick-gyrophare {
   filter: grayscale(0.7) brightness(0.75);
+}
+
+.stand-verrouille .derrick-aura {
+  display: none;
 }
 
 .barriere {
@@ -2177,8 +2273,13 @@ kbd {
   .foreuse-debris i,
   .tete-foreuse-tourne .foreuse-corps,
   .tete-foreuse-tourne .foreuse-meche,
+  .tete-foreuse-tourne .foreuse-lumiere,
   .derrick-tourne .derrick-moteur,
   .derrick-tourne .derrick-meche,
+  .derrick-tourne .derrick-aura,
+  .derrick-tourne .derrick-gyrophare,
+  .derrick-tourne .derrick-roue,
+  .derrick-tourne .derrick-moteur::after,
   .gain,
   .toast,
   .victoire-trophee {

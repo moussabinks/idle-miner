@@ -4,7 +4,7 @@
 // il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, PIOCHES, PRIX_SEAU, type IdBloc } from './donnees'
+import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, MINERAIS_REPARATION, PIOCHES, PRIX_SEAU, type IdBloc } from './donnees'
 import {
   acheterPioche,
   acheterSac,
@@ -32,7 +32,9 @@ import {
   prochainNiveauAscenseur,
   reparer,
   sacPlein,
-  vendre,
+  objetsAVendre,
+  equiper,
+  vendreLot,
   type EtatJeu,
 } from './mineur'
 import { verifierSucces } from './succes'
@@ -102,14 +104,54 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     const prochaine = PIOCHES[etat.meilleure + 1]
     if (sacPlein(etat) && etat.ascenseur.niveau === 0) return true
     if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) return true
-    return estCassee(etat) && peutReparer(etat)
+    return (estCassee(etat) || etat.niveauPioche !== etat.meilleure) && solutionPourLaPioche()
+  }
+
+  // Une pioche qu'on peut utiliser (ou réparer) au village : la meilleure d'abord.
+  function piocheUtilisable(niveau: number): boolean {
+    if (!(niveau in etat.pioches)) return false
+    const intacte = (etat.pioches[niveau] ?? 0) < PIOCHES[niveau].durabilite
+    return intacte || peutReparer(etat, niveau) || peutAcheterPioche(etat, niveau)
+  }
+
+  // Est-ce que remonter servirait à quelque chose pour la pioche (réparer, racheter, changer) ?
+  function solutionPourLaPioche(): boolean {
+    for (let niveau = etat.meilleure; niveau >= 0; niveau--) {
+      if (niveau === etat.niveauPioche && !estCassee(etat)) return false // déjà la meilleure possible
+      if (piocheUtilisable(niveau)) return true
+    }
+    return false
+  }
+
+  // Au village : on reprend la meilleure pioche qu'on peut (réparée avec l'argent et 3 minerais,
+  // ou rachetée neuve) ; sinon une moins bonne qu'on possède encore, en attendant.
+  function choisirPioche(): void {
+    for (let niveau = etat.meilleure; niveau >= 0; niveau--) {
+      if (!(niveau in etat.pioches)) continue
+      if ((etat.pioches[niveau] ?? 0) >= PIOCHES[niveau].durabilite) {
+        if (peutReparer(etat, niveau)) reparer(etat, niveau)
+        else if (peutAcheterPioche(etat, niveau)) acheterPioche(etat, niveau)
+      }
+      if ((etat.pioches[niveau] ?? 0) < PIOCHES[niveau].durabilite) {
+        equiper(etat, niveau)
+        return
+      }
+    }
   }
 
   // Tout ce que le bot fait au village, avant de redescendre.
   function faireLesCourses(): void {
     const prochaine = PIOCHES[etat.meilleure + 1]
     etat.nonAVendre = objetsAGarder(etat)
-    vendre(etat)
+    // Il vend tout, sauf 3 minerais de sa meilleure pioche : de quoi la réparer quand elle cassera.
+    const lot = objetsAVendre(etat)
+    const minerai = PIOCHES[etat.meilleure].reparation
+    if (minerai && lot[minerai] !== undefined) {
+      const reste = (lot[minerai] ?? 0) - MINERAIS_REPARATION
+      if (reste > 0) lot[minerai] = reste
+      else delete lot[minerai]
+    }
+    vendreLot(etat, lot)
     if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) acheterPioche(etat, prochaine.niveau)
     for (const id of LISTE_ENCHANTEMENTS) {
       while (peutEnchanter(etat, id)) enchanter(etat, id)
@@ -119,7 +161,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     if (etat.profondeur >= 36) {
       while (etat.seaux < 2 && etat.argent >= 2 * PRIX_SEAU) acheterSeau(etat)
     }
-    if (estCassee(etat) && peutReparer(etat)) reparer(etat)
+    choisirPioche()
   }
 
   while (!etat.victoire && etat.stats.blocsCasses < maxBlocs) {

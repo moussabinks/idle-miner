@@ -338,14 +338,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
                 disabled={!auFront || enMinage || estCassee(etat)}
                 title={estCassee(etat) ? 'Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser »)' : 'Creuser sans s’arrêter'}
               >
-                <span className="emoji-bouton">🔁 </span>Auto
+                <span className="emoji-bouton">♾️ </span>Auto
               </button>
             )}
             <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
-              <span className="emoji-bouton">⏫ </span>Village
+              <span className="emoji-bouton">🏠 </span>Village
             </button>
             <button className="bouton bouton-voyage" onClick={allerALaMine} disabled={auFront || dansLaCabine}>
-              <span className="emoji-bouton">⏬ </span>Mine
+              <span className="emoji-bouton">⛏️ </span>Mine
             </button>
           </div>
           {/* Un petit rappel : on se déplace avec les flèches du clavier. */}

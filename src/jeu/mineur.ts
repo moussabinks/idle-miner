@@ -15,14 +15,13 @@ import {
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
   MINERAIS_COFFRE,
-  MULTIPLICATEUR_ACHAT,
   NIVEAUX_ASCENSEUR,
   PIOCHES,
   LARGEUR_MINE,
-  PRIX_PLANCHE,
   PRIX_SEAU,
   PROFONDEUR_BEDROCK,
-  REPARATION_PAR_UNITE,
+  MINERAIS_REPARATION,
+  PART_PRIX_REPARATION,
   SACS,
   SECONDES_PAR_CASE,
   SECONDES_PAR_METRE_ECHELLE,
@@ -204,6 +203,7 @@ export type Heritage = {
   niveauAscenseur: number
   employes: Employe[]
   argentGagneAvant: number
+  enchantements: Record<IdEnchantement, number>
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
@@ -215,6 +215,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     niveauAscenseur = 0,
     employes = [],
     argentGagneAvant = 0,
+    enchantements = { efficacite: 0, fortune: 0, solidite: 0 },
   } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
@@ -237,7 +238,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     // L'ascenseur garde son niveau (la cabine attend au village).
     ascenseur: { ...nouvelAscenseur(), niveau: niveauAscenseur },
     foreuse: structuredClone(foreuse),
-    enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
+    // Les enchantements sont gardés au prestige (19/10) : ils s'appliquent à toutes les pioches.
+    enchantements: { ...enchantements },
     niveauSac: 0,
     seaux: 0,
     prestige,
@@ -276,6 +278,7 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     niveauAscenseur: etat.ascenseur.niveau,
     employes: etat.employes.map(employeApresPrestige),
     argentGagneAvant: argentGagneTotal(etat),
+    enchantements: etat.enchantements,
   })
 }
 
@@ -966,14 +969,16 @@ export function appelerAscenseur(etat: EtatJeu): string[] {
 }
 
 // Le mineur monte dans la cabine, vers le village (0) ou vers le front de taille.
-// En montant, la cabine emporte aussi les minerais cochés : ils sont vendus en arrivant.
-// En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé).
+// En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé) : il est
+// vendu en arrivant. Avec un lot vide ({}), elle ne monte que le mineur : son sac reste plein
+// et rien n'est vendu (c'est le bouton « Remonter » du sac).
 export function prendreAscenseur(etat: EtatJeu, destination: number, lot?: Inventaire): string[] {
   if (!ascenseurDisponible(etat)) return []
   const arrivee = Math.min(positionFront(etat), Math.max(0, destination))
   if (arrivee === etat.position) return []
   const ascenseur = etat.ascenseur
-  if (arrivee < etat.position) ascenseur.chargement = chargerCabine(etat, lot)
+  const justeLeMineur = lot !== undefined && Object.keys(lot).length === 0
+  if (arrivee < etat.position && !justeLeMineur) ascenseur.chargement = chargerCabine(etat, lot)
   ascenseur.passager = true
   ascenseur.retourAuFront = false
   ascenseur.cible = arrivee
@@ -1056,43 +1061,31 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
 // Réparation
 // ---------------------------------------------------------------------------
 
-export type DevisReparation = {
-  unites: number // unités de matériau nécessaires
-  dansLeSac: number // unités prises dans le sac
-  aAcheter: number // unités achetées automatiquement
-  cout: number // prix en $
-  materiau: string // nom du matériau
-}
-
-export function devisReparation(etat: EtatJeu, niveau = etat.niveauPioche): DevisReparation {
+// Le prix d'une réparation, au même format que les autres achats : de l'argent (selon
+// l'usure) + 3 minerais de la pioche. null si la pioche n'est pas usée.
+export function coutReparation(etat: EtatJeu, niveau = etat.niveauPioche): Cout | null {
   const pioche = PIOCHES[niveau]
-  const usureActuelle = etat.pioches[niveau] ?? 0
-  const unites = Math.ceil(usureActuelle / (pioche.durabilite * REPARATION_PAR_UNITE))
-
-  if (pioche.reparation === 'planche') {
-    return { unites, dansLeSac: 0, aAcheter: unites, cout: unites * PRIX_PLANCHE, materiau: 'planches' }
-  }
-  const materiau = pioche.reparation
-  const dansLeSac = Math.min(unites, quantite(etat, materiau))
-  const aAcheter = unites - dansLeSac
-  const cout = aAcheter * BLOCS[materiau].prix * MULTIPLICATEUR_ACHAT
-  return { unites, dansLeSac, aAcheter, cout, materiau: BLOCS[materiau].nom }
+  const usure = etat.pioches[niveau] ?? 0
+  if (!pioche || usure <= 0) return null
+  const argent = Math.max(1, Math.ceil(pioche.prix * PART_PRIX_REPARATION * Math.min(1, usure / pioche.durabilite)))
+  const materiaux: Partial<Record<IdBloc, number>> = pioche.reparation ? { [pioche.reparation]: MINERAIS_REPARATION } : {}
+  return { argent, materiaux }
 }
 
 export function peutReparer(etat: EtatJeu, niveau = etat.niveauPioche): boolean {
   if (!(niveau in etat.pioches)) return false
-  const devis = devisReparation(etat, niveau)
-  return devis.unites > 0 && etat.argent >= devis.cout
+  const cout = coutReparation(etat, niveau)
+  return cout !== null && peutPayer(etat, cout)
 }
 
 export function reparer(etat: EtatJeu, niveau = etat.niveauPioche): string[] {
-  if (!aLaSurface(etat) || !peutReparer(etat, niveau)) return []
-  const devis = devisReparation(etat, niveau)
-  const pioche = PIOCHES[niveau]
-  if (pioche.reparation !== 'planche') retirer(etat, pioche.reparation, devis.dansLeSac)
-  etat.argent -= devis.cout
+  const cout = coutReparation(etat, niveau)
+  if (!aLaSurface(etat) || cout === null || !peutReparer(etat, niveau)) return []
+  payer(etat, cout)
   etat.pioches[niveau] = 0
-  return [`🔧 Pioche en ${pioche.nom} réparée (${devis.unites} ${devis.materiau}).`]
+  const pioche = PIOCHES[niveau]
+  const minerai = pioche.reparation ? ` et ${MINERAIS_REPARATION} ${BLOCS[pioche.reparation].nom}` : ''
+  return [`🔧 Pioche en ${pioche.nom} réparée (${cout.argent} $${minerai}).`]
 }
 
 // ---------------------------------------------------------------------------
@@ -1158,18 +1151,26 @@ export function coutEnchantement(etat: EtatJeu, id: IdEnchantement): Cout | null
   const prochain = etat.enchantements[id] + 1
   if (prochain > e.niveauMax) return null
   return {
-    argent: e.argentParNiveau * prochain,
+    argent: e.argentParNiveau * prochain * prochain,
     materiaux: { lapis: e.lapisParNiveau * prochain, emeraude: e.emeraudesParNiveau * prochain },
   }
 }
 
-export function peutEnchanter(etat: EtatJeu, id: IdEnchantement): boolean {
-  const cout = coutEnchantement(etat, id)
-  return cout !== null && peutPayer(etat, cout)
+// Le prochain niveau est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
+export function enchantementBloqueAuPrestige(etat: EtatJeu, id: IdEnchantement): number | null {
+  const prochain = etat.enchantements[id] + 1
+  if (coutEnchantement(etat, id) === null || prochain <= niveauMaxAuPrestige(id, etat.prestige)) return null
+  return prestigePourNiveau(id, prochain)
 }
 
+export function peutEnchanter(etat: EtatJeu, id: IdEnchantement): boolean {
+  const cout = coutEnchantement(etat, id)
+  return cout !== null && enchantementBloqueAuPrestige(etat, id) === null && peutPayer(etat, cout)
+}
+
+// Reste-t-il un enchantement à prendre à ce prestige ?
 export function peutEncoreEnchanter(etat: EtatJeu): boolean {
-  return LISTE_ENCHANTEMENTS.some((id) => coutEnchantement(etat, id) !== null)
+  return LISTE_ENCHANTEMENTS.some((id) => coutEnchantement(etat, id) !== null && enchantementBloqueAuPrestige(etat, id) === null)
 }
 
 export function enchanter(etat: EtatJeu, id: IdEnchantement): string[] {
