@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { aleatoireAvecGraine, choisir, entierEntre } from '../jeu/aleatoire'
+import { employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
 import { IconePixel } from './IconePixel'
@@ -44,7 +45,7 @@ function genererDecor(): Decor[] {
   }
   // Quelques rochers et des bouts de barrière.
   for (let i = 0; i < 3; i++) decor.push({ type: 'rocher', x: entierEntre(aleatoire, 1, LONGUEUR_VILLAGE - 2) + 0.3, devant: true })
-  for (const x of [18.8, 20.6]) decor.push({ type: 'barriere', x, devant: false })
+  for (const x of [21.8, 23.2]) decor.push({ type: 'barriere', x, devant: false })
   return decor
 }
 
@@ -103,7 +104,8 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
 
         {/* Les stands */}
         {STANDS.map((stand, index) => {
-          const verrouille = stand.id === 'foreuse' && !foreuseDebloquee(etat)
+          // La foreuse s'ouvre au prestige 1, les mineurs au prestige 2 : avant, un cadenas.
+          const verrouille = (stand.id === 'foreuse' && !foreuseDebloquee(etat)) || (stand.id === 'employes' && !employesDebloques(etat))
           const actif = standActif?.id === stand.id
           return (
             <button
@@ -112,7 +114,7 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               style={{ left: stand.x * TUILE - 34 }}
               onClick={() => onAllerStand(index)}
               disabled={!auVillage}
-              title={verrouille ? 'Débloquée au prestige 1' : stand.description}
+              title={verrouille ? `Débloqué au prestige ${stand.id === 'foreuse' ? 1 : 2}` : stand.description}
             >
               <span className="panneau-bois">{stand.nom}</span>
               {stand.id === 'puits' && (
@@ -143,6 +145,11 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
                 <span className="echoppe" aria-hidden="true">
                   <span className="auvent" />
                   <span className="comptoir">{stand.icone && <IconePixel nom={stand.icone} taille={28} />}</span>
+                  {verrouille && (
+                    <span className="barriere">
+                      <IconePixel nom="cadenas" taille={22} />
+                    </span>
+                  )}
                 </span>
               )}
             </button>

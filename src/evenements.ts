@@ -21,6 +21,7 @@ export type Evenement =
   | { type: 'pas' }
   | { type: 'piocheCassee' }
   | { type: 'talent' }
+  | { type: 'recolteMineurs'; montant: number } // un mineur employé a vendu sa récolte
 
 // Le sac et le quai de l'ascenseur ensemble : ce que le mineur a ramassé.
 function ramasse(etat: EtatJeu): Inventaire {
@@ -30,6 +31,11 @@ function ramasse(etat: EtatJeu): Inventaire {
     total[bloc] = (total[bloc] ?? 0) + (nombre ?? 0)
   }
   return total
+}
+
+// Ce que les mineurs employés ont rapporté depuis le début.
+function totalGagne(etat: EtatJeu): number {
+  return etat.employes.reduce((total, mineur) => total + mineur.gagne, 0)
 }
 
 export function evenementsEntre(avant: EtatJeu, apres: EtatJeu): Evenement[] {
@@ -58,11 +64,15 @@ export function evenementsEntre(avant: EtatJeu, apres: EtatJeu): Evenement[] {
   const talent = apres.talents.length > avant.talents.length
   if (talent) evenements.push({ type: 'talent' })
 
+  // L'argent rapporté par les mineurs employés : discret (ils vendent souvent).
+  const gainMineurs = totalGagne(apres) - totalGagne(avant)
+  if (gainMineurs > 0) evenements.push({ type: 'recolteMineurs', montant: gainMineurs })
+
   // L'argent : une vente (marché, chariot, ascenseur) ou un achat.
   // L'argent d'un coffre arrive avec un bloc cassé : ce n'est pas une vente.
-  const difference = apres.argent - avant.argent
+  const difference = apres.argent - avant.argent - Math.max(0, gainMineurs)
   if (difference > 0 && !blocCasse && !talent) evenements.push({ type: 'vente', montant: difference })
-  if (difference < 0) evenements.push({ type: 'achat' })
+  if (difference < 0 && apres.argent < avant.argent) evenements.push({ type: 'achat' })
 
   // L'ascenseur arrive à destination : « ding ».
   const cabine = { avant: avant.ascenseur, apres: apres.ascenseur }

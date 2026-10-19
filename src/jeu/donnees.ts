@@ -210,8 +210,35 @@ export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 5000, cout: { argent: 100000, materiaux: { or: 10 } } },
 ]
 
+// À partir du prestige 3, on peut acheter d'autres foreuses : elles creusent ensemble,
+// partagent le chariot et le charbon. Prix de la 2e, 3e, 4e et 5e foreuse.
+export const PRESTIGE_FOREUSES_MULTIPLES = 3
+export const PRIX_FOREUSES_EN_PLUS = [50000, 100000, 200000, 400000]
+
 // La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
 export const BLOCS_FORES_PAR_METRE = 10
+
+// ---------------------------------------------------------------------------
+// Les mineurs employés (débloqués au prestige 2)
+// ---------------------------------------------------------------------------
+
+export const PRESTIGE_EMPLOYES = 2
+// On peut en employer 2 au prestige 2, puis 1 de plus à chaque prestige, jusqu'à 6.
+export const MAX_EMPLOYES = 6
+// Le prix d'embauche du 1er, 2e, 3e... mineur.
+export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
+export const SAC_EMPLOYE = 32
+export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé']
+
+// La pioche d'un mineur : il s'en occupe tout seul, on paie seulement pour une meilleure.
+// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre.
+export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; prix: number }[] = [
+  { nom: 'Bois', vitesse: 0.8, profMax: 30, prix: 0 },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 60, prix: 6000 },
+  { nom: 'Fer', vitesse: 1.8, profMax: 96, prix: 20000 },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 116, prix: 50000 },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 127, prix: 120000 },
+]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
 // +15 % sur les ventes et +10 % de vitesse pour toutes les pioches.

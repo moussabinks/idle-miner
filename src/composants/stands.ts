@@ -4,7 +4,7 @@
 
 import type { NomIcone } from './IconePixel'
 
-export type IdStand = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse'
+export type IdStand = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
 
 export type Stand = {
   id: IdStand
@@ -21,10 +21,11 @@ export const STANDS: Stand[] = [
   { id: 'bazar', nom: 'Bazar', icone: 'bazar', description: "Sacs à dos et seaux d'eau.", x: 10.5 },
   { id: 'enchanteur', nom: 'Enchanteur', icone: 'enchanteur', description: 'Enchante tes pioches avec lapis et émeraudes.', x: 13.5 },
   { id: 'foreuse', nom: 'Foreuse', icone: 'foreuse', description: 'Elle creuse toute seule si tu lui donnes du charbon.', x: 16.8 },
+  { id: 'employes', nom: 'Mineurs', icone: 'employes', description: 'Embauche des mineurs qui creusent et vendent pour toi.', x: 19.8 },
 ]
 
 // Longueur du village (en tuiles) et taille d'une tuile à l'écran (en pixels).
-export const LONGUEUR_VILLAGE = 22
+export const LONGUEUR_VILLAGE = 24
 export const TUILE = 40
 
 export const X_PUITS = STANDS[0].x

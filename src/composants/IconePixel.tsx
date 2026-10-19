@@ -2,7 +2,7 @@
 // Chaque dessin est une liste de lignes : une lettre = un pixel, '.' = transparent.
 // Les couleurs de chaque lettre sont dans PALETTE.
 
-export type NomIcone = 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'cadenas' | 'etoile'
+export type NomIcone = 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'cadenas' | 'etoile' | 'employes'
 
 const PALETTE: Record<string, string> = {
   K: '#1a1a1a', // contour
@@ -20,6 +20,8 @@ const PALETTE: Record<string, string> = {
   C: '#4ee8dc', // diamant
   O: '#2a1a3a', // obsidienne
   D: '#efe6cf', // papier
+  P: '#f0c8a0', // peau
+  E: '#ffe066', // lampe du casque
 }
 
 const DESSINS: Record<NomIcone, string[]> = {
@@ -112,6 +114,21 @@ const DESSINS: Record<NomIcone, string[]> = {
     '.KYYK..KYyK.',
     'KYyK....KyyK',
     'KKK......KKK',
+  ],
+  // Un casque de mineur avec sa lampe (les mineurs employés)
+  employes: [
+    '....KKKK....',
+    '..KKYYYYKK..',
+    '.KYYKEEKYYK.',
+    '.KYYKEEKYYK.',
+    'KYYYYKKYYYYK',
+    'KyyyyyyyyyyK',
+    'KKKKKKKKKKKK',
+    '.KPPPPPPPPK.',
+    '.KPKPPPPKPK.',
+    '.KPPPPPPPPK.',
+    '..KPPKKPPK..',
+    '...KKKKKK...',
   ],
   // Un cadenas
   cadenas: [

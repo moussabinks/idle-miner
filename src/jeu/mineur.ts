@@ -39,7 +39,7 @@ import {
   appliquerTalentsDeDepart,
   bonusVenteTalents,
   multiplicateurCoffre,
-  multiplicateurEchelle,
+  multiplicateurAscenseur,
   multiplicateurPioche,
   type IdTalent,
 } from './talents'
@@ -86,6 +86,21 @@ export type Foreuse = {
   blocsFores: number
   nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
   rechargeAuto: boolean // la foreuse brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
+  nombre: number // combien de foreuses (à partir du prestige 3, on peut en acheter d'autres)
+}
+
+// Un mineur employé (prestige 2) : il creuse tout seul dans sa propre galerie, remonte
+// vendre sa récolte quand son sac est plein, puis redescend. Les règles sont dans employes.ts.
+export type Employe = {
+  nom: string
+  niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
+  profondeur: number // la profondeur de sa galerie
+  etape: 'creuse' | 'monte' | 'descend'
+  position: number // où il est pendant ses trajets (0 = au village)
+  sac: Inventaire
+  progression: number // fraction du prochain bloc
+  blocsCasses: number
+  gagne: number // ce qu'il t'a rapporté (après son salaire)
 }
 
 // Pour quitter le front de taille, le mineur marche d'abord jusqu'au puits (à gauche),
@@ -94,6 +109,7 @@ export type Depart = {
   destination: number // où il va ensuite (0 = village)
   parEchelle: boolean // true = il prend l'échelle même si l'ascenseur est là
   temps: number // secondes passées sur la case en cours
+  lot?: Inventaire // ce que l'ascenseur emporte en montant (sinon : tout ce qui n'est pas gardé)
 }
 
 export type EtatJeu = {
@@ -123,11 +139,12 @@ export type EtatJeu = {
   stats: Statistiques
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
+  employes: Employe[] // les mineurs employés (gardés à chaque prestige)
   depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 9
+export const VERSION_ETAT = 10
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -148,6 +165,7 @@ export function nouvelleForeuse(): Foreuse {
     blocsFores: 0,
     nonCoches: [],
     rechargeAuto: false,
+    nombre: 1,
   }
 }
 
@@ -167,14 +185,18 @@ export function nouvelAscenseur(): Ascenseur {
   }
 }
 
-export function creerPartie(
-  aleatoire: Aleatoire,
-  prestige = 0,
-  succes: string[] = [],
-  nonAVendre: IdBloc[] = [],
-  foreuse: Foreuse = nouvelleForeuse(),
-  talents: IdTalent[] = [],
-): EtatJeu {
+// Ce qu'une nouvelle partie reprend de la précédente, au prestige.
+export type Heritage = {
+  succes: string[]
+  nonAVendre: IdBloc[]
+  foreuse: Foreuse
+  talents: IdTalent[]
+  niveauAscenseur: number
+  employes: Employe[]
+}
+
+export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
+  const { succes = [], nonAVendre = [], foreuse = nouvelleForeuse(), talents = [], niveauAscenseur = 0, employes = [] } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
 
@@ -193,7 +215,8 @@ export function creerPartie(
     meilleure: 0,
     inventaire: {},
     nonAVendre: [...nonAVendre],
-    ascenseur: nouvelAscenseur(),
+    // L'ascenseur garde son niveau (la cabine attend au village).
+    ascenseur: { ...nouvelAscenseur(), niveau: niveauAscenseur },
     foreuse: structuredClone(foreuse),
     enchantements: { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac: 0,
@@ -211,6 +234,7 @@ export function creerPartie(
     },
     victoire: false,
     talents: [...talents],
+    employes: structuredClone(employes),
     depart: null,
     peculeRecu: false,
   }
@@ -219,10 +243,18 @@ export function creerPartie(
 }
 
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
-// On garde les succès, les objets décochés au marché, la foreuse et les talents.
+// On garde les succès, les objets gardés au marché, les talents, et tout ce qui
+// automatise le jeu : la foreuse, le niveau de l'ascenseur et les mineurs employés.
 // Le point de prestige gagné se dépense ensuite dans l'arbre (voir talents.ts).
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
-  return creerPartie(aleatoire, etat.prestige + 1, etat.succes, etat.nonAVendre, etat.foreuse, etat.talents)
+  return creerPartie(aleatoire, etat.prestige + 1, {
+    succes: etat.succes,
+    nonAVendre: etat.nonAVendre,
+    foreuse: etat.foreuse,
+    talents: etat.talents,
+    niveauAscenseur: etat.ascenseur.niveau,
+    employes: etat.employes,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -627,16 +659,16 @@ export function allerA(etat: EtatJeu, position: number): string[] {
 
 // Aller au village (0) ou au front de taille. Depuis le front, le mineur marche d'abord
 // jusqu'au puits ; ensuite il prend l'ascenseur s'il est là (sauf parEchelle), sinon l'échelle.
-export function voyager(etat: EtatJeu, destination: number, parEchelle = false): string[] {
+export function voyager(etat: EtatJeu, destination: number, parEchelle = false, lot?: Inventaire): string[] {
   if (etat.ascenseur.passager) return []
   const arrivee = Math.min(positionFront(etat), Math.max(0, Math.round(destination)))
   if (auFond(etat) && etat.colonneMineur > 0 && arrivee < etat.position) {
-    etat.depart = { destination: arrivee, parEchelle, temps: 0 }
+    etat.depart = { destination: arrivee, parEchelle, temps: 0, lot }
     return []
   }
   etat.depart = null
   if (!parEchelle && ascenseurDisponible(etat)) {
-    const messages = prendreAscenseur(etat, arrivee)
+    const messages = prendreAscenseur(etat, arrivee, lot)
     if (messages.length > 0) return messages
   }
   return allerA(etat, arrivee)
@@ -657,7 +689,7 @@ export function avancerMarche(etat: EtatJeu, secondes: number): string[] {
   }
   if (etat.colonneMineur > 0) return []
   etat.depart = null
-  return voyager(etat, depart.destination, depart.parEchelle)
+  return voyager(etat, depart.destination, depart.parEchelle, depart.lot)
 }
 
 // Arrête le joueur sur le prochain barreau (quand on relâche la flèche).
@@ -673,18 +705,24 @@ export function arreterSurEchelle(etat: EtatJeu): string[] {
 
 // Temps pour parcourir toute l'échelle depuis le front de taille.
 export function dureeEchelle(etat: EtatJeu): number {
-  return positionFront(etat) * secondesParMetre(etat)
+  return positionFront(etat) * secondesParMetre()
 }
 
-// Le temps pour grimper d'un mètre (plus court avec le talent « Grimpeur agile »).
-export function secondesParMetre(etat: EtatJeu): number {
-  return SECONDES_PAR_METRE_ECHELLE * multiplicateurEchelle(etat)
+// Le temps pour grimper d'un mètre à l'échelle.
+export function secondesParMetre(): number {
+  return SECONDES_PAR_METRE_ECHELLE
+}
+
+// Le temps pour un mètre en ascenseur (plus court avec le talent « Ascenseur express »).
+export function secondesParMetreAscenseur(etat: EtatJeu): number {
+  const niveau = niveauAscenseur(etat)
+  return niveau === null ? 0 : niveau.secondesParMetre * multiplicateurAscenseur(etat)
 }
 
 // Fait grimper le joueur vers sa cible pendant quelques secondes.
 export function avancerSurEchelle(etat: EtatJeu, secondes: number): string[] {
   if (!enMouvement(etat) || etat.ascenseur.passager) return []
-  const pas = secondes / secondesParMetre(etat)
+  const pas = secondes / secondesParMetre()
   if (Math.abs(etat.cible - etat.position) <= pas) etat.position = etat.cible
   else etat.position += Math.sign(etat.cible - etat.position) * pas
 
@@ -856,12 +894,13 @@ export function appelerAscenseur(etat: EtatJeu): string[] {
 
 // Le mineur monte dans la cabine, vers le village (0) ou vers le front de taille.
 // En montant, la cabine emporte aussi les minerais cochés : ils sont vendus en arrivant.
-export function prendreAscenseur(etat: EtatJeu, destination: number): string[] {
+// En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé).
+export function prendreAscenseur(etat: EtatJeu, destination: number, lot?: Inventaire): string[] {
   if (!ascenseurDisponible(etat)) return []
   const arrivee = Math.min(positionFront(etat), Math.max(0, destination))
   if (arrivee === etat.position) return []
   const ascenseur = etat.ascenseur
-  if (arrivee < etat.position) ascenseur.chargement = chargerCabine(etat)
+  if (arrivee < etat.position) ascenseur.chargement = chargerCabine(etat, lot)
   ascenseur.passager = true
   ascenseur.retourAuFront = false
   ascenseur.cible = arrivee
@@ -871,7 +910,7 @@ export function prendreAscenseur(etat: EtatJeu, destination: number): string[] {
 // Temps pour que la cabine parcoure tout le puits (du front de taille au village).
 export function dureeAscenseur(etat: EtatJeu): number {
   const niveau = niveauAscenseur(etat)
-  return niveau === null ? 0 : positionFront(etat) * niveau.secondesParMetre
+  return niveau === null ? 0 : positionFront(etat) * secondesParMetreAscenseur(etat)
 }
 
 // Dans combien de secondes la cabine aura fini son voyage (retour au front compris,
@@ -883,7 +922,7 @@ export function secondesAvantArretAscenseur(etat: EtatJeu): number {
   const metres = ascenseur.retourAuFront
     ? ascenseur.position + positionFront(etat) // elle monte au village, puis redescend au front
     : Math.abs(ascenseur.cible - ascenseur.position)
-  return metres * niveau.secondesParMetre
+  return metres * secondesParMetreAscenseur(etat)
 }
 
 // Fait avancer la cabine (et le mineur s'il est dedans).
@@ -892,7 +931,7 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   const niveau = niveauAscenseur(etat)
   if (niveau === null || !ascenseurEnMouvement(etat)) return []
 
-  const pas = secondes / niveau.secondesParMetre
+  const pas = secondes / secondesParMetreAscenseur(etat)
   if (Math.abs(ascenseur.cible - ascenseur.position) <= pas) ascenseur.position = ascenseur.cible
   else ascenseur.position += Math.sign(ascenseur.cible - ascenseur.position) * pas
 

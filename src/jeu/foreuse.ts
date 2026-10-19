@@ -11,13 +11,15 @@ import {
   NIVEAUX_FORAGE,
   NIVEAU_RECHARGE_AUTO,
   PRESTIGE_FOREUSE,
+  PRESTIGE_FOREUSES_MULTIPLES,
+  PRIX_FOREUSES_EN_PLUS,
   RESERVE_RECHARGE_AUTO,
   PROFONDEUR_BEDROCK,
   SECONDES_PAR_CHARBON,
   type IdBloc,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
-import { multiplicateurCharbon, multiplicateurForage } from './talents'
+import { multiplicateurCharbon, multiplicateurChariot, multiplicateurForage } from './talents'
 import {
   aLaSurface,
   payer,
@@ -39,12 +41,40 @@ export function foreuseDebloquee(etat: EtatJeu): boolean {
   return etat.prestige >= PRESTIGE_FOREUSE
 }
 
+// La vitesse de toutes les foreuses ensemble (blocs par seconde).
 export function vitesseForage(etat: EtatJeu): number {
-  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse * multiplicateurForage(etat)
+  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse * multiplicateurForage(etat) * etat.foreuse.nombre
 }
 
 export function capaciteChariot(etat: EtatJeu): number {
-  return NIVEAUX_CHARIOT[etat.foreuse.niveauChariot].capacite
+  return NIVEAUX_CHARIOT[etat.foreuse.niveauChariot].capacite * multiplicateurChariot(etat)
+}
+
+// Combien de secondes les foreuses tournent encore avec le charbon chargé
+// (chaque foreuse brûle son charbon : à 3 foreuses, il part 3 fois plus vite).
+export function secondesDeCharbon(etat: EtatJeu): number {
+  return etat.foreuse.carburant / etat.foreuse.nombre
+}
+
+// --- Plusieurs foreuses (prestige 3) ---
+
+// Le nombre de foreuses qu'on peut avoir : 2 au prestige 3, 3 au prestige 4... (5 au plus).
+export function maxForeuses(etat: EtatJeu): number {
+  if (etat.prestige < PRESTIGE_FOREUSES_MULTIPLES) return 1
+  return Math.min(1 + PRIX_FOREUSES_EN_PLUS.length, etat.prestige - 1)
+}
+
+export function prixProchaineForeuse(etat: EtatJeu): number | null {
+  if (etat.foreuse.nombre >= maxForeuses(etat)) return null
+  return PRIX_FOREUSES_EN_PLUS[etat.foreuse.nombre - 1] ?? null
+}
+
+export function acheterForeuse(etat: EtatJeu): string[] {
+  const prix = prixProchaineForeuse(etat)
+  if (!aLaSurface(etat) || !etat.foreuse.active || prix === null || etat.argent < prix) return []
+  etat.argent -= prix
+  etat.foreuse.nombre += 1
+  return [`⚙️ Nouvelle foreuse ! Tu en as ${etat.foreuse.nombre} qui creusent ensemble.`]
 }
 
 export function nbDansChariot(etat: EtatJeu): number {
@@ -188,10 +218,11 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
     // (le charbon n'est pas brûlé pour rien).
     const placeDansChariot = capaciteChariot(etat) - nbDansChariot(etat)
     const tempsPourRemplir = Math.max(0, (placeDansChariot - foreuse.progression) / vitesseForage(etat))
-    const tempsDeForage = Math.min(reste, foreuse.carburant, tempsPourRemplir)
+    const tempsDeForage = Math.min(reste, secondesDeCharbon(etat), tempsPourRemplir)
     if (tempsDeForage <= 0) break
     reste -= tempsDeForage
-    foreuse.carburant -= tempsDeForage
+    foreuse.carburant -= tempsDeForage * foreuse.nombre
+    if (foreuse.carburant < 1e-9) foreuse.carburant = 0 // pas de miette de charbon à cause des arrondis
     foreuse.progression += tempsDeForage * vitesseForage(etat)
 
     while (foreuse.progression >= 1 && !chariotPlein(etat)) {
@@ -199,7 +230,7 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
       const bloc = tirerBlocNormal(foreuse.profondeur, aleatoire)
       foreuse.blocsFores += 1
       // Avec la recharge automatique, le charbon va dans le moteur tant que sa réserve est basse.
-      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && foreuse.carburant < RESERVE_RECHARGE_AUTO) {
+      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < RESERVE_RECHARGE_AUTO) {
         foreuse.carburant += SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
       } else {
         foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1

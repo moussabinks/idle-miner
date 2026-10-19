@@ -4,6 +4,9 @@ import {
   activerForeuse,
   ameliorerChariot,
   ameliorerForage,
+  acheterForeuse,
+  maxForeuses,
+  vitesseForage,
   basculerChariot,
   basculerRechargeAuto,
   capaciteChariot,
@@ -117,12 +120,38 @@ describe('foreuse', () => {
     expect(etat.inventaire).toEqual({})
   })
 
-  it('est gardée au prestige suivant', () => {
+  it('est gardée au prestige suivant, avec ses améliorations (et l’ascenseur aussi)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
     etat.foreuse.chariot = { fer: 3 }
+    etat.foreuse.niveauVitesse = 2
+    etat.foreuse.niveauChariot = 1
+    etat.ascenseur.niveau = 3
     const suite = prestige(etat, aleatoireAvecGraine(3))
     expect(suite.foreuse.active).toBe(true)
     expect(suite.foreuse.chariot).toEqual({ fer: 3 })
+    expect(suite.foreuse.niveauVitesse).toBe(2)
+    expect(suite.foreuse.niveauChariot).toBe(1)
+    expect(suite.ascenseur.niveau).toBe(3)
+    expect(suite.ascenseur.position).toBe(0) // la cabine attend au village
+  })
+
+  it('à partir du prestige 3, on peut acheter d’autres foreuses (elles creusent ensemble)', () => {
+    const etat = partiePrestige1()
+    activerForeuse(etat)
+    etat.argent = 1_000_000
+    expect(acheterForeuse(etat)).toEqual([]) // pas avant le prestige 3
+    etat.prestige = 3
+    expect(maxForeuses(etat)).toBe(2)
+    const vitesseUne = vitesseForage(etat)
+    acheterForeuse(etat)
+    expect(etat.foreuse.nombre).toBe(2)
+    expect(vitesseForage(etat)).toBe(2 * vitesseUne)
+    expect(acheterForeuse(etat)).toEqual([]) // 2 au prestige 3
+    // Deux foreuses brûlent le charbon deux fois plus vite.
+    remplirForeuse(etat, 1) // 20 s de charbon pour une foreuse
+    avancerTemps(etat, 15, aleatoireAvecGraine(2))
+    expect(etat.foreuse.carburant).toBe(0)
+    expect(nbDansChariot(etat)).toBe(10) // 10 s × (0,5 bloc par seconde × 2 foreuses)
   })
 })

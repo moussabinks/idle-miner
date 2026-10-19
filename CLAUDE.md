@@ -36,5 +36,6 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 ## Choix de design hérités de la v1 (à respecter)
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques (PNJ), pas de quêtes du marchand.
-  - Exception décidée le 16/10 : la **foreuse** (débloquée au prestige 1, alimentée au charbon) creuse toute seule.
+  - Exception décidée le 16/10 : la **foreuse** (débloquée au prestige 1, alimentée au charbon) creuse toute seule. Plusieurs foreuses à partir du prestige 3.
+  - Exception décidée le 19/10 : les **mineurs employés** (débloqués au prestige 2, `src/jeu/employes.ts`) creusent, remontent et vendent tout seuls ; on paie leur embauche, leurs pioches, et ils gardent un salaire sur leurs ventes.
 - On ne doit jamais être bloqué : pioches rachetables, minage à mains nues si la pioche est cassée, galeries horizontales à la profondeur max.

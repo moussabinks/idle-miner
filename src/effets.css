@@ -251,7 +251,7 @@
 /* --- L'arbre de prestige ------------------------------------------------- */
 
 .arbre-prestige {
-  max-width: 760px;
+  max-width: 980px;
   width: 100%;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
@@ -282,7 +282,7 @@
 
 .arbre {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin: 12px 0;
 }
@@ -303,6 +303,7 @@
 .branche-mineur { --couleur-branche: #6fb8ff; }
 .branche-marchand { --couleur-branche: #f2b33d; }
 .branche-ingenieur { --couleur-branche: #5cc95c; }
+.branche-patron { --couleur-branche: #e07b2a; }
 
 .talent {
   position: relative;
@@ -388,6 +389,12 @@
   0% { transform: scale(1); }
   30% { transform: scale(1.08); box-shadow: 0 0 26px var(--couleur-branche); }
   100% { transform: scale(1); }
+}
+
+@media (max-width: 860px) {
+  .arbre {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 600px) {

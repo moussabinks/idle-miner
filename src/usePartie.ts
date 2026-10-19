@@ -12,6 +12,7 @@ import {
   casserBloc,
   creerPartie,
   dureeBlocActuel,
+  estCassee,
   demanderEnvoi,
   indexBlocActuel,
   nbSurQuai,
@@ -95,6 +96,9 @@ function jouerSons(evenements: Evenement[]): void {
         break
       case 'talent':
         sons.talent()
+        break
+      case 'recolteMineurs':
+        sons.pieces(3)
         break
     }
   }
@@ -190,8 +194,11 @@ export function usePartie(idMonde: string) {
         ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
       ])
       const evenements = evenementsEntre(ancien, copie)
-      const vente = evenements.some((e) => e.type === 'vente')
-      if (copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, vente)
+      // La grande animation seulement pour tes ventes ; un petit « +X $ » pour le reste
+      // (coffres, récoltes des mineurs...).
+      const vente = evenements.find((e) => e.type === 'vente')
+      if (vente) afficherGain(vente.montant, true)
+      else if (copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, false)
       jouerSons(evenements)
       if (succes.length > 0) sons.succes()
       animer(evenements)
@@ -238,6 +245,10 @@ export function usePartie(idMonde: string) {
             succes: false,
           },
         ])
+      } else if (blocsRestantsRef.current === Infinity && estCassee(apres)) {
+        // Creusage automatique : on s'arrête quand la pioche casse (pas de minage à mains nues sans le joueur).
+        changerBlocsRestants(0)
+        afficherToasts([{ id: prochainId++, texte: '💥 Pioche cassée : creusage automatique arrêté.', succes: false }])
       } else changerBlocsRestants(blocsRestantsRef.current - 1)
     },
     [changerBlocsRestants, afficherToasts],
@@ -278,19 +289,31 @@ export function usePartie(idMonde: string) {
     [jouer, apresUnBloc, changerBlocsRestants],
   )
 
-  // L'horloge tourne quand quelque chose bouge : échelle, ascenseur, foreuse ou minage.
+  // L'horloge tourne quand quelque chose bouge : échelle, ascenseur, foreuse, mineurs ou minage.
+  // Quand le joueur (ou la cabine) se déplace, elle bat à chaque image de l'écran (environ
+  // 60 fois par seconde) pour que le mouvement soit fluide ; sinon 20 fois par seconde suffit.
   const horlogeActive = tempsQuiPasse(etat) || blocsRestants > 0
+  const mouvementFluide = etat.position !== etat.cible || etat.depart !== null || ascenseurEnMouvement(etat)
   useEffect(() => {
     if (!horlogeActive) return
     let derniereFois = performance.now()
-    const horloge = setInterval(() => {
+    const avancer = () => {
       const maintenant = performance.now()
-      const secondes = (maintenant - derniereFois) / 1000
+      // Au plus 1 s d'un coup (si l'onglet était en pause, par exemple).
+      const secondes = Math.min(1, (maintenant - derniereFois) / 1000)
       derniereFois = maintenant
       tic(secondes)
-    }, INTERVALLE_HORLOGE)
+    }
+    if (mouvementFluide) {
+      let image = requestAnimationFrame(function boucle() {
+        avancer()
+        image = requestAnimationFrame(boucle)
+      })
+      return () => cancelAnimationFrame(image)
+    }
+    const horloge = setInterval(avancer, INTERVALLE_HORLOGE)
     return () => clearInterval(horloge)
-  }, [horlogeActive, tic])
+  }, [horlogeActive, mouvementFluide, tic])
 
   // Sauvegarde automatique à chaque changement.
   useEffect(() => {
@@ -305,6 +328,9 @@ export function usePartie(idMonde: string) {
     },
     [changerBlocsRestants],
   )
+
+  // Creuse sans s'arrêter, jusqu'à ce qu'on clique sur « Arrêt » (ou que la pioche casse).
+  const creuserAuto = useCallback(() => changerBlocsRestants(Infinity), [changerBlocsRestants])
 
   const arreter = useCallback(() => changerBlocsRestants(0), [changerBlocsRestants])
 
@@ -328,6 +354,8 @@ export function usePartie(idMonde: string) {
     trouvailles,
     nbVentes,
     enMinage: blocsRestants > 0,
+    enAuto: blocsRestants === Infinity,
+    creuserAuto,
     jouer,
     creuser,
     arreter,

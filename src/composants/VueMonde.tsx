@@ -17,14 +17,12 @@ import {
   positionFront,
   type EtatJeu,
 } from '../jeu/mineur'
-import type { Action, Eclat, Gain, Trouvaille } from '../usePartie'
-import { ModuleAscenseur } from './ModuleAscenseur'
+import type { Eclat, Gain, Trouvaille } from '../usePartie'
 import { Personnage } from './Personnage'
 import { VueVillage } from './VueVillage'
 
 type Props = {
   etat: EtatJeu
-  jouer: (action: Action) => void
   enMinage: boolean
   versLaGauche: boolean
   // La marche au village
@@ -152,7 +150,10 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
             <i />
           </span>
         )}
-        <span className="foreuse-etiquette">{plusBas ? `↓ -${foreuse.profondeur} m` : `-${foreuse.profondeur} m`}</span>
+        <span className="foreuse-etiquette">
+          {plusBas ? `↓ -${foreuse.profondeur} m` : `-${foreuse.profondeur} m`}
+          {foreuse.nombre > 1 && ` ×${foreuse.nombre}`}
+        </span>
       </div>
     </>
   )
@@ -164,7 +165,6 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
 
 export function VueMonde({
   etat,
-  jouer,
   enMinage,
   versLaGauche,
   xVillage,
@@ -213,7 +213,8 @@ export function VueMonde({
   // Pendant qu'il bouge (échelle ou ascenseur), la vue le suit directement, par petits pas ;
   // pour les grands sauts (arrivée au village...), elle glisse en douceur.
   const bouge = etat.position !== etat.cible || dansLaCabine
-  const repere = auVillage ? -1 : Math.round(etat.position * 4) / 4
+  // Pendant un trajet, la caméra suit la position exacte, à chaque image (mouvement fluide).
+  const repere = auVillage ? -1 : bouge ? etat.position : Math.round(etat.position * 4) / 4
   const joueurSuivi = dansLaCabine ? joueurCabineRef : enVillageAPied ? joueurVillageRef : auFront ? joueurFrontRef : joueurEchelleRef
   useEffect(() => {
     const conteneur = conteneurRef.current
@@ -275,19 +276,31 @@ export function VueMonde({
           ))}
       </div>
 
-      {/* Un petit rappel de la foreuse, toujours visible : on clique pour aller la voir. */}
-      {foreuseVisible && (
-        <button
-          className={`indicateur-foreuse ${foreuseEnMarche(etat) ? 'tourne' : ''}`}
-          onClick={() => montrer(foreuseRef.current, 'smooth')}
-          title="Voir la foreuse"
-        >
-          <span className="mini-foreuse" aria-hidden="true">
-            <span className="foreuse-corps" />
-            <span className="foreuse-meche" />
-          </span>
-          Foreuse -{etat.foreuse.profondeur} m · {foreuseEnMarche(etat) ? 'en marche' : 'arrêtée'}
-        </button>
+      {/* De petits rappels toujours visibles : la foreuse (on clique pour aller la voir) et les mineurs. */}
+      {(foreuseVisible || etat.employes.length > 0) && (
+        <div className="indicateurs">
+          {foreuseVisible && (
+            <button
+              className={`indicateur-foreuse ${foreuseEnMarche(etat) ? 'tourne' : ''}`}
+              onClick={() => montrer(foreuseRef.current, 'smooth')}
+              title="Voir la foreuse"
+            >
+              <span className="mini-foreuse" aria-hidden="true">
+                <span className="foreuse-corps" />
+                <span className="foreuse-meche" />
+              </span>
+              {etat.foreuse.nombre > 1 ? `${etat.foreuse.nombre} foreuses` : 'Foreuse'} -{etat.foreuse.profondeur} m ·{' '}
+              {foreuseEnMarche(etat) ? 'en marche' : 'arrêtée'}
+            </button>
+          )}
+          {etat.employes.length > 0 && (
+            <span className="indicateur-foreuse indicateur-mineurs" title="Tes mineurs travaillent pour toi">
+              👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''} ·{' '}
+              {etat.employes.filter((m) => m.etape === 'creuse').length} creuse
+              {etat.employes.filter((m) => m.etape === 'creuse').length > 1 ? 'nt' : ''}
+            </span>
+          )}
+        </div>
       )}
 
       <VueVillage
@@ -368,7 +381,6 @@ export function VueMonde({
       )}
       {etat.enGalerie && !etat.victoire && !auVillage && <p className="bandeau-galerie">↔️ Galerie : ta pioche ne descend pas plus bas</p>}
 
-      {!auVillage && <ModuleAscenseur etat={etat} jouer={jouer} />}
 
       <div className="gains" aria-hidden="true">
         {gains

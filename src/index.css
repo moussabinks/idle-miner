@@ -306,7 +306,8 @@ h2 {
   background: linear-gradient(#d9a441, #9a6b1f);
   border: 2px solid #4a3410;
   box-shadow: 0 0 8px rgb(255 200 80 / 0.5);
-  transition: top 0.1s linear;
+  /* Pas de transition : la cabine est redessinée à chaque image pendant son trajet
+     (une transition la ferait traîner derrière la caméra, comme si elle tremblait). */
   z-index: 2;
 }
 
@@ -432,7 +433,6 @@ h2 {
   left: calc(var(--x-echelle) + var(--col-echelle) / 2 - var(--taille-case) / 2);
   width: var(--taille-case);
   height: var(--taille-case);
-  transition: top 0.1s linear;
   z-index: 3;
   display: grid;
   place-items: center;
@@ -492,12 +492,20 @@ h2 {
 }
 
 /* L'indicateur de la foreuse, collé en haut à droite de la vue de la mine. */
-.indicateur-foreuse {
+/* Les rappels en haut à droite de la mine (foreuse, mineurs) : ils restent visibles. */
+.indicateurs {
   position: sticky;
   top: 6px;
   float: right;
-  margin: 6px 6px -40px 0;
+  margin: 6px 6px -80px 0;
   z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.indicateur-foreuse {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -533,57 +541,12 @@ h2 {
   animation: tremble 0.15s linear infinite;
 }
 
-/* Le module de l'ascenseur, collé en bas à gauche de la vue de la mine. */
-.module-ascenseur {
-  position: sticky;
-  bottom: 0;
-  z-index: 4;
-  margin: 0 8px 8px;
-  width: fit-content;
-  max-width: min(360px, calc(100% - 16px));
-  padding: 6px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: rgb(20 20 26 / 0.94);
-  border: 2px solid #4a3410;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.6);
-  font-size: 0.82rem;
-}
-
-.module-boutons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-}
-
-.module-boutons .bouton {
-  padding-left: 2px;
-  padding-right: 2px;
-  font-size: 0.74rem;
-}
-
-.module-titre,
 .module-ligne {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-button.module-titre {
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.module-titre strong {
-  color: #e8b45a;
 }
 
 /* ------------------------------------------------------- Personnage */
@@ -804,6 +767,7 @@ button.module-titre {
 .stand-forgeron { --auvent: #5b5b66; }
 .stand-bazar { --auvent: #2f8f4a; }
 .stand-enchanteur { --auvent: #7a4cc2; }
+.stand-employes { --auvent: #e07b2a; }
 
 .stand:hover:not(:disabled) .echoppe,
 .stand:hover:not(:disabled) .entree-mine,
@@ -1402,9 +1366,16 @@ kbd {
   gap: 6px;
 }
 
-.jauges li {
+/* « .inventaire » : dans le sac de la mine aussi, les jauges restent les unes sous les autres. */
+.inventaire .jauges {
+  display: flex;
+}
+
+.jauges li,
+.inventaire .jauges li {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 4px;
   background: var(--carte-claire);
   border: 1px solid transparent;
@@ -1794,4 +1765,30 @@ kbd {
   .victoire-trophee {
     animation: none;
   }
+}
+
+.indicateur-mineurs {
+  color: #ffb35c;
+  cursor: default;
+  padding-left: 8px;
+}
+
+/* Les deux boutons de l'ascenseur, dans le sac de la mine. */
+.boutons-ascenseur {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.boutons-ascenseur .bouton {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.carte-ascenseur {
+  margin-top: 12px;
+}
+
+.carte-employe {
+  border-left: 4px solid #e07b2a;
 }

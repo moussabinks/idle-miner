@@ -13,6 +13,7 @@ import {
   NIVEAU_RECHARGE_AUTO,
   PIOCHES,
   PRESTIGE_FOREUSE,
+  PRESTIGE_FOREUSES_MULTIPLES,
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
@@ -30,7 +31,11 @@ import {
   peutActiverForeuse,
   prochainNiveauChariot,
   prochainNiveauForage,
+  acheterForeuse,
   basculerChariot,
+  maxForeuses,
+  prixProchaineForeuse,
+  secondesDeCharbon,
   basculerRechargeAuto,
   rechargeAutoDisponible,
   remplirForeuse,
@@ -297,6 +302,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const chariot = prochainNiveauChariot(etat)
   const charbon = quantite(etat, 'charbon')
   const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  const prixForeuse = prixProchaineForeuse(etat)
   const selection = selectionChariot(etat)
   const valeurSelection = valeurDe(etat, selection)
   const nbSelection = Object.values(selection).reduce((total, n) => total + (n ?? 0), 0)
@@ -315,9 +321,9 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           forés
         </span>
         <Barre
-          valeur={foreuse.carburant}
-          max={Math.max(foreuse.carburant, 10 * SECONDES_PAR_CHARBON)}
-          texte={`Charbon : ${Math.ceil(foreuse.carburant)} s`}
+          valeur={secondesDeCharbon(etat)}
+          max={Math.max(secondesDeCharbon(etat), 10 * SECONDES_PAR_CHARBON)}
+          texte={`Charbon : ${Math.ceil(secondesDeCharbon(etat))} s`}
           couleur="or"
         />
         <div className="boutons">
@@ -378,10 +384,35 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         </div>
       </div>
 
+      {/* Plusieurs foreuses (prestige 3) : elles creusent ensemble, partagent le chariot et le charbon. */}
+      <div className="ligne-achat">
+        <div className="ligne-titre">
+          <strong>⚙️ Foreuses</strong>
+          <span className="badge">
+            {foreuse.nombre} / {maxForeuses(etat)}
+          </span>
+        </div>
+        {etat.prestige < PRESTIGE_FOREUSES_MULTIPLES ? (
+          <span className="discret">🔒 Au prestige {PRESTIGE_FOREUSES_MULTIPLES}, tu pourras acheter d'autres foreuses qui creusent avec celle-ci.</span>
+        ) : prixForeuse === null ? (
+          <span className="discret">
+            {foreuse.nombre > 1 ? `Tes ${foreuse.nombre} foreuses creusent ensemble (et brûlent ${foreuse.nombre} fois plus de charbon).` : ''} Le prochain
+            prestige permet d'en avoir une de plus (5 au plus).
+          </span>
+        ) : (
+          <div className="boutons">
+            <span className="discret">Chaque foreuse ajoute sa vitesse (et brûle son charbon).</span>
+            <Bouton actif={etat.argent >= prixForeuse} genre="acheter" onClick={() => jouer(acheterForeuse)}>
+              Acheter une foreuse · {prixForeuse.toLocaleString('fr-FR')} $
+            </Bouton>
+          </div>
+        )}
+      </div>
+
       <div className="ligne-achat">
         <strong>Améliorations</strong>
         <div className="boutons">
-          <span className="discret">Vitesse : {NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s</span>
+          <span className="discret">Vitesse : {NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s par foreuse</span>
           {forage ? (
             <>
               <PrixCout etat={etat} cout={forage.cout} />

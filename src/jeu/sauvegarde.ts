@@ -6,6 +6,7 @@
 // dans les tests c'est un faux stockage en mémoire.
 
 import { VERSION_ETAT, type EtatJeu } from './mineur'
+import { TALENTS_RETIRES } from './talents'
 
 export const NB_MONDES_MAX = 5
 
@@ -312,6 +313,18 @@ function migrer(donnees: unknown): unknown {
     etat = { ...etat, version: 9, ascenseur: { ...(etat.ascenseur as object), lotDemande: null } }
   }
 
+  // Version 9 -> 10 : mineurs employés, plusieurs foreuses, et deux talents retirés
+  // (« Ascenseur offert » et « Grimpeur agile ») : leurs points sont rendus.
+  if (etat.version === 9) {
+    etat = {
+      ...etat,
+      version: 10,
+      employes: [],
+      foreuse: { ...(etat.foreuse as object), nombre: 1 },
+      talents: (etat.talents as string[]).filter((id) => !TALENTS_RETIRES.includes(id)),
+    }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -339,6 +352,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.nonAVendre) &&
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
-    Array.isArray(etat.talents)
+    Array.isArray(etat.talents) &&
+    Array.isArray(etat.employes)
   )
 }

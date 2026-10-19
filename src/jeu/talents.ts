@@ -1,6 +1,6 @@
 // L'arbre de prestige : à chaque prestige, on gagne 1 point à dépenser dans un
-// talent. Il y a trois branches (mineur, marchand, ingénieur) de 4 talents ; il
-// faut le talent du dessus pour prendre celui du dessous.
+// talent. Il y a quatre branches (mineur, marchand, ingénieur, patron) de 4 talents ;
+// il faut le talent du dessus pour prendre celui du dessous.
 // Les talents sont gardés pour toujours (ils survivent aux prestiges suivants).
 //
 // Ce fichier n'importe que le *type* EtatJeu depuis mineur.ts : mineur.ts peut donc
@@ -17,12 +17,16 @@ export type IdTalent =
   | 'pecule'
   | 'grandSac'
   | 'tresor'
-  | 'ascenseurOffert'
-  | 'grimpeur'
+  | 'ascenseurRapide'
   | 'foreuseTurbo'
   | 'moteurEconome'
+  | 'grandChariot'
+  | 'contremaitre'
+  | 'grandsSacs'
+  | 'salaireReduit'
+  | 'recrue'
 
-export type IdBranche = 'mineur' | 'marchand' | 'ingenieur'
+export type IdBranche = 'mineur' | 'marchand' | 'ingenieur' | 'patron'
 
 export type Talent = {
   id: IdTalent
@@ -36,7 +40,11 @@ export const BRANCHES: { id: IdBranche; nom: string }[] = [
   { id: 'mineur', nom: 'Mineur' },
   { id: 'marchand', nom: 'Marchand' },
   { id: 'ingenieur', nom: 'Ingénieur' },
+  { id: 'patron', nom: 'Patron' },
 ]
+
+// Les anciens talents retirés (19/10) : ceux qui les avaient récupèrent leur point.
+export const TALENTS_RETIRES = ['ascenseurOffert', 'grimpeur']
 
 export const TALENTS: Talent[] = [
   { id: 'poigne', branche: 'mineur', rang: 1, nom: 'Poigne de fer', description: 'Tes pioches creusent 15 % plus vite.' },
@@ -49,10 +57,15 @@ export const TALENTS: Talent[] = [
   { id: 'grandSac', branche: 'marchand', rang: 3, nom: 'Grand sac', description: 'Chaque partie commence avec le sac de 128 places.' },
   { id: 'tresor', branche: 'marchand', rang: 4, nom: 'Chasseur de trésors', description: 'Les coffres rapportent 2 fois plus d’argent.' },
 
-  { id: 'ascenseurOffert', branche: 'ingenieur', rang: 1, nom: 'Ascenseur offert', description: 'Chaque partie commence avec l’ascenseur construit.' },
-  { id: 'grimpeur', branche: 'ingenieur', rang: 2, nom: 'Grimpeur agile', description: 'Tu montes et descends l’échelle 40 % plus vite.' },
-  { id: 'foreuseTurbo', branche: 'ingenieur', rang: 3, nom: 'Foreuse turbo', description: 'La foreuse creuse 50 % plus vite.' },
-  { id: 'moteurEconome', branche: 'ingenieur', rang: 4, nom: 'Moteur économe', description: 'Chaque charbon fait tourner la foreuse 2 fois plus longtemps.' },
+  { id: 'ascenseurRapide', branche: 'ingenieur', rang: 1, nom: 'Ascenseur express', description: 'L’ascenseur va 30 % plus vite (pour toi et tes mineurs).' },
+  { id: 'foreuseTurbo', branche: 'ingenieur', rang: 2, nom: 'Foreuse turbo', description: 'Les foreuses creusent 50 % plus vite.' },
+  { id: 'moteurEconome', branche: 'ingenieur', rang: 3, nom: 'Moteur économe', description: 'Chaque charbon fait tourner les foreuses 2 fois plus longtemps.' },
+  { id: 'grandChariot', branche: 'ingenieur', rang: 4, nom: 'Grand chariot', description: 'Le chariot des foreuses contient 2 fois plus.' },
+
+  { id: 'contremaitre', branche: 'patron', rang: 1, nom: 'Contremaître', description: 'Tes mineurs creusent 25 % plus vite.' },
+  { id: 'grandsSacs', branche: 'patron', rang: 2, nom: 'Sacs d’équipe', description: 'Les sacs de tes mineurs sont 2 fois plus grands.' },
+  { id: 'salaireReduit', branche: 'patron', rang: 3, nom: 'Bon patron', description: 'Tes mineurs gardent 10 % de leurs ventes au lieu de 25 %.' },
+  { id: 'recrue', branche: 'patron', rang: 4, nom: 'Recruteur', description: 'Tu peux employer 1 mineur de plus.' },
 ]
 
 export const PECULE_DEPART = 300
@@ -103,11 +116,6 @@ export function appliquerTalentsDeDepart(etat: EtatJeu): void {
   if (aLeTalent(etat, 'piocheFer')) donnerPioche(2)
   if (aLeTalent(etat, 'fortune')) etat.enchantements.fortune = Math.max(1, etat.enchantements.fortune)
   if (aLeTalent(etat, 'grandSac')) etat.niveauSac = Math.max(2, etat.niveauSac)
-  if (aLeTalent(etat, 'ascenseurOffert') && etat.ascenseur.niveau === 0) {
-    etat.ascenseur.niveau = 1
-    etat.ascenseur.position = 0
-    etat.ascenseur.cible = 0
-  }
   // Le pécule n'est donné qu'une fois par partie.
   if (aLeTalent(etat, 'pecule') && !etat.peculeRecu) {
     etat.argent += PECULE_DEPART
@@ -129,9 +137,32 @@ export function multiplicateurCoffre(etat: EtatJeu): number {
   return aLeTalent(etat, 'tresor') ? 2 : 1
 }
 
-export function multiplicateurEchelle(etat: EtatJeu): number {
-  // 40 % plus vite = chaque mètre prend 1 / 1,4 du temps.
-  return aLeTalent(etat, 'grimpeur') ? 1 / 1.4 : 1
+// Le temps d'un mètre en ascenseur : 30 % plus vite = 1 / 1,3 du temps.
+export function multiplicateurAscenseur(etat: EtatJeu): number {
+  return aLeTalent(etat, 'ascenseurRapide') ? 1 / 1.3 : 1
+}
+
+export function multiplicateurChariot(etat: EtatJeu): number {
+  return aLeTalent(etat, 'grandChariot') ? 2 : 1
+}
+
+// --- Les mineurs employés ---
+
+export function multiplicateurMineurs(etat: EtatJeu): number {
+  return aLeTalent(etat, 'contremaitre') ? 1.25 : 1
+}
+
+export function multiplicateurSacMineurs(etat: EtatJeu): number {
+  return aLeTalent(etat, 'grandsSacs') ? 2 : 1
+}
+
+// La part des ventes que les mineurs gardent pour eux (leur salaire).
+export function partSalaire(etat: EtatJeu): number {
+  return aLeTalent(etat, 'salaireReduit') ? 0.1 : 0.25
+}
+
+export function mineursEnPlus(etat: EtatJeu): number {
+  return aLeTalent(etat, 'recrue') ? 1 : 0
 }
 
 export function multiplicateurForage(etat: EtatJeu): number {

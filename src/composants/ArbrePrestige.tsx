@@ -1,4 +1,4 @@
-// L'arbre de prestige : trois branches de talents. À chaque prestige, on gagne
+// L'arbre de prestige : quatre branches de talents (mineur, marchand, ingénieur, patron). À chaque prestige, on gagne
 // 1 point et on choisit sa récompense. Il s'ouvre tout seul après un prestige,
 // et on peut le rouvrir à l'entrée de la mine, au village (ou avec l'étoile du bandeau).
 
@@ -12,6 +12,7 @@ const ICONES_BRANCHES: Record<IdBranche, NomIcone> = {
   mineur: 'forgeron',
   marchand: 'marche',
   ingenieur: 'foreuse',
+  patron: 'employes',
 }
 
 type Props = {

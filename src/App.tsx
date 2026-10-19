@@ -13,7 +13,8 @@ import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
 import { IconePixel } from './composants/IconePixel'
 import { Inventaire } from './composants/Inventaire'
-import { AmeliorationAscenseur } from './composants/ModuleAscenseur'
+import { AmeliorationAscenseur } from './composants/Ascenseur'
+import { PanneauEmployes } from './composants/PanneauEmployes'
 import {
   PanneauBazar,
   PanneauEnchanter,
@@ -35,6 +36,7 @@ import {
   deplacerMineur,
   dureeAscenseur,
   dureeEchelle,
+  estCassee,
   positionFront,
   voyager,
 } from './jeu/mineur'
@@ -48,9 +50,8 @@ type OngletMine = 'sac' | 'pioches'
 
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
-  const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie(
-    monde.id,
-  )
+  const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, enAuto, jouer, creuser, creuserAuto, arreter, recommencer, passerPrestige } =
+    usePartie(monde.id)
   const [arbreOuvert, setArbreOuvert] = useState(false)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
@@ -190,6 +191,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {stand.id === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
         {stand.id === 'enchanteur' && <PanneauEnchanter etat={etat} jouer={jouer} />}
         {stand.id === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
+        {stand.id === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
         {stand.id === 'puits' && (
           <div className="liste-cartes">
             {/* Après la bedrock, c'est ici qu'on passe prestige. */}
@@ -268,7 +270,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </button>
         </nav>
         <div className="panneau-contenu" role="tabpanel">
-          {ongletMine === 'sac' && <Inventaire etat={etat} jouer={jouer} />}
+          {ongletMine === 'sac' && <Inventaire etat={etat} jouer={jouer} onRemonter={arreter} />}
           {ongletMine === 'pioches' && <PanneauPioches etat={etat} jouer={jouer} />}
         </div>
       </section>
@@ -294,7 +296,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         <div className="colonne-mine">
           <VueMonde
             etat={etat}
-            jouer={jouer}
             enMinage={enMinage}
             versLaGauche={versLaGauche}
             xVillage={village.x}
@@ -309,19 +310,32 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           {/* La barre de boutons : toujours les mêmes 4 boutons, toujours à la même place.
               Ceux qui ne servent pas à l'endroit où l'on est sont simplement grisés. */}
           <div className="actions">
-            {/* Le même emplacement sert à creuser ou à arrêter. */}
-            {enMinage ? (
+            {/* « Creuser » casse une couche (et devient « Arrêter » pendant ce temps). */}
+            {enMinage && !enAuto ? (
               <button className="bouton bouton-stop" onClick={arreter}>
                 <span className="emoji-bouton">⏹️ </span>Arrêter
               </button>
             ) : (
-              <button className="bouton bouton-creuser" onClick={() => creuser(1)} disabled={!auFront}>
+              <button className="bouton bouton-creuser" onClick={() => creuser(1)} disabled={!auFront || enMinage}>
                 <span className="emoji-bouton">⛏️ </span>Creuser
               </button>
             )}
-            <button className="bouton bouton-creuser-x10" onClick={() => creuser(10)} disabled={!auFront || enMinage}>
-              <span className="emoji-bouton">⛏️ </span>x10
-            </button>
+            {/* « Auto » creuse sans s'arrêter, jusqu'à ce qu'on reclique (« Arrêt »).
+                Il s'arrête aussi tout seul si la pioche casse : pas de minage à mains nues sans toi. */}
+            {enAuto ? (
+              <button className="bouton bouton-stop" onClick={arreter}>
+                <span className="emoji-bouton">⏹️ </span>Arrêt
+              </button>
+            ) : (
+              <button
+                className="bouton bouton-creuser-x10"
+                onClick={creuserAuto}
+                disabled={!auFront || enMinage || estCassee(etat)}
+                title={estCassee(etat) ? 'Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser »)' : 'Creuser sans s’arrêter'}
+              >
+                <span className="emoji-bouton">🔁 </span>Auto
+              </button>
+            )}
             <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
               <span className="emoji-bouton">⏫ </span>Village
             </button>

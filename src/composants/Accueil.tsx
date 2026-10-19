@@ -210,7 +210,7 @@ export function Accueil({ onJouer }: { onJouer: (monde: InfoMonde) => void }) {
             <li>
               <span className="etape-icone">🛗</span>
               <span>
-                <strong>Améliore</strong> ta pioche, ton sac et l'ascenseur, puis automatise avec la foreuse.
+                <strong>Améliore</strong> ta pioche, ton sac et l'ascenseur, puis automatise avec la foreuse et des mineurs.
               </span>
             </li>
             <li>

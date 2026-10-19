@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { vitesseForage } from './foreuse'
-import { bonusVente, creerPartie, dureeEchelle, prestige, vitesse, type EtatJeu } from './mineur'
+import { bonusVente, creerPartie, prestige, secondesParMetreAscenseur, vitesse, type EtatJeu } from './mineur'
 import { choisirTalent, PECULE_DEPART, peutChoisirTalent, pointsDisponibles, TALENTS } from './talents'
 
 // Une partie au prestige donné, sans talent.
@@ -10,9 +10,9 @@ function partie(niveauPrestige: number): EtatJeu {
 }
 
 describe('arbre de prestige', () => {
-  it('a trois branches de quatre talents', () => {
-    expect(TALENTS).toHaveLength(12)
-    for (const branche of ['mineur', 'marchand', 'ingenieur']) {
+  it('a quatre branches de quatre talents', () => {
+    expect(TALENTS).toHaveLength(16)
+    for (const branche of ['mineur', 'marchand', 'ingenieur', 'patron']) {
       expect(TALENTS.filter((t) => t.branche === branche).map((t) => t.rang)).toEqual([1, 2, 3, 4])
     }
   })
@@ -41,13 +41,12 @@ describe('arbre de prestige', () => {
 
   it('les talents sont gardés et rejoués au prestige suivant', () => {
     const etat = partie(4)
-    for (const id of ['negoce', 'pecule', 'grandSac', 'ascenseurOffert'] as const) choisirTalent(etat, id)
+    for (const id of ['negoce', 'pecule', 'grandSac', 'ascenseurRapide'] as const) choisirTalent(etat, id)
     expect(etat.argent).toBe(PECULE_DEPART)
     const suite = prestige(etat, aleatoireAvecGraine(1))
     expect(suite.talents).toEqual(etat.talents)
     expect(suite.argent).toBe(PECULE_DEPART)
     expect(suite.niveauSac).toBe(2)
-    expect(suite.ascenseur.niveau).toBe(1)
     expect(pointsDisponibles(suite)).toBe(1) // le nouveau point du 5e prestige
   })
 
@@ -74,15 +73,16 @@ describe('arbre de prestige', () => {
   it('les bonus permanents', () => {
     const etat = partie(4)
     const vitesseAvant = vitesse(etat)
-    const echelleAvant = dureeEchelle({ ...etat, profondeur: 50 })
+    etat.ascenseur.niveau = 1
+    const ascenseurAvant = secondesParMetreAscenseur(etat)
     const forageAvant = vitesseForage(etat)
     choisirTalent(etat, 'poigne')
     choisirTalent(etat, 'negoce')
-    choisirTalent(etat, 'ascenseurOffert')
-    choisirTalent(etat, 'grimpeur')
+    choisirTalent(etat, 'ascenseurRapide')
+    choisirTalent(etat, 'foreuseTurbo')
     expect(vitesse(etat)).toBeCloseTo(vitesseAvant * 1.15)
     expect(bonusVente(etat)).toBeCloseTo(1 + 0.15 * 4 + 0.1)
-    expect(dureeEchelle({ ...etat, profondeur: 50 })).toBeCloseTo(echelleAvant / 1.4)
-    expect(vitesseForage(etat)).toBe(forageAvant)
+    expect(secondesParMetreAscenseur(etat)).toBeCloseTo(ascenseurAvant / 1.3)
+    expect(vitesseForage(etat)).toBeCloseTo(forageAvant * 1.5)
   })
 })
