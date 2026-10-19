@@ -20,7 +20,7 @@ import {
   sacPlein,
   type EtatJeu,
 } from './jeu/mineur'
-import { charger, effacer, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
+import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps, tempsQuiPasse } from './jeu/temps'
 import { evenementsEntre, type Evenement } from './evenements'
@@ -100,13 +100,14 @@ function jouerSons(evenements: Evenement[]): void {
   }
 }
 
-// Charge la partie. Si le jeu était fermé, on rattrape le temps passé (la foreuse
-// a continué de creuser) et on prépare un message pour le dire au joueur.
-function chargerOuCreer(): { etat: EtatJeu; messageAbsence: string | null } {
-  const etat = charger(window.localStorage)
+// Charge la partie du monde choisi. Si le monde n'a pas été ouvert depuis un moment, on
+// rattrape le temps passé (la foreuse a continué de creuser) et on prépare un message.
+function chargerOuCreer(idMonde: string): { etat: EtatJeu; messageAbsence: string | null } {
+  marquerJoue(window.localStorage, idMonde)
+  const etat = charger(window.localStorage, idMonde)
   if (etat === null) return { etat: creerPartie(aleatoireNavigateur), messageAbsence: null }
 
-  const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage))
+  const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
   const avant = nbDansChariot(etat)
   avancerTemps(etat, absence, aleatoireNavigateur)
   const fores = nbDansChariot(etat) - avant
@@ -114,8 +115,9 @@ function chargerOuCreer(): { etat: EtatJeu; messageAbsence: string | null } {
   return { etat, messageAbsence }
 }
 
-export function usePartie() {
-  const [depart] = useState(chargerOuCreer)
+// idMonde : le monde (la sauvegarde) choisi sur l'écran d'accueil.
+export function usePartie(idMonde: string) {
+  const [depart] = useState(() => chargerOuCreer(idMonde))
   const [etat, setEtat] = useState<EtatJeu>(depart.etat)
   // Au démarrage, on affiche le message de la foreuse si le joueur était absent.
   const [toasts, setToasts] = useState<Toast[]>(() =>
@@ -292,8 +294,8 @@ export function usePartie() {
 
   // Sauvegarde automatique à chaque changement.
   useEffect(() => {
-    sauvegarder(window.localStorage, etat)
-  }, [etat])
+    sauvegarder(window.localStorage, idMonde, etat)
+  }, [etat, idMonde])
 
   // Creuse des couches entières : on finit la couche en cours, puis les suivantes.
   const creuser = useCallback(
@@ -308,8 +310,7 @@ export function usePartie() {
 
   const recommencer = useCallback(() => {
     changerBlocsRestants(0)
-    effacer(window.localStorage)
-    changerEtat(creerPartie(aleatoireNavigateur))
+    changerEtat(creerPartie(aleatoireNavigateur)) // la sauvegarde automatique remplace l'ancienne partie
     setToasts([])
   }, [changerEtat, changerBlocsRestants])
 

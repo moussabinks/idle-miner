@@ -3,11 +3,12 @@
 // Clavier :
 //   au village : ← → pour marcher le long du chemin (garder la touche), ↓ pour descendre dans la mine ;
 //   sur l'échelle : ↑ pour monter, ↓ pour descendre (on avance tant que la touche est appuyée) ;
-//   au front de taille : ← → pour se déplacer, ↓ ou Espace pour creuser, ↑ pour remonter.
+//   au front de taille : ← → pour se déplacer, ↑ pour remonter (on creuse seulement avec les boutons).
 // Sur l'écran, il n'y a pas de flèches : les boutons Village et Mine font les trajets.
 
 import { useEffect, useState } from 'react'
 import { reglerLieu } from './ambiance'
+import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
 import { IconePixel } from './composants/IconePixel'
@@ -37,6 +38,7 @@ import {
   positionFront,
   voyager,
 } from './jeu/mineur'
+import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
 import { useMarcheVillage } from './useMarcheVillage'
@@ -44,8 +46,11 @@ import { usePartie } from './usePartie'
 
 type OngletMine = 'sac' | 'pioches'
 
-function App() {
-  const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie()
+// Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
+function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
+  const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie(
+    monde.id,
+  )
   const [arbreOuvert, setArbreOuvert] = useState(false)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
@@ -109,7 +114,7 @@ function App() {
     function toucheAppuyee(evenement: KeyboardEvent) {
       if (evenement.target instanceof HTMLInputElement) return
       const touche = evenement.key
-      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(touche)) return
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(touche)) return
       evenement.preventDefault()
       // Une touche gardée appuyée se répète : pour marcher et grimper, seul le premier appui compte.
       const repetition = evenement.repeat
@@ -125,7 +130,6 @@ function App() {
         if (touche === 'ArrowLeft') deplacerAuFront(-1)
         if (touche === 'ArrowRight') deplacerAuFront(+1)
         if (touche === 'ArrowUp' && !repetition) commencerEchelle(-1)
-        if ((touche === 'ArrowDown' || touche === ' ') && !enMinage) creuser(1)
       } else if (!dansLaCabine) {
         // Sur l'échelle.
         if (touche === 'ArrowUp' && !repetition) commencerEchelle(-1)
@@ -147,7 +151,7 @@ function App() {
   })
 
   function demanderRecommencer() {
-    if (window.confirm('Effacer ta partie et tout recommencer (succès et foreuse compris) ?')) {
+    if (window.confirm(`Effacer la partie du monde « ${monde.nom} » et tout recommencer (succès et foreuse compris) ?`)) {
       recommencer()
       village.placer(X_PUITS)
     }
@@ -169,14 +173,7 @@ function App() {
     panneau = (
       <section className="carte panneau">
         <h2>Le village</h2>
-        <p className="discret">Promène-toi le long du chemin avec ← → (garde la touche appuyée), ou clique sur un stand pour y aller.</p>
-        <div className="liste-cartes">
-          {STANDS.map((s, index) => (
-            <button key={s.id} className="bouton bouton-petit bouton-aller bouton-voyage" onClick={() => village.allerVers(STANDS[index].x)}>
-              {s.icone && <IconePixel nom={s.icone} taille={18} />} {s.nom}
-            </button>
-          ))}
-        </div>
+        <p className="discret">Promène-toi le long du chemin avec ← →, ou clique sur un stand pour y aller.</p>
       </section>
     )
   } else if (enVille && stand !== null) {
@@ -282,6 +279,10 @@ function App() {
     <div className="jeu">
       <header className="entete">
         <h1 className="titre">⛏️ Idle Miner</h1>
+        {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
+        <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde">
+          🌍 {monde.nom}
+        </button>
         {/* Les succès : un petit bouton discret, ils s'ouvrent dans une fenêtre. */}
         <button className="bouton-succes" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
           🏅 {etat.succes.length}/{SUCCES.length}
@@ -331,12 +332,6 @@ function App() {
           {/* Un petit rappel : on se déplace avec les flèches du clavier. */}
           <p className="aide-clavier">
             <kbd>←</kbd> <kbd>→</kbd> {enVille ? 'pour marcher dans le village' : 'pour te déplacer dans la mine'}
-            {auFront && (
-              <>
-                {' '}
-                · <kbd>Espace</kbd> pour creuser
-              </>
-            )}
           </p>
         </div>
 
@@ -371,6 +366,14 @@ function App() {
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
     </div>
   )
+}
+
+// L'application : l'écran d'accueil (choix du monde), puis le jeu.
+function App() {
+  const [monde, setMonde] = useState<InfoMonde | null>(null)
+  if (monde === null) return <Accueil onJouer={setMonde} />
+  // « key » : changer de monde repart d'un jeu tout neuf (aucun état de l'ancien monde ne reste).
+  return <Jeu key={monde.id} monde={monde} onQuitter={() => setMonde(null)} />
 }
 
 export default App

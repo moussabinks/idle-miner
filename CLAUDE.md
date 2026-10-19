@@ -31,7 +31,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - Visuel : blocs, animations et effets en CSS (gradients, keyframes) tant qu'on n'a pas décidé d'utiliser des sprites.
 - Sons : fabriqués avec Web Audio (pas de fichier audio, donc rien à créditer) : bruitages dans `src/sons.ts`, musique et ambiances (oiseaux et vent à la surface, grotte dans la mine) dans `src/ambiance.ts`. Les deux se coupent depuis le bandeau (🔊 et 🎵).
 - Boutons : une couleur par sorte d'action (creuser, vendre, acheter, améliorer, réparer, enchanter, prestige, ascenseur, se déplacer...), voir « Les couleurs des boutons » dans `src/index.css`.
-- Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web).
+- Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web), avec jusqu'à **5 mondes** (5 parties séparées) choisis sur l'écran d'accueil (`src/composants/Accueil.tsx`, logique dans `src/jeu/sauvegarde.ts`).
 
 ## Choix de design hérités de la v1 (à respecter)
 

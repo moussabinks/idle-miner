@@ -1,7 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { casserBloc, creerPartie } from './mineur'
-import { CLE_SAUVEGARDE, charger, effacer, sauvegarder, secondesDepuisSauvegarde, type Stockage } from './sauvegarde'
+import {
+  ANCIENNE_CLE_SAUVEGARDE,
+  NB_MONDES_MAX,
+  charger,
+  cleMonde,
+  creerMonde,
+  dupliquerMonde,
+  listerMondes,
+  marquerJoue,
+  peutCreerMonde,
+  renommerMonde,
+  sauvegarder,
+  secondesDepuisSauvegarde,
+  supprimerMonde,
+  type Stockage,
+} from './sauvegarde'
+
+// Les anciennes parties des tests de migration sont rangées dans le monde « 1 ».
+const CLE_SAUVEGARDE = cleMonde('1')
 
 // Un faux localStorage, en mémoire.
 function fauxStockage(): Stockage & { donnees: Map<string, string> } {
@@ -20,17 +38,17 @@ describe('sauvegarde', () => {
     const etat = creerPartie(aleatoire)
     for (let i = 0; i < 20; i++) casserBloc(etat, aleatoire)
     const stockage = fauxStockage()
-    sauvegarder(stockage, etat)
-    expect(charger(stockage)).toEqual(etat)
+    sauvegarder(stockage, '1', etat)
+    expect(charger(stockage, '1')).toEqual(etat)
   })
 
   it("renvoie null s'il n'y a rien ou si la sauvegarde est abîmée", () => {
     const stockage = fauxStockage()
-    expect(charger(stockage)).toBeNull()
+    expect(charger(stockage, '1')).toBeNull()
     stockage.setItem(CLE_SAUVEGARDE, '{pas du json')
-    expect(charger(stockage)).toBeNull()
+    expect(charger(stockage, '1')).toBeNull()
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify({ version: 999 }))
-    expect(charger(stockage)).toBeNull()
+    expect(charger(stockage, '1')).toBeNull()
   })
 
   it('met à jour une sauvegarde de la version 1 (jusqu’à la version 8)', () => {
@@ -40,7 +58,7 @@ describe('sauvegarde', () => {
     ancienne.coucheActuelle = ['terre', 'terre', 'terre', 'terre', 'terre', 'terre']
     ancienne.couchesDessous = [['pierre', 'fer', 'pierre', 'pierre', 'pierre', 'pierre']]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage)
+    const etat = charger(stockage, '1')
     expect(etat?.version).toBe(8)
     expect(etat?.position).toBe(9) // au front de taille, comme avant
     expect(etat?.ascenseur.niveau).toBe(0)
@@ -61,7 +79,7 @@ describe('sauvegarde', () => {
     }
     for (const champ of ['position', 'cible', 'foreuse', 'talents', 'peculeRecu']) delete ancienne[champ]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage)
+    const etat = charger(stockage, '1')
     expect(etat?.position).toBe(0)
     expect(etat?.ascenseur.niveau).toBe(1)
   })
@@ -81,7 +99,7 @@ describe('sauvegarde', () => {
     }
     delete ancienne.talents
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage)
+    const etat = charger(stockage, '1')
     expect(etat?.profondeur).toBe(127)
     expect(etat?.position).toBe(126)
     expect(etat?.coucheActuelle).toHaveLength(10)
@@ -100,7 +118,7 @@ describe('sauvegarde', () => {
     delete ancienne.talents
     ;(ancienne.coucheActuelle as string[])[3] = 'donjon'
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage)
+    const etat = charger(stockage, '1')
     expect(etat?.version).toBe(8)
     expect(etat?.coucheActuelle[3]).toBe('pierre')
     expect(etat?.succes).toEqual(['premier'])
@@ -111,14 +129,59 @@ describe('sauvegarde', () => {
 
   it('compte le temps passé depuis la dernière sauvegarde', () => {
     const stockage = fauxStockage()
-    sauvegarder(stockage, creerPartie(aleatoireAvecGraine(1)), 1_000_000)
-    expect(secondesDepuisSauvegarde(stockage, 1_060_000)).toBe(60)
+    sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)
+    expect(secondesDepuisSauvegarde(stockage, '1', 1_060_000)).toBe(60)
+  })
+})
+
+describe('les mondes (5 sauvegardes au plus)', () => {
+  const partie = () => creerPartie(aleatoireAvecGraine(1))
+
+  it('crée des mondes, chacun avec sa partie et sa couleur', () => {
+    const stockage = fauxStockage()
+    expect(listerMondes(stockage)).toEqual([])
+    const a = creerMonde(stockage, 'Dev avancé', partie(), 1000)
+    const b = creerMonde(stockage, '  ', partie(), 2000) // nom vide : un nom par défaut
+    expect(a).toMatchObject({ id: '1', nom: 'Dev avancé', couleur: 0 })
+    expect(b).toMatchObject({ id: '2', nom: 'Monde 2', couleur: 1 })
+    expect(charger(stockage, '1')).not.toBeNull()
+    expect(listerMondes(stockage).map((m) => m.id)).toEqual(['2', '1']) // le plus récent en premier
   })
 
-  it('efface la sauvegarde', () => {
+  it('pas plus de 5 mondes', () => {
     const stockage = fauxStockage()
-    sauvegarder(stockage, creerPartie(aleatoireAvecGraine(1)))
-    effacer(stockage)
-    expect(charger(stockage)).toBeNull()
+    for (let i = 0; i < NB_MONDES_MAX; i++) creerMonde(stockage, `M${i}`, partie(), i)
+    expect(peutCreerMonde(stockage)).toBe(false)
+    expect(creerMonde(stockage, 'de trop', partie())).toBeNull()
+    expect(listerMondes(stockage)).toHaveLength(5)
+  })
+
+  it('renomme, duplique, supprime, et remonte le dernier monde joué', () => {
+    const stockage = fauxStockage()
+    creerMonde(stockage, 'Début', partie(), 1000)
+    creerMonde(stockage, 'Léo', partie(), 2000)
+    renommerMonde(stockage, '1', 'Début de partie')
+    expect(listerMondes(stockage).find((m) => m.id === '1')?.nom).toBe('Début de partie')
+    const copie = dupliquerMonde(stockage, '2', 3000)
+    expect(copie?.nom).toBe('Léo (copie)')
+    expect(charger(stockage, copie!.id)).toEqual(charger(stockage, '2'))
+    marquerJoue(stockage, '1', 4000)
+    expect(listerMondes(stockage)[0].id).toBe('1')
+    supprimerMonde(stockage, '2')
+    expect(listerMondes(stockage).map((m) => m.id)).toEqual(['1', '3'])
+    expect(charger(stockage, '2')).toBeNull()
+    // Une place libérée : la couleur du monde supprimé est réutilisée.
+    expect(creerMonde(stockage, 'Nouveau', partie(), 5000)?.couleur).toBe(1)
+  })
+
+  it('l’ancienne partie unique devient « Monde 1 »', () => {
+    const stockage = fauxStockage()
+    const ancienne = partie()
+    stockage.setItem(ANCIENNE_CLE_SAUVEGARDE, JSON.stringify(ancienne))
+    stockage.setItem('idle-miner-horodatage', '123456')
+    expect(listerMondes(stockage)).toEqual([{ id: '1', nom: 'Monde 1', couleur: 0, creeLe: 123456, joueLe: 123456 }])
+    expect(charger(stockage, '1')).toEqual(ancienne)
+    expect(stockage.getItem(ANCIENNE_CLE_SAUVEGARDE)).toBeNull()
+    expect(secondesDepuisSauvegarde(stockage, '1', 123456 + 5000)).toBe(5)
   })
 })
