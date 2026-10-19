@@ -124,10 +124,10 @@ describe('foreuse', () => {
   it('s’améliore (vitesse et chariot)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
-    etat.argent = 10000
-    etat.inventaire = { fer: 10 }
-    ameliorerForage(etat, 0) // 6 000 $ + 10 fer
-    ameliorerChariot(etat) // 3 000 $
+    etat.argent = 5000
+    etat.inventaire = { fer: 30, redstone: 5 }
+    ameliorerForage(etat, 0) // 2 500 $ + 20 fer + 5 redstone
+    ameliorerChariot(etat) // 1 500 $ + 10 fer
     expect(etat.foreuse.foreuses[0].niveauVitesse).toBe(1)
     expect(capaciteChariot(etat)).toBe(500)
     expect(etat.argent).toBe(1000)
@@ -138,7 +138,7 @@ describe('foreuse', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
     etat.argent = 10_000_000
-    etat.inventaire = { fer: 100, redstone: 100, diamant: 100, or: 100 }
+    etat.inventaire = { fer: 1000, redstone: 1000 }
     // Au prestige 1 (son déblocage) : un seul niveau de plus.
     for (let i = 0; i < 5; i++) {
       ameliorerForage(etat, 0)
@@ -207,7 +207,7 @@ describe('foreuse', () => {
     activerForeuse(etat)
     etat.prestige = 4
     etat.argent = 10_000_000
-    etat.inventaire = { fer: 100, redstone: 100, diamant: 100 }
+    etat.inventaire = { fer: 1000, redstone: 1000 }
     // La première foreuse est déjà bien avancée.
     etat.foreuse.foreuses[0].niveauVitesse = 3
     etat.foreuse.foreuses[0].profondeur = 80

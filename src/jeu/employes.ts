@@ -15,13 +15,15 @@ import {
   PRESTIGE_EMPLOYES,
   PRIX_EMBAUCHE,
   NIVEAUX_ASCENSEUR,
-  PROFONDEUR_BEDROCK,
+  depuisReference,
+  profondeurBedrock,
   SECONDES_VENTE_EMPLOYE,
+  type Cout,
   niveauMaxAuPrestige,
   prestigePourNiveau,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
-import { aLaSurface, secondesParMetreAscenseur, valeurDe, type EtatJeu, type Employe } from './mineur'
+import { aLaSurface, payer, peutPayer, secondesParMetreAscenseur, valeurDe, type EtatJeu, type Employe } from './mineur'
 import { mineursEnPlus, multiplicateurAscenseur, multiplicateurMineurs, multiplicateurSacMineurs, partSalaire } from './talents'
 
 // ---------------------------------------------------------------------------
@@ -59,8 +61,9 @@ export function vitesseEmploye(etat: EtatJeu, employe: Employe): number {
   return NIVEAUX_EMPLOYE[employe.niveau].vitesse * multiplicateurMineurs(etat)
 }
 
-export function profondeurMaxEmploye(employe: Employe): number {
-  return Math.min(NIVEAUX_EMPLOYE[employe.niveau].profMax, PROFONDEUR_BEDROCK - 1)
+// Jusqu'où descend un mineur, selon sa pioche, dans la mine de ce prestige (sans toucher la bedrock).
+export function profondeurMaxEmploye(etat: EtatJeu, employe: Employe): number {
+  return Math.min(depuisReference(NIVEAUX_EMPLOYE[employe.niveau].profMax, etat.prestige), profondeurBedrock(etat.prestige) - 1)
 }
 
 // Les mineurs ont leur propre ascenseur (une cabine chacun) : il va aussi vite que le tien,
@@ -85,20 +88,21 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
   return Math.abs(arrivee - employe.position) * secondesParMetreEmploye(etat, employe)
 }
 
-export function prixAmeliorationEmploye(employe: Employe): number | null {
-  return NIVEAUX_EMPLOYE[employe.niveau + 1]?.prix ?? null
+// Le prix du prochain équipement (argent + fer + redstone), null s'il a déjà le meilleur.
+export function coutAmeliorationEmploye(employe: Employe): Cout | null {
+  return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
 
 // Le prochain équipement est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
 export function employeBloqueAuPrestige(etat: EtatJeu, employe: Employe): number | null {
   const prochain = employe.niveau + 1
-  if (prixAmeliorationEmploye(employe) === null || prochain <= niveauMaxAuPrestige('mineur', etat.prestige)) return null
+  if (coutAmeliorationEmploye(employe) === null || prochain <= niveauMaxAuPrestige('mineur', etat.prestige)) return null
   return prestigePourNiveau('mineur', prochain)
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
-  const prix = prixAmeliorationEmploye(employe)
-  return prix !== null && employeBloqueAuPrestige(etat, employe) === null && etat.argent >= prix
+  const cout = coutAmeliorationEmploye(employe)
+  return cout !== null && employeBloqueAuPrestige(etat, employe) === null && peutPayer(etat, cout)
 }
 
 // ---------------------------------------------------------------------------
@@ -128,9 +132,9 @@ export function embaucher(etat: EtatJeu): string[] {
 export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
   if (!aLaSurface(etat) || !employe) return []
-  const prix = prixAmeliorationEmploye(employe)
-  if (prix === null || !peutAmeliorerEmploye(etat, employe)) return []
-  etat.argent -= prix
+  const cout = coutAmeliorationEmploye(employe)
+  if (cout === null || !peutAmeliorerEmploye(etat, employe)) return []
+  payer(etat, cout)
   employe.niveau += 1
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
 }
@@ -145,6 +149,7 @@ function vendreRecolte(etat: EtatJeu, employe: Employe): void {
   const pourToi = Math.round(gain * (1 - partSalaire(etat)))
   etat.argent += pourToi
   etat.stats.argentGagne += pourToi
+  etat.stats.argentMineurs += pourToi
   employe.gagne += pourToi
   employe.sac = {}
 }
@@ -161,12 +166,13 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       reste -= temps
       while (employe.progression >= 1 && nbDansSacEmploye(employe) < tailleSacEmploye(etat, employe)) {
         employe.progression -= 1
-        const bloc = tirerBlocNormal(employe.profondeur, aleatoire)
+        const bloc = tirerBlocNormal(employe.profondeur, aleatoire, etat.prestige)
         employe.sac[bloc] = (employe.sac[bloc] ?? 0) + 1
         employe.blocsCasses += 1
+        etat.stats.blocsMineurs += 1
         // Il descend d'un mètre tous les 5 blocs (sa galerie est étroite), tant que sa pioche le permet.
         if (employe.blocsCasses % BLOCS_PAR_METRE_EMPLOYE === 0) {
-          employe.profondeur = Math.min(profondeurMaxEmploye(employe), employe.profondeur + 1)
+          employe.profondeur = Math.min(profondeurMaxEmploye(etat, employe), employe.profondeur + 1)
         }
       }
       if (nbDansSacEmploye(employe) >= tailleSacEmploye(etat, employe)) {

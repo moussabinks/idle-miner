@@ -3,8 +3,11 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { LARGEUR_MINE } from './donnees'
 import { genererCouche, poidsDesBlocs, tirerBloc, tirerBlocNormal } from './mine'
 
+// Les profondeurs de ces tests sont celles de la mine de référence (150 m, celle du prestige 1).
+const PRESTIGE_REFERENCE = 1
+
 function blocsPossibles(profondeur: number) {
-  return poidsDesBlocs(profondeur).map((c) => c.valeur)
+  return poidsDesBlocs(profondeur, PRESTIGE_REFERENCE).map((c) => c.valeur)
 }
 
 describe('génération de la mine', () => {
@@ -30,7 +33,7 @@ describe('génération de la mine', () => {
   })
 
   it('les minerais apparaissent petit à petit (pas d’un coup)', () => {
-    const poids = (profondeur: number, bloc: string) => poidsDesBlocs(profondeur).find((c) => c.valeur === bloc)?.poids ?? 0
+    const poids = (profondeur: number, bloc: string) => poidsDesBlocs(profondeur, PRESTIGE_REFERENCE).find((c) => c.valeur === bloc)?.poids ?? 0
     // L'or : très rare au début, puis de plus en plus fréquent, jusqu'à son maximum.
     expect(poids(29, 'or')).toBeLessThan(1)
     expect(poids(50, 'or')).toBeGreaterThan(poids(29, 'or'))
@@ -54,14 +57,26 @@ describe('génération de la mine', () => {
 
   it('la foreuse ne tire jamais de bloc spécial', () => {
     const aleatoire = aleatoireAvecGraine(5)
-    for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode']).not.toContain(tirerBlocNormal(60, aleatoire))
+    for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode']).not.toContain(tirerBlocNormal(60, aleatoire, PRESTIGE_REFERENCE))
   })
 
   it('génère des couches de 6 blocs, toujours les mêmes avec la même graine', () => {
-    const a = genererCouche(70, aleatoireAvecGraine(7))
-    const b = genererCouche(70, aleatoireAvecGraine(7))
+    const a = genererCouche(70, aleatoireAvecGraine(7), PRESTIGE_REFERENCE)
+    const b = genererCouche(70, aleatoireAvecGraine(7), PRESTIGE_REFERENCE)
     expect(a).toHaveLength(LARGEUR_MINE)
     expect(a).toEqual(b)
+  })
+
+  it('met les minerais à l’échelle de la mine du prestige (100 m, 150 m, 200 m...)', () => {
+    // Le diamant commence à -53 m dans la mine de 150 m : vers -35 m au prestige 0 (100 m),
+    // et vers -71 m au prestige 2 (200 m).
+    const avecDiamant = (profondeur: number, prestige: number) => poidsDesBlocs(profondeur, prestige).some((c) => c.valeur === 'diamant')
+    expect(avecDiamant(34, 0)).toBe(false)
+    expect(avecDiamant(36, 0)).toBe(true)
+    expect(avecDiamant(70, 2)).toBe(false)
+    expect(avecDiamant(72, 2)).toBe(true)
+    // Le charbon et le fer restent près de la surface à chaque prestige.
+    expect(poidsDesBlocs(18, 4).some((c) => c.valeur === 'charbon')).toBe(true) // mine de 300 m
   })
 
   it('respecte les poids : la roche est bien plus fréquente que le diamant', () => {
@@ -69,7 +84,7 @@ describe('génération de la mine', () => {
     let pierre = 0
     let diamant = 0
     for (let i = 0; i < 5000; i++) {
-      const bloc = tirerBloc(70, aleatoire)
+      const bloc = tirerBloc(70, aleatoire, PRESTIGE_REFERENCE)
       if (bloc === 'pierre') pierre++
       if (bloc === 'diamant') diamant++
     }

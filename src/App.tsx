@@ -11,6 +11,7 @@ import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
+import { FenetreStatistiques } from './composants/Statistiques'
 import { Icone } from './composants/Icone'
 import { Inventaire } from './composants/Inventaire'
 import { AmeliorationAscenseur } from './composants/Ascenseur'
@@ -41,6 +42,7 @@ import {
   voyager,
 } from './jeu/mineur'
 import { decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
+import { profondeurBedrock } from './jeu/donnees'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
@@ -56,6 +58,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     usePartie(monde.id)
   const [arbreOuvert, setArbreOuvert] = useState(false)
   const [succesOuverts, setSuccesOuverts] = useState(false)
+  const [statsOuvertes, setStatsOuvertes] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
   const [versLaGauche, setVersLaGauche] = useState(false)
 
@@ -64,8 +67,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const dansLaCabine = etat.ascenseur.passager
 
   // La musique d'ambiance suit le joueur : oiseaux et vent au village, grotte dans la mine.
-  const metres = Math.round(etat.position)
-  useEffect(() => reglerLieu(enVille, metres), [enVille, metres])
+  // Où on est entre la surface et la bedrock (la grotte s'entend de plus en plus en descendant).
+  const auFondDeLaMine = Math.round((etat.position / profondeurBedrock(etat.prestige)) * 50) / 50
+  useEffect(() => reglerLieu(enVille, auFondDeLaMine), [enVille, auFondDeLaMine])
 
   // La marche dans le village.
   const village = useMarcheVillage(enVille)
@@ -297,7 +301,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
           🌍 {monde.nom}
         </button>
-        {/* Les succès : un petit bouton discret, ils s'ouvrent dans une fenêtre. */}
+        {/* Les statistiques et les succès : de petits boutons discrets, ils s'ouvrent dans une fenêtre. */}
+        <button className="bouton-succes" onClick={() => setStatsOuvertes(true)} title="Voir les statistiques">
+          📊 Stats
+        </button>
         <button className="bouton-succes" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
           🏅 {etat.succes.length}/{SUCCES.length}
         </button>
@@ -381,6 +388,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </div>
         </div>
       )}
+      {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
       {arbreOuvert && <ArbrePrestige etat={etat} jouer={jouer} onFermer={() => setArbreOuvert(false)} />}
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
     </div>

@@ -1,7 +1,6 @@
 // Les 16 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
 // et restent débloqués après un prestige.
 
-import { PROFONDEUR_BEDROCK } from './donnees'
 import { peutEncoreEnchanter, type EtatJeu } from './mineur'
 
 export type Succes = {
@@ -34,7 +33,7 @@ export const SUCCES: Succes[] = [
     description: 'Mettre tous les enchantements au max',
     condition: (e) => !peutEncoreEnchanter(e),
   },
-  { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: `Atteindre la bedrock à -${PROFONDEUR_BEDROCK} m`, condition: (e) => e.victoire },
+  { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: 'Atteindre la bedrock, tout au fond de la mine', condition: (e) => e.victoire },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

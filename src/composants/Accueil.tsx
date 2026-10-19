@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import { PROFONDEUR_BEDROCK, type IdBloc } from '../jeu/donnees'
+import { PROFONDEUR_EN_PLUS_PAR_PRESTIGE, profondeurBedrock, type IdBloc } from '../jeu/donnees'
 import { creerPartie } from '../jeu/mineur'
 import {
   NB_MONDES_MAX,
@@ -199,7 +199,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
         <div className="accueil-texte">
           <h1 className="titre accueil-titre">⛏️ Idle Miner</h1>
           <p className="accueil-accroche">
-            Creuse, vends tes minerais, achète de meilleures pioches… et descends jusqu'à la <strong>bedrock, à -{PROFONDEUR_BEDROCK} m</strong> !
+            Creuse, vends tes minerais, achète de meilleures pioches… et descends jusqu'à la <strong>bedrock, à -{profondeurBedrock(0)} m</strong> ! À chaque
+            prestige, la mine est {PROFONDEUR_EN_PLUS_PAR_PRESTIGE} m plus profonde.
           </p>
           <ol className="accueil-etapes">
             <li>

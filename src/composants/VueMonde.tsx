@@ -4,7 +4,7 @@
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
 import { Fragment, memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
-import { BLOCS, LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { BLOCS, LARGEUR_MINE, PIOCHES, estRocheDure, profondeurBedrock, zoneDe, type IdBloc } from '../jeu/donnees'
 import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche, nbForeuses, profondeurForeuse } from '../jeu/foreuse'
 import {
@@ -42,9 +42,9 @@ type Props = {
 type CaseMine = IdBloc | 'bedrock' | null
 
 // Une case de la mine (un bloc, ou un trou déjà creusé).
-function Case({ bloc, profondeur, classe = '' }: { bloc: CaseMine; profondeur: number; classe?: string }) {
+function Case({ bloc, profondeur, prestige, classe = '' }: { bloc: CaseMine; profondeur: number; prestige: number; classe?: string }) {
   if (bloc === null) return <div className={`case vide ${classe}`} />
-  const roche = profondeur > 80 ? 'roche-deepslate' : 'roche-pierre'
+  const roche = estRocheDure(profondeur, prestige) ? 'roche-deepslate' : 'roche-pierre'
   return <div className={`case bloc bloc-${bloc} ${roche} ${classe}`} />
 }
 
@@ -60,8 +60,8 @@ const DIRECTIONS_ECLATS = [
   { dx: 36, dy: -12 },
 ]
 
-function Eclats({ bloc, profondeur }: { bloc: IdBloc; profondeur: number }) {
-  const roche = profondeur > 80 ? 'roche-deepslate' : 'roche-pierre'
+function Eclats({ bloc, profondeur, prestige }: { bloc: IdBloc; profondeur: number; prestige: number }) {
+  const roche = estRocheDure(profondeur, prestige) ? 'roche-deepslate' : 'roche-pierre'
   return (
     <span className="eclats" aria-hidden="true">
       {DIRECTIONS_ECLATS.map((d, i) => (
@@ -103,9 +103,9 @@ const PIECES_VENTE = Array.from({ length: 12 }, (_, i) => {
 
 // Une rangée de la mine : l'étiquette, la place de l'échelle et de l'ascenseur,
 // les 10 cases, puis la place du puits de la foreuse et celle de la galerie des mineurs.
-function Rangee({ profondeur, classe = '', children }: { profondeur: number; classe?: string; children: ReactNode }) {
+function Rangee({ profondeur, prestige, classe = '', children }: { profondeur: number; prestige: number; classe?: string; children: ReactNode }) {
   return (
-    <div className={`rangee ${zoneDe(profondeur).classe} ${classe}`}>
+    <div className={`rangee ${zoneDe(profondeur, prestige).classe} ${classe}`}>
       <span className="etiquette">{profondeur % 5 === 0 || classe.includes('front') ? `-${profondeur} m` : ''}</span>
       <div className="place-echelle" />
       <div className="place-ascenseur" />
@@ -118,9 +118,9 @@ function Rangee({ profondeur, classe = '', children }: { profondeur: number; cla
 
 // Une rangée déjà creusée. « memo » évite de la redessiner si rien n'a changé :
 // il peut y en avoir plus de 100.
-const RangeeCreusee = memo(function RangeeCreusee({ profondeur }: { profondeur: number }) {
+const RangeeCreusee = memo(function RangeeCreusee({ profondeur, prestige }: { profondeur: number; prestige: number }) {
   return (
-    <Rangee profondeur={profondeur} classe="creusee">
+    <Rangee profondeur={profondeur} prestige={prestige} classe="creusee">
       {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
         <div key={colonne} className="case vide" />
       ))}
@@ -247,7 +247,7 @@ function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRange
                 {etiquette(mineurPlusBas)}
                 <Personnage couleurPioche={couleurPioche} action="creuse" />
                 {!mineurPlusBas && (
-                  <span className={`mineur-bloc case bloc ${mineur.profondeur > 80 ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
+                  <span className={`mineur-bloc case bloc ${estRocheDure(mineur.profondeur, etat.prestige) ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
                 )}
               </div>
             )}
@@ -327,14 +327,15 @@ export function VueMonde({
 
   // Les rangées sous le front de taille : la couche en cours, puis celles du dessous.
   const rangeesDuBas: ReactNode[] = []
-  const derniere = Math.min(P + 4, PROFONDEUR_BEDROCK + 1)
+  const bedrock = profondeurBedrock(etat.prestige)
+  const derniere = Math.min(P + 4, bedrock + 1)
   for (let d = P; d <= derniere; d++) {
     const rang = d - P
-    if (d >= PROFONDEUR_BEDROCK) {
+    if (d >= bedrock) {
       rangeesDuBas.push(
-        <Rangee key={d} profondeur={d}>
+        <Rangee key={d} profondeur={d} prestige={etat.prestige}>
           {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
-            <Case key={colonne} bloc="bedrock" profondeur={d} />
+            <Case key={colonne} bloc="bedrock" profondeur={d} prestige={etat.prestige} />
           ))}
         </Rangee>,
       )
@@ -343,7 +344,7 @@ export function VueMonde({
     const blocs: CaseMine[] = rang === 0 ? etat.coucheActuelle : (etat.couchesDessous[rang - 1] ?? Array(LARGEUR_MINE).fill(null))
     // Lumière naturelle : plus une couche est loin sous le mineur, plus elle est sombre.
     rangeesDuBas.push(
-      <Rangee key={d} profondeur={d} classe={`${rang === 0 ? 'couche-en-cours' : `ombre-${rang}`}`}>
+      <Rangee key={d} profondeur={d} prestige={etat.prestige} classe={`${rang === 0 ? 'couche-en-cours' : `ombre-${rang}`}`}>
         {blocs.map((bloc, colonne) => {
           const enCours = rang === 0 && colonne === indexActuel
           let classe = ''
@@ -351,7 +352,7 @@ export function VueMonde({
           return (
             <div key={colonne} className="emplacement" style={enCours ? { ['--duree' as string]: `${duree}s` } : undefined}>
               {/* La clé change quand le mineur commence ce bloc, pour relancer l'animation de fissure. */}
-              <Case key={enCours ? 'joueur' : 'fixe'} bloc={bloc} profondeur={d} classe={classe} />
+              <Case key={enCours ? 'joueur' : 'fixe'} bloc={bloc} profondeur={d} prestige={etat.prestige} classe={classe} />
             </div>
           )
         })}
@@ -462,12 +463,12 @@ export function VueMonde({
 
         {/* Tout ce qui a déjà été creusé, depuis l'entrée du puits. */}
         {Array.from({ length: Math.max(0, front - 1) }, (_, i) => (
-          <RangeeCreusee key={i + 1} profondeur={i + 1} />
+          <RangeeCreusee key={i + 1} profondeur={i + 1} prestige={etat.prestige} />
         ))}
 
         {/* Le front de taille, où se tient le mineur. */}
         {front >= 1 && (
-          <Rangee profondeur={front} classe="creusee front">
+          <Rangee profondeur={front} prestige={etat.prestige} classe="creusee front">
             {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
               <div key={colonne} className="case vide">
                 {auFront && colonne === colonneAffichee && (
@@ -485,7 +486,7 @@ export function VueMonde({
                 {eclats
                   .filter((e) => e.colonne === colonne)
                   .map((e) => (
-                    <Eclats key={e.id} bloc={e.bloc} profondeur={P} />
+                    <Eclats key={e.id} bloc={e.bloc} profondeur={P} prestige={etat.prestige} />
                   ))}
                 {trouvailles
                   .filter((t) => t.colonne === colonne)

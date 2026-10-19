@@ -1614,6 +1614,197 @@ kbd {
   color: var(--accent);
 }
 
+/* --- La fenêtre des statistiques (Statistiques.tsx) --------------------------- */
+.fenetre-stats {
+  width: min(860px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fenetre-stats h2 {
+  margin: 0;
+  color: var(--accent);
+}
+
+.fenetre-stats h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.choix-periode {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--bordure);
+}
+
+/* Les grands chiffres. */
+.stat-tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-tuile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--carte-claire);
+  border: 1px solid var(--bordure);
+}
+
+.stat-tuile-titre {
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+}
+
+.stat-tuile-valeur {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+
+.stat-colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 14px;
+}
+
+.stat-bloc {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--carte-claire);
+  border: 1px solid var(--bordure);
+}
+
+/* L'argent par source : une barre partagée en segments (un petit espace entre eux). */
+.barre-sources {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barre-source {
+  min-width: 4px;
+  transition: filter 0.15s;
+}
+
+.barre-source:hover {
+  filter: brightness(1.25);
+}
+
+.legende-sources {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.legende-sources li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.legende-sources strong,
+.legende-sources .discret {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.pastille {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Les blocs cassés : une barre par sorte (une seule couleur, la sorte est donnée par l'icône). */
+.barres-blocs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.barres-blocs li {
+  display: grid;
+  grid-template-columns: 18px 88px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.barres-blocs li:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.barres-blocs .mini-bloc {
+  width: 18px;
+  height: 18px;
+}
+
+.barre-bloc-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texte-doux);
+}
+
+.barre-bloc-piste {
+  height: 10px;
+}
+
+.barre-bloc {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: #5b8fd6;
+}
+
+.barre-bloc-valeur {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-petits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 14px;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+}
+
+@media (max-width: 640px) {
+  .stat-tuiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-colonnes {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-petits {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .bouton {
   border: 2px solid #000;
   border-radius: 8px;

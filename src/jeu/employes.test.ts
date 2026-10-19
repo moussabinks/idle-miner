@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { DUREE_MIN_TRAJET_EMPLOYE, NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, SECONDES_VENTE_EMPLOYE } from './donnees'
-import { activiteEmploye, ameliorerEmploye, employeBloqueAuPrestige, avancerEmployes, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
+import { DUREE_MIN_TRAJET_EMPLOYE, NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, SECONDES_VENTE_EMPLOYE, profondeurBedrock } from './donnees'
+import { activiteEmploye, ameliorerEmploye, profondeurMaxEmploye, employeBloqueAuPrestige, avancerEmployes, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
 import { creerPartie, prestige, type EtatJeu } from './mineur'
 import { choisirTalent } from './talents'
 import { avancerTemps } from './temps'
 
-// Un joueur au village, au prestige donné, avec de l'argent.
+// Un joueur au village, au prestige donné, avec de l'argent (et du fer et de la redstone
+// pour l'équipement des mineurs).
 function partie(niveauPrestige: number, argent = 1_000_000): EtatJeu {
   const etat = creerPartie(aleatoireAvecGraine(1), niveauPrestige)
   etat.argent = argent
+  etat.inventaire = { fer: 1000, redstone: 1000 }
   return etat
 }
 
@@ -109,7 +111,8 @@ describe('mineurs employés', () => {
     const etat = partie(2)
     embaucher(etat)
     avancerTemps(etat, 4 * 3600, aleatoireAvecGraine(4))
-    expect(etat.employes[0].profondeur).toBe(NIVEAUX_EMPLOYE[0].profMax)
+    expect(etat.employes[0].profondeur).toBe(profondeurMaxEmploye(etat, etat.employes[0]))
+    expect(etat.employes[0].profondeur).toBeLessThan(profondeurBedrock(etat.prestige))
     ameliorerEmploye(etat, 0)
     expect(etat.employes[0].niveau).toBe(1)
   })

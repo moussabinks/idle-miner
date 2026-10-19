@@ -41,7 +41,7 @@ export function Hud({ etat, nbVentes, enMinage, onOuvrirArbre }: Props) {
   const plein = sacPlein(etat)
   const pioche = piocheEquipee(etat)
   const cassee = estCassee(etat)
-  const zone = zoneDe(etat.profondeur)
+  const zone = zoneDe(etat.profondeur, etat.prestige)
   const enVille = aLaSurface(etat)
   const auFront = auFond(etat)
   const dansLaCabine = etat.ascenseur.passager

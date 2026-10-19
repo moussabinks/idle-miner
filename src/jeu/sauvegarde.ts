@@ -5,8 +5,8 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { PRESTIGE_EMPLOYES, PRESTIGE_FOREUSE } from './donnees'
-import { VERSION_ETAT, type EtatJeu } from './mineur'
+import { PRESTIGE_EMPLOYES, PRESTIGE_FOREUSE, profondeurBedrock } from './donnees'
+import { VERSION_ETAT, nouvellesStatistiques, type EtatJeu } from './mineur'
 import { TALENTS_RETIRES } from './talents'
 
 export const NB_MONDES_MAX = 5
@@ -401,6 +401,34 @@ function migrer(donnees: unknown): unknown {
     etat = { ...etat, version: 13, decouvertes }
   }
 
+  // Version 13 -> 14 : la mine n'a plus la même profondeur à chaque prestige (-100 m au
+  // prestige 0, puis 50 m de plus par prestige). Une partie déjà plus bas que sa nouvelle
+  // bedrock remonte juste au-dessus, et la bedrock compte comme atteinte.
+  if (etat.version === 13) {
+    const prestige = typeof etat.prestige === 'number' ? etat.prestige : 0
+    const plusBas = profondeurBedrock(prestige) - 1
+    const ramener = (metres: unknown) => (typeof metres === 'number' ? Math.min(metres, plusBas) : metres)
+    if (typeof etat.profondeur === 'number' && etat.profondeur > plusBas) {
+      const ascenseur = etat.ascenseur as Record<string, unknown>
+      etat = {
+        ...etat,
+        profondeur: plusBas,
+        position: ramener(etat.position),
+        cible: ramener(etat.cible),
+        victoire: true,
+        enGalerie: true,
+        ascenseur: { ...ascenseur, position: ramener(ascenseur.position), cible: ramener(ascenseur.cible) },
+      }
+    }
+    // Et les nouvelles statistiques (écran 📊) : elles partent de 0 pour les anciennes parties.
+    etat = {
+      ...etat,
+      version: 14,
+      stats: { ...nouvellesStatistiques(), ...(etat.stats as object) },
+      statsTotales: nouvellesStatistiques(),
+    }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -431,6 +459,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.talents) &&
     Array.isArray(etat.employes) &&
     Array.isArray(etat.decouvertes) &&
+    typeof etat.statsTotales === 'object' &&
     typeof etat.argentGagneAvant === 'number'
   )
 }

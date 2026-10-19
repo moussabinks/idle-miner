@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { embaucher } from './employes'
+import { embaucher, profondeurMaxEmploye } from './employes'
 import { activerForeuse } from './foreuse'
 import { creerPartie, positionFront, type EtatJeu } from './mineur'
 import { revenuParSeconde, valeurMoyenneBloc } from './revenu'
@@ -27,8 +27,8 @@ describe('argent généré par seconde', () => {
   })
 
   it('les blocs valent plus en profondeur, et encore plus avec Fortune', () => {
-    expect(valeurMoyenneBloc(60)).toBeGreaterThan(valeurMoyenneBloc(5))
-    expect(valeurMoyenneBloc(60, 3)).toBeGreaterThan(valeurMoyenneBloc(60))
+    expect(valeurMoyenneBloc(60, 1)).toBeGreaterThan(valeurMoyenneBloc(5, 1))
+    expect(valeurMoyenneBloc(60, 1, 3)).toBeGreaterThan(valeurMoyenneBloc(60, 1))
   })
 
   it('compte la foreuse seulement quand elle tourne', () => {
@@ -55,7 +55,8 @@ describe('argent généré par seconde', () => {
     const etat = partie(3)
     embaucher(etat)
     etat.employes[0].niveau = 2
-    etat.employes[0].profondeur = 90 // sa pioche s'arrête à -96 m : il reste à peu près à cette profondeur
+    // Au fond de ce que permet sa pioche : il reste à cette profondeur pendant tout le test.
+    etat.employes[0].profondeur = profondeurMaxEmploye(etat, etat.employes[0])
     etat.employes[0].etape = 'creuse'
     const estimation = revenuParSeconde(etat, false).mineurs
     const avant = etat.argent

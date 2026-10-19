@@ -10,7 +10,6 @@
 //
 // Le bouton 🎵 du bandeau coupe musique et ambiances (réglage gardé dans le localStorage).
 
-import { PROFONDEUR_BEDROCK } from './jeu/donnees'
 import { contexteAudio, ecrireReglage, lireReglage, quandLeSonEstPermis } from './sons'
 
 const CLE_MUSIQUE = 'idle-miner-musique'
@@ -47,7 +46,7 @@ let prochaineMesure = 0
 
 // Où est le joueur : à la surface, ou à quelle profondeur dans la mine.
 let aLaSurface = true
-let profondeur = 0
+let profondeur = 0 // entre 0 (surface) et 1 (bedrock)
 
 export function musiqueActive(): boolean {
   return active
@@ -62,9 +61,11 @@ export function basculerMusique(): boolean {
 }
 
 // Appelée par l'interface quand le joueur change d'endroit : on fond les ambiances.
-export function reglerLieu(surface: boolean, metres: number): void {
+// « auFond » : où il est entre la surface (0) et la bedrock (1), la mine n'ayant pas la même
+// profondeur à chaque prestige.
+export function reglerLieu(surface: boolean, auFond: number): void {
   aLaSurface = surface
-  profondeur = metres
+  profondeur = auFond
   appliquerLieu()
 }
 
@@ -73,7 +74,7 @@ function appliquerLieu() {
   const { ctx, surface, grotte, envoiEchoGrotte, musique } = noeuds
   const t = ctx.currentTime
   // Plus on est profond, plus la grotte s'entend (et plus elle résonne).
-  const fond = Math.min(1, profondeur / PROFONDEUR_BEDROCK)
+  const fond = Math.min(1, profondeur)
   // Le vent et les oiseaux s'arrêtent vite en entrant dans la mine (ils ne descendent pas avec toi).
   surface.gain.setTargetAtTime(aLaSurface ? 1 : 0, t, aLaSurface ? 1.2 : 0.4)
   grotte.gain.setTargetAtTime(aLaSurface ? 0 : 0.55 + 0.45 * fond, t, 1.2)

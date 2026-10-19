@@ -118,12 +118,47 @@ export const VITESSE_MAINS_NUES = 1
 // ---------------------------------------------------------------------------
 
 export const LARGEUR_MINE = 10 // blocs par couche
-// La bedrock est à -150 m pour tous les prestiges (décidé le 19/10, avant -128 m). Toutes les
-// profondeurs du jeu (minerais, zones, pioches) ont été agrandies dans la même proportion.
-export const PROFONDEUR_BEDROCK = 150
+// La mine est plus profonde à chaque prestige (décidé le 19/10) : la bedrock est à -100 m au
+// prestige 0, puis 50 m plus bas à chaque prestige (-150 m, -200 m, -250 m...).
+export const PROFONDEUR_BEDROCK_DEPART = 100
+export const PROFONDEUR_EN_PLUS_PAR_PRESTIGE = 50
 
-// Sous cette profondeur, la roche devient de la roche dure et tout est plus long à casser.
+export function profondeurBedrock(prestige: number): number {
+  return PROFONDEUR_BEDROCK_DEPART + PROFONDEUR_EN_PLUS_PAR_PRESTIGE * prestige
+}
+
+// Toutes les profondeurs écrites dans les données (minerais, zones, roche dure, blocs
+// spéciaux, profondeur max des pioches) sont données pour une mine de 150 m de référence.
+// On les met à l'échelle de la mine du prestige en cours : × 100/150 au prestige 0, × 1 au
+// prestige 1, × 200/150 au prestige 2... Ainsi, à chaque prestige, le charbon et le fer
+// sont près de la surface, puis les autres minerais arrivent petit à petit jusqu'en bas.
+export const PROFONDEUR_REFERENCE = 150
+
+export function echelleMine(prestige: number): number {
+  return profondeurBedrock(prestige) / PROFONDEUR_REFERENCE
+}
+
+// Une vraie profondeur (dans la mine du prestige) → la profondeur de référence (mine de 150 m).
+export function versReference(profondeur: number, prestige: number): number {
+  return profondeur / echelleMine(prestige)
+}
+
+// Une profondeur de référence → la vraie profondeur dans la mine du prestige (en mètres entiers).
+export function depuisReference(metres: number, prestige: number): number {
+  return Math.round(metres * echelleMine(prestige))
+}
+
+// Sous cette profondeur (de référence), la roche devient de la roche dure et tout est plus long à casser.
 export const PROFONDEUR_DEEPSLATE = 94
+
+export function estRocheDure(profondeur: number, prestige: number): boolean {
+  return versReference(profondeur, prestige) > PROFONDEUR_DEEPSLATE
+}
+
+// Jusqu'où descend une pioche dans la mine de ce prestige (la netherite va jusqu'à la bedrock).
+export function profondeurMaxPioche(niveau: number, prestige: number): number {
+  return depuisReference(PIOCHES[niveau].profMax, prestige)
+}
 
 // Les sacs : la taille et le prix de chaque niveau (le premier est gratuit).
 export const SACS = [
@@ -246,20 +281,22 @@ export const RESERVE_RECHARGE_AUTO = 60
 export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
   // Plus rapide dès le départ (19/10) : avant, elle rapportait trop peu, et agrandir le
   // chariot ne servait à rien parce qu'il ne se remplissait presque jamais.
+  // Prix revus le 19/10 (comme l'ascenseur) : moins d'argent, plus de fer et de redstone, pour
+  // ne pas avoir à rester au fond à farmer avant de passer prestige.
   { vitesse: 2, cout: { materiaux: {} } },
-  { vitesse: 3, cout: { argent: 6000, materiaux: { fer: 10 } } },
-  { vitesse: 5, cout: { argent: 20000, materiaux: { redstone: 10 } } },
-  { vitesse: 8, cout: { argent: 60000, materiaux: { diamant: 3 } } },
-  { vitesse: 12, cout: { argent: 150000, materiaux: { diamant: 5 } } },
+  { vitesse: 3, cout: { argent: 2500, materiaux: { fer: 20, redstone: 5 } } },
+  { vitesse: 5, cout: { argent: 6000, materiaux: { fer: 40, redstone: 20 } } },
+  { vitesse: 8, cout: { argent: 12000, materiaux: { fer: 60, redstone: 40 } } },
+  { vitesse: 12, cout: { argent: 25000, materiaux: { fer: 90, redstone: 70 } } },
 ]
 
 // Taille du chariot (en objets) et coût de chaque niveau.
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 200, cout: { materiaux: {} } },
-  { capacite: 500, cout: { argent: 3000, materiaux: {} } },
-  { capacite: 1000, cout: { argent: 12000, materiaux: {} } },
-  { capacite: 2500, cout: { argent: 40000, materiaux: { fer: 10 } } },
-  { capacite: 5000, cout: { argent: 100000, materiaux: { or: 10 } } },
+  { capacite: 500, cout: { argent: 1500, materiaux: { fer: 10 } } },
+  { capacite: 1000, cout: { argent: 4000, materiaux: { fer: 25, redstone: 10 } } },
+  { capacite: 2500, cout: { argent: 9000, materiaux: { fer: 45, redstone: 25 } } },
+  { capacite: 5000, cout: { argent: 18000, materiaux: { fer: 70, redstone: 45 } } },
 ]
 
 // À partir du prestige 3, on peut acheter d'autres foreuses : elles creusent ensemble,
@@ -294,12 +331,13 @@ export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', '
 // Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.
 // vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
 // sac = places dans son sac à dos.
-export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; prix: number }[] = [
-  { nom: 'Bois', vitesse: 0.8, profMax: 35, sac: 32, prix: 0 },
-  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, prix: 6000 },
-  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, prix: 20000 },
-  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, prix: 50000 },
-  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, prix: 120000 },
+// Prix revus le 19/10 : moins d'argent, plus de fer et de redstone (comme l'ascenseur).
+export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; cout: Cout }[] = [
+  { nom: 'Bois', vitesse: 0.8, profMax: 35, sac: 32, cout: { materiaux: {} } },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, cout: { argent: 3000, materiaux: { fer: 15, redstone: 5 } } },
+  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, cout: { argent: 7000, materiaux: { fer: 35, redstone: 20 } } },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, cout: { argent: 15000, materiaux: { fer: 60, redstone: 40 } } },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, cout: { argent: 30000, materiaux: { fer: 90, redstone: 70 } } },
 ]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
@@ -372,8 +410,10 @@ export const ZONES: Zone[] = [
   { nom: 'Abîmes', profMax: 150, classe: 'zone-abimes' },
 ]
 
-export function zoneDe(profondeur: number): Zone {
-  return ZONES.find((z) => profondeur <= z.profMax) ?? ZONES[ZONES.length - 1]
+// La zone (profondeurs de référence, mises à l'échelle de la mine du prestige).
+export function zoneDe(profondeur: number, prestige: number): Zone {
+  const reference = versReference(profondeur, prestige)
+  return ZONES.find((z) => reference <= z.profMax) ?? ZONES[ZONES.length - 1]
 }
 
 // ---------------------------------------------------------------------------
@@ -383,7 +423,7 @@ export function zoneDe(profondeur: number): Zone {
 export const VITESSE_JEU = 0.45
 
 // Durée (en secondes) pour casser un bloc (x1,5 dans la roche dure).
-export function dureeCasse(durete: number, profondeur: number, vitesse: number): number {
-  const malusProfondeur = profondeur > PROFONDEUR_DEEPSLATE ? 1.5 : 1
+export function dureeCasse(durete: number, profondeur: number, vitesse: number, prestige: number): number {
+  const malusProfondeur = estRocheDure(profondeur, prestige) ? 1.5 : 1
   return ((durete * malusProfondeur) / vitesse) * VITESSE_JEU
 }

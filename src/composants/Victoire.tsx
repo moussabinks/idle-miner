@@ -1,6 +1,6 @@
 // L'écran de victoire, quand on atteint la bedrock.
 
-import { BONUS_PRESTIGE, BONUS_VITESSE_PRESTIGE, PROFONDEUR_BEDROCK } from '../jeu/donnees'
+import { BONUS_PRESTIGE, BONUS_VITESSE_PRESTIGE, profondeurBedrock } from '../jeu/donnees'
 import type { EtatJeu } from '../jeu/mineur'
 
 type Props = {
@@ -23,7 +23,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
       <div className="carte victoire">
         <div className="victoire-trophee">🏆</div>
         <h2 id="titre-victoire">Bedrock atteinte !</h2>
-        <p>Tu as creusé jusqu'à -{PROFONDEUR_BEDROCK} m. Bravo, mineur !</p>
+        <p>Tu as creusé jusqu'à -{profondeurBedrock(etat.prestige)} m. Bravo, mineur ! Au prochain prestige, la mine descendra jusqu'à -{profondeurBedrock(etat.prestige + 1)} m.</p>
         <ul className="victoire-stats">
           <li>
             <strong>{etat.stats.blocsCasses.toLocaleString('fr-FR')}</strong> blocs cassés
