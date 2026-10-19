@@ -147,3 +147,4 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 - **2026-10-19** : jauges pour vendre ou envoyer une partie seulement (marché et ascenseur), « x2 » retiré de la case Pioche, minerais qui apparaissent petit à petit. Sauvegarde v9.
 - **2026-10-19** : ascenseur gardé au prestige, mineurs employés (prestige 2), plusieurs foreuses (prestige 3), arbre à 4 branches (Patron), boutons Envoyer / Remonter avec l'ascenseur (plus de pop-in), creusage Auto qui s'arrête si la pioche casse, trajets fluides. Sauvegarde v10.
 - **2026-10-19** : l'interface tient dans la hauteur de l'écran sur ordinateur (mine extensible, panneau qui défile seul, jauges compactes).
+- **2026-10-19** : nouveau dessin de l'ascenseur : cage en métal (toit, grille, plancher rayé jaune et noir, lampe qui clignote en route), caisse de minerai quand elle est chargée, puits plus large avec glissières et traverses, poulie qui tourne et câble.

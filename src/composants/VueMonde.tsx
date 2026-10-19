@@ -8,6 +8,7 @@ import { BLOCS, LARGEUR_MINE, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '..
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
+  ascenseurEnMouvement,
   auFond,
   dureeBlocActuel,
   estCassee,
@@ -319,14 +320,32 @@ export function VueMonde({
         {/* L'ascenseur (ou son emplacement s'il n'est pas construit) : la cabine monte et descend. */}
         <div className={`rail-ascenseur ${ascenseur.niveau > 0 ? 'construit' : ''}`} style={{ height: `calc(var(--pas) * ${front} + 14px)` }} />
         {ascenseur.niveau > 0 && (
-          <div className={`cabine ${dansLaCabine ? 'cabine-occupee' : ''}`} style={{ top: `calc(var(--pas) * ${ascenseur.position - 1})` }}>
-            {(Object.keys(ascenseur.chargement).length > 0 || nbSurQuai(etat) > 0) && <span className="cabine-chargee" />}
-            {dansLaCabine && (
-              <div ref={joueurCabineRef} className="passager">
-                <Personnage couleurPioche={couleurPioche} action="repos" />
-              </div>
-            )}
-          </div>
+          <>
+            {/* La poulie en haut du puits, et le câble qui tient la cabine. */}
+            <span className={`poulie-ascenseur ${ascenseurEnMouvement(etat) ? 'tourne' : ''}`} aria-hidden="true" />
+            <span className="cable-ascenseur" style={{ height: `calc(var(--pas) * ${ascenseur.position - 1} + 14px)` }} aria-hidden="true" />
+            {/* La cabine : une cage en métal avec un toit, une grille, un plancher rayé et une lampe. */}
+            <div
+              className={`cabine ${dansLaCabine ? 'cabine-occupee' : ''} ${ascenseurEnMouvement(etat) ? 'cabine-en-route' : ''}`}
+              style={{ top: `calc(var(--pas) * ${ascenseur.position - 1})` }}
+            >
+              <span className="cabine-toit" aria-hidden="true">
+                <span className="cabine-lampe" />
+              </span>
+              {/* Les minerais qu'elle transporte : une petite caisse pleine de minerai. */}
+              {(Object.keys(ascenseur.chargement).length > 0 || nbSurQuai(etat) > 0) && (
+                <span className="cabine-chargee" aria-hidden="true" />
+              )}
+              {dansLaCabine && (
+                <div ref={joueurCabineRef} className="passager">
+                  <Personnage couleurPioche={couleurPioche} action="repos" />
+                </div>
+              )}
+              {/* La grille passe devant le passager et le chargement. */}
+              <span className="cabine-grille" aria-hidden="true" />
+              <span className="cabine-plancher" aria-hidden="true" />
+            </div>
+          </>
         )}
 
         {/* Le joueur sur l'échelle. */}
