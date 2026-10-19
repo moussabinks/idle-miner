@@ -6,7 +6,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 
 ## Stack
 
-- **Vite + React + TypeScript**, 100 % côté navigateur, sans backend.
+- **Vite + React + TypeScript**, côté navigateur. Le seul « backend » est **Supabase** (décidé le 19/10), pour les comptes et la sauvegarde en ligne (et bientôt le leaderboard) : pas de serveur à nous. Le jeu doit toujours marcher sans lui (tout reste dans `localStorage`).
 - **Vitest** pour les tests (`npm test`), **oxlint** pour le lint (`npm run lint`).
 - Hébergement **Vercel** : chaque push sur `main` déploie la prod, et chaque Pull Request a son lien de preview.
 - Code sur GitHub, à deux développeurs : on passe par des branches et des PR, jamais de push direct sur `main`.
@@ -32,6 +32,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - Sons : fabriqués avec Web Audio (pas de fichier audio, donc rien à créditer) : bruitages dans `src/sons.ts`, musique et ambiances (oiseaux et vent à la surface, grotte dans la mine) dans `src/ambiance.ts`. Les deux se coupent depuis le bandeau (🔊 et 🎵).
 - Boutons : une couleur par sorte d'action (creuser, vendre, acheter, améliorer, réparer, enchanter, prestige, ascenseur, se déplacer...), voir « Les couleurs des boutons » dans `src/index.css`.
 - Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web), avec jusqu'à **5 mondes** (5 parties séparées) choisis sur l'écran d'accueil (`src/composants/Accueil.tsx`, logique dans `src/jeu/sauvegarde.ts`).
+- **Comptes (facultatifs)** : pseudo + mot de passe, sans email. Connecté, tous les mondes sont recopiés en ligne sur Supabase (`src/enLigne.ts` parle au serveur, `src/useCompte.ts` synchronise, règles pures dans `src/jeu/compte.ts`). La table et ses règles de sécurité sont dans `supabase/schema.sql` : toute nouvelle table doit avoir ses règles (RLS). Ne jamais mettre la clé `service_role` / secret dans le code.
 
 ## Choix de design hérités de la v1 (à respecter)
 

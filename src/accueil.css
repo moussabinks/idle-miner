@@ -259,3 +259,50 @@
     animation: none;
   }
 }
+
+/* --- Le compte (au-dessus des mondes) --------------------------------------- */
+
+.carte-compte {
+  margin-bottom: 18px;
+}
+
+.carte-compte-formulaire,
+.carte-compte-connecte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.carte-compte-texte {
+  display: flex;
+  flex-direction: column;
+  margin-right: auto;
+}
+
+.carte-compte input {
+  width: 150px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-claire);
+  color: var(--texte);
+  font: inherit;
+}
+
+.carte-compte-connecte .lien {
+  margin-left: auto;
+}
+
+.carte-compte-erreur {
+  margin: 8px 0 0;
+}
+
+/* Sur téléphone, les champs prennent toute la largeur. */
+@media (max-width: 560px) {
+  .carte-compte input,
+  .carte-compte .bouton {
+    flex: 1 1 100%;
+    width: auto;
+  }
+}

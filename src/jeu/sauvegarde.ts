@@ -131,6 +131,55 @@ export function supprimerMonde(stockage: Stockage, id: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tous les mondes d'un coup (pour la sauvegarde en ligne)
+// ---------------------------------------------------------------------------
+
+// Une copie brute de tous les mondes du navigateur : clé du localStorage -> texte.
+// On l'envoie telle quelle en ligne, et on la remet telle quelle sur un autre appareil.
+export type SauvegardeComplete = Record<string, string>
+
+export function exporterTout(stockage: Stockage): SauvegardeComplete {
+  const copie: SauvegardeComplete = {}
+  try {
+    const liste = stockage.getItem(CLE_MONDES)
+    if (liste === null) return copie
+    copie[CLE_MONDES] = liste
+    for (const monde of listerMondes(stockage)) {
+      for (const cle of [cleMonde(monde.id), cleHorodatage(monde.id)]) {
+        const texte = stockage.getItem(cle)
+        if (texte !== null) copie[cle] = texte
+      }
+    }
+  } catch {
+    // Stockage interdit : on renvoie ce qu'on a pu lire.
+  }
+  return copie
+}
+
+// Remplace tous les mondes du navigateur par ceux de la copie.
+export function importerTout(stockage: Stockage, copie: SauvegardeComplete): void {
+  for (const monde of listerMondes(stockage)) supprimerMonde(stockage, monde.id)
+  try {
+    // Par prudence, on n'écrit que des clés de mondes (pas les réglages du son, par exemple).
+    for (const [cle, texte] of Object.entries(copie)) {
+      if (cle.startsWith('idle-miner-monde')) stockage.setItem(cle, texte)
+    }
+  } catch {
+    // Stockage plein ou interdit : tant pis.
+  }
+}
+
+// Les mondes rangés dans une copie (liste vide si elle n'en a pas ou si elle est abîmée).
+export function mondesDeLaCopie(copie: SauvegardeComplete): InfoMonde[] {
+  try {
+    const liste = JSON.parse(copie[CLE_MONDES] ?? '[]')
+    return Array.isArray(liste) ? (liste as InfoMonde[]) : []
+  } catch {
+    return []
+  }
+}
+
+// ---------------------------------------------------------------------------
 // La partie d'un monde
 // ---------------------------------------------------------------------------
 
