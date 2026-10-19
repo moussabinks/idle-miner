@@ -232,7 +232,7 @@ export function usePartie() {
             texte:
               apres.ascenseur.niveau > 0
                 ? '🎒 Sac plein ! Envoie tes objets à la surface avec l’ascenseur (panneau Sac).'
-                : '🎒 Sac plein ! Remonte vendre au marché (↑).',
+                : '🎒 Sac plein ! Remonte vendre au marché (bouton Village).',
             succes: false,
           },
         ])

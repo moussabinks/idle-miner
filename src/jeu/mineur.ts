@@ -478,7 +478,7 @@ function recolter(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   const nombre = nbDrops(etat, bloc, aleatoire)
   if (bloc === 'diamant') etat.stats.diamantsTrouves += nombre
   const perdus = stocker(etat, bloc, nombre)
-  if (perdus > 0) messages.push('🎒 Sac plein ! Remonte vendre au marché (ou envoie l’ascenseur).')
+  if (perdus > 0) messages.push('🎒 Sac plein ! Remonte vendre au marché (bouton Village) ou envoie l’ascenseur.')
   return messages
 }
 

@@ -67,7 +67,8 @@ Depuis la v8 de l'état (`VERSION_ETAT = 8`, anciennes sauvegardes migrées auto
 - **Quitter le front de taille** : le mineur **marche jusqu'au puits** (case par case, 0,12 s par case) avant de prendre l'ascenseur ou l'échelle (`voyager`, `depart`, `avancerMarche`). Il ne se téléporte plus.
 - **Noms** : le bouton « Front » s'appelle « Mine », le stand « Puits » s'appelle « Mine » et a un nouveau dessin (galerie dans un rocher, poutres, lanterne, rails, wagonnet).
 - **Succès** : un petit bouton « 🏅 x/16 » en haut à droite ouvre une fenêtre (ils ne prennent plus de place à côté du jeu).
-- **Notifications** : en bas à droite sur ordinateur, en haut sur téléphone (plus jamais sur les boutons).
+- **Notifications** : en bas de la colonne de droite (sous le panneau du stand ou du sac), en plus gros, sans cacher la mine ni les boutons ; en haut de l'écran sur téléphone.
+- **Sac plein** : la case « Sac » du bandeau clignote en rouge, tremble un peu et dit « Sac plein ! Vends ou envoie tes minerais » (pour qu'un nouveau joueur comprenne pourquoi il ne creuse plus).
 - **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms).
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
@@ -131,3 +132,4 @@ Depuis la v8 de l'état (`VERSION_ETAT = 8`, anciennes sauvegardes migrées auto
 - **2026-10-19** : sacs de 512, 1 024 et 2 048 places au Bazar. La caméra suit enfin le mineur dans l'ascenseur (descente depuis le village).
 - **2026-10-19** : économie basée sur l'argent (ascenseur, foreuse et enchantements coûtent surtout de l'argent, peu de minerais), ascenseur à 6 niveaux, foreuse avec un niveau de plus en forage et en chariot.
 - **2026-10-19** : barre d'actions à 4 boutons (plus de flèches), le mineur marche jusqu'au puits avant de monter, « Front » et « Puits » renommés « Mine » (nouvelle entrée de mine), succès dans une fenêtre, minuteur de l'ascenseur, ascenseur constructible au village, notifications en bas à droite. Sauvegarde v8.
+- **2026-10-19** : alerte visuelle sur la case Sac quand le sac est plein, notifications plus visibles (colonne de droite).

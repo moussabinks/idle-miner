@@ -342,6 +342,8 @@ function App() {
 
         <div className="colonne-panneaux">
           {panneau}
+          {/* Les notifications, sous le panneau de droite : bien visibles, sans cacher le jeu. */}
+          <Toasts toasts={toasts} />
         </div>
       </main>
 
@@ -367,7 +369,6 @@ function App() {
       )}
       {arbreOuvert && <ArbrePrestige etat={etat} jouer={jouer} onFermer={() => setArbreOuvert(false)} />}
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
-      <Toasts toasts={toasts} />
     </div>
   )
 }

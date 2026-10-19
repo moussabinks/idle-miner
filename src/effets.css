@@ -200,6 +200,27 @@
   100% { transform: scale(1); }
 }
 
+/* --- Sac plein : la case du bandeau clignote en rouge et tremble un peu ------ */
+
+.hud-alerte {
+  border-color: var(--rouge);
+  animation: alerte-sac 1.4s ease-in-out infinite;
+}
+
+.hud-alerte .hud-titre {
+  color: #ff8a84;
+  font-weight: 800;
+}
+
+@keyframes alerte-sac {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(229 83 75 / 0); transform: translateX(0); }
+  10% { transform: translateX(-3px); }
+  20% { transform: translateX(3px); }
+  30% { transform: translateX(-2px); }
+  40% { transform: translateX(0); }
+  50% { box-shadow: 0 0 0 4px rgb(229 83 75 / 0.55), 0 0 18px rgb(229 83 75 / 0.6); }
+}
+
 /* --- Les petits boutons du bandeau (son, arbre de prestige) --------------- */
 
 .hud-bouton {
@@ -384,6 +405,7 @@
   .gain-vente-texte,
   .piece,
   .argent-saute,
+  .hud-alerte,
   .hud-bouton.a-depenser,
   .talent-disponible,
   .talent-nouveau {

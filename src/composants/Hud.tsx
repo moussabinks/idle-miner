@@ -9,6 +9,7 @@ import {
   estCassee,
   nbDansSac,
   piocheEquipee,
+  sacPlein,
   tailleSac,
   vitesse,
   type EtatJeu,
@@ -29,6 +30,7 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
   const [son, setSon] = useState(sonActif)
   const [musique, setMusique] = useState(musiqueActive)
   const points = pointsDisponibles(etat)
+  const plein = sacPlein(etat)
   const pioche = piocheEquipee(etat)
   const cassee = estCassee(etat)
   const zone = zoneDe(etat.profondeur)
@@ -73,9 +75,11 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
         </span>
       </div>
 
-      <div className="hud-case hud-sac">
-        <span className="hud-titre">🎒 Sac</span>
-        <Barre valeur={nbDansSac(etat)} max={tailleSac(etat)} texte={`${nbDansSac(etat)} / ${tailleSac(etat)}`} couleur="or" />
+      {/* Sac plein : la case clignote en rouge, pour qu'un nouveau joueur comprenne
+          tout de suite pourquoi il ne peut plus creuser. */}
+      <div className={`hud-case hud-sac ${plein ? 'hud-alerte' : ''}`}>
+        <span className="hud-titre">{plein ? '🎒 Sac plein ! Vends ou envoie tes minerais' : '🎒 Sac'}</span>
+        <Barre valeur={nbDansSac(etat)} max={tailleSac(etat)} texte={`${nbDansSac(etat)} / ${tailleSac(etat)}`} couleur={plein ? 'rouge' : 'or'} />
       </div>
 
       <div className="hud-case hud-petits">
