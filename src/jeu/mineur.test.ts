@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { LARGEUR_MINE, PIOCHES } from './donnees'
+import { LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK } from './donnees'
 import {
   argentGagneTotal,
   acheterPioche,
@@ -134,7 +134,7 @@ describe('minage', () => {
     placerAuFront(etat, PIOCHES[0].profMax)
     coucheDe(etat, 'pierre')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, aleatoireAvecGraine(i))
-    expect(etat.profondeur).toBe(30)
+    expect(etat.profondeur).toBe(PIOCHES[0].profMax)
     expect(etat.enGalerie).toBe(true)
     expect(etat.coucheActuelle.every((b) => b !== null)).toBe(true)
   })
@@ -162,11 +162,11 @@ describe('minage', () => {
     const etat = nouvellePartie()
     etat.pioches[4] = 0
     etat.niveauPioche = 4
-    placerAuFront(etat, 127)
+    placerAuFront(etat, PROFONDEUR_BEDROCK - 1)
     coucheDe(etat, 'deepslate')
     for (let i = 0; i < LARGEUR_MINE; i++) casserBloc(etat, toujours(0.5))
     expect(etat.victoire).toBe(true)
-    expect(etat.profondeur).toBe(127) // la bedrock est juste en dessous
+    expect(etat.profondeur).toBe(PROFONDEUR_BEDROCK - 1) // la bedrock est juste en dessous
     expect(etat.enGalerie).toBe(true)
     // On continue de creuser des galeries sur la dernière couche.
     const avant = etat.stats.blocsCasses

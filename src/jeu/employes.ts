@@ -7,7 +7,7 @@
 
 import type { Aleatoire } from './aleatoire'
 import {
-  BLOCS_FORES_PAR_METRE,
+  BLOCS_PAR_METRE_EMPLOYE,
   DUREE_MIN_TRAJET_EMPLOYE,
   MAX_EMPLOYES,
   NIVEAUX_EMPLOYE,
@@ -164,8 +164,8 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         const bloc = tirerBlocNormal(employe.profondeur, aleatoire)
         employe.sac[bloc] = (employe.sac[bloc] ?? 0) + 1
         employe.blocsCasses += 1
-        // Il descend d'un mètre tous les 10 blocs, tant que sa pioche le permet.
-        if (employe.blocsCasses % BLOCS_FORES_PAR_METRE === 0) {
+        // Il descend d'un mètre tous les 5 blocs (sa galerie est étroite), tant que sa pioche le permet.
+        if (employe.blocsCasses % BLOCS_PAR_METRE_EMPLOYE === 0) {
           employe.profondeur = Math.min(profondeurMaxEmploye(employe), employe.profondeur + 1)
         }
       }

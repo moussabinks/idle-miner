@@ -11,8 +11,8 @@ describe('pioches', () => {
 })
 
 describe('dureeCasse', () => {
-  it('applique le malus x1.5 dans la deepslate (sous -80 m)', () => {
-    expect(dureeCasse(3, 81, 6)).toBeCloseTo(dureeCasse(3, 80, 6) * 1.5)
+  it('applique le malus x1.5 dans la roche dure (sous -94 m)', () => {
+    expect(dureeCasse(3, 95, 6)).toBeCloseTo(dureeCasse(3, 94, 6) * 1.5)
   })
 
   it('casse la pierre en 0.3375 s avec une pioche en bois', () => {

@@ -10,6 +10,7 @@
 //
 // Le bouton 🎵 du bandeau coupe musique et ambiances (réglage gardé dans le localStorage).
 
+import { PROFONDEUR_BEDROCK } from './jeu/donnees'
 import { contexteAudio, ecrireReglage, lireReglage, quandLeSonEstPermis } from './sons'
 
 const CLE_MUSIQUE = 'idle-miner-musique'
@@ -72,7 +73,7 @@ function appliquerLieu() {
   const { ctx, surface, grotte, envoiEchoGrotte, musique } = noeuds
   const t = ctx.currentTime
   // Plus on est profond, plus la grotte s'entend (et plus elle résonne).
-  const fond = Math.min(1, profondeur / 128)
+  const fond = Math.min(1, profondeur / PROFONDEUR_BEDROCK)
   // Le vent et les oiseaux s'arrêtent vite en entrant dans la mine (ils ne descendent pas avec toi).
   surface.gain.setTargetAtTime(aLaSurface ? 1 : 0, t, aLaSurface ? 1.2 : 0.4)
   grotte.gain.setTargetAtTime(aLaSurface ? 0 : 0.55 + 0.45 * fond, t, 1.2)

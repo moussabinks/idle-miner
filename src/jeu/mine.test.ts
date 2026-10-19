@@ -8,36 +8,36 @@ function blocsPossibles(profondeur: number) {
 }
 
 describe('génération de la mine', () => {
-  it('a de la terre en surface, de la pierre puis de la deepslate', () => {
+  it('a de la terre en surface, de la pierre puis de la roche dure', () => {
     expect(blocsPossibles(5)).toContain('terre')
     expect(blocsPossibles(20)).toContain('pierre')
-    expect(blocsPossibles(90)).toContain('deepslate')
-    expect(blocsPossibles(90)).not.toContain('pierre')
+    expect(blocsPossibles(100)).toContain('deepslate')
+    expect(blocsPossibles(100)).not.toContain('pierre')
   })
 
-  it("ne met les minerais qu'à partir de leur profondeur", () => {
-    expect(blocsPossibles(6)).not.toContain('charbon')
-    expect(blocsPossibles(7)).toContain('charbon') // un peu de charbon et de fer près de la surface
-    expect(blocsPossibles(7)).toContain('fer')
-    expect(blocsPossibles(17)).not.toContain('redstone')
-    expect(blocsPossibles(18)).toContain('redstone')
-    expect(blocsPossibles(24)).not.toContain('or')
-    expect(blocsPossibles(25)).toContain('or')
-    expect(blocsPossibles(44)).not.toContain('diamant')
-    expect(blocsPossibles(45)).toContain('diamant')
-    expect(blocsPossibles(95)).not.toContain('debris')
-    expect(blocsPossibles(96)).toContain('debris')
+  it("ne met les minerais qu'à partir de leur profondeur (mine à -150 m)", () => {
+    expect(blocsPossibles(7)).not.toContain('charbon')
+    expect(blocsPossibles(8)).toContain('charbon') // un peu de charbon et de fer près de la surface
+    expect(blocsPossibles(8)).toContain('fer')
+    expect(blocsPossibles(20)).not.toContain('redstone')
+    expect(blocsPossibles(21)).toContain('redstone')
+    expect(blocsPossibles(28)).not.toContain('or')
+    expect(blocsPossibles(29)).toContain('or')
+    expect(blocsPossibles(52)).not.toContain('diamant')
+    expect(blocsPossibles(53)).toContain('diamant')
+    expect(blocsPossibles(111)).not.toContain('debris')
+    expect(blocsPossibles(112)).toContain('debris')
   })
 
   it('les minerais apparaissent petit à petit (pas d’un coup)', () => {
     const poids = (profondeur: number, bloc: string) => poidsDesBlocs(profondeur).find((c) => c.valeur === bloc)?.poids ?? 0
     // L'or : très rare au début, puis de plus en plus fréquent, jusqu'à son maximum.
-    expect(poids(25, 'or')).toBeLessThan(1)
-    expect(poids(45, 'or')).toBeGreaterThan(poids(25, 'or'))
-    expect(poids(65, 'or')).toBeGreaterThan(poids(45, 'or'))
-    expect(poids(100, 'or')).toBe(poids(65, 'or'))
+    expect(poids(29, 'or')).toBeLessThan(1)
+    expect(poids(50, 'or')).toBeGreaterThan(poids(29, 'or'))
+    expect(poids(76, 'or')).toBeGreaterThan(poids(50, 'or'))
+    expect(poids(120, 'or')).toBe(poids(76, 'or'))
     // Jamais de saut brutal d'un mètre à l'autre.
-    for (let p = 7; p < 127; p++) {
+    for (let p = 8; p < 149; p++) {
       for (const bloc of ['charbon', 'fer', 'redstone', 'or', 'lapis', 'emeraude', 'diamant']) {
         expect(Math.abs(poids(p + 1, bloc) - poids(p, bloc))).toBeLessThan(1)
       }
@@ -45,10 +45,11 @@ describe('génération de la mine', () => {
   })
 
   it('place les blocs spéciaux à partir de leur profondeur', () => {
-    expect(blocsPossibles(16)).not.toContain('coffre')
-    expect(blocsPossibles(17)).toContain('coffre')
-    expect(blocsPossibles(41)).toContain('lave')
-    expect(blocsPossibles(51)).toContain('geode')
+    expect(blocsPossibles(19)).not.toContain('coffre')
+    expect(blocsPossibles(20)).toContain('coffre')
+    expect(blocsPossibles(47)).not.toContain('lave')
+    expect(blocsPossibles(48)).toContain('lave')
+    expect(blocsPossibles(60)).toContain('geode')
   })
 
   it('la foreuse ne tire jamais de bloc spécial', () => {
