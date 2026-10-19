@@ -127,7 +127,7 @@ Depuis la v11 de l'état (`VERSION_ETAT = 11`, anciennes sauvegardes migrées au
 - Valeurs choisies par nous, à ajuster après de vraies parties : prix de l'ascenseur, de la foreuse et des enchantements (voir l'économie ci-dessous), vitesse de l'échelle (0,15 s/m), coûts et niveaux de la foreuse.
 - Une nouvelle partie commence à -2 m : le premier mètre est l'entrée du puits.
 - **Économie (19/10)** : les améliorations coûtent surtout de l'argent, les minerais ne servent plus que d'appoint. Le joueur avait trop d'argent sans rien pour le dépenser (fin du prestige 2), et l'ascenseur était trop cher en fer et redstone au début.
-  - Ascenseur : 250 $ + 5 fer, puis 1 500 $ + 10 fer + 5 redstone, 5 000 $ + 20 fer + 10 redstone, 15 000 $ + 20 redstone, 35 000 $ + 10 or, 80 000 $ + 5 diamants.
+  - Ascenseur (revu le 19/10 : trop cher au prestige 3, on pouvait à peine l'améliorer) : **peu d'argent, beaucoup de fer et de redstone**. 250 $ + 8 fer, puis 1 200 $ + 15 fer + 5 redstone, 2 000 $ + 30 fer + 15 redstone, 4 500 $ + 50 fer + 30 redstone, 9 000 $ + 80 fer + 50 redstone, 18 000 $ + 120 fer + 80 redstone (avant : jusqu'à 80 000 $). Bot : médiane environ 17 min.
   - Foreuse : activation 5 000 $ + 10 fer + 5 redstone. Forage 6 000 $, 20 000 $, 60 000 $, 150 000 $ (+ quelques minerais). Chariot 3 000 $, 12 000 $, 40 000 $, 100 000 $.
   - Enchantements : argent + lapis + émeraudes, par niveau (efficacité 400 $ + 3 lapis + 1 émeraude, fortune 600 $ + 4 + 1, solidité 300 $ + 3 + 1).
   - **Fortune affaiblie (19/10)**, c'était trop fort : chaque niveau donne 20 % de chance de **doubler** un minerai (Fortune I 20 %, II 40 %, III 60 %), jamais plus de ×2. Avant (formule de la v1), Fortune III donnait jusqu'à ×4.
@@ -182,3 +182,4 @@ Depuis la v11 de l'état (`VERSION_ETAT = 11`, anciennes sauvegardes migrées au
 - **2026-10-19** : flèche qui guide vers la foreuse (prestige 1) et les mineurs (prestige 2) tout juste débloqués, sac à dos gardé au prestige. Sauvegarde v13.
 - **2026-10-19** : bug corrigé (on creusait plus vite pendant les trajets d'ascenseur), nouvelle ambiance de grotte (gouttes d'eau avec écho, cailloux qui roulent, plus de vent sous terre).
 - **2026-10-19** : boutons de l'ascenseur au-dessus de la liste du sac, nouveaux objets en bas de la liste, pioches gardées au prestige.
+- **2026-10-19** : ascenseur moins cher en argent mais plus cher en fer et redstone (dernier niveau 18 000 $ au lieu de 80 000 $).

@@ -449,24 +449,25 @@ describe('ascenseur', () => {
     expect(etat.inventaire).toEqual({})
   })
 
-  it('se construit puis s’améliore, surtout avec de l’argent, directement dans la mine', () => {
+  it('se construit puis s’améliore avec un peu d’argent et beaucoup de fer et de redstone, dans la mine', () => {
     const etat = nouvellePartie()
-    etat.argent = 2000
-    etat.inventaire = { fer: 20, redstone: 5 }
-    ameliorerAscenseur(etat) // niveau 1 : 250 $ + 5 fer (pas besoin de redstone)
+    etat.prestige = 1 // pour avoir le droit au niveau 3
+    etat.argent = 5000
+    etat.inventaire = { fer: 30, redstone: 5 }
+    ameliorerAscenseur(etat) // niveau 1 : 250 $ + 8 fer (pas besoin de redstone)
     expect(etat.ascenseur.niveau).toBe(1)
-    ameliorerAscenseur(etat) // niveau 2 : 1 500 $ + 10 fer + 5 redstone
+    ameliorerAscenseur(etat) // niveau 2 : 1 200 $ + 15 fer + 5 redstone
     expect(etat.ascenseur.niveau).toBe(2)
-    expect(etat.argent).toBe(250)
-    expect(etat.inventaire).toEqual({ fer: 5 })
-    ameliorerAscenseur(etat) // niveau 3 : pas assez d'argent
+    expect(etat.argent).toBe(3550)
+    expect(etat.inventaire).toEqual({ fer: 7 })
+    ameliorerAscenseur(etat) // niveau 3 : l'argent suffit, mais pas le fer et la redstone
     expect(etat.ascenseur.niveau).toBe(2)
   })
 
   it('a 6 niveaux, jusqu’à 1 024 objets par voyage, débloqués petit à petit par les prestiges', () => {
     const etat = nouvellePartie()
     etat.argent = 1_000_000
-    etat.inventaire = { fer: 100, redstone: 100, or: 100, diamant: 100 }
+    etat.inventaire = { fer: 500, redstone: 500 }
     // Au prestige 0 : niveau 2 au plus, même avec plein d'argent.
     while (peutAmeliorerAscenseur(etat)) ameliorerAscenseur(etat)
     expect(etat.ascenseur.niveau).toBe(2)
