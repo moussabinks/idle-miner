@@ -24,6 +24,17 @@ describe('stands à découvrir (la flèche du village)', () => {
 })
 
 describe('prestige', () => {
+  it('garde les pioches débloquées, réparées, et équipe la meilleure', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    etat.pioches = { 0: 10, 1: 0, 2: 100, 3: 500, 4: 800 }
+    etat.meilleure = 4
+    etat.niveauPioche = 2
+    const suite = prestige(etat, aleatoireAvecGraine(2))
+    expect(suite.pioches).toEqual({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 })
+    expect(suite.meilleure).toBe(4)
+    expect(suite.niveauPioche).toBe(4)
+  })
+
   it('garde la taille du sac à dos', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     etat.niveauSac = 4

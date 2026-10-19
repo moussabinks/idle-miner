@@ -31,8 +31,9 @@ type Props = {
 export function Inventaire({ etat, jouer, onRemonter }: Props) {
   // Les quantités choisies avec les jauges (par défaut : tout, sauf les objets gardés).
   const [choix, setChoix] = useState<Choix>({})
-  // Les objets les plus précieux en premier.
-  const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  // Dans l'ordre où on les a trouvés : un nouvel objet arrive en bas de la liste, pour ne pas
+  // bousculer les lignes du haut pendant qu'on creuse (le sac garde l'ordre d'arrivée).
+  const piles = Object.entries(etat.inventaire) as [IdBloc, number][]
   const ascenseur = etat.ascenseur
   const avecAscenseur = ascenseur.niveau > 0
   const lot = lotChoisi(choix, ascenseur.garder, piles)
@@ -71,34 +72,8 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
 
   return (
     <div className="inventaire">
-      {piles.length === 0 ? (
-        <p className="discret">Ton sac est vide. Creuse !</p>
-      ) : avecAscenseur ? (
-        <>
-          <p className="discret">Choisis combien l'ascenseur emporte de chaque objet au marché.</p>
-          <Jauges
-            piles={piles}
-            choix={choix}
-            gardes={ascenseur.garder}
-            onChanger={changer}
-            prixUnitaire={prixUnitaire}
-            onToutSelectionner={toutSelectionner}
-          />
-        </>
-      ) : (
-        // Sans ascenseur, on ne peut rien faire d'ici : juste regarder.
-        <ul>
-          {piles.map(([id, nombre]) => (
-            <li key={id}>
-              <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-              <span className="inventaire-nom">{BLOCS[id].nom}</span>
-              <span className="inventaire-nombre">×{nombre}</span>
-              <span className="inventaire-valeur">{Math.round(nombre * prixUnitaire(id))} $</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
+      {/* Les boutons de l'ascenseur en haut, au-dessus de la liste : ils ne bougent pas quand
+          de nouveaux objets arrivent dans le sac (on peut cliquer sans viser une cible mouvante). */}
       {avecAscenseur ? (
         <div className="envoi-ascenseur">
           {surLeQuai > 0 && <p className="discret">📦 {surLeQuai} objet(s) attendent sur le quai de l'ascenseur : ils partent en premier.</p>}
@@ -131,6 +106,34 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
           </label>
         </div>
       ) : null}
+      {piles.length === 0 ? (
+        <p className="discret">Ton sac est vide. Creuse !</p>
+      ) : avecAscenseur ? (
+        <>
+          <p className="discret">Choisis combien l'ascenseur emporte de chaque objet au marché.</p>
+          <Jauges
+            piles={piles}
+            choix={choix}
+            gardes={ascenseur.garder}
+            onChanger={changer}
+            prixUnitaire={prixUnitaire}
+            onToutSelectionner={toutSelectionner}
+          />
+        </>
+      ) : (
+        // Sans ascenseur, on ne peut rien faire d'ici : juste regarder.
+        <ul>
+          {piles.map(([id, nombre]) => (
+            <li key={id}>
+              <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+              <span className="inventaire-nom">{BLOCS[id].nom}</span>
+              <span className="inventaire-nombre">×{nombre}</span>
+              <span className="inventaire-valeur">{Math.round(nombre * prixUnitaire(id))} $</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
 
       {/* L'ascenseur se construit et s'améliore directement d'ici. */}
       <div className="ligne-achat carte-ascenseur">
