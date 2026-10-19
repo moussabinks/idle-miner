@@ -137,6 +137,7 @@ export type EtatJeu = {
   prestige: number
   succes: string[] // identifiants des succès débloqués (gardés au prestige)
   stats: Statistiques
+  argentGagneAvant: number // l'argent gagné pendant les prestiges précédents (pour le classement)
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
   employes: Employe[] // les mineurs employés (gardés à chaque prestige)
@@ -144,7 +145,7 @@ export type EtatJeu = {
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 10
+export const VERSION_ETAT = 11
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -193,10 +194,19 @@ export type Heritage = {
   talents: IdTalent[]
   niveauAscenseur: number
   employes: Employe[]
+  argentGagneAvant: number
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
-  const { succes = [], nonAVendre = [], foreuse = nouvelleForeuse(), talents = [], niveauAscenseur = 0, employes = [] } = heritage
+  const {
+    succes = [],
+    nonAVendre = [],
+    foreuse = nouvelleForeuse(),
+    talents = [],
+    niveauAscenseur = 0,
+    employes = [],
+    argentGagneAvant = 0,
+  } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
 
@@ -232,6 +242,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
       lavesEteintes: 0,
       diamantsTrouves: 0,
     },
+    argentGagneAvant,
     victoire: false,
     talents: [...talents],
     employes: structuredClone(employes),
@@ -245,6 +256,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
 // On garde les succès, les objets gardés au marché, les talents, et tout ce qui
 // automatise le jeu : la foreuse, le niveau de l'ascenseur et les mineurs employés.
+// L'argent gagné est ajouté au total de la partie (pour le classement).
 // Le point de prestige gagné se dépense ensuite dans l'arbre (voir talents.ts).
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   return creerPartie(aleatoire, etat.prestige + 1, {
@@ -254,7 +266,13 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     talents: etat.talents,
     niveauAscenseur: etat.ascenseur.niveau,
     employes: etat.employes,
+    argentGagneAvant: argentGagneTotal(etat),
   })
+}
+
+// Tout l'argent gagné depuis le début, prestiges compris (c'est ce que classe le leaderboard).
+export function argentGagneTotal(etat: EtatJeu): number {
+  return etat.argentGagneAvant + etat.stats.argentGagne
 }
 
 // ---------------------------------------------------------------------------

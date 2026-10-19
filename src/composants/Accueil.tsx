@@ -18,6 +18,7 @@ import {
   type InfoMonde,
 } from '../jeu/sauvegarde'
 import type { Compte } from '../useCompte'
+import { CarteClassement } from './CarteClassement'
 import { CarteCompte } from './CarteCompte'
 import { Personnage } from './Personnage'
 
@@ -279,6 +280,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
           )}
         </div>
       </section>
+
+      <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} />
     </div>
   )
 }

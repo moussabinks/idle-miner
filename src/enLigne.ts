@@ -1,11 +1,12 @@
-// La partie « en ligne » : les comptes et la sauvegarde des mondes sur Supabase.
+// La partie « en ligne » : les comptes, la sauvegarde des mondes et le classement sur Supabase.
 // Supabase est un service hébergé qui nous donne une base de données et des comptes
 // (avec les mots de passe bien protégés), sans qu'on ait à écrire de serveur.
 //
-// La table et ses règles de sécurité sont dans `supabase/schema.sql`.
+// Les tables et leurs règles de sécurité sont dans `supabase/schema.sql` et `supabase/classement.sql`.
 // Si Supabase ne répond pas, le jeu marche quand même : tout reste dans le navigateur.
 
 import { createClient } from '@supabase/supabase-js'
+import type { LigneClassement, Score, TriClassement } from './jeu/classement'
 import { emailDuPseudo, type SauvegardeEnLigne } from './jeu/compte'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
 
@@ -75,4 +76,30 @@ export async function envoyerMondes(joueur: Joueur, parties: SauvegardeComplete)
   const { error } = await supabase.from('sauvegardes').upsert({ joueur: joueur.id, parties, envoyee_le: envoyeeLe })
   if (error) throw new Error(error.message)
   return envoyeeLe
+}
+
+// ---------------------------------------------------------------------------
+// Le classement
+// ---------------------------------------------------------------------------
+
+// Met à jour la ligne du joueur (le serveur garde toujours son meilleur score).
+export async function envoyerScore(joueur: Joueur, score: Score): Promise<void> {
+  const { error } = await supabase
+    .from('classement')
+    .upsert({ joueur: joueur.id, pseudo: joueur.pseudo, prestige: score.prestige, argent: score.argent })
+  if (error) throw new Error(error.message)
+}
+
+// Les meilleurs joueurs, au prestige (l'argent départage) ou à l'argent (le prestige départage).
+// Lisible même sans compte.
+export async function lireClassement(tri: TriClassement, nombre: number): Promise<LigneClassement[]> {
+  const autre: TriClassement = tri === 'prestige' ? 'argent' : 'prestige'
+  const { data, error } = await supabase
+    .from('classement')
+    .select('pseudo, prestige, argent')
+    .order(tri, { ascending: false })
+    .order(autre, { ascending: false })
+    .limit(nombre)
+  if (error) throw new Error(error.message)
+  return data.map((ligne) => ({ pseudo: String(ligne.pseudo), prestige: Number(ligne.prestige), argent: Number(ligne.argent) }))
 }

@@ -374,6 +374,10 @@ function migrer(donnees: unknown): unknown {
     }
   }
 
+  // Version 10 -> 11 : l'argent gagné aux prestiges précédents (pour le classement).
+  // On ne le connaît pas pour les anciennes parties : on part de 0.
+  if (etat.version === 10) etat = { ...etat, version: 11, argentGagneAvant: 0 }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -402,6 +406,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
     Array.isArray(etat.talents) &&
-    Array.isArray(etat.employes)
+    Array.isArray(etat.employes) &&
+    typeof etat.argentGagneAvant === 'number'
   )
 }
