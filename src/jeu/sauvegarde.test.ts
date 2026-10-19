@@ -33,7 +33,7 @@ describe('sauvegarde', () => {
     expect(charger(stockage)).toBeNull()
   })
 
-  it('met à jour une sauvegarde de la version 1 (jusqu’à la version 6)', () => {
+  it('met à jour une sauvegarde de la version 1 (jusqu’à la version 7)', () => {
     const stockage = fauxStockage()
     const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1)), version: 1, profondeur: 10 }
     for (const champ of ['position', 'cible', 'colonneMineur', 'nonAVendre', 'ascenseur', 'foreuse', 'talents', 'peculeRecu']) delete ancienne[champ]
@@ -41,7 +41,7 @@ describe('sauvegarde', () => {
     ancienne.couchesDessous = [['pierre', 'fer', 'pierre', 'pierre', 'pierre', 'pierre']]
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage)
-    expect(etat?.version).toBe(6)
+    expect(etat?.version).toBe(7)
     expect(etat?.position).toBe(9) // au front de taille, comme avant
     expect(etat?.ascenseur.niveau).toBe(0)
     expect(etat?.foreuse.active).toBe(false)
@@ -101,7 +101,7 @@ describe('sauvegarde', () => {
     ;(ancienne.coucheActuelle as string[])[3] = 'donjon'
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage)
-    expect(etat?.version).toBe(6)
+    expect(etat?.version).toBe(7)
     expect(etat?.coucheActuelle[3]).toBe('pierre')
     expect(etat?.succes).toEqual(['premier'])
     expect(etat?.talents).toEqual([]) // ses 2 prestiges lui donnent 2 points à dépenser

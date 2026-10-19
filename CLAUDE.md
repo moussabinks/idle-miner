@@ -29,7 +29,8 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - **Tout est en français** : UI, noms de variables et de fonctions, commentaires. Les mots-clés et API de TS/React restent en anglais.
 - Code lisible et commenté pour un public débutant, avec des noms explicites, sans astuces obscures.
 - Visuel : blocs, animations et effets en CSS (gradients, keyframes) tant qu'on n'a pas décidé d'utiliser des sprites.
-- Sons : fabriqués avec Web Audio dans `src/sons.ts` (pas de fichier audio), coupables depuis le bandeau.
+- Sons : fabriqués avec Web Audio (pas de fichier audio, donc rien à créditer) : bruitages dans `src/sons.ts`, musique et ambiances (oiseaux et vent à la surface, grotte dans la mine) dans `src/ambiance.ts`. Les deux se coupent depuis le bandeau (🔊 et 🎵).
+- Boutons : une couleur par sorte d'action (creuser, vendre, acheter, améliorer, réparer, enchanter, prestige, ascenseur, se déplacer...), voir « Les couleurs des boutons » dans `src/index.css`.
 - Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web).
 
 ## Choix de design hérités de la v1 (à respecter)

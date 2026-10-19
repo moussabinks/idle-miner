@@ -6,6 +6,7 @@
 //   au front de taille : ← → pour se déplacer, ↓ ou Espace pour creuser, ↑ pour remonter.
 
 import { useEffect, useRef, useState } from 'react'
+import { reglerLieu } from './ambiance'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
 import { IconePixel } from './composants/IconePixel'
@@ -60,6 +61,10 @@ function App() {
   const enVille = aLaSurface(etat)
   const auFront = auFond(etat)
   const dansLaCabine = etat.ascenseur.passager
+
+  // La musique d'ambiance suit le joueur : oiseaux et vent au village, grotte dans la mine.
+  const metres = Math.round(etat.position)
+  useEffect(() => reglerLieu(enVille, metres), [enVille, metres])
 
   // La marche dans le village.
   const village = useMarcheVillage(enVille)
@@ -187,7 +192,7 @@ function App() {
         <p className="discret">Promène-toi le long du chemin avec ← → (garde la touche appuyée), ou clique sur un stand pour y aller.</p>
         <div className="liste-cartes">
           {STANDS.map((s, index) => (
-            <button key={s.id} className="bouton bouton-petit bouton-aller" onClick={() => village.allerVers(STANDS[index].x)}>
+            <button key={s.id} className="bouton bouton-petit bouton-aller bouton-voyage" onClick={() => village.allerVers(STANDS[index].x)}>
               {s.icone && <IconePixel nom={s.icone} taille={18} />} {s.nom}
             </button>
           ))}
@@ -218,7 +223,7 @@ function App() {
                   Passe prestige quand tu veux : tu recommences avec +15 % sur les ventes et des pioches 10 % plus rapides (à chaque prestige),
                   et tu choisis un talent dans l'arbre de prestige.
                 </span>
-                <button className="bouton bouton-principal" onClick={faireLePrestige}>
+                <button className="bouton bouton-prestige" onClick={faireLePrestige}>
                   ⭐ Passer prestige {etat.prestige + 1}
                 </button>
               </div>
@@ -235,7 +240,7 @@ function App() {
                     : `${etat.talents.length} talent(s) débloqué(s). Le prochain prestige te donnera 1 point de plus.`}
                 </span>
                 <div className="boutons">
-                  <button className={`bouton bouton-petit ${pointsDisponibles(etat) > 0 ? 'bouton-principal' : ''}`} onClick={() => setArbreOuvert(true)}>
+                  <button className="bouton bouton-petit bouton-prestige" onClick={() => setArbreOuvert(true)}>
                     Ouvrir l'arbre
                   </button>
                 </div>
@@ -249,11 +254,11 @@ function App() {
                 : `À l'échelle, il faut ${Math.ceil(dureeEchelle(etat))} s pour y descendre.`}
             </p>
             <div className="boutons">
-              <button className="bouton bouton-principal" onClick={allerAuFront}>
+              <button className="bouton bouton-voyage" onClick={allerAuFront}>
                 ⏬ Descendre au front {cabineAuVillage ? 'en ascenseur' : "à l'échelle"}
               </button>
               {etat.ascenseur.niveau > 0 && !cabineAuVillage && (
-                <button className="bouton" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
+                <button className="bouton bouton-ascenseur" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
                   🛗 Appeler l'ascenseur
                 </button>
               )}
@@ -280,7 +285,7 @@ function App() {
           </button>
         </nav>
         <div className="panneau-contenu" role="tabpanel">
-          {ongletMine === 'sac' && <Inventaire etat={etat} />}
+          {ongletMine === 'sac' && <Inventaire etat={etat} jouer={jouer} />}
           {ongletMine === 'pioches' && <PanneauPioches etat={etat} jouer={jouer} />}
         </div>
       </section>
@@ -360,17 +365,17 @@ function App() {
                 <span className="emoji-bouton">⏹️ </span>Arrêter
               </button>
             ) : (
-              <button className="bouton bouton-principal" onClick={() => creuser(1)} disabled={!auFront}>
+              <button className="bouton bouton-creuser" onClick={() => creuser(1)} disabled={!auFront}>
                 <span className="emoji-bouton">⛏️ </span>Creuser
               </button>
             )}
-            <button className="bouton" onClick={() => creuser(10)} disabled={!auFront || enMinage}>
+            <button className="bouton bouton-creuser-x10" onClick={() => creuser(10)} disabled={!auFront || enMinage}>
               <span className="emoji-bouton">⛏️ </span>x10
             </button>
-            <button className="bouton" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
+            <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
               <span className="emoji-bouton">⏫ </span>Village
             </button>
-            <button className="bouton" onClick={allerAuFront} disabled={auFront || dansLaCabine}>
+            <button className="bouton bouton-voyage" onClick={allerAuFront} disabled={auFront || dansLaCabine}>
               <span className="emoji-bouton">⏬ </span>Front
             </button>
           </div>

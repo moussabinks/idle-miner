@@ -6,13 +6,15 @@
 import type { IdBloc } from './jeu/donnees'
 import { estCassee, indexBlocActuel, type EtatJeu, type Inventaire } from './jeu/mineur'
 
-// Les minerais qui méritent une petite fête quand on les trouve.
+// Les minerais rares ont droit à un son plus brillant (tous les minerais ont leur animation).
 export const MINERAIS_RARES: IdBloc[] = ['lapis', 'or', 'emeraude', 'diamant', 'debris']
+
+// La roche ordinaire : pas d'animation de trouvaille pour elle.
+const ROCHES: IdBloc[] = ['pierre', 'terre', 'gravier', 'deepslate']
 
 export type Evenement =
   | { type: 'casse'; bloc: IdBloc; colonne: number }
-  | { type: 'minerai' }
-  | { type: 'rare'; bloc: IdBloc; nombre: number; colonne: number }
+  | { type: 'trouvaille'; bloc: IdBloc; nombre: number; colonne: number; rare: boolean }
   | { type: 'vente'; montant: number }
   | { type: 'achat' }
   | { type: 'ding' }
@@ -42,14 +44,12 @@ export function evenementsEntre(avant: EtatJeu, apres: EtatJeu): Evenement[] {
 
     // Ce qui est tombé dans le sac (ou sur le quai).
     const ramasseAvant = ramasse(avant)
-    let mineraiTrouve = false
     for (const [id, nombre] of Object.entries(ramasse(apres))) {
-      const gagne = (nombre ?? 0) - (ramasseAvant[id as IdBloc] ?? 0)
-      if (gagne <= 0) continue
-      if (MINERAIS_RARES.includes(id as IdBloc)) evenements.push({ type: 'rare', bloc: id as IdBloc, nombre: gagne, colonne })
-      else if (id !== 'pierre' && id !== 'terre' && id !== 'gravier' && id !== 'deepslate') mineraiTrouve = true
+      const objet = id as IdBloc
+      const gagne = (nombre ?? 0) - (ramasseAvant[objet] ?? 0)
+      if (gagne <= 0 || ROCHES.includes(objet)) continue
+      evenements.push({ type: 'trouvaille', bloc: objet, nombre: gagne, colonne, rare: MINERAIS_RARES.includes(objet) })
     }
-    if (mineraiTrouve) evenements.push({ type: 'minerai' })
   }
 
   if (!estCassee(avant) && estCassee(apres) && avant.niveauPioche === apres.niveauPioche) evenements.push({ type: 'piocheCassee' })

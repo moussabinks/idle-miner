@@ -15,6 +15,7 @@ import {
 } from '../jeu/mineur'
 import { useState } from 'react'
 import { pointsDisponibles } from '../jeu/talents'
+import { basculerMusique, musiqueActive } from '../ambiance'
 import { basculerSon, sonActif } from '../sons'
 import { Barre } from './Barre'
 
@@ -26,6 +27,7 @@ type Props = {
 
 export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
   const [son, setSon] = useState(sonActif)
+  const [musique, setMusique] = useState(musiqueActive)
   const points = pointsDisponibles(etat)
   const pioche = piocheEquipee(etat)
   const cassee = estCassee(etat)
@@ -91,6 +93,14 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
         )}
         <button className="hud-bouton" onClick={() => setSon(basculerSon())} title={son ? 'Couper le son' : 'Remettre le son'} aria-label={son ? 'Couper le son' : 'Remettre le son'}>
           {son ? '🔊' : '🔇'}
+        </button>
+        <button
+          className={`hud-bouton ${musique ? '' : 'hud-bouton-coupe'}`}
+          onClick={() => setMusique(basculerMusique())}
+          title={musique ? 'Couper la musique et les ambiances' : 'Remettre la musique et les ambiances'}
+          aria-label={musique ? 'Couper la musique et les ambiances' : 'Remettre la musique et les ambiances'}
+        >
+          🎵
         </button>
       </div>
     </header>

@@ -10,6 +10,7 @@ import {
   COUT_ACTIVATION_FOREUSE,
   NIVEAUX_CHARIOT,
   NIVEAUX_FORAGE,
+  NIVEAU_RECHARGE_AUTO,
   PIOCHES,
   PRESTIGE_FOREUSE,
   PRIX_SEAU,
@@ -31,8 +32,11 @@ import {
   peutPayer,
   prochainNiveauChariot,
   prochainNiveauForage,
+  basculerChariot,
+  basculerRechargeAuto,
+  rechargeAutoDisponible,
   remplirForeuse,
-  valeurChariot,
+  selectionChariot,
   vendreChariot,
   viderChariotDansSac,
   vitesseForage,
@@ -53,9 +57,11 @@ import {
   peutAcheterPioche,
   peutEnchanter,
   peutReparer,
+  placeLibre,
   prixProchainSac,
   quantite,
   reparer,
+  valeurDe,
   vendre,
   type DevisReparation,
   type EtatJeu,
@@ -69,9 +75,12 @@ type PropsPanneau = {
   jouer: (action: Action) => void
 }
 
-function Bouton({ actif, onClick, children }: { actif: boolean; onClick: () => void; children: ReactNode }) {
+// Chaque sorte d'action a sa couleur (voir « Les couleurs des boutons » dans index.css).
+export type GenreBouton = 'neutre' | 'acheter' | 'ameliorer' | 'reparer' | 'enchanter' | 'vendre' | 'sac' | 'charbon'
+
+function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: () => void; genre: GenreBouton; children: ReactNode }) {
   return (
-    <button className="bouton bouton-petit" disabled={!actif} onClick={onClick}>
+    <button className={`bouton bouton-petit bouton-${genre}`} disabled={!actif} onClick={onClick}>
       {children}
     </button>
   )
@@ -193,17 +202,17 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
 
             <div className="boutons">
               {possedee && !equipee && (
-                <Bouton actif onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
+                <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
                   Équiper
                 </Bouton>
               )}
               {enVille && possedee && usure > 0 && (
-                <Bouton actif={peutReparer(etat, pioche.niveau)} onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
+                <Bouton actif={peutReparer(etat, pioche.niveau)} genre="reparer" onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
                   🔧 Réparer · {texteDevis(devis)}
                 </Bouton>
               )}
               {enVille && (
-                <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
+                <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} genre="acheter" onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
                   {prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'} · {pioche.prix.toLocaleString('fr-FR')} $
                 </Bouton>
               )}
@@ -231,7 +240,7 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
         </span>
         {prixSac !== null && (
           <div className="boutons">
-            <Bouton actif={etat.argent >= prixSac} onClick={() => jouer(acheterSac)}>
+            <Bouton actif={etat.argent >= prixSac} genre="acheter" onClick={() => jouer(acheterSac)}>
               Acheter · {prixSac.toLocaleString('fr-FR')} $
             </Bouton>
           </div>
@@ -242,7 +251,7 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
         <strong>🪣 Seau d'eau</strong>
         <span className="discret">Transforme une lave en obsidienne (60 $) au lieu de brûler ton sac. Tu en as {etat.seaux}.</span>
         <div className="boutons">
-          <Bouton actif={etat.argent >= PRIX_SEAU} onClick={() => jouer(acheterSeau)}>
+          <Bouton actif={etat.argent >= PRIX_SEAU} genre="acheter" onClick={() => jouer(acheterSeau)}>
             Acheter · {PRIX_SEAU} $
           </Bouton>
         </div>
@@ -295,7 +304,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           </span>
           <div className="boutons">
             <PrixCout etat={etat} cout={COUT_ACTIVATION_FOREUSE} />
-            <Bouton actif={peutActiverForeuse(etat)} onClick={() => jouer(activerForeuse)}>
+            <Bouton actif={peutActiverForeuse(etat)} genre="ameliorer" onClick={() => jouer(activerForeuse)}>
               Activer
             </Bouton>
           </div>
@@ -309,6 +318,9 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const chariot = prochainNiveauChariot(etat)
   const charbon = quantite(etat, 'charbon')
   const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  const selection = selectionChariot(etat)
+  const valeurSelection = valeurDe(etat, selection)
+  const nbSelection = Object.values(selection).reduce((total, n) => total + (n ?? 0), 0)
 
   return (
     <div className="liste-cartes">
@@ -331,30 +343,58 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         />
         <div className="boutons">
           <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon}</span>
-          <Bouton actif={charbon >= 1} onClick={() => jouer((e) => remplirForeuse(e, 1))}>
+          <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
             +1
           </Bouton>
-          <Bouton actif={charbon >= 10} onClick={() => jouer((e) => remplirForeuse(e, 10))}>
+          <Bouton actif={charbon >= 10} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 10))}>
             +10
           </Bouton>
-          <Bouton actif={charbon >= 1} onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
+          <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
             Tout
           </Bouton>
         </div>
+        {rechargeAutoDisponible(etat) ? (
+          <label className="case-option">
+            <input type="checkbox" checked={foreuse.rechargeAuto} onChange={() => jouer(basculerRechargeAuto)} />
+            Recharge automatique : elle brûle le charbon qu'elle remonte (en gardant une minute d'avance)
+          </label>
+        ) : (
+          <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {NIVEAU_RECHARGE_AUTO + 1} de forage.</span>
+        )}
       </div>
 
       <div className="ligne-achat">
         <strong>Chariot</strong>
         <Barre valeur={nbDansChariot(etat)} max={capaciteChariot(etat)} texte={`${nbDansChariot(etat)} / ${capaciteChariot(etat)}`} couleur="violet" />
-        {contenu.length > 0 && (
-          <span className="discret">{contenu.map(([id, nombre]) => `${nombre} ${BLOCS[id].nom.toLowerCase()}`).join(' · ')}</span>
+        {contenu.length === 0 ? (
+          <span className="discret">Le chariot est vide.</span>
+        ) : (
+          <>
+            <span className="discret">Coche ce que tu veux vendre ou mettre dans ton sac.</span>
+            <ul className="liste-vente liste-chariot">
+              {contenu.map(([id, nombre]) => {
+                const coche = !foreuse.nonCoches.includes(id)
+                return (
+                  <li key={id} className={coche ? '' : 'garde'}>
+                    <label>
+                      <input type="checkbox" checked={coche} onChange={() => jouer((e) => basculerChariot(e, id))} />
+                      <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+                      <span className="inventaire-nom">{BLOCS[id].nom}</span>
+                      <span className="inventaire-nombre">×{nombre}</span>
+                      <span className="inventaire-valeur">{Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $</span>
+                    </label>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
         )}
         <div className="boutons">
-          <Bouton actif={valeurChariot(etat) > 0} onClick={() => jouer(vendreChariot)}>
-            💰 Vendre le chariot
+          <Bouton actif={valeurSelection > 0} genre="vendre" onClick={() => jouer(vendreChariot)}>
+            💰 Vendre la sélection{valeurSelection > 0 && ` · +${valeurSelection.toLocaleString('fr-FR')} $`}
           </Bouton>
-          <Bouton actif={contenu.length > 0} onClick={() => jouer(viderChariotDansSac)}>
-            🎒 Mettre dans le sac
+          <Bouton actif={nbSelection > 0 && placeLibre(etat) > 0} genre="sac" onClick={() => jouer(viderChariotDansSac)}>
+            🎒 Mettre dans le sac ({Math.min(nbSelection, placeLibre(etat))})
           </Bouton>
         </div>
       </div>
@@ -366,7 +406,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           {forage ? (
             <>
               <PrixCout etat={etat} cout={forage.cout} />
-              <Bouton actif={peutPayer(etat, forage.cout)} onClick={() => jouer(ameliorerForage)}>
+              <Bouton actif={peutPayer(etat, forage.cout)} genre="ameliorer" onClick={() => jouer(ameliorerForage)}>
                 → {forage.vitesse} bloc/s
               </Bouton>
             </>
@@ -379,7 +419,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           {chariot ? (
             <>
               <PrixCout etat={etat} cout={chariot.cout} />
-              <Bouton actif={peutPayer(etat, chariot.cout)} onClick={() => jouer(ameliorerChariot)}>
+              <Bouton actif={peutPayer(etat, chariot.cout)} genre="ameliorer" onClick={() => jouer(ameliorerChariot)}>
                 → {chariot.capacite} places
               </Bouton>
             </>
@@ -421,7 +461,7 @@ export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
                   <Materiau etat={etat} bloc="lapis" nombre={cout.lapis} />
                   <Materiau etat={etat} bloc="emeraude" nombre={cout.emeraudes} />
                 </span>
-                <Bouton actif={peutEnchanter(etat, id)} onClick={() => jouer((x) => enchanter(x, id))}>
+                <Bouton actif={peutEnchanter(etat, id)} genre="enchanter" onClick={() => jouer((x) => enchanter(x, id))}>
                   Enchanter {chiffreRomain(niveau + 1)}
                 </Bouton>
               </div>

@@ -9,7 +9,9 @@ import {
   COUT_ACTIVATION_FOREUSE,
   NIVEAUX_CHARIOT,
   NIVEAUX_FORAGE,
+  NIVEAU_RECHARGE_AUTO,
   PRESTIGE_FOREUSE,
+  RESERVE_RECHARGE_AUTO,
   PROFONDEUR_BEDROCK,
   SECONDES_PAR_CHARBON,
   type Cout,
@@ -120,14 +122,38 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   return [`🛒 Chariot plus grand : ${prochain.capacite} places.`]
 }
 
-// Vend le chariot au marché (sauf les objets décochés, qui restent dedans).
-export function vendreChariot(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat)) return []
-  const aVendre: Inventaire = {}
+// Les objets cochés du chariot (ceux qu'on vend ou qu'on met dans le sac).
+export function selectionChariot(etat: EtatJeu): Inventaire {
+  const selection: Inventaire = {}
   for (const [id, nombre] of Object.entries(etat.foreuse.chariot)) {
     const bloc = id as IdBloc
-    if (!etat.nonAVendre.includes(bloc)) aVendre[bloc] = nombre
+    if (!etat.foreuse.nonCoches.includes(bloc) && (nombre ?? 0) > 0) selection[bloc] = nombre
   }
+  return selection
+}
+
+// Coche ou décoche un objet du chariot.
+export function basculerChariot(etat: EtatJeu, bloc: IdBloc): string[] {
+  const nonCoches = etat.foreuse.nonCoches
+  etat.foreuse.nonCoches = nonCoches.includes(bloc) ? nonCoches.filter((b) => b !== bloc) : [...nonCoches, bloc]
+  return []
+}
+
+// Active ou coupe la recharge automatique au charbon (à partir du niveau 3 de forage).
+export function rechargeAutoDisponible(etat: EtatJeu): boolean {
+  return etat.foreuse.niveauVitesse >= NIVEAU_RECHARGE_AUTO
+}
+
+export function basculerRechargeAuto(etat: EtatJeu): string[] {
+  if (!rechargeAutoDisponible(etat)) return []
+  etat.foreuse.rechargeAuto = !etat.foreuse.rechargeAuto
+  return []
+}
+
+// Vend les objets cochés du chariot (les autres restent dedans).
+export function vendreChariot(etat: EtatJeu): string[] {
+  if (!aLaSurface(etat)) return []
+  const aVendre = selectionChariot(etat)
   const gain = valeurDe(etat, aVendre)
   if (gain === 0) return []
   for (const [bloc, nombre] of Object.entries(aVendre)) retirerDuChariot(etat, bloc as IdBloc, nombre ?? 0)
@@ -136,11 +162,11 @@ export function vendreChariot(etat: EtatJeu): string[] {
   return [`💰 Chariot vendu : +${gain} $`]
 }
 
-// Met le contenu du chariot dans le sac (tant qu'il y a de la place).
+// Met les objets cochés du chariot dans le sac (tant qu'il y a de la place).
 export function viderChariotDansSac(etat: EtatJeu): string[] {
   if (!aLaSurface(etat)) return []
   let pris = 0
-  for (const [id, nombre] of Object.entries(etat.foreuse.chariot)) {
+  for (const [id, nombre] of Object.entries(selectionChariot(etat))) {
     const bloc = id as IdBloc
     const aPrendre = Math.min(nombre ?? 0, placeLibre(etat))
     if (aPrendre <= 0) continue
@@ -165,22 +191,34 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
   const foreuse = etat.foreuse
   if (!foreuseEnMarche(etat)) return []
 
-  // Elle ne fore que tant qu'il reste du charbon, et jusqu'à ce que le chariot soit plein
-  // (le charbon n'est pas brûlé pour rien).
-  const placeDansChariot = capaciteChariot(etat) - nbDansChariot(etat)
-  const tempsPourRemplir = Math.max(0, (placeDansChariot - foreuse.progression) / vitesseForage(etat))
-  const tempsDeForage = Math.min(secondes, foreuse.carburant, tempsPourRemplir)
-  foreuse.carburant -= tempsDeForage
-  foreuse.progression += tempsDeForage * vitesseForage(etat)
+  // On avance par étapes : avec la recharge automatique, le charbon remonté pendant une
+  // étape fait tourner la foreuse à l'étape suivante (utile après une longue absence).
+  let reste = secondes
+  while (reste > 0 && foreuseEnMarche(etat)) {
+    // Elle ne fore que tant qu'il reste du charbon, et jusqu'à ce que le chariot soit plein
+    // (le charbon n'est pas brûlé pour rien).
+    const placeDansChariot = capaciteChariot(etat) - nbDansChariot(etat)
+    const tempsPourRemplir = Math.max(0, (placeDansChariot - foreuse.progression) / vitesseForage(etat))
+    const tempsDeForage = Math.min(reste, foreuse.carburant, tempsPourRemplir)
+    if (tempsDeForage <= 0) break
+    reste -= tempsDeForage
+    foreuse.carburant -= tempsDeForage
+    foreuse.progression += tempsDeForage * vitesseForage(etat)
 
-  while (foreuse.progression >= 1 && !chariotPlein(etat)) {
-    foreuse.progression -= 1
-    const bloc = tirerBlocNormal(foreuse.profondeur, aleatoire)
-    foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
-    foreuse.blocsFores += 1
-    // Elle descend d'un mètre tous les 6 blocs, jusqu'à la bedrock.
-    if (foreuse.blocsFores % BLOCS_FORES_PAR_METRE === 0) {
-      foreuse.profondeur = Math.min(PROFONDEUR_BEDROCK - 1, foreuse.profondeur + 1)
+    while (foreuse.progression >= 1 && !chariotPlein(etat)) {
+      foreuse.progression -= 1
+      const bloc = tirerBlocNormal(foreuse.profondeur, aleatoire)
+      foreuse.blocsFores += 1
+      // Avec la recharge automatique, le charbon va dans le moteur tant que sa réserve est basse.
+      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && foreuse.carburant < RESERVE_RECHARGE_AUTO) {
+        foreuse.carburant += SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
+      } else {
+        foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
+      }
+      // Elle descend d'un mètre tous les 10 blocs, jusqu'à la bedrock.
+      if (foreuse.blocsFores % BLOCS_FORES_PAR_METRE === 0) {
+        foreuse.profondeur = Math.min(PROFONDEUR_BEDROCK - 1, foreuse.profondeur + 1)
+      }
     }
   }
 

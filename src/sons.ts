@@ -3,19 +3,29 @@
 // (un oscillateur dont le volume retombe) et de « bruit » (un souffle filtré,
 // pour les coups de pioche et les éboulements).
 //
-// Le son peut être coupé : le réglage est gardé dans le localStorage.
+// Les bruitages peuvent être coupés : le réglage est gardé dans le localStorage.
+// La musique et les ambiances sont dans ambiance.ts (avec leur propre réglage).
 
 const CLE_SON = 'idle-miner-son'
 
 let contexte: AudioContext | null = null
 let sortie: GainNode | null = null
-let actif = lireReglage()
+let actif = lireReglage(CLE_SON)
 
-function lireReglage(): boolean {
+// Lit un réglage « actif / coupé » (actif par défaut).
+export function lireReglage(cle: string): boolean {
   try {
-    return window.localStorage.getItem(CLE_SON) !== 'coupe'
+    return window.localStorage.getItem(cle) !== 'coupe'
   } catch {
     return true
+  }
+}
+
+export function ecrireReglage(cle: string, valeur: boolean): void {
+  try {
+    window.localStorage.setItem(cle, valeur ? 'actif' : 'coupe')
+  } catch {
+    // Tant pis, le réglage ne sera pas gardé.
   }
 }
 
@@ -25,30 +35,43 @@ export function sonActif(): boolean {
 
 export function basculerSon(): boolean {
   actif = !actif
-  try {
-    window.localStorage.setItem(CLE_SON, actif ? 'actif' : 'coupe')
-  } catch {
-    // Tant pis, le réglage ne sera pas gardé.
-  }
+  ecrireReglage(CLE_SON, actif)
   return actif
 }
 
+// Le contexte audio du navigateur, partagé avec la musique (ambiance.ts).
 // Le navigateur n'autorise le son qu'après un clic ou une touche du joueur :
-// on crée (ou réveille) le contexte audio à ce moment-là.
-function audio(): AudioContext | null {
-  if (!actif || typeof window === 'undefined' || !('AudioContext' in window)) return null
-  if (contexte === null) {
-    contexte = new AudioContext()
-    sortie = contexte.createGain()
-    sortie.gain.value = 0.5 // volume général
-    sortie.connect(contexte.destination)
-  }
+// on le crée (ou on le réveille) à ce moment-là.
+export function contexteAudio(): AudioContext | null {
+  if (typeof window === 'undefined' || !('AudioContext' in window)) return null
+  if (contexte === null) contexte = new AudioContext()
   if (contexte.state === 'suspended') void contexte.resume()
   return contexte
 }
 
+// Le contexte, seulement si les bruitages sont actifs.
+function audio(): AudioContext | null {
+  if (!actif) return null
+  const ctx = contexteAudio()
+  if (ctx && sortie === null) {
+    sortie = ctx.createGain()
+    sortie.gain.value = 0.5 // volume des bruitages
+    sortie.connect(ctx.destination)
+  }
+  return ctx
+}
+
+// Fonctions appelées au premier clic ou à la première touche (la musique s'y branche).
+const auReveil: (() => void)[] = []
+export function quandLeSonEstPermis(action: () => void): void {
+  auReveil.push(action)
+}
+
 if (typeof window !== 'undefined') {
-  const reveiller = () => audio()
+  const reveiller = () => {
+    if (!contexteAudio()) return
+    for (const action of auReveil) action()
+  }
   window.addEventListener('pointerdown', reveiller)
   window.addEventListener('keydown', reveiller)
 }

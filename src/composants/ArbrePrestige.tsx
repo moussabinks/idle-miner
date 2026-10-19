@@ -71,7 +71,7 @@ export function ArbrePrestige({ etat, jouer, onFermer }: Props) {
         </div>
 
         <div className="boutons boutons-centre">
-          <button className={`bouton ${points === 0 ? 'bouton-principal' : ''}`} onClick={onFermer}>
+          <button className="bouton bouton-neutre" onClick={onFermer}>
             {points > 0 ? 'Plus tard' : 'Fermer'}
           </button>
         </div>

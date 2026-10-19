@@ -27,7 +27,7 @@ describe('événements pour les sons et les animations', () => {
     const avant = auFront('diamant')
     const apres = structuredClone(avant)
     casserBloc(apres, toujours(0.5))
-    expect(evenementsEntre(avant, apres)).toContainEqual({ type: 'rare', bloc: 'diamant', nombre: 1, colonne: 0 })
+    expect(evenementsEntre(avant, apres)).toContainEqual({ type: 'trouvaille', bloc: 'diamant', nombre: 1, colonne: 0, rare: true })
   })
 
   it('une vente au marché', () => {

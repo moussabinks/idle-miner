@@ -174,6 +174,12 @@ export const PRESTIGE_FOREUSE = 1
 // Un charbon fait tourner la foreuse pendant 20 secondes.
 export const SECONDES_PAR_CHARBON = 20
 
+// À partir de ce niveau de forage (le 3e), la foreuse peut se recharger toute seule
+// avec le charbon qu'elle remonte (option à cocher).
+export const NIVEAU_RECHARGE_AUTO = 2
+// Elle ne garde pour elle que de quoi tourner une minute : le reste du charbon va au chariot.
+export const RESERVE_RECHARGE_AUTO = 60
+
 // Vitesse de forage (blocs par seconde) et coût de chaque niveau.
 export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
   { vitesse: 0.5, cout: { materiaux: {} } },

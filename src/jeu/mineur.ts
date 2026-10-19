@@ -67,7 +67,9 @@ export type Ascenseur = {
   passager: boolean // true = le mineur est dans la cabine
   retourAuFront: boolean // true = après avoir vendu, elle redescend toute seule au front de taille
   quai: Inventaire // les blocs qui attendent au pied de l'ascenseur quand le sac est plein
-  garder: IdBloc[] // les objets que l'ascenseur ne prend pas (décochés dans le module)
+  garder: IdBloc[] // les objets que l'ascenseur ne prend pas (décochés dans le sac)
+  envoiDemande: boolean // true = on a demandé un envoi : la cabine vient, puis repart chargée
+  envoiAuto: boolean // true = quand le sac est plein, l'ascenseur part tout seul au marché
 }
 
 export type Foreuse = {
@@ -79,6 +81,8 @@ export type Foreuse = {
   profondeur: number // profondeur atteinte par la foreuse
   progression: number // fraction du prochain bloc foré (0 à 1)
   blocsFores: number
+  nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
+  rechargeAuto: boolean // la foreuse brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
 }
 
 export type EtatJeu = {
@@ -111,7 +115,7 @@ export type EtatJeu = {
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 6
+export const VERSION_ETAT = 7
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -121,11 +125,33 @@ export const VERSION_ETAT = 6
 export const PROFONDEUR_DEPART = 2
 
 export function nouvelleForeuse(): Foreuse {
-  return { active: false, carburant: 0, niveauVitesse: 0, niveauChariot: 0, chariot: {}, profondeur: 1, progression: 0, blocsFores: 0 }
+  return {
+    active: false,
+    carburant: 0,
+    niveauVitesse: 0,
+    niveauChariot: 0,
+    chariot: {},
+    profondeur: 1,
+    progression: 0,
+    blocsFores: 0,
+    nonCoches: [],
+    rechargeAuto: false,
+  }
 }
 
 export function nouvelAscenseur(): Ascenseur {
-  return { niveau: 0, position: 0, cible: 0, chargement: {}, passager: false, retourAuFront: false, quai: {}, garder: [] }
+  return {
+    niveau: 0,
+    position: 0,
+    cible: 0,
+    chargement: {},
+    passager: false,
+    retourAuFront: false,
+    quai: {},
+    garder: [],
+    envoiDemande: false,
+    envoiAuto: false,
+  }
 }
 
 export function creerPartie(
@@ -642,11 +668,29 @@ export function placeQuai(etat: EtatJeu): number {
   return niveau === null ? 0 : Math.max(0, niveau.capacite - nbSurQuai(etat))
 }
 
-// Coche ou décoche un objet dans le module de l'ascenseur (décoché = il reste dans le sac).
+// Coche ou décoche un objet du sac (décoché = l'ascenseur le laisse dans le sac).
 export function basculerChargement(etat: EtatJeu, bloc: IdBloc): string[] {
   const garder = etat.ascenseur.garder
   etat.ascenseur.garder = garder.includes(bloc) ? garder.filter((b) => b !== bloc) : [...garder, bloc]
   return []
+}
+
+// Coche ou décoche l'envoi automatique quand le sac est plein.
+export function basculerEnvoiAuto(etat: EtatJeu): string[] {
+  etat.ascenseur.envoiAuto = !etat.ascenseur.envoiAuto
+  return []
+}
+
+// Combien d'objets partiraient au prochain envoi : le quai, puis les objets cochés du sac,
+// dans la limite de la place dans la cabine.
+export function nbAEnvoyer(etat: EtatJeu): number {
+  const niveau = niveauAscenseur(etat)
+  if (niveau === null) return 0
+  let total = nbSurQuai(etat)
+  for (const [id, nombre] of Object.entries(etat.inventaire)) {
+    if (!etat.ascenseur.garder.includes(id as IdBloc)) total += nombre ?? 0
+  }
+  return Math.min(niveau.capacite, total)
 }
 
 // Remplit la cabine : d'abord ce qui attend sur le quai, puis le sac (sauf les objets
@@ -690,6 +734,16 @@ export function envoyerAscenseur(etat: EtatJeu): string[] {
   etat.ascenseur.cible = 0
   etat.ascenseur.retourAuFront = true
   return ['🛗 L’ascenseur remonte ton chargement au marché.']
+}
+
+// Le bouton « Envoyer à la surface » du sac : si la cabine est là, elle part tout de suite ;
+// sinon on l'appelle (ou on attend qu'elle ait fini son voyage) et elle repartira chargée.
+export function demanderEnvoi(etat: EtatJeu): string[] {
+  if (etat.ascenseur.niveau === 0 || etat.position === 0 || nbAEnvoyer(etat) === 0) return []
+  if (ascenseurDisponible(etat)) return envoyerAscenseur(etat)
+  etat.ascenseur.envoiDemande = true
+  if (!ascenseurEnMouvement(etat)) appelerAscenseur(etat)
+  return ['🛗 L’ascenseur arrive pour prendre ton chargement.']
 }
 
 // Fait venir la cabine là où se trouve le joueur.
@@ -754,6 +808,19 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   if (ascenseur.retourAuFront && ascenseur.position === 0) {
     ascenseur.retourAuFront = false
     ascenseur.cible = positionFront(etat)
+    return messages
+  }
+
+  // Un envoi a été demandé : la cabine repart chargée si le mineur est là,
+  // sinon elle va le chercher (et on oublie la demande s'il est remonté au village).
+  if (ascenseur.envoiDemande) {
+    if (etat.position === 0) ascenseur.envoiDemande = false
+    else if (ascenseurDisponible(etat)) {
+      ascenseur.envoiDemande = false
+      messages.push(...envoyerAscenseur(etat))
+    } else if (!enMouvement(etat)) {
+      ascenseur.cible = etat.position
+    }
   }
   return messages
 }

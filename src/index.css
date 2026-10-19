@@ -534,8 +534,9 @@ h2 {
   bottom: 0;
   z-index: 4;
   margin: 0 8px 8px;
-  max-width: 330px;
-  padding: 8px 10px;
+  width: fit-content;
+  max-width: min(360px, calc(100% - 16px));
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -558,30 +559,6 @@ h2 {
   font-size: 0.74rem;
 }
 
-.choix-chargement {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  max-height: 90px;
-  overflow-y: auto;
-}
-
-.choix-chargement label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.choix-chargement label.garde {
-  opacity: 0.5;
-}
-
-.module-ascenseur .lien {
-  text-align: left;
-  font-size: 0.78rem;
-}
-
 .module-titre,
 .module-ligne {
   display: flex;
@@ -602,10 +579,6 @@ button.module-titre {
 
 .module-titre strong {
   color: #e8b45a;
-}
-
-.module-etat {
-  color: #9fd4ff;
 }
 
 /* ------------------------------------------------------- Personnage */
@@ -665,7 +638,9 @@ button.module-titre {
 .village {
   position: relative;
   height: 250px;
-  overflow: hidden;
+  /* « clip » et pas « hidden » : le village ne doit jamais défiler tout seul
+     (par exemple quand un stand reçoit le focus), seule la caméra le déplace. */
+  overflow: clip;
   background: linear-gradient(#4f97e0, #a8d4f5 75%, #cfe9f8);
 }
 
@@ -1088,17 +1063,76 @@ button.module-titre {
   outline-offset: 2px;
 }
 
-.bouton-principal {
+/* --- Les couleurs des boutons : une couleur par sorte d'action ---------------
+   Creuser = or · Arrêter = rouge · Vendre = vert · Acheter = bleu · Améliorer = turquoise
+   Réparer = orange · Enchanter = violet · Prestige = rose · Ascenseur = cyan
+   Se déplacer = bois · Mettre dans le sac = kaki · Charbon = anthracite · Le reste = gris. */
+
+.bouton-principal,
+.bouton-creuser {
   background: linear-gradient(#f2b33d, #c8861a);
   color: #1b1206;
+}
+
+.bouton-creuser-x10 {
+  background: linear-gradient(#c98f2a, #8e5f12);
+  color: #fff3d6;
+}
+
+.bouton-stop {
+  background: linear-gradient(#e5534b, #a3302a);
 }
 
 .bouton-vendre {
   background: linear-gradient(#4fb35a, #2f7d38);
 }
 
-.bouton-stop {
-  background: linear-gradient(#e5534b, #a3302a);
+.bouton-acheter {
+  background: linear-gradient(#4a8af0, #2457b8);
+}
+
+.bouton-ameliorer {
+  background: linear-gradient(#22b5a3, #127a6d);
+}
+
+.bouton-reparer {
+  background: linear-gradient(#f28a3a, #b95713);
+}
+
+.bouton-enchanter {
+  background: linear-gradient(#9b6cf0, #6236b8);
+}
+
+.bouton-prestige {
+  background: linear-gradient(#e85aa8, #a32b70);
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.35),
+    inset 0 2px 0 rgb(255 255 255 / 0.15),
+    0 0 12px rgb(232 90 168 / 0.45);
+}
+
+.bouton-ascenseur {
+  background: linear-gradient(#2cc3e0, #137f99);
+  color: #04232b;
+}
+
+.bouton-voyage {
+  background: linear-gradient(#a8784a, #6f4826);
+}
+
+.bouton-sac {
+  background: linear-gradient(#b3ab52, #77702a);
+  color: #1d1b06;
+}
+
+.bouton-charbon {
+  background: linear-gradient(#3f3f44, #222226);
+  color: #ffb35c;
+  border-color: #000;
+}
+
+.bouton-neutre {
+  background: linear-gradient(#4a4a58, #383843);
 }
 
 .bouton-petit {
@@ -1242,6 +1276,11 @@ button.module-titre {
 }
 
 /* Le marché : liste à cocher */
+.liste-chariot {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 .liste-vente {
   list-style: none;
   padding: 0;
@@ -1312,6 +1351,49 @@ button.module-titre {
 }
 
 /* Inventaire */
+.inventaire > .discret:first-child {
+  margin-top: 0;
+}
+
+.inventaire-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.inventaire input[type='checkbox'],
+.case-option input,
+.liste-chariot input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #22b8d8;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Le bouton d'envoi par l'ascenseur, sous le sac. */
+.envoi-ascenseur {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.envoi-ascenseur .discret {
+  margin: 0;
+}
+
+.case-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .inventaire ul {
   margin-bottom: 0;
   list-style: none;

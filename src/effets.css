@@ -32,7 +32,7 @@
   100% { transform: translate(var(--dx), calc(var(--dy) * -0.2 + 16px)) rotate(var(--tour)) scale(0.6); opacity: 0; }
 }
 
-/* --- Un minerai rare : il s'envole en brillant ---------------------------- */
+/* --- Un minerai trouvé : il s'envole en brillant -------------------------- */
 
 .trouvaille {
   position: absolute;
@@ -56,6 +56,11 @@
   animation: trouvaille 1.8s ease-out forwards;
 }
 
+.trouvaille-charbon { --couleur-rare: #c9c9c9; }
+.trouvaille-fer { --couleur-rare: #ecc7a8; }
+.trouvaille-redstone { --couleur-rare: #ff4d4d; }
+.trouvaille-amethyste { --couleur-rare: #c9a2ff; }
+.trouvaille-obsidienne { --couleur-rare: #a26ad8; }
 .trouvaille-lapis { --couleur-rare: #4a7eea; }
 .trouvaille-or { --couleur-rare: #ffd84a; }
 .trouvaille-emeraude { --couleur-rare: #4cf08a; }
@@ -205,6 +210,11 @@
   font: inherit;
   padding: 2px 8px;
   cursor: pointer;
+}
+
+.hud-bouton-coupe {
+  opacity: 0.5;
+  text-decoration: line-through;
 }
 
 .hud-bouton:hover {

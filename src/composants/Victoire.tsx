@@ -44,7 +44,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvre !'}
         </p>
         <div className="boutons boutons-centre">
-          <button className="bouton bouton-principal" onClick={onPrestige}>
+          <button className="bouton bouton-prestige" onClick={onPrestige}>
             ⭐ Passer prestige {etat.prestige + 1}
           </button>
           <button className="bouton" onClick={onFermer}>

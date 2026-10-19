@@ -4,6 +4,8 @@ import {
   activerForeuse,
   ameliorerChariot,
   ameliorerForage,
+  basculerChariot,
+  basculerRechargeAuto,
   capaciteChariot,
   foreuseEnMarche,
   nbDansChariot,
@@ -64,17 +66,35 @@ describe('foreuse', () => {
     expect(etat.foreuse.carburant).toBeGreaterThan(0) // le charbon restant n'est pas brûlé
   })
 
-  it('se vide au marché ou dans le sac', () => {
+  it('se vide au marché ou dans le sac, seulement les objets cochés', () => {
     const etat = partiePrestige1()
     etat.inventaire = {}
     etat.foreuse.chariot = { pierre: 40, diamant: 2 }
-    etat.nonAVendre = ['diamant']
+    basculerChariot(etat, 'diamant') // décoché : ni vendu, ni mis dans le sac
     vendreChariot(etat)
     expect(etat.argent).toBe(Math.round(40 * 1.15)) // bonus du prestige 1 (+15 %)
     expect(etat.foreuse.chariot).toEqual({ diamant: 2 })
     viderChariotDansSac(etat)
+    expect(etat.inventaire).toEqual({})
+    basculerChariot(etat, 'diamant') // recoché
+    viderChariotDansSac(etat)
     expect(etat.inventaire).toEqual({ diamant: 2 })
     expect(etat.foreuse.chariot).toEqual({})
+  })
+
+  it('se recharge toute seule avec son charbon (à partir du niveau 3 de forage)', () => {
+    const etat = partiePrestige1()
+    activerForeuse(etat)
+    expect(basculerRechargeAuto(etat)).toEqual([]) // pas encore disponible
+    expect(etat.foreuse.rechargeAuto).toBe(false)
+    etat.foreuse.niveauVitesse = 2
+    etat.foreuse.profondeur = 40
+    basculerRechargeAuto(etat)
+    expect(etat.foreuse.rechargeAuto).toBe(true)
+    remplirForeuse(etat, 1)
+    // Une heure plus tard, elle tourne encore grâce au charbon qu'elle a remonté.
+    avancerTemps(etat, 3600, aleatoireAvecGraine(4))
+    expect(etat.foreuse.blocsFores).toBeGreaterThan(20 * 2 * 3)
   })
 
   it('s’améliore (vitesse et chariot)', () => {

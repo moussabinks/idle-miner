@@ -7,14 +7,12 @@ import { aleatoireNavigateur } from './jeu/aleatoire'
 import { BLOCS, LARGEUR_MINE, type IdBloc } from './jeu/donnees'
 import { nbDansChariot } from './jeu/foreuse'
 import {
-  appelerAscenseur,
-  ascenseurDisponible,
   ascenseurEnMouvement,
   auFond,
   casserBloc,
   creerPartie,
   dureeBlocActuel,
-  envoyerAscenseur,
+  demanderEnvoi,
   indexBlocActuel,
   nbSurQuai,
   peutStocker,
@@ -30,7 +28,7 @@ import { sons } from './sons'
 
 export type Toast = { id: number; texte: string; succes: boolean }
 export type Gain = { id: number; montant: number; vente: boolean }
-// Les éclats d'un bloc qui vient de casser, et les minerais rares trouvés (animations).
+// Les éclats d'un bloc qui vient de casser, et les minerais trouvés (animations).
 export type Eclat = { id: number; colonne: number; bloc: IdBloc }
 export type Trouvaille = { id: number; colonne: number; bloc: IdBloc; nombre: number }
 
@@ -76,11 +74,9 @@ function jouerSons(evenements: Evenement[]): void {
         else if (evenement.bloc === 'geode') sons.geode()
         sons.casse(BLOCS[evenement.bloc].durete >= 3)
         break
-      case 'minerai':
-        sons.minerai()
-        break
-      case 'rare':
-        sons.rare()
+      case 'trouvaille':
+        if (evenement.rare) sons.rare()
+        else sons.minerai()
         break
       case 'vente':
         sons.vente(evenement.montant)
@@ -153,7 +149,7 @@ export function usePartie() {
     setTimeout(() => setGains((liste) => liste.filter((g) => g.id !== gain.id)), vente ? DUREE_VENTE : DUREE_GAIN)
   }, [])
 
-  // Les animations qui vont avec les événements (éclats, minerais rares, ventes).
+  // Les animations qui vont avec les événements (éclats, minerais trouvés, ventes).
   const animer = useCallback(
     (evenements: Evenement[]) => {
       for (const evenement of evenements) {
@@ -162,7 +158,7 @@ export function usePartie() {
           setEclats((liste) => [...liste.slice(-4), eclat])
           setTimeout(() => setEclats((liste) => liste.filter((e) => e.id !== eclat.id)), DUREE_ECLATS)
         }
-        if (evenement.type === 'rare') {
+        if (evenement.type === 'trouvaille') {
           const trouvaille = { id: prochainId++, colonne: evenement.colonne, bloc: evenement.bloc, nombre: evenement.nombre }
           setTrouvailles((liste) => [...liste.slice(-2), trouvaille])
           setTimeout(() => setTrouvailles((liste) => liste.filter((t) => t.id !== trouvaille.id)), DUREE_TROUVAILLE)
@@ -235,7 +231,7 @@ export function usePartie() {
             id: prochainId++,
             texte:
               apres.ascenseur.niveau > 0
-                ? '🎒 Sac et quai pleins ! Attends le retour de l’ascenseur.'
+                ? '🎒 Sac plein ! Envoie tes objets à la surface avec l’ascenseur (panneau Sac).'
                 : '🎒 Sac plein ! Remonte vendre au marché (↑).',
             succes: false,
           },
@@ -259,11 +255,12 @@ export function usePartie() {
         return
       }
 
-      // Sac plein (ou quai pas vide) : la cabine emporte tout au marché si elle est là,
-      // sinon on l'appelle. Pendant ce temps, on continue de creuser.
+      // Avec l'envoi automatique (case à cocher dans le sac) : quand le sac est plein, l'ascenseur
+      // vient chercher les objets cochés. Pendant ce temps, on continue de creuser.
       const aRemonter = sacPlein(etatActuel) || nbSurQuai(etatActuel) > 0
-      if (aRemonter && etatActuel.ascenseur.niveau > 0 && !ascenseurEnMouvement(etatActuel)) {
-        etatActuel = ascenseurDisponible(etatActuel) ? jouer(envoyerAscenseur) : jouer(appelerAscenseur)
+      const ascenseur = etatActuel.ascenseur
+      if (aRemonter && ascenseur.envoiAuto && !ascenseur.envoiDemande && !ascenseurEnMouvement(etatActuel)) {
+        etatActuel = jouer(demanderEnvoi)
       }
 
       // Le joueur avance sur son bloc.

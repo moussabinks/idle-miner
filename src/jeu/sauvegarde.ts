@@ -176,6 +176,17 @@ function migrer(donnees: unknown): unknown {
     delete etat.epee
   }
 
+  // Version 6 -> 7 : envoi par l'ascenseur depuis le sac, inventaire à cocher et
+  // recharge automatique de la foreuse.
+  if (etat.version === 6) {
+    etat = {
+      ...etat,
+      version: 7,
+      ascenseur: { ...(etat.ascenseur as object), envoiDemande: false, envoiAuto: false },
+      foreuse: { ...(etat.foreuse as object), nonCoches: [], rechargeAuto: false },
+    }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees

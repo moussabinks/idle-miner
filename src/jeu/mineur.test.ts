@@ -10,6 +10,10 @@ import {
   appelerAscenseur,
   ascenseurDisponible,
   basculerVente,
+  basculerChargement,
+  demanderEnvoi,
+  nbAEnvoyer,
+  avancerAscenseur,
   casserBloc,
   aLaSurface,
   auFond,
@@ -312,6 +316,33 @@ describe('échelle et déplacements', () => {
 })
 
 describe('ascenseur', () => {
+  it('« Envoyer à la surface » : seulement les objets cochés, dans la limite de la cabine', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    construireAscenseur(etat, 1) // 32 places
+    etat.inventaire = { fer: 30, pierre: 10, diamant: 1 }
+    basculerChargement(etat, 'pierre') // la pierre reste dans le sac
+    expect(nbAEnvoyer(etat)).toBe(31)
+    demanderEnvoi(etat)
+    expect(etat.ascenseur.chargement).toEqual({ diamant: 1, fer: 30 })
+    expect(etat.inventaire).toEqual({ pierre: 10 })
+  })
+
+  it('« Envoyer à la surface » appelle la cabine si elle n’est pas là, puis elle repart chargée', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    construireAscenseur(etat, 1)
+    etat.ascenseur.position = 0 // la cabine attend au village
+    etat.ascenseur.cible = 0
+    etat.inventaire = { fer: 5 }
+    demanderEnvoi(etat)
+    expect(etat.ascenseur.cible).toBe(etat.position)
+    avancerAscenseur(etat, 60) // elle arrive...
+    expect(etat.ascenseur.chargement).toEqual({ fer: 5 }) // ... et repart aussitôt
+    expect(etat.ascenseur.cible).toBe(0)
+    expect(etat.inventaire).toEqual({})
+  })
+
   it('se construit puis s’améliore avec du fer et de la redstone, directement dans la mine', () => {
     const etat = nouvellePartie()
     etat.inventaire = { fer: 60, redstone: 25 }

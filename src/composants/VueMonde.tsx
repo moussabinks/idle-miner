@@ -73,7 +73,7 @@ function Eclats({ bloc, profondeur }: { bloc: IdBloc; profondeur: number }) {
   )
 }
 
-// Un minerai rare trouvé : il s'envole en brillant au-dessus du mineur.
+// Un minerai trouvé : il s'envole en brillant au-dessus du mineur.
 function TrouvailleRare({ trouvaille }: { trouvaille: Trouvaille }) {
   return (
     <span className={`trouvaille trouvaille-${trouvaille.bloc}`} aria-hidden="true">
