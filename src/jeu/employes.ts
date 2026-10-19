@@ -15,6 +15,8 @@ import {
   PRESTIGE_EMPLOYES,
   PRIX_EMBAUCHE,
   PROFONDEUR_BEDROCK,
+  niveauMaxAuPrestige,
+  prestigePourNiveau,
   SECONDES_PAR_METRE_ECHELLE,
   SECONDES_VENTE_EMPLOYE,
 } from './donnees'
@@ -86,6 +88,18 @@ export function prixAmeliorationEmploye(employe: Employe): number | null {
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.prix ?? null
 }
 
+// Le prochain équipement est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
+export function employeBloqueAuPrestige(etat: EtatJeu, employe: Employe): number | null {
+  const prochain = employe.niveau + 1
+  if (prixAmeliorationEmploye(employe) === null || prochain <= niveauMaxAuPrestige('mineur', etat.prestige)) return null
+  return prestigePourNiveau('mineur', prochain)
+}
+
+export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
+  const prix = prixAmeliorationEmploye(employe)
+  return prix !== null && employeBloqueAuPrestige(etat, employe) === null && etat.argent >= prix
+}
+
 // ---------------------------------------------------------------------------
 // Actions (au village)
 // ---------------------------------------------------------------------------
@@ -114,7 +128,7 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
   if (!aLaSurface(etat) || !employe) return []
   const prix = prixAmeliorationEmploye(employe)
-  if (prix === null || etat.argent < prix) return []
+  if (prix === null || !peutAmeliorerEmploye(etat, employe)) return []
   etat.argent -= prix
   employe.niveau += 1
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]

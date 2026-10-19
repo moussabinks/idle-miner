@@ -175,6 +175,39 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Les plafonds d'amélioration selon le prestige (décidé le 19/10)
+// ---------------------------------------------------------------------------
+
+// On ne peut pas tout améliorer en un seul prestige (sinon : prestige 1, on farme, et
+// tout est au maximum). Règle commune : au déblocage, on peut monter jusqu'à un certain
+// niveau, puis chaque prestige permet un niveau de plus.
+//   - ascenseur : niveau 2 au prestige 0, 3 au prestige 1... jusqu'à 6 ;
+//   - forage et chariot de la foreuse (débloquée au prestige 1) : 2e niveau au prestige 1,
+//     3e au prestige 2... (les niveaux de la foreuse sont comptés à partir de 0 dans le code) ;
+//   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer au prestige 3...
+export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur'
+
+export const PLAFONDS: Record<IdPlafond, { prestigeDeblocage: number; niveauAuDeblocage: number; niveauMax: number }> = {
+  ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
+  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
+  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
+  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },
+}
+
+// Le plus haut niveau qu'on peut atteindre à ce prestige.
+export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
+  const plafond = PLAFONDS[id]
+  const prestigesEnPlus = Math.max(0, prestige - plafond.prestigeDeblocage)
+  return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + prestigesEnPlus)
+}
+
+// Le prestige qu'il faut pour atteindre ce niveau (pour afficher « 🔒 Prestige 3 »).
+export function prestigePourNiveau(id: IdPlafond, niveau: number): number {
+  const plafond = PLAFONDS[id]
+  return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage)
+}
+
+// ---------------------------------------------------------------------------
 // La foreuse (débloquée au prestige 1)
 // ---------------------------------------------------------------------------
 

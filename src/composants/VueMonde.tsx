@@ -17,8 +17,10 @@ import {
   nbSurQuai,
   piocheEquipee,
   positionFront,
+  sensDeMinage,
   type EtatJeu,
 } from '../jeu/mineur'
+import { MINERAIS_RARES } from '../evenements'
 import type { Eclat, Gain, Trouvaille } from '../usePartie'
 import { Personnage } from './Personnage'
 import { VueVillage } from './VueVillage'
@@ -76,7 +78,7 @@ function Eclats({ bloc, profondeur }: { bloc: IdBloc; profondeur: number }) {
 // Un minerai trouvé : il s'envole en brillant au-dessus du mineur.
 function TrouvailleRare({ trouvaille }: { trouvaille: Trouvaille }) {
   return (
-    <span className={`trouvaille trouvaille-${trouvaille.bloc}`} aria-hidden="true">
+    <span className={`trouvaille trouvaille-${trouvaille.bloc} ${MINERAIS_RARES.includes(trouvaille.bloc) ? 'trouvaille-rare' : ''}`} aria-hidden="true">
       <span className="trouvaille-rayons" />
       <span className={`mini-bloc bloc-${trouvaille.bloc} roche-pierre`} />
       <span className="trouvaille-texte">
@@ -429,7 +431,9 @@ export function VueMonde({
                     <Personnage
                       couleurPioche={couleurPioche}
                       action={etat.depart ? 'marche' : enMinage ? 'creuse' : 'repos'}
-                      versLaGauche={etat.depart ? true : versLaGauche}
+                      // Il part vers le puits (à gauche), il creuse dans le sens de la couche
+                      // (en zigzag), ou il regarde là où on l'a fait marcher.
+                      versLaGauche={etat.depart ? true : enMinage ? sensDeMinage(etat) < 0 : versLaGauche}
                     />
                   </div>
                 )}

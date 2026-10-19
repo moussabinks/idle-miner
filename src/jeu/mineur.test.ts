@@ -10,6 +10,7 @@ import {
   apercuVente,
   allerA,
   ameliorerAscenseur,
+  ascenseurBloqueAuPrestige,
   niveauAscenseur,
   peutAmeliorerAscenseur,
   appelerAscenseur,
@@ -24,6 +25,7 @@ import {
   avancerAscenseur,
   casserBloc,
   nbDrops,
+  sensDeMinage,
   aLaSurface,
   auFond,
   creerPartie,
@@ -98,6 +100,17 @@ describe('début de partie', () => {
 })
 
 describe('minage', () => {
+  it('creuse en zigzag : il regarde vers la droite, puis vers la gauche à la couche suivante', () => {
+    const etat = nouvellePartie()
+    coucheDe(etat, 'pierre')
+    etat.colonneMineur = 0
+    expect(sensDeMinage(etat)).toBe(1)
+    // Arrivé au bout à droite, il ne reste qu'un bloc ; la couche suivante repart vers la gauche.
+    coucheDe(etat, 'pierre')
+    etat.colonneMineur = LARGEUR_MINE - 1
+    expect(sensDeMinage(etat)).toBe(-1)
+  })
+
   it('met le bloc dans le sac et use la pioche', () => {
     const etat = nouvellePartie()
     coucheDe(etat, 'pierre')
@@ -449,12 +462,22 @@ describe('ascenseur', () => {
     expect(etat.ascenseur.niveau).toBe(2)
   })
 
-  it('a 6 niveaux, jusqu’à 1 024 objets par voyage', () => {
+  it('a 6 niveaux, jusqu’à 1 024 objets par voyage, débloqués petit à petit par les prestiges', () => {
     const etat = nouvellePartie()
     etat.argent = 1_000_000
     etat.inventaire = { fer: 100, redstone: 100, or: 100, diamant: 100 }
+    // Au prestige 0 : niveau 2 au plus, même avec plein d'argent.
+    while (peutAmeliorerAscenseur(etat)) ameliorerAscenseur(etat)
+    expect(etat.ascenseur.niveau).toBe(2)
+    expect(ascenseurBloqueAuPrestige(etat)).toBe(1)
+    // Puis un niveau de plus par prestige : le niveau 6 au prestige 4.
+    etat.prestige = 3
+    while (peutAmeliorerAscenseur(etat)) ameliorerAscenseur(etat)
+    expect(etat.ascenseur.niveau).toBe(5)
+    etat.prestige = 4
     while (peutAmeliorerAscenseur(etat)) ameliorerAscenseur(etat)
     expect(etat.ascenseur.niveau).toBe(6)
+    expect(ascenseurBloqueAuPrestige(etat)).toBeNull()
     expect(niveauAscenseur(etat)?.capacite).toBe(1024)
   })
 

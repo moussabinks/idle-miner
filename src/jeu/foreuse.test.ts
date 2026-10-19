@@ -4,6 +4,8 @@ import {
   activerForeuse,
   ameliorerChariot,
   ameliorerForage,
+  chariotBloqueAuPrestige,
+  forageBloqueAuPrestige,
   acheterForeuse,
   maxForeuses,
   vitesseForage,
@@ -129,6 +131,31 @@ describe('foreuse', () => {
     expect(capaciteChariot(etat)).toBe(500)
     expect(etat.argent).toBe(1000)
     expect(etat.inventaire).toEqual({})
+  })
+
+  it('ne s’améliore pas au-delà de ce que permet le prestige', () => {
+    const etat = partiePrestige1()
+    activerForeuse(etat)
+    etat.argent = 10_000_000
+    etat.inventaire = { fer: 100, redstone: 100, diamant: 100, or: 100 }
+    // Au prestige 1 (son déblocage) : un seul niveau de plus.
+    for (let i = 0; i < 5; i++) {
+      ameliorerForage(etat)
+      ameliorerChariot(etat)
+    }
+    expect(etat.foreuse.niveauVitesse).toBe(1)
+    expect(etat.foreuse.niveauChariot).toBe(1)
+    expect(forageBloqueAuPrestige(etat)).toBe(2)
+    expect(chariotBloqueAuPrestige(etat)).toBe(2)
+    // Au prestige 4, tout est débloqué.
+    etat.prestige = 4
+    for (let i = 0; i < 5; i++) {
+      ameliorerForage(etat)
+      ameliorerChariot(etat)
+    }
+    expect(etat.foreuse.niveauVitesse).toBe(4)
+    expect(etat.foreuse.niveauChariot).toBe(4)
+    expect(forageBloqueAuPrestige(etat)).toBeNull()
   })
 
   it('au prestige, elle garde seulement ses améliorations (et l’ascenseur son niveau)', () => {

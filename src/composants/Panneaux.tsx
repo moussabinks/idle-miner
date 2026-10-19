@@ -17,6 +17,7 @@ import {
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
+  niveauMaxAuPrestige,
   type IdBloc,
 } from '../jeu/donnees'
 import {
@@ -33,7 +34,11 @@ import {
   prochainNiveauForage,
   acheterForeuse,
   basculerChariot,
+  chariotBloqueAuPrestige,
   cocherToutChariot,
+  forageBloqueAuPrestige,
+  peutAmeliorerChariot,
+  peutAmeliorerForage,
   maxForeuses,
   prixProchaineForeuse,
   secondesDeCharbon,
@@ -60,7 +65,6 @@ import {
   equiper,
   peutAcheterPioche,
   peutEnchanter,
-  peutPayer,
   peutReparer,
   placeLibre,
   prixProchainSac,
@@ -72,10 +76,10 @@ import {
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
 import type { Action } from '../usePartie'
+import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import { lotChoisi, type Choix } from '../choix'
 import { Jauges } from './Jauges'
-import { Materiau, PrixCout } from './PrixCout'
 
 type PropsPanneau = {
   etat: EtatJeu
@@ -204,32 +208,30 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
               />
             )}
 
-            {prochaine && Object.keys(pioche.materiaux).length > 0 && (
-              <span className="materiaux">
-                Il faut :{' '}
-                {Object.entries(pioche.materiaux).map(([bloc, nombre]) => (
-                  <Materiau key={bloc} etat={etat} bloc={bloc as IdBloc} nombre={nombre ?? 0} />
-                ))}
-              </span>
+            {(possedee && !equipee) || (enVille && possedee && usure > 0) ? (
+              <div className="boutons">
+                {possedee && !equipee && (
+                  <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
+                    Équiper
+                  </Bouton>
+                )}
+                {enVille && possedee && usure > 0 && (
+                  <Bouton actif={peutReparer(etat, pioche.niveau)} genre="reparer" onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
+                    🔧 Réparer · {texteDevis(devis)}
+                  </Bouton>
+                )}
+              </div>
+            ) : null}
+            {/* Débloquer (avec les minerais demandés) ou racheter neuve : le prix à gauche, comme partout. */}
+            {enVille && (
+              <Achat
+                etat={etat}
+                cout={{ argent: pioche.prix, materiaux: prochaine ? pioche.materiaux : {} }}
+                texte={prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'}
+                possible={peutAcheterPioche(etat, pioche.niveau)}
+                onAcheter={() => jouer((e) => acheterPioche(e, pioche.niveau))}
+              />
             )}
-
-            <div className="boutons">
-              {possedee && !equipee && (
-                <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
-                  Équiper
-                </Bouton>
-              )}
-              {enVille && possedee && usure > 0 && (
-                <Bouton actif={peutReparer(etat, pioche.niveau)} genre="reparer" onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
-                  🔧 Réparer · {texteDevis(devis)}
-                </Bouton>
-              )}
-              {enVille && (
-                <Bouton actif={peutAcheterPioche(etat, pioche.niveau)} genre="acheter" onClick={() => jouer((e) => acheterPioche(e, pioche.niveau))}>
-                  {prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'} · {pioche.prix.toLocaleString('fr-FR')} $
-                </Bouton>
-              )}
-            </div>
           </div>
         )
       })}
@@ -247,27 +249,29 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
   return (
     <div className="liste-cartes">
       <div className="ligne-achat">
-        <strong>🎒 Sac plus grand</strong>
-        <span className="discret">
-          {prochainSac ? `${SACS[etat.niveauSac].taille} → ${prochainSac.taille} places` : `Tu as le plus grand sac (${SACS[etat.niveauSac].taille} places).`}
-        </span>
-        {prixSac !== null && (
-          <div className="boutons">
-            <Bouton actif={etat.argent >= prixSac} genre="acheter" onClick={() => jouer(acheterSac)}>
-              Acheter · {prixSac.toLocaleString('fr-FR')} $
-            </Bouton>
-          </div>
-        )}
+        <strong>🎒 Sac à dos</strong>
+        <Amelioration
+          etat={etat}
+          actuel={`${SACS[etat.niveauSac].taille} places`}
+          niveau={etat.niveauSac + 1}
+          niveauMax={SACS.length}
+          suivant={prochainSac && prixSac !== null ? { cout: { argent: prixSac, materiaux: {} }, texte: `⬆ ${prochainSac.taille} places` } : null}
+          possible={prixSac !== null && etat.argent >= prixSac && aLaSurface(etat)}
+          onAmeliorer={() => jouer(acheterSac)}
+          genre="acheter"
+        />
       </div>
 
       <div className="ligne-achat">
         <strong>🪣 Seau d'eau</strong>
         <span className="discret">Transforme une lave en obsidienne (60 $) au lieu de brûler ton sac. Tu en as {etat.seaux}.</span>
-        <div className="boutons">
-          <Bouton actif={etat.argent >= PRIX_SEAU} genre="acheter" onClick={() => jouer(acheterSeau)}>
-            Acheter · {PRIX_SEAU} $
-          </Bouton>
-        </div>
+        <Achat
+          etat={etat}
+          cout={{ argent: PRIX_SEAU, materiaux: {} }}
+          texte="🪣 Acheter"
+          possible={etat.argent >= PRIX_SEAU && aLaSurface(etat)}
+          onAcheter={() => jouer(acheterSeau)}
+        />
       </div>
 
     </div>
@@ -303,12 +307,14 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
             Une fois activée, elle le reste pour toujours (même après les prochains prestiges). Ensuite, elle creuse toute seule tant qu'elle a du
             charbon et remonte ce qu'elle trouve dans son chariot.
           </span>
-          <div className="boutons">
-            <PrixCout etat={etat} cout={COUT_ACTIVATION_FOREUSE} />
-            <Bouton actif={peutActiverForeuse(etat)} genre="ameliorer" onClick={() => jouer(activerForeuse)}>
-              Activer
-            </Bouton>
-          </div>
+          <Achat
+            etat={etat}
+            cout={COUT_ACTIVATION_FOREUSE}
+            texte="⚙️ Activer"
+            possible={peutActiverForeuse(etat) && aLaSurface(etat)}
+            onAcheter={() => jouer(activerForeuse)}
+            genre="ameliorer"
+          />
         </div>
       </div>
     )
@@ -426,43 +432,47 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
             prestige permet d'en avoir une de plus (5 au plus).
           </span>
         ) : (
-          <div className="boutons">
+          <>
             <span className="discret">Chaque foreuse ajoute sa vitesse (et brûle son charbon).</span>
-            <Bouton actif={etat.argent >= prixForeuse} genre="acheter" onClick={() => jouer(acheterForeuse)}>
-              Acheter une foreuse · {prixForeuse.toLocaleString('fr-FR')} $
-            </Bouton>
-          </div>
+            <Achat
+              etat={etat}
+              cout={{ argent: prixForeuse, materiaux: {} }}
+              texte="🛒 Acheter une foreuse"
+              possible={etat.argent >= prixForeuse && aLaSurface(etat)}
+              onAcheter={() => jouer(acheterForeuse)}
+            />
+          </>
         )}
       </div>
 
       <div className="ligne-achat">
-        <strong>Améliorations</strong>
-        <div className="boutons">
-          <span className="discret">Vitesse : {NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s par foreuse</span>
-          {forage ? (
-            <>
-              <PrixCout etat={etat} cout={forage.cout} />
-              <Bouton actif={peutPayer(etat, forage.cout)} genre="ameliorer" onClick={() => jouer(ameliorerForage)}>
-                → {forage.vitesse} bloc/s
-              </Bouton>
-            </>
-          ) : (
-            <span className="ok">max</span>
-          )}
-        </div>
-        <div className="boutons">
-          <span className="discret">Chariot : {NIVEAUX_CHARIOT[foreuse.niveauChariot].capacite} places</span>
-          {chariot ? (
-            <>
-              <PrixCout etat={etat} cout={chariot.cout} />
-              <Bouton actif={peutPayer(etat, chariot.cout)} genre="ameliorer" onClick={() => jouer(ameliorerChariot)}>
-                → {chariot.capacite} places
-              </Bouton>
-            </>
-          ) : (
-            <span className="ok">max</span>
-          )}
-        </div>
+        <strong>⚙️ Vitesse de forage</strong>
+        <Amelioration
+          etat={etat}
+          actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s par foreuse`}
+          niveau={foreuse.niveauVitesse + 1}
+          niveauMax={NIVEAUX_FORAGE.length}
+          niveauPermis={niveauMaxAuPrestige('forage', etat.prestige) + 1}
+          suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
+          bloqueAuPrestige={forageBloqueAuPrestige(etat)}
+          possible={peutAmeliorerForage(etat)}
+          onAmeliorer={() => jouer(ameliorerForage)}
+        />
+      </div>
+
+      <div className="ligne-achat">
+        <strong>🛒 Taille du chariot</strong>
+        <Amelioration
+          etat={etat}
+          actuel={`${NIVEAUX_CHARIOT[foreuse.niveauChariot].capacite} places`}
+          niveau={foreuse.niveauChariot + 1}
+          niveauMax={NIVEAUX_CHARIOT.length}
+          niveauPermis={niveauMaxAuPrestige('chariot', etat.prestige) + 1}
+          suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite} places` }}
+          bloqueAuPrestige={chariotBloqueAuPrestige(etat)}
+          possible={peutAmeliorerChariot(etat)}
+          onAmeliorer={() => jouer(ameliorerChariot)}
+        />
       </div>
     </div>
   )
@@ -482,23 +492,18 @@ export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
         const cout = coutEnchantement(etat, id)
         return (
           <div key={id} className="ligne-achat">
-            <div className="ligne-titre">
-              <strong>✨ {e.nom}</strong>
-              <span className="badge">
-                {niveau === 0 ? 'Aucun' : chiffreRomain(niveau)} / {chiffreRomain(e.niveauMax)}
-              </span>
-            </div>
+            <strong>✨ {e.nom}</strong>
             <span className="discret">{e.description}</span>
-            {cout === null ? (
-              <span className="ok">Niveau max atteint !</span>
-            ) : (
-              <div className="boutons">
-                <PrixCout etat={etat} cout={cout} />
-                <Bouton actif={peutEnchanter(etat, id)} genre="enchanter" onClick={() => jouer((x) => enchanter(x, id))}>
-                  Enchanter {chiffreRomain(niveau + 1)}
-                </Bouton>
-              </div>
-            )}
+            <Amelioration
+              etat={etat}
+              actuel={niveau === 0 ? 'Pas encore enchantée' : `${e.nom} ${chiffreRomain(niveau)}`}
+              niveau={niveau}
+              niveauMax={e.niveauMax}
+              suivant={cout && { cout, texte: `✨ Enchanter ${chiffreRomain(niveau + 1)}` }}
+              possible={peutEnchanter(etat, id)}
+              onAmeliorer={() => jouer((x) => enchanter(x, id))}
+              genre="enchanter"
+            />
           </div>
         )
       })}

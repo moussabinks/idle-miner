@@ -124,6 +124,19 @@ h2 {
 .hud-argent strong {
   color: var(--accent);
   font-size: 1.15rem;
+  font-variant-numeric: tabular-nums; /* les chiffres ne bougent pas pendant que le compteur défile */
+}
+
+/* L'argent généré par seconde, à côté du titre « Argent ». */
+.hud-revenu {
+  margin-left: 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte-doux);
+}
+
+.hud-revenu-actif {
+  color: var(--vert);
 }
 
 .hud-enchants {
@@ -659,6 +672,82 @@ h2 {
 
 .indicateur-foreuse.tourne .foreuse-corps {
   animation: tremble 0.15s linear infinite;
+}
+
+/* Une ligne d'amélioration (la même partout : Amelioration.tsx). */
+.amelioration {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.amelioration-haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* Les niveaux en petits carrés : pleins (achetés), vides (à acheter), hachurés (bloqués par le prestige). */
+.niveaux {
+  display: inline-flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.niveaux i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-claire);
+}
+
+.niveaux i.niveau-achete {
+  border-color: #127a6d;
+  background: linear-gradient(#3fe0cb, #22b5a3);
+  box-shadow: 0 0 6px rgb(34 181 163 / 0.5);
+}
+
+/* Le dernier niveau acheté « pop » quand il apparaît (juste après un achat). */
+.niveaux i.niveau-achete:last-of-type,
+.niveaux i.niveau-achete:has(+ .niveau-libre),
+.niveaux i.niveau-achete:has(+ .niveau-bloque) {
+  animation: niveau-pop 0.45s ease-out;
+}
+
+.niveaux i.niveau-bloque {
+  background: repeating-linear-gradient(135deg, var(--carte-claire) 0 2px, var(--fond) 2px 4px);
+  opacity: 0.7;
+}
+
+@keyframes niveau-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.amelioration-max {
+  color: var(--vert);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.amelioration-verrou {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px dashed var(--bordure);
+  color: var(--texte-doux);
+  font-size: 0.82rem;
 }
 
 .module-ligne {

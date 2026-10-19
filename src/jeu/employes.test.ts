@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { DUREE_MIN_TRAJET_EMPLOYE, NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, SECONDES_VENTE_EMPLOYE } from './donnees'
-import { activiteEmploye, ameliorerEmploye, avancerEmployes, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
+import { activiteEmploye, ameliorerEmploye, employeBloqueAuPrestige, avancerEmployes, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
 import { creerPartie, prestige, type EtatJeu } from './mineur'
 import { choisirTalent } from './talents'
 import { avancerTemps } from './temps'
@@ -83,8 +83,20 @@ describe('mineurs employés', () => {
     expect(mineur.sac).toEqual({})
   })
 
-  it('ont un plus grand sac à chaque amélioration', () => {
+  it('ont un meilleur équipement petit à petit : un niveau de plus par prestige', () => {
     const etat = partie(2)
+    embaucher(etat)
+    ameliorerEmploye(etat, 0)
+    ameliorerEmploye(etat, 0)
+    expect(etat.employes[0].niveau).toBe(1) // Pierre au prestige 2, pas plus
+    expect(employeBloqueAuPrestige(etat, etat.employes[0])).toBe(3)
+    etat.prestige = 3
+    ameliorerEmploye(etat, 0)
+    expect(etat.employes[0].niveau).toBe(2)
+  })
+
+  it('ont un plus grand sac à chaque amélioration', () => {
+    const etat = partie(5)
     embaucher(etat)
     const mineur = etat.employes[0]
     const tailles = [tailleSacEmploye(etat, mineur)]

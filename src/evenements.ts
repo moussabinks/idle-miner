@@ -22,6 +22,8 @@ export type Evenement =
   | { type: 'piocheCassee' }
   | { type: 'talent' }
   | { type: 'recolteMineurs'; montant: number } // un mineur employé a vendu sa récolte
+  | { type: 'nouvelleCouche'; palier: boolean } // une couche finie (palier = tous les 10 m)
+  | { type: 'amelioration' } // un niveau de plus : ascenseur, foreuse, mineur, sac, pioche, enchantement
 
 // Le sac et le quai de l'ascenseur ensemble : ce que le mineur a ramassé.
 function ramasse(etat: EtatJeu): Inventaire {
@@ -30,6 +32,14 @@ function ramasse(etat: EtatJeu): Inventaire {
     const bloc = id as IdBloc
     total[bloc] = (total[bloc] ?? 0) + (nombre ?? 0)
   }
+  return total
+}
+
+// Un seul nombre qui grandit à chaque amélioration achetée (pour la repérer facilement).
+function totalNiveaux(etat: EtatJeu): number {
+  let total = etat.ascenseur.niveau + etat.foreuse.niveauVitesse + etat.foreuse.niveauChariot + etat.niveauSac + etat.meilleure
+  for (const niveau of Object.values(etat.enchantements)) total += niveau
+  for (const mineur of etat.employes) total += mineur.niveau
   return total
 }
 
@@ -57,6 +67,14 @@ export function evenementsEntre(avant: EtatJeu, apres: EtatJeu): Evenement[] {
       evenements.push({ type: 'trouvaille', bloc: objet, nombre: gagne, colonne, rare: MINERAIS_RARES.includes(objet) })
     }
   }
+
+  // Une couche finie : le mineur descend d'un mètre.
+  if (apres.profondeur > avant.profondeur && apres.prestige === avant.prestige) {
+    evenements.push({ type: 'nouvelleCouche', palier: apres.profondeur % 10 === 0 })
+  }
+
+  // Une amélioration achetée (le son de l'achat est alors remplacé par une petite fanfare).
+  if (totalNiveaux(apres) > totalNiveaux(avant) && apres.prestige === avant.prestige) evenements.push({ type: 'amelioration' })
 
   if (!estCassee(avant) && estCassee(apres) && avant.niveauPioche === apres.niveauPioche) evenements.push({ type: 'piocheCassee' })
 

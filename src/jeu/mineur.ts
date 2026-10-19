@@ -30,6 +30,8 @@ import {
   dureeCasse,
   type Cout,
   type IdBloc,
+  niveauMaxAuPrestige,
+  prestigePourNiveau,
   type IdEnchantement,
   type NiveauAscenseur,
   type Pioche,
@@ -381,6 +383,22 @@ export function indexBlocActuel(etat: EtatJeu): number {
     if (meilleur === -1 || distance < Math.abs(meilleur - etat.colonneMineur)) meilleur = colonne
   })
   return meilleur
+}
+
+// Le sens dans lequel le mineur avance en creusant la couche : -1 vers la gauche, 1 vers la droite.
+// Il creuse en zigzag (une couche vers la droite, la suivante vers la gauche) : il regarde du côté
+// où il reste le plus de blocs à casser.
+export function sensDeMinage(etat: EtatJeu): -1 | 1 {
+  const actuel = indexBlocActuel(etat)
+  if (actuel === -1) return 1
+  let aGauche = 0
+  let aDroite = 0
+  etat.coucheActuelle.forEach((bloc, colonne) => {
+    if (bloc === null || colonne === actuel) return
+    if (colonne < actuel) aGauche += 1
+    else aDroite += 1
+  })
+  return aGauche > aDroite ? -1 : 1
 }
 
 export function blocActuel(etat: EtatJeu): IdBloc | null {
@@ -788,9 +806,16 @@ export function prochainNiveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
   return NIVEAUX_ASCENSEUR[etat.ascenseur.niveau] ?? null
 }
 
+// Le prochain niveau est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
+export function ascenseurBloqueAuPrestige(etat: EtatJeu): number | null {
+  const prochain = prochainNiveauAscenseur(etat)
+  if (prochain === null || prochain.niveau <= niveauMaxAuPrestige('ascenseur', etat.prestige)) return null
+  return prestigePourNiveau('ascenseur', prochain.niveau)
+}
+
 export function peutAmeliorerAscenseur(etat: EtatJeu): boolean {
   const prochain = prochainNiveauAscenseur(etat)
-  return prochain !== null && peutPayer(etat, prochain.cout)
+  return prochain !== null && ascenseurBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
 }
 
 // Construit l'ascenseur (niveau 1) ou l'améliore. Ça se fait directement dans la mine.

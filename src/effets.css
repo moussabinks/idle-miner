@@ -200,6 +200,30 @@
   100% { transform: scale(1); }
 }
 
+/* Une couche finie : la profondeur du bandeau fait un petit bond. */
+.profondeur-saute {
+  display: inline-block;
+  animation: profondeur-saute 0.35s ease-out;
+}
+
+@keyframes profondeur-saute {
+  0% { transform: translateY(-4px); color: #9fe3ff; }
+  100% { transform: translateY(0); }
+}
+
+/* Un minerai rare : toute la mine tremble un court instant. */
+.puits-mine:has(.trouvaille-rare) {
+  animation: secousse 0.35s ease-out;
+}
+
+@keyframes secousse {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 1px); }
+  40% { transform: translate(3px, -1px); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(1px, 0); }
+}
+
 /* --- Sac plein : la case du bandeau clignote en rouge et tremble un peu ------ */
 
 .hud-alerte {
@@ -412,6 +436,9 @@
   .gain-vente-texte,
   .piece,
   .argent-saute,
+  .profondeur-saute,
+  .puits-mine:has(.trouvaille-rare),
+  .niveaux i,
   .hud-alerte,
   .hud-bouton.a-depenser,
   .talent-disponible,

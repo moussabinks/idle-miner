@@ -1,22 +1,26 @@
 // Le stand des mineurs (débloqué au prestige 2) : on embauche des mineurs qui creusent
 // tout seuls, remontent vendre leur récolte et te donnent l'argent (moins leur salaire).
 
-import { NIVEAUX_EMPLOYE, PRESTIGE_EMPLOYES } from '../jeu/donnees'
+import { NIVEAUX_EMPLOYE, PRESTIGE_EMPLOYES, niveauMaxAuPrestige } from '../jeu/donnees'
 import {
   activiteEmploye,
   ameliorerEmploye,
   embaucher,
+  employeBloqueAuPrestige,
+  iconeActiviteEmploye,
   employesDebloques,
   maxEmployes,
   nbDansSacEmploye,
+  peutAmeliorerEmploye,
   prixAmeliorationEmploye,
   prixEmbauche,
   tailleSacEmploye,
   vitesseEmploye,
 } from '../jeu/employes'
-import type { EtatJeu } from '../jeu/mineur'
-import { partSalaire } from '../jeu/talents'
+import { aLaSurface, type EtatJeu } from '../jeu/mineur'
+import { multiplicateurSacMineurs, partSalaire } from '../jeu/talents'
 import type { Action } from '../usePartie'
+import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 
 export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
@@ -55,11 +59,13 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
         {prix === null ? (
           <span className="discret">Ton équipe est complète. Chaque prestige te permet d'en employer un de plus (6 au plus).</span>
         ) : (
-          <div className="boutons">
-            <button className="bouton bouton-petit bouton-acheter" disabled={etat.argent < prix} onClick={() => jouer(embaucher)}>
-              Embaucher · {prix.toLocaleString('fr-FR')} $
-            </button>
-          </div>
+          <Achat
+            etat={etat}
+            cout={{ argent: prix, materiaux: {} }}
+            texte="👷 Embaucher"
+            possible={etat.argent >= prix && aLaSurface(etat)}
+            onAcheter={() => jouer(embaucher)}
+          />
         )}
       </div>
 
@@ -70,7 +76,7 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
           <div key={index} className="ligne-achat carte-employe">
             <div className="ligne-titre">
               <strong>👷 {employe.nom}</strong>
-              <span className="badge">Pioche en {NIVEAUX_EMPLOYE[employe.niveau].nom}</span>
+              <span className="badge">{iconeActiviteEmploye(employe)}</span>
             </div>
             <span className="discret">
               {activiteEmploye(etat, employe)} · {vitesseEmploye(etat, employe).toLocaleString('fr-FR')} bloc/s · t'a rapporté{' '}
@@ -82,20 +88,23 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
               texte={`Sac : ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat, employe)}`}
               couleur="or"
             />
-            {prixPioche !== null && prochaine && (
-              <div className="boutons">
-                <span className="discret">
-                  Pioche en {prochaine.nom} : plus rapide, jusqu'à -{prochaine.profMax} m, et sac de {prochaine.sac * (tailleSacEmploye(etat, employe) / NIVEAUX_EMPLOYE[employe.niveau].sac)} places
-                </span>
-                <button
-                  className="bouton bouton-petit bouton-ameliorer"
-                  disabled={etat.argent < prixPioche}
-                  onClick={() => jouer((e) => ameliorerEmploye(e, index))}
-                >
-                  Améliorer · {prixPioche.toLocaleString('fr-FR')} $
-                </button>
-              </div>
+            {prochaine && (
+              <span className="discret">
+                Équipement suivant : pioche en {prochaine.nom} (plus rapide, jusqu'à -{prochaine.profMax} m) et sac de{' '}
+                {prochaine.sac * multiplicateurSacMineurs(etat)} places.
+              </span>
             )}
+            <Amelioration
+              etat={etat}
+              actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} · sac de ${tailleSacEmploye(etat, employe)}`}
+              niveau={employe.niveau + 1}
+              niveauMax={NIVEAUX_EMPLOYE.length}
+              niveauPermis={niveauMaxAuPrestige('mineur', etat.prestige) + 1}
+              suivant={prixPioche !== null && prochaine ? { cout: { argent: prixPioche, materiaux: {} }, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
+              bloqueAuPrestige={employeBloqueAuPrestige(etat, employe)}
+              possible={peutAmeliorerEmploye(etat, employe)}
+              onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
+            />
           </div>
         )
       })}
