@@ -2,7 +2,7 @@
 // Les stands sont serrés les uns contre les autres pour que les allers-retours soient rapides.
 // Les positions sont en « tuiles » (une tuile = la largeur d'un pas du mineur).
 
-import type { NomIcone } from './IconePixel'
+import type { NomIcone } from './Icone'
 
 export type IdStand = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
 

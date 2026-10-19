@@ -11,7 +11,7 @@ import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
-import { IconePixel } from './composants/IconePixel'
+import { Icone } from './composants/Icone'
 import { Inventaire } from './composants/Inventaire'
 import { AmeliorationAscenseur } from './composants/Ascenseur'
 import { PanneauEmployes } from './composants/PanneauEmployes'
@@ -183,7 +183,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     panneau = (
       <section className="carte panneau">
         <h2 className="titre-stand">
-          {stand.icone && <IconePixel nom={stand.icone} taille={28} />}
+          {stand.icone && <Icone nom={stand.icone} taille={28} />}
           {stand.nom}
         </h2>
         <p className="discret">{stand.description}</p>
@@ -212,7 +212,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             {etat.prestige > 0 && (
               <div className="ligne-achat">
                 <strong className="titre-avec-icone">
-                  <IconePixel nom="etoile" taille={20} /> Arbre de prestige
+                  <Icone nom="etoile" taille={20} /> Arbre de prestige
                 </strong>
                 <span className="discret">
                   {pointsDisponibles(etat) > 0

@@ -282,6 +282,9 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
       </section>
 
       <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} />
+
+      {/* La version en ligne (commit et date du build) : pour vérifier que Vercel est à jour. */}
+      <p className="accueil-version discret">Version {__VERSION_JEU__}</p>
     </div>
   )
 }
