@@ -144,8 +144,8 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
           )
         })}
 
-        {/* Le mineur, sur le chemin */}
-        {auVillage && (
+        {/* Le mineur, sur le chemin (sauf s'il vient de monter dans l'ascenseur) */}
+        {auVillage && !etat.ascenseur.passager && (
           <div ref={joueurRef} className="joueur-village" style={{ left: x * TUILE - 22 }}>
             <Personnage couleurPioche={couleurPioche} action={enMarche ? 'marche' : 'repos'} versLaGauche={versLaGauche} />
           </div>

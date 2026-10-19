@@ -176,7 +176,13 @@ export function VueMonde({
   trouvailles,
 }: Props) {
   const conteneurRef = useRef<HTMLElement>(null)
-  const joueurRef = useRef<HTMLDivElement>(null)
+  // Une référence par endroit où le mineur peut être dessiné. Si elles partageaient la même,
+  // le mineur qui disparaît d'un endroit (le village, au départ de l'ascenseur) l'effacerait
+  // pendant que celui de la cabine est encore là, et la caméra ne saurait plus qui suivre.
+  const joueurVillageRef = useRef<HTMLDivElement>(null)
+  const joueurCabineRef = useRef<HTMLDivElement>(null)
+  const joueurEchelleRef = useRef<HTMLDivElement>(null)
+  const joueurFrontRef = useRef<HTMLDivElement>(null)
   const foreuseRef = useRef<HTMLDivElement>(null)
 
   // Fait défiler la vue jusqu'à un élément (le joueur, ou la foreuse).
@@ -198,6 +204,7 @@ export function VueMonde({
   // Le mineur n'est dessiné qu'à un seul endroit à la fois (sinon la caméra ne sait plus qui suivre).
   const auFront = auFond(etat) && !dansLaCabine
   const surEchelle = !auVillage && !auFront && !dansLaCabine
+  const enVillageAPied = auVillage && !dansLaCabine
 
   // Pendant le minage, le mineur se place au-dessus du bloc qu'il casse.
   const colonneAffichee = enMinage && indexActuel !== -1 ? indexActuel : etat.colonneMineur
@@ -207,13 +214,14 @@ export function VueMonde({
   // pour les grands sauts (arrivée au village...), elle glisse en douceur.
   const bouge = etat.position !== etat.cible || dansLaCabine
   const repere = auVillage ? -1 : Math.round(etat.position * 4) / 4
+  const joueurSuivi = dansLaCabine ? joueurCabineRef : enVillageAPied ? joueurVillageRef : auFront ? joueurFrontRef : joueurEchelleRef
   useEffect(() => {
     const conteneur = conteneurRef.current
-    const joueur = joueurRef.current
+    const joueur = joueurSuivi.current
     if (!conteneur || !joueur) return
     const haut = joueur.getBoundingClientRect().top - conteneur.getBoundingClientRect().top + conteneur.scrollTop
     conteneur.scrollTo({ top: haut - conteneur.clientHeight / 2 + joueur.offsetHeight / 2, behavior: bouge ? 'auto' : 'smooth' })
-  }, [repere, P, bouge])
+  }, [repere, P, bouge, joueurSuivi])
 
   const foreuseVisible = foreuseDebloquee(etat) && etat.foreuse.active
 
@@ -288,7 +296,7 @@ export function VueMonde({
         versLaGauche={versLaGaucheVillage}
         enMarche={enMarcheVillage}
         onAllerStand={onAllerStand}
-        joueurRef={joueurRef}
+        joueurRef={joueurVillageRef}
       />
 
       <div className="puits-mine">
@@ -301,7 +309,7 @@ export function VueMonde({
           <div className={`cabine ${dansLaCabine ? 'cabine-occupee' : ''}`} style={{ top: `calc(var(--pas) * ${ascenseur.position - 1})` }}>
             {(Object.keys(ascenseur.chargement).length > 0 || nbSurQuai(etat) > 0) && <span className="cabine-chargee" />}
             {dansLaCabine && (
-              <div ref={joueurRef} className="passager">
+              <div ref={joueurCabineRef} className="passager">
                 <Personnage couleurPioche={couleurPioche} action="repos" />
               </div>
             )}
@@ -310,7 +318,7 @@ export function VueMonde({
 
         {/* Le joueur sur l'échelle. */}
         {surEchelle && (
-          <div ref={joueurRef} className="joueur-echelle" style={{ top: `calc(var(--pas) * ${etat.position - 1})` }}>
+          <div ref={joueurEchelleRef} className="joueur-echelle" style={{ top: `calc(var(--pas) * ${etat.position - 1})` }}>
             <Personnage couleurPioche={couleurPioche} action="grimpe" />
           </div>
         )}
@@ -328,7 +336,7 @@ export function VueMonde({
             {Array.from({ length: LARGEUR_MINE }, (_, colonne) => (
               <div key={colonne} className="case vide">
                 {auFront && colonne === colonneAffichee && (
-                  <div ref={joueurRef} className="porte-joueur">
+                  <div ref={joueurFrontRef} className="porte-joueur">
                     <Personnage couleurPioche={couleurPioche} action={enMinage ? 'creuse' : 'repos'} versLaGauche={versLaGauche} />
                   </div>
                 )}

@@ -130,6 +130,10 @@ export const SACS = [
   { taille: 64, prix: 80 },
   { taille: 128, prix: 400 },
   { taille: 256, prix: 1500 },
+  // Les grands sacs (19/10) : pour les longues sessions et après les prestiges.
+  { taille: 512, prix: 5000 },
+  { taille: 1024, prix: 15000 },
+  { taille: 2048, prix: 40000 },
 ]
 
 export const PRIX_SEAU = 25

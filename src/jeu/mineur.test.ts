@@ -4,6 +4,8 @@ import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
   acheterPioche,
   acheterSac,
+  tailleSac,
+  prixProchainSac,
   apercuVente,
   allerA,
   ameliorerAscenseur,
@@ -487,6 +489,14 @@ describe('boutique et enchantements', () => {
     acheterSac(etat)
     expect(etat.niveauSac).toBe(1)
     expect(etat.argent).toBe(0)
+  })
+
+  it('peut agrandir le sac jusqu’à 2 048 places', () => {
+    const etat = partieALaSurface()
+    etat.argent = 1_000_000
+    while (prixProchainSac(etat) !== null) acheterSac(etat)
+    expect(tailleSac(etat)).toBe(2048)
+    expect(acheterSac(etat)).toEqual([])
   })
 
   it('enchante avec des lapis et des émeraudes (coût × niveau)', () => {
