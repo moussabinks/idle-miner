@@ -57,7 +57,9 @@ function objetsAGarder(etat: EtatJeu): IdBloc[] {
   if (etat.meilleure < 3) garder.push('diamant')
   if (etat.meilleure < 4) garder.push('debris', 'or')
   if (peutEncoreEnchanter(etat)) garder.push('lapis', 'emeraude')
-  if (prochainNiveauAscenseur(etat) !== null) garder.push('fer', 'redstone')
+  // Les minerais du prochain niveau de l'ascenseur (l'argent, lui, vient des ventes).
+  const prochainAscenseur = prochainNiveauAscenseur(etat)
+  if (prochainAscenseur !== null) garder.push(...(Object.keys(prochainAscenseur.cout.materiaux) as IdBloc[]))
   return garder
 }
 

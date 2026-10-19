@@ -14,16 +14,15 @@ import {
   RESERVE_RECHARGE_AUTO,
   PROFONDEUR_BEDROCK,
   SECONDES_PAR_CHARBON,
-  type Cout,
   type IdBloc,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
 import { multiplicateurCharbon, multiplicateurForage } from './talents'
 import {
   aLaSurface,
-  payerMateriaux,
+  payer,
+  peutPayer,
   placeLibre,
-  possede,
   quantite,
   ramasser,
   retirer,
@@ -61,16 +60,6 @@ export function chariotPlein(etat: EtatJeu): boolean {
 // La foreuse tourne-t-elle en ce moment ?
 export function foreuseEnMarche(etat: EtatJeu): boolean {
   return etat.foreuse.active && etat.foreuse.carburant > 0 && !chariotPlein(etat)
-}
-
-// A-t-on de quoi payer ce coût (argent et matériaux du sac) ?
-export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
-  return etat.argent >= (cout.argent ?? 0) && possede(etat, cout.materiaux)
-}
-
-function payer(etat: EtatJeu, cout: Cout): void {
-  etat.argent -= cout.argent ?? 0
-  payerMateriaux(etat, cout.materiaux)
 }
 
 // ---------------------------------------------------------------------------

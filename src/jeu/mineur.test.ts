@@ -9,6 +9,8 @@ import {
   apercuVente,
   allerA,
   ameliorerAscenseur,
+  niveauAscenseur,
+  peutAmeliorerAscenseur,
   appelerAscenseur,
   ascenseurDisponible,
   basculerVente,
@@ -345,16 +347,27 @@ describe('ascenseur', () => {
     expect(etat.inventaire).toEqual({})
   })
 
-  it('se construit puis s’améliore avec du fer et de la redstone, directement dans la mine', () => {
+  it('se construit puis s’améliore, surtout avec de l’argent, directement dans la mine', () => {
     const etat = nouvellePartie()
-    etat.inventaire = { fer: 60, redstone: 25 }
-    ameliorerAscenseur(etat) // niveau 1 : 10 fer + 5 redstone
+    etat.argent = 2000
+    etat.inventaire = { fer: 20, redstone: 5 }
+    ameliorerAscenseur(etat) // niveau 1 : 250 $ + 5 fer (pas besoin de redstone)
     expect(etat.ascenseur.niveau).toBe(1)
-    ameliorerAscenseur(etat) // niveau 2 : 40 fer + 15 redstone
+    ameliorerAscenseur(etat) // niveau 2 : 1 500 $ + 10 fer + 5 redstone
     expect(etat.ascenseur.niveau).toBe(2)
-    expect(etat.inventaire).toEqual({ fer: 10, redstone: 5 })
-    ameliorerAscenseur(etat) // niveau 3 : pas assez de fer
+    expect(etat.argent).toBe(250)
+    expect(etat.inventaire).toEqual({ fer: 5 })
+    ameliorerAscenseur(etat) // niveau 3 : pas assez d'argent
     expect(etat.ascenseur.niveau).toBe(2)
+  })
+
+  it('a 6 niveaux, jusqu’à 1 024 objets par voyage', () => {
+    const etat = nouvellePartie()
+    etat.argent = 1_000_000
+    etat.inventaire = { fer: 100, redstone: 100, or: 100, diamant: 100 }
+    while (peutAmeliorerAscenseur(etat)) ameliorerAscenseur(etat)
+    expect(etat.ascenseur.niveau).toBe(6)
+    expect(niveauAscenseur(etat)?.capacite).toBe(1024)
   })
 
   it('remonte le sac, le vend en haut et redescend au front de taille', () => {
@@ -499,12 +512,14 @@ describe('boutique et enchantements', () => {
     expect(acheterSac(etat)).toEqual([])
   })
 
-  it('enchante avec des lapis et des émeraudes (coût × niveau)', () => {
+  it('enchante avec de l’argent, des lapis et des émeraudes (coût × niveau)', () => {
     const etat = partieALaSurface()
-    etat.inventaire = { lapis: 12, emeraude: 3 }
-    enchanter(etat, 'efficacite') // niveau I : 4 lapis + 1 émeraude
-    enchanter(etat, 'efficacite') // niveau II : 8 lapis + 2 émeraudes
+    etat.argent = 1200
+    etat.inventaire = { lapis: 9, emeraude: 3 }
+    enchanter(etat, 'efficacite') // niveau I : 400 $ + 3 lapis + 1 émeraude
+    enchanter(etat, 'efficacite') // niveau II : 800 $ + 6 lapis + 2 émeraudes
     expect(etat.enchantements.efficacite).toBe(2)
+    expect(etat.argent).toBe(0)
     expect(etat.inventaire).toEqual({})
     expect(vitesse(etat)).toBe(2 * 1.5)
   })

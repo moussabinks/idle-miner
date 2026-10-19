@@ -1,10 +1,9 @@
 // Le petit module de l'ascenseur, en bas à gauche de la mine : on le construit,
-// on l'améliore (fer et redstone), on l'appelle, ou on monte dedans.
+// on l'améliore (surtout avec de l'argent), on l'appelle, ou on monte dedans.
 // Pour envoyer des minerais au marché, c'est dans le sac (panneau de droite).
 // Il reste replié tant qu'on ne l'ouvre pas, pour ne pas cacher la mine.
 
 import { useState } from 'react'
-import { BLOCS } from '../jeu/donnees'
 import {
   ameliorerAscenseur,
   appelerAscenseur,
@@ -16,23 +15,13 @@ import {
   positionFront,
   prendreAscenseur,
   prochainNiveauAscenseur,
-  quantite,
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action } from '../usePartie'
+import { PrixCout } from './PrixCout'
 
 // Ouvert ou replié : gardé ici pour qu'il reste comme on l'a laissé quand on remonte puis redescend.
 let ouvertMemorise = false
-
-// « 12/20 fer » en vert s'il y en a assez, en rouge sinon.
-function Besoin({ etat, bloc, nombre }: { etat: EtatJeu; bloc: 'fer' | 'redstone'; nombre: number }) {
-  const possede = quantite(etat, bloc)
-  return (
-    <span className={possede >= nombre ? 'ok' : 'manque'}>
-      {Math.min(possede, nombre)}/{nombre} {BLOCS[bloc].nom.toLowerCase()}
-    </span>
-  )
-}
 
 // Où en est la cabine, en quelques mots.
 function etatCabine(etat: EtatJeu): string {
@@ -91,10 +80,7 @@ export function ModuleAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action
 
           {prochain ? (
             <div className="module-ligne">
-              <span className="materiaux">
-                <Besoin etat={etat} bloc="fer" nombre={prochain.fer} />
-                <Besoin etat={etat} bloc="redstone" nombre={prochain.redstone} />
-              </span>
+              <PrixCout etat={etat} cout={prochain.cout} />
               <button
                 className="bouton bouton-petit bouton-ameliorer"
                 disabled={!peutAmeliorerAscenseur(etat) || ascenseurEnMouvement(etat)}

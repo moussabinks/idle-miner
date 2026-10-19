@@ -148,31 +148,35 @@ export const COUCHES_VISIBLES_DESSOUS = 4
 // Temps pour monter (ou descendre) un mètre à l'échelle, en secondes.
 export const SECONDES_PAR_METRE_ECHELLE = 0.15
 
-// L'ascenseur automatique : il se construit puis s'améliore avec du fer et de la redstone.
-// Chaque niveau remonte plus d'objets par voyage, et plus vite.
+// Le prix d'une amélioration : surtout de l'argent, et un peu de minerais.
+// (Choix du 19/10 : l'économie repose sur l'argent, les minerais servent d'appoint.)
+export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
+
+// L'ascenseur automatique : il se construit puis s'améliore directement dans la mine.
+// Le premier niveau ne demande pas de redstone (on n'en trouve que sous -40 m) :
+// on peut le construire tôt. Chaque niveau remonte plus d'objets par voyage, et plus vite.
 export type NiveauAscenseur = {
   niveau: number
-  fer: number
-  redstone: number
+  cout: Cout
   capacite: number // objets remontés par voyage
   secondesParMetre: number // temps pour parcourir un mètre
 }
 
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, fer: 10, redstone: 5, capacite: 32, secondesParMetre: 0.1 },
-  { niveau: 2, fer: 40, redstone: 15, capacite: 64, secondesParMetre: 0.07 },
-  { niveau: 3, fer: 80, redstone: 30, capacite: 128, secondesParMetre: 0.05 },
-  { niveau: 4, fer: 150, redstone: 60, capacite: 256, secondesParMetre: 0.03 },
+  { niveau: 1, cout: { argent: 250, materiaux: { fer: 5 } }, capacite: 32, secondesParMetre: 0.1 },
+  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 10, redstone: 5 } }, capacite: 64, secondesParMetre: 0.07 },
+  { niveau: 3, cout: { argent: 5000, materiaux: { fer: 20, redstone: 10 } }, capacite: 128, secondesParMetre: 0.05 },
+  { niveau: 4, cout: { argent: 15000, materiaux: { redstone: 20 } }, capacite: 256, secondesParMetre: 0.03 },
+  { niveau: 5, cout: { argent: 35000, materiaux: { or: 10 } }, capacite: 512, secondesParMetre: 0.02 },
+  { niveau: 6, cout: { argent: 80000, materiaux: { diamant: 5 } }, capacite: 1024, secondesParMetre: 0.015 },
 ]
 
 // ---------------------------------------------------------------------------
 // La foreuse (débloquée au prestige 1)
 // ---------------------------------------------------------------------------
 
-export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
-
 // On l'active une seule fois (elle reste active après les prestiges suivants).
-export const COUT_ACTIVATION_FOREUSE: Cout = { materiaux: { fer: 30, redstone: 10 } }
+export const COUT_ACTIVATION_FOREUSE: Cout = { argent: 5000, materiaux: { fer: 10, redstone: 5 } }
 export const PRESTIGE_FOREUSE = 1
 
 // Un charbon fait tourner la foreuse pendant 20 secondes.
@@ -185,19 +189,22 @@ export const NIVEAU_RECHARGE_AUTO = 2
 export const RESERVE_RECHARGE_AUTO = 60
 
 // Vitesse de forage (blocs par seconde) et coût de chaque niveau.
+// La foreuse est gardée d'un prestige à l'autre : c'est là qu'on investit son argent.
 export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
   { vitesse: 0.5, cout: { materiaux: {} } },
-  { vitesse: 1, cout: { argent: 1000, materiaux: { fer: 30 } } },
-  { vitesse: 2, cout: { argent: 4000, materiaux: { redstone: 30, or: 10 } } },
-  { vitesse: 4, cout: { argent: 12000, materiaux: { diamant: 10 } } },
+  { vitesse: 1, cout: { argent: 6000, materiaux: { fer: 10 } } },
+  { vitesse: 2, cout: { argent: 20000, materiaux: { redstone: 10 } } },
+  { vitesse: 4, cout: { argent: 60000, materiaux: { diamant: 3 } } },
+  { vitesse: 8, cout: { argent: 150000, materiaux: { diamant: 5 } } },
 ]
 
 // Taille du chariot (en objets) et coût de chaque niveau.
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 200, cout: { materiaux: {} } },
-  { capacite: 500, cout: { argent: 800, materiaux: {} } },
-  { capacite: 1000, cout: { argent: 3000, materiaux: { fer: 50 } } },
-  { capacite: 2500, cout: { argent: 9000, materiaux: { or: 20 } } },
+  { capacite: 500, cout: { argent: 3000, materiaux: {} } },
+  { capacite: 1000, cout: { argent: 12000, materiaux: {} } },
+  { capacite: 2500, cout: { argent: 40000, materiaux: { fer: 10 } } },
+  { capacite: 5000, cout: { argent: 100000, materiaux: { or: 10 } } },
 ]
 
 // La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
@@ -219,7 +226,8 @@ export type Enchantement = {
   nom: string
   description: string
   niveauMax: number
-  // Coût du niveau n : (lapis × n) + (émeraudes × n).
+  // Coût du niveau n : (argent × n) + (lapis × n) + (émeraudes × n).
+  argentParNiveau: number
   lapisParNiveau: number
   emeraudesParNiveau: number
 }
@@ -230,7 +238,8 @@ export const ENCHANTEMENTS: Record<IdEnchantement, Enchantement> = {
     nom: 'Efficacité',
     description: '+25 % de vitesse par niveau',
     niveauMax: 5,
-    lapisParNiveau: 4,
+    argentParNiveau: 400,
+    lapisParNiveau: 3,
     emeraudesParNiveau: 1,
   },
   fortune: {
@@ -238,15 +247,17 @@ export const ENCHANTEMENTS: Record<IdEnchantement, Enchantement> = {
     nom: 'Fortune',
     description: 'Plus de minerais par bloc cassé',
     niveauMax: 3,
-    lapisParNiveau: 6,
-    emeraudesParNiveau: 2,
+    argentParNiveau: 600,
+    lapisParNiveau: 4,
+    emeraudesParNiveau: 1,
   },
   solidite: {
     id: 'solidite',
     nom: 'Solidité',
     description: "La pioche s'use moins vite",
     niveauMax: 3,
-    lapisParNiveau: 4,
+    argentParNiveau: 300,
+    lapisParNiveau: 3,
     emeraudesParNiveau: 1,
   },
 }

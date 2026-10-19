@@ -19,22 +19,28 @@ import { avancerTemps } from './temps'
 // Un joueur au village, au prestige 1 (la foreuse est débloquée).
 function partiePrestige1(): EtatJeu {
   const etat = creerPartie(aleatoireAvecGraine(1), 1)
-  etat.inventaire = { fer: 30, redstone: 10, charbon: 5 }
+  etat.argent = 5000 // l'activation : 5 000 $ + 10 fer + 5 redstone
+  etat.inventaire = { fer: 10, redstone: 5, charbon: 5 }
   return etat
 }
 
 describe('foreuse', () => {
   it('est bloquée au prestige 0', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    etat.inventaire = { fer: 30, redstone: 10 }
+    etat.argent = 5000
+    etat.inventaire = { fer: 10, redstone: 5 }
     expect(activerForeuse(etat)).toEqual([])
     expect(etat.foreuse.active).toBe(false)
   })
 
-  it('s’active une fois avec du fer et de la redstone', () => {
+  it('s’active une fois, surtout avec de l’argent (et un peu de fer et de redstone)', () => {
     const etat = partiePrestige1()
+    etat.argent = 4999
+    expect(activerForeuse(etat)).toEqual([])
+    etat.argent = 5000
     activerForeuse(etat)
     expect(etat.foreuse.active).toBe(true)
+    expect(etat.argent).toBe(0)
     expect(etat.inventaire).toEqual({ charbon: 5 })
   })
 
@@ -68,6 +74,7 @@ describe('foreuse', () => {
 
   it('se vide au marché ou dans le sac, seulement les objets cochés', () => {
     const etat = partiePrestige1()
+    etat.argent = 0
     etat.inventaire = {}
     etat.foreuse.chariot = { pierre: 40, diamant: 2 }
     basculerChariot(etat, 'diamant') // décoché : ni vendu, ni mis dans le sac
@@ -100,13 +107,14 @@ describe('foreuse', () => {
   it('s’améliore (vitesse et chariot)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
-    etat.argent = 2000
-    etat.inventaire = { fer: 30 }
-    ameliorerForage(etat) // 1 000 $ + 30 fer
-    ameliorerChariot(etat) // 800 $
+    etat.argent = 10000
+    etat.inventaire = { fer: 10 }
+    ameliorerForage(etat) // 6 000 $ + 10 fer
+    ameliorerChariot(etat) // 3 000 $
     expect(etat.foreuse.niveauVitesse).toBe(1)
     expect(capaciteChariot(etat)).toBe(500)
-    expect(etat.argent).toBe(200)
+    expect(etat.argent).toBe(1000)
+    expect(etat.inventaire).toEqual({})
   })
 
   it('est gardée au prestige suivant', () => {

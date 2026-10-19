@@ -16,7 +16,6 @@ import {
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
-  type Cout,
   type IdBloc,
 } from '../jeu/donnees'
 import {
@@ -29,7 +28,6 @@ import {
   foreuseEnMarche,
   nbDansChariot,
   peutActiverForeuse,
-  peutPayer,
   prochainNiveauChariot,
   prochainNiveauForage,
   basculerChariot,
@@ -56,6 +54,7 @@ import {
   equiper,
   peutAcheterPioche,
   peutEnchanter,
+  peutPayer,
   peutReparer,
   placeLibre,
   prixProchainSac,
@@ -69,6 +68,7 @@ import {
 import { SUCCES } from '../jeu/succes'
 import type { Action } from '../usePartie'
 import { Barre } from './Barre'
+import { Materiau, PrixCout } from './PrixCout'
 
 type PropsPanneau = {
   etat: EtatJeu
@@ -83,16 +83,6 @@ function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: 
     <button className={`bouton bouton-petit bouton-${genre}`} disabled={!actif} onClick={onClick}>
       {children}
     </button>
-  )
-}
-
-// Affiche « 3/4 💎 Diamant » en rouge s'il en manque.
-function Materiau({ etat, bloc, nombre }: { etat: EtatJeu; bloc: IdBloc; nombre: number }) {
-  const possede = quantite(etat, bloc)
-  return (
-    <span className={possede >= nombre ? 'ok' : 'manque'}>
-      {Math.min(possede, nombre)}/{nombre} {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
-    </span>
   )
 }
 
@@ -262,18 +252,6 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
 }
 
 // ---------------------------------------------------------------------------
-
-// Le prix d'une amélioration : « 1 000 $ + 0/30 fer ».
-function PrixCout({ etat, cout }: { etat: EtatJeu; cout: Cout }) {
-  return (
-    <span className="materiaux">
-      {cout.argent !== undefined && <span className={etat.argent >= cout.argent ? 'ok' : 'manque'}>{cout.argent.toLocaleString('fr-FR')} $</span>}
-      {Object.entries(cout.materiaux).map(([bloc, nombre]) => (
-        <Materiau key={bloc} etat={etat} bloc={bloc as IdBloc} nombre={nombre ?? 0} />
-      ))}
-    </span>
-  )
-}
 
 // La foreuse : débloquée au prestige 1, activée une fois, puis nourrie au charbon.
 export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
@@ -457,10 +435,7 @@ export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
               <span className="ok">Niveau max atteint !</span>
             ) : (
               <div className="boutons">
-                <span className="materiaux">
-                  <Materiau etat={etat} bloc="lapis" nombre={cout.lapis} />
-                  <Materiau etat={etat} bloc="emeraude" nombre={cout.emeraudes} />
-                </span>
+                <PrixCout etat={etat} cout={cout} />
                 <Bouton actif={peutEnchanter(etat, id)} genre="enchanter" onClick={() => jouer((x) => enchanter(x, id))}>
                   Enchanter {chiffreRomain(niveau + 1)}
                 </Bouton>

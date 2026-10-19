@@ -33,11 +33,11 @@ describe('bot de simulation (équilibrage)', () => {
     expect(blocsTries[blocsTries.length - 1]).toBeLessThan(9000)
   })
 
-  it("construit l'ascenseur vers le milieu de la mine (entre -40 et -100 m)", () => {
+  it("construit l'ascenseur assez tôt (entre -10 et -60 m) : il ne demande pas de redstone au début", () => {
     for (const partie of parties) {
       expect(partie.etat.ascenseur.niveau).toBeGreaterThanOrEqual(1)
-      expect(partie.profondeurAscenseur).toBeGreaterThan(40)
-      expect(partie.profondeurAscenseur).toBeLessThan(100)
+      expect(partie.profondeurAscenseur).toBeGreaterThan(10)
+      expect(partie.profondeurAscenseur).toBeLessThan(60)
     }
   })
 

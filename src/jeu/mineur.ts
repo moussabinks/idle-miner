@@ -27,6 +27,7 @@ import {
   SECONDES_PAR_METRE_ECHELLE,
   VITESSE_MAINS_NUES,
   dureeCasse,
+  type Cout,
   type IdBloc,
   type IdEnchantement,
   type NiveauAscenseur,
@@ -337,6 +338,16 @@ export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
   return Object.entries(materiaux).every(([bloc, nombre]) => quantite(etat, bloc as IdBloc) >= (nombre ?? 0))
 }
 
+// A-t-on de quoi payer ce coût (argent et matériaux du sac) ?
+export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
+  return etat.argent >= (cout.argent ?? 0) && possede(etat, cout.materiaux)
+}
+
+export function payer(etat: EtatJeu, cout: Cout): void {
+  etat.argent -= cout.argent ?? 0
+  payerMateriaux(etat, cout.materiaux)
+}
+
 export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
   for (const [bloc, nombre] of Object.entries(materiaux)) retirer(etat, bloc as IdBloc, nombre ?? 0)
 }
@@ -625,16 +636,14 @@ export function prochainNiveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
 
 export function peutAmeliorerAscenseur(etat: EtatJeu): boolean {
   const prochain = prochainNiveauAscenseur(etat)
-  if (prochain === null) return false
-  return quantite(etat, 'fer') >= prochain.fer && quantite(etat, 'redstone') >= prochain.redstone
+  return prochain !== null && peutPayer(etat, prochain.cout)
 }
 
 // Construit l'ascenseur (niveau 1) ou l'améliore. Ça se fait directement dans la mine.
 export function ameliorerAscenseur(etat: EtatJeu): string[] {
   const prochain = prochainNiveauAscenseur(etat)
   if (prochain === null || !peutAmeliorerAscenseur(etat) || ascenseurEnMouvement(etat)) return []
-  retirer(etat, 'fer', prochain.fer)
-  retirer(etat, 'redstone', prochain.redstone)
+  payer(etat, prochain.cout)
   // À la construction, la cabine est installée là où se trouve le joueur.
   if (etat.ascenseur.niveau === 0) {
     etat.ascenseur.position = Math.round(etat.position)
@@ -926,16 +935,19 @@ export function acheterSeau(etat: EtatJeu): string[] {
 // ---------------------------------------------------------------------------
 
 // Coût du prochain niveau d'un enchantement (null s'il est déjà au max).
-export function coutEnchantement(etat: EtatJeu, id: IdEnchantement): { lapis: number; emeraudes: number } | null {
+export function coutEnchantement(etat: EtatJeu, id: IdEnchantement): Cout | null {
   const e = ENCHANTEMENTS[id]
   const prochain = etat.enchantements[id] + 1
   if (prochain > e.niveauMax) return null
-  return { lapis: e.lapisParNiveau * prochain, emeraudes: e.emeraudesParNiveau * prochain }
+  return {
+    argent: e.argentParNiveau * prochain,
+    materiaux: { lapis: e.lapisParNiveau * prochain, emeraude: e.emeraudesParNiveau * prochain },
+  }
 }
 
 export function peutEnchanter(etat: EtatJeu, id: IdEnchantement): boolean {
   const cout = coutEnchantement(etat, id)
-  return cout !== null && quantite(etat, 'lapis') >= cout.lapis && quantite(etat, 'emeraude') >= cout.emeraudes
+  return cout !== null && peutPayer(etat, cout)
 }
 
 export function peutEncoreEnchanter(etat: EtatJeu): boolean {
@@ -945,8 +957,7 @@ export function peutEncoreEnchanter(etat: EtatJeu): boolean {
 export function enchanter(etat: EtatJeu, id: IdEnchantement): string[] {
   const cout = coutEnchantement(etat, id)
   if (!aLaSurface(etat) || cout === null || !peutEnchanter(etat, id)) return []
-  retirer(etat, 'lapis', cout.lapis)
-  retirer(etat, 'emeraude', cout.emeraudes)
+  payer(etat, cout)
   etat.enchantements[id] += 1
   return [`✨ ${ENCHANTEMENTS[id].nom} ${chiffreRomain(etat.enchantements[id])} !`]
 }
