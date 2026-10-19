@@ -14,7 +14,7 @@ import {
   PRESTIGE_FOREUSES_MULTIPLES,
   PRIX_FOREUSES_EN_PLUS,
   RESERVE_RECHARGE_AUTO,
-  PROFONDEUR_BEDROCK,
+  profondeurBedrock,
   SECONDES_PAR_CHARBON,
   niveauMaxAuPrestige,
   prestigePourNiveau,
@@ -234,6 +234,7 @@ export function vendreChariot(etat: EtatJeu): string[] {
   for (const [bloc, nombre] of Object.entries(aVendre)) retirerDuChariot(etat, bloc as IdBloc, nombre ?? 0)
   etat.argent += gain
   etat.stats.argentGagne += gain
+  etat.stats.argentForeuse += gain
   return [`💰 Chariot vendu : +${gain} $`]
 }
 
@@ -286,8 +287,9 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
       une.progression += tempsDeForage * vitesseUneForeuse(etat, une)
       while (une.progression >= 1 && !chariotPlein(etat)) {
         une.progression -= 1
-        const bloc = tirerBlocNormal(une.profondeur, aleatoire)
+        const bloc = tirerBlocNormal(une.profondeur, aleatoire, etat.prestige)
         une.blocsFores += 1
+        etat.stats.blocsForeuse += 1
         // Avec la recharge automatique, le charbon va dans le moteur tant que sa réserve est basse.
         if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < RESERVE_RECHARGE_AUTO) {
           foreuse.carburant += SECONDES_PAR_CHARBON * multiplicateurCharbon(etat)
@@ -296,7 +298,7 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
         }
         // Elle descend d'un mètre tous les 10 blocs, jusqu'à la bedrock.
         if (une.blocsFores % BLOCS_FORES_PAR_METRE === 0) {
-          une.profondeur = Math.min(PROFONDEUR_BEDROCK - 1, une.profondeur + 1)
+          une.profondeur = Math.min(profondeurBedrock(etat.prestige) - 1, une.profondeur + 1)
         }
       }
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { jouerPartie } from './bot'
-import { PROFONDEUR_BEDROCK } from './donnees'
+import { profondeurBedrock } from './donnees'
 
 // Le bot joue 20 parties (avec des graines fixes, donc toujours les mêmes).
 const parties = Array.from({ length: 20 }, (_, i) => jouerPartie(aleatoireAvecGraine(i + 1)))
@@ -11,22 +11,23 @@ const minutesTriees = parties.map((p) => p.temps / 60).sort((a, b) => a - b)
 const medianeMinutes = minutesTriees[Math.floor(minutesTriees.length / 2)]
 
 describe('bot de simulation (équilibrage)', () => {
-  it(`atteint toujours la bedrock (-${PROFONDEUR_BEDROCK} m) avec la pioche en netherite`, () => {
+  it(`atteint toujours la bedrock (-${profondeurBedrock(0)} m) avec la pioche en netherite`, () => {
     for (const partie of parties) {
       expect(partie.etat.victoire).toBe(true)
-      expect(partie.etat.profondeur).toBe(PROFONDEUR_BEDROCK - 1) // la dernière couche avant la bedrock
+      expect(partie.etat.profondeur).toBe(profondeurBedrock(0) - 1) // la dernière couche avant la bedrock
       expect(partie.etat.meilleure).toBe(4)
     }
   })
 
-  it('atteint la bedrock en 2 000 à 3 500 blocs (médiane, couches de 10 blocs)', () => {
-    expect(mediane).toBeGreaterThanOrEqual(2000)
-    expect(mediane).toBeLessThanOrEqual(3500)
+  // La première partie (prestige 0) a une mine de 100 m depuis le 19/10 : elle est plus courte.
+  it('atteint la bedrock en 1 300 à 3 000 blocs (médiane, couches de 10 blocs)', () => {
+    expect(mediane).toBeGreaterThanOrEqual(1300)
+    expect(mediane).toBeLessThanOrEqual(3000)
   })
 
-  it('joue une partie de 15 à 30 minutes (médiane)', () => {
-    expect(medianeMinutes).toBeGreaterThanOrEqual(15)
-    expect(medianeMinutes).toBeLessThanOrEqual(30)
+  it('joue une première partie de 10 à 25 minutes (médiane)', () => {
+    expect(medianeMinutes).toBeGreaterThanOrEqual(10)
+    expect(medianeMinutes).toBeLessThanOrEqual(25)
   })
 
   it("n'est jamais extrêmement long ou court", () => {

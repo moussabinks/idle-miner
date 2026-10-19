@@ -12,8 +12,9 @@ import {
   maxEmployes,
   nbDansSacEmploye,
   peutAmeliorerEmploye,
-  prixAmeliorationEmploye,
+  coutAmeliorationEmploye,
   prixEmbauche,
+  profondeurMaxEmploye,
   tailleSacEmploye,
   vitesseEmploye,
 } from '../jeu/employes'
@@ -70,7 +71,7 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
       </div>
 
       {etat.employes.map((employe, index) => {
-        const prixPioche = prixAmeliorationEmploye(employe)
+        const coutPioche = coutAmeliorationEmploye(employe)
         const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
         return (
           <div key={index} className="ligne-achat carte-employe">
@@ -90,7 +91,7 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
             />
             {prochaine && (
               <span className="discret">
-                Équipement suivant : pioche en {prochaine.nom} (plus rapide, jusqu'à -{prochaine.profMax} m) et sac de{' '}
+                Équipement suivant : pioche en {prochaine.nom} (plus rapide, jusqu'à -{profondeurMaxEmploye(etat, { ...employe, niveau: employe.niveau + 1 })} m) et sac de{' '}
                 {prochaine.sac * multiplicateurSacMineurs(etat)} places.
               </span>
             )}
@@ -100,7 +101,7 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
               niveau={employe.niveau + 1}
               niveauMax={NIVEAUX_EMPLOYE.length}
               niveauPermis={niveauMaxAuPrestige('mineur', etat.prestige) + 1}
-              suivant={prixPioche !== null && prochaine ? { cout: { argent: prixPioche, materiaux: {} }, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
+              suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
               bloqueAuPrestige={employeBloqueAuPrestige(etat, employe)}
               possible={peutAmeliorerEmploye(etat, employe)}
               onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}

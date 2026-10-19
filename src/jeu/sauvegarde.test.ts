@@ -103,10 +103,12 @@ describe('sauvegarde', () => {
     delete ancienne.talents
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage, '1')
-    expect(etat?.profondeur).toBe(127)
-    expect(etat?.position).toBe(126)
+    // Au prestige 0, la bedrock est maintenant à -100 m (version 14) : la partie remonte juste au-dessus.
+    expect(etat?.profondeur).toBe(99)
+    expect(etat?.position).toBe(99)
+    expect(etat?.victoire).toBe(true)
     expect(etat?.coucheActuelle).toHaveLength(10)
-    expect(etat?.ascenseur).toMatchObject({ niveau: 2, position: 126, cible: 126 })
+    expect(etat?.ascenseur).toMatchObject({ niveau: 2, position: 99, cible: 99 })
   })
 
   it('retire les donjons, l’épée et l’assistant d’une sauvegarde de la version 5', () => {

@@ -19,7 +19,8 @@ import {
   PIOCHES,
   LARGEUR_MINE,
   PRIX_SEAU,
-  PROFONDEUR_BEDROCK,
+  profondeurBedrock,
+  profondeurMaxPioche,
   MINERAIS_REPARATION,
   PART_PRIX_REPARATION,
   SACS,
@@ -36,6 +37,7 @@ import {
   type Pioche,
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
+import { additionnerStatistiques } from './statistiques'
 import {
   appliquerTalentsDeDepart,
   bonusVenteTalents,
@@ -52,12 +54,38 @@ export type Inventaire = Partial<Record<IdBloc, number>>
 
 export type Statistiques = {
   blocsCasses: number
-  argentGagne: number
+  argentGagne: number // tout l'argent gagné (toi, la foreuse et les mineurs)
   tempsMinage: number // en secondes de jeu
   coffresOuverts: number
   geodesCassees: number
   lavesEteintes: number
   diamantsTrouves: number
+  // Ajouté le 19/10, pour l'écran des statistiques :
+  argentForeuse: number // l'argent des chariots vendus
+  argentMineurs: number // l'argent rapporté par les mineurs employés (après leur salaire)
+  blocsParType: Inventaire // les blocs que tu as cassés, par sorte
+  blocsForeuse: number
+  blocsMineurs: number
+  profondeurMax: number // le plus bas que tu sois descendu
+}
+
+// Des statistiques toutes neuves (une nouvelle partie).
+export function nouvellesStatistiques(): Statistiques {
+  return {
+    blocsCasses: 0,
+    argentGagne: 0,
+    tempsMinage: 0,
+    coffresOuverts: 0,
+    geodesCassees: 0,
+    lavesEteintes: 0,
+    diamantsTrouves: 0,
+    argentForeuse: 0,
+    argentMineurs: 0,
+    blocsParType: {},
+    blocsForeuse: 0,
+    blocsMineurs: 0,
+    profondeurMax: 0,
+  }
 }
 
 // L'ascenseur : une cabine qui monte et descend le long du puits.
@@ -143,7 +171,8 @@ export type EtatJeu = {
   seaux: number
   prestige: number
   succes: string[] // identifiants des succès débloqués (gardés au prestige)
-  stats: Statistiques
+  stats: Statistiques // cette partie
+  statsTotales: Statistiques // toutes les parties d'avant (les prestiges précédents)
   argentGagneAvant: number // l'argent gagné pendant les prestiges précédents (pour le classement)
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
@@ -156,7 +185,7 @@ export type EtatJeu = {
 // Les stands qui se débloquent avec les prestiges (une flèche guide le joueur jusqu'à eux).
 export type Decouverte = 'foreuse' | 'employes'
 
-export const VERSION_ETAT = 13
+export const VERSION_ETAT = 14
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -213,6 +242,7 @@ export type Heritage = {
   pioches: Record<number, number> // les pioches débloquées (usure)
   meilleure: number
   niveauPioche: number
+  statsTotales: Statistiques
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
@@ -230,9 +260,10 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     pioches = { 0: 0 }, // la pioche en bois est offerte
     meilleure = 0,
     niveauPioche = 0,
+    statsTotales = nouvellesStatistiques(),
   } = heritage
   const couchesDessous: IdBloc[][] = []
-  for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
+  for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire, prestige))
 
   const etat: EtatJeu = {
     version: VERSION_ETAT,
@@ -241,7 +272,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     colonneMineur: 0,
     argent: 0,
     profondeur: PROFONDEUR_DEPART,
-    coucheActuelle: genererCouche(PROFONDEUR_DEPART, aleatoire),
+    coucheActuelle: genererCouche(PROFONDEUR_DEPART, aleatoire, prestige),
     couchesDessous,
     enGalerie: false,
     pioches: { ...pioches },
@@ -258,15 +289,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     seaux: 0,
     prestige,
     succes: [...succes],
-    stats: {
-      blocsCasses: 0,
-      argentGagne: 0,
-      tempsMinage: 0,
-      coffresOuverts: 0,
-      geodesCassees: 0,
-      lavesEteintes: 0,
-      diamantsTrouves: 0,
-    },
+    stats: nouvellesStatistiques(),
+    statsTotales: structuredClone(statsTotales),
     argentGagneAvant,
     victoire: false,
     talents: [...talents],
@@ -300,6 +324,8 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     pioches: Object.fromEntries(Object.keys(etat.pioches).map((niveau) => [niveau, 0])),
     meilleure: etat.meilleure,
     niveauPioche: etat.meilleure,
+    // Les statistiques de cette partie s'ajoutent à celles des parties d'avant.
+    statsTotales: additionnerStatistiques(etat.statsTotales, etat.stats),
   })
 }
 
@@ -440,7 +466,7 @@ export function blocActuel(etat: EtatJeu): IdBloc | null {
 export function dureeBlocActuel(etat: EtatJeu): number {
   const bloc = blocActuel(etat)
   if (bloc === null) return 0
-  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat))
+  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat), etat.prestige)
 }
 
 // ---------------------------------------------------------------------------
@@ -527,6 +553,8 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 // on récolte, puis on passe à la couche suivante si c'était le dernier bloc.
 function finirBloc(etat: EtatJeu, index: number, bloc: IdBloc, aleatoire: Aleatoire): string[] {
   etat.stats.blocsCasses += 1
+  etat.stats.blocsParType[bloc] = (etat.stats.blocsParType[bloc] ?? 0) + 1
+  etat.stats.profondeurMax = Math.max(etat.stats.profondeurMax, etat.profondeur)
   const messages = recolter(etat, bloc, aleatoire)
   etat.coucheActuelle[index] = null
   if (indexBlocActuel(etat) === -1) messages.push(...passerCoucheSuivante(etat, aleatoire))
@@ -549,7 +577,7 @@ export function peutStocker(etat: EtatJeu): boolean {
 
 // Les minerais qu'on peut trouver à cette profondeur (pour les coffres).
 function mineraisDuCoin(etat: EtatJeu): IdBloc[] {
-  const minerais = poidsDesBlocs(etat.profondeur)
+  const minerais = poidsDesBlocs(etat.profondeur, etat.prestige)
     .map((c) => c.valeur)
     .filter((id) => MINERAIS_COFFRE.includes(id))
   return minerais.length > 0 ? minerais : ['charbon']
@@ -613,23 +641,23 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 
   // Juste au-dessus de la bedrock : on ne peut plus descendre, mais on continue
   // de creuser des galeries (pour tester ses enchantements avant le prestige).
-  if (suivante >= PROFONDEUR_BEDROCK) {
+  if (suivante >= profondeurBedrock(etat.prestige)) {
     if (!etat.victoire) {
       etat.victoire = true
       messages.push('🏆 Tu as atteint la bedrock ! Continue de creuser ici, ou passe prestige à l’entrée de la mine (village).')
     }
     etat.enGalerie = true
-    etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire)
+    etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire, etat.prestige)
     return messages
   }
 
   // La pioche ne peut pas descendre plus bas : galerie horizontale.
-  if (suivante > piocheEquipee(etat).profMax) {
+  if (suivante > profondeurMaxPioche(etat.niveauPioche, etat.prestige)) {
     if (!etat.enGalerie) {
       messages.push(`↔️ Ta pioche en ${piocheEquipee(etat).nom} ne descend pas plus bas : tu creuses une galerie.`)
     }
     etat.enGalerie = true
-    etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire)
+    etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire, etat.prestige)
     return messages
   }
 
@@ -652,9 +680,9 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     if (ascenseur.position === ancienFront) ascenseur.position = ascenseur.cible
   }
 
-  etat.coucheActuelle = etat.couchesDessous.shift() ?? genererCouche(suivante, aleatoire)
+  etat.coucheActuelle = etat.couchesDessous.shift() ?? genererCouche(suivante, aleatoire, etat.prestige)
   const profondeurAGenerer = suivante + COUCHES_EN_AVANCE
-  etat.couchesDessous.push(profondeurAGenerer < PROFONDEUR_BEDROCK ? genererCouche(profondeurAGenerer, aleatoire) : [])
+  etat.couchesDessous.push(profondeurAGenerer < profondeurBedrock(etat.prestige) ? genererCouche(profondeurAGenerer, aleatoire, etat.prestige) : [])
 
   return messages
 }

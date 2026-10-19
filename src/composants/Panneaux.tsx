@@ -17,7 +17,8 @@ import {
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
-  PROFONDEUR_BEDROCK,
+  profondeurBedrock,
+  profondeurMaxPioche,
   niveauMaxAuPrestige,
   type IdBloc,
 } from '../jeu/donnees'
@@ -191,7 +192,7 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
               {equipee && <span className="badge">Équipée</span>}
             </div>
             <span className="discret">
-              Vitesse x{pioche.vitesse} · jusqu'à -{pioche.profMax} m · durabilité {pioche.durabilite}
+              Vitesse x{pioche.vitesse} · jusqu'à -{profondeurMaxPioche(pioche.niveau, etat.prestige)} m · durabilité {pioche.durabilite}
             </span>
 
             {possedee && (
@@ -289,7 +290,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         <div className="ligne-achat verrouille">
           <strong>🔒 Fermé par une barrière</strong>
           <span className="discret">
-            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-{PROFONDEUR_BEDROCK} m) puis passe prestige pour y installer une foreuse
+            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-{profondeurBedrock(etat.prestige)} m) puis passe prestige pour y installer une foreuse
             qui creuse toute seule.
           </span>
         </div>

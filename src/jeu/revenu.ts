@@ -24,17 +24,17 @@ export type Revenu = {
 }
 
 // Les blocs « normaux » à une profondeur (sans lave, coffre ni géode), avec leur probabilité.
-function probabilites(profondeur: number): { bloc: IdBloc; chance: number }[] {
-  const choix = poidsDesBlocs(profondeur).filter((c) => !BLOCS[c.valeur].special)
+function probabilites(profondeur: number, prestige: number): { bloc: IdBloc; chance: number }[] {
+  const choix = poidsDesBlocs(profondeur, prestige).filter((c) => !BLOCS[c.valeur].special)
   const total = choix.reduce((somme, c) => somme + c.poids, 0)
   return choix.map((c) => ({ bloc: c.valeur, chance: c.poids / total }))
 }
 
 // La valeur moyenne d'un bloc à une profondeur (sans les bonus de vente).
 // Avec Fortune, un minerai vaut en moyenne un peu plus (il est parfois doublé).
-export function valeurMoyenneBloc(profondeur: number, fortune = 0): number {
+export function valeurMoyenneBloc(profondeur: number, prestige: number, fortune = 0): number {
   let moyenne = 0
-  for (const { bloc, chance } of probabilites(profondeur)) {
+  for (const { bloc, chance } of probabilites(profondeur, prestige)) {
     const doublement = BLOCS[bloc].minerai ? 1 + fortune * CHANCE_FORTUNE_PAR_NIVEAU : 1
     moyenne += chance * BLOCS[bloc].prix * doublement
   }
@@ -45,18 +45,18 @@ export function valeurMoyenneBloc(profondeur: number, fortune = 0): number {
 function revenuJoueur(etat: EtatJeu): number {
   if (!auFond(etat)) return 0
   let dureeMoyenne = 0
-  for (const { bloc, chance } of probabilites(etat.profondeur)) {
-    dureeMoyenne += chance * dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat))
+  for (const { bloc, chance } of probabilites(etat.profondeur, etat.prestige)) {
+    dureeMoyenne += chance * dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat), etat.prestige)
   }
   if (dureeMoyenne <= 0) return 0
-  return (valeurMoyenneBloc(etat.profondeur, etat.enchantements.fortune) * bonusVente(etat)) / dureeMoyenne
+  return (valeurMoyenneBloc(etat.profondeur, etat.prestige, etat.enchantements.fortune) * bonusVente(etat)) / dureeMoyenne
 }
 
 function revenuForeuse(etat: EtatJeu): number {
   if (!foreuseEnMarche(etat)) return 0
   // Chaque foreuse creuse à sa vitesse, à sa propre profondeur.
   let total = 0
-  for (const une of etat.foreuse.foreuses) total += vitesseUneForeuse(etat, une) * valeurMoyenneBloc(une.profondeur)
+  for (const une of etat.foreuse.foreuses) total += vitesseUneForeuse(etat, une) * valeurMoyenneBloc(une.profondeur, etat.prestige)
   return total * bonusVente(etat)
 }
 
@@ -64,7 +64,7 @@ function revenuMineurs(etat: EtatJeu): number {
   let total = 0
   for (const mineur of etat.employes) {
     const sac = tailleSacEmploye(etat, mineur)
-    const gainParSac = sac * valeurMoyenneBloc(mineur.profondeur) * bonusVente(etat) * (1 - partSalaire(etat))
+    const gainParSac = sac * valeurMoyenneBloc(mineur.profondeur, etat.prestige) * bonusVente(etat) * (1 - partSalaire(etat))
     const tempsCreuse = sac / vitesseEmploye(etat, mineur)
     const tempsTrajets = 2 * Math.max(1, mineur.profondeur - 1) * secondesParMetreEmploye(etat, mineur)
     total += gainParSac / (tempsCreuse + tempsTrajets + SECONDES_VENTE_EMPLOYE)
