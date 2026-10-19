@@ -21,32 +21,30 @@ export function Jauges({ piles, choix, gardes, onChanger, prixUnitaire }: Props)
       {piles.map(([bloc, nombre]) => {
         const quantite = quantiteVoulue(choix, gardes, bloc, nombre)
         return (
-          <li key={bloc} className={quantite === 0 ? 'garde' : ''}>
-            <div className="jauge-haut">
-              <span className={`mini-bloc bloc-${bloc} roche-pierre`} aria-hidden="true" />
-              <span className="inventaire-nom">{BLOCS[bloc].nom}</span>
-              {/* Le compteur : combien sont choisis, sur combien. */}
-              <span className="jauge-compteur">
-                {quantite} / {nombre}
-              </span>
-              <span className="inventaire-valeur">{Math.round(quantite * prixUnitaire(bloc))} $</span>
-            </div>
-            <div className="jauge-bas">
-              <input
-                type="range"
-                min={0}
-                max={nombre}
-                value={quantite}
-                aria-label={`Quantité de ${BLOCS[bloc].nom}`}
-                onChange={(e) => {
-                  const valeur = Number(e.target.value)
-                  onChanger(bloc, valeur >= nombre ? 'max' : valeur)
-                }}
-              />
-              <button className="bouton bouton-petit bouton-neutre" disabled={quantite === nombre} onClick={() => onChanger(bloc, 'max')}>
-                Max
-              </button>
-            </div>
+          // Tout sur une ligne (pour que la liste reste courte) : le bloc, son nom, la jauge,
+          // le compteur, la valeur et le bouton « Max ».
+          <li key={bloc} className={quantite === 0 ? 'garde' : ''} title={BLOCS[bloc].nom}>
+            <span className={`mini-bloc bloc-${bloc} roche-pierre`} aria-hidden="true" />
+            <span className="jauge-nom">{BLOCS[bloc].nom}</span>
+            <input
+              type="range"
+              min={0}
+              max={nombre}
+              value={quantite}
+              aria-label={`Quantité de ${BLOCS[bloc].nom}`}
+              onChange={(e) => {
+                const valeur = Number(e.target.value)
+                onChanger(bloc, valeur >= nombre ? 'max' : valeur)
+              }}
+            />
+            {/* Le compteur : combien sont choisis, sur combien. */}
+            <span className="jauge-compteur">
+              {quantite}/{nombre}
+            </span>
+            <span className="jauge-valeur">{Math.round(quantite * prixUnitaire(bloc))} $</span>
+            <button className="bouton bouton-petit bouton-neutre jauge-max" disabled={quantite === nombre} onClick={() => onChanger(bloc, 'max')}>
+              Max
+            </button>
           </li>
         )
       })}

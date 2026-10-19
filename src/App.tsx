@@ -282,7 +282,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       <header className="entete">
         <h1 className="titre">⛏️ Idle Miner</h1>
         {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
-        <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde">
+        {/* Petit lien discret (avec confirmation) : il efface la partie de ce monde. */}
+        <button className="lien lien-recommencer" onClick={demanderRecommencer}>
+          Recommencer à zéro
+        </button>
+        <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
           🌍 {monde.nom}
         </button>
         {/* Les succès : un petit bouton discret, ils s'ouvrent dans une fenêtre. */}
@@ -355,13 +359,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           <Toasts toasts={toasts} />
         </div>
       </main>
-
-      <footer className="pied">
-        <span>Partie sauvegardée automatiquement dans ce navigateur.</span>
-        <button className="lien" onClick={demanderRecommencer}>
-          Recommencer à zéro
-        </button>
-      </footer>
 
       {succesOuverts && (
         <div className="voile" role="dialog" aria-modal="true" aria-label="Succès" onClick={() => setSuccesOuverts(false)}>

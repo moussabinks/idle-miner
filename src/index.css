@@ -1356,31 +1356,28 @@ kbd {
 }
 
 /* Le marché : liste à cocher */
-/* Les jauges du marché et de l'ascenseur : une par objet, pour en choisir une partie. */
-.jauges {
+/* Les jauges du marché et de l'ascenseur : une ligne par objet, pour en choisir une partie. */
+.jauges,
+.inventaire .jauges {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-/* « .inventaire » : dans le sac de la mine aussi, les jauges restent les unes sous les autres. */
-.inventaire .jauges {
-  display: flex;
+  gap: 4px;
 }
 
 .jauges li,
 .inventaire .jauges li {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   background: var(--carte-claire);
   border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 0.84rem;
 }
 
 .jauges li.garde {
@@ -1389,31 +1386,44 @@ kbd {
   border-style: dashed;
 }
 
-.jauge-haut,
-.jauge-bas {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.jauges .mini-bloc {
+  width: 18px;
+  height: 18px;
 }
 
-.jauge-haut {
-  font-size: 0.88rem;
+.jauge-nom {
+  flex: 0 0 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.jauge-compteur {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.jauge-bas input[type='range'] {
+.jauges input[type='range'] {
   flex: 1;
-  min-width: 0;
+  min-width: 50px;
   accent-color: var(--accent);
   cursor: pointer;
 }
 
-.jauge-bas .bouton {
-  padding: 3px 10px;
+.jauge-compteur {
+  flex: 0 0 auto;
+  min-width: 48px;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.jauge-valeur {
+  flex: 0 0 auto;
+  min-width: 48px;
+  text-align: right;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.jauges .jauge-max {
+  padding: 2px 8px;
+  font-size: 0.75rem;
 }
 
 .liste-chariot {
@@ -1675,6 +1685,79 @@ kbd {
   gap: 8px;
   font-size: 0.8rem;
   color: var(--texte-doux);
+}
+
+/* ------------------------------------------- Tout tient dans l'écran */
+
+/* Sur ordinateur, le jeu prend exactement la hauteur de la fenêtre : la mine s'étire
+   pour remplir la place, et seul le panneau de droite défile s'il est trop long.
+   Plus besoin de faire défiler la page. */
+@media (min-width: 861px) and (min-height: 560px) {
+  .jeu {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px;
+    max-width: 1180px;
+  }
+
+  .entete {
+    margin-bottom: 8px;
+  }
+
+  .titre {
+    font-size: 1.35rem;
+  }
+
+  .hud {
+    margin-bottom: 10px;
+  }
+
+  .hud-case {
+    height: 62px;
+    padding: 6px 10px;
+  }
+
+  .plateau {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .colonne-mine {
+    min-height: 0;
+    gap: 8px;
+  }
+
+  .monde {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .colonne-panneaux {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Le panneau défile tout seul s'il est trop long (les notifications restent dessous). */
+  .colonne-panneaux > .panneau {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+/* Le petit lien « Recommencer à zéro », dans l'en-tête. */
+.lien-recommencer {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+}
+
+.entete .lien-recommencer + .bouton-monde {
+  margin-left: 0;
 }
 
 /* ----------------------------------------------------------- Mobile */
