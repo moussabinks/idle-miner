@@ -24,6 +24,7 @@ import {
 import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps, tempsQuiPasse } from './jeu/temps'
+import { travailler, type Travail } from './travail'
 import { evenementsEntre, type Evenement } from './evenements'
 import { sons } from './sons'
 
@@ -42,25 +43,9 @@ const DUREE_VENTE = 1800 // ms, la grosse animation d'une vente
 const DUREE_ECLATS = 600 // ms
 const DUREE_TROUVAILLE = 1800 // ms
 const INTERVALLE_COUPS = 0.22 // secondes entre deux coups de pioche (pour le son)
-const DUREE_MIN_BLOC = 0.08 // secondes, pour que l'animation reste visible
 const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
 const ABSENCE_MAX = 8 * 60 * 60 // la foreuse travaille au plus 8 h pendant que le jeu est fermé
 
-// Le travail du mineur sur un bloc : quel bloc (cle), et depuis combien de secondes.
-type Travail = { cle: string; temps: number }
-
-// Fait avancer un mineur sur son bloc. Renvoie true quand le bloc est cassé.
-// Si le mineur a changé de bloc, on repart de zéro.
-function travailler(travail: Travail, cle: string, duree: number, secondes: number): boolean {
-  if (travail.cle !== cle) {
-    travail.cle = cle
-    travail.temps = 0
-  }
-  travail.temps += secondes
-  if (travail.temps < Math.max(DUREE_MIN_BLOC, duree)) return false
-  travail.cle = ''
-  return true
-}
 
 let prochainId = 1
 const ID_MESSAGE_ABSENCE = 0
@@ -227,11 +212,13 @@ export function usePartie(idMonde: string) {
   const blocsRestantsRef = useRef(0)
   const changerBlocsRestants = useCallback((nombre: number) => {
     blocsRestantsRef.current = nombre
+    // On arrête de creuser : le temps en trop du dernier bloc ne compte plus.
+    if (nombre <= 0) travailJoueur.current.reste = 0
     setBlocsRestants(nombre)
   }, [])
 
   // Le bloc sur lequel travaille chaque mineur, et depuis combien de temps.
-  const travailJoueur = useRef<Travail>({ cle: '', temps: 0 })
+  const travailJoueur = useRef<Travail>({ cle: '', temps: 0, reste: 0 })
 
   // Après chaque bloc cassé : on compte, et on gère le sac plein.
   // Avec l'ascenseur, on ne s'arrête pas : les blocs en trop attendent sur son quai.
