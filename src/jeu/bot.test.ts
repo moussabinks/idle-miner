@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { jouerPartie } from './bot'
+import { PROFONDEUR_BEDROCK } from './donnees'
 
 // Le bot joue 20 parties (avec des graines fixes, donc toujours les mêmes).
 const parties = Array.from({ length: 20 }, (_, i) => jouerPartie(aleatoireAvecGraine(i + 1)))
@@ -10,10 +11,10 @@ const minutesTriees = parties.map((p) => p.temps / 60).sort((a, b) => a - b)
 const medianeMinutes = minutesTriees[Math.floor(minutesTriees.length / 2)]
 
 describe('bot de simulation (équilibrage)', () => {
-  it('atteint toujours la bedrock (-128 m) avec la pioche en netherite', () => {
+  it(`atteint toujours la bedrock (-${PROFONDEUR_BEDROCK} m) avec la pioche en netherite`, () => {
     for (const partie of parties) {
       expect(partie.etat.victoire).toBe(true)
-      expect(partie.etat.profondeur).toBe(127) // la dernière couche avant la bedrock
+      expect(partie.etat.profondeur).toBe(PROFONDEUR_BEDROCK - 1) // la dernière couche avant la bedrock
       expect(partie.etat.meilleure).toBe(4)
     }
   })
@@ -33,11 +34,11 @@ describe('bot de simulation (équilibrage)', () => {
     expect(blocsTries[blocsTries.length - 1]).toBeLessThan(9000)
   })
 
-  it("construit l'ascenseur assez tôt (entre -10 et -60 m) : il ne demande pas de redstone au début", () => {
+  it("construit l'ascenseur assez tôt (entre -10 et -70 m) : il ne demande pas de redstone au début", () => {
     for (const partie of parties) {
       expect(partie.etat.ascenseur.niveau).toBeGreaterThanOrEqual(1)
       expect(partie.profondeurAscenseur).toBeGreaterThan(10)
-      expect(partie.profondeurAscenseur).toBeLessThan(60)
+      expect(partie.profondeurAscenseur).toBeLessThan(70)
     }
   })
 
@@ -45,10 +46,10 @@ describe('bot de simulation (équilibrage)', () => {
     for (const partie of parties) expect(partie.allersRetours).toBeGreaterThan(3)
   })
 
-  it('achète la pioche en fer entre -15 et -60 m', () => {
+  it('achète la pioche en fer entre -15 et -70 m', () => {
     for (const partie of parties) {
       expect(partie.profondeurPiocheFer).toBeGreaterThanOrEqual(15)
-      expect(partie.profondeurPiocheFer).toBeLessThanOrEqual(60)
+      expect(partie.profondeurPiocheFer).toBeLessThanOrEqual(70)
     }
   })
 })

@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import type { IdBloc } from '../jeu/donnees'
+import { PROFONDEUR_BEDROCK, type IdBloc } from '../jeu/donnees'
 import { creerPartie } from '../jeu/mineur'
 import {
   NB_MONDES_MAX,
@@ -45,11 +45,11 @@ type LigneIllustration = { etiquette: string; roche: 'pierre' | 'deepslate'; blo
 // null = déjà creusé (le puits du mineur, à gauche).
 const COUPE: LigneIllustration[] = [
   { etiquette: '-2 m', roche: 'pierre', blocs: [null, 'terre', 'terre', 'gravier', 'terre', 'terre'] },
-  { etiquette: '-20 m', roche: 'pierre', blocs: [null, 'pierre', 'charbon', 'pierre', 'fer', 'pierre'] },
-  { etiquette: '-60 m', roche: 'pierre', blocs: [null, 'redstone', 'pierre', 'or', 'pierre', 'lapis'] },
-  { etiquette: '-100 m', roche: 'deepslate', blocs: ['deepslate', 'emeraude', 'deepslate', 'diamant', 'deepslate', 'deepslate'] },
-  { etiquette: '-120 m', roche: 'deepslate', blocs: ['deepslate', 'deepslate', 'debris', 'deepslate', 'lave', 'deepslate'] },
-  { etiquette: '-128 m', roche: 'deepslate', blocs: ['bedrock', 'bedrock', 'bedrock', 'bedrock', 'bedrock', 'bedrock'] },
+  { etiquette: '-24 m', roche: 'pierre', blocs: [null, 'pierre', 'charbon', 'pierre', 'fer', 'pierre'] },
+  { etiquette: '-70 m', roche: 'pierre', blocs: [null, 'redstone', 'pierre', 'or', 'pierre', 'lapis'] },
+  { etiquette: '-117 m', roche: 'deepslate', blocs: ['deepslate', 'emeraude', 'deepslate', 'diamant', 'deepslate', 'deepslate'] },
+  { etiquette: '-140 m', roche: 'deepslate', blocs: ['deepslate', 'deepslate', 'debris', 'deepslate', 'lave', 'deepslate'] },
+  { etiquette: '-150 m', roche: 'deepslate', blocs: ['bedrock', 'bedrock', 'bedrock', 'bedrock', 'bedrock', 'bedrock'] },
 ]
 
 function IllustrationMine() {
@@ -199,7 +199,7 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
         <div className="accueil-texte">
           <h1 className="titre accueil-titre">⛏️ Idle Miner</h1>
           <p className="accueil-accroche">
-            Creuse, vends tes minerais, achète de meilleures pioches… et descends jusqu'à la <strong>bedrock, à -128 m</strong> !
+            Creuse, vends tes minerais, achète de meilleures pioches… et descends jusqu'à la <strong>bedrock, à -{PROFONDEUR_BEDROCK} m</strong> !
           </p>
           <ol className="accueil-etapes">
             <li>

@@ -17,6 +17,7 @@ import {
   PRIX_SEAU,
   SECONDES_PAR_CHARBON,
   SACS,
+  PROFONDEUR_BEDROCK,
   niveauMaxAuPrestige,
   type IdBloc,
 } from '../jeu/donnees'
@@ -288,7 +289,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         <div className="ligne-achat verrouille">
           <strong>🔒 Fermé par une barrière</strong>
           <span className="discret">
-            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-128 m) puis passe prestige pour y installer une foreuse
+            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-{PROFONDEUR_BEDROCK} m) puis passe prestige pour y installer une foreuse
             qui creuse toute seule.
           </span>
         </div>

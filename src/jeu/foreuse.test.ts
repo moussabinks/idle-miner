@@ -55,10 +55,10 @@ describe('foreuse', () => {
   it('creuse tant qu’elle a du charbon, et s’arrête sans', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
-    remplirForeuse(etat, 1) // 1 charbon = 20 s à 0,5 bloc par seconde = 10 blocs
+    remplirForeuse(etat, 1) // 1 charbon = 20 s à 2 blocs par seconde = 40 blocs
     expect(etat.inventaire.charbon).toBe(4)
     avancerTemps(etat, 60, aleatoireAvecGraine(2))
-    expect(nbDansChariot(etat)).toBe(10)
+    expect(nbDansChariot(etat)).toBe(40)
     expect(etat.foreuse.carburant).toBe(0)
     expect(foreuseEnMarche(etat)).toBe(false)
   })
@@ -66,9 +66,9 @@ describe('foreuse', () => {
   it('descend d’un mètre tous les 10 blocs (une couche)', () => {
     const etat = partiePrestige1()
     activerForeuse(etat)
-    remplirForeuse(etat, 3) // 30 blocs
+    remplirForeuse(etat, 3) // 60 s à 2 blocs par seconde = 120 blocs, soit 12 couches
     avancerTemps(etat, 100, aleatoireAvecGraine(2))
-    expect(etat.foreuse.foreuses[0].profondeur).toBe(4)
+    expect(etat.foreuse.foreuses[0].profondeur).toBe(13)
   })
 
   it('s’arrête quand le chariot est plein', () => {
@@ -199,7 +199,7 @@ describe('foreuse', () => {
     remplirForeuse(etat, 1) // 20 s de charbon pour une foreuse
     avancerTemps(etat, 15, aleatoireAvecGraine(2))
     expect(etat.foreuse.carburant).toBe(0)
-    expect(nbDansChariot(etat)).toBe(10) // 10 s × (0,5 bloc par seconde × 2 foreuses)
+    expect(nbDansChariot(etat)).toBe(40) // 10 s × (2 blocs par seconde × 2 foreuses)
   })
 
   it('une foreuse achetée arrive toute neuve : niveau 0, depuis la surface, et s’améliore à part', () => {

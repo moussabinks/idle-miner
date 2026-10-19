@@ -1,6 +1,6 @@
 // Génération de la mine : quels blocs trouve-t-on à chaque profondeur ?
-// La mine descend jusqu'à -128 m (deux fois la v1) : les profondeurs de la
-// spec v1 sont donc multipliées par 2.
+// La mine descend jusqu'à -150 m (la v1 s'arrêtait à -64 m) : les profondeurs de la spec v1
+// ont été doublées (mine à -128 m), puis agrandies encore un peu pour -150 m (19/10).
 
 import { choisirPondere, type Aleatoire } from './aleatoire'
 import { BLOCS, LARGEUR_MINE, POIDS_ROCHE, PROFONDEUR_DEEPSLATE, type IdBloc } from './donnees'
@@ -10,15 +10,15 @@ import { BLOCS, LARGEUR_MINE, POIDS_ROCHE, PROFONDEUR_DEEPSLATE, type IdBloc } f
 type Apparition = { bloc: IdBloc; debut: number; plein: number; poidsDebut: number; poidsPlein: number }
 
 export const APPARITION_MINERAIS: Apparition[] = [
-  { bloc: 'charbon', debut: 7, plein: 30, poidsDebut: 6, poidsPlein: 16 },
-  { bloc: 'fer', debut: 7, plein: 35, poidsDebut: 3, poidsPlein: 12 },
-  { bloc: 'redstone', debut: 18, plein: 50, poidsDebut: 0.5, poidsPlein: 6 },
-  { bloc: 'or', debut: 25, plein: 65, poidsDebut: 0.4, poidsPlein: 5 },
-  { bloc: 'lapis', debut: 30, plein: 65, poidsDebut: 0.5, poidsPlein: 6 },
-  { bloc: 'emeraude', debut: 40, plein: 70, poidsDebut: 0.2, poidsPlein: 2 },
-  { bloc: 'diamant', debut: 45, plein: 100, poidsDebut: 0.2, poidsPlein: 5 },
+  { bloc: 'charbon', debut: 8, plein: 35, poidsDebut: 6, poidsPlein: 16 },
+  { bloc: 'fer', debut: 8, plein: 41, poidsDebut: 3, poidsPlein: 12 },
+  { bloc: 'redstone', debut: 21, plein: 59, poidsDebut: 0.5, poidsPlein: 6 },
+  { bloc: 'or', debut: 29, plein: 76, poidsDebut: 0.4, poidsPlein: 5 },
+  { bloc: 'lapis', debut: 35, plein: 76, poidsDebut: 0.5, poidsPlein: 6 },
+  { bloc: 'emeraude', debut: 47, plein: 82, poidsDebut: 0.2, poidsPlein: 2 },
+  { bloc: 'diamant', debut: 53, plein: 117, poidsDebut: 0.2, poidsPlein: 5 },
   // Les débris antiques restent très rares, tout au fond.
-  { bloc: 'debris', debut: 96, plein: 115, poidsDebut: 0.2, poidsPlein: 1 },
+  { bloc: 'debris', debut: 112, plein: 135, poidsDebut: 0.2, poidsPlein: 1 },
 ]
 
 // Le poids d'un minerai à une profondeur (0 s'il n'est pas encore apparu).
@@ -36,11 +36,11 @@ export function poidsDesBlocs(profondeur: number): { valeur: IdBloc; poids: numb
   const choix: { valeur: IdBloc; poids: number }[] = []
 
   // La roche de base change avec la profondeur.
-  if (p <= 6) choix.push({ valeur: 'terre', poids: POIDS_ROCHE })
+  if (p <= 7) choix.push({ valeur: 'terre', poids: POIDS_ROCHE })
   else if (p <= PROFONDEUR_DEEPSLATE) choix.push({ valeur: 'pierre', poids: POIDS_ROCHE })
   else choix.push({ valeur: 'deepslate', poids: POIDS_ROCHE })
 
-  if (p <= 48) choix.push({ valeur: 'gravier', poids: p <= 6 ? 30 : 10 })
+  if (p <= 56) choix.push({ valeur: 'gravier', poids: p <= 7 ? 30 : 10 })
 
   // Les minerais apparaissent petit à petit (choix du 19/10) : chacun commence très rare
   // à sa profondeur de départ, puis devient de plus en plus fréquent jusqu'à sa profondeur
@@ -52,9 +52,9 @@ export function poidsDesBlocs(profondeur: number): { valeur: IdBloc; poids: numb
   }
 
   // Blocs spéciaux.
-  if (p > 16) choix.push({ valeur: 'coffre', poids: 0.8 })
-  if (p > 40) choix.push({ valeur: 'lave', poids: 1.5 })
-  if (p > 50) choix.push({ valeur: 'geode', poids: 1 })
+  if (p > 19) choix.push({ valeur: 'coffre', poids: 0.8 })
+  if (p > 47) choix.push({ valeur: 'lave', poids: 1.5 })
+  if (p > 59) choix.push({ valeur: 'geode', poids: 1 })
 
   return choix
 }

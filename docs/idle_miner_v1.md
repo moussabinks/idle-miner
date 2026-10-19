@@ -102,6 +102,7 @@
 ### Ambiance
 
 - **6 zones** avec un fond de plus en plus sombre : Surface (≤3), Cavernes (≤15), Mines (≤30), Profondeurs (≤40), Deepslate (≤52), Abîmes (≤64).
+  - **Version web** : mine à -150 m (19/10), toutes les profondeurs agrandies dans la même proportion (voir `donnees.ts` et `mine.ts`).
 - **Animations CSS** : tremblement et fissures sur le bloc en cours, `envol` pour le « +X $ », `eclat` pour les notifications, lave qui pulse, torches qui vacillent.
 
 ## 5. Conventions de code (à respecter)
