@@ -164,13 +164,15 @@ export type NiveauAscenseur = {
   secondesParMetre: number // temps pour parcourir un mètre
 }
 
+// Choix du 19/10 : peu d'argent mais beaucoup de fer et de redstone (avant, les derniers
+// niveaux coûtaient jusqu'à 80 000 $ : trop cher, même au prestige 3).
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, cout: { argent: 250, materiaux: { fer: 5 } }, capacite: 32, secondesParMetre: 0.1 },
-  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 10, redstone: 5 } }, capacite: 64, secondesParMetre: 0.07 },
-  { niveau: 3, cout: { argent: 5000, materiaux: { fer: 20, redstone: 10 } }, capacite: 128, secondesParMetre: 0.05 },
-  { niveau: 4, cout: { argent: 15000, materiaux: { redstone: 20 } }, capacite: 256, secondesParMetre: 0.03 },
-  { niveau: 5, cout: { argent: 35000, materiaux: { or: 10 } }, capacite: 512, secondesParMetre: 0.02 },
-  { niveau: 6, cout: { argent: 80000, materiaux: { diamant: 5 } }, capacite: 1024, secondesParMetre: 0.015 },
+  { niveau: 1, cout: { argent: 250, materiaux: { fer: 8 } }, capacite: 32, secondesParMetre: 0.1 },
+  { niveau: 2, cout: { argent: 1200, materiaux: { fer: 15, redstone: 5 } }, capacite: 64, secondesParMetre: 0.07 },
+  { niveau: 3, cout: { argent: 2000, materiaux: { fer: 30, redstone: 15 } }, capacite: 128, secondesParMetre: 0.05 },
+  { niveau: 4, cout: { argent: 4500, materiaux: { fer: 50, redstone: 30 } }, capacite: 256, secondesParMetre: 0.03 },
+  { niveau: 5, cout: { argent: 9000, materiaux: { fer: 80, redstone: 50 } }, capacite: 512, secondesParMetre: 0.02 },
+  { niveau: 6, cout: { argent: 18000, materiaux: { fer: 120, redstone: 80 } }, capacite: 1024, secondesParMetre: 0.015 },
 ]
 
 // ---------------------------------------------------------------------------
