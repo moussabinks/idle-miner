@@ -62,8 +62,9 @@ import {
   bonusVente,
   chiffreRomain,
   coutEnchantement,
-  devisReparation,
+  coutReparation,
   enchanter,
+  enchantementBloqueAuPrestige,
   equiper,
   peutAcheterPioche,
   peutEnchanter,
@@ -73,7 +74,6 @@ import {
   quantite,
   reparer,
   valeurDe,
-  type DevisReparation,
   type EtatJeu,
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
@@ -97,14 +97,6 @@ function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: 
       {children}
     </button>
   )
-}
-
-// « 2 Fer », « 48 $ » ou « 24 $ + 1 Fer » selon ce qu'il faut pour réparer.
-function texteDevis(devis: DevisReparation): string {
-  const morceaux: string[] = []
-  if (devis.cout > 0) morceaux.push(`${devis.cout} $`)
-  if (devis.dansLeSac > 0) morceaux.push(`${devis.dansLeSac} ${devis.materiau}`)
-  return morceaux.join(' + ')
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +170,7 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
         const debloquee = pioche.niveau <= etat.meilleure
         const prochaine = pioche.niveau === etat.meilleure + 1
         const usure = etat.pioches[pioche.niveau] ?? 0
-        const devis = devisReparation(etat, pioche.niveau)
+        const cout = coutReparation(etat, pioche.niveau)
 
         if (!debloquee && !prochaine) {
           return (
@@ -210,20 +202,24 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
               />
             )}
 
-            {(possedee && !equipee) || (enVille && possedee && usure > 0) ? (
+            {possedee && !equipee && (
               <div className="boutons">
-                {possedee && !equipee && (
-                  <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
-                    Équiper
-                  </Bouton>
-                )}
-                {enVille && possedee && usure > 0 && (
-                  <Bouton actif={peutReparer(etat, pioche.niveau)} genre="reparer" onClick={() => jouer((e) => reparer(e, pioche.niveau))}>
-                    🔧 Réparer · {texteDevis(devis)}
-                  </Bouton>
-                )}
+                <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
+                  Équiper
+                </Bouton>
               </div>
-            ) : null}
+            )}
+            {/* Réparer : de l'argent (selon l'usure) + 3 minerais de la pioche, le prix à gauche. */}
+            {enVille && possedee && usure > 0 && cout && (
+              <Achat
+                etat={etat}
+                cout={cout}
+                texte="🔧 Réparer"
+                possible={peutReparer(etat, pioche.niveau)}
+                onAcheter={() => jouer((e) => reparer(e, pioche.niveau))}
+                genre="reparer"
+              />
+            )}
             {/* Débloquer (avec les minerais demandés) ou racheter neuve : le prix à gauche, comme partout. */}
             {enVille && (
               <Achat
@@ -497,7 +493,8 @@ export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Les enchantements s'appliquent à toutes tes pioches. Tu as {quantite(etat, 'lapis')} 🔷 lapis et {quantite(etat, 'emeraude')} 💚 émeraudes.
+        Les enchantements s'appliquent à toutes tes pioches et sont gardés au prestige. Leurs niveaux se débloquent petit à petit, prestige après
+        prestige. Tu as {quantite(etat, 'lapis')} 🔷 lapis et {quantite(etat, 'emeraude')} 💚 émeraudes.
       </p>
       {LISTE_ENCHANTEMENTS.map((id) => {
         const e = ENCHANTEMENTS[id]
@@ -512,7 +509,9 @@ export function PanneauEnchanter({ etat, jouer }: PropsPanneau) {
               actuel={niveau === 0 ? 'Pas encore enchantée' : `${e.nom} ${chiffreRomain(niveau)}`}
               niveau={niveau}
               niveauMax={e.niveauMax}
+              niveauPermis={niveauMaxAuPrestige(id, etat.prestige)}
               suivant={cout && { cout, texte: `✨ Enchanter ${chiffreRomain(niveau + 1)}` }}
+              bloqueAuPrestige={enchantementBloqueAuPrestige(etat, id)}
               possible={peutEnchanter(etat, id)}
               onAmeliorer={() => jouer((x) => enchanter(x, id))}
               genre="enchanter"

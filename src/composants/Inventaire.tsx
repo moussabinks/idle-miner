@@ -63,11 +63,10 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
   }
 
   // Remonter au village avec la cabine (le mineur marche d'abord jusqu'au puits) :
-  // elle emporte les objets choisis avec les jauges, vendus en arrivant.
+  // seulement le mineur, avec son sac. Rien n'est vendu : c'est « Envoyer » qui vend.
   function remonter() {
     onRemonter()
-    jouer((e) => voyager(e, 0, false, lot))
-    setChoix({})
+    jouer((e) => voyager(e, 0, false, {}))
   }
 
   return (
@@ -103,11 +102,11 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
       {avecAscenseur ? (
         <div className="envoi-ascenseur">
           {surLeQuai > 0 && <p className="discret">📦 {surLeQuai} objet(s) attendent sur le quai de l'ascenseur : ils partent en premier.</p>}
-          {/* Deux boutons : envoyer les objets seuls, ou remonter avec eux. Pendant que la cabine
-              voyage, ils sont grisés et comptent les secondes. */}
+          {/* Deux boutons : envoyer les objets (vendus en arrivant), ou remonter soi-même (le sac
+              reste plein). Pendant que la cabine voyage, ils sont grisés et comptent les secondes. */}
           <div className="boutons-ascenseur">
             <button
-              className="bouton bouton-ascenseur"
+              className="bouton bouton-petit bouton-ascenseur"
               disabled={aEnvoyer === 0 || occupe}
               onClick={() => {
                 jouer((e) => demanderEnvoi(e, lot))
@@ -117,11 +116,11 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
               {enVoyage ? `🛗 ${minuteur}` : aEnvoyer === 0 ? '📦 Rien à envoyer' : `📦 Envoyer ${aEnvoyer} objet${aEnvoyer > 1 ? 's' : ''}`}
             </button>
             {ici ? (
-              <button className="bouton bouton-voyage" disabled={occupe} onClick={remonter}>
-                ⏫ Remonter avec l'ascenseur{aEnvoyer > 0 ? ` (+${aEnvoyer})` : ''}
+              <button className="bouton bouton-petit bouton-voyage" disabled={occupe} onClick={remonter}>
+                ⏫ Remonter
               </button>
             ) : (
-              <button className="bouton bouton-voyage" disabled={occupe} onClick={() => jouer(appelerAscenseur)}>
+              <button className="bouton bouton-petit bouton-voyage" disabled={occupe} onClick={() => jouer(appelerAscenseur)}>
                 {enVoyage ? `🛗 ${minuteur}` : "🛗 Appeler l'ascenseur"}
               </button>
             )}

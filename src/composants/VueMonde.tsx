@@ -155,6 +155,7 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
             style={{ top: `calc(var(--pas) * ${profondeurAffichee - 1})` }}
             title={`Foreuse ${index + 1} à -${une.profondeur} m`}
           >
+            <span className="foreuse-lumiere" />
             <span className="foreuse-corps" />
             <span className="foreuse-meche" />
             {enMarche && (

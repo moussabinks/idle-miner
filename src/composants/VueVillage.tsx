@@ -131,8 +131,12 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               )}
               {stand.id === 'foreuse' && (
                 <span className={`derrick ${foreuseEnMarche(etat) ? 'derrick-tourne' : ''}`} aria-hidden="true">
+                  <span className="derrick-aura" />
                   <span className="derrick-tour" />
-                  <span className="derrick-moteur" />
+                  <span className="derrick-gyrophare" />
+                  <span className="derrick-moteur">
+                    <span className="derrick-roue" />
+                  </span>
                   <span className="derrick-meche" />
                   {verrouille && (
                     <span className="barriere">

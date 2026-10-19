@@ -79,13 +79,13 @@ export type Pioche = {
   prix: number
   // Matériaux à fournir en plus de l'argent pour l'acheter.
   materiaux: Partial<Record<IdBloc, number>>
-  // Matériau utilisé pour la réparer. 'planche' n'existe pas dans le sac : on l'achète.
-  reparation: IdBloc | 'planche'
+  // Le minerai qu'il faut pour la réparer (null : la pioche en bois, réparée avec de l'argent seulement).
+  reparation: IdBloc | null
   couleur: string // couleur du fer de la pioche, pour dessiner le personnage
 }
 
 export const PIOCHES: Pioche[] = [
-  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 30, durabilite: 60, prix: 5, materiaux: {}, reparation: 'planche', couleur: '#b5834a' },
+  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 30, durabilite: 60, prix: 5, materiaux: {}, reparation: null, couleur: '#b5834a' },
   { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 60, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre', couleur: '#8f8f8f' },
   { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 96, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer', couleur: '#e6e6e6' },
   { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 116, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant', couleur: '#4ee8dc' },
@@ -103,14 +103,12 @@ export const PIOCHES: Pioche[] = [
   },
 ]
 
-// Prix d'une planche (pour réparer la pioche en bois).
-export const PRIX_PLANCHE = 2
-
-// Chaque unité de matériau répare 25 % de la pioche (comme l'enclume).
-export const REPARATION_PAR_UNITE = 0.25
-
-// Un matériau qui manque est acheté à 2 fois son prix de vente.
-export const MULTIPLICATEUR_ACHAT = 2
+// La réparation d'une pioche (règle du 19/10, la même pour toutes) : de l'argent + 3 minerais
+// de la pioche (3 fer pour la pioche en fer, 3 diamants pour la pioche en diamant...).
+// L'argent dépend de l'usure : une pioche cassée coûte la moitié de son prix neuve.
+// La pioche en bois n'a pas de minerai (il n'y a pas de bois dans la mine) : argent seulement.
+export const MINERAIS_REPARATION = 3
+export const PART_PRIX_REPARATION = 0.5
 
 // Vitesse à mains nues (pioche cassée).
 export const VITESSE_MAINS_NUES = 1
@@ -186,26 +184,40 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 //   - forage et chariot de la foreuse (débloquée au prestige 1) : 2e niveau au prestige 1,
 //     3e au prestige 2... (les niveaux de la foreuse sont comptés à partir de 0 dans le code) ;
 //   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer au prestige 3...
-export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur'
+//   - enchantements (gardés au prestige depuis le 19/10) : Efficacité I au prestige 0, puis un
+//     niveau de plus par prestige (V au prestige 4) ; Fortune et Solidité, plus rares, un niveau
+//     tous les 2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4).
+export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur' | IdEnchantement
 
-export const PLAFONDS: Record<IdPlafond, { prestigeDeblocage: number; niveauAuDeblocage: number; niveauMax: number }> = {
+type Plafond = {
+  prestigeDeblocage: number
+  niveauAuDeblocage: number
+  niveauMax: number
+  prestigesParNiveau?: number // combien de prestiges pour un niveau de plus (1 par défaut)
+}
+
+export const PLAFONDS: Record<IdPlafond, Plafond> = {
   ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
   forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
   chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
   mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },
+  efficacite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 5 },
+  fortune: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
+  solidite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
 }
 
 // Le plus haut niveau qu'on peut atteindre à ce prestige.
 export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
   const plafond = PLAFONDS[id]
   const prestigesEnPlus = Math.max(0, prestige - plafond.prestigeDeblocage)
-  return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + prestigesEnPlus)
+  const niveauxEnPlus = Math.floor(prestigesEnPlus / (plafond.prestigesParNiveau ?? 1))
+  return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + niveauxEnPlus)
 }
 
 // Le prestige qu'il faut pour atteindre ce niveau (pour afficher « 🔒 Prestige 3 »).
 export function prestigePourNiveau(id: IdPlafond, niveau: number): number {
   const plafond = PLAFONDS[id]
-  return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage)
+  return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage) * (plafond.prestigesParNiveau ?? 1)
 }
 
 // ---------------------------------------------------------------------------
@@ -296,7 +308,8 @@ export type Enchantement = {
   nom: string
   description: string
   niveauMax: number
-  // Coût du niveau n : (argent × n) + (lapis × n) + (émeraudes × n).
+  // Coût du niveau n : (argent × n × n) + (lapis × n) + (émeraudes × n).
+  // L'argent grandit vite (n²) : les derniers niveaux, gardés de prestige en prestige, se méritent.
   argentParNiveau: number
   lapisParNiveau: number
   emeraudesParNiveau: number

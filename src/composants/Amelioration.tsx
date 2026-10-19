@@ -74,7 +74,7 @@ export function Achat({
   texte: ReactNode
   possible: boolean
   onAcheter: () => void
-  genre?: 'ameliorer' | 'acheter' | 'enchanter'
+  genre?: 'ameliorer' | 'acheter' | 'enchanter' | 'reparer'
 }) {
   return (
     <div className="module-ligne">
