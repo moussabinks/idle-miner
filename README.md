@@ -20,3 +20,4 @@ Puis ouvrir http://localhost:5173.
 5. L'autre teste le lien de preview Vercel, relit le code, puis merge.
 
 Les règles du jeu sont décrites dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md).
+L'état du projet et la feuille de route sont dans [CONTEXTE.md](CONTEXTE.md).

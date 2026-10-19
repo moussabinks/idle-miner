@@ -1,0 +1,231 @@
+/* =========================================================================
+   Les blocs de la mine, dessinés uniquement en CSS (dégradés).
+   Chaque bloc a la classe .bloc-<id>. Les minerais sont une roche
+   (.roche-pierre ou .roche-deepslate) avec des taches de couleur (--minerai).
+   ========================================================================= */
+
+.case {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 3px;
+}
+
+.bloc {
+  /* Petit relief : clair en haut à gauche, sombre en bas à droite. */
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.12),
+    inset -3px -3px 0 rgb(0 0 0 / 0.28);
+  image-rendering: pixelated;
+}
+
+/* Les roches de base */
+.roche-pierre {
+  --roche:
+    radial-gradient(circle at 20% 30%, #8a8a8a 0 8%, transparent 9%),
+    radial-gradient(circle at 75% 70%, #6a6a6a 0 10%, transparent 11%),
+    radial-gradient(circle at 60% 20%, #9a9a9a 0 6%, transparent 7%),
+    linear-gradient(135deg, #858585, #6f6f6f);
+}
+
+.roche-deepslate {
+  --roche:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 2px, transparent 2px 9px),
+    radial-gradient(circle at 70% 30%, #4d4d55 0 9%, transparent 10%),
+    linear-gradient(135deg, #48484f, #343439);
+}
+
+.bloc-pierre,
+.bloc-deepslate {
+  background: var(--roche);
+}
+
+.bloc-deepslate {
+  --roche:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 2px, transparent 2px 9px),
+    radial-gradient(circle at 70% 30%, #4d4d55 0 9%, transparent 10%),
+    linear-gradient(135deg, #48484f, #343439);
+}
+
+.bloc-terre {
+  background:
+    radial-gradient(circle at 25% 35%, #6b4423 0 8%, transparent 9%),
+    radial-gradient(circle at 70% 65%, #5a3a1e 0 10%, transparent 11%),
+    radial-gradient(circle at 60% 25%, #94643a 0 6%, transparent 7%),
+    linear-gradient(135deg, #8b5a2b, #6e4520);
+}
+
+.bloc-gravier {
+  background:
+    radial-gradient(circle at 20% 25%, #a29d97 0 12%, transparent 13%),
+    radial-gradient(circle at 65% 30%, #6c6661 0 14%, transparent 15%),
+    radial-gradient(circle at 40% 70%, #8c8680 0 13%, transparent 14%),
+    radial-gradient(circle at 80% 75%, #5d5853 0 11%, transparent 12%),
+    linear-gradient(135deg, #8a847e, #75706b);
+}
+
+/* Les minerais : des taches de la couleur du minerai sur la roche. */
+.bloc-charbon,
+.bloc-fer,
+.bloc-redstone,
+.bloc-lapis,
+.bloc-or,
+.bloc-emeraude,
+.bloc-diamant {
+  background:
+    radial-gradient(circle at 25% 28%, var(--minerai) 0 11%, transparent 12%),
+    radial-gradient(circle at 70% 22%, var(--minerai-clair) 0 8%, transparent 9%),
+    radial-gradient(circle at 58% 62%, var(--minerai) 0 13%, transparent 14%),
+    radial-gradient(circle at 22% 74%, var(--minerai-clair) 0 9%, transparent 10%),
+    radial-gradient(circle at 82% 80%, var(--minerai) 0 7%, transparent 8%),
+    var(--roche);
+}
+
+.bloc-charbon { --minerai: #1c1c1c; --minerai-clair: #3a3a3a; }
+.bloc-fer { --minerai: #d8a07a; --minerai-clair: #ecc7a8; }
+.bloc-redstone { --minerai: #d01414; --minerai-clair: #ff4d4d; }
+.bloc-lapis { --minerai: #1f4fbf; --minerai-clair: #4a7eea; }
+.bloc-or { --minerai: #f4c518; --minerai-clair: #fff07a; }
+.bloc-emeraude { --minerai: #17b84a; --minerai-clair: #6cf596; }
+.bloc-diamant { --minerai: #3fe0d0; --minerai-clair: #b5fff7; }
+
+/* Les minerais rares brillent un peu. */
+.bloc-diamant,
+.bloc-emeraude {
+  animation: scintille 2.4s ease-in-out infinite;
+}
+
+.bloc-debris {
+  background:
+    repeating-radial-gradient(circle at 50% 50%, #6b4a3a 0 3px, #4a3128 3px 6px),
+    linear-gradient(135deg, #5a3d30, #3b2820);
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.1),
+    inset -3px -3px 0 rgb(0 0 0 / 0.4),
+    0 0 10px rgb(180 110 70 / 0.4);
+}
+
+.bloc-amethyste {
+  background:
+    conic-gradient(from 45deg at 50% 50%, #b48ee8, #7a4cc2, #d6b8ff, #6a3cb0, #b48ee8);
+}
+
+.bloc-obsidienne {
+  background:
+    radial-gradient(circle at 30% 30%, #5c2a8a 0 10%, transparent 11%),
+    radial-gradient(circle at 70% 65%, #3d1a5e 0 12%, transparent 13%),
+    linear-gradient(135deg, #1e0f2e, #0f0718);
+}
+
+/* Les blocs spéciaux */
+.bloc-lave {
+  background:
+    radial-gradient(circle at 30% 30%, #ffe066 0 10%, transparent 30%),
+    radial-gradient(circle at 70% 70%, #ffb000 0 12%, transparent 35%),
+    linear-gradient(135deg, #ff7b00, #d43a00);
+  box-shadow: 0 0 14px rgb(255 120 0 / 0.75);
+  animation: lave 1.6s ease-in-out infinite;
+}
+
+.bloc-coffre {
+  background:
+    linear-gradient(#f5d142, #f5d142) 50% 42% / 16% 22% no-repeat,
+    linear-gradient(#3a230f, #3a230f) 0 38% / 100% 6% no-repeat,
+    repeating-linear-gradient(90deg, #a8682b 0 30%, #8c5420 30% 33%),
+    linear-gradient(#a8682b, #7c4a1d);
+  border-radius: 4px;
+}
+
+.bloc-geode {
+  background:
+    radial-gradient(circle at 50% 50%, #e2c8ff 0 14%, #9b6ad6 15% 30%, #5b3a8a 31% 42%, transparent 43%),
+    var(--roche);
+}
+
+.bloc-bedrock {
+  background:
+    radial-gradient(circle at 20% 30%, #555 0 12%, transparent 13%),
+    radial-gradient(circle at 70% 25%, #111 0 14%, transparent 15%),
+    radial-gradient(circle at 45% 70%, #666 0 10%, transparent 11%),
+    radial-gradient(circle at 80% 80%, #1a1a1a 0 12%, transparent 13%),
+    linear-gradient(135deg, #3a3a3a, #1f1f1f);
+}
+
+/* Une case déjà creusée. */
+.case.vide {
+  background: rgb(0 0 0 / 0.35);
+  box-shadow: inset 0 0 12px rgb(0 0 0 / 0.6);
+}
+
+/* Petite version d'un bloc, pour l'inventaire. */
+.mini-bloc {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow:
+    inset 2px 2px 0 rgb(255 255 255 / 0.12),
+    inset -2px -2px 0 rgb(0 0 0 / 0.28);
+}
+
+/* =========================================================================
+   Animation du bloc en cours : il tremble et se fissure pendant --duree.
+   ========================================================================= */
+
+.en-cours {
+  outline: 2px solid rgb(255 255 255 / 0.8);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.en-cours::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    linear-gradient(35deg, transparent 46%, rgb(0 0 0 / 0.75) 47% 50%, transparent 51%),
+    linear-gradient(-50deg, transparent 47%, rgb(0 0 0 / 0.7) 48% 51%, transparent 52%),
+    linear-gradient(100deg, transparent 30%, rgb(0 0 0 / 0.6) 31% 33%, transparent 34%);
+}
+
+.casse {
+  animation: tremble 0.12s linear infinite;
+}
+
+.casse::after {
+  animation: fissure var(--duree, 0.4s) linear forwards;
+}
+
+@keyframes tremble {
+  0% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(1px, -1px) rotate(-1deg); }
+  50% { transform: translate(-1px, 1px) rotate(1deg); }
+  75% { transform: translate(1px, 1px) rotate(0); }
+  100% { transform: translate(0, 0) rotate(0); }
+}
+
+@keyframes fissure {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lave {
+  0%, 100% { filter: brightness(1); box-shadow: 0 0 10px rgb(255 120 0 / 0.6); }
+  50% { filter: brightness(1.25); box-shadow: 0 0 20px rgb(255 160 0 / 0.95); }
+}
+
+@keyframes scintille {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .casse,
+  .bloc-lave,
+  .bloc-diamant,
+  .bloc-emeraude {
+    animation: none;
+  }
+}

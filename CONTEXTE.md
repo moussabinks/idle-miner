@@ -1,0 +1,150 @@
+# Idle Miner (web) : contexte du projet
+
+> Où en est le projet, qui fait quoi, ce qui est décidé et ce qui reste à faire.
+> Les règles de code sont dans [CLAUDE.md](CLAUDE.md), les règles du jeu dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md).
+> À mettre à jour à chaque étape importante.
+
+## 1. Le projet en bref
+
+- **Quoi** : un idle game de minage inspiré de Minecraft. On creuse, on vend les blocs, on achète de meilleures pioches et on descend jusqu’à la bedrock (-128 m).
+- **D'où on part** : une v1 jouable en **Python** (notebook Jupyter + `ipywidgets`). Sa spec complète est dans `docs/idle_miner_v1.md`.
+- **Objectif** : un portage web avec un front plus soigné, jouable dans le navigateur et hébergé sur Vercel.
+- **Équipe** : 2 développeurs sur GitHub.
+  - `moussabinks` : propriétaire du dépôt.
+  - `N04H2004` : collaborateur.
+
+## 2. Choix techniques
+
+| Sujet | Choix | Pourquoi |
+|---|---|---|
+| Langage | TypeScript | Vercel ne fait pas tourner de notebook Python. Le jeu tourne entièrement dans le navigateur, sans serveur. |
+| Front | React 19 + Vite | Standard, rapide, très bien supporté par Vercel. |
+| Tests | Vitest | Teste la logique du jeu sans navigateur, y compris le futur bot d'équilibrage. |
+| Lint | oxlint | Fourni par le template Vite. |
+| Sauvegarde | `localStorage` | Pas de backend, et la progression doit survivre à la fermeture de l'onglet. |
+| Option écartée | Garder le Python avec Pyodide | Environ 10 Mo à charger au démarrage et difficile à brancher sur React. |
+
+## 3. Infra
+
+- **Dépôt** : https://github.com/moussabinks/idle-miner (**privé**). Branche principale : `main`.
+- **Workflow** : une branche par fonctionnalité, puis une Pull Request. L'autre développeur relit avant le merge. On ne pousse jamais directement sur `main`.
+- **Vercel** : ⚠️ **pas encore branché**, la décision est en attente :
+  - **Option A** : le compte Vercel Pro du collègue. Il faut alors une organisation GitHub (on y transfère le dépôt) et que les deux développeurs soient membres de l'équipe Vercel, sinon les déploiements de l'autre sont bloqués.
+  - **Option B** : passer le dépôt en public et utiliser le plan Hobby gratuit. Avec un dépôt privé, Hobby ne déploie que les commits du propriétaire.
+  - Si le dépôt est transféré, mettre à jour le remote : `git remote set-url origin https://github.com/<org>/idle-miner.git`.
+- **Poste de dev (Mac)** : Homebrew, Node 26, npm 11, git, et gh connecté au compte `moussabinks`.
+
+## 4. État actuel du code
+
+Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
+
+Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées automatiquement) :
+
+- **Mine à -128 m, couches de 10 blocs.** Zones, minerais et pioches à l'échelle de 128 m. Les minerais **apparaissent petit à petit** (19/10, `APPARITION_MINERAIS` dans `mine.ts`) : chacun commence très rare à sa profondeur de départ puis devient plus fréquent jusqu'à sa profondeur « pleine » (charbon et fer dès -7 m, redstone dès -18 m, or dès -25 m, lapis dès -30 m, émeraude dès -40 m, diamant dès -45 m, débris dès -96 m).
+- **Bedrock** : en finissant la couche -127 m avec la netherite, on gagne (succès + écran de victoire une seule fois), mais on **continue de creuser** des galeries à -127 m. Le prestige se fait quand on veut, au Puits.
+- **Une seule vue qui défile** : le village en haut, puis tout le puits creusé. L'échelle et le rail de l'ascenseur à gauche, le puits de la foreuse à droite. La caméra suit le joueur (directement pendant qu'il bouge, en douceur pour les sauts).
+- **Village** (`VueVillage.tsx`, `useMarcheVillage.ts`) : un monde de 22 tuiles avec chemin, hautes herbes, fleurs, arbres, barrières et collines (défilement plus lent). Les stands sont **serrés tous les 3 pas** (19/10) pour des allers-retours rapides : Puits, Marché, Forgeron, Bazar, Enchanteur, Foreuse. On marche avec ← → (garder la touche) ou en cliquant sur un stand.
+- **Position du joueur** : `position` en mètres (0 = village, `profondeur - 1` = front de taille). Échelle : 0,15 s par mètre.
+- **Ascenseur** : une vraie cabine qui monte et descend (`position`, `cible`), construite puis améliorée **surtout avec de l'argent** (6 niveaux, de 32 à 1 024 objets par voyage). Le niveau 1 (250 $ + 5 fer) ne demande pas de redstone : on peut le construire tôt.
+  - **Envoi depuis le sac** (panneau Sac, à droite dans la mine) : chaque objet a une case à cocher (gardée d'une fois sur l'autre), et le bouton « Envoyer X objets à la surface » (X = place dans la cabine) les fait vendre au marché. Si la cabine n'est pas là, elle vient d'abord (`demanderEnvoi`, `envoiDemande`).
+  - Pendant que la cabine voyage, le bouton d'envoi est **grisé avec un minuteur** (« de retour dans 12 s »), et le module en bas à gauche affiche aussi le temps restant (`secondesAvantArretAscenseur`).
+  - On peut aussi **construire et améliorer l'ascenseur au village**, à l'entrée de la mine.
+  - **Envoi automatique** quand le sac est plein : case à cocher, **désactivée par défaut** (19/10 : avant, l'ascenseur partait tout seul avec n'importe quels objets).
+  - **Plus de pop-in** (19/10) : dans le sac, deux boutons côte à côte : « 📦 Envoyer X objets » (la cabine part seule) et « ⏫ Remonter avec l'ascenseur » (le mineur marche jusqu'au puits et monte avec les objets choisis). Si la cabine n'est pas là : « 🛗 Appeler l'ascenseur ». La construction et les améliorations sont dans une carte « Ascenseur » sous le sac (et au village).
+  - **Le niveau de l'ascenseur est gardé au prestige** (19/10), comme la foreuse.
+  - Trajets fluides : pendant un déplacement, l'horloge bat à chaque image (requestAnimationFrame) et la caméra suit la position exacte ; la cabine n'a plus de transition CSS (elle « tremblait »).
+  - Quand le sac est plein, les blocs attendent sur le **quai** de l'ascenseur (ils partent en premier au prochain envoi).
+- **Prestige** : +15 % sur les ventes et +10 % de vitesse des pioches, par niveau (cumulés). On garde : succès, talents, foreuse(s), niveau de l'ascenseur, mineurs employés.
+- **Mineurs employés** (prestige 2, `employes.ts`, `PanneauEmployes.tsx`, stand « Mineurs » avec cadenas avant) : 2 au prestige 2, puis 1 de plus par prestige (6 au plus, +1 avec un talent). Embauche 5 000 $, 12 000 $, 25 000 $... Chacun creuse dans sa propre galerie (vitesse et profondeur selon sa pioche, de Bois à Netherite, améliorable avec de l'argent), remonte vendre quand son sac de 32 est plein (en ascenseur s'il est construit, plus rapide, sinon à l'échelle), garde 25 % de salaire et te donne le reste. Ils travaillent aussi jeu fermé (8 h au plus). Un rappel « 👷 2 mineurs » est affiché en haut de la mine.
+- **Plusieurs foreuses** (prestige 3) : 2 au prestige 3, puis 1 de plus par prestige (5 au plus), 50 000 $, 100 000 $, 200 000 $, 400 000 $. Elles creusent ensemble (vitesses additionnées), partagent le chariot et brûlent chacune leur charbon (`foreuse.nombre`).
+- **Creuser** : « Creuser » casse une couche ; « 🔁 Auto » creuse sans s'arrêter jusqu'à « ⏹ Arrêt », et s'arrête tout seul si la pioche casse (pas de minage à mains nues en AFK).
+- **Arbre de prestige** (`talents.ts`, `ArbrePrestige.tsx`) : 1 point par prestige, 4 branches de 4 talents (Mineur, Marchand, Ingénieur, Patron). Ingénieur : ascenseur +30 %, foreuses +50 %, charbon ×2, chariot ×2. Patron : mineurs +25 %, sacs ×2, salaire 10 %, +1 mineur. « Ascenseur offert » et « Grimpeur agile » ont été retirés le 19/10 (leurs points sont rendus). Il faut le talent du dessus pour prendre celui du dessous. L'arbre s'ouvre tout seul après un prestige pour choisir sa récompense ; on le rouvre au Puits ou avec l'étoile du bandeau. Les talents sont gardés pour toujours. Bonus de départ (pioche en pierre/fer, Fortune I, sac de 128, 300 $) et bonus permanents.
+- **Sons** (`src/sons.ts`) : fabriqués avec Web Audio, sans fichier. Coups de pioche, bloc qui casse, « plink » des minerais, étincelles des minerais rares, « ka-ching » des ventes (plus de pièces pour une grosse vente), « ding-dong » de l'ascenseur, barreaux d'échelle, achats, succès, talents, prestige, lave, coffres, géodes. Bouton 🔊/🔇 dans le bandeau (réglage gardé dans `localStorage`).
+- **Musique et ambiances** (`src/ambiance.ts`) : musique calme générée (accords la mineur / fa / do / sol, basse et mélodie pentatonique au hasard), vent et oiseaux au village, grondement, écho, gouttes d'eau et résonances graves dans la mine (de plus en plus présents en descendant). Bouton 🎵 dans le bandeau.
+- **Boutons colorés par action** : creuser (or), arrêter (rouge), vendre (vert), acheter (bleu), améliorer (turquoise), réparer (orange), enchanter (violet), prestige (rose), ascenseur (cyan), se déplacer (bois), mettre dans le sac (kaki), charbon (anthracite).
+- **Animations** (`src/effets.css`, `src/evenements.ts`) : éclats qui sautent quand un bloc casse, bulle brillante avec rayons et étincelles pour **tous les minerais** (charbon, fer, redstone… et les rares, qui ont en plus un son scintillant), gros « +X $ » avec une gerbe de pièces pour les ventes, compteur d'argent qui saute. `evenements.ts` compare l'état avant/après une action pour savoir quoi jouer.
+- **Foreuse** (prestige 1+) : activée une fois (5 000 $ + 10 fer + 5 redstone), améliorée surtout avec de l'argent (forage jusqu'à 8 blocs/s pour 150 000 $, chariot jusqu'à 5 000 places), au charbon (1 charbon = 20 s), elle descend d'un mètre tous les 10 blocs. On la voit forer dans son puits (jaune et noir, animée), avec un indicateur toujours visible en haut de la mine. Le chariot a un **inventaire à cocher** : « Vendre la sélection » et « Mettre dans le sac » ne prennent que les objets cochés. Au **niveau 3 de forage**, une option à cocher la fait **se recharger toute seule** avec le charbon qu'elle remonte (elle garde une minute de réserve, le reste va au chariot). Elle continue quand le jeu est fermé (8 h au plus). **C'est la seule chose qui avance hors ligne** (avec la fin d'un trajet d'échelle ou d'ascenseur) : le minage du joueur s'arrête quand l'onglet est fermé.
+- **Marché** : une **jauge par objet** (curseur + bouton « Max » + compteur « 5 / 20 ») pour vendre une partie seulement (`vendreLot`). Une jauge à 0 « garde » l'objet (`nonAVendre`), et il recommence à 0 la fois suivante. Pareil dans le sac de la mine pour l'**ascenseur** (`demanderEnvoi(etat, lot)`, `ascenseur.garder` pour l'envoi automatique).
+- **Bandeau** : la case Pioche n'affiche plus « x2, x3 » (on croyait que c'était un nombre de pioches).
+- **Sacs** (Bazar) : 32 places au départ, puis 64 (80 $), 128 (400 $), 256 (1 500 $), 512 (5 000 $), 1 024 (15 000 $) et 2 048 places (40 000 $). Les trois derniers ont été ajoutés le 19/10.
+- **Caméra** : une référence par endroit où le mineur est dessiné (village, cabine, échelle, front). Avec une seule référence partagée, la caméra restait au village pendant la descente en ascenseur (corrigé le 19/10).
+- **Pas de torches** : lumière naturelle, les 4 couches sous la couche en cours sont visibles et de plus en plus sombres.
+- **Écran d'accueil et mondes** (`Accueil.tsx`, `sauvegarde.ts`) : au lancement, un écran explique le but du jeu (4 étapes et une coupe de la mine jusqu'à la bedrock) et liste les **mondes** : jusqu'à 5 parties séparées (une save de dev avancée, une save de début, celle d'un ami...). On peut créer (avec un nom), jouer, renommer, dupliquer et supprimer un monde. Dans le jeu, le bouton « 🌍 nom du monde » en haut ramène à l'accueil. Chaque monde a sa sauvegarde et son temps hors ligne ; le son et la musique sont communs. L'ancienne sauvegarde unique devient « Monde 1 ». Les saves restent dans le navigateur (pas d'export pour l'instant).
+- **Village** : entre deux stands, plus de menu de navigation (19/10) : on marche avec ← → ou on clique sur un stand.
+- **Creuser** : seulement avec les boutons Creuser / x10 (19/10). Les flèches du clavier servent seulement à se déplacer.
+- **Tout tient dans l'écran** (ordinateur, 19/10) : le jeu prend exactement la hauteur de la fenêtre (`index.css`, « Tout tient dans l'écran »). La mine s'étire pour remplir la place, et seul le panneau de droite défile à l'intérieur s'il est trop long. Les jauges tiennent sur une ligne par objet. « Recommencer à zéro » est un petit lien dans l'en-tête. Sur téléphone, la page défile comme avant.
+- **Barre de boutons fixe** : 4 boutons toujours à la même place (Creuser/Arrêter, x10, Village, Mine). Plus de flèches à l'écran (19/10) : un petit rappel « ← → pour te déplacer » (caché sur écran tactile). Les flèches du clavier marchent toujours (↑ ↓ pour l'échelle).
+- **Quitter le front de taille** : le mineur **marche jusqu'au puits** (case par case, 0,12 s par case) avant de prendre l'ascenseur ou l'échelle (`voyager`, `depart`, `avancerMarche`). Il ne se téléporte plus.
+- **Noms** : le bouton « Front » s'appelle « Mine », le stand « Puits » s'appelle « Mine » et a un nouveau dessin (galerie dans un rocher, poutres, lanterne, rails, wagonnet).
+- **Succès** : un petit bouton « 🏅 x/16 » en haut à droite ouvre une fenêtre (ils ne prennent plus de place à côté du jeu).
+- **Notifications** : en bas de la colonne de droite (sous le panneau du stand ou du sac), en plus gros, sans cacher la mine ni les boutons ; en haut de l'écran sur téléphone.
+- **Sac plein** : la case « Sac » du bandeau clignote en rouge, tremble un peu et dit « Sac plein ! Vends ou envoie tes minerais » (pour qu'un nouveau joueur comprenne pourquoi il ne creuse plus).
+- **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms).
+- **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
+
+- `src/jeu/` (logique pure, testée avec Vitest) :
+  - `donnees.ts` : blocs, pioches, sacs, enchantements, zones et constantes de la spec v1.
+  - `aleatoire.ts` : aléatoire injectable (`Math.random` en jeu, générateur à graine dans les tests).
+  - `mine.ts` : génération des couches pondérée selon la profondeur.
+  - `mineur.ts` : l'état de la partie (`EtatJeu`, un objet JSON) et toutes les actions (casser, vendre, réparer, acheter, enchanter, prestige).
+  - `succes.ts` : les 16 succès. `sauvegarde.ts` : `localStorage`. `talents.ts` : l'arbre de prestige.
+  - `foreuse.ts` : la foreuse. `temps.ts` : le temps qui passe (échelle, ascenseur, foreuse).
+  - `bot.ts` + `bot.test.ts` : le bot joue 20 parties (il prend l'ascenseur). Médiane ≈ 2 400 blocs pour la bedrock (couches de 10), environ 19 min de jeu simulé.
+- `src/usePartie.ts` : le hook React qui relie la logique à l'écran (minage animé, toasts, sauvegarde auto).
+- `src/composants/` : `VueMonde` (village + puits + échelle + ascenseur), `ModuleAscenseur`, personnage, icônes pixel, HUD, sac, panneaux des stands (dont la foreuse), succès, toasts, écran de victoire.
+- `src/blocs.css` : tous les blocs et animations en CSS. `src/index.css` : mise en page (desktop et mobile).
+
+### Choix faits là où la spec v1 ne disait rien
+
+- Sac plein : le bloc est cassé mais perdu, et le minage « x10 » s'arrête tout seul.
+- Le seau d'eau est consommé quand il éteint une lave.
+- « Vendre tout » vend vraiment tout : c'est au joueur de décocher ce qu'il veut garder (demande du 16/10).
+- Fabriquer des torches et changer de pioche se fait partout ; vendre, acheter, réparer et enchanter seulement à la surface.
+- Racheter une pioche neuve coûte le même prix (matériaux compris) que la débloquer.
+- Pioche cassée : on mine à mains nues, mais la profondeur max reste celle de la pioche équipée.
+- La liste des 16 succès a été réinventée (la v1 ne la détaillait pas).
+- Valeurs choisies par nous, à ajuster après de vraies parties : prix de l'ascenseur, de la foreuse et des enchantements (voir l'économie ci-dessous), vitesse de l'échelle (0,15 s/m), coûts et niveaux de la foreuse.
+- Une nouvelle partie commence à -2 m : le premier mètre est l'entrée du puits.
+- **Économie (19/10)** : les améliorations coûtent surtout de l'argent, les minerais ne servent plus que d'appoint. Le joueur avait trop d'argent sans rien pour le dépenser (fin du prestige 2), et l'ascenseur était trop cher en fer et redstone au début.
+  - Ascenseur : 250 $ + 5 fer, puis 1 500 $ + 10 fer + 5 redstone, 5 000 $ + 20 fer + 10 redstone, 15 000 $ + 20 redstone, 35 000 $ + 10 or, 80 000 $ + 5 diamants.
+  - Foreuse : activation 5 000 $ + 10 fer + 5 redstone. Forage 6 000 $, 20 000 $, 60 000 $, 150 000 $ (+ quelques minerais). Chariot 3 000 $, 12 000 $, 40 000 $, 100 000 $.
+  - Enchantements : argent + lapis + émeraudes, par niveau (efficacité 400 $ + 3 lapis + 1 émeraude, fortune 600 $ + 4 + 1, solidité 300 $ + 3 + 1).
+  - Bot : partie médiane inchangée (bedrock dans la cible), ascenseur construit vers -20/-50 m, et il reste moins d'argent en fin de partie.
+
+## 5. Feuille de route
+
+1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, fin de partie (victoire, prestige, succès).
+2. **Brancher Vercel** (décision A/B ci-dessus).
+3. **Polish** : ✅ sons et animations (19/10). Reste : meilleure ambiance par zone, éventuellement des sprites.
+4. Ajuster l'équilibrage après de vraies parties (le bot donne environ 19 min jusqu'à la bedrock).
+5. Idées en attente : améliorations des pioches au forgeron, couches dures, étais de mine, de vrais mineurs automatiques pour un jeu qui avance hors ligne (proposé le 18/10, pas encore décidé).
+
+## 6. Décisions de design (héritées de la v1)
+
+- ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques, pas de quêtes du marchand.
+  - Exception (16/10) : la foreuse du prestige 1, qui creuse seule tant qu'on lui donne du charbon.
+  - L'assistant Emmanuel Macron (ajouté le 18/10) a été retiré le 19/10.
+- ✅ Le joueur n'est jamais bloqué : pioches rachetables, minage à mains nues, galeries horizontales.
+- 🆕 Nouveau par rapport à la v1 : la sauvegarde. Elle avait été refusée dans le notebook, mais elle devient indispensable sur le web.
+
+## 7. Journal
+
+- **2026-10-15** : choix de la stack, installation des outils sur le Mac, création du squelette et du dépôt GitHub privé. Ajout du collaborateur `N04H2004`.
+- **2026-10-16** : ajout de ce fichier `CONTEXTE.md` au dépôt.
+- **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).
+- **2026-10-16** : surface avec stands, échelle, déplacements au clavier, « Vendre tout » avec objets à décocher, ascenseur à redstone, personnage taupe en SVG.
+- **2026-10-16** : mine à -128 m, vue unique qui défile avec l'échelle sur toute la hauteur, ascenseur à niveaux (fer + redstone) utilisable dans la mine, icônes pixel art au village, foreuse au prestige 1.
+- **2026-10-16** : barre de boutons à positions fixes, suppression des torches (lumière naturelle).
+- **2026-10-18** : assistant Emmanuel Macron (2 000 $), horloge unique pour le minage (corrige le minage bloqué pendant les voyages de l'ascenseur). Sauvegarde v4.
+- **2026-10-18** : on continue de creuser à la bedrock, plus de charbon/fer près de la surface, ascenseur qui emmène le mineur (avec choix des minerais et quai), prestige +15 % ventes / +10 % vitesse, village large où l'on se promène, couches de 10 blocs, donjons avec zombie et épée, foreuse visible en action. Sauvegarde v5.
+- **2026-10-19** : retrait des donjons, de l'épée et de l'assistant Emmanuel Macron. Village resserré (stands tous les 3 pas). Arbre de prestige (12 talents). Sons Web Audio et animations (éclats, minerais rares, ventes). Sauvegarde v6.
+- **2026-10-19** : envoi par l'ascenseur depuis le sac (objets à cocher, envoi auto en option), module d'ascenseur simplifié et replié, inventaire à cocher et recharge automatique de la foreuse, couleurs de boutons par action, animation de trouvaille pour tous les minerais, musique et ambiances (surface / grotte). Sauvegarde v7.
+- **2026-10-19** : sacs de 512, 1 024 et 2 048 places au Bazar. La caméra suit enfin le mineur dans l'ascenseur (descente depuis le village).
+- **2026-10-19** : économie basée sur l'argent (ascenseur, foreuse et enchantements coûtent surtout de l'argent, peu de minerais), ascenseur à 6 niveaux, foreuse avec un niveau de plus en forage et en chariot.
+- **2026-10-19** : barre d'actions à 4 boutons (plus de flèches), le mineur marche jusqu'au puits avant de monter, « Front » et « Puits » renommés « Mine » (nouvelle entrée de mine), succès dans une fenêtre, minuteur de l'ascenseur, ascenseur constructible au village, notifications en bas à droite. Sauvegarde v8.
+- **2026-10-19** : alerte visuelle sur la case Sac quand le sac est plein, notifications plus visibles (colonne de droite).
+- **2026-10-19** : écran d'accueil (but du jeu + coupe de la mine) et jusqu'à 5 mondes (créer, jouer, renommer, dupliquer, supprimer). Plus de menu de navigation au village, plus de minage au clavier.
+- **2026-10-19** : jauges pour vendre ou envoyer une partie seulement (marché et ascenseur), « x2 » retiré de la case Pioche, minerais qui apparaissent petit à petit. Sauvegarde v9.
+- **2026-10-19** : ascenseur gardé au prestige, mineurs employés (prestige 2), plusieurs foreuses (prestige 3), arbre à 4 branches (Patron), boutons Envoyer / Remonter avec l'ascenseur (plus de pop-in), creusage Auto qui s'arrête si la pioche casse, trajets fluides. Sauvegarde v10.
+- **2026-10-19** : l'interface tient dans la hauteur de l'écran sur ordinateur (mine extensible, panneau qui défile seul, jauges compactes).
+- **2026-10-19** : nouveau dessin de l'ascenseur : cage en métal (toit, grille, plancher rayé jaune et noir, lampe qui clignote en route), caisse de minerai quand elle est chargée, puits plus large avec glissières et traverses, poulie qui tourne et câble.

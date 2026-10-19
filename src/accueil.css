@@ -1,0 +1,261 @@
+/* =========================================================================
+   L'écran d'accueil : le but du jeu, une coupe de la mine, et les mondes.
+   ========================================================================= */
+
+.accueil {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* --- Le haut : le texte à gauche, l'illustration à droite ---------------- */
+
+.accueil-heros {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.accueil-titre {
+  font-size: 2.6rem;
+  margin: 0 0 8px;
+}
+
+.accueil-accroche {
+  font-size: 1.15rem;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.accueil-accroche strong {
+  color: var(--accent);
+}
+
+.accueil-etapes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.accueil-etapes li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  padding: 10px 14px;
+  line-height: 1.4;
+}
+
+.etape-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--carte-claire);
+  font-size: 1.3rem;
+}
+
+/* --- L'illustration : une coupe de la mine ----------------------------- */
+
+.illustration {
+  --case-illu: 34px;
+  position: relative;
+  padding: 0 0 8px;
+  border: 3px solid #000;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b0a0c;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.5);
+}
+
+.illustration-ciel {
+  position: relative;
+  height: 64px;
+  background: linear-gradient(#4f97e0, #a8d4f5);
+}
+
+.illustration-soleil {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: #ffe066;
+  box-shadow: 0 0 18px rgb(255 224 102 / 0.8);
+}
+
+/* Une petite échoppe du marché, au loin. */
+.illustration-stand {
+  position: absolute;
+  bottom: 0;
+  left: calc(44px + 3.5 * var(--case-illu));
+  width: 40px;
+  height: 30px;
+  background:
+    repeating-linear-gradient(90deg, #d43b3b 0 6px, #f5efe0 6px 12px) top / 100% 35% no-repeat,
+    linear-gradient(#b07a3f, #8a5a2b);
+  border: 2px solid #5a3a1a;
+  border-bottom: none;
+}
+
+.illustration-herbe {
+  height: 8px;
+  background: linear-gradient(#5fbf3c, #3f8f28);
+  margin-bottom: 4px;
+}
+
+.illustration-ligne {
+  display: grid;
+  grid-template-columns: 44px repeat(6, var(--case-illu));
+  gap: 3px;
+  padding-right: 8px;
+  margin-bottom: 3px;
+  align-items: center;
+}
+
+.illustration-etiquette {
+  font-size: 0.7rem;
+  color: var(--texte-doux);
+  text-align: right;
+  padding-right: 6px;
+}
+
+.illustration-case {
+  width: var(--case-illu);
+  height: var(--case-illu);
+}
+
+.illustration-case.vide {
+  background: #2b2724;
+  box-shadow: inset 0 0 8px rgb(0 0 0 / 0.6);
+}
+
+.illustration-mineur {
+  position: absolute;
+  inset: 2px;
+}
+
+/* La bedrock, au fond : le but ! */
+.illustration-trophee {
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.7);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  animation: scintille 1.6s ease-in-out infinite;
+}
+
+/* --- Les mondes --------------------------------------------------------- */
+
+.accueil-mondes h2 {
+  margin: 0 0 12px;
+}
+
+.grille-mondes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.carte-monde {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 5px solid var(--couleur-monde, var(--accent));
+}
+
+.carte-monde h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.carte-monde-haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.carte-monde-infos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  font-size: 0.88rem;
+}
+
+.carte-monde .boutons {
+  margin-top: auto;
+}
+
+.carte-monde-renommer {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.carte-monde input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-claire);
+  color: var(--texte);
+  font: inherit;
+}
+
+.carte-nouveau-monde {
+  border-top-color: var(--bordure);
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Le bouton du monde en cours, dans le jeu (à côté des succès). */
+.entete .bouton-monde {
+  margin-left: auto;
+}
+
+@media (max-width: 760px) {
+  .accueil-heros {
+    grid-template-columns: 1fr;
+  }
+
+  .illustration {
+    --case-illu: 30px;
+    justify-self: center;
+  }
+
+  .accueil-titre {
+    font-size: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .illustration-trophee {
+    animation: none;
+  }
+}

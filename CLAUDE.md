@@ -1,7 +1,8 @@
 # Idle Miner — version web
 
-Idle game de minage inspiré de Minecraft : on creuse, on vend, on achète de meilleures pioches pour descendre jusqu'à la bedrock (-64 m).
+Idle game de minage inspiré de Minecraft : on creuse, on vend, on achète de meilleures pioches pour descendre jusqu'à la bedrock (-128 m depuis le 16/10, contre -64 m dans la v1).
 C'est le portage web du notebook Python décrit dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md). **Cette spec est la référence pour les règles et l'équilibrage** (pioches, blocs, enchantements, prestige, succès).
+L'état d'avancement, les décisions en attente et la feuille de route sont dans [CONTEXTE.md](CONTEXTE.md) : le lire en début de session et le mettre à jour à chaque étape importante.
 
 ## Stack
 
@@ -21,16 +22,20 @@ C'est le portage web du notebook Python décrit dans [docs/idle_miner_v1.md](doc
 - `src/jeu/` : **logique du jeu en TypeScript pur, sans React ni DOM.** Données (`donnees.ts`), génération de la mine, état du mineur, règles. Tout doit être testable sans navigateur.
 - `src/` (le reste) : composants React. Ils lisent l'état du jeu et appellent ses actions, et ne contiennent pas de règles du jeu.
 - L'aléatoire passe par une fonction injectable, pour qu'on puisse avoir des tests déterministes.
-- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère : la bedrock vers 900 à 1 250 blocs.
+- Garder un **bot de simulation** dans les tests (comme dans la v1) : il joue une partie complète et vérifie l'équilibrage. Repère (mine à -128 m, couches de 10 blocs) : la bedrock vers 2 000 à 3 500 blocs, soit 15 à 30 minutes de jeu.
 
 ## Conventions
 
 - **Tout est en français** : UI, noms de variables et de fonctions, commentaires. Les mots-clés et API de TS/React restent en anglais.
 - Code lisible et commenté pour un public débutant, avec des noms explicites, sans astuces obscures.
 - Visuel : blocs, animations et effets en CSS (gradients, keyframes) tant qu'on n'a pas décidé d'utiliser des sprites.
-- Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web).
+- Sons : fabriqués avec Web Audio (pas de fichier audio, donc rien à créditer) : bruitages dans `src/sons.ts`, musique et ambiances (oiseaux et vent à la surface, grotte dans la mine) dans `src/ambiance.ts`. Les deux se coupent depuis le bandeau (🔊 et 🎵).
+- Boutons : une couleur par sorte d'action (creuser, vendre, acheter, améliorer, réparer, enchanter, prestige, ascenseur, se déplacer...), voir « Les couleurs des boutons » dans `src/index.css`.
+- Sauvegarde de la progression dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web), avec jusqu'à **5 mondes** (5 parties séparées) choisis sur l'écran d'accueil (`src/composants/Accueil.tsx`, logique dans `src/jeu/sauvegarde.ts`).
 
 ## Choix de design hérités de la v1 (à respecter)
 
 - ❌ Pas de creepers, pas de prix du marché variables, pas de mineurs automatiques (PNJ), pas de quêtes du marchand.
+  - Exception décidée le 16/10 : la **foreuse** (débloquée au prestige 1, alimentée au charbon) creuse toute seule. Plusieurs foreuses à partir du prestige 3.
+  - Exception décidée le 19/10 : les **mineurs employés** (débloqués au prestige 2, `src/jeu/employes.ts`) creusent, remontent et vendent tout seuls ; on paie leur embauche, leurs pioches, et ils gardent un salaire sur leurs ventes.
 - On ne doit jamais être bloqué : pioches rachetables, minage à mains nues si la pioche est cassée, galeries horizontales à la profondeur max.
