@@ -38,7 +38,7 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-Depuis la v7 de l'état (`VERSION_ETAT = 7`, anciennes sauvegardes migrées automatiquement) :
+Depuis la v8 de l'état (`VERSION_ETAT = 8`, anciennes sauvegardes migrées automatiquement) :
 
 - **Mine à -128 m, couches de 10 blocs.** Zones, minerais et pioches à l'échelle de 128 m. Un peu de charbon et de fer dès -7 m. Débris antiques rares (poids 1, sous -104 m). Redstone dès -40 m.
 - **Bedrock** : en finissant la couche -127 m avec la netherite, on gagne (succès + écran de victoire une seule fois), mais on **continue de creuser** des galeries à -127 m. Le prestige se fait quand on veut, au Puits.
@@ -47,6 +47,8 @@ Depuis la v7 de l'état (`VERSION_ETAT = 7`, anciennes sauvegardes migrées auto
 - **Position du joueur** : `position` en mètres (0 = village, `profondeur - 1` = front de taille). Échelle : 0,15 s par mètre.
 - **Ascenseur** : une vraie cabine qui monte et descend (`position`, `cible`), construite puis améliorée **surtout avec de l'argent** (6 niveaux, de 32 à 1 024 objets par voyage). Le niveau 1 (250 $ + 5 fer) ne demande pas de redstone : on peut le construire tôt.
   - **Envoi depuis le sac** (panneau Sac, à droite dans la mine) : chaque objet a une case à cocher (gardée d'une fois sur l'autre), et le bouton « Envoyer X objets à la surface » (X = place dans la cabine) les fait vendre au marché. Si la cabine n'est pas là, elle vient d'abord (`demanderEnvoi`, `envoiDemande`).
+  - Pendant que la cabine voyage, le bouton d'envoi est **grisé avec un minuteur** (« de retour dans 12 s »), et le module en bas à gauche affiche aussi le temps restant (`secondesAvantArretAscenseur`).
+  - On peut aussi **construire et améliorer l'ascenseur au village**, à l'entrée de la mine.
   - **Envoi automatique** quand le sac est plein : case à cocher, **désactivée par défaut** (19/10 : avant, l'ascenseur partait tout seul avec n'importe quels objets).
   - Le **module** en bas à gauche de la mine est simplifié et **toujours replié** par défaut (il se souvient s'il a été ouvert, et se replie quand on monte dans la cabine) : appeler, monter / descendre avec, construire / améliorer.
   - Quand le sac est plein, les blocs attendent sur le **quai** de l'ascenseur (ils partent en premier au prochain envoi).
@@ -61,7 +63,11 @@ Depuis la v7 de l'état (`VERSION_ETAT = 7`, anciennes sauvegardes migrées auto
 - **Sacs** (Bazar) : 32 places au départ, puis 64 (80 $), 128 (400 $), 256 (1 500 $), 512 (5 000 $), 1 024 (15 000 $) et 2 048 places (40 000 $). Les trois derniers ont été ajoutés le 19/10.
 - **Caméra** : une référence par endroit où le mineur est dessiné (village, cabine, échelle, front). Avec une seule référence partagée, la caméra restait au village pendant la descente en ascenseur (corrigé le 19/10).
 - **Pas de torches** : lumière naturelle, les 4 couches sous la couche en cours sont visibles et de plus en plus sombres.
-- **Barre de boutons fixe** : toujours les mêmes 8 boutons à la même place (◀ ▲ ▼ ▶ / Creuser x10 Village Front).
+- **Barre de boutons fixe** : 4 boutons toujours à la même place (Creuser/Arrêter, x10, Village, Mine). Plus de flèches à l'écran (19/10) : un petit rappel « ← → pour te déplacer » (caché sur écran tactile). Les flèches du clavier marchent toujours (↑ ↓ pour l'échelle).
+- **Quitter le front de taille** : le mineur **marche jusqu'au puits** (case par case, 0,12 s par case) avant de prendre l'ascenseur ou l'échelle (`voyager`, `depart`, `avancerMarche`). Il ne se téléporte plus.
+- **Noms** : le bouton « Front » s'appelle « Mine », le stand « Puits » s'appelle « Mine » et a un nouveau dessin (galerie dans un rocher, poutres, lanterne, rails, wagonnet).
+- **Succès** : un petit bouton « 🏅 x/16 » en haut à droite ouvre une fenêtre (ils ne prennent plus de place à côté du jeu).
+- **Notifications** : en bas à droite sur ordinateur, en haut sur téléphone (plus jamais sur les boutons).
 - **Horloge unique** (`usePartie.ts`) : échelle, ascenseur, foreuse et minage avancent au même rythme (tic de 50 ms).
 - **Personnage** : une taupe mineuse en SVG (`Personnage.tsx`) dont la pioche prend la couleur de la pioche équipée.
 
@@ -124,3 +130,4 @@ Depuis la v7 de l'état (`VERSION_ETAT = 7`, anciennes sauvegardes migrées auto
 - **2026-10-19** : envoi par l'ascenseur depuis le sac (objets à cocher, envoi auto en option), module d'ascenseur simplifié et replié, inventaire à cocher et recharge automatique de la foreuse, couleurs de boutons par action, animation de trouvaille pour tous les minerais, musique et ambiances (surface / grotte). Sauvegarde v7.
 - **2026-10-19** : sacs de 512, 1 024 et 2 048 places au Bazar. La caméra suit enfin le mineur dans l'ascenseur (descente depuis le village).
 - **2026-10-19** : économie basée sur l'argent (ascenseur, foreuse et enchantements coûtent surtout de l'argent, peu de minerais), ascenseur à 6 niveaux, foreuse avec un niveau de plus en forage et en chariot.
+- **2026-10-19** : barre d'actions à 4 boutons (plus de flèches), le mineur marche jusqu'au puits avant de monter, « Front » et « Puits » renommés « Mine » (nouvelle entrée de mine), succès dans une fenêtre, minuteur de l'ascenseur, ascenseur constructible au village, notifications en bas à droite. Sauvegarde v8.

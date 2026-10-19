@@ -801,50 +801,105 @@ button.module-titre {
 .stand-enchanteur { --auvent: #7a4cc2; }
 
 .stand:hover:not(:disabled) .echoppe,
-.stand:hover:not(:disabled) .puits,
+.stand:hover:not(:disabled) .entree-mine,
 .stand:hover:not(:disabled) .derrick {
   filter: brightness(1.15);
 }
 
-/* Le puits */
-.puits {
+/* L'entrée de la mine : une galerie dans un rocher, étayée de poutres. */
+.entree-mine {
   position: relative;
-  width: 58px;
+  width: 68px;
   height: 64px;
 }
 
-.puits-toit {
+/* Le rocher, en forme de petite colline. */
+.entree-rocher {
   position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 0;
-  height: 28%;
-  background: linear-gradient(#8a5a2b, #6b4420);
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-
-.puits-echelle {
-  position: absolute;
-  left: 38%;
-  right: 38%;
-  top: 25%;
-  bottom: 20%;
+  inset: 4px 0 0;
+  border-radius: 34px 34px 4px 4px;
   background:
-    repeating-linear-gradient(transparent 0 5px, #c48b4a 5px 7px),
-    linear-gradient(90deg, #9c6b35 0 2px, #1a1410 2px calc(100% - 2px), #9c6b35 calc(100% - 2px));
+    radial-gradient(circle at 22% 30%, #9a9a9a 0 7%, transparent 8%),
+    radial-gradient(circle at 75% 25%, #8a8a8a 0 9%, transparent 10%),
+    radial-gradient(circle at 85% 60%, #6c6c6c 0 8%, transparent 9%),
+    radial-gradient(circle at 15% 70%, #707070 0 9%, transparent 10%),
+    linear-gradient(#8b8b8b, #5f5f5f);
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.12),
+    inset -3px -4px 0 rgb(0 0 0 / 0.3);
 }
 
-.puits-margelle {
+/* L'ouverture : noire au fond, comme un tunnel qui s'enfonce. */
+.entree-trou {
   position: absolute;
-  left: 2%;
-  right: 2%;
+  left: 20px;
+  right: 20px;
+  bottom: 6px;
+  height: 34px;
+  border-radius: 14px 14px 0 0;
+  background: radial-gradient(ellipse at 50% 85%, #2a1d12 0 25%, #0b0806 70%);
+}
+
+/* Les poutres : deux montants et un linteau en bois. */
+.entree-poutres {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 6px;
+  height: 40px;
+  border: 4px solid #7a5028;
+  border-bottom: none;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 2px 0 #a8743d,
+    0 0 0 1px #3a2410;
+}
+
+/* La lanterne accrochée au linteau, qui vacille. */
+.entree-lanterne {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  width: 6px;
+  height: 8px;
+  margin-left: -3px;
+  border-radius: 2px;
+  background: #ffd36a;
+  box-shadow: 0 0 6px 2px rgb(255 190 80 / 0.8);
+  animation: lanterne 1.8s ease-in-out infinite;
+}
+
+/* Les rails qui sortent de la galerie. */
+.entree-rails {
+  position: absolute;
+  left: 8px;
+  right: 8px;
   bottom: 0;
-  height: 34%;
-  border-radius: 3px;
+  height: 6px;
   background:
-    repeating-linear-gradient(90deg, transparent 0 10px, rgb(0 0 0 / 0.25) 10px 11px),
-    linear-gradient(#a3a3a3, #6f6f6f);
-  border: 2px solid #3d3d3d;
+    repeating-linear-gradient(90deg, #6b4420 0 4px, transparent 4px 9px),
+    linear-gradient(transparent 0 1px, #9a9a9a 1px 2px, transparent 2px 4px, #9a9a9a 4px 5px, transparent 5px);
+}
+
+/* Un petit wagonnet chargé de minerai, devant l'entrée. */
+.entree-wagon {
+  position: absolute;
+  left: 2px;
+  bottom: 5px;
+  width: 16px;
+  height: 10px;
+  border-radius: 1px 1px 3px 3px;
+  background:
+    radial-gradient(circle at 30% 0, #f2c23a 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 0, #8fe8e0 0 2px, transparent 3px),
+    linear-gradient(#5f5f66, #3c3c42);
+  border: 1px solid #222;
+  box-shadow: 0 -3px 0 -1px #4a3a2a;
+}
+
+@keyframes lanterne {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px 2px rgb(255 190 80 / 0.8); }
+  50% { opacity: 0.8; box-shadow: 0 0 9px 3px rgb(255 170 60 / 0.6); }
 }
 
 /* La foreuse du village : une tour de forage jaune et noire. */
@@ -1026,10 +1081,66 @@ button.module-titre {
 
 .aide-clavier {
   margin: 0;
-  min-height: 2.6em; /* la même hauteur quel que soit le texte */
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--texte-doux);
   text-align: center;
+}
+
+/* Une touche du clavier, dessinée comme une petite touche. */
+kbd {
+  display: inline-block;
+  min-width: 1.7em;
+  padding: 1px 6px;
+  border: 1px solid var(--bordure);
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  background: var(--carte-claire);
+  color: var(--texte);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Le haut de la page : le titre, et le petit bouton des succès à droite. */
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.entete .titre {
+  margin: 0;
+}
+
+.bouton-succes {
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.bouton-succes:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.fenetre-succes {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.fenetre-succes h2 {
+  margin-top: 0;
+  color: var(--accent);
 }
 
 .bouton {
@@ -1437,21 +1548,21 @@ button.module-titre {
 /* ------------------------------------------------------------ Toasts */
 
 .toasts {
+  /* En bas à droite, loin des boutons d'action (qui sont sous la mine, à gauche). */
   position: fixed;
-  left: 50%;
+  right: 16px;
   bottom: 16px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
-  width: min(440px, calc(100vw - 32px));
+  width: min(360px, calc(100vw - 32px));
   pointer-events: none;
   z-index: 20;
 }
 
 .toast {
-  background: #0d0d11;
+  background: rgb(13 13 17 / 0.95);
   border: 2px solid var(--bordure);
   border-radius: 8px;
   padding: 8px 14px;
@@ -1580,6 +1691,25 @@ button.module-titre {
   .hud-petits {
     grid-column: 1 / -1;
     justify-content: center;
+  }
+}
+
+/* Sur téléphone, les notifications s'affichent en haut (en bas, elles cacheraient les boutons). */
+@media (max-width: 860px) {
+  .toasts {
+    top: 8px;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+}
+
+/* Sans clavier (écran tactile), le rappel des flèches ne sert à rien. */
+@media (hover: none) {
+  .aide-clavier {
+    display: none;
   }
 }
 

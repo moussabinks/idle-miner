@@ -1,6 +1,6 @@
 // L'arbre de prestige : trois branches de talents. À chaque prestige, on gagne
 // 1 point et on choisit sa récompense. Il s'ouvre tout seul après un prestige,
-// et on peut le rouvrir au puits du village (ou avec l'étoile du bandeau).
+// et on peut le rouvrir à l'entrée de la mine, au village (ou avec l'étoile du bandeau).
 
 import { useState } from 'react'
 import { aLeTalent, BRANCHES, choisirTalent, peutChoisirTalent, pointsDisponibles, TALENTS, type IdBranche, type IdTalent } from '../jeu/talents'

@@ -3,6 +3,7 @@
 
 import { BLOCS, type IdBloc } from '../jeu/donnees'
 import {
+  ascenseurEnMouvement,
   basculerChargement,
   basculerEnvoiAuto,
   bonusVente,
@@ -10,6 +11,7 @@ import {
   enMouvement,
   nbAEnvoyer,
   nbSurQuai,
+  secondesAvantArretAscenseur,
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action } from '../usePartie'
@@ -21,6 +23,7 @@ export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Act
   const avecAscenseur = ascenseur.niveau > 0
   const aEnvoyer = nbAEnvoyer(etat)
   const surLeQuai = nbSurQuai(etat)
+  const enVoyage = ascenseurEnMouvement(etat)
 
   return (
     <div className="inventaire">
@@ -57,11 +60,12 @@ export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Act
           {surLeQuai > 0 && <p className="discret">📦 {surLeQuai} objet(s) attendent sur le quai de l'ascenseur : ils partent en premier.</p>}
           <button
             className="bouton bouton-ascenseur"
-            disabled={aEnvoyer === 0 || ascenseur.envoiDemande || ascenseur.passager || enMouvement(etat)}
+            disabled={aEnvoyer === 0 || enVoyage || ascenseur.envoiDemande || ascenseur.passager || enMouvement(etat)}
             onClick={() => jouer(demanderEnvoi)}
           >
-            {ascenseur.envoiDemande
-              ? '🛗 L’ascenseur arrive…'
+            {/* Pendant que la cabine voyage, le bouton est grisé et compte les secondes. */}
+            {enVoyage
+              ? `🛗 Ascenseur ${ascenseur.retourAuFront ? 'de retour' : 'là'} dans ${Math.ceil(secondesAvantArretAscenseur(etat))} s`
               : aEnvoyer === 0
                 ? '🛗 Rien à envoyer'
                 : `🛗 Envoyer ${aEnvoyer} objet${aEnvoyer > 1 ? 's' : ''} à la surface`}

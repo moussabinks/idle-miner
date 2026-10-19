@@ -15,7 +15,7 @@ export type Stand = {
 }
 
 export const STANDS: Stand[] = [
-  { id: 'puits', nom: 'Puits', icone: null, description: "L'échelle et l'ascenseur qui descendent dans la mine (flèche ↓).", x: 1.5 },
+  { id: 'puits', nom: 'Mine', icone: null, description: "L'entrée de la mine : l'échelle et l'ascenseur pour descendre (flèche ↓).", x: 1.5 },
   { id: 'marche', nom: 'Marché', icone: 'marche', description: 'Vends tes blocs et minerais.', x: 4.5 },
   { id: 'forgeron', nom: 'Forgeron', icone: 'forgeron', description: 'Pioches et réparations.', x: 7.5 },
   { id: 'bazar', nom: 'Bazar', icone: 'bazar', description: "Sacs à dos et seaux d'eau.", x: 10.5 },

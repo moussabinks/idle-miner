@@ -116,10 +116,15 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
             >
               <span className="panneau-bois">{stand.nom}</span>
               {stand.id === 'puits' && (
-                <span className="puits" aria-hidden="true">
-                  <span className="puits-toit" />
-                  <span className="puits-echelle" />
-                  <span className="puits-margelle" />
+                // L'entrée de la mine : une galerie creusée dans un rocher, étayée de poutres,
+                // avec des rails, une lanterne et un wagonnet de minerai.
+                <span className="entree-mine" aria-hidden="true">
+                  <span className="entree-rocher" />
+                  <span className="entree-trou" />
+                  <span className="entree-poutres" />
+                  <span className="entree-lanterne" />
+                  <span className="entree-rails" />
+                  <span className="entree-wagon" />
                 </span>
               )}
               {stand.id === 'foreuse' && (

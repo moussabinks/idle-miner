@@ -14,6 +14,8 @@ import {
   appelerAscenseur,
   ascenseurDisponible,
   basculerVente,
+  secondesAvantArretAscenseur,
+  voyager,
   basculerChargement,
   demanderEnvoi,
   nbAEnvoyer,
@@ -319,7 +321,56 @@ describe('échelle et déplacements', () => {
   })
 })
 
+describe('quitter le front de taille', () => {
+  it('le mineur marche jusqu’à l’échelle avant de monter (pas de téléportation)', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    etat.colonneMineur = 5
+    voyager(etat, 0)
+    expect(etat.depart).not.toBeNull()
+    expect(etat.cible).toBe(etat.position) // il ne grimpe pas encore
+    avancerTemps(etat, 0.3) // 0,3 s = 2 cases
+    expect(etat.colonneMineur).toBe(3)
+    expect(etat.cible).toBe(etat.position)
+    avancerTemps(etat, 0.4) // il arrive au puits et commence à monter
+    expect(etat.colonneMineur).toBe(0)
+    expect(etat.depart).toBeNull()
+    expect(etat.cible).toBe(0)
+  })
+
+  it('il ne creuse pas pendant qu’il marche, et peut changer d’avis', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    coucheDe(etat, 'pierre')
+    etat.colonneMineur = 4
+    voyager(etat, 0)
+    expect(casserBloc(etat, toujours(0))).toEqual([])
+    deplacerMineur(etat, +1)
+    expect(etat.depart).toBeNull()
+  })
+
+  it('au bout du chemin, il prend l’ascenseur s’il est là', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    construireAscenseur(etat, 1)
+    etat.colonneMineur = 2
+    voyager(etat, 0)
+    avancerTemps(etat, 0.3)
+    expect(etat.ascenseur.passager).toBe(true)
+  })
+})
+
 describe('ascenseur', () => {
+  it('dit dans combien de temps il revient au front après avoir vendu', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 21) // front à 20 m
+    construireAscenseur(etat, 1) // 0,1 s par mètre
+    etat.inventaire = { fer: 2 }
+    expect(secondesAvantArretAscenseur(etat)).toBe(0)
+    demanderEnvoi(etat)
+    expect(secondesAvantArretAscenseur(etat)).toBeCloseTo((20 + 20) * 0.1)
+  })
+
   it('« Envoyer à la surface » : seulement les objets cochés, dans la limite de la cabine', () => {
     const etat = nouvellePartie()
     placerAuFront(etat, 20)

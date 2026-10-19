@@ -48,7 +48,7 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
 
       <div className="hud-case">
         <span className="hud-titre">
-          {enVille ? `Front à -${etat.profondeur} m` : auFront ? zone.nom : dansLaCabine ? "Dans l'ascenseur" : "Sur l'échelle"}
+          {enVille ? `Mine : -${etat.profondeur} m` : auFront ? zone.nom : dansLaCabine ? "Dans l'ascenseur" : "Sur l'échelle"}
         </span>
         <strong>
           {enVille ? '☀️ Village' : auFront ? `📏 -${etat.profondeur} m` : `${dansLaCabine ? '🛗' : '🪜'} -${Math.round(etat.position)} m`}

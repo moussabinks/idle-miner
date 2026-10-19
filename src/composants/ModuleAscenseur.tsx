@@ -15,6 +15,8 @@ import {
   positionFront,
   prendreAscenseur,
   prochainNiveauAscenseur,
+  secondesAvantArretAscenseur,
+  voyager,
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action } from '../usePartie'
@@ -23,20 +25,54 @@ import { PrixCout } from './PrixCout'
 // Ouvert ou replié : gardé ici pour qu'il reste comme on l'a laissé quand on remonte puis redescend.
 let ouvertMemorise = false
 
-// Où en est la cabine, en quelques mots.
+// Où en est la cabine, en quelques mots, avec le temps qu'il lui reste.
 function etatCabine(etat: EtatJeu): string {
   const ascenseur = etat.ascenseur
   if (ascenseur.niveau === 0) return 'pas encore construit'
-  if (ascenseur.passager) return ascenseur.cible === 0 ? 'tu montes au village…' : 'tu descends au front…'
-  if (ascenseurEnMouvement(etat)) return ascenseur.cible < ascenseur.position ? 'monte au marché…' : 'descend…'
+  const reste = `${Math.ceil(secondesAvantArretAscenseur(etat))} s`
+  if (ascenseur.passager) return ascenseur.cible === 0 ? `tu montes au village… ${reste}` : `tu descends dans la mine… ${reste}`
+  if (ascenseurEnMouvement(etat)) {
+    if (ascenseur.retourAuFront) return `au marché · retour dans ${reste}`
+    if (ascenseur.cible === etat.position) return `arrive dans ${reste}`
+    return `en route… ${reste}`
+  }
   if (ascenseurDisponible(etat)) return 'prête, à ton niveau'
   return ascenseur.position === 0 ? 'attend au village' : `attend à -${Math.round(ascenseur.position)} m`
+}
+
+// Construire ou améliorer l'ascenseur : dans le module de la mine, et aussi au village.
+// « details » : afficher aussi le niveau et où en est la cabine (le module les montre déjà dans son titre).
+export function AmeliorationAscenseur({ etat, jouer, details = true }: { etat: EtatJeu; jouer: (action: Action) => void; details?: boolean }) {
+  const niveau = niveauAscenseur(etat)
+  const prochain = prochainNiveauAscenseur(etat)
+  return (
+    <>
+      {details && niveau && (
+        <span className="discret">
+          Niveau {niveau.niveau} : {niveau.capacite} objets par voyage · {etatCabine(etat)}
+        </span>
+      )}
+      {prochain ? (
+        <div className="module-ligne">
+          <PrixCout etat={etat} cout={prochain.cout} />
+          <button
+            className="bouton bouton-petit bouton-ameliorer"
+            disabled={!peutAmeliorerAscenseur(etat) || ascenseurEnMouvement(etat)}
+            onClick={() => jouer(ameliorerAscenseur)}
+          >
+            {niveau ? `Améliorer (niv. ${prochain.niveau}, ${prochain.capacite} places)` : 'Construire'}
+          </button>
+        </div>
+      ) : (
+        <span className="ok">Niveau maximum !</span>
+      )}
+    </>
+  )
 }
 
 export function ModuleAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
   const [ouvert, setOuvert] = useState(ouvertMemorise)
   const niveau = niveauAscenseur(etat)
-  const prochain = prochainNiveauAscenseur(etat)
   const ici = ascenseurDisponible(etat)
   const front = positionFront(etat)
 
@@ -45,9 +81,10 @@ export function ModuleAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action
     setOuvert(valeur)
   }
 
-  // Monter dans la cabine : le module se replie pour laisser voir le trajet.
-  function voyager(destination: number) {
-    jouer((e) => prendreAscenseur(e, destination))
+  // Monter dans la cabine (le mineur marche d'abord jusqu'au puits) :
+  // le module se replie pour laisser voir le trajet.
+  function partir(destination: number) {
+    jouer((e) => (destination === 0 ? voyager(e, 0) : prendreAscenseur(e, destination)))
     changerOuvert(false)
   }
 
@@ -69,29 +106,16 @@ export function ModuleAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action
                   Appeler
                 </button>
               )}
-              <button className="bouton bouton-petit bouton-voyage" disabled={!ici || etat.position === 0} onClick={() => voyager(0)}>
+              <button className="bouton bouton-petit bouton-voyage" disabled={!ici || etat.position === 0} onClick={() => partir(0)}>
                 ⏫ Monter avec
               </button>
-              <button className="bouton bouton-petit bouton-voyage" disabled={!ici || etat.position >= front} onClick={() => voyager(front)}>
+              <button className="bouton bouton-petit bouton-voyage" disabled={!ici || etat.position >= front} onClick={() => partir(front)}>
                 ⏬ Descendre avec
               </button>
             </div>
           )}
 
-          {prochain ? (
-            <div className="module-ligne">
-              <PrixCout etat={etat} cout={prochain.cout} />
-              <button
-                className="bouton bouton-petit bouton-ameliorer"
-                disabled={!peutAmeliorerAscenseur(etat) || ascenseurEnMouvement(etat)}
-                onClick={() => jouer(ameliorerAscenseur)}
-              >
-                {niveau ? `Améliorer (niv. ${prochain.niveau}, ${prochain.capacite} places)` : 'Construire'}
-              </button>
-            </div>
-          ) : (
-            <span className="ok">Niveau maximum !</span>
-          )}
+          <AmeliorationAscenseur etat={etat} jouer={jouer} details={false} />
         </>
       )}
     </div>

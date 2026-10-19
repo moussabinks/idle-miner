@@ -1,16 +1,18 @@
 // La page du jeu : elle assemble les composants, relie les boutons et le clavier aux actions.
 //
 // Clavier :
-//   au village : ← → pour marcher le long du chemin (garder la touche), ↓ pour descendre dans le puits ;
+//   au village : ← → pour marcher le long du chemin (garder la touche), ↓ pour descendre dans la mine ;
 //   sur l'échelle : ↑ pour monter, ↓ pour descendre (on avance tant que la touche est appuyée) ;
 //   au front de taille : ← → pour se déplacer, ↓ ou Espace pour creuser, ↑ pour remonter.
+// Sur l'écran, il n'y a pas de flèches : les boutons Village et Mine font les trajets.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { reglerLieu } from './ambiance'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { Hud } from './composants/Hud'
 import { IconePixel } from './composants/IconePixel'
 import { Inventaire } from './composants/Inventaire'
+import { AmeliorationAscenseur } from './composants/ModuleAscenseur'
 import {
   PanneauBazar,
   PanneauEnchanter,
@@ -23,21 +25,17 @@ import { STANDS, X_PUITS, standProche } from './composants/stands'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
 import { VueMonde } from './composants/VueMonde'
-import { LARGEUR_MINE } from './jeu/donnees'
 import {
   aLaSurface,
-  allerA,
   appelerAscenseur,
   arreterSurEchelle,
-  ascenseurDisponible,
   ascenseurEnMouvement,
   auFond,
   deplacerMineur,
   dureeAscenseur,
   dureeEchelle,
   positionFront,
-  prendreAscenseur,
-  type EtatJeu,
+  voyager,
 } from './jeu/mineur'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
@@ -46,15 +44,10 @@ import { usePartie } from './usePartie'
 
 type OngletMine = 'sac' | 'pioches'
 
-// Aller au village (0) ou au front de taille : en ascenseur s'il est là, sinon à l'échelle.
-function voyagerVers(etat: EtatJeu, destination: number): string[] {
-  if (ascenseurDisponible(etat)) return prendreAscenseur(etat, destination)
-  return allerA(etat, destination)
-}
-
 function App() {
   const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, jouer, creuser, arreter, recommencer, passerPrestige } = usePartie()
   const [arbreOuvert, setArbreOuvert] = useState(false)
+  const [succesOuverts, setSuccesOuverts] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
   const [versLaGauche, setVersLaGauche] = useState(false)
 
@@ -81,42 +74,29 @@ function App() {
 
   // --- Les actions des boutons et du clavier -------------------------------
 
-  // Commencer à monter (sens = -1) ou à descendre (sens = +1) l'échelle.
-  // On avance jusqu'à ce que la touche (ou le bouton) soit relâchée.
+  // Commencer à monter (sens = -1) ou à descendre (sens = +1) l'échelle, au clavier.
+  // On avance jusqu'à ce que la touche soit relâchée. Depuis le front de taille, le
+  // mineur marche d'abord jusqu'à l'échelle.
   function commencerEchelle(sens: number) {
     arreter()
-    jouer((e) => allerA(e, sens < 0 ? 0 : positionFront(e)))
+    jouer((e) => voyager(e, sens < 0 ? 0 : positionFront(e), true))
   }
 
   function finirEchelle() {
     jouer(arreterSurEchelle)
   }
 
-  // Les boutons « à maintenir » (▲ ▼, et ◀ ▶ au village).
-  const boutonAppuye = useRef<'echelle' | 'village' | null>(null)
-  function appuiEchelle(sens: number) {
-    boutonAppuye.current = 'echelle'
-    commencerEchelle(sens)
-  }
-  function appuiMarche(sens: number) {
-    boutonAppuye.current = 'village'
-    village.commencer(sens)
-  }
-  function relacheBouton() {
-    if (boutonAppuye.current === 'echelle') finirEchelle()
-    if (boutonAppuye.current === 'village') village.arreter()
-    boutonAppuye.current = null
-  }
-
+  // Remonter au village : le mineur marche jusqu'au puits, puis prend l'ascenseur
+  // s'il est là, sinon l'échelle.
   function allerAuVillage() {
     arreter()
-    jouer((e) => voyagerVers(e, 0))
+    jouer((e) => voyager(e, 0))
   }
 
-  // Depuis le village, on marche d'abord jusqu'au puits, puis on descend.
-  function allerAuFront() {
-    if (enVille) village.allerVers(X_PUITS, () => jouer((e) => voyagerVers(e, positionFront(e))))
-    else jouer((e) => voyagerVers(e, positionFront(e)))
+  // Descendre dans la mine : depuis le village, on marche d'abord jusqu'à l'entrée.
+  function allerALaMine() {
+    if (enVille) village.allerVers(X_PUITS, () => jouer((e) => voyager(e, positionFront(e))))
+    else jouer((e) => voyager(e, positionFront(e)))
   }
 
   function deplacerAuFront(sens: number) {
@@ -139,7 +119,7 @@ function App() {
         if (touche === 'ArrowRight' && !repetition) village.commencer(+1)
         if (touche === 'ArrowDown' && !repetition) {
           if (prochePuits) commencerEchelle(+1)
-          else allerAuFront()
+          else allerALaMine()
         }
       } else if (auFront) {
         if (touche === 'ArrowLeft') deplacerAuFront(-1)
@@ -248,20 +228,26 @@ function App() {
             )}
 
             <p>
-              Ton front de taille est à <strong>-{etat.profondeur} m</strong>.{' '}
+              Ta mine descend à <strong>-{etat.profondeur} m</strong>.{' '}
               {cabineAuVillage
                 ? `L'ascenseur t'attend : descente en ${Math.ceil(dureeAscenseur(etat))} s.`
                 : `À l'échelle, il faut ${Math.ceil(dureeEchelle(etat))} s pour y descendre.`}
             </p>
             <div className="boutons">
-              <button className="bouton bouton-voyage" onClick={allerAuFront}>
-                ⏬ Descendre au front {cabineAuVillage ? 'en ascenseur' : "à l'échelle"}
+              <button className="bouton bouton-voyage" onClick={allerALaMine}>
+                ⏬ Descendre dans la mine {cabineAuVillage ? 'en ascenseur' : "à l'échelle"}
               </button>
               {etat.ascenseur.niveau > 0 && !cabineAuVillage && (
                 <button className="bouton bouton-ascenseur" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
                   🛗 Appeler l'ascenseur
                 </button>
               )}
+            </div>
+
+            {/* L'ascenseur se construit et s'améliore aussi d'ici, sans descendre. */}
+            <div className="ligne-achat">
+              <strong>🛗 Ascenseur</strong>
+              <AmeliorationAscenseur etat={etat} jouer={jouer} />
             </div>
 
           </div>
@@ -294,7 +280,13 @@ function App() {
 
   return (
     <div className="jeu">
-      <h1 className="titre">⛏️ Idle Miner</h1>
+      <header className="entete">
+        <h1 className="titre">⛏️ Idle Miner</h1>
+        {/* Les succès : un petit bouton discret, ils s'ouvrent dans une fenêtre. */}
+        <button className="bouton-succes" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
+          🏅 {etat.succes.length}/{SUCCES.length}
+        </button>
+      </header>
       <Hud etat={etat} nbVentes={nbVentes} onOuvrirArbre={() => setArbreOuvert(true)} />
 
       <main className="plateau">
@@ -313,52 +305,9 @@ function App() {
             trouvailles={trouvailles}
           />
 
-          {/* La barre de boutons : toujours les mêmes 8 boutons, toujours à la même place.
+          {/* La barre de boutons : toujours les mêmes 4 boutons, toujours à la même place.
               Ceux qui ne servent pas à l'endroit où l'on est sont simplement grisés. */}
           <div className="actions">
-            {/* ◀ ▶ : au village, on marche tant qu'on appuie ; au front, on change de case. */}
-            <button
-              className="bouton"
-              onPointerDown={() => (enVille ? appuiMarche(-1) : deplacerAuFront(-1))}
-              onPointerUp={relacheBouton}
-              onPointerLeave={relacheBouton}
-              disabled={!enVille && (!auFront || etat.colonneMineur === 0)}
-              aria-label="Aller à gauche"
-            >
-              ◀
-            </button>
-            {/* ▲ ▼ sont « à maintenir » : on grimpe tant qu'on appuie (pratique sur mobile). */}
-            <button
-              className="bouton"
-              onPointerDown={() => appuiEchelle(-1)}
-              onPointerUp={relacheBouton}
-              onPointerLeave={relacheBouton}
-              disabled={enVille || dansLaCabine}
-              aria-label="Monter l'échelle (maintenir)"
-            >
-              ▲
-            </button>
-            <button
-              className="bouton"
-              onPointerDown={() => (enVille && !prochePuits ? allerAuFront() : appuiEchelle(+1))}
-              onPointerUp={relacheBouton}
-              onPointerLeave={relacheBouton}
-              disabled={auFront || dansLaCabine}
-              aria-label="Descendre l'échelle (maintenir)"
-            >
-              ▼
-            </button>
-            <button
-              className="bouton"
-              onPointerDown={() => (enVille ? appuiMarche(+1) : deplacerAuFront(+1))}
-              onPointerUp={relacheBouton}
-              onPointerLeave={relacheBouton}
-              disabled={!enVille && (!auFront || etat.colonneMineur === LARGEUR_MINE - 1)}
-              aria-label="Aller à droite"
-            >
-              ▶
-            </button>
-
             {/* Le même emplacement sert à creuser ou à arrêter. */}
             {enMinage ? (
               <button className="bouton bouton-stop" onClick={arreter}>
@@ -375,27 +324,24 @@ function App() {
             <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
               <span className="emoji-bouton">⏫ </span>Village
             </button>
-            <button className="bouton bouton-voyage" onClick={allerAuFront} disabled={auFront || dansLaCabine}>
-              <span className="emoji-bouton">⏬ </span>Front
+            <button className="bouton bouton-voyage" onClick={allerALaMine} disabled={auFront || dansLaCabine}>
+              <span className="emoji-bouton">⏬ </span>Mine
             </button>
           </div>
+          {/* Un petit rappel : on se déplace avec les flèches du clavier. */}
           <p className="aide-clavier">
-            {enVille
-              ? '⌨️ ← → pour marcher (garde la touche appuyée) · ↓ pour descendre dans le puits'
-              : auFront
-                ? '⌨️ ← → pour te déplacer · ↓ ou Espace pour creuser · ↑ pour remonter · Village et Front prennent l’ascenseur s’il est là'
-                : '⌨️ ↑ ↓ pour monter ou descendre l’échelle (garde la touche appuyée)'}
+            <kbd>←</kbd> <kbd>→</kbd> {enVille ? 'pour marcher dans le village' : 'pour te déplacer dans la mine'}
+            {auFront && (
+              <>
+                {' '}
+                · <kbd>Espace</kbd> pour creuser
+              </>
+            )}
           </p>
         </div>
 
         <div className="colonne-panneaux">
           {panneau}
-          <details className="carte succes-repliable">
-            <summary>
-              🏅 Succès {etat.succes.length}/{SUCCES.length}
-            </summary>
-            <PanneauSucces etat={etat} />
-          </details>
         </div>
       </main>
 
@@ -406,6 +352,19 @@ function App() {
         </button>
       </footer>
 
+      {succesOuverts && (
+        <div className="voile" role="dialog" aria-modal="true" aria-label="Succès" onClick={() => setSuccesOuverts(false)}>
+          <div className="carte fenetre-succes" onClick={(e) => e.stopPropagation()}>
+            <h2>🏅 Succès</h2>
+            <PanneauSucces etat={etat} />
+            <div className="boutons boutons-centre">
+              <button className="bouton bouton-neutre" onClick={() => setSuccesOuverts(false)}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {arbreOuvert && <ArbrePrestige etat={etat} jouer={jouer} onFermer={() => setArbreOuvert(false)} />}
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
       <Toasts toasts={toasts} />

@@ -24,6 +24,7 @@ import {
   PROFONDEUR_BEDROCK,
   REPARATION_PAR_UNITE,
   SACS,
+  SECONDES_PAR_CASE,
   SECONDES_PAR_METRE_ECHELLE,
   VITESSE_MAINS_NUES,
   dureeCasse,
@@ -86,6 +87,14 @@ export type Foreuse = {
   rechargeAuto: boolean // la foreuse brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
 }
 
+// Pour quitter le front de taille, le mineur marche d'abord jusqu'au puits (à gauche),
+// puis prend l'ascenseur s'il est là, sinon l'échelle.
+export type Depart = {
+  destination: number // où il va ensuite (0 = village)
+  parEchelle: boolean // true = il prend l'échelle même si l'ascenseur est là
+  temps: number // secondes passées sur la case en cours
+}
+
 export type EtatJeu = {
   version: number
   // Position du joueur sur l'échelle, en mètres : 0 = au village, profondeur - 1 = au front de taille.
@@ -113,10 +122,11 @@ export type EtatJeu = {
   stats: Statistiques
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
+  depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 7
+export const VERSION_ETAT = 8
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -199,6 +209,7 @@ export function creerPartie(
     },
     victoire: false,
     talents: [...talents],
+    depart: null,
     peculeRecu: false,
   }
   appliquerTalentsDeDepart(etat)
@@ -367,7 +378,7 @@ export function nbDrops(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): numb
 export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
   const index = indexBlocActuel(etat)
-  if (!auFond(etat) || index === -1) return messages
+  if (!auFond(etat) || index === -1 || etat.depart !== null) return messages
   const bloc = etat.coucheActuelle[index] as IdBloc
   etat.colonneMineur = index // le mineur se place au-dessus du bloc
 
@@ -481,7 +492,7 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   if (suivante >= PROFONDEUR_BEDROCK) {
     if (!etat.victoire) {
       etat.victoire = true
-      messages.push('🏆 Tu as atteint la bedrock ! Continue de creuser ici, ou passe prestige au puits.')
+      messages.push('🏆 Tu as atteint la bedrock ! Continue de creuser ici, ou passe prestige à l’entrée de la mine (village).')
     }
     etat.enGalerie = true
     etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire)
@@ -575,6 +586,7 @@ export function vendre(etat: EtatJeu): string[] {
 // Déplace le mineur d'une case au front de taille (sens = -1 pour la gauche, +1 pour la droite).
 export function deplacerMineur(etat: EtatJeu, sens: number): string[] {
   if (!auFond(etat)) return []
+  etat.depart = null // on change d'avis : il ne part plus
   etat.colonneMineur = Math.min(LARGEUR_MINE - 1, Math.max(0, etat.colonneMineur + sens))
   return []
 }
@@ -587,10 +599,46 @@ export function allerA(etat: EtatJeu, position: number): string[] {
   return []
 }
 
+// Aller au village (0) ou au front de taille. Depuis le front, le mineur marche d'abord
+// jusqu'au puits ; ensuite il prend l'ascenseur s'il est là (sauf parEchelle), sinon l'échelle.
+export function voyager(etat: EtatJeu, destination: number, parEchelle = false): string[] {
+  if (etat.ascenseur.passager) return []
+  const arrivee = Math.min(positionFront(etat), Math.max(0, Math.round(destination)))
+  if (auFond(etat) && etat.colonneMineur > 0 && arrivee < etat.position) {
+    etat.depart = { destination: arrivee, parEchelle, temps: 0 }
+    return []
+  }
+  etat.depart = null
+  if (!parEchelle && ascenseurDisponible(etat)) {
+    const messages = prendreAscenseur(etat, arrivee)
+    if (messages.length > 0) return messages
+  }
+  return allerA(etat, arrivee)
+}
+
+// Fait marcher le mineur vers le puits, case par case, puis le fait partir.
+export function avancerMarche(etat: EtatJeu, secondes: number): string[] {
+  const depart = etat.depart
+  if (depart === null) return []
+  if (!auFond(etat)) {
+    etat.depart = null
+    return []
+  }
+  depart.temps += secondes
+  while (depart.temps >= SECONDES_PAR_CASE && etat.colonneMineur > 0) {
+    depart.temps -= SECONDES_PAR_CASE
+    etat.colonneMineur -= 1
+  }
+  if (etat.colonneMineur > 0) return []
+  etat.depart = null
+  return voyager(etat, depart.destination, depart.parEchelle)
+}
+
 // Arrête le joueur sur le prochain barreau (quand on relâche la flèche).
 // S'il est pile sur un barreau, il avance quand même d'un barreau : un appui
 // très court fait donc toujours bouger d'un mètre.
 export function arreterSurEchelle(etat: EtatJeu): string[] {
+  etat.depart = null // s'il marchait encore vers l'échelle, il s'arrête là
   const p = etat.position
   if (etat.cible < p) etat.cible = Math.max(etat.cible, Number.isInteger(p) ? p - 1 : Math.floor(p))
   if (etat.cible > p) etat.cible = Math.min(etat.cible, Number.isInteger(p) ? p + 1 : Math.ceil(p))
@@ -782,6 +830,18 @@ export function prendreAscenseur(etat: EtatJeu, destination: number): string[] {
 export function dureeAscenseur(etat: EtatJeu): number {
   const niveau = niveauAscenseur(etat)
   return niveau === null ? 0 : positionFront(etat) * niveau.secondesParMetre
+}
+
+// Dans combien de secondes la cabine aura fini son voyage (retour au front compris,
+// quand elle revient toute seule après avoir vendu). 0 si elle est arrêtée.
+export function secondesAvantArretAscenseur(etat: EtatJeu): number {
+  const niveau = niveauAscenseur(etat)
+  const ascenseur = etat.ascenseur
+  if (niveau === null || !ascenseurEnMouvement(etat)) return 0
+  const metres = ascenseur.retourAuFront
+    ? ascenseur.position + positionFront(etat) // elle monte au village, puis redescend au front
+    : Math.abs(ascenseur.cible - ascenseur.position)
+  return metres * niveau.secondesParMetre
 }
 
 // Fait avancer la cabine (et le mineur s'il est dedans).

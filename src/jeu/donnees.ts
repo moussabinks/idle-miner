@@ -148,6 +148,9 @@ export const COUCHES_VISIBLES_DESSOUS = 4
 // Temps pour monter (ou descendre) un mètre à l'échelle, en secondes.
 export const SECONDES_PAR_METRE_ECHELLE = 0.15
 
+// Temps pour marcher d'une case au front de taille (jusqu'à l'échelle, par exemple).
+export const SECONDES_PAR_CASE = 0.12
+
 // Le prix d'une amélioration : surtout de l'argent, et un peu de minerais.
 // (Choix du 19/10 : l'économie repose sur l'argent, les minerais servent d'appoint.)
 export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }

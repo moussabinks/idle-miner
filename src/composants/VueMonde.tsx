@@ -337,7 +337,12 @@ export function VueMonde({
               <div key={colonne} className="case vide">
                 {auFront && colonne === colonneAffichee && (
                   <div ref={joueurFrontRef} className="porte-joueur">
-                    <Personnage couleurPioche={couleurPioche} action={enMinage ? 'creuse' : 'repos'} versLaGauche={versLaGauche} />
+                    {/* S'il part vers le puits, il marche vers la gauche, case par case. */}
+                    <Personnage
+                      couleurPioche={couleurPioche}
+                      action={etat.depart ? 'marche' : enMinage ? 'creuse' : 'repos'}
+                      versLaGauche={etat.depart ? true : versLaGauche}
+                    />
                   </div>
                 )}
                 {eclats
@@ -359,7 +364,7 @@ export function VueMonde({
       </div>
 
       {etat.victoire && !auVillage && (
-        <p className="bandeau-galerie">🏆 Bedrock atteinte : creuse encore ici, ou passe prestige au puits du village.</p>
+        <p className="bandeau-galerie">🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l’entrée de la mine (village).</p>
       )}
       {etat.enGalerie && !etat.victoire && !auVillage && <p className="bandeau-galerie">↔️ Galerie : ta pioche ne descend pas plus bas</p>}
 
