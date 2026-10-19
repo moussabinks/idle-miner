@@ -40,8 +40,8 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Tes mineurs creusent tout seuls, remontent vendre leur récolte (en ascenseur s'il est construit, sinon à l'échelle) et s'occupent
-        de leur pioche. Ils gardent {Math.round(partSalaire(etat) * 100)} % de leurs ventes comme salaire : le reste est pour toi. Ils
+        Tes mineurs creusent tout seuls. Quand leur sac est plein, ils remontent (en ascenseur s'il est construit, sinon à l'échelle), vendent
+        leur récolte au marché puis redescendent : pendant ce temps-là, ils ne creusent pas. Ils s'occupent de leur équipement. Ils gardent {Math.round(partSalaire(etat) * 100)} % de leurs ventes comme salaire : le reste est pour toi. Ils
         travaillent même quand le jeu est fermé, et restent après un prestige.
       </p>
 
@@ -73,19 +73,19 @@ export function PanneauEmployes({ etat, jouer }: { etat: EtatJeu; jouer: (action
               <span className="badge">Pioche en {NIVEAUX_EMPLOYE[employe.niveau].nom}</span>
             </div>
             <span className="discret">
-              {activiteEmploye(employe)} · {vitesseEmploye(etat, employe).toLocaleString('fr-FR')} bloc/s · t'a rapporté{' '}
+              {activiteEmploye(etat, employe)} · {vitesseEmploye(etat, employe).toLocaleString('fr-FR')} bloc/s · t'a rapporté{' '}
               {employe.gagne.toLocaleString('fr-FR')} $
             </span>
             <Barre
               valeur={nbDansSacEmploye(employe)}
-              max={tailleSacEmploye(etat)}
-              texte={`Sac : ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat)}`}
+              max={tailleSacEmploye(etat, employe)}
+              texte={`Sac : ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat, employe)}`}
               couleur="or"
             />
             {prixPioche !== null && prochaine && (
               <div className="boutons">
                 <span className="discret">
-                  Pioche en {prochaine.nom} : plus rapide, jusqu'à -{prochaine.profMax} m
+                  Pioche en {prochaine.nom} : plus rapide, jusqu'à -{prochaine.profMax} m, et sac de {prochaine.sac * (tailleSacEmploye(etat, employe) / NIVEAUX_EMPLOYE[employe.niveau].sac)} places
                 </span>
                 <button
                   className="bouton bouton-petit bouton-ameliorer"

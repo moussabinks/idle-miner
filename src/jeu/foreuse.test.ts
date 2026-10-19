@@ -8,6 +8,8 @@ import {
   maxForeuses,
   vitesseForage,
   basculerChariot,
+  cocherToutChariot,
+  selectionChariot,
   basculerRechargeAuto,
   capaciteChariot,
   foreuseEnMarche,
@@ -90,6 +92,15 @@ describe('foreuse', () => {
     viderChariotDansSac(etat)
     expect(etat.inventaire).toEqual({ diamant: 2 })
     expect(etat.foreuse.chariot).toEqual({})
+  })
+
+  it('se coche ou se décoche entièrement d’un coup', () => {
+    const etat = partiePrestige1()
+    etat.foreuse.chariot = { pierre: 40, fer: 3, diamant: 2 }
+    cocherToutChariot(etat, false)
+    expect(selectionChariot(etat)).toEqual({})
+    cocherToutChariot(etat, true)
+    expect(selectionChariot(etat)).toEqual({ pierre: 40, fer: 3, diamant: 2 })
   })
 
   it('se recharge toute seule avec son charbon (à partir du niveau 3 de forage)', () => {

@@ -158,6 +158,12 @@ export function basculerChariot(etat: EtatJeu, bloc: IdBloc): string[] {
   return []
 }
 
+// Coche (ou décoche) d'un coup tous les objets du chariot.
+export function cocherToutChariot(etat: EtatJeu, coche: boolean): string[] {
+  etat.foreuse.nonCoches = coche ? [] : (Object.keys(etat.foreuse.chariot) as IdBloc[])
+  return []
+}
+
 // Active ou coupe la recharge automatique au charbon (à partir du niveau 3 de forage).
 export function rechargeAutoDisponible(etat: EtatJeu): boolean {
   return etat.foreuse.niveauVitesse >= NIVEAU_RECHARGE_AUTO

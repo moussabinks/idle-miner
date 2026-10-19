@@ -95,10 +95,10 @@ export type Employe = {
   nom: string
   niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
   profondeur: number // la profondeur de sa galerie
-  etape: 'creuse' | 'monte' | 'descend'
+  etape: 'creuse' | 'monte' | 'vend' | 'descend'
   position: number // où il est pendant ses trajets (0 = au village)
   sac: Inventaire
-  progression: number // fraction du prochain bloc
+  progression: number // fraction du prochain bloc (en creusant), ou secondes passées au marché (en vendant)
   blocsCasses: number
   gagne: number // ce qu'il t'a rapporté (après son salaire)
 }
@@ -439,11 +439,15 @@ export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
 // Minage
 // ---------------------------------------------------------------------------
 
-// Nombre d'objets obtenus en cassant un bloc (enchantement Fortune sur les minerais).
+// La chance de doubler un minerai avec Fortune : 20 % par niveau (Fortune III : 60 %).
+export const CHANCE_FORTUNE_PAR_NIVEAU = 0.2
+
+// Nombre d'objets obtenus en cassant un bloc (enchantement Fortune sur les minerais) :
+// 1, ou 2 si la chance de Fortune tombe.
 export function nbDrops(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): number {
   const fortune = etat.enchantements.fortune
   if (!BLOCS[bloc].minerai || fortune === 0) return 1
-  return 1 + Math.max(0, entierEntre(aleatoire, 0, fortune + 1) - 1)
+  return aleatoire() < fortune * CHANCE_FORTUNE_PAR_NIVEAU ? 2 : 1
 }
 
 // Casse le prochain bloc de la couche en cours.

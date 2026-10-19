@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE } from './donnees'
-import { ameliorerEmploye, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
+import { DUREE_MIN_TRAJET_EMPLOYE, NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, SECONDES_VENTE_EMPLOYE } from './donnees'
+import { activiteEmploye, ameliorerEmploye, avancerEmployes, embaucher, maxEmployes, nbDansSacEmploye, prixEmbauche, tailleSacEmploye } from './employes'
 import { creerPartie, prestige, type EtatJeu } from './mineur'
 import { choisirTalent } from './talents'
 import { avancerTemps } from './temps'
@@ -42,18 +42,55 @@ describe('mineurs employés', () => {
     expect(mineur.profondeur).toBeGreaterThan(2)
     expect(etat.argent).toBeGreaterThan(0)
     expect(etat.argent).toBe(mineur.gagne)
-    expect(nbDansSacEmploye(mineur)).toBeLessThanOrEqual(tailleSacEmploye(etat))
+    expect(nbDansSacEmploye(mineur)).toBeLessThanOrEqual(tailleSacEmploye(etat, mineur))
   })
 
   it('vont plus vite avec l’ascenseur qu’à l’échelle', () => {
     const aLechelle = partie(2)
     embaucher(aLechelle)
-    aLechelle.employes[0].profondeur = 28
+    // Assez profond pour que le trajet dure plus que le minimum, même en ascenseur.
+    aLechelle.employes[0].niveau = 2
+    aLechelle.employes[0].profondeur = 80
     const enAscenseur = structuredClone(aLechelle)
     enAscenseur.ascenseur.niveau = 4
     avancerTemps(aLechelle, 1800, aleatoireAvecGraine(3))
     avancerTemps(enAscenseur, 1800, aleatoireAvecGraine(3))
     expect(enAscenseur.employes[0].blocsCasses).toBeGreaterThan(aLechelle.employes[0].blocsCasses)
+  })
+
+  it('prennent le temps de remonter, de vendre puis de redescendre', () => {
+    const etat = partie(2, PRIX_EMBAUCHE[0])
+    embaucher(etat)
+    const mineur = etat.employes[0]
+    // Sac plein, au fond de sa galerie à -3 m (tout près de la surface).
+    mineur.profondeur = 3
+    mineur.etape = 'creuse'
+    mineur.sac = { pierre: tailleSacEmploye(etat, mineur) }
+    avancerEmployes(etat, 0.01, aleatoireAvecGraine(1))
+    expect(mineur.etape).toBe('monte')
+    // Même tout près, le trajet dure au moins quelques secondes...
+    avancerEmployes(etat, DUREE_MIN_TRAJET_EMPLOYE - 0.5, aleatoireAvecGraine(1))
+    expect(mineur.etape).toBe('monte')
+    expect(etat.argent).toBe(0)
+    // ... puis il vend au marché, ce qui prend aussi du temps.
+    avancerEmployes(etat, 1, aleatoireAvecGraine(1))
+    expect(mineur.etape).toBe('vend')
+    expect(activiteEmploye(etat, mineur)).toContain('vend')
+    expect(etat.argent).toBe(0)
+    avancerEmployes(etat, SECONDES_VENTE_EMPLOYE, aleatoireAvecGraine(1))
+    expect(mineur.etape).toBe('descend')
+    expect(etat.argent).toBeGreaterThan(0)
+    expect(mineur.sac).toEqual({})
+  })
+
+  it('ont un plus grand sac à chaque amélioration', () => {
+    const etat = partie(2)
+    embaucher(etat)
+    const mineur = etat.employes[0]
+    const tailles = [tailleSacEmploye(etat, mineur)]
+    while (ameliorerEmploye(etat, 0).length > 0) tailles.push(tailleSacEmploye(etat, mineur))
+    expect(tailles).toEqual(NIVEAUX_EMPLOYE.map((n) => n.sac))
+    expect(tailles[tailles.length - 1]).toBeGreaterThan(tailles[0])
   })
 
   it('ne descendent pas plus bas que leur pioche, et s’améliorent', () => {
@@ -83,6 +120,7 @@ describe('mineurs employés', () => {
     choisirTalent(etat, 'salaireReduit')
     choisirTalent(etat, 'recrue')
     expect(maxEmployes(etat)).toBe(5)
-    expect(tailleSacEmploye(etat)).toBe(64)
+    embaucher(etat)
+    expect(tailleSacEmploye(etat, etat.employes[0])).toBe(2 * NIVEAUX_EMPLOYE[0].sac)
   })
 })

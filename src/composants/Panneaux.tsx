@@ -33,6 +33,7 @@ import {
   prochainNiveauForage,
   acheterForeuse,
   basculerChariot,
+  cocherToutChariot,
   maxForeuses,
   prixProchaineForeuse,
   secondesDeCharbon,
@@ -118,13 +119,29 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
     if ((valeur === 0) !== garde) jouer((e) => reglerVente(e, bloc, valeur !== 0))
   }
 
+  // Toutes les jauges au maximum : plus aucun objet n'est gardé.
+  function toutSelectionner() {
+    setChoix({})
+    jouer((e) => {
+      for (const [bloc] of piles) reglerVente(e, bloc, true)
+      return []
+    })
+  }
+
   return (
     <div className="liste-cartes">
       <p className="discret">Choisis combien vendre de chaque objet (garde-en pour une pioche, un enchantement, l'ascenseur…).</p>
       {piles.length === 0 ? (
         <p className="discret">Ton sac est vide. Va creuser !</p>
       ) : (
-        <Jauges piles={piles} choix={choix} gardes={etat.nonAVendre} onChanger={changer} prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)} />
+        <Jauges
+          piles={piles}
+          choix={choix}
+          gardes={etat.nonAVendre}
+          onChanger={changer}
+          prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)}
+          onToutSelectionner={toutSelectionner}
+        />
       )}
       <button
         className="bouton bouton-vendre"
@@ -355,7 +372,16 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           <span className="discret">Le chariot est vide.</span>
         ) : (
           <>
-            <span className="discret">Coche ce que tu veux vendre ou mettre dans ton sac.</span>
+            <div className="ligne-titre">
+              <span className="discret">Coche ce que tu veux vendre ou mettre dans ton sac.</span>
+              {/* Tout cocher d'un coup (ou tout décocher, si tout est déjà coché). */}
+              <button
+                className="bouton bouton-petit bouton-neutre"
+                onClick={() => jouer((e) => cocherToutChariot(e, contenu.some(([id]) => foreuse.nonCoches.includes(id))))}
+              >
+                {contenu.some(([id]) => foreuse.nonCoches.includes(id)) ? '☑️ Tout sélectionner' : '☐ Tout désélectionner'}
+              </button>
+            </div>
             <ul className="liste-vente liste-chariot">
               {contenu.map(([id, nombre]) => {
                 const coche = !foreuse.nonCoches.includes(id)

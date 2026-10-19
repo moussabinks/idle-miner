@@ -1477,6 +1477,13 @@ kbd {
 
 /* Le marché : liste à cocher */
 /* Les jauges du marché et de l'ascenseur : une ligne par objet, pour en choisir une partie. */
+/* « Tout sélectionner », au-dessus des jauges (marché et ascenseur). */
+.tout-selectionner {
+  justify-self: start;
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
 .jauges,
 .inventaire .jauges {
   list-style: none;
@@ -2016,6 +2023,11 @@ kbd {
   .jeu.avec-mineurs {
     --col-mineurs: 22px;
   }
+
+  /* Sur téléphone, la place manque : juste l'icône et la profondeur (ou le temps). */
+  .mineur-prenom {
+    display: none;
+  }
 }
 
 /* Le tunnel creusé par les mineurs, jusqu'au plus profond d'entre eux. */
@@ -2052,7 +2064,7 @@ kbd {
 /* Son nom, en petit au-dessus de la tête. */
 .mineur-nom {
   position: absolute;
-  top: -12px;
+  top: -15px;
   right: 0; /* calé à droite : la galerie est au bord de la mine, l'étiquette ne doit pas en sortir */
   padding: 0 4px;
   border-radius: 3px;
@@ -2075,10 +2087,20 @@ kbd {
   animation: tremble 0.15s linear infinite;
 }
 
-/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */
-.mineur-plus-bas .mineur-nom::after {
-  content: ' ↓';
+/* La petite jauge de son sac à dos, sous son nom. */
+.mineur-sac {
+  display: block;
+  height: 2px;
+  margin: 1px 0 1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #ffb35c calc(var(--remplissage) * 100%), rgb(255 255 255 / 0.2) 0);
 }
+
+/* Sac plein (il remonte vendre) : l'étiquette passe au vert, comme les boutons de vente. */
+.mineur-monte .mineur-nom {
+  color: #7be08a;
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .mineur-employe {

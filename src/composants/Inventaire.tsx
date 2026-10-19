@@ -53,6 +53,15 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
     if ((valeur === 0) !== garde) jouer((e) => reglerChargement(e, bloc, valeur !== 0))
   }
 
+  // Toutes les jauges au maximum : l'ascenseur emporte tout (plus aucun objet gardé).
+  function toutSelectionner() {
+    setChoix({})
+    jouer((e) => {
+      for (const [bloc] of piles) reglerChargement(e, bloc, true)
+      return []
+    })
+  }
+
   // Remonter au village avec la cabine (le mineur marche d'abord jusqu'au puits) :
   // elle emporte les objets choisis avec les jauges, vendus en arrivant.
   function remonter() {
@@ -68,7 +77,14 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
       ) : avecAscenseur ? (
         <>
           <p className="discret">Choisis combien l'ascenseur emporte de chaque objet au marché.</p>
-          <Jauges piles={piles} choix={choix} gardes={ascenseur.garder} onChanger={changer} prixUnitaire={prixUnitaire} />
+          <Jauges
+            piles={piles}
+            choix={choix}
+            gardes={ascenseur.garder}
+            onChanger={changer}
+            prixUnitaire={prixUnitaire}
+            onToutSelectionner={toutSelectionner}
+          />
         </>
       ) : (
         // Sans ascenseur, on ne peut rien faire d'ici : juste regarder.

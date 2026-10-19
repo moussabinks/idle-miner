@@ -227,17 +227,23 @@ export const PRESTIGE_EMPLOYES = 2
 export const MAX_EMPLOYES = 6
 // Le prix d'embauche du 1er, 2e, 3e... mineur.
 export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
-export const SAC_EMPLOYE = 32
+// Les temps morts d'un mineur entre deux séances de creusage (en secondes) :
+// un trajet (attente de l'ascenseur comprise) dure au moins DUREE_MIN_TRAJET_EMPLOYE,
+// et il passe SECONDES_VENTE_EMPLOYE au marché pour vendre sa récolte.
+export const DUREE_MIN_TRAJET_EMPLOYE = 5
+export const SECONDES_VENTE_EMPLOYE = 4
 export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé']
 
-// La pioche d'un mineur : il s'en occupe tout seul, on paie seulement pour une meilleure.
-// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre.
-export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; prix: number }[] = [
-  { nom: 'Bois', vitesse: 0.8, profMax: 30, prix: 0 },
-  { nom: 'Pierre', vitesse: 1.2, profMax: 60, prix: 6000 },
-  { nom: 'Fer', vitesse: 1.8, profMax: 96, prix: 20000 },
-  { nom: 'Diamant', vitesse: 2.5, profMax: 116, prix: 50000 },
-  { nom: 'Netherite', vitesse: 3.2, profMax: 127, prix: 120000 },
+// L'équipement d'un mineur : il s'en occupe tout seul, on paie seulement pour un meilleur.
+// Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.
+// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
+// sac = places dans son sac à dos.
+export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; prix: number }[] = [
+  { nom: 'Bois', vitesse: 0.8, profMax: 30, sac: 32, prix: 0 },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 60, sac: 48, prix: 6000 },
+  { nom: 'Fer', vitesse: 1.8, profMax: 96, sac: 64, prix: 20000 },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 116, sac: 96, prix: 50000 },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 127, sac: 128, prix: 120000 },
 ]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
@@ -275,7 +281,7 @@ export const ENCHANTEMENTS: Record<IdEnchantement, Enchantement> = {
   fortune: {
     id: 'fortune',
     nom: 'Fortune',
-    description: 'Plus de minerais par bloc cassé',
+    description: '20 % de chance par niveau de doubler un minerai',
     niveauMax: 3,
     argentParNiveau: 600,
     lapisParNiveau: 4,

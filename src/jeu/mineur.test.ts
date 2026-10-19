@@ -23,6 +23,7 @@ import {
   nbAEnvoyer,
   avancerAscenseur,
   casserBloc,
+  nbDrops,
   aLaSurface,
   auFond,
   creerPartie,
@@ -611,12 +612,17 @@ describe('boutique et enchantements', () => {
     expect(vitesse(etat)).toBe(2 * 1.5)
   })
 
-  it('fortune donne plusieurs minerais', () => {
+  it('fortune donne une chance de doubler le minerai : 20 %, 40 %, 60 %', () => {
     const etat = nouvellePartie()
-    etat.enchantements.fortune = 3
-    coucheDe(etat, 'fer')
-    casserBloc(etat, toujours(0.99))
-    expect(etat.inventaire.fer).toBe(4)
+    // Le tirage est comparé à la chance : en dessous, le minerai est doublé.
+    for (const [niveau, chance] of [[1, 0.2], [2, 0.4], [3, 0.6]]) {
+      etat.enchantements.fortune = niveau
+      expect(nbDrops(etat, 'fer', toujours(chance - 0.01))).toBe(2)
+      expect(nbDrops(etat, 'fer', toujours(chance + 0.01))).toBe(1)
+    }
+    // Jamais plus de 2, et rien sur la roche.
+    expect(nbDrops(etat, 'fer', toujours(0))).toBe(2)
+    expect(nbDrops(etat, 'pierre', toujours(0))).toBe(1)
   })
 })
 

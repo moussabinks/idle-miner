@@ -92,6 +92,7 @@
 - **Enchantements** (formules exactes de Minecraft) :
   - Efficacité I à V : +25 % de vitesse par niveau. Coût par niveau n : 4n lapis + 1n émeraude.
   - Fortune I à III : `1 + max(0, randint(0, n+1) - 1)` drops, sur les minerais uniquement (hors débris et améthyste). Coût : 6n lapis + 2n émeraudes.
+    - **Version web (19/10)** : jugé trop fort, remplacé par 20 % × n de chance de doubler le minerai (×2 au plus).
   - Solidité I à III : chance de 1/(n+1) d'user la pioche. Coût : 4n lapis + 1n émeraude.
 - **Vente** : garde automatiquement les minerais requis pour la prochaine pioche à débloquer, ainsi que les lapis et émeraudes tant que les enchantements ne sont pas tous au max.
 - **Prestige** : après la bedrock, on recommence avec +25 % sur toutes les ventes par niveau de prestige. Les succès sont conservés.

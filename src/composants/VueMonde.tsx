@@ -5,6 +5,7 @@
 
 import { memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { BLOCS, LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
@@ -174,21 +175,30 @@ function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRange
       <div className="galerie-mineurs" style={{ height: `calc(var(--pas) * ${hauteur} + 14px)` }} />
       {etat.employes.map((mineur, index) => {
         const creuse = mineur.etape === 'creuse'
+        // Au marché (ou tout en haut de son trajet), il est au village : on ne le dessine pas dans
+        // la mine (le compteur en haut de la mine affiche 💰).
+        if (mineur.etape === 'vend' || (!creuse && mineur.position < 0.5)) return null
         // Quand il creuse, il se tient juste au-dessus du bloc qu'il casse ; sinon, il est sur son trajet.
-        const rangee = creuse ? mineur.profondeur - 1 : Math.round(mineur.position)
-        if (rangee < 1) return null // il est au village, en train de vendre
+        const rangee = creuse ? mineur.profondeur - 1 : Math.max(1, Math.round(mineur.position))
         // Plus profond que ce qu'on voit : on le dessine en bas, avec une flèche.
         const plusBas = rangee > derniereRangee - 1
         const rangeeAffichee = Math.min(rangee, derniereRangee - 1)
+        // L'indicateur : ce qu'il fait (icône), sa profondeur quand il creuse, sinon le temps restant.
+        const detail = creuse ? `-${mineur.profondeur} m` : `${Math.ceil(secondesRestantesEmploye(etat, mineur))} s`
+        const remplissage = nbDansSacEmploye(mineur) / tailleSacEmploye(etat, mineur)
         return (
           <div
             key={index}
-            className={`mineur-employe ${plusBas ? 'mineur-plus-bas' : ''}`}
+            className={`mineur-employe mineur-${mineur.etape} ${plusBas ? 'mineur-plus-bas' : ''}`}
             style={{ top: `calc(var(--pas) * ${rangeeAffichee - 1})` }}
-            title={`${mineur.nom} à -${mineur.profondeur} m`}
+            title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
           >
             <span className="mineur-nom">
-              {mineur.nom} -{creuse ? mineur.profondeur : rangee} m
+              {iconeActiviteEmploye(mineur)} <span className="mineur-prenom">{mineur.nom}</span> {detail}
+              {/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */}
+              {plusBas && ' ↓'}
+              {/* Le remplissage de son sac à dos. */}
+              <span className="mineur-sac" style={{ ['--remplissage' as string]: remplissage }} />
             </span>
             <Personnage couleurPioche={PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur} action={creuse ? 'creuse' : 'grimpe'} />
             {creuse && !plusBas && (
@@ -336,10 +346,14 @@ export function VueMonde({
             </button>
           )}
           {etat.employes.length > 0 && (
-            <span className="indicateur-foreuse indicateur-mineurs" title="Tes mineurs travaillent pour toi">
-              👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''} ·{' '}
-              {etat.employes.filter((m) => m.etape === 'creuse').length} creuse
-              {etat.employes.filter((m) => m.etape === 'creuse').length > 1 ? 'nt' : ''}
+            <span className="indicateur-foreuse indicateur-mineurs" title="Tes mineurs : ⛏️ creusent, ⏫ remontent, 💰 vendent, ⏬ redescendent">
+              👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''}
+              {/* Combien creusent, remontent, vendent, redescendent (seulement ce qui n'est pas à 0). */}
+              {(['creuse', 'monte', 'vend', 'descend'] as const).map((etape) => {
+                const lesquels = etat.employes.filter((m) => m.etape === etape)
+                if (lesquels.length === 0) return null
+                return <span key={etape}> · {iconeActiviteEmploye(lesquels[0])} {lesquels.length}</span>
+              })}
             </span>
           )}
         </div>
