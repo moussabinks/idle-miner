@@ -141,6 +141,14 @@ describe('sauvegarde', () => {
     expect(etat?.foreuse.foreuses).toHaveLength(1)
   })
 
+  it('les stands déjà débloqués d’une ancienne partie (version 12) sont déjà découverts', () => {
+    const stockage = fauxStockage()
+    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1), 1), version: 12 }
+    delete ancienne.decouvertes
+    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
+    expect(charger(stockage, '1')?.decouvertes).toEqual(['foreuse'])
+  })
+
   it('sépare les foreuses d’une ancienne partie (version 11) en gardant ce qu’elles avaient', () => {
     const stockage = fauxStockage()
     const partie = creerPartie(aleatoireAvecGraine(1), 3)

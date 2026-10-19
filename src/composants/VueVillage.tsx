@@ -5,7 +5,8 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
 import { aleatoireAvecGraine, choisir, entierEntre } from '../jeu/aleatoire'
 import { employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
-import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
+import { decouvertesAMontrer } from '../jeu/decouvertes'
+import { aLaSurface, estCassee, piocheEquipee, type Decouverte, type EtatJeu } from '../jeu/mineur'
 import { Icone } from './Icone'
 import { Personnage } from './Personnage'
 import { LONGUEUR_VILLAGE, STANDS, TUILE, standProche } from './stands'
@@ -75,10 +76,25 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
   const auVillage = aLaSurface(etat)
   const couleurPioche = estCassee(etat) ? null : piocheEquipee(etat).couleur
   const standActif = auVillage ? standProche(x) : null
+  // Un stand tout juste débloqué (foreuse au prestige 1, mineurs au prestige 2) : une flèche
+  // qui clignote sur le côté montre où il est, et un « Nouveau ! » saute au-dessus de lui.
+  const aDecouvrir = auVillage ? decouvertesAMontrer(etat) : []
+  const indexCible = STANDS.findIndex((s) => s.id === aDecouvrir[0])
+  const cible = indexCible >= 0 ? STANDS[indexCible] : null
+  const versLaDroite = cible !== null && cible.x > x
 
   return (
     <div ref={cadreRef} className="village">
       <div className="soleil" aria-hidden="true" />
+      {cible && standActif?.id !== cible.id && (
+        <button className={`fleche-decouverte ${versLaDroite ? 'fleche-droite' : 'fleche-gauche'}`} onClick={() => onAllerStand(indexCible)}>
+          {!versLaDroite && <span className="fleche-pointe">⬅</span>}
+          <span>
+            Nouveau : <strong>{cible.nom}</strong> !
+          </span>
+          {versLaDroite && <span className="fleche-pointe">➡</span>}
+        </button>
+      )}
       <div className="nuage nuage-1" aria-hidden="true" />
       <div className="nuage nuage-2" aria-hidden="true" />
 
@@ -116,6 +132,7 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               disabled={!auVillage}
               title={verrouille ? `Débloqué au prestige ${stand.id === 'foreuse' ? 1 : 2}` : stand.description}
             >
+              {aDecouvrir.includes(stand.id as Decouverte) && <span className="badge-nouveau">Nouveau ! ⬇</span>}
               <span className="panneau-bois">{stand.nom}</span>
               {stand.id === 'puits' && (
                 // L'entrée de la mine : une galerie creusée dans un rocher, étayée de poutres,

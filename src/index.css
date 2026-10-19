@@ -972,6 +972,85 @@ h2 {
     );
 }
 
+/* La flèche qui guide vers un stand tout juste débloqué : collée au bord du village, du
+   côté du stand. Elle clignote et pousse dans sa direction. On peut cliquer dessus pour y aller. */
+.fleche-decouverte {
+  position: absolute;
+  top: 34%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 2px solid #3d2710;
+  background: linear-gradient(#ffe066, #f2b33d);
+  color: #2a1a06;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 14px rgb(255 214 102 / 0.8);
+  cursor: pointer;
+  animation: fleche-clignote 1s ease-in-out infinite;
+}
+
+.fleche-droite {
+  right: 10px;
+  --pousse: 6px;
+}
+
+.fleche-gauche {
+  left: 10px;
+  --pousse: -6px;
+}
+
+.fleche-pointe {
+  font-size: 1.1rem;
+  animation: fleche-pousse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes fleche-clignote {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.75; filter: brightness(1.25); }
+}
+
+@keyframes fleche-pousse {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--pousse)); }
+}
+
+/* « Nouveau ! » qui saute au-dessus du stand tout juste débloqué. */
+.badge-nouveau {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e5534b;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgb(229 83 75 / 0.8);
+  animation: badge-saute 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes badge-saute {
+  from { transform: translate(-50%, 0); }
+  to { transform: translate(-50%, -6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fleche-decouverte,
+  .fleche-pointe,
+  .badge-nouveau {
+    animation: none;
+  }
+
+  .badge-nouveau {
+    transform: translateX(-50%);
+  }
+}
+
 /* Les stands sont posés sur l'herbe, derrière le chemin. */
 .stand {
   position: absolute;
