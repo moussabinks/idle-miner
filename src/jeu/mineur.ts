@@ -210,6 +210,9 @@ export type Heritage = {
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
   decouvertes: Decouverte[]
+  pioches: Record<number, number> // les pioches débloquées (usure)
+  meilleure: number
+  niveauPioche: number
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
@@ -224,6 +227,9 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     enchantements = { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac = 0,
     decouvertes = [],
+    pioches = { 0: 0 }, // la pioche en bois est offerte
+    meilleure = 0,
+    niveauPioche = 0,
   } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
@@ -238,9 +244,9 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     coucheActuelle: genererCouche(PROFONDEUR_DEPART, aleatoire),
     couchesDessous,
     enGalerie: false,
-    pioches: { 0: 0 }, // la pioche en bois est offerte
-    niveauPioche: 0,
-    meilleure: 0,
+    pioches: { ...pioches },
+    niveauPioche,
+    meilleure,
     inventaire: {},
     nonAVendre: [...nonAVendre],
     // L'ascenseur garde son niveau (la cabine attend au village).
@@ -290,6 +296,10 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     enchantements: etat.enchantements,
     niveauSac: etat.niveauSac,
     decouvertes: etat.decouvertes,
+    // Les pioches sont gardées (19/10), toutes réparées : on repart avec sa meilleure pioche.
+    pioches: Object.fromEntries(Object.keys(etat.pioches).map((niveau) => [niveau, 0])),
+    meilleure: etat.meilleure,
+    niveauPioche: etat.meilleure,
   })
 }
 

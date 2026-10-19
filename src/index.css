@@ -2038,7 +2038,7 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
+  margin-bottom: 12px; /* en haut du sac, au-dessus de la liste */
 }
 
 .envoi-ascenseur .discret {
