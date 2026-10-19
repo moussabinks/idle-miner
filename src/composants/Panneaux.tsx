@@ -2,7 +2,7 @@
 // Foreuse) et le panneau des succès.
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   BLOCS,
   ENCHANTEMENTS,
@@ -44,8 +44,8 @@ import {
   acheterPioche,
   acheterSac,
   acheterSeau,
-  apercuVente,
-  basculerVente,
+  reglerVente,
+  vendreLot,
   bonusVente,
   chiffreRomain,
   coutEnchantement,
@@ -61,13 +61,14 @@ import {
   quantite,
   reparer,
   valeurDe,
-  vendre,
   type DevisReparation,
   type EtatJeu,
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
 import type { Action } from '../usePartie'
 import { Barre } from './Barre'
+import { lotChoisi, type Choix } from '../choix'
+import { Jauges } from './Jauges'
 import { Materiau, PrixCout } from './PrixCout'
 
 type PropsPanneau = {
@@ -98,37 +99,37 @@ function texteDevis(devis: DevisReparation): string {
 
 // Le marché : « Vendre tout » vend tout le sac, sauf ce qu'on décoche.
 export function PanneauMarche({ etat, jouer }: PropsPanneau) {
-  const gain = apercuVente(etat)
+  // Les quantités choisies avec les jauges (par défaut : tout, sauf les objets gardés).
+  const [choix, setChoix] = useState<Choix>({})
   // Les objets les plus précieux en premier.
   const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  const lot = lotChoisi(choix, etat.nonAVendre, piles)
+  const gain = valeurDe(etat, lot)
+
+  // Une jauge mise à 0 : l'objet est « gardé » (le jeu s'en souvient pour la prochaine fois).
+  function changer(bloc: IdBloc, valeur: number | 'max') {
+    setChoix({ ...choix, [bloc]: valeur })
+    const garde = etat.nonAVendre.includes(bloc)
+    if ((valeur === 0) !== garde) jouer((e) => reglerVente(e, bloc, valeur !== 0))
+  }
 
   return (
     <div className="liste-cartes">
-      <p className="discret">Décoche ce que tu veux garder (pour une pioche, un enchantement, l'ascenseur…).</p>
+      <p className="discret">Choisis combien vendre de chaque objet (garde-en pour une pioche, un enchantement, l'ascenseur…).</p>
       {piles.length === 0 ? (
         <p className="discret">Ton sac est vide. Va creuser !</p>
       ) : (
-        <ul className="liste-vente">
-          {piles.map(([id, nombre]) => {
-            const aVendre = !etat.nonAVendre.includes(id)
-            return (
-              <li key={id} className={aVendre ? '' : 'garde'}>
-                <label>
-                  <input type="checkbox" checked={aVendre} onChange={() => jouer((e) => basculerVente(e, id))} />
-                  <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-                  <span className="inventaire-nom">{BLOCS[id].nom}</span>
-                  <span className="inventaire-nombre">×{nombre}</span>
-                  <span className="inventaire-valeur">
-                    {aVendre ? `${Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $` : '🔒 gardé'}
-                  </span>
-                </label>
-              </li>
-            )
-          })}
-        </ul>
+        <Jauges piles={piles} choix={choix} gardes={etat.nonAVendre} onChanger={changer} prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)} />
       )}
-      <button className="bouton bouton-vendre" disabled={gain === 0} onClick={() => jouer(vendre)}>
-        💰 Vendre tout {gain > 0 && `· +${gain.toLocaleString('fr-FR')} $`}
+      <button
+        className="bouton bouton-vendre"
+        disabled={gain === 0}
+        onClick={() => {
+          jouer((e) => vendreLot(e, lot))
+          setChoix({}) // après la vente, les jauges reviennent à « tout » (sauf les objets gardés)
+        }}
+      >
+        💰 Vendre la sélection {gain > 0 && `· +${gain.toLocaleString('fr-FR')} $`}
       </button>
     </div>
   )

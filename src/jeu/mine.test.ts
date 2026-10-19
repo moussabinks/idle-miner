@@ -15,16 +15,33 @@ describe('génération de la mine', () => {
     expect(blocsPossibles(90)).not.toContain('pierre')
   })
 
-  it("ne met les minerais qu'à la bonne profondeur", () => {
+  it("ne met les minerais qu'à partir de leur profondeur", () => {
     expect(blocsPossibles(6)).not.toContain('charbon')
     expect(blocsPossibles(7)).toContain('charbon') // un peu de charbon et de fer près de la surface
     expect(blocsPossibles(7)).toContain('fer')
-    expect(blocsPossibles(40)).not.toContain('redstone')
-    expect(blocsPossibles(41)).toContain('redstone')
-    expect(blocsPossibles(60)).not.toContain('diamant')
-    expect(blocsPossibles(61)).toContain('diamant')
-    expect(blocsPossibles(104)).not.toContain('debris')
-    expect(blocsPossibles(105)).toContain('debris')
+    expect(blocsPossibles(17)).not.toContain('redstone')
+    expect(blocsPossibles(18)).toContain('redstone')
+    expect(blocsPossibles(24)).not.toContain('or')
+    expect(blocsPossibles(25)).toContain('or')
+    expect(blocsPossibles(44)).not.toContain('diamant')
+    expect(blocsPossibles(45)).toContain('diamant')
+    expect(blocsPossibles(95)).not.toContain('debris')
+    expect(blocsPossibles(96)).toContain('debris')
+  })
+
+  it('les minerais apparaissent petit à petit (pas d’un coup)', () => {
+    const poids = (profondeur: number, bloc: string) => poidsDesBlocs(profondeur).find((c) => c.valeur === bloc)?.poids ?? 0
+    // L'or : très rare au début, puis de plus en plus fréquent, jusqu'à son maximum.
+    expect(poids(25, 'or')).toBeLessThan(1)
+    expect(poids(45, 'or')).toBeGreaterThan(poids(25, 'or'))
+    expect(poids(65, 'or')).toBeGreaterThan(poids(45, 'or'))
+    expect(poids(100, 'or')).toBe(poids(65, 'or'))
+    // Jamais de saut brutal d'un mètre à l'autre.
+    for (let p = 7; p < 127; p++) {
+      for (const bloc of ['charbon', 'fer', 'redstone', 'or', 'lapis', 'emeraude', 'diamant']) {
+        expect(Math.abs(poids(p + 1, bloc) - poids(p, bloc))).toBeLessThan(1)
+      }
+    }
   })
 
   it('place les blocs spéciaux à partir de leur profondeur', () => {

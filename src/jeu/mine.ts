@@ -5,6 +5,30 @@
 import { choisirPondere, type Aleatoire } from './aleatoire'
 import { BLOCS, LARGEUR_MINE, POIDS_ROCHE, PROFONDEUR_DEEPSLATE, type IdBloc } from './donnees'
 
+// Comment chaque minerai apparaît : à partir de « debut » mètres il pèse « poidsDebut »,
+// puis son poids grandit régulièrement jusqu'à « poidsPlein » à « plein » mètres.
+type Apparition = { bloc: IdBloc; debut: number; plein: number; poidsDebut: number; poidsPlein: number }
+
+export const APPARITION_MINERAIS: Apparition[] = [
+  { bloc: 'charbon', debut: 7, plein: 30, poidsDebut: 6, poidsPlein: 16 },
+  { bloc: 'fer', debut: 7, plein: 35, poidsDebut: 3, poidsPlein: 12 },
+  { bloc: 'redstone', debut: 18, plein: 50, poidsDebut: 0.5, poidsPlein: 6 },
+  { bloc: 'or', debut: 25, plein: 65, poidsDebut: 0.4, poidsPlein: 5 },
+  { bloc: 'lapis', debut: 30, plein: 65, poidsDebut: 0.5, poidsPlein: 6 },
+  { bloc: 'emeraude', debut: 40, plein: 70, poidsDebut: 0.2, poidsPlein: 2 },
+  { bloc: 'diamant', debut: 45, plein: 100, poidsDebut: 0.2, poidsPlein: 5 },
+  // Les débris antiques restent très rares, tout au fond.
+  { bloc: 'debris', debut: 96, plein: 115, poidsDebut: 0.2, poidsPlein: 1 },
+]
+
+// Le poids d'un minerai à une profondeur (0 s'il n'est pas encore apparu).
+export function poidsProgressif(profondeur: number, apparition: Apparition): number {
+  if (profondeur < apparition.debut) return 0
+  if (profondeur >= apparition.plein) return apparition.poidsPlein
+  const avancement = (profondeur - apparition.debut) / (apparition.plein - apparition.debut)
+  return apparition.poidsDebut + (apparition.poidsPlein - apparition.poidsDebut) * avancement
+}
+
 // Liste des blocs possibles à une profondeur, avec leur poids.
 // Plus le poids est grand, plus le bloc est fréquent.
 export function poidsDesBlocs(profondeur: number): { valeur: IdBloc; poids: number }[] {
@@ -18,28 +42,14 @@ export function poidsDesBlocs(profondeur: number): { valeur: IdBloc; poids: numb
 
   if (p <= 48) choix.push({ valeur: 'gravier', poids: p <= 6 ? 30 : 10 })
 
-  // Minerais courants : un peu dès qu'on sort de la terre, puis plus souvent en profondeur.
-  if (p > 6 && p <= 30) {
-    choix.push({ valeur: 'charbon', poids: 10 })
-    choix.push({ valeur: 'fer', poids: 6 })
+  // Les minerais apparaissent petit à petit (choix du 19/10) : chacun commence très rare
+  // à sa profondeur de départ, puis devient de plus en plus fréquent jusqu'à sa profondeur
+  // « pleine ». Le joueur découvre ainsi un peu de redstone, d'or, de lapis... bien avant
+  // d'en trouver beaucoup : pas de changement brutal.
+  for (const minerai of APPARITION_MINERAIS) {
+    const poids = poidsProgressif(p, minerai)
+    if (poids > 0) choix.push({ valeur: minerai.bloc, poids })
   }
-  if (p > 30) {
-    choix.push({ valeur: 'charbon', poids: 16 })
-    choix.push({ valeur: 'fer', poids: 12 })
-  }
-
-  // La redstone arrive un peu avant les autres minerais rares : elle sert à l'ascenseur.
-  if (p > 40) choix.push({ valeur: 'redstone', poids: 6 })
-
-  // Minerais rares.
-  if (p > 60) {
-    choix.push({ valeur: 'lapis', poids: 6 })
-    choix.push({ valeur: 'or', poids: 5 })
-    choix.push({ valeur: 'emeraude', poids: 2 })
-    choix.push({ valeur: 'diamant', poids: p > PROFONDEUR_DEEPSLATE ? 5 : 2 })
-  }
-  // Les débris antiques sont très rares, tout au fond.
-  if (p > 104) choix.push({ valeur: 'debris', poids: 1 })
 
   // Blocs spéciaux.
   if (p > 16) choix.push({ valeur: 'coffre', poids: 0.8 })

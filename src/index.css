@@ -1392,6 +1392,59 @@ kbd {
 }
 
 /* Le marché : liste à cocher */
+/* Les jauges du marché et de l'ascenseur : une par objet, pour en choisir une partie. */
+.jauges {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jauges li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--carte-claire);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.jauges li.garde {
+  opacity: 0.6;
+  border-color: var(--bordure);
+  border-style: dashed;
+}
+
+.jauge-haut,
+.jauge-bas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jauge-haut {
+  font-size: 0.88rem;
+}
+
+.jauge-compteur {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.jauge-bas input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.jauge-bas .bouton {
+  padding: 3px 10px;
+}
+
 .liste-chariot {
   max-height: 240px;
   overflow-y: auto;

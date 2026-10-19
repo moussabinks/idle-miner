@@ -71,6 +71,7 @@ export type Ascenseur = {
   quai: Inventaire // les blocs qui attendent au pied de l'ascenseur quand le sac est plein
   garder: IdBloc[] // les objets que l'ascenseur ne prend pas (décochés dans le sac)
   envoiDemande: boolean // true = on a demandé un envoi : la cabine vient, puis repart chargée
+  lotDemande: Inventaire | null // ce qu'on a choisi d'envoyer (null = tous les objets cochés)
   envoiAuto: boolean // true = quand le sac est plein, l'ascenseur part tout seul au marché
 }
 
@@ -126,7 +127,7 @@ export type EtatJeu = {
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 8
+export const VERSION_ETAT = 9
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -161,6 +162,7 @@ export function nouvelAscenseur(): Ascenseur {
     quai: {},
     garder: [],
     envoiDemande: false,
+    lotDemande: null,
     envoiAuto: false,
   }
 }
@@ -567,6 +569,30 @@ export function basculerVente(etat: EtatJeu, bloc: IdBloc): string[] {
   return []
 }
 
+// Garder (aVendre = false) ou non un objet quand on vend tout.
+export function reglerVente(etat: EtatJeu, bloc: IdBloc, aVendre: boolean): string[] {
+  const garder = etat.nonAVendre.filter((b) => b !== bloc)
+  etat.nonAVendre = aVendre ? garder : [...garder, bloc]
+  return []
+}
+
+// Vend une partie du sac : les quantités choisies avec les jauges du marché.
+export function vendreLot(etat: EtatJeu, lot: Inventaire): string[] {
+  if (!aLaSurface(etat)) return ['⬆️ Le marché est à la surface : remonte au village.']
+  const vendus: Inventaire = {}
+  for (const [id, nombre] of Object.entries(lot)) {
+    const bloc = id as IdBloc
+    const pris = Math.max(0, Math.min(Math.floor(nombre ?? 0), quantite(etat, bloc)))
+    if (pris > 0) vendus[bloc] = pris
+  }
+  const gain = valeurDe(etat, vendus)
+  if (gain === 0) return ['Rien à vendre pour le moment.']
+  for (const [bloc, nombre] of Object.entries(vendus)) retirer(etat, bloc as IdBloc, nombre ?? 0)
+  etat.argent += gain
+  etat.stats.argentGagne += gain
+  return [`💰 Vente : +${gain} $`]
+}
+
 // « Vendre tout » au marché de la surface.
 export function vendre(etat: EtatJeu): string[] {
   if (!aLaSurface(etat)) return ['⬆️ Le marché est à la surface : remonte par l’échelle.']
@@ -740,19 +766,35 @@ export function basculerEnvoiAuto(etat: EtatJeu): string[] {
 
 // Combien d'objets partiraient au prochain envoi : le quai, puis les objets cochés du sac,
 // dans la limite de la place dans la cabine.
-export function nbAEnvoyer(etat: EtatJeu): number {
+// Avec un « lot » (les quantités choisies avec les jauges du sac), on n'envoie que ça ;
+// sans lot, tous les objets qui ne sont pas gardés.
+export function nbAEnvoyer(etat: EtatJeu, lot?: Inventaire): number {
   const niveau = niveauAscenseur(etat)
   if (niveau === null) return 0
   let total = nbSurQuai(etat)
   for (const [id, nombre] of Object.entries(etat.inventaire)) {
-    if (!etat.ascenseur.garder.includes(id as IdBloc)) total += nombre ?? 0
+    total += quantiteChoisie(etat, id as IdBloc, nombre ?? 0, lot)
   }
   return Math.min(niveau.capacite, total)
 }
 
+// Combien d'objets de cette pile partent : la quantité du lot (sans dépasser la pile),
+// ou toute la pile si l'objet n'est pas gardé.
+function quantiteChoisie(etat: EtatJeu, bloc: IdBloc, nombre: number, lot?: Inventaire): number {
+  if (lot) return Math.max(0, Math.min(nombre, lot[bloc] ?? 0))
+  return etat.ascenseur.garder.includes(bloc) ? 0 : nombre
+}
+
+// Garder (envoyer = false) ou non un objet dans le sac quand l'ascenseur part.
+export function reglerChargement(etat: EtatJeu, bloc: IdBloc, envoyer: boolean): string[] {
+  const garder = etat.ascenseur.garder.filter((b) => b !== bloc)
+  etat.ascenseur.garder = envoyer ? garder : [...garder, bloc]
+  return []
+}
+
 // Remplit la cabine : d'abord ce qui attend sur le quai, puis le sac (sauf les objets
 // décochés), les plus précieux en premier, dans la limite de sa capacité.
-function chargerCabine(etat: EtatJeu): Inventaire {
+function chargerCabine(etat: EtatJeu, lot?: Inventaire): Inventaire {
   const niveau = niveauAscenseur(etat)
   const chargement: Inventaire = {}
   if (niveau === null) return chargement
@@ -772,8 +814,7 @@ function chargerCabine(etat: EtatJeu): Inventaire {
 
   for (const [id, nombre] of Object.entries(etat.inventaire).sort(parPrix)) {
     const bloc = id as IdBloc
-    if (etat.ascenseur.garder.includes(bloc)) continue
-    const pris = Math.min(nombre ?? 0, place)
+    const pris = Math.min(quantiteChoisie(etat, bloc, nombre ?? 0, lot), place)
     if (pris <= 0) continue
     chargement[bloc] = (chargement[bloc] ?? 0) + pris
     retirer(etat, bloc, pris)
@@ -783,9 +824,9 @@ function chargerCabine(etat: EtatJeu): Inventaire {
 }
 
 // Envoie la cabine (sans le mineur) vendre au marché. Elle redescend ensuite au front de taille.
-export function envoyerAscenseur(etat: EtatJeu): string[] {
+export function envoyerAscenseur(etat: EtatJeu, lot?: Inventaire): string[] {
   if (!ascenseurDisponible(etat) || etat.position === 0) return []
-  const chargement = chargerCabine(etat)
+  const chargement = chargerCabine(etat, lot)
   if (Object.keys(chargement).length === 0) return []
   etat.ascenseur.chargement = chargement
   etat.ascenseur.cible = 0
@@ -795,10 +836,11 @@ export function envoyerAscenseur(etat: EtatJeu): string[] {
 
 // Le bouton « Envoyer à la surface » du sac : si la cabine est là, elle part tout de suite ;
 // sinon on l'appelle (ou on attend qu'elle ait fini son voyage) et elle repartira chargée.
-export function demanderEnvoi(etat: EtatJeu): string[] {
-  if (etat.ascenseur.niveau === 0 || etat.position === 0 || nbAEnvoyer(etat) === 0) return []
-  if (ascenseurDisponible(etat)) return envoyerAscenseur(etat)
+export function demanderEnvoi(etat: EtatJeu, lot?: Inventaire): string[] {
+  if (etat.ascenseur.niveau === 0 || etat.position === 0 || nbAEnvoyer(etat, lot) === 0) return []
+  if (ascenseurDisponible(etat)) return envoyerAscenseur(etat, lot)
   etat.ascenseur.envoiDemande = true
+  etat.ascenseur.lotDemande = lot ?? null
   if (!ascenseurEnMouvement(etat)) appelerAscenseur(etat)
   return ['🛗 L’ascenseur arrive pour prendre ton chargement.']
 }
@@ -883,10 +925,14 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   // Un envoi a été demandé : la cabine repart chargée si le mineur est là,
   // sinon elle va le chercher (et on oublie la demande s'il est remonté au village).
   if (ascenseur.envoiDemande) {
-    if (etat.position === 0) ascenseur.envoiDemande = false
-    else if (ascenseurDisponible(etat)) {
+    if (etat.position === 0) {
       ascenseur.envoiDemande = false
-      messages.push(...envoyerAscenseur(etat))
+      ascenseur.lotDemande = null
+    } else if (ascenseurDisponible(etat)) {
+      const lot = ascenseur.lotDemande ?? undefined
+      ascenseur.envoiDemande = false
+      ascenseur.lotDemande = null
+      messages.push(...envoyerAscenseur(etat, lot))
     } else if (!enMouvement(etat)) {
       ascenseur.cible = etat.position
     }

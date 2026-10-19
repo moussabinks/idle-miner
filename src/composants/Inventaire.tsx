@@ -1,58 +1,65 @@
 // Le contenu du sac, au fond de la mine. On ne peut pas vendre ici, mais avec
-// l'ascenseur on coche ce qu'on veut envoyer à la surface (vendu en arrivant).
+// l'ascenseur on choisit (avec les jauges) ce qu'on envoie à la surface, vendu en arrivant.
 
+import { useState } from 'react'
+import { lotChoisi, type Choix } from '../choix'
 import { BLOCS, type IdBloc } from '../jeu/donnees'
 import {
   ascenseurEnMouvement,
-  basculerChargement,
   basculerEnvoiAuto,
   bonusVente,
   demanderEnvoi,
   enMouvement,
   nbAEnvoyer,
   nbSurQuai,
+  reglerChargement,
   secondesAvantArretAscenseur,
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action } from '../usePartie'
+import { Jauges } from './Jauges'
 
 export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
+  // Les quantités choisies avec les jauges (par défaut : tout, sauf les objets gardés).
+  const [choix, setChoix] = useState<Choix>({})
   // Les objets les plus précieux en premier.
   const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const ascenseur = etat.ascenseur
   const avecAscenseur = ascenseur.niveau > 0
-  const aEnvoyer = nbAEnvoyer(etat)
+  const lot = lotChoisi(choix, ascenseur.garder, piles)
+  const aEnvoyer = nbAEnvoyer(etat, lot)
   const surLeQuai = nbSurQuai(etat)
   const enVoyage = ascenseurEnMouvement(etat)
+  const prixUnitaire = (bloc: IdBloc) => BLOCS[bloc].prix * bonusVente(etat)
+
+  // Une jauge mise à 0 : l'objet est « gardé » (le jeu s'en souvient, aussi pour l'envoi automatique).
+  function changer(bloc: IdBloc, valeur: number | 'max') {
+    setChoix({ ...choix, [bloc]: valeur })
+    const garde = ascenseur.garder.includes(bloc)
+    if ((valeur === 0) !== garde) jouer((e) => reglerChargement(e, bloc, valeur !== 0))
+  }
 
   return (
     <div className="inventaire">
       {piles.length === 0 ? (
         <p className="discret">Ton sac est vide. Creuse !</p>
-      ) : (
+      ) : avecAscenseur ? (
         <>
-          {avecAscenseur && <p className="discret">Coche ce que l'ascenseur emporte au marché.</p>}
-          <ul>
-            {piles.map(([id, nombre]) => {
-              const envoye = !ascenseur.garder.includes(id)
-              const ligne = (
-                <>
-                  {avecAscenseur && <input type="checkbox" checked={envoye} onChange={() => jouer((e) => basculerChargement(e, id))} />}
-                  <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-                  <span className="inventaire-nom">{BLOCS[id].nom}</span>
-                  <span className="inventaire-nombre">×{nombre}</span>
-                  <span className="inventaire-valeur">{Math.round(nombre * BLOCS[id].prix * bonusVente(etat))} $</span>
-                </>
-              )
-              return (
-                <li key={id} className={avecAscenseur && !envoye ? 'garde' : ''}>
-                  {/* Avec l'ascenseur, toute la ligne est cliquable pour cocher / décocher. */}
-                  {avecAscenseur ? <label className="inventaire-ligne">{ligne}</label> : ligne}
-                </li>
-              )
-            })}
-          </ul>
+          <p className="discret">Choisis combien l'ascenseur emporte de chaque objet au marché.</p>
+          <Jauges piles={piles} choix={choix} gardes={ascenseur.garder} onChanger={changer} prixUnitaire={prixUnitaire} />
         </>
+      ) : (
+        // Sans ascenseur, on ne peut rien faire d'ici : juste regarder.
+        <ul>
+          {piles.map(([id, nombre]) => (
+            <li key={id}>
+              <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+              <span className="inventaire-nom">{BLOCS[id].nom}</span>
+              <span className="inventaire-nombre">×{nombre}</span>
+              <span className="inventaire-valeur">{Math.round(nombre * prixUnitaire(id))} $</span>
+            </li>
+          ))}
+        </ul>
       )}
 
       {avecAscenseur ? (
@@ -61,7 +68,10 @@ export function Inventaire({ etat, jouer }: { etat: EtatJeu; jouer: (action: Act
           <button
             className="bouton bouton-ascenseur"
             disabled={aEnvoyer === 0 || enVoyage || ascenseur.envoiDemande || ascenseur.passager || enMouvement(etat)}
-            onClick={() => jouer(demanderEnvoi)}
+            onClick={() => {
+              jouer((e) => demanderEnvoi(e, lot))
+              setChoix({}) // les jauges reviennent à « tout » pour le prochain envoi
+            }}
           >
             {/* Pendant que la cabine voyage, le bouton est grisé et compte les secondes. */}
             {enVoyage

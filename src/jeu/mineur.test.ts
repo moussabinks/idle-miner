@@ -14,6 +14,7 @@ import {
   appelerAscenseur,
   ascenseurDisponible,
   basculerVente,
+  vendreLot,
   secondesAvantArretAscenseur,
   voyager,
   basculerChargement,
@@ -318,6 +319,40 @@ describe('échelle et déplacements', () => {
     etat.coucheActuelle = ['pierre', null, null, 'fer', null, 'terre']
     etat.colonneMineur = 2
     expect(indexBlocActuel(etat)).toBe(3)
+  })
+})
+
+describe('vendre ou envoyer une partie seulement', () => {
+  it('vend seulement les quantités choisies au marché', () => {
+    const etat = partieALaSurface()
+    etat.inventaire = { fer: 10, or: 3 }
+    vendreLot(etat, { fer: 4, or: 99 }) // on ne peut pas vendre plus qu'on n'a
+    expect(etat.inventaire).toEqual({ fer: 6 })
+    expect(etat.argent).toBe(4 * 12 + 3 * 35)
+  })
+
+  it('l’ascenseur emporte seulement le lot choisi', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    construireAscenseur(etat, 1)
+    etat.inventaire = { fer: 10, charbon: 8 }
+    expect(nbAEnvoyer(etat, { fer: 3 })).toBe(3)
+    demanderEnvoi(etat, { fer: 3 })
+    expect(etat.ascenseur.chargement).toEqual({ fer: 3 })
+    expect(etat.inventaire).toEqual({ fer: 7, charbon: 8 })
+  })
+
+  it('le lot est gardé si la cabine doit d’abord venir', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 20)
+    construireAscenseur(etat, 1)
+    etat.ascenseur.position = 0
+    etat.ascenseur.cible = 0
+    etat.inventaire = { fer: 10 }
+    demanderEnvoi(etat, { fer: 2 })
+    avancerAscenseur(etat, 60)
+    expect(etat.ascenseur.chargement).toEqual({ fer: 2 })
+    expect(etat.ascenseur.lotDemande).toBeNull()
   })
 })
 

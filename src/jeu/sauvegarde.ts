@@ -307,6 +307,11 @@ function migrer(donnees: unknown): unknown {
   // Version 7 -> 8 : le mineur marche jusqu'au puits avant de monter.
   if (etat.version === 7) etat = { ...etat, version: 8, depart: null }
 
+  // Version 8 -> 9 : on choisit les quantités à envoyer par l'ascenseur.
+  if (etat.version === 8) {
+    etat = { ...etat, version: 9, ascenseur: { ...(etat.ascenseur as object), lotDemande: null } }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees

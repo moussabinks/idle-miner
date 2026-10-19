@@ -11,7 +11,6 @@ import {
   piocheEquipee,
   sacPlein,
   tailleSac,
-  vitesse,
   type EtatJeu,
 } from '../jeu/mineur'
 import { useState } from 'react'
@@ -59,7 +58,7 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
 
       <div className="hud-case hud-pioche">
         <span className="hud-titre">
-          {cassee ? '✋ Mains nues' : `${pioche.emoji} Pioche en ${pioche.nom}`} · x{vitesse(etat).toLocaleString('fr-FR')}
+          {cassee ? '✋ Mains nues' : `${pioche.emoji} Pioche en ${pioche.nom}`}
         </span>
         <Barre
           valeur={durabiliteRestante(etat)}
