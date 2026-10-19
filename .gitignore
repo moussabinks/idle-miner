@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Captures d'écran de test (elles ne servent pas au jeu)
+/*.png
