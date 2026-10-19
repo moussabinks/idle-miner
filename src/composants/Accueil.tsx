@@ -1,6 +1,7 @@
 // L'écran d'accueil : il explique le but du jeu (avec une coupe de la mine) et
 // montre les mondes (jusqu'à 5 sauvegardes). On y crée, renomme, duplique,
-// supprime un monde, et on choisit sur lequel jouer.
+// supprime un monde, et on choisit sur lequel jouer. On peut aussi se connecter
+// à son compte pour retrouver ses mondes sur un autre appareil.
 
 import { useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
@@ -16,6 +17,8 @@ import {
   supprimerMonde,
   type InfoMonde,
 } from '../jeu/sauvegarde'
+import type { Compte } from '../useCompte'
+import { CarteCompte } from './CarteCompte'
 import { Personnage } from './Personnage'
 
 // Les couleurs des cartes des mondes (une par monde, pour les reconnaître d'un coup d'œil).
@@ -88,11 +91,12 @@ type PropsCarte = {
   monde: InfoMonde
   dernier: boolean // le dernier monde joué
   peutDupliquer: boolean
+  bloque: boolean // pendant la synchronisation avec le compte, on ne lance pas de partie
   onJouer: () => void
   onChangement: () => void // pour rafraîchir la liste après une modification
 }
 
-function CarteMonde({ monde, dernier, peutDupliquer, onJouer, onChangement }: PropsCarte) {
+function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangement }: PropsCarte) {
   const [edition, setEdition] = useState(false)
   const [nom, setNom] = useState(monde.nom)
   const etat = charger(window.localStorage, monde.id)
@@ -145,7 +149,7 @@ function CarteMonde({ monde, dernier, peutDupliquer, onJouer, onChangement }: Pr
       <span className="discret">Joué {depuis(monde.joueLe)}</span>
 
       <div className="boutons">
-        <button className="bouton bouton-creuser" onClick={onJouer}>
+        <button className="bouton bouton-creuser" disabled={bloque} onClick={onJouer}>
           ▶ Jouer
         </button>
         <button className="bouton bouton-petit bouton-neutre" onClick={() => setEdition(!edition)}>
@@ -174,12 +178,14 @@ function CarteMonde({ monde, dernier, peutDupliquer, onJouer, onChangement }: Pr
 // L'écran entier
 // ---------------------------------------------------------------------------
 
-export function Accueil({ onJouer }: { onJouer: (monde: InfoMonde) => void }) {
+export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: InfoMonde) => void }) {
   // Change à chaque modification : le composant se redessine et relit la liste des mondes.
   const [, setVersion] = useState(0)
   const mondes = listerMondes(window.localStorage)
   const [nouveauNom, setNouveauNom] = useState('')
   const place = mondes.length < NB_MONDES_MAX
+  // Pendant un échange avec le compte, les mondes peuvent être remplacés : on attend.
+  const bloque = compte.statut === 'chargement' || compte.statut === 'synchro'
 
   function creer() {
     const info = creerMonde(window.localStorage, nouveauNom || `Monde ${mondes.length + 1}`, creerPartie(aleatoireNavigateur))
@@ -225,6 +231,7 @@ export function Accueil({ onJouer }: { onJouer: (monde: InfoMonde) => void }) {
       </section>
 
       <section className="accueil-mondes">
+        <CarteCompte compte={compte} />
         <h2>
           Choisis ton monde{' '}
           <span className="discret">
@@ -234,10 +241,12 @@ export function Accueil({ onJouer }: { onJouer: (monde: InfoMonde) => void }) {
         <div className="grille-mondes">
           {mondes.map((monde, index) => (
             <CarteMonde
-              key={monde.id}
+              // La version change quand les mondes du compte remplacent ceux du navigateur.
+              key={`${compte.versionMondes}-${monde.id}`}
               monde={monde}
               dernier={index === 0}
               peutDupliquer={place}
+              bloque={bloque}
               onJouer={() => onJouer(monde)}
               onChangement={() => setVersion((v) => v + 1)}
             />
@@ -261,7 +270,7 @@ export function Accueil({ onJouer }: { onJouer: (monde: InfoMonde) => void }) {
                 onChange={(e) => setNouveauNom(e.target.value)}
                 aria-label="Nom du nouveau monde"
               />
-              <button className="bouton bouton-creuser" type="submit">
+              <button className="bouton bouton-creuser" type="submit" disabled={bloque}>
                 ⛏️ Créer et jouer
               </button>
             </form>

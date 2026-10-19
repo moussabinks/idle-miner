@@ -21,17 +21,21 @@
 | Front | React 19 + Vite | Standard, rapide, très bien supporté par Vercel. |
 | Tests | Vitest | Teste la logique du jeu sans navigateur, y compris le futur bot d'équilibrage. |
 | Lint | oxlint | Fourni par le template Vite. |
-| Sauvegarde | `localStorage` | Pas de backend, et la progression doit survivre à la fermeture de l'onglet. |
+| Sauvegarde | `localStorage` | La progression doit survivre à la fermeture de l'onglet. |
+| Comptes et sauvegarde en ligne | Supabase (19/10) | Comptes avec mots de passe bien protégés et base de données, sans écrire de serveur. Servira aussi au leaderboard. |
 | Option écartée | Garder le Python avec Pyodide | Environ 10 Mo à charger au démarrage et difficile à brancher sur React. |
 
 ## 3. Infra
 
-- **Dépôt** : https://github.com/moussabinks/idle-miner (**privé**). Branche principale : `main`.
+- **Dépôt** : https://github.com/moussabinks/idle-miner (passage en **public** prévu le 19/10, pour Vercel Hobby). Branche principale : `main`.
 - **Workflow** : une branche par fonctionnalité, puis une Pull Request. L'autre développeur relit avant le merge. On ne pousse jamais directement sur `main`.
-- **Vercel** : ⚠️ **pas encore branché**, la décision est en attente :
+- **Vercel** : le 19/10, `N04H2004` publie avec `npx vercel --prod` depuis son PC (compte Hobby, sans déploiement automatique). Pour les déploiements automatiques et les previews de PR, choix entre :
   - **Option A** : le compte Vercel Pro du collègue. Il faut alors une organisation GitHub (on y transfère le dépôt) et que les deux développeurs soient membres de l'équipe Vercel, sinon les déploiements de l'autre sont bloqués.
   - **Option B** : passer le dépôt en public et utiliser le plan Hobby gratuit. Avec un dépôt privé, Hobby ne déploie que les commits du propriétaire.
   - Si le dépôt est transféré, mettre à jour le remote : `git remote set-url origin https://github.com/<org>/idle-miner.git`.
+- **Supabase** : projet `peumwxcvqncynobwejmk` (https://peumwxcvqncynobwejmk.supabase.co). L'adresse et la clé publique (« publishable ») sont dans `src/enLigne.ts`. À faire une fois dans le tableau de bord :
+  - **SQL Editor** : coller et lancer `supabase/schema.sql` (table `sauvegardes` + règles de sécurité).
+  - **Authentication → Sign In / Providers → Email** : décocher **Confirm email** (les adresses des comptes sont fabriquées à partir du pseudo, aucun email ne peut arriver).
 - **Poste de dev (Mac)** : Homebrew, Node 26, npm 11, git, et gh connecté au compte `moussabinks`.
 
 ## 4. État actuel du code
@@ -69,6 +73,7 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 - **Sacs** (Bazar) : 32 places au départ, puis 64 (80 $), 128 (400 $), 256 (1 500 $), 512 (5 000 $), 1 024 (15 000 $) et 2 048 places (40 000 $). Les trois derniers ont été ajoutés le 19/10.
 - **Caméra** : une référence par endroit où le mineur est dessiné (village, cabine, échelle, front). Avec une seule référence partagée, la caméra restait au village pendant la descente en ascenseur (corrigé le 19/10).
 - **Pas de torches** : lumière naturelle, les 4 couches sous la couche en cours sont visibles et de plus en plus sombres.
+- **Comptes et sauvegarde en ligne** (19/10, `CarteCompte.tsx`, `useCompte.ts`, `enLigne.ts`, `compte.ts`) : sur l'accueil, une carte « Ton compte » (facultative) : pseudo (3 à 16 caractères, lettres sans accent, chiffres, `_`, `-`) + mot de passe (6 caractères au moins). Pas d'email : Supabase reçoit l'adresse fictive `pseudo@joueurs.idle-miner.app` (en minuscules, donc « Noah » = « noah »), et un mot de passe oublié est perdu. Connecté, tous les mondes du navigateur sont copiés en ligne (une ligne par joueur dans `sauvegardes`, un envoi toutes les 20 s s'ils ont changé, en quittant un monde et en quittant la page). À la connexion : compte vide → on envoie ; navigateur vide → on récupère ; sinon, si ce navigateur a fait le dernier échange avec ce compte → on envoie, et sinon on demande au joueur lesquels garder. Le `localStorage` reste la sauvegarde principale : sans réseau, le jeu marche comme avant.
 - **Écran d'accueil et mondes** (`Accueil.tsx`, `sauvegarde.ts`) : au lancement, un écran explique le but du jeu (4 étapes et une coupe de la mine jusqu'à la bedrock) et liste les **mondes** : jusqu'à 5 parties séparées (une save de dev avancée, une save de début, celle d'un ami...). On peut créer (avec un nom), jouer, renommer, dupliquer et supprimer un monde. Dans le jeu, le bouton « 🌍 nom du monde » en haut ramène à l'accueil. Chaque monde a sa sauvegarde et son temps hors ligne ; le son et la musique sont communs. L'ancienne sauvegarde unique devient « Monde 1 ». Les saves restent dans le navigateur (pas d'export pour l'instant).
 - **Village** : entre deux stands, plus de menu de navigation (19/10) : on marche avec ← → ou on clique sur un stand.
 - **Creuser** : seulement avec les boutons Creuser / x10 (19/10). Les flèches du clavier servent seulement à se déplacer.
@@ -115,6 +120,7 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 
 1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, fin de partie (victoire, prestige, succès).
 2. **Brancher Vercel** (décision A/B ci-dessus).
+2 bis. **Leaderboard** (sur Supabase, après les comptes) : choisir ce qu'on classe (profondeur max, prestiges, argent gagné, temps jusqu'à la bedrock) et un minimum d'anti-triche (scores impossibles refusés).
 3. **Polish** : ✅ sons et animations (19/10). Reste : meilleure ambiance par zone, éventuellement des sprites.
 4. Ajuster l'équilibrage après de vraies parties (le bot donne environ 19 min jusqu'à la bedrock).
 5. Idées en attente : améliorations des pioches au forgeron, couches dures, étais de mine, de vrais mineurs automatiques pour un jeu qui avance hors ligne (proposé le 18/10, pas encore décidé).
@@ -148,3 +154,4 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 - **2026-10-19** : ascenseur gardé au prestige, mineurs employés (prestige 2), plusieurs foreuses (prestige 3), arbre à 4 branches (Patron), boutons Envoyer / Remonter avec l'ascenseur (plus de pop-in), creusage Auto qui s'arrête si la pioche casse, trajets fluides. Sauvegarde v10.
 - **2026-10-19** : l'interface tient dans la hauteur de l'écran sur ordinateur (mine extensible, panneau qui défile seul, jauges compactes).
 - **2026-10-19** : nouveau dessin de l'ascenseur : cage en métal (toit, grille, plancher rayé jaune et noir, lampe qui clignote en route), caisse de minerai quand elle est chargée, puits plus large avec glissières et traverses, poulie qui tourne et câble.
+- **2026-10-19** : comptes facultatifs (pseudo + mot de passe, sans email) et sauvegarde en ligne de tous les mondes sur Supabase. Prépare le leaderboard.

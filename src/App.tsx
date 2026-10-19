@@ -43,6 +43,7 @@ import {
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
+import { useCompte } from './useCompte'
 import { useMarcheVillage } from './useMarcheVillage'
 import { usePartie } from './usePartie'
 
@@ -379,12 +380,19 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   )
 }
 
-// L'application : l'écran d'accueil (choix du monde), puis le jeu.
+// L'application : l'écran d'accueil (choix du monde et compte), puis le jeu.
 function App() {
   const [monde, setMonde] = useState<InfoMonde | null>(null)
-  if (monde === null) return <Accueil onJouer={setMonde} />
+  // Le compte reste ouvert pendant la partie : il recopie les mondes en ligne régulièrement.
+  const compte = useCompte()
+  if (monde === null) return <Accueil compte={compte} onJouer={setMonde} />
+
+  function quitter() {
+    compte.envoyerMaintenant() // la partie qu'on vient de jouer part tout de suite en ligne
+    setMonde(null)
+  }
   // « key » : changer de monde repart d'un jeu tout neuf (aucun état de l'ancien monde ne reste).
-  return <Jeu key={monde.id} monde={monde} onQuitter={() => setMonde(null)} />
+  return <Jeu key={monde.id} monde={monde} onQuitter={quitter} />
 }
 
 export default App

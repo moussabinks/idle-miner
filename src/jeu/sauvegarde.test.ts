@@ -8,7 +8,10 @@ import {
   cleMonde,
   creerMonde,
   dupliquerMonde,
+  exporterTout,
+  importerTout,
   listerMondes,
+  mondesDeLaCopie,
   marquerJoue,
   peutCreerMonde,
   renommerMonde,
@@ -194,5 +197,40 @@ describe('les mondes (5 sauvegardes au plus)', () => {
     expect(charger(stockage, '1')).toEqual(ancienne)
     expect(stockage.getItem(ANCIENNE_CLE_SAUVEGARDE)).toBeNull()
     expect(secondesDepuisSauvegarde(stockage, '1', 123456 + 5000)).toBe(5)
+  })
+})
+
+describe('copie de tous les mondes (sauvegarde en ligne)', () => {
+  it("remet les mêmes mondes et parties sur un autre appareil", () => {
+    const aleatoire = aleatoireAvecGraine(7)
+    const ordinateur = fauxStockage()
+    const etat = creerPartie(aleatoire)
+    for (let i = 0; i < 30; i++) casserBloc(etat, aleatoire)
+    const premier = creerMonde(ordinateur, 'Ma save', etat, 1000)!
+    creerMonde(ordinateur, 'Test', creerPartie(aleatoire), 2000)
+
+    const copie = exporterTout(ordinateur)
+    expect(mondesDeLaCopie(copie).map((m) => m.nom).sort()).toEqual(['Ma save', 'Test'])
+
+    // Le téléphone avait un autre monde : il est remplacé.
+    const telephone = fauxStockage()
+    creerMonde(telephone, 'Vieux monde', creerPartie(aleatoire), 500)
+    importerTout(telephone, JSON.parse(JSON.stringify(copie)))
+
+    expect(listerMondes(telephone).map((m) => m.nom).sort()).toEqual(['Ma save', 'Test'])
+    expect(charger(telephone, premier.id)).toEqual(etat)
+    expect(exporterTout(telephone)).toEqual(copie)
+  })
+
+  it("n'écrit que des clés de mondes", () => {
+    const stockage = fauxStockage()
+    importerTout(stockage, { 'idle-miner-son': 'coupe', 'autre-site': 'x' })
+    expect(stockage.getItem('idle-miner-son')).toBeNull()
+    expect(stockage.getItem('autre-site')).toBeNull()
+  })
+
+  it('renvoie une copie vide sans aucun monde', () => {
+    expect(exporterTout(fauxStockage())).toEqual({})
+    expect(mondesDeLaCopie({})).toEqual([])
   })
 })
