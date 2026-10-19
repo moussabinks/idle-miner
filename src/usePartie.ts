@@ -67,6 +67,7 @@ const ID_MESSAGE_ABSENCE = 0
 
 // Joue le son qui va avec chaque événement.
 function jouerSons(evenements: Evenement[]): void {
+  const amelioration = evenements.some((e) => e.type === 'amelioration')
   for (const evenement of evenements) {
     switch (evenement.type) {
       case 'casse':
@@ -83,7 +84,13 @@ function jouerSons(evenements: Evenement[]): void {
         sons.vente(evenement.montant)
         break
       case 'achat':
-        sons.achat()
+        if (!amelioration) sons.achat()
+        break
+      case 'amelioration':
+        sons.amelioration()
+        break
+      case 'nouvelleCouche':
+        sons.nouvelleCouche(evenement.palier)
         break
       case 'ding':
         sons.ding()

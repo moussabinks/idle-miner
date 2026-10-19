@@ -14,7 +14,9 @@ import {
   type EtatJeu,
 } from '../jeu/mineur'
 import { useState } from 'react'
+import { revenuParSeconde } from '../jeu/revenu'
 import { pointsDisponibles } from '../jeu/talents'
+import { useCompteur } from '../useCompteur'
 import { basculerMusique, musiqueActive } from '../ambiance'
 import { basculerSon, sonActif } from '../sons'
 import { Barre } from './Barre'
@@ -22,10 +24,17 @@ import { Barre } from './Barre'
 type Props = {
   etat: EtatJeu
   nbVentes: number // change à chaque vente, pour faire sauter le compteur d'argent
+  enMinage: boolean // tu es en train de creuser (pour le calcul du $/s)
   onOuvrirArbre: () => void
 }
 
-export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
+// « 0,8 $/s », « 12 $/s », « 1 250 $/s ».
+function texteRevenu(parSeconde: number): string {
+  const arrondi = parSeconde < 10 ? Math.round(parSeconde * 10) / 10 : Math.round(parSeconde)
+  return `${arrondi.toLocaleString('fr-FR')} $/s`
+}
+
+export function Hud({ etat, nbVentes, enMinage, onOuvrirArbre }: Props) {
   const [son, setSon] = useState(sonActif)
   const [musique, setMusique] = useState(musiqueActive)
   const points = pointsDisponibles(etat)
@@ -37,13 +46,21 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
   const auFront = auFond(etat)
   const dansLaCabine = etat.ascenseur.passager
   const enchantements = LISTE_ENCHANTEMENTS.filter((id) => etat.enchantements[id] > 0)
+  const revenu = revenuParSeconde(etat, enMinage)
+  // Le compteur d'argent défile jusqu'à la nouvelle somme (plus satisfaisant qu'un saut).
+  const argentAffiche = useCompteur(etat.argent)
 
   return (
     <header className="hud">
       <div className="hud-case hud-argent">
-        <span className="hud-titre">Argent</span>
+        <span
+          className="hud-titre"
+          title={`Argent généré par seconde (en moyenne) : toi ${texteRevenu(revenu.joueur)} · foreuse ${texteRevenu(revenu.foreuse)} · mineurs ${texteRevenu(revenu.mineurs)}`}
+        >
+          Argent <span className={`hud-revenu ${revenu.total > 0 ? 'hud-revenu-actif' : ''}`}>📈 {texteRevenu(revenu.total)}</span>
+        </span>
         <strong key={nbVentes} className={nbVentes > 0 ? 'argent-saute' : ''}>
-          💵 {etat.argent.toLocaleString('fr-FR')} $
+          💵 {argentAffiche.toLocaleString('fr-FR')} $
         </strong>
       </div>
 
@@ -51,7 +68,7 @@ export function Hud({ etat, nbVentes, onOuvrirArbre }: Props) {
         <span className="hud-titre">
           {enVille ? `Mine : -${etat.profondeur} m` : auFront ? zone.nom : dansLaCabine ? "Dans l'ascenseur" : "Sur l'échelle"}
         </span>
-        <strong>
+        <strong key={auFront ? etat.profondeur : 'trajet'} className={auFront ? 'profondeur-saute' : ''}>
           {enVille ? '☀️ Village' : auFront ? `📏 -${etat.profondeur} m` : `${dansLaCabine ? '🛗' : '🪜'} -${Math.round(etat.position)} m`}
         </strong>
       </div>

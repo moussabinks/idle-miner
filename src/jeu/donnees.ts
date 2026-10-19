@@ -175,6 +175,39 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Les plafonds d'amélioration selon le prestige (décidé le 19/10)
+// ---------------------------------------------------------------------------
+
+// On ne peut pas tout améliorer en un seul prestige (sinon : prestige 1, on farme, et
+// tout est au maximum). Règle commune : au déblocage, on peut monter jusqu'à un certain
+// niveau, puis chaque prestige permet un niveau de plus.
+//   - ascenseur : niveau 2 au prestige 0, 3 au prestige 1... jusqu'à 6 ;
+//   - forage et chariot de la foreuse (débloquée au prestige 1) : 2e niveau au prestige 1,
+//     3e au prestige 2... (les niveaux de la foreuse sont comptés à partir de 0 dans le code) ;
+//   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer au prestige 3...
+export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur'
+
+export const PLAFONDS: Record<IdPlafond, { prestigeDeblocage: number; niveauAuDeblocage: number; niveauMax: number }> = {
+  ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
+  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
+  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
+  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },
+}
+
+// Le plus haut niveau qu'on peut atteindre à ce prestige.
+export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
+  const plafond = PLAFONDS[id]
+  const prestigesEnPlus = Math.max(0, prestige - plafond.prestigeDeblocage)
+  return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + prestigesEnPlus)
+}
+
+// Le prestige qu'il faut pour atteindre ce niveau (pour afficher « 🔒 Prestige 3 »).
+export function prestigePourNiveau(id: IdPlafond, niveau: number): number {
+  const plafond = PLAFONDS[id]
+  return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage)
+}
+
+// ---------------------------------------------------------------------------
 // La foreuse (débloquée au prestige 1)
 // ---------------------------------------------------------------------------
 
@@ -227,17 +260,23 @@ export const PRESTIGE_EMPLOYES = 2
 export const MAX_EMPLOYES = 6
 // Le prix d'embauche du 1er, 2e, 3e... mineur.
 export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
-export const SAC_EMPLOYE = 32
+// Les temps morts d'un mineur entre deux séances de creusage (en secondes) :
+// un trajet (attente de l'ascenseur comprise) dure au moins DUREE_MIN_TRAJET_EMPLOYE,
+// et il passe SECONDES_VENTE_EMPLOYE au marché pour vendre sa récolte.
+export const DUREE_MIN_TRAJET_EMPLOYE = 5
+export const SECONDES_VENTE_EMPLOYE = 4
 export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé']
 
-// La pioche d'un mineur : il s'en occupe tout seul, on paie seulement pour une meilleure.
-// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre.
-export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; prix: number }[] = [
-  { nom: 'Bois', vitesse: 0.8, profMax: 30, prix: 0 },
-  { nom: 'Pierre', vitesse: 1.2, profMax: 60, prix: 6000 },
-  { nom: 'Fer', vitesse: 1.8, profMax: 96, prix: 20000 },
-  { nom: 'Diamant', vitesse: 2.5, profMax: 116, prix: 50000 },
-  { nom: 'Netherite', vitesse: 3.2, profMax: 127, prix: 120000 },
+// L'équipement d'un mineur : il s'en occupe tout seul, on paie seulement pour un meilleur.
+// Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.
+// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
+// sac = places dans son sac à dos.
+export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; prix: number }[] = [
+  { nom: 'Bois', vitesse: 0.8, profMax: 30, sac: 32, prix: 0 },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 60, sac: 48, prix: 6000 },
+  { nom: 'Fer', vitesse: 1.8, profMax: 96, sac: 64, prix: 20000 },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 116, sac: 96, prix: 50000 },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 127, sac: 128, prix: 120000 },
 ]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
@@ -275,7 +314,7 @@ export const ENCHANTEMENTS: Record<IdEnchantement, Enchantement> = {
   fortune: {
     id: 'fortune',
     nom: 'Fortune',
-    description: 'Plus de minerais par bloc cassé',
+    description: '20 % de chance par niveau de doubler un minerai',
     niveauMax: 3,
     argentParNiveau: 600,
     lapisParNiveau: 4,

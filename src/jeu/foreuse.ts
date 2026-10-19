@@ -16,6 +16,8 @@ import {
   RESERVE_RECHARGE_AUTO,
   PROFONDEUR_BEDROCK,
   SECONDES_PAR_CHARBON,
+  niveauMaxAuPrestige,
+  prestigePourNiveau,
   type IdBloc,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
@@ -125,9 +127,33 @@ export function prochainNiveauChariot(etat: EtatJeu) {
   return NIVEAUX_CHARIOT[etat.foreuse.niveauChariot + 1] ?? null
 }
 
+// Le prochain niveau de forage (ou de chariot) est-il bloqué par le prestige ?
+// Renvoie le prestige qu'il faut (null = pas bloqué).
+export function forageBloqueAuPrestige(etat: EtatJeu): number | null {
+  const prochain = etat.foreuse.niveauVitesse + 1
+  if (prochainNiveauForage(etat) === null || prochain <= niveauMaxAuPrestige('forage', etat.prestige)) return null
+  return prestigePourNiveau('forage', prochain)
+}
+
+export function chariotBloqueAuPrestige(etat: EtatJeu): number | null {
+  const prochain = etat.foreuse.niveauChariot + 1
+  if (prochainNiveauChariot(etat) === null || prochain <= niveauMaxAuPrestige('chariot', etat.prestige)) return null
+  return prestigePourNiveau('chariot', prochain)
+}
+
+export function peutAmeliorerForage(etat: EtatJeu): boolean {
+  const prochain = prochainNiveauForage(etat)
+  return etat.foreuse.active && prochain !== null && forageBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
+}
+
+export function peutAmeliorerChariot(etat: EtatJeu): boolean {
+  const prochain = prochainNiveauChariot(etat)
+  return etat.foreuse.active && prochain !== null && chariotBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
+}
+
 export function ameliorerForage(etat: EtatJeu): string[] {
   const prochain = prochainNiveauForage(etat)
-  if (!aLaSurface(etat) || !etat.foreuse.active || prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (!aLaSurface(etat) || prochain === null || !peutAmeliorerForage(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauVitesse += 1
   return [`⚙️ Forage plus rapide : ${prochain.vitesse} blocs par seconde.`]
@@ -135,7 +161,7 @@ export function ameliorerForage(etat: EtatJeu): string[] {
 
 export function ameliorerChariot(etat: EtatJeu): string[] {
   const prochain = prochainNiveauChariot(etat)
-  if (!aLaSurface(etat) || !etat.foreuse.active || prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (!aLaSurface(etat) || prochain === null || !peutAmeliorerChariot(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauChariot += 1
   return [`🛒 Chariot plus grand : ${prochain.capacite} places.`]
@@ -155,6 +181,12 @@ export function selectionChariot(etat: EtatJeu): Inventaire {
 export function basculerChariot(etat: EtatJeu, bloc: IdBloc): string[] {
   const nonCoches = etat.foreuse.nonCoches
   etat.foreuse.nonCoches = nonCoches.includes(bloc) ? nonCoches.filter((b) => b !== bloc) : [...nonCoches, bloc]
+  return []
+}
+
+// Coche (ou décoche) d'un coup tous les objets du chariot.
+export function cocherToutChariot(etat: EtatJeu, coche: boolean): string[] {
+  etat.foreuse.nonCoches = coche ? [] : (Object.keys(etat.foreuse.chariot) as IdBloc[])
   return []
 }
 

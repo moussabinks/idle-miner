@@ -279,7 +279,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   return (
-    <div className="jeu">
+    <div className={`jeu ${etat.employes.length > 0 ? 'avec-mineurs' : ''}`}>
       <header className="entete">
         <h1 className="titre">⛏️ Idle Miner</h1>
         {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
@@ -295,7 +295,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           🏅 {etat.succes.length}/{SUCCES.length}
         </button>
       </header>
-      <Hud etat={etat} nbVentes={nbVentes} onOuvrirArbre={() => setArbreOuvert(true)} />
+      <Hud etat={etat} nbVentes={nbVentes} enMinage={enMinage} onOuvrirArbre={() => setArbreOuvert(true)} />
 
       <main className="plateau">
         <div className="colonne-mine">

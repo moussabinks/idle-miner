@@ -30,6 +30,8 @@ import {
   dureeCasse,
   type Cout,
   type IdBloc,
+  niveauMaxAuPrestige,
+  prestigePourNiveau,
   type IdEnchantement,
   type NiveauAscenseur,
   type Pioche,
@@ -95,10 +97,10 @@ export type Employe = {
   nom: string
   niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
   profondeur: number // la profondeur de sa galerie
-  etape: 'creuse' | 'monte' | 'descend'
+  etape: 'creuse' | 'monte' | 'vend' | 'descend'
   position: number // où il est pendant ses trajets (0 = au village)
   sac: Inventaire
-  progression: number // fraction du prochain bloc
+  progression: number // fraction du prochain bloc (en creusant), ou secondes passées au marché (en vendant)
   blocsCasses: number
   gagne: number // ce qu'il t'a rapporté (après son salaire)
 }
@@ -262,12 +264,32 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   return creerPartie(aleatoire, etat.prestige + 1, {
     succes: etat.succes,
     nonAVendre: etat.nonAVendre,
-    foreuse: etat.foreuse,
+    foreuse: foreuseApresPrestige(etat.foreuse),
     talents: etat.talents,
     niveauAscenseur: etat.ascenseur.niveau,
-    employes: etat.employes,
+    employes: etat.employes.map(employeApresPrestige),
     argentGagneAvant: argentGagneTotal(etat),
   })
+}
+
+// Au prestige, la foreuse garde seulement ses améliorations (activation, vitesse, chariot,
+// nombre de foreuses, options) : plus de charbon, chariot vide, et elle repart de la surface.
+export function foreuseApresPrestige(foreuse: Foreuse): Foreuse {
+  return {
+    ...nouvelleForeuse(),
+    active: foreuse.active,
+    niveauVitesse: foreuse.niveauVitesse,
+    niveauChariot: foreuse.niveauChariot,
+    nombre: foreuse.nombre,
+    rechargeAuto: foreuse.rechargeAuto,
+    nonCoches: [...foreuse.nonCoches],
+  }
+}
+
+// Pareil pour les mineurs employés : ils gardent leur pioche, mais recommencent
+// une galerie depuis la surface, le sac vide.
+export function employeApresPrestige(employe: Employe): Employe {
+  return { ...employe, profondeur: 2, etape: 'descend', position: 0, sac: {}, progression: 0 }
 }
 
 // Tout l'argent gagné depuis le début, prestiges compris (c'est ce que classe le leaderboard).
@@ -363,6 +385,22 @@ export function indexBlocActuel(etat: EtatJeu): number {
   return meilleur
 }
 
+// Le sens dans lequel le mineur avance en creusant la couche : -1 vers la gauche, 1 vers la droite.
+// Il creuse en zigzag (une couche vers la droite, la suivante vers la gauche) : il regarde du côté
+// où il reste le plus de blocs à casser.
+export function sensDeMinage(etat: EtatJeu): -1 | 1 {
+  const actuel = indexBlocActuel(etat)
+  if (actuel === -1) return 1
+  let aGauche = 0
+  let aDroite = 0
+  etat.coucheActuelle.forEach((bloc, colonne) => {
+    if (bloc === null || colonne === actuel) return
+    if (colonne < actuel) aGauche += 1
+    else aDroite += 1
+  })
+  return aGauche > aDroite ? -1 : 1
+}
+
 export function blocActuel(etat: EtatJeu): IdBloc | null {
   const index = indexBlocActuel(etat)
   return index === -1 ? null : etat.coucheActuelle[index]
@@ -419,11 +457,15 @@ export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
 // Minage
 // ---------------------------------------------------------------------------
 
-// Nombre d'objets obtenus en cassant un bloc (enchantement Fortune sur les minerais).
+// La chance de doubler un minerai avec Fortune : 20 % par niveau (Fortune III : 60 %).
+export const CHANCE_FORTUNE_PAR_NIVEAU = 0.2
+
+// Nombre d'objets obtenus en cassant un bloc (enchantement Fortune sur les minerais) :
+// 1, ou 2 si la chance de Fortune tombe.
 export function nbDrops(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): number {
   const fortune = etat.enchantements.fortune
   if (!BLOCS[bloc].minerai || fortune === 0) return 1
-  return 1 + Math.max(0, entierEntre(aleatoire, 0, fortune + 1) - 1)
+  return aleatoire() < fortune * CHANCE_FORTUNE_PAR_NIVEAU ? 2 : 1
 }
 
 // Casse le prochain bloc de la couche en cours.
@@ -764,9 +806,16 @@ export function prochainNiveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
   return NIVEAUX_ASCENSEUR[etat.ascenseur.niveau] ?? null
 }
 
+// Le prochain niveau est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
+export function ascenseurBloqueAuPrestige(etat: EtatJeu): number | null {
+  const prochain = prochainNiveauAscenseur(etat)
+  if (prochain === null || prochain.niveau <= niveauMaxAuPrestige('ascenseur', etat.prestige)) return null
+  return prestigePourNiveau('ascenseur', prochain.niveau)
+}
+
 export function peutAmeliorerAscenseur(etat: EtatJeu): boolean {
   const prochain = prochainNiveauAscenseur(etat)
-  return prochain !== null && peutPayer(etat, prochain.cout)
+  return prochain !== null && ascenseurBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
 }
 
 // Construit l'ascenseur (niveau 1) ou l'améliore. Ça se fait directement dans la mine.

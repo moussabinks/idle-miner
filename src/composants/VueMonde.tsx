@@ -4,7 +4,8 @@
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
 import { memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
-import { BLOCS, LARGEUR_MINE, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { BLOCS, LARGEUR_MINE, PIOCHES, PROFONDEUR_BEDROCK, zoneDe, type IdBloc } from '../jeu/donnees'
+import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
@@ -16,8 +17,10 @@ import {
   nbSurQuai,
   piocheEquipee,
   positionFront,
+  sensDeMinage,
   type EtatJeu,
 } from '../jeu/mineur'
+import { MINERAIS_RARES } from '../evenements'
 import type { Eclat, Gain, Trouvaille } from '../usePartie'
 import { Personnage } from './Personnage'
 import { VueVillage } from './VueVillage'
@@ -75,7 +78,7 @@ function Eclats({ bloc, profondeur }: { bloc: IdBloc; profondeur: number }) {
 // Un minerai trouvé : il s'envole en brillant au-dessus du mineur.
 function TrouvailleRare({ trouvaille }: { trouvaille: Trouvaille }) {
   return (
-    <span className={`trouvaille trouvaille-${trouvaille.bloc}`} aria-hidden="true">
+    <span className={`trouvaille trouvaille-${trouvaille.bloc} ${MINERAIS_RARES.includes(trouvaille.bloc) ? 'trouvaille-rare' : ''}`} aria-hidden="true">
       <span className="trouvaille-rayons" />
       <span className={`mini-bloc bloc-${trouvaille.bloc} roche-pierre`} />
       <span className="trouvaille-texte">
@@ -99,7 +102,7 @@ const PIECES_VENTE = Array.from({ length: 12 }, (_, i) => {
 })
 
 // Une rangée de la mine : l'étiquette, la place de l'échelle et de l'ascenseur,
-// les 10 cases, puis la place du puits de la foreuse.
+// les 10 cases, puis la place du puits de la foreuse et celle de la galerie des mineurs.
 function Rangee({ profondeur, classe = '', children }: { profondeur: number; classe?: string; children: ReactNode }) {
   return (
     <div className={`rangee ${zoneDe(profondeur).classe} ${classe}`}>
@@ -108,6 +111,7 @@ function Rangee({ profondeur, classe = '', children }: { profondeur: number; cla
       <div className="place-ascenseur" />
       {children}
       <div className="place-foreuse" />
+      <div className="place-mineurs" />
     </div>
   )
 }
@@ -156,6 +160,55 @@ function PuitsForeuse({ etat, derniereRangee, teteRef }: { etat: EtatJeu; dernie
           {foreuse.nombre > 1 && ` ×${foreuse.nombre}`}
         </span>
       </div>
+    </>
+  )
+}
+
+// Les mineurs employés (prestige 2) dans leur galerie, à droite de la foreuse :
+// on les voit descendre, creuser leur bloc, puis remonter vendre leur récolte.
+function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRangee: number }) {
+  if (etat.employes.length === 0) return null
+  // La galerie descend jusqu'au mineur le plus profond (sans dépasser ce qu'on affiche).
+  const plusProfond = Math.max(...etat.employes.map((mineur) => mineur.profondeur))
+  const hauteur = Math.min(plusProfond, derniereRangee)
+
+  return (
+    <>
+      <div className="galerie-mineurs" style={{ height: `calc(var(--pas) * ${hauteur} + 14px)` }} />
+      {etat.employes.map((mineur, index) => {
+        const creuse = mineur.etape === 'creuse'
+        // Au marché (ou tout en haut de son trajet), il est au village : on ne le dessine pas dans
+        // la mine (le compteur en haut de la mine affiche 💰).
+        if (mineur.etape === 'vend' || (!creuse && mineur.position < 0.5)) return null
+        // Quand il creuse, il se tient juste au-dessus du bloc qu'il casse ; sinon, il est sur son trajet.
+        const rangee = creuse ? mineur.profondeur - 1 : Math.max(1, Math.round(mineur.position))
+        // Plus profond que ce qu'on voit : on le dessine en bas, avec une flèche.
+        const plusBas = rangee > derniereRangee - 1
+        const rangeeAffichee = Math.min(rangee, derniereRangee - 1)
+        // L'indicateur : ce qu'il fait (icône), sa profondeur quand il creuse, sinon le temps restant.
+        const detail = creuse ? `-${mineur.profondeur} m` : `${Math.ceil(secondesRestantesEmploye(etat, mineur))} s`
+        const remplissage = nbDansSacEmploye(mineur) / tailleSacEmploye(etat, mineur)
+        return (
+          <div
+            key={index}
+            className={`mineur-employe mineur-${mineur.etape} ${plusBas ? 'mineur-plus-bas' : ''}`}
+            style={{ top: `calc(var(--pas) * ${rangeeAffichee - 1})` }}
+            title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
+          >
+            <span className="mineur-nom">
+              {iconeActiviteEmploye(mineur)} <span className="mineur-prenom">{mineur.nom}</span> {detail}
+              {/* Plus profond que ce qu'on voit : il est dessiné en bas, avec sa vraie profondeur. */}
+              {plusBas && ' ↓'}
+              {/* Le remplissage de son sac à dos. */}
+              <span className="mineur-sac" style={{ ['--remplissage' as string]: remplissage }} />
+            </span>
+            <Personnage couleurPioche={PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur} action={creuse ? 'creuse' : 'grimpe'} />
+            {creuse && !plusBas && (
+              <span className={`mineur-bloc case bloc ${mineur.profondeur > 80 ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
+            )}
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -295,10 +348,14 @@ export function VueMonde({
             </button>
           )}
           {etat.employes.length > 0 && (
-            <span className="indicateur-foreuse indicateur-mineurs" title="Tes mineurs travaillent pour toi">
-              👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''} ·{' '}
-              {etat.employes.filter((m) => m.etape === 'creuse').length} creuse
-              {etat.employes.filter((m) => m.etape === 'creuse').length > 1 ? 'nt' : ''}
+            <span className="indicateur-foreuse indicateur-mineurs" title="Tes mineurs : ⛏️ creusent, ⏫ remontent, 💰 vendent, ⏬ redescendent">
+              👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''}
+              {/* Combien creusent, remontent, vendent, redescendent (seulement ce qui n'est pas à 0). */}
+              {(['creuse', 'monte', 'vend', 'descend'] as const).map((etape) => {
+                const lesquels = etat.employes.filter((m) => m.etape === etape)
+                if (lesquels.length === 0) return null
+                return <span key={etape}> · {iconeActiviteEmploye(lesquels[0])} {lesquels.length}</span>
+              })}
             </span>
           )}
         </div>
@@ -356,6 +413,7 @@ export function VueMonde({
         )}
 
         <PuitsForeuse etat={etat} derniereRangee={derniere} teteRef={foreuseRef} />
+        <GalerieMineurs etat={etat} derniereRangee={derniere} />
 
         {/* Tout ce qui a déjà été creusé, depuis l'entrée du puits. */}
         {Array.from({ length: Math.max(0, front - 1) }, (_, i) => (
@@ -373,7 +431,9 @@ export function VueMonde({
                     <Personnage
                       couleurPioche={couleurPioche}
                       action={etat.depart ? 'marche' : enMinage ? 'creuse' : 'repos'}
-                      versLaGauche={etat.depart ? true : versLaGauche}
+                      // Il part vers le puits (à gauche), il creuse dans le sens de la couche
+                      // (en zigzag), ou il regarde là où on l'a fait marcher.
+                      versLaGauche={etat.depart ? true : enMinage ? sensDeMinage(etat) < 0 : versLaGauche}
                     />
                   </div>
                 )}

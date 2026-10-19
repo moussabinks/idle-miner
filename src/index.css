@@ -19,13 +19,15 @@
   --col-echelle: 18px;
   --col-ascenseur: 34px;
   --col-foreuse: 28px;
-  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse));
+  --col-mineurs: 0px; /* la galerie des mineurs employés (élargie quand on en a, voir .avec-mineurs) */
+  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse) + var(--col-mineurs));
   --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
-  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 13 * 3px);
+  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 14 * 3px);
   /* Où commencent l'échelle, l'ascenseur et la foreuse (depuis le bord gauche du puits). */
   --x-echelle: calc(10px + var(--col-etiquette) + 3px);
   --x-ascenseur: calc(var(--x-echelle) + var(--col-echelle) + 3px);
   --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
+  --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
   --pas: calc(var(--taille-case) + 3px);
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -122,6 +124,19 @@ h2 {
 .hud-argent strong {
   color: var(--accent);
   font-size: 1.15rem;
+  font-variant-numeric: tabular-nums; /* les chiffres ne bougent pas pendant que le compteur défile */
+}
+
+/* L'argent généré par seconde, à côté du titre « Argent ». */
+.hud-revenu {
+  margin-left: 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte-doux);
+}
+
+.hud-revenu-actif {
+  color: var(--vert);
 }
 
 .hud-enchants {
@@ -218,7 +233,7 @@ h2 {
 /* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 6 cases. */
 .rangee {
   display: grid;
-  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse);
+  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse) var(--col-mineurs);
   gap: 3px;
   margin-bottom: 3px;
   align-items: center;
@@ -657,6 +672,82 @@ h2 {
 
 .indicateur-foreuse.tourne .foreuse-corps {
   animation: tremble 0.15s linear infinite;
+}
+
+/* Une ligne d'amélioration (la même partout : Amelioration.tsx). */
+.amelioration {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.amelioration-haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* Les niveaux en petits carrés : pleins (achetés), vides (à acheter), hachurés (bloqués par le prestige). */
+.niveaux {
+  display: inline-flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.niveaux i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--bordure);
+  background: var(--carte-claire);
+}
+
+.niveaux i.niveau-achete {
+  border-color: #127a6d;
+  background: linear-gradient(#3fe0cb, #22b5a3);
+  box-shadow: 0 0 6px rgb(34 181 163 / 0.5);
+}
+
+/* Le dernier niveau acheté « pop » quand il apparaît (juste après un achat). */
+.niveaux i.niveau-achete:last-of-type,
+.niveaux i.niveau-achete:has(+ .niveau-libre),
+.niveaux i.niveau-achete:has(+ .niveau-bloque) {
+  animation: niveau-pop 0.45s ease-out;
+}
+
+.niveaux i.niveau-bloque {
+  background: repeating-linear-gradient(135deg, var(--carte-claire) 0 2px, var(--fond) 2px 4px);
+  opacity: 0.7;
+}
+
+@keyframes niveau-pop {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.amelioration-max {
+  color: var(--vert);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.amelioration-verrou {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px dashed var(--bordure);
+  color: var(--texte-doux);
+  font-size: 0.82rem;
 }
 
 .module-ligne {
@@ -1475,6 +1566,13 @@ kbd {
 
 /* Le marché : liste à cocher */
 /* Les jauges du marché et de l'ascenseur : une ligne par objet, pour en choisir une partie. */
+/* « Tout sélectionner », au-dessus des jauges (marché et ascenseur). */
+.tout-selectionner {
+  justify-self: start;
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
 .jauges,
 .inventaire .jauges {
   list-style: none;
@@ -1994,4 +2092,111 @@ kbd {
 
 .carte-employe {
   border-left: 4px solid #e07b2a;
+}
+
+/* ------------------------------------------- La galerie des mineurs employés */
+
+/* Quand on a des mineurs, une colonne de plus à droite de la foreuse : on redéclare
+   les tailles qui en dépendent (elles sont calculées à partir de --col-mineurs). */
+.jeu.avec-mineurs {
+  --col-mineurs: 34px;
+  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse) + var(--col-mineurs));
+  --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
+  --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 14 * 3px);
+  --pas: calc(var(--taille-case) + 3px);
+  --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
+  --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
+}
+
+@media (max-width: 480px) {
+  .jeu.avec-mineurs {
+    --col-mineurs: 22px;
+  }
+
+  /* Sur téléphone, la place manque : juste l'icône et la profondeur (ou le temps). */
+  .mineur-prenom {
+    display: none;
+  }
+}
+
+/* Le tunnel creusé par les mineurs, jusqu'au plus profond d'entre eux. */
+.galerie-mineurs {
+  position: absolute;
+  top: -14px;
+  left: var(--x-mineurs);
+  width: var(--col-mineurs);
+  background:
+    repeating-linear-gradient(transparent 0 calc(var(--pas) - 3px), rgb(0 0 0 / 0.35) calc(var(--pas) - 3px) var(--pas)),
+    linear-gradient(90deg, #3a2a1c 0 2px, #241a12 2px calc(100% - 2px), #3a2a1c calc(100% - 2px));
+  box-shadow: inset 0 0 6px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+}
+
+/* Un mineur employé : le personnage, son nom, et le bloc qu'il casse sous lui. */
+.mineur-employe {
+  position: absolute;
+  left: var(--x-mineurs);
+  width: var(--col-mineurs);
+  height: var(--taille-case);
+  display: grid;
+  place-items: end center;
+  transition: top 0.12s linear; /* il bouge par petits pas : on adoucit */
+  z-index: 3;
+  pointer-events: none;
+}
+
+.mineur-employe .personnage {
+  width: calc(var(--col-mineurs) + 8px);
+  height: calc(var(--col-mineurs) + 8px);
+}
+
+/* Son nom, en petit au-dessus de la tête. */
+.mineur-nom {
+  position: absolute;
+  top: -15px;
+  right: 0; /* calé à droite : la galerie est au bord de la mine, l'étiquette ne doit pas en sortir */
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 0.65);
+  color: #ffb35c;
+  font-size: 0.55rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Le bloc qu'il est en train de casser, juste sous ses pieds (il tremble).
+   Sélecteur double : il doit passer devant « .case { position: relative } » de blocs.css. */
+.mineur-employe .mineur-bloc {
+  position: absolute;
+  top: 100%;
+  left: 2px;
+  right: 2px;
+  height: calc(var(--taille-case) - 6px);
+  margin-top: 3px;
+  animation: tremble 0.15s linear infinite;
+}
+
+/* La petite jauge de son sac à dos, sous son nom. */
+.mineur-sac {
+  display: block;
+  height: 2px;
+  margin: 1px 0 1px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #ffb35c calc(var(--remplissage) * 100%), rgb(255 255 255 / 0.2) 0);
+}
+
+/* Sac plein (il remonte vendre) : l'étiquette passe au vert, comme les boutons de vente. */
+.mineur-monte .mineur-nom {
+  color: #7be08a;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .mineur-employe {
+    transition: none;
+  }
+
+  .mineur-employe .mineur-bloc {
+    animation: none;
+  }
 }

@@ -129,6 +129,11 @@ function bruit(debut: number, duree: number, options: OptionsBruit = {}) {
 }
 
 // Un petit écart au hasard, pour que deux coups de pioche ne sonnent pas pareil.
+// La série de minerais (pour la note qui monte) : une gamme pentatonique, toujours jolie.
+const GAMME_SERIE = [1047, 1175, 1319, 1568, 1760, 2093, 2349, 2637]
+let serieMinerais = 0
+let dernierMinerai = 0
+
 function varier(valeur: number, ecart = 0.08): number {
   return valeur * (1 - ecart + Math.random() * 2 * ecart)
 }
@@ -151,9 +156,33 @@ export const sons = {
     note(varier(dur ? 110 : 150), 0, 0.12, { type: 'triangle', volume: 0.22, vers: 55 })
   },
 
-  // Un minerai ordinaire qui tombe dans le sac : « plink ».
+  // Un minerai ordinaire qui tombe dans le sac : « plink ». Quand on en trouve plusieurs
+  // à la suite (moins de 4 s entre deux), la note monte d'un cran à chaque fois, comme
+  // une gamme : on a envie de continuer la série !
   minerai() {
-    note(varier(1320, 0.03), 0.02, 0.12, { type: 'triangle', volume: 0.12 })
+    const maintenant = performance.now()
+    serieMinerais = maintenant - dernierMinerai < 4000 ? serieMinerais + 1 : 0
+    dernierMinerai = maintenant
+    const frequence = GAMME_SERIE[Math.min(serieMinerais, GAMME_SERIE.length - 1)]
+    note(frequence, 0.02, 0.12, { type: 'triangle', volume: 0.12 })
+    // Au sommet de la gamme : un petit écho brillant en plus.
+    if (serieMinerais >= GAMME_SERIE.length - 1) note(frequence * 2, 0.06, 0.15, { type: 'sine', volume: 0.05 })
+  },
+
+  // Une couche finie : un « boum » sourd de la roche qui cède. Tous les 10 m, une
+  // petite cloche en plus pour fêter le palier.
+  nouvelleCouche(palier: boolean) {
+    note(70, 0, 0.25, { type: 'sine', volume: 0.25, vers: 40 })
+    bruit(0, 0.2, { filtre: 'lowpass', frequence: 400, volume: 0.2 })
+    if (palier) [659, 988, 1319].forEach((f, i) => note(f, 0.1 + i * 0.08, 0.4, { type: 'triangle', volume: 0.12 }))
+  },
+
+  // Une amélioration achetée : trois notes qui montent, « niveau supérieur ! ».
+  amelioration() {
+    ;[523, 659, 784].forEach((f, i) => note(f, i * 0.06, 0.16, { type: 'square', volume: 0.06 }))
+    note(1047, 0.18, 0.45, { type: 'triangle', volume: 0.14 })
+    note(2093, 0.2, 0.3, { type: 'sine', volume: 0.05 })
+    sons.pieces(2, 0.02)
   },
 
   // Un minerai rare (diamant, émeraude...) : une petite pluie d'étincelles qui monte.

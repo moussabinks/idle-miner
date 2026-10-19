@@ -1,8 +1,10 @@
 // L'ascenseur à l'écran : où en est la cabine, et le bloc pour le construire ou
 // l'améliorer (dans le sac de la mine, et à l'entrée de la mine au village).
 
+import { NIVEAUX_ASCENSEUR, niveauMaxAuPrestige } from '../jeu/donnees'
 import {
   ameliorerAscenseur,
+  ascenseurBloqueAuPrestige,
   ascenseurDisponible,
   ascenseurEnMouvement,
   niveauAscenseur,
@@ -12,7 +14,7 @@ import {
   type EtatJeu,
 } from '../jeu/mineur'
 import type { Action } from '../usePartie'
-import { PrixCout } from './PrixCout'
+import { Amelioration } from './Amelioration'
 
 // Où en est la cabine, en quelques mots, avec le temps qu'il lui reste.
 function etatCabine(etat: EtatJeu): string {
@@ -34,26 +36,16 @@ export function AmeliorationAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (
   const niveau = niveauAscenseur(etat)
   const prochain = prochainNiveauAscenseur(etat)
   return (
-    <>
-      {niveau && (
-        <span className="discret">
-          Niveau {niveau.niveau} : {niveau.capacite} objets par voyage · {etatCabine(etat)}
-        </span>
-      )}
-      {prochain ? (
-        <div className="module-ligne">
-          <PrixCout etat={etat} cout={prochain.cout} />
-          <button
-            className="bouton bouton-petit bouton-ameliorer"
-            disabled={!peutAmeliorerAscenseur(etat) || ascenseurEnMouvement(etat)}
-            onClick={() => jouer(ameliorerAscenseur)}
-          >
-            {niveau ? `Améliorer (niv. ${prochain.niveau}, ${prochain.capacite} places)` : 'Construire'}
-          </button>
-        </div>
-      ) : (
-        <span className="ok">Niveau maximum !</span>
-      )}
-    </>
+    <Amelioration
+      etat={etat}
+      actuel={niveau ? `${niveau.capacite} objets par voyage · ${etatCabine(etat)}` : 'Pas encore construit'}
+      niveau={etat.ascenseur.niveau}
+      niveauMax={NIVEAUX_ASCENSEUR.length}
+      niveauPermis={niveauMaxAuPrestige('ascenseur', etat.prestige)}
+      suivant={prochain && { cout: prochain.cout, texte: niveau ? `⬆ ${prochain.capacite} places` : '🔨 Construire' }}
+      bloqueAuPrestige={ascenseurBloqueAuPrestige(etat)}
+      possible={peutAmeliorerAscenseur(etat) && !ascenseurEnMouvement(etat)}
+      onAmeliorer={() => jouer(ameliorerAscenseur)}
+    />
   )
 }
