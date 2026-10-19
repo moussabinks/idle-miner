@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES } from './donnees'
 import {
+  argentGagneTotal,
   acheterPioche,
   acheterSac,
   tailleSac,
@@ -628,6 +629,16 @@ describe('prestige et succès', () => {
     expect(suite.prestige).toBe(1)
     expect(suite.succes).toContain('premier_bloc')
     expect(suite.stats.blocsCasses).toBe(0)
+  })
+
+  it("le prestige garde le total de l'argent gagné (pour le classement)", () => {
+    const etat = nouvellePartie()
+    etat.stats.argentGagne = 1000
+    const suite = prestige(etat, aleatoireAvecGraine(1))
+    suite.stats.argentGagne = 250
+    const encore = prestige(suite, aleatoireAvecGraine(2))
+    expect(encore.stats.argentGagne).toBe(0)
+    expect(argentGagneTotal(encore)).toBe(1250)
   })
 
   it('ne débloque un succès qu’une seule fois', () => {

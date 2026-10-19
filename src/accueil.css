@@ -306,3 +306,94 @@
     width: auto;
   }
 }
+
+/* --- Le classement (sous les mondes) ----------------------------------------- */
+
+.carte-classement {
+  margin-top: 24px;
+}
+
+.classement-haut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.classement-haut h2 {
+  margin: 0;
+}
+
+/* Les onglets partagés (.onglets) sont faits pour le haut d'une carte : ici ils sont dans la ligne. */
+.classement-onglets.onglets {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+.classement-haut .lien {
+  margin-left: auto;
+}
+
+.classement-explication {
+  margin: 8px 0 12px;
+}
+
+.classement-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.classement-liste li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto 160px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--carte-claire);
+}
+
+/* La ligne du joueur connecté. */
+.classement-liste li.classement-moi {
+  outline: 2px solid var(--accent);
+}
+
+.classement-rang {
+  font-weight: 800;
+  text-align: center;
+}
+
+.classement-pseudo {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classement-valeur {
+  font-weight: 800;
+  color: var(--accent);
+  text-align: right;
+}
+
+.classement-autre {
+  color: var(--texte-doux);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .classement-liste li {
+    grid-template-columns: 32px 1fr auto;
+  }
+
+  /* Sur téléphone, on n'affiche que la valeur classée. */
+  .classement-liste .classement-autre {
+    display: none;
+  }
+}

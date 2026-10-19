@@ -1,4 +1,4 @@
-// Le compte du joueur et la sauvegarde en ligne de ses mondes.
+// Le compte du joueur, la sauvegarde en ligne de ses mondes et son score au classement.
 //
 // Le localStorage reste la sauvegarde principale : le jeu y écrit à chaque instant.
 // Quand le joueur est connecté, ce hook recopie régulièrement tous les mondes en ligne,
@@ -13,8 +13,18 @@ import {
   lireDerniereSynchro,
   type SauvegardeEnLigne,
 } from './jeu/compte'
-import { exporterTout, importerTout, mondesDeLaCopie } from './jeu/sauvegarde'
-import { creerCompte, envoyerMondes, joueurConnecte, seConnecter, seDeconnecter, telechargerMondes, type Joueur } from './enLigne'
+import { meilleurScore } from './jeu/classement'
+import { exporterTout, importerTout, mondesDeLaCopie, type SauvegardeComplete } from './jeu/sauvegarde'
+import {
+  creerCompte,
+  envoyerMondes,
+  envoyerScore,
+  joueurConnecte,
+  seConnecter,
+  seDeconnecter,
+  telechargerMondes,
+  type Joueur,
+} from './enLigne'
 
 // Toutes les 20 s, on envoie les mondes s'ils ont changé.
 const INTERVALLE_ENVOI = 20_000 // ms
@@ -51,21 +61,41 @@ export function useCompte() {
   // d'écraser les mondes du compte avant d'avoir regardé ce qu'il contient).
   const pret = useRef(false)
   const occupe = useRef(false)
+  // Le dernier score envoyé au classement (on ne le renvoie que s'il a changé).
+  const dernierScore = useRef('')
+
+  // Le score part avec les mondes. S'il est refusé (pseudo d'un ancien compte, par exemple),
+  // tant pis : la sauvegarde des mondes compte plus que le classement.
+  const envoyerLeScore = useCallback(async (j: Joueur, parties: SauvegardeComplete) => {
+    const score = meilleurScore(parties)
+    const texte = JSON.stringify(score)
+    if (texte === dernierScore.current || (score.prestige === 0 && score.argent === 0)) return
+    try {
+      await envoyerScore(j, score)
+      dernierScore.current = texte
+    } catch {
+      // On réessaiera au prochain envoi.
+    }
+  }, [])
 
   const envoyer = useCallback(async (j: Joueur) => {
     const parties = exporterTout(window.localStorage)
     const texte = JSON.stringify(parties)
     if (texte === dernierEnvoi.current) return
+    let date: number
     try {
-      const date = await envoyerMondes(j, parties)
+      date = await envoyerMondes(j, parties)
       dernierEnvoi.current = texte
       ecrireDerniereSynchro(window.localStorage, { joueur: j.id, envoyeeLe: date })
-      setEnvoyeeLe(date)
-      setStatut('a-jour')
     } catch {
       setStatut('hors-ligne')
+      return
     }
-  }, [])
+    // Le score d'abord : le classement de l'accueil se relit quand l'heure d'envoi change.
+    await envoyerLeScore(j, parties)
+    setEnvoyeeLe(date)
+    setStatut('a-jour')
+  }, [envoyerLeScore])
 
   // Le premier échange après la connexion : envoyer, récupérer, ou demander au joueur.
   const synchroniser = useCallback(
@@ -87,6 +117,7 @@ export function useCompte() {
           setEnvoyeeLe(enLigne.envoyeeLe)
           setVersionMondes((v) => v + 1)
           setStatut('a-jour')
+          void envoyerLeScore(j, enLigne.parties)
         } else if (choix === 'envoyer') {
           dernierEnvoi.current = '' // on force l'envoi
           await envoyer(j)
@@ -100,7 +131,7 @@ export function useCompte() {
         occupe.current = false
       }
     },
-    [envoyer],
+    [envoyer, envoyerLeScore],
   )
 
   // Au lancement : une session est peut-être encore ouverte (Supabase la garde dans le navigateur).
@@ -159,6 +190,7 @@ export function useCompte() {
     await seDeconnecter()
     pret.current = false
     dernierEnvoi.current = ''
+    dernierScore.current = ''
     setJoueur(null)
     setEnvoyeeLe(null)
     setStatut('deconnecte')

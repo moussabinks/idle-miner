@@ -34,7 +34,8 @@
   - **Option B** : passer le dépôt en public et utiliser le plan Hobby gratuit. Avec un dépôt privé, Hobby ne déploie que les commits du propriétaire.
   - Si le dépôt est transféré, mettre à jour le remote : `git remote set-url origin https://github.com/<org>/idle-miner.git`.
 - **Supabase** : projet `peumwxcvqncynobwejmk` (https://peumwxcvqncynobwejmk.supabase.co). L'adresse et la clé publique (« publishable ») sont dans `src/enLigne.ts`. À faire une fois dans le tableau de bord :
-  - **SQL Editor** : coller et lancer `supabase/schema.sql` (table `sauvegardes` + règles de sécurité).
+  - **SQL Editor** : coller et lancer `supabase/schema.sql` (table `sauvegardes` + règles de sécurité). ✅ fait le 19/10.
+  - **SQL Editor** : coller et lancer `supabase/classement.sql` (table `classement` + règles de sécurité).
   - **Authentication → Sign In / Providers → Email** : décocher **Confirm email** (les adresses des comptes sont fabriquées à partir du pseudo, aucun email ne peut arriver).
 - **Poste de dev (Mac)** : Homebrew, Node 26, npm 11, git, et gh connecté au compte `moussabinks`.
 
@@ -42,7 +43,7 @@
 
 Le jeu est **jouable de bout en bout** : de -1 m à la bedrock, puis prestige.
 
-Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées automatiquement) :
+Depuis la v11 de l'état (`VERSION_ETAT = 11`, anciennes sauvegardes migrées automatiquement) :
 
 - **Mine à -128 m, couches de 10 blocs.** Zones, minerais et pioches à l'échelle de 128 m. Les minerais **apparaissent petit à petit** (19/10, `APPARITION_MINERAIS` dans `mine.ts`) : chacun commence très rare à sa profondeur de départ puis devient plus fréquent jusqu'à sa profondeur « pleine » (charbon et fer dès -7 m, redstone dès -18 m, or dès -25 m, lapis dès -30 m, émeraude dès -40 m, diamant dès -45 m, débris dès -96 m).
 - **Bedrock** : en finissant la couche -127 m avec la netherite, on gagne (succès + écran de victoire une seule fois), mais on **continue de creuser** des galeries à -127 m. Le prestige se fait quand on veut, au Puits.
@@ -74,6 +75,7 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 - **Caméra** : une référence par endroit où le mineur est dessiné (village, cabine, échelle, front). Avec une seule référence partagée, la caméra restait au village pendant la descente en ascenseur (corrigé le 19/10).
 - **Pas de torches** : lumière naturelle, les 4 couches sous la couche en cours sont visibles et de plus en plus sombres.
 - **Comptes et sauvegarde en ligne** (19/10, `CarteCompte.tsx`, `useCompte.ts`, `enLigne.ts`, `compte.ts`) : sur l'accueil, une carte « Ton compte » (facultative) : pseudo (3 à 16 caractères, lettres sans accent, chiffres, `_`, `-`) + mot de passe (6 caractères au moins). Pas d'email : Supabase reçoit l'adresse fictive `pseudo@joueurs.idle-miner.app` (en minuscules, donc « Noah » = « noah »), et un mot de passe oublié est perdu. Connecté, tous les mondes du navigateur sont copiés en ligne (une ligne par joueur dans `sauvegardes`, un envoi toutes les 20 s s'ils ont changé, en quittant un monde et en quittant la page). À la connexion : compte vide → on envoie ; navigateur vide → on récupère ; sinon, si ce navigateur a fait le dernier échange avec ce compte → on envoie, et sinon on demande au joueur lesquels garder. Le `localStorage` reste la sauvegarde principale : sans réseau, le jeu marche comme avant.
+- **Classement / leaderboard** (19/10, `classement.ts`, `CarteClassement.tsx`, table `classement`) : sous les mondes, sur l'accueil, deux onglets **⭐ Prestige** (l'argent départage) et **💰 Argent** (le prestige départage), top 20, médailles pour les 3 premiers, ligne du joueur encadrée. Tout le monde peut le lire ; pour y apparaître, il faut un compte. Le score est le meilleur des mondes du joueur et part avec chaque envoi des mondes. « Argent » = tout l'argent gagné depuis le début, **prestiges compris** (`argentGagneTotal` : `argentGagneAvant`, gardé au prestige, + `stats.argentGagne`) : l'argent en poche baisse quand on achète et repart à 0 au prestige. Les parties d'avant la v11 partent de 0 pour les prestiges passés. Côté serveur : le pseudo doit être celui du compte (impossible de se faire passer pour un autre), pseudos uniques sans tenir compte des majuscules, le serveur garde toujours le **meilleur** score (supprimer un monde ne fait pas descendre), et des scores impossibles sont refusés (prestige ≤ 500, argent ≤ 10^15). C'est un anti-triche minimal : un joueur qui modifie son `localStorage` peut encore tricher.
 - **Écran d'accueil et mondes** (`Accueil.tsx`, `sauvegarde.ts`) : au lancement, un écran explique le but du jeu (4 étapes et une coupe de la mine jusqu'à la bedrock) et liste les **mondes** : jusqu'à 5 parties séparées (une save de dev avancée, une save de début, celle d'un ami...). On peut créer (avec un nom), jouer, renommer, dupliquer et supprimer un monde. Dans le jeu, le bouton « 🌍 nom du monde » en haut ramène à l'accueil. Chaque monde a sa sauvegarde et son temps hors ligne ; le son et la musique sont communs. L'ancienne sauvegarde unique devient « Monde 1 ». Les saves restent dans le navigateur (pas d'export pour l'instant).
 - **Village** : entre deux stands, plus de menu de navigation (19/10) : on marche avec ← → ou on clique sur un stand.
 - **Creuser** : seulement avec les boutons Creuser / x10 (19/10). Les flèches du clavier servent seulement à se déplacer.
@@ -120,7 +122,7 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 
 1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, fin de partie (victoire, prestige, succès).
 2. **Brancher Vercel** (décision A/B ci-dessus).
-2 bis. **Leaderboard** (sur Supabase, après les comptes) : choisir ce qu'on classe (profondeur max, prestiges, argent gagné, temps jusqu'à la bedrock) et un minimum d'anti-triche (scores impossibles refusés).
+2 bis. ✅ **Leaderboard** (19/10) : prestige et argent gagné au total. Idées : classement par temps jusqu'à la bedrock, voir son rang même hors du top 20, retirer un tricheur à la main dans Supabase (Table Editor → classement).
 3. **Polish** : ✅ sons et animations (19/10). Reste : meilleure ambiance par zone, éventuellement des sprites.
 4. Ajuster l'équilibrage après de vraies parties (le bot donne environ 19 min jusqu'à la bedrock).
 5. Idées en attente : améliorations des pioches au forgeron, couches dures, étais de mine, de vrais mineurs automatiques pour un jeu qui avance hors ligne (proposé le 18/10, pas encore décidé).
@@ -155,3 +157,4 @@ Depuis la v10 de l'état (`VERSION_ETAT = 10`, anciennes sauvegardes migrées au
 - **2026-10-19** : l'interface tient dans la hauteur de l'écran sur ordinateur (mine extensible, panneau qui défile seul, jauges compactes).
 - **2026-10-19** : nouveau dessin de l'ascenseur : cage en métal (toit, grille, plancher rayé jaune et noir, lampe qui clignote en route), caisse de minerai quand elle est chargée, puits plus large avec glissières et traverses, poulie qui tourne et câble.
 - **2026-10-19** : comptes facultatifs (pseudo + mot de passe, sans email) et sauvegarde en ligne de tous les mondes sur Supabase. Prépare le leaderboard.
+- **2026-10-19** : classement (leaderboard) au prestige et à l'argent gagné au total, sur l'accueil. Argent gagné gardé au prestige (`argentGagneAvant`). Sauvegarde v11.
