@@ -40,6 +40,7 @@ import {
   positionFront,
   voyager,
 } from './jeu/mineur'
+import { decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
@@ -70,6 +71,12 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const village = useMarcheVillage(enVille)
   const stand = enVille ? standProche(village.x) : null
   const prochePuits = Math.abs(village.x - X_PUITS) < 1
+
+  // Arrivé devant un stand tout juste débloqué (foreuse, mineurs) : la flèche du village disparaît.
+  const standADecouvrir = stand && decouvertesAMontrer(etat).find((id) => id === stand.id)
+  useEffect(() => {
+    if (standADecouvrir) jouer((e) => marquerDecouvert(e, standADecouvrir))
+  }, [standADecouvrir, jouer])
 
   // L'écran de victoire s'affiche une seule fois, au moment où l'on atteint la bedrock.
   const [victoireAffichee, setVictoireAffichee] = useState(false)

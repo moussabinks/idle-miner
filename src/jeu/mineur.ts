@@ -148,11 +148,15 @@ export type EtatJeu = {
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
   employes: Employe[] // les mineurs employés (gardés à chaque prestige)
+  decouvertes: Decouverte[] // les stands débloqués que le joueur a déjà visités (voir decouvertes.ts)
   depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 12
+// Les stands qui se débloquent avec les prestiges (une flèche guide le joueur jusqu'à eux).
+export type Decouverte = 'foreuse' | 'employes'
+
+export const VERSION_ETAT = 13
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -204,6 +208,8 @@ export type Heritage = {
   employes: Employe[]
   argentGagneAvant: number
   enchantements: Record<IdEnchantement, number>
+  niveauSac: number
+  decouvertes: Decouverte[]
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
@@ -216,6 +222,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     employes = [],
     argentGagneAvant = 0,
     enchantements = { efficacite: 0, fortune: 0, solidite: 0 },
+    niveauSac = 0,
+    decouvertes = [],
   } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire))
@@ -240,7 +248,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     foreuse: structuredClone(foreuse),
     // Les enchantements sont gardés au prestige (19/10) : ils s'appliquent à toutes les pioches.
     enchantements: { ...enchantements },
-    niveauSac: 0,
+    niveauSac, // le sac à dos est gardé au prestige (19/10)
     seaux: 0,
     prestige,
     succes: [...succes],
@@ -257,6 +265,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     victoire: false,
     talents: [...talents],
     employes: structuredClone(employes),
+    decouvertes: [...decouvertes],
     depart: null,
     peculeRecu: false,
   }
@@ -279,6 +288,8 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     employes: etat.employes.map(employeApresPrestige),
     argentGagneAvant: argentGagneTotal(etat),
     enchantements: etat.enchantements,
+    niveauSac: etat.niveauSac,
+    decouvertes: etat.decouvertes,
   })
 }
 

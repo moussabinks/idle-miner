@@ -5,6 +5,7 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
+import { PRESTIGE_EMPLOYES, PRESTIGE_FOREUSE } from './donnees'
 import { VERSION_ETAT, type EtatJeu } from './mineur'
 import { TALENTS_RETIRES } from './talents'
 
@@ -392,6 +393,14 @@ function migrer(donnees: unknown): unknown {
     }
   }
 
+  // Version 12 -> 13 : les stands découverts (pour la flèche qui guide vers un nouveau stand).
+  // Une ancienne partie connaît déjà les stands qu'elle a débloqués : pas de flèche pour rien.
+  if (etat.version === 12) {
+    const prestige = typeof etat.prestige === 'number' ? etat.prestige : 0
+    const decouvertes = [...(prestige >= PRESTIGE_FOREUSE ? ['foreuse'] : []), ...(prestige >= PRESTIGE_EMPLOYES ? ['employes'] : [])]
+    etat = { ...etat, version: 13, decouvertes }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -421,6 +430,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.foreuse === 'object' &&
     Array.isArray(etat.talents) &&
     Array.isArray(etat.employes) &&
+    Array.isArray(etat.decouvertes) &&
     typeof etat.argentGagneAvant === 'number'
   )
 }
