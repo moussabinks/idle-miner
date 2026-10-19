@@ -1,6 +1,6 @@
 // Les mineurs employés (débloqués au prestige 2).
 // Chaque mineur creuse tout seul dans sa propre galerie. Quand son sac est plein, il
-// remonte au village (en ascenseur s'il est construit, sinon à l'échelle), vend sa
+// remonte au village dans sa propre cabine d'ascenseur, vend sa
 // récolte au marché, garde son salaire et te donne le reste, puis redescend.
 // Les trajets et la vente prennent du temps : pendant ce temps-là, il ne creuse pas.
 // Ils continuent pendant que le jeu est fermé (comme la foreuse) et restent après un prestige.
@@ -14,15 +14,15 @@ import {
   NOMS_EMPLOYES,
   PRESTIGE_EMPLOYES,
   PRIX_EMBAUCHE,
+  NIVEAUX_ASCENSEUR,
   PROFONDEUR_BEDROCK,
+  SECONDES_VENTE_EMPLOYE,
   niveauMaxAuPrestige,
   prestigePourNiveau,
-  SECONDES_PAR_METRE_ECHELLE,
-  SECONDES_VENTE_EMPLOYE,
 } from './donnees'
 import { tirerBlocNormal } from './mine'
 import { aLaSurface, secondesParMetreAscenseur, valeurDe, type EtatJeu, type Employe } from './mineur'
-import { mineursEnPlus, multiplicateurMineurs, multiplicateurSacMineurs, partSalaire } from './talents'
+import { mineursEnPlus, multiplicateurAscenseur, multiplicateurMineurs, multiplicateurSacMineurs, partSalaire } from './talents'
 
 // ---------------------------------------------------------------------------
 // Informations
@@ -63,11 +63,12 @@ export function profondeurMaxEmploye(employe: Employe): number {
   return Math.min(NIVEAUX_EMPLOYE[employe.niveau].profMax, PROFONDEUR_BEDROCK - 1)
 }
 
-// Le temps pour monter ou descendre d'un mètre : l'ascenseur s'il est construit (plus rapide),
-// sinon l'échelle. Un trajet complet dure quand même au moins DUREE_MIN_TRAJET_EMPLOYE
-// (il faut attendre la cabine, charger le sac...) : sinon, près de la surface, ce serait instantané.
+// Les mineurs ont leur propre ascenseur (une cabine chacun) : il va aussi vite que le tien,
+// et au moins comme un ascenseur de niveau 1 si tu n'as pas encore construit le tien.
+// Un trajet complet dure quand même au moins DUREE_MIN_TRAJET_EMPLOYE (il faut attendre la
+// cabine, charger le sac...) : sinon, près de la surface, ce serait instantané.
 export function secondesParMetreEmploye(etat: EtatJeu, employe: Employe): number {
-  const parMetre = etat.ascenseur.niveau > 0 ? secondesParMetreAscenseur(etat) : SECONDES_PAR_METRE_ECHELLE
+  const parMetre = etat.ascenseur.niveau > 0 ? secondesParMetreAscenseur(etat) : NIVEAUX_ASCENSEUR[0].secondesParMetre * multiplicateurAscenseur(etat)
   const longueurTrajet = Math.max(1, employe.profondeur - 1) // du village jusqu'au fond de sa galerie
   return Math.max(parMetre, DUREE_MIN_TRAJET_EMPLOYE / longueurTrajet)
 }

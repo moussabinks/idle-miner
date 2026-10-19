@@ -36,6 +36,8 @@ import {
   basculerChariot,
   chariotBloqueAuPrestige,
   cocherToutChariot,
+  nbForeuses,
+  profondeurForeuse,
   forageBloqueAuPrestige,
   peutAmeliorerChariot,
   peutAmeliorerForage,
@@ -321,7 +323,6 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   }
 
   const enMarche = foreuseEnMarche(etat)
-  const forage = prochainNiveauForage(etat)
   const chariot = prochainNiveauChariot(etat)
   const charbon = quantite(etat, 'charbon')
   const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
@@ -340,8 +341,8 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           </span>
         </div>
         <span className="discret">
-          Profondeur de forage : -{foreuse.profondeur} m · {vitesseForage(etat)} bloc(s) par seconde · {foreuse.blocsFores.toLocaleString('fr-FR')} blocs
-          forés
+          {nbForeuses(etat) > 1 ? `${nbForeuses(etat)} foreuses` : 'Profondeur de forage'} : jusqu'à -{profondeurForeuse(etat)} m ·{' '}
+          {vitesseForage(etat)} bloc(s) par seconde en tout
         </span>
         <Barre
           valeur={secondesDeCharbon(etat)}
@@ -421,19 +422,22 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         <div className="ligne-titre">
           <strong>⚙️ Foreuses</strong>
           <span className="badge">
-            {foreuse.nombre} / {maxForeuses(etat)}
+            {nbForeuses(etat)} / {maxForeuses(etat)}
           </span>
         </div>
         {etat.prestige < PRESTIGE_FOREUSES_MULTIPLES ? (
           <span className="discret">🔒 Au prestige {PRESTIGE_FOREUSES_MULTIPLES}, tu pourras acheter d'autres foreuses qui creusent avec celle-ci.</span>
         ) : prixForeuse === null ? (
           <span className="discret">
-            {foreuse.nombre > 1 ? `Tes ${foreuse.nombre} foreuses creusent ensemble (et brûlent ${foreuse.nombre} fois plus de charbon).` : ''} Le prochain
-            prestige permet d'en avoir une de plus (5 au plus).
+            {nbForeuses(etat) > 1 ? `Tes ${nbForeuses(etat)} foreuses creusent ensemble (et brûlent ${nbForeuses(etat)} fois plus de charbon).` : ''} Le
+            prochain prestige permet d'en avoir une de plus (5 au plus).
           </span>
         ) : (
           <>
-            <span className="discret">Chaque foreuse ajoute sa vitesse (et brûle son charbon).</span>
+            <span className="discret">
+              Une nouvelle foreuse part de la surface, au premier niveau de forage : elle creuse son propre trou, ajoute sa vitesse
+              et brûle son charbon.
+            </span>
             <Achat
               etat={etat}
               cout={{ argent: prixForeuse, materiaux: {} }}
@@ -445,20 +449,29 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         )}
       </div>
 
-      <div className="ligne-achat">
-        <strong>⚙️ Vitesse de forage</strong>
-        <Amelioration
-          etat={etat}
-          actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse} bloc/s par foreuse`}
-          niveau={foreuse.niveauVitesse + 1}
-          niveauMax={NIVEAUX_FORAGE.length}
-          niveauPermis={niveauMaxAuPrestige('forage', etat.prestige) + 1}
-          suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
-          bloqueAuPrestige={forageBloqueAuPrestige(etat)}
-          possible={peutAmeliorerForage(etat)}
-          onAmeliorer={() => jouer(ameliorerForage)}
-        />
-      </div>
+      {/* Chaque foreuse a sa vitesse de forage et sa profondeur : on les améliore une par une. */}
+      {foreuse.foreuses.map((une, index) => {
+        const forage = prochainNiveauForage(etat, index)
+        return (
+          <div key={index} className="ligne-achat">
+            <div className="ligne-titre">
+              <strong>⚙️ {nbForeuses(etat) > 1 ? `Foreuse ${index + 1}` : 'Vitesse de forage'}</strong>
+              <span className="badge">-{une.profondeur} m</span>
+            </div>
+            <Amelioration
+              etat={etat}
+              actuel={`${NIVEAUX_FORAGE[une.niveauVitesse].vitesse} bloc/s · ${une.blocsFores.toLocaleString('fr-FR')} blocs forés`}
+              niveau={une.niveauVitesse + 1}
+              niveauMax={NIVEAUX_FORAGE.length}
+              niveauPermis={niveauMaxAuPrestige('forage', etat.prestige) + 1}
+              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
+              bloqueAuPrestige={forageBloqueAuPrestige(etat, index)}
+              possible={peutAmeliorerForage(etat, index)}
+              onAmeliorer={() => jouer((e) => ameliorerForage(e, index))}
+            />
+          </div>
+        )
+      })}
 
       <div className="ligne-achat">
         <strong>🛒 Taille du chariot</strong>

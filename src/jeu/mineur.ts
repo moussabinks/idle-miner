@@ -77,18 +77,24 @@ export type Ascenseur = {
   envoiAuto: boolean // true = quand le sac est plein, l'ascenseur part tout seul au marché
 }
 
+// Ce que les foreuses partagent : le charbon, le chariot et les options.
 export type Foreuse = {
   active: boolean // activée une fois pour toutes (avec du fer et de la redstone)
-  carburant: number // secondes de forage restantes (le charbon brûlé)
-  niveauVitesse: number // index dans NIVEAUX_FORAGE
+  carburant: number // secondes de forage restantes (le charbon brûlé), pour toutes les foreuses
   niveauChariot: number // index dans NIVEAUX_CHARIOT
-  chariot: Inventaire // ce que la foreuse a remonté
-  profondeur: number // profondeur atteinte par la foreuse
+  chariot: Inventaire // ce que les foreuses ont remonté
+  nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
+  rechargeAuto: boolean // les foreuses brûlent le charbon qu'elles remontent (débloqué au niveau 3 de forage)
+  // Chaque foreuse a sa vitesse et creuse son propre trou (on en achète d'autres au prestige 3).
+  foreuses: UneForeuse[]
+}
+
+// Une foreuse : son niveau de forage et où elle en est.
+export type UneForeuse = {
+  niveauVitesse: number // index dans NIVEAUX_FORAGE
+  profondeur: number // profondeur atteinte
   progression: number // fraction du prochain bloc foré (0 à 1)
   blocsFores: number
-  nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
-  rechargeAuto: boolean // la foreuse brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
-  nombre: number // combien de foreuses (à partir du prestige 3, on peut en acheter d'autres)
 }
 
 // Un mineur employé (prestige 2) : il creuse tout seul dans sa propre galerie, remonte
@@ -147,7 +153,7 @@ export type EtatJeu = {
   peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-export const VERSION_ETAT = 11
+export const VERSION_ETAT = 12
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -160,16 +166,17 @@ export function nouvelleForeuse(): Foreuse {
   return {
     active: false,
     carburant: 0,
-    niveauVitesse: 0,
     niveauChariot: 0,
     chariot: {},
-    profondeur: 1,
-    progression: 0,
-    blocsFores: 0,
     nonCoches: [],
     rechargeAuto: false,
-    nombre: 1,
+    foreuses: [uneNouvelleForeuse()],
   }
+}
+
+// Une foreuse toute neuve : niveau de forage 0, elle part de la surface.
+export function uneNouvelleForeuse(): UneForeuse {
+  return { niveauVitesse: 0, profondeur: 1, progression: 0, blocsFores: 0 }
 }
 
 export function nouvelAscenseur(): Ascenseur {
@@ -272,17 +279,16 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   })
 }
 
-// Au prestige, la foreuse garde seulement ses améliorations (activation, vitesse, chariot,
-// nombre de foreuses, options) : plus de charbon, chariot vide, et elle repart de la surface.
+// Au prestige, les foreuses gardent seulement leurs améliorations (activation, vitesse de
+// chacune, chariot, options) : plus de charbon, chariot vide, et elles repartent de la surface.
 export function foreuseApresPrestige(foreuse: Foreuse): Foreuse {
   return {
     ...nouvelleForeuse(),
     active: foreuse.active,
-    niveauVitesse: foreuse.niveauVitesse,
     niveauChariot: foreuse.niveauChariot,
-    nombre: foreuse.nombre,
     rechargeAuto: foreuse.rechargeAuto,
     nonCoches: [...foreuse.nonCoches],
+    foreuses: foreuse.foreuses.map((une) => ({ ...uneNouvelleForeuse(), niveauVitesse: une.niveauVitesse })),
   }
 }
 

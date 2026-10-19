@@ -45,17 +45,17 @@ describe('mineurs employés', () => {
     expect(nbDansSacEmploye(mineur)).toBeLessThanOrEqual(tailleSacEmploye(etat, mineur))
   })
 
-  it('vont plus vite avec l’ascenseur qu’à l’échelle', () => {
-    const aLechelle = partie(2)
-    embaucher(aLechelle)
+  it('ont leur propre ascenseur, plus rapide quand tu améliores le tien', () => {
+    const sansTonAscenseur = partie(2)
+    embaucher(sansTonAscenseur)
     // Assez profond pour que le trajet dure plus que le minimum, même en ascenseur.
-    aLechelle.employes[0].niveau = 2
-    aLechelle.employes[0].profondeur = 80
-    const enAscenseur = structuredClone(aLechelle)
-    enAscenseur.ascenseur.niveau = 4
-    avancerTemps(aLechelle, 1800, aleatoireAvecGraine(3))
-    avancerTemps(enAscenseur, 1800, aleatoireAvecGraine(3))
-    expect(enAscenseur.employes[0].blocsCasses).toBeGreaterThan(aLechelle.employes[0].blocsCasses)
+    sansTonAscenseur.employes[0].niveau = 2
+    sansTonAscenseur.employes[0].profondeur = 80
+    const avecTonAscenseur = structuredClone(sansTonAscenseur)
+    avecTonAscenseur.ascenseur.niveau = 4
+    avancerTemps(sansTonAscenseur, 1800, aleatoireAvecGraine(3))
+    avancerTemps(avecTonAscenseur, 1800, aleatoireAvecGraine(3))
+    expect(avecTonAscenseur.employes[0].blocsCasses).toBeGreaterThan(sansTonAscenseur.employes[0].blocsCasses)
   })
 
   it('prennent le temps de remonter, de vendre puis de redescendre', () => {

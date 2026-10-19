@@ -378,6 +378,20 @@ function migrer(donnees: unknown): unknown {
   // On ne le connaît pas pour les anciennes parties : on part de 0.
   if (etat.version === 10) etat = { ...etat, version: 11, argentGagneAvant: 0 }
 
+  // Version 11 -> 12 : chaque foreuse a son niveau et sa profondeur (au lieu d'un « nombre »
+  // de foreuses identiques). Les foreuses déjà achetées gardent ce qu'elles avaient.
+  if (etat.version === 11) {
+    const ancienne = etat.foreuse as Record<string, unknown>
+    if (Array.isArray(ancienne.foreuses)) {
+      etat = { ...etat, version: 12 } // déjà au nouveau format
+    } else {
+      const { niveauVitesse, profondeur, progression, blocsFores, nombre, ...partage } = ancienne
+      const une = { niveauVitesse: niveauVitesse ?? 0, profondeur: profondeur ?? 1, progression: progression ?? 0, blocsFores: blocsFores ?? 0 }
+      const combien = typeof nombre === 'number' ? nombre : 1
+      etat = { ...etat, version: 12, foreuse: { ...partage, foreuses: Array.from({ length: combien }, () => ({ ...une })) } }
+    }
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
