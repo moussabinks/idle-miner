@@ -295,12 +295,11 @@ export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', '
 // vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
 // sac = places dans son sac à dos.
 export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; prix: number }[] = [
-  // Plus rapides (19/10) : environ 1,5 fois plus qu'avant.
-  { nom: 'Bois', vitesse: 1.2, profMax: 35, sac: 32, prix: 0 },
-  { nom: 'Pierre', vitesse: 1.8, profMax: 70, sac: 48, prix: 6000 },
-  { nom: 'Fer', vitesse: 2.7, profMax: 112, sac: 64, prix: 20000 },
-  { nom: 'Diamant', vitesse: 3.8, profMax: 136, sac: 96, prix: 50000 },
-  { nom: 'Netherite', vitesse: 4.8, profMax: 149, sac: 128, prix: 120000 },
+  { nom: 'Bois', vitesse: 0.8, profMax: 35, sac: 32, prix: 0 },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, prix: 6000 },
+  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, prix: 20000 },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, prix: 50000 },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, prix: 120000 },
 ]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
