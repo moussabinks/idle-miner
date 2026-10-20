@@ -57,7 +57,6 @@ export function conditionsPrestige(etat: EtatJeu): ConditionPrestige[] {
   }
 
   // L'équipement de chaque mineur embauché (on n'oblige pas à embaucher toute l'équipe).
-  // (Au prestige 2, la pioche en bois de départ suffit : pas de condition.)
   const equipement = niveauMaxAuPrestige('mineur', p)
   if (equipement > 0) {
     etat.employes.forEach((employe, index) => {

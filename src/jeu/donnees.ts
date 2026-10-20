@@ -224,7 +224,8 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 //   - forage et chariot de la foreuse (débloquée au prestige 1) : le niveau de base au prestige 1,
 //     le 2e au prestige 2... jusqu'au 8e au prestige 8 (les niveaux de la foreuse sont comptés
 //     à partir de 0 dans le code) ;
-//   - pioche des mineurs (débloqués au prestige 2) : Bois au prestige 2, Pierre au prestige 3...
+//   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer et Diamant au
+//     prestige 3, Netherite au prestige 4 ;
 //   - recruteur (prestige 4) : niveau 1 à l'embauche, puis un niveau de plus par prestige ;
 //   - enchantements (gardés au prestige) : les trois au même niveau, un de plus tous les
 //     2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4...).
@@ -236,6 +237,9 @@ type Plafond = {
   niveauAuDeblocage: number
   niveauMax: number
   prestigesParNiveau?: number // combien de prestiges pour un niveau de plus (1 par défaut)
+  // Ou bien, des paliers choisis à la main : le niveau permis à chaque prestige depuis le
+  // déblocage (le dernier vaut pour tous les prestiges suivants).
+  paliers?: number[]
 }
 
 // Rééquilibré le 20/10 (on ne pouvait presque rien améliorer avant la bedrock du prestige 2) :
@@ -249,8 +253,9 @@ export const PLAFONDS: Record<IdPlafond, Plafond> = {
   // La foreuse : au prestige 1, l'activer suffit ; un niveau de plus par prestige ensuite (le 8e au prestige 8).
   forage: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
   chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
-  // Les mineurs : pioche en bois au prestige 2, puis une meilleure par prestige (netherite au prestige 6).
-  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 0, niveauMax: 4 },
+  // Les mineurs (choisi le 20/10) : jusqu'à la pierre au prestige 2, fer et diamant au prestige 3,
+  // netherite au prestige 4. (Niveaux : 0 bois, 1 pierre, 2 fer, 3 diamant, 4 netherite.)
+  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4, paliers: [1, 3, 4] },
   recruteur: { prestigeDeblocage: 4, niveauAuDeblocage: 1, niveauMax: 4 },
   // Les enchantements, tous au même niveau : I aux prestiges 0 et 1, II aux prestiges 2 et 3,
   // III aux prestiges 4 et 5 (le maximum de Fortune et Solidité), puis Efficacité IV et V.
@@ -262,6 +267,10 @@ export const PLAFONDS: Record<IdPlafond, Plafond> = {
 // Le plus haut niveau qu'on peut atteindre à ce prestige.
 export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
   const plafond = PLAFONDS[id]
+  if (plafond.paliers) {
+    const rang = Math.max(0, prestige - plafond.prestigeDeblocage)
+    return plafond.paliers[Math.min(rang, plafond.paliers.length - 1)]
+  }
   const prestigesEnPlus = Math.max(0, prestige - plafond.prestigeDeblocage)
   const niveauxEnPlus = Math.floor(prestigesEnPlus / (plafond.prestigesParNiveau ?? 1))
   return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + niveauxEnPlus)
@@ -270,6 +279,10 @@ export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
 // Le prestige qu'il faut pour atteindre ce niveau (pour afficher « 🔒 Prestige 3 »).
 export function prestigePourNiveau(id: IdPlafond, niveau: number): number {
   const plafond = PLAFONDS[id]
+  if (plafond.paliers) {
+    const rang = plafond.paliers.findIndex((max) => max >= niveau)
+    return plafond.prestigeDeblocage + (rang === -1 ? plafond.paliers.length - 1 : rang)
+  }
   return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage) * (plafond.prestigesParNiveau ?? 1)
 }
 
