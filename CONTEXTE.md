@@ -1,4 +1,4 @@
-# Idle Miner (web) : contexte du projet
+# Mega Digger (web, ex-Idle Miner) : contexte du projet
 
 > Où en est le projet, qui fait quoi, ce qui est décidé et ce qui reste à faire.
 > Les règles de code sont dans [CLAUDE.md](CLAUDE.md), les règles du jeu dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md).
@@ -202,3 +202,4 @@ L'état en est à la **v15** (`VERSION_ETAT = 15`, les anciennes sauvegardes son
 - **2026-10-20** : prix d'embauche selon la taille de l'équipe (plus du prestige), mineurs licenciés comptés jusqu'au prestige suivant ; sans manager, salaires payés 10 minutes à la fois seulement. Sauvegarde v16.
 - **2026-10-20** : finalement, les mineurs licenciés ne comptent plus dans le prix d'embauche (demandé : le prix ne dépend que des mineurs actifs).
 - **2026-10-20** : guider le joueur (`src/jeu/objectifs.ts`) : barre fine « 🎯 prochain objectif » sous le bandeau (l'achat le plus proche, avec l'argent ou le minerai qui manque ; elle brille en vert quand c'est achetable, un clic mène au stand) ; pastille verte « 💰 Achetable ! » sur les stands où une amélioration est payable ; après un prestige, badge « ⬆ Niveaux ! » et flèche jaune « Nouveaux niveaux : Bazar ! » vers les stands qui ont de nouveaux niveaux, jusqu'à ce qu'on passe devant (`etat.standsVus`, remis à zéro au prestige). Sauvegarde v17.
+- **2026-10-20** : le jeu s'appelle **Mega Digger** (titre, onglet, en-tête). Nouvel écran d'accueil : grand bandeau « grotte » (lueurs, éclats de minerai qui flottent, rochers), logo doré en relief avec reflet (police Luckiest Guy de Google Fonts, repli Arial Black hors ligne), pioche qui frappe, gros bouton « Jouer » qui reprend le dernier monde, 3 chiffres clés, coupe de la mine qui flotte, 4 cartes « comment jouer », cartes des mondes qui brillent au survol.

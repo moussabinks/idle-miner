@@ -179,6 +179,24 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
 // L'écran entier
 // ---------------------------------------------------------------------------
 
+// Les éclats de minerai qui flottent dans la grotte (placés une fois pour toutes).
+const COULEURS_PARTICULES = ['#ffd36b', '#4ee8dc', '#5cc95c', '#e5534b', '#4f9df0', '#b06cf0']
+const PARTICULES = Array.from({ length: 26 }, (_, i) => ({
+  x: (i * 37) % 100,
+  y: 10 + ((i * 53) % 80),
+  couleur: COULEURS_PARTICULES[i % COULEURS_PARTICULES.length],
+  delai: (i % 7) * 0.9,
+  duree: 6 + (i % 5) * 1.5,
+}))
+
+// Comment jouer, en 4 étapes.
+const ETAPES = [
+  { emoji: '⛏️', titre: 'Creuse', texte: 'Couche par couche : charbon, fer, or, diamants…', couleur: '#f2b33d' },
+  { emoji: '💰', titre: 'Vends', texte: 'Au marché du village, et regarde ton argent grimper.', couleur: '#5cc95c' },
+  { emoji: '👷', titre: 'Automatise', texte: 'Ascenseur, foreuse, mineurs et manager bossent pour toi.', couleur: '#4f9df0' },
+  { emoji: '🏆', titre: 'Prestige', texte: 'Atteins la bedrock et recommence encore plus fort.', couleur: '#e85aa8' },
+]
+
 export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: InfoMonde) => void }) {
   // Change à chaque modification : le composant se redessine et relit la liste des mondes.
   const [, setVersion] = useState(0)
@@ -193,49 +211,102 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
     if (info) onJouer(info)
   }
 
+  // Le gros bouton du haut : reprendre le dernier monde joué, ou en créer un premier.
+  const dernierMonde = mondes[0] ?? null
+  const etatDernier = dernierMonde ? charger(window.localStorage, dernierMonde.id) : null
+
   return (
     <div className="accueil">
-      <section className="accueil-heros">
-        <div className="accueil-texte">
-          <h1 className="titre accueil-titre">⛏️ Idle Miner</h1>
-          <p className="accueil-accroche">
-            Creuse, vends tes minerais, achète de meilleures pioches… et descends jusqu'à la <strong>bedrock, à -{profondeurBedrock(0)} m</strong> ! À chaque
-            prestige, la mine est {PROFONDEUR_EN_PLUS_PAR_PRESTIGE} m plus profonde.
-          </p>
-          <ol className="accueil-etapes">
-            <li>
-              <span className="etape-icone">⛏️</span>
-              <span>
-                <strong>Creuse</strong> la mine couche par couche : charbon, fer, or, diamants…
-              </span>
-            </li>
-            <li>
-              <span className="etape-icone">💰</span>
-              <span>
-                <strong>Vends</strong> tes minerais au marché du village.
-              </span>
-            </li>
-            <li>
-              <span className="etape-icone">🛗</span>
-              <span>
-                <strong>Améliore</strong> ta pioche, ton sac et l'ascenseur, puis automatise avec la foreuse et des mineurs.
-              </span>
-            </li>
-            <li>
-              <span className="etape-icone">🏆</span>
-              <span>
-                <strong>Atteins la bedrock</strong> et passe prestige pour recommencer encore plus fort.
-              </span>
-            </li>
-          </ol>
+      <section className="heros">
+        {/* Le décor : une grotte sombre, des rochers devant, et des éclats de minerai qui brillent en flottant. */}
+        <div className="heros-decor" aria-hidden="true">
+          <span className="heros-lueur heros-lueur-1" />
+          <span className="heros-lueur heros-lueur-2" />
+          {PARTICULES.map((p, i) => (
+            <i key={i} className="particule" style={{ left: `${p.x}%`, top: `${p.y}%`, background: p.couleur, animationDelay: `${p.delai}s`, animationDuration: `${p.duree}s` }} />
+          ))}
+          <span className="heros-rochers heros-rochers-fond" />
+          <span className="heros-rochers heros-rochers-devant" />
         </div>
-        <IllustrationMine />
+
+        <div className="heros-contenu">
+          <div className="heros-texte">
+            <h1 className="logo" aria-label="Mega Digger">
+              <span className="logo-pioche" aria-hidden="true">
+                ⛏️
+              </span>
+              <span className="logo-mots">
+                <span className="logo-mega">MEGA</span>
+                <span className="logo-digger">DIGGER</span>
+              </span>
+            </h1>
+            <p className="heros-accroche">
+              Creuse. Vends. <strong>Deviens riche.</strong>
+            </p>
+            <p className="heros-description">
+              Descends jusqu'à la <strong>bedrock</strong>, recrute une équipe de mineurs (rares, épiques… mythiques !), fais tourner ta foreuse
+              et passe prestige pour une mine toujours plus profonde.
+            </p>
+
+            <div className="heros-boutons">
+              {dernierMonde ? (
+                <button className="bouton bouton-mega" disabled={bloque} onClick={() => onJouer(dernierMonde)}>
+                  <span className="bouton-mega-titre">▶ Jouer</span>
+                  <span className="bouton-mega-detail">
+                    {dernierMonde.nom}
+                    {etatDernier && ` · ⭐ ${etatDernier.prestige} · -${etatDernier.profondeur} m`}
+                  </span>
+                </button>
+              ) : (
+                <button className="bouton bouton-mega" disabled={bloque} onClick={creer}>
+                  <span className="bouton-mega-titre">⛏️ Commencer à creuser</span>
+                  <span className="bouton-mega-detail">Ta première mine t'attend</span>
+                </button>
+              )}
+              <a className="bouton bouton-mondes" href="#mondes">
+                🌍 Mes mondes
+              </a>
+            </div>
+
+            <ul className="heros-chiffres">
+              <li>
+                <strong>-{profondeurBedrock(0)} m</strong>
+                <span>jusqu'à la bedrock</span>
+              </li>
+              <li>
+                <strong>+{PROFONDEUR_EN_PLUS_PAR_PRESTIGE} m</strong>
+                <span>à chaque prestige</span>
+              </li>
+              <li>
+                <strong>5</strong>
+                <span>raretés de mineurs</span>
+              </li>
+            </ul>
+          </div>
+          <div className="heros-illustration">
+            <IllustrationMine />
+          </div>
+        </div>
       </section>
 
-      <section className="accueil-mondes">
+      {/* Comment jouer, en 4 cartes. */}
+      <ol className="etapes">
+        {ETAPES.map((etape, i) => (
+          <li key={etape.titre} className="etape" style={{ ['--couleur-etape' as string]: etape.couleur }}>
+            <span className="etape-numero">{i + 1}</span>
+            <span className="etape-emoji" aria-hidden="true">
+              {etape.emoji}
+            </span>
+            <strong>{etape.titre}</strong>
+            <span className="discret">{etape.texte}</span>
+          </li>
+        ))}
+      </ol>
+
+      <section className="accueil-mondes" id="mondes">
         <CarteCompte compte={compte} />
-        <h2>
-          Choisis ton monde{' '}
+        <h2 className="titre-section">
+          🌍 Tes mondes{' '}
           <span className="discret">
             ({mondes.length}/{NB_MONDES_MAX})
           </span>
