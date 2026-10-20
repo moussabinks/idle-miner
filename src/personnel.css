@@ -592,3 +592,62 @@
     animation: none;
   }
 }
+
+/* --- La carte compacte d'un mineur (20/10) : toute l'équipe se voit sans trop défiler --- */
+.carte-compacte {
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.carte-compacte .nom-employe {
+  gap: 5px;
+}
+
+.etape-employe {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+}
+
+.carte-compacte .discret {
+  font-size: 0.78rem;
+}
+
+/* Le temps payé et le sac, côte à côte, en petites jauges. */
+.jauges-employe {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.jauges-employe .barre {
+  height: 15px;
+}
+
+.jauges-employe .barre-texte {
+  font-size: 0.68rem;
+}
+
+.carte-compacte .lien-licencier {
+  align-self: center;
+}
+
+/* --- La fenêtre de confirmation (Confirmation.tsx) ------------------------------- */
+.fenetre-confirmation {
+  width: min(380px, 100%);
+  text-align: center;
+  border-color: var(--accent);
+  animation: eclat 0.25s ease-out;
+}
+
+.fenetre-confirmation h2 {
+  color: var(--accent);
+}
+
+.confirmation-message p {
+  margin: 6px 0;
+}
+
+.fenetre-confirmation .boutons {
+  margin-top: 14px;
+}

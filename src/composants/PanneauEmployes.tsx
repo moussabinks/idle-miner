@@ -53,16 +53,17 @@ import {
   salaireEmploye,
   salaireManager,
   salairesParPaie,
+  secondesRestantesEmploye,
   tailleSacEmploye,
   tempsPayeMin,
   vitesseEmploye,
 } from '../jeu/employes'
 import { aLaSurface, type Employe, type EtatJeu } from '../jeu/mineur'
 import { revenuBrutEmploye } from '../jeu/revenu'
-import { multiplicateurSacMineurs } from '../jeu/talents'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
+import { Confirmation } from './Confirmation'
 import { RevelationRecrue } from './RevelationRecrue'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
@@ -245,72 +246,67 @@ function Recruteur({ etat, jouer }: Props) {
   )
 }
 
-// La carte d'un mineur : sa rareté, ce qu'il fait, son salaire, son sac et son équipement.
-function CarteMineur({ etat, jouer, employe, index }: Props & { employe: Employe; index: number }) {
+// La carte d'un mineur, compacte pour voir toute l'équipe d'un coup d'œil :
+//   - son nom, sa rareté, ce qu'il fait (icône + profondeur ou temps restant) et « Licencier » ;
+//   - ce qu'il rapporte et son salaire, sur une ligne ;
+//   - deux petites jauges côte à côte : le temps payé et le sac ;
+//   - l'amélioration de son équipement (prix et bouton).
+// Le détail complet (activité, ce qu'il t'a rapporté...) est dans l'infobulle.
+function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { employe: Employe; index: number; onLicencier: () => void }) {
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
   // Ce qu'il rapporte une fois au fond de sa galerie (là où sont les minerais les plus chers).
   const fond = profondeurMaxEmploye(etat, employe)
   const rapporte = revenuBrutEmploye(etat, { ...employe, profondeur: fond }) * SECONDES_PAR_PAIE
-  const prixDepart = indemnites(etat)
-
-  function renvoyer() {
-    const question = `Licencier ${employe.nom} (${rarete.nom.toLowerCase()}) ? Tu paies ${argent(prixDepart)} d'indemnités, et il part avec son équipement.`
-    if (window.confirm(question)) jouer((e) => licencier(e, index))
-  }
+  const etape = employe.etape === 'creuse' ? `-${employe.profondeur} m` : employe.etape === 'attend' ? 'pas payé' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
+  const detail = `${activiteEmploye(etat, employe)} · ${vitesseEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s · t'a rapporté ${argent(employe.gagne)}`
 
   return (
-    <div className={`ligne-achat carte-employe rarete-${employe.rarete}`}>
+    <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete}`} title={detail}>
       <div className="ligne-titre">
         <strong className="nom-employe">
-          👷 {employe.nom}{' '}
+          {employe.nom}
           <span className={`pastille-rarete rarete-${employe.rarete}`}>
             {rarete.nom}
             {rarete.rendement > 1 && ` ×${rarete.rendement.toLocaleString('fr-FR')}`}
           </span>
+          <span className="etape-employe">
+            {iconeActiviteEmploye(employe)} {etape}
+          </span>
         </strong>
-        <span className="badge">{iconeActiviteEmploye(employe)}</span>
+        <button className="lien lien-licencier" disabled={!aLaSurface(etat)} onClick={onLicencier} title="Licencier ce mineur">
+          Licencier
+        </button>
       </div>
       <span className="discret">
-        {activiteEmploye(etat, employe)} · {vitesseEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s
+        💰 ~{argent(rapporte)} / 10 min au fond (-{fond} m) · salaire {argent(salaireEmploye(etat, employe))}
       </span>
-      <span className="discret">
-        Au fond de sa galerie (-{fond} m), il rapporte environ <strong>{argent(rapporte)}</strong> par 10 min · salaire{' '}
-        {argent(salaireEmploye(etat, employe))} · t'a rapporté {argent(employe.gagne)}
-      </span>
-      <Barre
-        valeur={employe.tempsPaye}
-        max={SECONDES_PAYEES_MAX}
-        texte={employe.tempsPaye > 0 ? `⏳ Payé encore ${duree(employe.tempsPaye)}` : '😠 Plus payé'}
-        couleur={employe.tempsPaye > 0 ? 'vert' : 'rouge'}
-      />
-      <Barre
-        valeur={nbDansSacEmploye(employe)}
-        max={tailleSacEmploye(etat, employe)}
-        texte={`Sac : ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat, employe)}`}
-        couleur="or"
-      />
-      {prochaine && (
-        <span className="discret">
-          Équipement suivant : pioche en {prochaine.nom} (plus rapide, jusqu'à -{profondeurMaxEmploye(etat, { ...employe, niveau: employe.niveau + 1 })} m) et sac de{' '}
-          {Math.round(prochaine.sac * multiplicateurSacMineurs(etat) * rarete.rendement)} places.
-        </span>
-      )}
+      <div className="jauges-employe">
+        <Barre
+          valeur={employe.tempsPaye}
+          max={SECONDES_PAYEES_MAX}
+          texte={employe.tempsPaye > 0 ? `⏳ ${duree(employe.tempsPaye)}` : '😠 Plus payé'}
+          couleur={employe.tempsPaye > 0 ? 'vert' : 'rouge'}
+        />
+        <Barre
+          valeur={nbDansSacEmploye(employe)}
+          max={tailleSacEmploye(etat, employe)}
+          texte={`🎒 ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat, employe)}`}
+          couleur="or"
+        />
+      </div>
       <Amelioration
         etat={etat}
-        actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} · sac de ${tailleSacEmploye(etat, employe)}`}
+        actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
         niveauPermis={niveauMaxAuPrestige('mineur', etat.prestige) + 1}
-        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
+        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ ${prochaine.nom}` } : null}
         bloqueAuPrestige={employeBloqueAuPrestige(etat, employe)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
-      <button className="lien lien-licencier" disabled={!aLaSurface(etat) || etat.argent < prixDepart} onClick={renvoyer}>
-        Licencier ({argent(prixDepart)} d'indemnités)
-      </button>
     </div>
   )
 }
@@ -318,6 +314,8 @@ function CarteMineur({ etat, jouer, employe, index }: Props & { employe: Employe
 export function PanneauEmployes({ etat, jouer }: Props) {
   // Le mineur qu'on vient de recruter (avec le recruteur) : on dévoile sa rareté en grand.
   const [recrue, setRecrue] = useState<Employe | null>(null)
+  // Le mineur qu'on veut licencier : on demande d'abord confirmation (fenêtre du jeu).
+  const [aLicencier, setALicencier] = useState<number | null>(null)
 
   if (!employesDebloques(etat)) {
     return (
@@ -346,9 +344,8 @@ export function PanneauEmployes({ etat, jouer }: Props) {
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Tes mineurs creusent tout seuls, remontent dans leur propre ascenseur (aussi rapide que le tien) et vendent leur récolte : tout l'argent
-        est pour toi. En échange, tu leur paies un salaire toutes les 10 minutes. Sans salaire, ils remontent attendre ici, mécontents. Ils
-        travaillent même quand le jeu est fermé (tant qu'ils sont payés), et restent après un prestige.
+        Tes mineurs creusent et vendent pour toi (tout l'argent est pour toi), même jeu fermé. En échange : un salaire toutes les 10 minutes, sinon
+        ils attendent ici, mécontents.
       </p>
 
       {etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
@@ -386,10 +383,30 @@ export function PanneauEmployes({ etat, jouer }: Props) {
       </div>
 
       {etat.employes.map((employe, index) => (
-        <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} />
+        <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
       ))}
 
       {recrue && <RevelationRecrue employe={recrue} etat={etat} onFermer={() => setRecrue(null)} />}
+      {aLicencier !== null && etat.employes[aLicencier] && (
+        <Confirmation
+          titre={`Licencier ${etat.employes[aLicencier].nom} ?`}
+          texteConfirmer="Licencier"
+          possible={etat.argent >= indemnites(etat)}
+          onConfirmer={() => {
+            jouer((e) => licencier(e, aLicencier))
+            setALicencier(null)
+          }}
+          onAnnuler={() => setALicencier(null)}
+        >
+          <p>
+            {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement.
+          </p>
+          <p>
+            Indemnités : <strong>{argent(indemnites(etat))}</strong>
+            {etat.argent < indemnites(etat) && <span className="texte-alerte"> (il te manque {argent(indemnites(etat) - etat.argent)})</span>}
+          </p>
+        </Confirmation>
+      )}
     </div>
   )
 }
