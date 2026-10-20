@@ -32,6 +32,7 @@ import {
 import { chariotBloqueAuPrestige, forageBloqueAuPrestige, foreuseDebloquee, prochainNiveauChariot, prochainNiveauForage } from './foreuse'
 import {
   ascenseurBloqueAuPrestige,
+  coutPioche,
   chiffreRomain,
   coutEnchantement,
   enchantementBloqueAuPrestige,
@@ -55,7 +56,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   const achats: AchatPossible[] = []
 
   const pioche = PIOCHES[etat.meilleure + 1]
-  if (pioche) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: { argent: pioche.prix, materiaux: pioche.materiaux } })
+  if (pioche) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: coutPioche(pioche.niveau) })
 
   const ascenseur = prochainNiveauAscenseur(etat)
   if (ascenseur && ascenseurBloqueAuPrestige(etat) === null) {

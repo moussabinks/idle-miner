@@ -230,7 +230,7 @@ La barre du bas a toujours 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **�
 
 - **⛏️ Creuser** (seulement au front) : casse tous les blocs **restants de la couche en cours** (un compteur de blocs à casser). Il devient **⏹️ Arrêter** pendant ce temps. Marche aussi à mains nues.
 - **♾️ Auto** : creuse sans fin (couche après couche) jusqu'à **⏹️ Arrêt**. Grisé si la pioche est cassée, et **s'arrête tout seul quand la pioche casse** (« 💥 Pioche cassée : creusage automatique arrêté. »).
-- Le minage s'arrête aussi dès que le mineur n'est plus au front, ou quand **plus rien ne peut être rangé** (sac plein et quai plein ou pas d'ascenseur) : « 🎒 Sac plein ! Envoie tes objets à la surface avec l'ascenseur (panneau Sac). » (avec ascenseur) ou « 🎒 Sac plein ! Remonte vendre au marché (bouton Village). » (sans). Attention : relancer « Creuser » sac plein casse quand même un bloc, dont le contenu est perdu, puis s'arrête.
+- Le minage s'arrête aussi dès que le mineur n'est plus au front, ou quand **plus rien ne peut être rangé** (sac plein et quai plein ou pas d'ascenseur) : « 🎒 Sac plein ! Envoie tes objets à la surface avec l'ascenseur (panneau Sac). » (avec ascenseur) ou « 🎒 Sac plein ! Remonte vendre au marché (bouton Village). » (sans). Relancer « Creuser » ou « Auto » quand plus rien ne peut être rangé ne casse aucun bloc : le message « Sac plein » s'affiche et rien ne se passe (`casserBloc` ne casse pas de bloc sans place, corrigé le 20/10 : avant, un bloc était cassé et son contenu perdu).
 - **Envoi automatique** (case du sac) : pendant le minage, si le sac est plein ou que le quai n'est pas vide, que l'ascenseur ne roule pas et qu'aucun envoi n'est déjà demandé, on demande un envoi ; on continue de creuser. Voir [mine.md](../batiments/mine.md).
 - Sons : un « tac » de pioche toutes les 0,22 s pendant qu'on casse un bloc.
 
@@ -320,13 +320,13 @@ S'il n'y a pas de nouveauté à montrer, la même flèche jaune peut indiquer un
 | 💎 | Diamants ! | Débloquer la pioche en diamant | ≥ Diamant |
 | 🔥 | Increvable | Débloquer la pioche en netherite | ≥ Netherite |
 | 🕳️ | Spéléologue | Descendre à -60 m | couche en cours à -60 m ou plus bas |
-| 🌑 | Dans les abîmes | Descendre à -105 m | couche en cours à -105 m ou plus bas (**impossible au prestige 0**, dont la dernière couche est -99 m) |
+| 🌑 | Dans les abîmes | Descendre à -105 m (possible dès le prestige 1) | couche en cours à -105 m ou plus bas (impossible au prestige 0, dont la dernière couche est -99 m : la description le dit) |
 | 💠 | Ça brille ! | Trouver un diamant | ≥ 1 diamant récolté par le joueur (pas foreuse ni mineurs) |
 | 🧰 | Chasseur de trésors | Ouvrir un coffre | ≥ 1 coffre ouvert |
 | 🔮 | Géologue | Casser une géode | ≥ 1 géode cassée |
 | 🪣 | Pompier | Éteindre de la lave avec un seau | ≥ 1 lave éteinte |
 | 💰 | Riche | Gagner 5 000 $ dans une partie | argent gagné ≥ 5 000 $ dans la partie en cours (toutes sources : ventes, coffres, ascenseur, foreuse, mineurs) |
-| ✨ | Enchanteur | Mettre tous les enchantements au max | plus aucun enchantement achetable **à ce prestige** (chacun au maximum ou au plafond du prestige : au prestige 0, Efficacité I + Fortune I + Solidité I suffisent) |
+| ✨ | Enchanteur | Mettre tous les enchantements au max permis par ton prestige | plus aucun enchantement achetable **à ce prestige** (chacun au maximum ou au plafond du prestige : au prestige 0, Efficacité I + Fortune I + Solidité I suffisent) |
 | 🏆 | Bedrock ! | Atteindre la bedrock, tout au fond de la mine | `victoire` vraie (couche bedrock − 1 finie) |
 
 Les compteurs « dans la partie en cours » repartent de 0 à chaque prestige, mais un succès obtenu reste obtenu.

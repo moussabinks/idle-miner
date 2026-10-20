@@ -181,8 +181,8 @@ La bande du village fait **250 px de haut** (`.village`, `overflow: clip` pour q
 |---|---|---|---|---|
 | 1 | **Ciel** | fixe | — | dégradé `#4f97e0 → #a8d4f5 → #cfe9f8` (fond de `.village`) |
 | 2 | **Soleil** | fixe | — | carré jaune `#ffe35c` aux coins arrondis, en haut à droite, avec un halo |
-| 3 | **Collines** | **40 % de la vitesse** (parallaxe) | — | 9 collines vertes arrondies (deux verts en alternance), hauteurs 46 à 88 px |
-| 4 | **Nuages** | animés tout seuls | 1 | 2 nuages blancs (trois blocs arrondis) qui traversent en 50 s et 65 s |
+| 3 | **Nuages** | animés tout seuls | 0 | 2 nuages blancs (trois blocs arrondis) qui traversent en 50 s et 65 s ; ils passent **derrière** les collines, les stands et les panneaux des noms (corrigé le 20/10 : avant, ils passaient devant) |
+| 4 | **Collines** | **40 % de la vitesse** (parallaxe) | — | 9 collines vertes arrondies (deux verts en alternance), hauteurs 46 à 88 px |
 | 5 | **Sol** | avec le monde | — | 76 px : herbe `#5aa83c`, chemin de terre beige `#d8b47a` bordé, terre brune `#7a5230`, petits cailloux |
 | 6 | **Arbres** | avec le monde | 0 | tronc et feuillage en trois boules vertes |
 | 6 | **Décor du fond** (herbes, fleurs, barrières) | avec le monde | 1 | derrière le chemin |

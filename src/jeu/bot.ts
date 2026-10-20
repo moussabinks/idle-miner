@@ -103,6 +103,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
   function doitRemonter(): boolean {
     const prochaine = PIOCHES[etat.meilleure + 1]
     if (sacPlein(etat) && etat.ascenseur.niveau === 0) return true
+    if (!peutStocker(etat)) return true // plus aucune place (sac et quai pleins, d'objets gardés) : on va vendre
     if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) return true
     return (estCassee(etat) || etat.niveauPioche !== etat.meilleure) && solutionPourLaPioche()
   }
@@ -194,9 +195,8 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     if (etat.position !== positionFront(etat)) voyager(positionFront(etat))
 
     // Comme un joueur qui clique sur « Creuser x10 » : 10 couches d'affilée,
-    // en s'arrêtant si le sac est plein (mais toujours au moins un bloc, pour
-    // avancer même si le sac reste plein d'objets gardés).
-    for (let i = 0; i < BLOCS_PAR_SERIE && !etat.victoire && (i === 0 || peutStocker(etat)); i++) {
+    // en s'arrêtant si le sac est plein (on ne casse jamais un bloc qu'on ne pourrait pas ranger).
+    for (let i = 0; i < BLOCS_PAR_SERIE && !etat.victoire && peutStocker(etat); i++) {
       const tempsAvant = etat.stats.tempsMinage
       casserBloc(etat, aleatoire)
       const duree = etat.stats.tempsMinage - tempsAvant

@@ -230,7 +230,7 @@ h2 {
   scrollbar-color: #4a4a58 transparent;
 }
 
-/* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 6 cases. */
+/* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 10 cases. */
 .rangee {
   display: grid;
   grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse) var(--col-mineurs);
@@ -912,7 +912,7 @@ h2 {
   box-shadow: 14px -8px 0 #fff, 28px 0 0 #fff;
   opacity: 0.9;
   animation: nuage 50s linear infinite;
-  z-index: 1;
+  z-index: 0; /* derrière les stands et leurs panneaux (le village vient après dans la page) */
 }
 
 .nuage-1 { top: 22px; left: -60px; width: 40px; }
@@ -1530,7 +1530,7 @@ h2 {
 
 /* ---------------------------------------------------------- Boutons */
 
-/* La barre de boutons : une grille fixe de 2 rangées de 4 boutons, qui ne bouge jamais. */
+/* La barre de boutons : une grille fixe d'une rangée de 4 boutons, qui ne bouge jamais. */
 .actions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

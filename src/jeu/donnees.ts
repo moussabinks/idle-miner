@@ -1,6 +1,6 @@
 // Données du jeu : pioches, blocs, sacs, enchantements, zones et constantes.
 // Les valeurs viennent de docs/idle_miner_v1.md (version notebook Python),
-// avec une mine plus profonde (bedrock à -150 m depuis le 19/10, au lieu de -64 m dans la v1).
+// avec une mine plus profonde (bedrock à -100 m au prestige 0 puis 50 m plus bas à chaque prestige, depuis le 19/10, au lieu de -64 m dans la v1).
 
 // ---------------------------------------------------------------------------
 // Blocs
@@ -192,7 +192,7 @@ export const SECONDES_PAR_CASE = 0.12
 export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
 
 // L'ascenseur automatique : il se construit puis s'améliore directement dans la mine.
-// Le premier niveau ne demande pas de redstone (on n'en trouve que sous -40 m) :
+// Le premier niveau ne demande pas de redstone (on n'en trouve qu'à partir de -21 m dans la mine de référence, et peu au début) :
 // on peut le construire tôt. Chaque niveau remonte plus d'objets par voyage, et plus vite.
 export type NiveauAscenseur = {
   niveau: number

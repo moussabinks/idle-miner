@@ -60,7 +60,7 @@ describe('génération de la mine', () => {
     for (let i = 0; i < 2000; i++) expect(['lave', 'coffre', 'geode']).not.toContain(tirerBlocNormal(60, aleatoire, PRESTIGE_REFERENCE))
   })
 
-  it('génère des couches de 6 blocs, toujours les mêmes avec la même graine', () => {
+  it('génère des couches de 10 blocs, toujours les mêmes avec la même graine', () => {
     const a = genererCouche(70, aleatoireAvecGraine(7), PRESTIGE_REFERENCE)
     const b = genererCouche(70, aleatoireAvecGraine(7), PRESTIGE_REFERENCE)
     expect(a).toHaveLength(LARGEUR_MINE)

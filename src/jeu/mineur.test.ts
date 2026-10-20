@@ -154,9 +154,11 @@ describe('minage', () => {
     const etat = nouvellePartie()
     etat.inventaire = { pierre: 32 }
     coucheDe(etat, 'pierre')
-    const messages = casserBloc(etat, toujours(0))
+    casserBloc(etat, toujours(0))
     expect(nbDansSac(etat)).toBe(32)
-    expect(messages.join()).toContain('Sac plein')
+    // Le bloc n'est pas cassé : sinon ce qu'il contient serait perdu.
+    expect(etat.coucheActuelle.every((bloc) => bloc !== null)).toBe(true)
+    expect(etat.stats.blocsCasses).toBe(0)
   })
 
   it('atteint la bedrock avec la pioche en netherite, et peut continuer de creuser au-dessus', () => {
