@@ -2841,6 +2841,12 @@ button {
     padding: 4px 10px;
   }
 
+  /* La barre « 🎯 prochain objectif » remonte de 8 px sous le bandeau (personnel.css) :
+     ici le bandeau a déjà une petite marge, on la laisse respirer. */
+  .jeu .objectif {
+    margin-top: 0;
+  }
+
   /* --- La mine prend la place qui reste au-dessus de la barre de boutons ---- */
   .monde {
     height: min(58dvh, 560px);
