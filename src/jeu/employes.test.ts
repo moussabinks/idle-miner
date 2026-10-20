@@ -9,7 +9,6 @@ import {
   RARETES,
   SALAIRE_MANAGER,
   SECONDES_PAR_PAIE,
-  SECONDES_PAYEES_MAX,
   SECONDES_VENTE_EMPLOYE,
   profondeurBedrock,
 } from './donnees'
@@ -78,10 +77,29 @@ describe('mineurs employés', () => {
     expect(etat.employes[0].nom).not.toBe(etat.employes[1].nom)
   })
 
-  it('coûtent plus cher à chaque prestige (comme ce que rapporte la mine)', () => {
+  it('coûtent selon la taille de l’équipe, pas selon le prestige', () => {
     expect(prixEmbauche(partie(2))).toBe(PRIX_EMBAUCHE[0])
-    expect(prixEmbauche(partie(3))).toBe(PRIX_EMBAUCHE[0] * 1.2)
-    expect(prixEmbauche(partie(6))).toBeGreaterThan(2 * PRIX_EMBAUCHE[0])
+    expect(prixEmbauche(partie(6))).toBe(PRIX_EMBAUCHE[0])
+  })
+
+  it('un mineur licencié compte encore dans le prix jusqu’au prochain prestige', () => {
+    const etat = partie(4)
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[2])
+    etat.argent = 1e9 // de quoi réembaucher plusieurs fois
+    licencier(etat, 1)
+    // Une place de libre, mais pas au prix de la 2e embauche : licencier pour réembaucher coûte de plus en plus.
+    expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[2])
+    for (let i = 0; i < 8; i++) {
+      embaucher(etat, hasard())
+      licencier(etat, 1)
+    }
+    expect(prixEmbauche(etat)).toBe(Math.round((PRIX_EMBAUCHE[6] * 1.6 ** 4) / 100) * 100)
+    // Au prestige, le compteur repart de 0.
+    const suite = prestige(etat, aleatoireAvecGraine(1))
+    expect(suite.licenciements).toBe(0)
+    expect(prixEmbauche(suite)).toBe(PRIX_EMBAUCHE[1])
   })
 
   it('creusent, remontent vendre et te donnent tout l’argent de leurs ventes', () => {
@@ -105,7 +123,7 @@ describe('mineurs employés', () => {
     // Assez profond pour que le trajet dure plus que le minimum, même en ascenseur.
     sansTonAscenseur.employes[0].niveau = 2
     sansTonAscenseur.employes[0].profondeur = 80
-    sansTonAscenseur.employes[0].tempsPaye = SECONDES_PAYEES_MAX
+    sansTonAscenseur.employes[0].tempsPaye = 1e6 // payé pour tout le test
     const avecTonAscenseur = structuredClone(sansTonAscenseur)
     avecTonAscenseur.ascenseur.niveau = 4
     avancerTemps(sansTonAscenseur, 1800, aleatoireAvecGraine(3))
@@ -163,7 +181,7 @@ describe('mineurs employés', () => {
   it('ne descendent pas plus bas que leur pioche, et s’améliorent', () => {
     const etat = partie(2)
     embaucher(etat, hasard())
-    etat.employes[0].tempsPaye = SECONDES_PAYEES_MAX
+    etat.employes[0].tempsPaye = 1e6 // payé pour tout le test
     avancerTemps(etat, 3500, aleatoireAvecGraine(4))
     expect(etat.employes[0].profondeur).toBe(profondeurMaxEmploye(etat, etat.employes[0]))
     expect(etat.employes[0].profondeur).toBeLessThan(profondeurBedrock(etat.prestige))
@@ -240,21 +258,20 @@ describe('salaires', () => {
     expect(mineur.blocsCasses).toBeGreaterThan(blocs)
   })
 
-  it('se paient d’avance jusqu’à 1 h, au prix du temps ajouté', () => {
+  it('sans manager, se paient 10 minutes à la fois seulement', () => {
     const etat = partie(3)
     embaucher(etat, hasard())
     embaucher(etat, hasard())
     const salaires = etat.employes.reduce((total, e) => total + salaireEmploye(etat, e), 0)
-    expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(salaires)
-    // Ils ont déjà 10 minutes : il en reste 50 à payer pour arriver à 1 h.
-    expect(coutSalaires(etat, SECONDES_PAYEES_MAX)).toBe(5 * salaires)
-    const avant = etat.argent
-    payerSalaires(etat, SECONDES_PAYEES_MAX)
-    expect(etat.argent).toBe(avant - 5 * salaires)
-    expect(etat.stats.salairesPayes).toBe(5 * salaires)
-    expect(etat.employes.every((e) => e.tempsPaye === SECONDES_PAYEES_MAX)).toBe(true)
-    // Déjà payés 1 h : rien de plus à payer.
+    // Ils ont déjà 10 minutes (l'embauche) : rien à payer, même pour 1 h.
     expect(peutPayerSalaires(etat, SECONDES_PAR_PAIE)).toBe(false)
+    expect(coutSalaires(etat, 6 * SECONDES_PAR_PAIE)).toBe(0)
+    // 4 minutes plus tard, on complète jusqu'à 10 minutes : on ne paie que les 4 minutes passées.
+    avancerTemps(etat, 240, aleatoireAvecGraine(2))
+    const avant = etat.argent
+    payerSalaires(etat, 6 * SECONDES_PAR_PAIE)
+    expect(etat.employes.every((e) => e.tempsPaye === SECONDES_PAR_PAIE)).toBe(true)
+    expect(avant - etat.argent).toBeCloseTo(salaires * 0.4, -1)
   })
 
   it('un mineur rare a un plus gros salaire, mais rapporte encore plus', () => {
@@ -282,7 +299,7 @@ describe('licenciement', () => {
     embaucher(etat, hasard())
     const parti = etat.employes[0].nom
     const prix = indemnites(etat)
-    expect(prix).toBe(Math.round((PRIX_EMBAUCHE[1] * 1.2 ** 2 * 0.4) / 100) * 100)
+    expect(prix).toBe(Math.round((PRIX_EMBAUCHE[1] * 0.4) / 100) * 100)
     const avant = etat.argent
     licencier(etat, 0)
     expect(etat.argent).toBe(avant - prix)

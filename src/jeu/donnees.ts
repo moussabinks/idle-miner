@@ -331,10 +331,12 @@ export const BLOCS_PAR_METRE_EMPLOYE = 5
 export const PRESTIGE_EMPLOYES = 2
 // On peut en employer 2 au prestige 2, puis 1 de plus à chaque prestige, jusqu'à 6.
 export const MAX_EMPLOYES = 6
-// Le prix d'embauche du 1er, 2e, 3e... mineur, au prestige 2. Ensuite, il monte de 20 % à
-// chaque prestige (comme ce que rapporte la mine) : voir prixEmbauche().
+// Le prix d'embauche du 1er, 2e, 3e... mineur (décidé le 20/10 : il dépend du nombre de
+// mineurs, plus du prestige). Les mineurs licenciés pendant ce prestige comptent encore : on
+// ne peut pas licencier et réembaucher au même prix pour n'avoir que des mythiques.
+// Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente : voir prixEmbauche().
 export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
-export const HAUSSE_EMBAUCHE_PAR_PRESTIGE = 1.2
+export const HAUSSE_APRES_LISTE = 1.6
 // Licencier un mineur coûte des indemnités : 40 % du prix d'une embauche (décidé le 20/10).
 export const PART_INDEMNITES = 0.4
 // Les temps morts d'un mineur entre deux séances de creusage (en secondes) :
@@ -351,9 +353,9 @@ export const NOMS_EMPLOYES = [
 // --- Les salaires (décidé le 20/10) ---
 // Les mineurs ne prennent plus de commission sur leurs ventes : on leur paie un salaire
 // toutes les 10 minutes. Sans salaire, ils remontent attendre au stand Personnel.
-// On peut payer d'avance, jusqu'à 1 heure.
+// Sans manager, on ne paie que 10 minutes à la fois (décidé le 20/10 : sinon le manager ne
+// servirait à rien) ; le manager, lui, paie au fur et à mesure.
 export const SECONDES_PAR_PAIE = 10 * 60
-export const SECONDES_PAYEES_MAX = 60 * 60
 // Le salaire de 10 minutes selon l'équipement (pioche en bois, pierre, fer, diamant, netherite),
 // au prestige 0 : environ 18 % de ce que le mineur rapporte au fond de sa galerie. Il reste
 // gagnant même juste après un prestige, quand il recommence à creuser depuis la surface

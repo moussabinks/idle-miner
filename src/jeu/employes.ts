@@ -4,8 +4,8 @@
 // l'argent est pour toi), puis redescend. Les trajets et la vente prennent du temps :
 // pendant ce temps-là, il ne creuse pas.
 //
-// Depuis le 20/10, on leur paie un salaire toutes les 10 minutes (on peut payer d'avance,
-// jusqu'à 1 h). Sans salaire, un mineur remonte et attend, mécontent, au stand Personnel.
+// Depuis le 20/10, on leur paie un salaire toutes les 10 minutes (sans manager, on ne paie que
+// 10 minutes à la fois). Sans salaire, un mineur remonte et attend, mécontent, au stand Personnel.
 // Au prestige 4, le recruteur trouve des mineurs plus ou moins rares (un mineur mythique
 // rapporte 5 fois plus) ; au prestige 5, le manager paie les salaires tout seul, avec
 // l'argent mis dans la trésorerie.
@@ -17,7 +17,7 @@ import {
   BLOCS_PAR_METRE_EMPLOYE,
   BONUS_PRESTIGE,
   DUREE_MIN_TRAJET_EMPLOYE,
-  HAUSSE_EMBAUCHE_PAR_PRESTIGE,
+  HAUSSE_APRES_LISTE,
   LISTE_RARETES,
   MAX_EMPLOYES,
   NIVEAUX_ASCENSEUR,
@@ -35,7 +35,6 @@ import {
   SALAIRES,
   SECONDES_AVANT_PAIE_MANAGER,
   SECONDES_PAR_PAIE,
-  SECONDES_PAYEES_MAX,
   SECONDES_VENTE_EMPLOYE,
   depuisReference,
   niveauMaxAuPrestige,
@@ -77,9 +76,12 @@ export function maxEmployes(etat: EtatJeu): number {
   return Math.min(MAX_EMPLOYES, etat.prestige) + mineursEnPlus(etat)
 }
 
-// Les prix du personnel montent de 20 % à chaque prestige après le 2e (comme ce que rapporte la mine).
-function haussePrestige(etat: EtatJeu): number {
-  return HAUSSE_EMBAUCHE_PAR_PRESTIGE ** Math.max(0, etat.prestige - PRESTIGE_EMPLOYES)
+// Le prix de base de la n-ième embauche (n = 0 pour la première) : la liste, puis 60 % de plus
+// à chaque fois.
+function prixDeBase(n: number): number {
+  const dernier = PRIX_EMBAUCHE.length - 1
+  if (n <= dernier) return PRIX_EMBAUCHE[n]
+  return PRIX_EMBAUCHE[dernier] * HAUSSE_APRES_LISTE ** (n - dernier)
 }
 
 // Arrondi à la centaine (des prix faciles à lire).
@@ -87,19 +89,17 @@ function arrondiPrix(prix: number): number {
   return Math.max(100, Math.round(prix / 100) * 100)
 }
 
-// Le prix de la prochaine embauche (null si l'équipe est complète).
+// Le prix de la prochaine embauche (null si l'équipe est complète). Il dépend du nombre de
+// mineurs qu'on a, plus ceux licenciés pendant ce prestige (ils comptent encore).
 export function prixEmbauche(etat: EtatJeu): number | null {
   if (etat.employes.length >= maxEmployes(etat)) return null
-  const base = PRIX_EMBAUCHE[etat.employes.length]
-  if (base === undefined) return null
-  return arrondiPrix(base * haussePrestige(etat) * multiplicateurPrixEmbauche(etat))
+  return arrondiPrix(prixDeBase(etat.employes.length + etat.licenciements) * multiplicateurPrixEmbauche(etat))
 }
 
 // Les indemnités d'un licenciement : 40 % du prix de la dernière embauche de l'équipe
 // (2 fois moins avec le talent « Indemnités réduites »).
 export function indemnites(etat: EtatJeu): number {
-  const base = PRIX_EMBAUCHE[Math.max(0, etat.employes.length - 1)] ?? PRIX_EMBAUCHE[0]
-  return arrondiPrix(base * haussePrestige(etat) * PART_INDEMNITES * multiplicateurIndemnites(etat))
+  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.length - 1)) * PART_INDEMNITES * multiplicateurIndemnites(etat))
 }
 
 export function rareteDe(employe: Employe): Rarete {
@@ -179,9 +179,10 @@ export function salaireEmploye(etat: EtatJeu, employe: Employe): number {
   return Math.round(base * (1 + BONUS_PRESTIGE * etat.prestige) * multiplicateurSalaires(etat))
 }
 
-// Combien de secondes on peut encore lui payer d'avance (jusqu'à 1 h en tout).
+// Combien de secondes on peut encore lui payer : sans manager, on paie au plus 10 minutes à
+// la fois (on complète jusqu'à 10 minutes payées).
 function secondesPayables(employe: Employe, secondes: number): number {
-  return Math.max(0, Math.min(secondes, SECONDES_PAYEES_MAX - employe.tempsPaye))
+  return Math.max(0, Math.min(secondes, SECONDES_PAR_PAIE - employe.tempsPaye))
 }
 
 // Le prix de quelques secondes de travail payées d'avance.
@@ -189,8 +190,8 @@ function prixDuTemps(etat: EtatJeu, employe: Employe, secondes: number): number 
   return Math.ceil((salaireEmploye(etat, employe) * secondes) / SECONDES_PAR_PAIE)
 }
 
-// Ce que coûte de payer `secondes` de plus à chaque mineur (sans dépasser 1 h d'avance).
-// Avec secondes = SECONDES_PAYEES_MAX, c'est le prix pour que tout le monde soit payé 1 h.
+// Ce que coûte de payer `secondes` de plus à chaque mineur (sans dépasser 10 minutes payées).
+// Avec secondes = SECONDES_PAR_PAIE, c'est le prix pour que tout le monde soit payé 10 minutes.
 export function coutSalaires(etat: EtatJeu, secondes: number): number {
   return etat.employes.reduce((total, e) => total + prixDuTemps(etat, e, secondesPayables(e, secondes)), 0)
 }
@@ -216,7 +217,7 @@ export function peutPayerSalaires(etat: EtatJeu, secondes: number): boolean {
   return !etat.manager.embauche && cout > 0 && etat.argent >= cout
 }
 
-// Paie `secondes` de travail de plus à chaque mineur (10 minutes, ou jusqu'à 1 h).
+// Paie `secondes` de travail de plus à chaque mineur (jusqu'à 10 minutes payées).
 export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
   if (!aLaSurface(etat) || !peutPayerSalaires(etat, secondes)) return []
   let paye = 0
@@ -421,6 +422,7 @@ export function licencier(etat: EtatJeu, index: number): string[] {
   if (!aLaSurface(etat) || !employe || etat.argent < prix) return []
   etat.argent -= prix
   etat.employes.splice(index, 1)
+  etat.licenciements += 1 // la prochaine embauche coûte comme s'il était encore là
   return [`👋 ${employe.nom} est parti(e). Indemnités : ${prix.toLocaleString('fr-FR')} $.`]
 }
 
