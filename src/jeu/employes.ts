@@ -151,7 +151,7 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
   return Math.abs(arrivee - employe.position) * secondesParMetreEmploye(etat, employe)
 }
 
-// Le prix du prochain équipement (argent + fer + redstone), null s'il a déjà le meilleur.
+// Le prix du prochain équipement (en argent seulement), null s'il a déjà le meilleur.
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }

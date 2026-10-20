@@ -399,13 +399,14 @@ export const SECONDES_AVANT_PAIE_MANAGER = 60
 // Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.
 // vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
 // sac = places dans son sac à dos.
-// Prix revus le 19/10 : moins d'argent, plus de fer et de redstone (comme l'ascenseur).
+// Payé seulement en argent (décidé le 20/10) : le fer et la redstone servent aux machines
+// (ascenseur et foreuse). Les prix d'avant + la valeur au marché des minerais qu'ils demandaient.
 export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; cout: Cout }[] = [
   { nom: 'Bois', vitesse: 0.8, profMax: 35, sac: 32, cout: { materiaux: {} } },
-  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, cout: { argent: 3000, materiaux: { fer: 15, redstone: 5 } } },
-  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, cout: { argent: 7000, materiaux: { fer: 35, redstone: 20 } } },
-  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, cout: { argent: 15000, materiaux: { fer: 60, redstone: 40 } } },
-  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, cout: { argent: 30000, materiaux: { fer: 90, redstone: 70 } } },
+  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, cout: { argent: 3500, materiaux: {} } },
+  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, cout: { argent: 8000, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, cout: { argent: 17000, materiaux: {} } },
+  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, cout: { argent: 33000, materiaux: {} } },
 ]
 
 // Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
