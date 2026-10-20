@@ -195,6 +195,7 @@ export type EtatJeu = {
   manager: Manager // gardé à chaque prestige
   tresorerie: number // l'argent mis de côté pour les salaires (vidé au prestige, comme l'argent)
   decouvertes: Decouverte[] // les stands débloqués que le joueur a déjà visités (voir decouvertes.ts)
+  standsVus: string[] // les stands visités depuis le dernier prestige (badge « Nouveaux niveaux », voir objectifs.ts)
   depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
 }
 
@@ -202,7 +203,7 @@ export type EtatJeu = {
 // la foreuse, les mineurs, puis le recruteur et le manager (au stand Personnel).
 export type Decouverte = 'foreuse' | 'employes' | 'recruteur' | 'manager'
 
-export const VERSION_ETAT = 16
+export const VERSION_ETAT = 17
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -323,6 +324,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     manager: { ...manager },
     tresorerie: 0,
     decouvertes: [...decouvertes],
+    standsVus: [], // remis à zéro à chaque prestige
     depart: null,
   }
   return etat

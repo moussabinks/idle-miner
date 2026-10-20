@@ -7,6 +7,7 @@ import { PIOCHES } from '../jeu/donnees'
 import { alerteSalaires, employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import { DECOUVERTES, decouvertesAMontrer } from '../jeu/decouvertes'
+import { standsAchetables, standsAvecNouveauxNiveaux } from '../jeu/objectifs'
 import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
 import { Icone } from './Icone'
 import { Personnage } from './Personnage'
@@ -85,6 +86,13 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
   const indexCible = aDecouvrir.length > 0 ? STANDS.findIndex((s) => s.id === DECOUVERTES[aDecouvrir[0]].stand) : -1
   const cible = indexCible >= 0 ? STANDS[indexCible] : null
   const versLaDroite = cible !== null && cible.x > x
+  // Après un prestige : les stands qui ont de nouveaux niveaux (même flèche jaune, quand il n'y a
+  // pas de nouveauté à montrer), et ceux où une amélioration est payable (pastille verte).
+  const nouveauxNiveaux = auVillage ? standsAvecNouveauxNiveaux(etat) : []
+  const indexNiveaux = cible === null && nouveauxNiveaux.length > 0 ? STANDS.findIndex((s) => s.id === nouveauxNiveaux[0]) : -1
+  const standNiveaux = indexNiveaux >= 0 ? STANDS[indexNiveaux] : null
+  const niveauxVersLaDroite = standNiveaux !== null && standNiveaux.x > x
+  const achetables = auVillage ? standsAchetables(etat) : []
   // Des mineurs ne sont pas payés : une flèche rouge (même style) les montre au stand Personnel.
   const alerte = auVillage ? alerteSalaires(etat) : null
   const indexPersonnel = STANDS.findIndex((s) => s.id === 'employes')
@@ -103,6 +111,15 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
             Nouveau : <strong>{DECOUVERTES[aDecouvrir[0]].nom}</strong> !
           </span>
           {versLaDroite && <span className="fleche-pointe">➡</span>}
+        </button>
+      )}
+      {standNiveaux && standActif?.id !== standNiveaux.id && (
+        <button className={`fleche-decouverte fleche-niveaux ${niveauxVersLaDroite ? 'fleche-droite' : 'fleche-gauche'}`} onClick={() => onAllerStand(indexNiveaux)}>
+          {!niveauxVersLaDroite && <span className="fleche-pointe">⬅</span>}
+          <span>
+            ⬆ Nouveaux niveaux : <strong>{standNiveaux.nom}</strong> !
+          </span>
+          {niveauxVersLaDroite && <span className="fleche-pointe">➡</span>}
         </button>
       )}
       {alerte && standActif?.id !== 'employes' && (
@@ -157,8 +174,15 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               {stand.id === 'employes' && alerte ? (
                 <span className="badge-nouveau badge-salaires">😠 Salaires ! ⬇</span>
               ) : (
-                standsNouveaux.includes(stand.id as 'foreuse' | 'employes') && <span className="badge-nouveau">Nouveau ! ⬇</span>
+                <>
+                  {standsNouveaux.includes(stand.id as 'foreuse' | 'employes') ? (
+                    <span className="badge-nouveau">Nouveau ! ⬇</span>
+                  ) : (
+                    nouveauxNiveaux.includes(stand.id) && <span className="badge-nouveau badge-niveaux">⬆ Niveaux !</span>
+                  )}
+                </>
               )}
+              {achetables.includes(stand.id) && !verrouille && <span className="pastille-achetable">💰 Achetable !</span>}
               <span className="panneau-bois">{stand.nom}</span>
               {stand.id === 'puits' && (
                 // L'entrée de la mine : une galerie creusée dans un rocher, étayée de poutres,
