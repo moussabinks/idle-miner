@@ -220,14 +220,15 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 // tout est au maximum). Règle commune : au déblocage, on peut monter jusqu'à un certain
 // niveau, puis chaque prestige permet un niveau de plus.
 //   - ascenseur : niveau 2 au prestige 0, 3 au prestige 1... jusqu'à 6 ;
-//   - forage et chariot de la foreuse (débloquée au prestige 1) : 2e niveau au prestige 1,
-//     3e au prestige 2... jusqu'au 8e au prestige 7 (les niveaux de la foreuse sont comptés à
-//     partir de 0 dans le code) ;
-//   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer au prestige 3...
+//   - sac à dos : 128 places aux prestiges 0 et 1, puis un sac de plus par prestige ;
+//   - forage et chariot de la foreuse (débloquée au prestige 1) : le niveau de base au prestige 1,
+//     le 2e au prestige 2... jusqu'au 8e au prestige 8 (les niveaux de la foreuse sont comptés
+//     à partir de 0 dans le code) ;
+//   - pioche des mineurs (débloqués au prestige 2) : Bois au prestige 2, Pierre au prestige 3...
 //   - recruteur (prestige 4) : niveau 1 à l'embauche, puis un niveau de plus par prestige ;
-//   - enchantements (gardés au prestige depuis le 19/10) : Efficacité I au prestige 0, puis un
-//     niveau de plus par prestige (V au prestige 4) ; Fortune et Solidité, plus rares, un niveau
-//     tous les 2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4).
+//   - enchantements (gardés au prestige) : les trois au même niveau, un de plus tous les
+//     2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4...).
+// Ce sont aussi les conditions du prestige : il faut tout avoir au plafond (conditionsPrestige.ts).
 export type IdPlafond = 'ascenseur' | 'sac' | 'forage' | 'chariot' | 'mineur' | 'recruteur' | IdEnchantement
 
 type Plafond = {
@@ -237,16 +238,23 @@ type Plafond = {
   prestigesParNiveau?: number // combien de prestiges pour un niveau de plus (1 par défaut)
 }
 
+// Rééquilibré le 20/10 (on ne pouvait presque rien améliorer avant la bedrock du prestige 2) :
+// chaque amélioration commence au niveau de base quand elle se débloque, puis gagne un palier
+// par prestige ; les trois enchantements montent ensemble, d'un niveau tous les 2 prestiges.
 export const PLAFONDS: Record<IdPlafond, Plafond> = {
   ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
-  // Le sac à dos (20/10) : jusqu'à 256 places au prestige 0, puis un sac de plus par prestige
-  // (2 048 places au prestige 3). Les niveaux sont comptés à partir de 0 (le sac de 32 places).
-  sac: { prestigeDeblocage: 0, niveauAuDeblocage: 3, niveauMax: 6 },
-  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
-  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
-  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },
+  // Le sac à dos : 128 places aux prestiges 0 et 1, puis un sac de plus par prestige (256 au
+  // prestige 2... 2 048 au prestige 5). Les niveaux sont comptés à partir de 0 (le sac de 32 places).
+  sac: { prestigeDeblocage: 1, niveauAuDeblocage: 2, niveauMax: 6 },
+  // La foreuse : au prestige 1, l'activer suffit ; un niveau de plus par prestige ensuite (le 8e au prestige 8).
+  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
+  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
+  // Les mineurs : pioche en bois au prestige 2, puis une meilleure par prestige (netherite au prestige 6).
+  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 0, niveauMax: 4 },
   recruteur: { prestigeDeblocage: 4, niveauAuDeblocage: 1, niveauMax: 4 },
-  efficacite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 5 },
+  // Les enchantements, tous au même niveau : I aux prestiges 0 et 1, II aux prestiges 2 et 3,
+  // III aux prestiges 4 et 5 (le maximum de Fortune et Solidité), puis Efficacité IV et V.
+  efficacite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 5, prestigesParNiveau: 2 },
   fortune: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
   solidite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
 }

@@ -695,7 +695,7 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   if (suivante >= profondeurBedrock(etat.prestige)) {
     if (!etat.victoire) {
       etat.victoire = true
-      messages.push('🏆 Tu as atteint la bedrock ! Continue de creuser ici, ou passe prestige à l’entrée de la mine (village).')
+      messages.push('🏆 Tu as atteint la bedrock ! Continue de creuser ici, ou passe prestige à l’arbre de prestige (village).')
     }
     etat.enGalerie = true
     etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire, etat.prestige)

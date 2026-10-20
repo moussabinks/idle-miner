@@ -44,8 +44,8 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           foreuse et ton personnel.
           {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvrira !'}
           {pret
-            ? ' Tu peux aussi continuer à creuser ici, et passer prestige plus tard à l’entrée de la mine.'
-            : ' Avant, améliore au maximum ce que ce prestige permet (la carte de l’entrée de la mine te le rappelle) :'}
+            ? ' Tu peux aussi continuer à creuser ici, et passer prestige plus tard à l’arbre de prestige (le bâtiment tout à gauche du village).'
+            : ' Avant, améliore au maximum ce que ce prestige permet (l’arbre de prestige du village te le rappelle) :'}
         </p>
         <CartePrestige etat={etat} onPrestige={onPrestige} compacte />
         <div className="boutons boutons-centre">

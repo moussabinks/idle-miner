@@ -28,7 +28,7 @@ describe('prochain objectif', () => {
     etat.meilleure = 2
     etat.pioches = { 0: 0, 1: 0, 2: 0 }
     etat.ascenseur.niveau = 2
-    etat.niveauSac = 3
+    etat.niveauSac = 2
     etat.enchantements = { efficacite: 1, fortune: 1, solidite: 1 }
     expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Pioche en Diamant', detail: 'il manque 3 Diamant' })
   })
@@ -37,11 +37,11 @@ describe('prochain objectif', () => {
     const etat = partie(0)
     etat.meilleure = 4
     etat.ascenseur.niveau = 2
-    etat.niveauSac = 3
+    etat.niveauSac = 2
     etat.enchantements = { efficacite: 1, fortune: 1, solidite: 1 }
     expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Atteindre la bedrock', stand: null })
     etat.victoire = true
-    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Prestige 1', stand: 'puits', pret: true })
+    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Prestige 1', stand: 'prestige', pret: true })
   })
 })
 
@@ -56,13 +56,12 @@ describe('stands', () => {
     expect(standsAvecNouveauxNiveaux(p0)).toEqual([])
     p0.victoire = true
     const p1 = prestige(p0, aleatoireAvecGraine(2))
-    // Au prestige 1 : ascenseur, sac, Efficacité (la foreuse vient d'ouvrir : c'est une nouveauté, pas un nouveau niveau).
-    expect(standsAvecNouveauxNiveaux(p1)).toEqual(['puits', 'bazar', 'enchanteur'])
-    marquerStandVu(p1, 'bazar')
-    expect(standsAvecNouveauxNiveaux(p1)).toEqual(['puits', 'enchanteur'])
-    // Au prestige suivant, tout revient (le prestige 2 débloque aussi la foreuse niveau 3).
+    // Au prestige 1 : seulement l'ascenseur (la foreuse vient d'ouvrir : c'est une nouveauté, pas un nouveau niveau).
+    expect(standsAvecNouveauxNiveaux(p1)).toEqual(['puits'])
+    marquerStandVu(p1, 'puits')
+    expect(standsAvecNouveauxNiveaux(p1)).toEqual([])
+    // Au prestige 2, tout revient : ascenseur, sac, enchantements (II) et foreuse (niveau 2).
     const p2 = prestige(p1, aleatoireAvecGraine(3))
-    expect(standsAvecNouveauxNiveaux(p2)).toContain('bazar')
-    expect(standsAvecNouveauxNiveaux(p2)).toContain('foreuse')
+    expect(standsAvecNouveauxNiveaux(p2)).toEqual(['puits', 'bazar', 'enchanteur', 'foreuse'])
   })
 })

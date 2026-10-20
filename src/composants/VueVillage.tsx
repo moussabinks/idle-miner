@@ -7,7 +7,9 @@ import { PIOCHES } from '../jeu/donnees'
 import { alerteSalaires, employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import { DECOUVERTES, decouvertesAMontrer } from '../jeu/decouvertes'
+import { peutPasserPrestige } from '../jeu/conditionsPrestige'
 import { standsAchetables, standsAvecNouveauxNiveaux } from '../jeu/objectifs'
+import { pointsDisponibles } from '../jeu/talents'
 import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
 import { Icone } from './Icone'
 import { Personnage } from './Personnage'
@@ -48,7 +50,7 @@ function genererDecor(): Decor[] {
   }
   // Quelques rochers et des bouts de barrière.
   for (let i = 0; i < 3; i++) decor.push({ type: 'rocher', x: entierEntre(aleatoire, 1, LONGUEUR_VILLAGE - 2) + 0.3, devant: true })
-  for (const x of [21.8, 23.2]) decor.push({ type: 'barriere', x, devant: false })
+  for (const x of [24.8, 26.2]) decor.push({ type: 'barriere', x, devant: false })
   return decor
 }
 
@@ -93,6 +95,9 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
   const standNiveaux = indexNiveaux >= 0 ? STANDS[indexNiveaux] : null
   const niveauxVersLaDroite = standNiveaux !== null && standNiveaux.x > x
   const achetables = auVillage ? standsAchetables(etat) : []
+  // L'arbre de prestige : on peut passer prestige, ou il reste des points à dépenser.
+  const pret = peutPasserPrestige(etat)
+  const points = pointsDisponibles(etat)
   // Des mineurs ne sont pas payés : une flèche rouge (même style) les montre au stand Personnel.
   const alerte = auVillage ? alerteSalaires(etat) : null
   const indexPersonnel = STANDS.findIndex((s) => s.id === 'employes')
@@ -171,7 +176,9 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               disabled={!auVillage}
               title={verrouille ? `Débloqué au prestige ${stand.id === 'foreuse' ? 1 : 2}` : stand.description}
             >
-              {stand.id === 'employes' && alerte ? (
+              {stand.id === 'prestige' && (pret || points > 0) ? (
+                <span className="badge-nouveau badge-prestige">{pret ? '⭐ Prêt !' : `🌟 ${points} point${points > 1 ? 's' : ''} !`}</span>
+              ) : stand.id === 'employes' && alerte ? (
                 <span className="badge-nouveau badge-salaires">😠 Salaires ! ⬇</span>
               ) : (
                 <>
@@ -212,7 +219,26 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
                   )}
                 </span>
               )}
-              {stand.id !== 'puits' && stand.id !== 'foreuse' && (
+              {stand.id === 'prestige' && (
+                // L'arbre de prestige : un grand arbre magique rose et doré, une étoile au sommet,
+                // des fruits qui brillent et une aura qui pulse (plus fort quand on peut passer prestige).
+                <span className={`arbre-magique ${pret ? 'arbre-pret' : ''}`} aria-hidden="true">
+                  <span className="arbre-aura" />
+                  <span className="arbre-tronc" />
+                  <span className="arbre-feuillage arbre-feuillage-1" />
+                  <span className="arbre-feuillage arbre-feuillage-2" />
+                  <span className="arbre-feuillage arbre-feuillage-3" />
+                  <span className="arbre-fruits">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="arbre-etoile">⭐</span>
+                </span>
+              )}
+              {stand.id !== 'puits' && stand.id !== 'foreuse' && stand.id !== 'prestige' && (
                 <span className="echoppe" aria-hidden="true">
                   <span className="auvent" />
                   <span className="comptoir">{stand.icone && <Icone nom={stand.icone} taille={28} />}</span>

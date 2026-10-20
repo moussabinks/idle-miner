@@ -645,16 +645,16 @@ describe('boutique et enchantements', () => {
     expect(etat.argent).toBe(0)
   })
 
-  it('agrandit le sac selon le prestige : 256 places au prestige 0, puis un sac de plus par prestige', () => {
+  it('agrandit le sac selon le prestige : 128 places aux prestiges 0 et 1, puis un sac de plus par prestige', () => {
     const etat = partieALaSurface()
     etat.argent = 1_000_000
     while (acheterSac(etat).length > 0);
-    expect(tailleSac(etat)).toBe(256)
-    expect(sacBloqueAuPrestige(etat)).toBe(1)
-    etat.prestige = 1
+    expect(tailleSac(etat)).toBe(128)
+    expect(sacBloqueAuPrestige(etat)).toBe(2)
+    etat.prestige = 2
     while (acheterSac(etat).length > 0);
-    expect(tailleSac(etat)).toBe(512)
-    etat.prestige = 3
+    expect(tailleSac(etat)).toBe(256)
+    etat.prestige = 5
     while (acheterSac(etat).length > 0);
     expect(tailleSac(etat)).toBe(2048)
     expect(prixProchainSac(etat)).toBeNull()
@@ -662,7 +662,7 @@ describe('boutique et enchantements', () => {
 
   it('enchante avec de l’argent (× niveau²), des lapis et des émeraudes (× niveau)', () => {
     const etat = partieALaSurface()
-    etat.prestige = 1 // Efficacité II n'est permise qu'à partir du prestige 1
+    etat.prestige = 2 // Efficacité II n'est permise qu'à partir du prestige 2
     etat.argent = 2000
     etat.inventaire = { lapis: 9, emeraude: 3 }
     enchanter(etat, 'efficacite') // niveau I : 400 $ + 3 lapis + 1 émeraude
@@ -682,13 +682,20 @@ describe('boutique et enchantements', () => {
     // Prestige 0 : seulement le niveau I de chacun.
     toutEnchanter()
     expect(etat.enchantements).toEqual({ efficacite: 1, fortune: 1, solidite: 1 })
-    expect(enchantementBloqueAuPrestige(etat, 'efficacite')).toBe(1)
+    expect(enchantementBloqueAuPrestige(etat, 'efficacite')).toBe(2)
     expect(enchantementBloqueAuPrestige(etat, 'fortune')).toBe(2)
-    // Efficacité : un niveau par prestige ; Fortune et Solidité : un tous les 2 prestiges.
+    // Les trois au même niveau, un de plus tous les 2 prestiges.
+    etat.prestige = 1
+    toutEnchanter()
+    expect(etat.enchantements).toEqual({ efficacite: 1, fortune: 1, solidite: 1 })
     etat.prestige = 2
     toutEnchanter()
-    expect(etat.enchantements).toEqual({ efficacite: 3, fortune: 2, solidite: 2 })
+    expect(etat.enchantements).toEqual({ efficacite: 2, fortune: 2, solidite: 2 })
     etat.prestige = 4
+    toutEnchanter()
+    expect(etat.enchantements).toEqual({ efficacite: 3, fortune: 3, solidite: 3 })
+    // Fortune et Solidité s'arrêtent à III ; Efficacité continue (V au prestige 8).
+    etat.prestige = 8
     toutEnchanter()
     expect(etat.enchantements).toEqual({ efficacite: 5, fortune: 3, solidite: 3 })
   })

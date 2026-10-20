@@ -44,7 +44,7 @@ import {
 } from './mineur'
 
 // Les stands du village (les mêmes identifiants que dans src/composants/stands.ts).
-export type IdStand = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
+export type IdStand = 'prestige' | 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
 
 // Une amélioration qu'on peut acheter à ce prestige (pas bloquée par un cadenas).
 export type AchatPossible = { stand: IdStand; nom: string; cout: Cout }
@@ -154,6 +154,7 @@ export type Objectif = {
 }
 
 const NOMS_STANDS: Record<IdStand, string> = {
+  prestige: 'à l’arbre de prestige',
   puits: 'à l’entrée de la mine',
   marche: 'au marché',
   forgeron: 'au forgeron',
@@ -199,7 +200,7 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
     return { texte: 'Atteindre la bedrock', detail: `-${etat.profondeur} / -${bedrock} m`, stand: null, valeur: etat.profondeur, max: bedrock, pret: false }
   }
   if (peutPasserPrestige(etat)) {
-    return { texte: `Prestige ${etat.prestige + 1}`, detail: 'tout est prêt, à l’entrée de la mine !', stand: 'puits', valeur: 1, max: 1, pret: true }
+    return { texte: `Prestige ${etat.prestige + 1}`, detail: 'tout est prêt, à l’arbre de prestige !', stand: 'prestige', valeur: 1, max: 1, pret: true }
   }
   return null
 }

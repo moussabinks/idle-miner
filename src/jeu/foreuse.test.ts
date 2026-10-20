@@ -126,6 +126,7 @@ describe('foreuse', () => {
     activerForeuse(etat)
     etat.argent = 5000
     etat.inventaire = { fer: 30, redstone: 5 }
+    etat.prestige = 2 // au prestige 1, l'activer suffit : le 2e niveau arrive au prestige 2
     ameliorerForage(etat) // 2 500 $ + 20 fer + 5 redstone
     ameliorerChariot(etat) // 1 500 $ + 10 fer
     expect(etat.foreuse.niveauVitesse).toBe(1)
@@ -139,26 +140,26 @@ describe('foreuse', () => {
     activerForeuse(etat)
     etat.argent = 10_000_000
     etat.inventaire = { fer: 5000, redstone: 5000 }
-    // Au prestige 1 (son déblocage) : un seul niveau de plus.
+    // Au prestige 1 (son déblocage) : le niveau de base seulement.
     for (let i = 0; i < 5; i++) {
       ameliorerForage(etat)
       ameliorerChariot(etat)
     }
-    expect(etat.foreuse.niveauVitesse).toBe(1)
-    expect(etat.foreuse.niveauChariot).toBe(1)
+    expect(etat.foreuse.niveauVitesse).toBe(0)
+    expect(etat.foreuse.niveauChariot).toBe(0)
     expect(forageBloqueAuPrestige(etat)).toBe(2)
     expect(chariotBloqueAuPrestige(etat)).toBe(2)
-    // Un niveau de plus à chaque prestige : au prestige 4, le 5e niveau...
+    // Un niveau de plus à chaque prestige : au prestige 4, le 4e niveau...
     etat.prestige = 4
     for (let i = 0; i < 10; i++) {
       ameliorerForage(etat)
       ameliorerChariot(etat)
     }
-    expect(etat.foreuse.niveauVitesse).toBe(4)
-    expect(etat.foreuse.niveauChariot).toBe(4)
+    expect(etat.foreuse.niveauVitesse).toBe(3)
+    expect(etat.foreuse.niveauChariot).toBe(3)
     expect(forageBloqueAuPrestige(etat)).toBe(5)
-    // ... et au prestige 7, les 8 niveaux.
-    etat.prestige = 7
+    // ... et au prestige 8, les 8 niveaux.
+    etat.prestige = 8
     for (let i = 0; i < 10; i++) {
       ameliorerForage(etat)
       ameliorerChariot(etat)
