@@ -4,7 +4,9 @@
 
 import type { NomIcone } from './Icone'
 
-export type IdStand = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
+// Les identifiants des stands sont définis avec la logique du jeu (objectifs.ts).
+import type { IdStand } from '../jeu/objectifs'
+export type { IdStand }
 
 export type Stand = {
   id: IdStand
