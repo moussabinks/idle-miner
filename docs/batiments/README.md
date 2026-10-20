@@ -1,5 +1,7 @@
 # Les bâtiments du village
 
+Le sommaire de toute la doc est dans [../jeu/vue-d-ensemble.md](../jeu/vue-d-ensemble.md).
+
 Une fiche par bâtiment, de gauche à droite dans le village : où il est, quand il se débloque, ce qu'on y fait (avec les chiffres), ses règles et les fichiers du code concernés.
 Ces fiches décrivent le code au 20/10 : **les mettre à jour quand on change un bâtiment.**
 
