@@ -129,7 +129,7 @@ describe('foreuse', () => {
     ameliorerForage(etat) // 2 500 $ + 20 fer + 5 redstone
     ameliorerChariot(etat) // 1 500 $ + 10 fer
     expect(etat.foreuse.niveauVitesse).toBe(1)
-    expect(capaciteChariot(etat)).toBe(500)
+    expect(capaciteChariot(etat)).toBe(1500)
     expect(etat.argent).toBe(1000)
     expect(etat.inventaire).toEqual({})
   })
@@ -191,6 +191,14 @@ describe('foreuse', () => {
     expect(suite.foreuse.niveauChariot).toBe(1)
     expect(suite.ascenseur.niveau).toBe(3)
     expect(suite.ascenseur.position).toBe(0) // la cabine attend au village
+  })
+
+  it('à niveaux égaux, la foreuse remplit son chariot en 8 minutes environ', () => {
+    for (let niveau = 0; niveau < NIVEAUX_FORAGE.length; niveau++) {
+      const secondes = NIVEAUX_CHARIOT[niveau].capacite / NIVEAUX_FORAGE[niveau].vitesse
+      expect(secondes).toBeGreaterThan(7 * 60)
+      expect(secondes).toBeLessThan(9 * 60)
+    }
   })
 
   it('les talents de l’ingénieur et du marchand', () => {

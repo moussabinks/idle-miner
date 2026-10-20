@@ -4,7 +4,7 @@
 // avec l'étoile du bandeau). La branche Recrutement reste fermée tant qu'on n'a pas le recruteur.
 
 import { useState } from 'react'
-import { PRESTIGE_RECRUTEUR } from '../jeu/donnees'
+import { PRESTIGE_EMPLOYES, PRESTIGE_RECRUTEUR } from '../jeu/donnees'
 import {
   aLeTalent,
   BRANCHES,
@@ -65,7 +65,9 @@ export function ArbrePrestige({ etat, jouer, onFermer }: Props) {
               </h3>
               {!brancheOuverte(etat, branche.id) && (
                 <span className="branche-verrou">
-                  🔒 S'ouvre quand tu embauches le recruteur (stand Personnel, prestige {PRESTIGE_RECRUTEUR}).
+                  {branche.id === 'patron'
+                    ? `🔒 S'ouvre avec les mineurs employés (prestige ${PRESTIGE_EMPLOYES}).`
+                    : `🔒 S'ouvre quand tu embauches le recruteur (stand Personnel, prestige ${PRESTIGE_RECRUTEUR}).`}
                 </span>
               )}
               {TALENTS.filter((t) => t.branche === branche.id).map((t) => {

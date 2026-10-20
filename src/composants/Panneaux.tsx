@@ -40,6 +40,7 @@ import {
   peutAmeliorerChariot,
   peutAmeliorerForage,
   secondesDeCharbon,
+  secondesPourRemplir,
   basculerRechargeAuto,
   rechargeAutoDisponible,
   valeurAuChariot,
@@ -276,6 +277,13 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
 // ---------------------------------------------------------------------------
 
 // La foreuse : débloquée au prestige 1, activée une fois, puis nourrie au charbon.
+// « 8 min », « 1 h 05 » : le temps de remplissage du chariot.
+function minutes(secondes: number): string {
+  const total = Math.round(secondes / 60)
+  if (total < 60) return `${Math.max(1, total)} min`
+  return `${Math.floor(total / 60)} h ${String(total % 60).padStart(2, '0')}`
+}
+
 export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const foreuse = etat.foreuse
 
@@ -428,13 +436,18 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
 
       <div className="ligne-achat">
         <strong>🛒 Taille du chariot</strong>
+        <span className="discret">
+          {secondesPourRemplir(etat) < 6 * 60
+            ? '⚠️ Ta foreuse remplit le chariot vite : agrandis-le pour qu’elle tourne plus longtemps sans toi.'
+            : 'Améliore le chariot en même temps que la foreuse : à niveaux égaux, il se remplit en 8 min environ.'}
+        </span>
         <Amelioration
           etat={etat}
-          actuel={`${NIVEAUX_CHARIOT[foreuse.niveauChariot].capacite} places`}
+          actuel={`${capaciteChariot(etat).toLocaleString('fr-FR')} places · plein en ${minutes(secondesPourRemplir(etat))}`}
           niveau={foreuse.niveauChariot + 1}
           niveauMax={NIVEAUX_CHARIOT.length}
           niveauPermis={niveauMaxAuPrestige('chariot', etat.prestige) + 1}
-          suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite} places` }}
+          suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite.toLocaleString('fr-FR')} places (${minutes(secondesPourRemplir(etat, foreuse.niveauChariot + 1))})` }}
           bloqueAuPrestige={chariotBloqueAuPrestige(etat)}
           possible={peutAmeliorerChariot(etat)}
           onAmeliorer={() => jouer(ameliorerChariot)}

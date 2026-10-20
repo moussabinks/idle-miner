@@ -280,13 +280,20 @@ export function retirerTresorerie(etat: EtatJeu, montant: number): string[] {
   return [`💼 ${pris.toLocaleString('fr-FR')} $ repris de la trésorerie.`]
 }
 
+// Ce qu'il manque dans la trésorerie pour payer une fois (10 minutes) toute l'équipe, manager compris.
+export function manquePourUnePaie(etat: EtatJeu): number {
+  return Math.max(0, depensesParPaie(etat) - etat.tresorerie)
+}
+
 // Ce que coûtent 10 minutes de toute l'équipe, manager compris (pour savoir combien de temps tient la trésorerie).
 export function depensesParPaie(etat: EtatJeu): number {
   return salairesParPaie(etat) + (etat.manager.embauche ? salaireManager() : 0)
 }
 
 // Le manager paie les salaires qui arrivent à leur fin (moins d'une minute payée), avec la
-// trésorerie. Il commence par lui-même (sans lui, plus personne n'est payé).
+// trésorerie. Il commence par lui-même (sans lui, plus personne n'est payé), puis les mineurs
+// du moins cher au plus cher : s'il n'y a pas de quoi payer tout le monde, le plus de mineurs
+// possible continuent de travailler.
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
   if (!manager.embauche) return
@@ -296,7 +303,8 @@ function payerParManager(etat: EtatJeu): void {
     manager.tempsPaye += SECONDES_PAR_PAIE
   }
   if (!managerAuTravail(etat)) return
-  for (const employe of etat.employes) {
+  const parSalaire = [...etat.employes].sort((a, b) => salaireEmploye(etat, a) - salaireEmploye(etat, b))
+  for (const employe of parSalaire) {
     const salaire = salaireEmploye(etat, employe)
     if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.tresorerie >= salaire) {
       etat.tresorerie -= salaire

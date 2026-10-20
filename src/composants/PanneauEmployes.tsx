@@ -27,6 +27,7 @@ import {
   coutSalaires,
   deposerTresorerie,
   depensesParPaie,
+  manquePourUnePaie,
   embaucher,
   embaucherManager,
   employeBloqueAuPrestige,
@@ -163,6 +164,7 @@ function Manager({ etat, jouer }: Props) {
     )
   }
   const depenses = depensesParPaie(etat)
+  const manque = manquePourUnePaie(etat)
   const vide = !managerAuTravail(etat) || nbSansSalaire(etat) > 0
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
@@ -174,12 +176,39 @@ function Manager({ etat, jouer }: Props) {
         <span>Trésorerie</span>
         <strong>{argent(etat.tresorerie)}</strong>
       </div>
+      {/* Combien il faut pour payer tout le monde une fois (10 min) : la jauge se remplit jusque-là. */}
+      <Barre
+        valeur={etat.tresorerie}
+        max={depenses}
+        texte={manque > 0 ? `Une paie de toute l'équipe : ${argent(etat.tresorerie)} / ${argent(depenses)}` : `✔ Une paie de toute l'équipe : ${argent(depenses)}`}
+        couleur={manque > 0 ? 'rouge' : 'vert'}
+      />
+      {manque > 0 && (
+        <div className="module-ligne">
+          <span className="texte-alerte">Il manque {argent(manque)} pour payer tout le monde (le manager se paie d'abord, puis les mineurs les moins chers).</span>
+          <button
+            className="bouton bouton-petit bouton-payer"
+            disabled={!aLaSurface(etat) || etat.argent < manque}
+            onClick={() => jouer((e) => deposerTresorerie(e, manquePourUnePaie(e)))}
+          >
+            +{argent(manque)}
+          </button>
+        </div>
+      )}
       <span className={vide ? 'texte-alerte' : 'discret'}>
         {vide
           ? '💼 La trésorerie est vide : remets de l’argent, sinon personne n’est payé !'
-          : `Salaires de l'équipe (manager compris) : ${argent(depenses)} toutes les 10 minutes. La trésorerie tient environ ${duree((etat.tresorerie / depenses) * SECONDES_PAR_PAIE)}.`}
+          : `La trésorerie tient environ ${duree((etat.tresorerie / depenses) * SECONDES_PAR_PAIE)}.`}
       </span>
       <div className="boutons">
+        <button
+          className="bouton bouton-petit bouton-payer"
+          disabled={!aLaSurface(etat) || etat.argent < 1}
+          onClick={() => jouer((e) => deposerTresorerie(e, Math.max(0, 6 * depensesParPaie(e) - e.tresorerie)))}
+          title="Assez pour payer toute l'équipe pendant 1 h"
+        >
+          Remplir pour 1 h
+        </button>
         {[1000, 10000, 100000].map((montant) => (
           <button
             key={montant}
