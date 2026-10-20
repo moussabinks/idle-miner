@@ -389,10 +389,7 @@ export function PanneauEmployes({ etat, jouer }: Props) {
           <>
             <span className="discret">
               {avecRecruteur ? 'Commun, rare... ou mythique ? On ne refuse personne : c’est la surprise ! ' : ''}
-              Ses 10 premières minutes de salaire sont comprises. Le prix monte avec la taille de l'équipe
-              {etat.licenciements > 0 &&
-                ` (les ${etat.licenciements === 1 ? 'un mineur licencié' : `${etat.licenciements} mineurs licenciés`} pendant ce prestige comptent encore)`}
-              .
+              Ses 10 premières minutes de salaire sont comprises. Le prix monte avec la taille de l'équipe.
             </span>
             <Achat
               etat={etat}
@@ -423,8 +420,7 @@ export function PanneauEmployes({ etat, jouer }: Props) {
           onAnnuler={() => setALicencier(null)}
         >
           <p>
-            {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement. Jusqu'au prochain
-            prestige, il compte encore dans le prix des embauches.
+            {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement.
           </p>
           <p>
             Indemnités : <strong>{argent(indemnites(etat))}</strong>
