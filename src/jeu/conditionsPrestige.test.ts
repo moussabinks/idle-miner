@@ -15,7 +15,7 @@ function toutFaireAuPrestige0(etat: EtatJeu): void {
   etat.victoire = true
   etat.ascenseur.niveau = 2
   etat.enchantements = { efficacite: 1, fortune: 1, solidite: 1 }
-  etat.niveauSac = 3 // 256 places
+  etat.niveauSac = 2 // 128 places
 }
 
 describe('conditions pour passer prestige', () => {
@@ -36,16 +36,25 @@ describe('conditions pour passer prestige', () => {
     expect(peutPasserPrestige(etat)).toBe(false)
   })
 
-  it('au prestige 1, la foreuse (activée, forage et chariot au niveau 2)', () => {
+  it('au prestige 1 : l’ascenseur niveau 3, et activer la foreuse suffit (sac et enchantements comme au prestige 0)', () => {
     const etat = partie(1)
     toutFaireAuPrestige0(etat)
     etat.ascenseur.niveau = 3
-    etat.niveauSac = 4
-    etat.enchantements.efficacite = 2 // un niveau de plus par prestige
     expect(peutPasserPrestige(etat)).toBe(false)
     etat.foreuse.active = true
+    expect(peutPasserPrestige(etat)).toBe(true)
+  })
+
+  it('au prestige 2 : sac de 256, les trois enchantements II, forage et chariot niveau 2', () => {
+    const etat = partie(2)
+    toutFaireAuPrestige0(etat)
+    etat.ascenseur.niveau = 4
+    etat.foreuse.active = true
+    const manque = () => conditionsPrestige(etat).filter((c) => !c.faite).map((c) => c.id)
+    expect(manque()).toEqual(['sac', 'enchantement-efficacite', 'enchantement-fortune', 'enchantement-solidite', 'forage', 'chariot'])
+    etat.niveauSac = 3
+    etat.enchantements = { efficacite: 2, fortune: 2, solidite: 2 }
     etat.foreuse.niveauVitesse = 1
-    expect(peutPasserPrestige(etat)).toBe(false)
     etat.foreuse.niveauChariot = 1
     expect(peutPasserPrestige(etat)).toBe(true)
   })

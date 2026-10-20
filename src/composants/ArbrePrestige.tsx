@@ -1,6 +1,6 @@
 // L'arbre de prestige : cinq branches de talents (mineur, marchand, ingénieur, patron,
 // recrutement). À chaque prestige, on gagne 1 point et on choisit sa récompense. Il s'ouvre
-// tout seul après un prestige, et on peut le rouvrir à l'entrée de la mine, au village (ou
+// tout seul après un prestige, et on peut le rouvrir au bâtiment « Arbre de prestige » du village (ou
 // avec l'étoile du bandeau). La branche Recrutement reste fermée tant qu'on n'a pas le recruteur.
 
 import { useState } from 'react'

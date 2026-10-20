@@ -5,7 +5,7 @@
 // Le sac à dos compte aussi (plafonné par le prestige depuis le 20/10). Les pioches ne comptent
 // pas : elles ne sont pas limitées par le prestige (et il faut de toute façon la pioche en
 // netherite pour atteindre la bedrock).
-// Le panneau de l'entrée de la mine montre cette liste, avec une jauge.
+// L'arbre de prestige du village (le bâtiment tout à gauche) montre cette liste, avec une jauge.
 
 import { ENCHANTEMENTS, LISTE_ENCHANTEMENTS, NIVEAUX_EMPLOYE, SACS, niveauMaxAuPrestige, profondeurBedrock } from './donnees'
 import { recruteurDebloque } from './employes'
@@ -49,17 +49,21 @@ export function conditionsPrestige(etat: EtatJeu): ConditionPrestige[] {
   if (foreuseDebloquee(etat)) {
     // Les niveaux de la foreuse sont comptés à partir de 0 dans le code : on affiche à partir de 1.
     liste.push(condition('foreuse', '⚙️ Foreuse activée', etat.foreuse.active ? 1 : 0, 1))
+    // Le niveau de base (au prestige 1) n'est pas une condition : l'activer suffit.
     const forage = niveauMaxAuPrestige('forage', p) + 1
-    liste.push(condition('forage', `⚙️ Forage au niveau ${forage}`, etat.foreuse.niveauVitesse + 1, forage))
+    if (forage > 1) liste.push(condition('forage', `⚙️ Forage au niveau ${forage}`, etat.foreuse.niveauVitesse + 1, forage))
     const chariot = niveauMaxAuPrestige('chariot', p) + 1
-    liste.push(condition('chariot', `🛒 Chariot au niveau ${chariot}`, etat.foreuse.niveauChariot + 1, chariot))
+    if (chariot > 1) liste.push(condition('chariot', `🛒 Chariot au niveau ${chariot}`, etat.foreuse.niveauChariot + 1, chariot))
   }
 
   // L'équipement de chaque mineur embauché (on n'oblige pas à embaucher toute l'équipe).
+  // (Au prestige 2, la pioche en bois de départ suffit : pas de condition.)
   const equipement = niveauMaxAuPrestige('mineur', p)
-  etat.employes.forEach((employe, index) => {
-    liste.push(condition(`mineur-${index}`, `👷 ${employe.nom} : pioche en ${NIVEAUX_EMPLOYE[equipement].nom}`, employe.niveau + 1, equipement + 1))
-  })
+  if (equipement > 0) {
+    etat.employes.forEach((employe, index) => {
+      liste.push(condition(`mineur-${index}`, `👷 ${employe.nom} : pioche en ${NIVEAUX_EMPLOYE[equipement].nom}`, employe.niveau + 1, equipement + 1))
+    })
+  }
 
   if (recruteurDebloque(etat)) {
     const recruteur = niveauMaxAuPrestige('recruteur', p)

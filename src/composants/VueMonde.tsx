@@ -499,7 +499,7 @@ export function VueMonde({
       </div>
 
       {etat.victoire && !auVillage && (
-        <p className="bandeau-galerie">🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l’entrée de la mine (village).</p>
+        <p className="bandeau-galerie">🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l’arbre de prestige (village).</p>
       )}
       {/* La couche du dessous est trop dure : un message bien visible, qui dit quelle pioche il faut. */}
       {etat.enGalerie && !etat.victoire && !auVillage && (

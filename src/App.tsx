@@ -229,7 +229,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {stand.id === 'enchanteur' && <PanneauEnchanter etat={etat} jouer={jouer} />}
         {stand.id === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
         {stand.id === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
-        {stand.id === 'puits' && (
+        {stand.id === 'prestige' && (
           <div className="liste-cartes">
             {/* C'est ici qu'on passe prestige : la liste de ce qu'il reste à faire, avec sa jauge. */}
             <CartePrestige etat={etat} onPrestige={faireLePrestige} />
@@ -251,6 +251,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
                 </div>
               </div>
             )}
+          </div>
+        )}
+        {stand.id === 'puits' && (
+          <div className="liste-cartes">
 
             <p>
               Ta mine descend à <strong>-{etat.profondeur} m</strong>.{' '}

@@ -1,4 +1,4 @@
-// La carte du prestige, à l'entrée de la mine (et sur l'écran de victoire) : ce qu'il reste
+// La carte du prestige, au bâtiment « Arbre de prestige » du village (et sur l'écran de victoire) : ce qu'il reste
 // à faire avant de pouvoir passer prestige, avec une jauge qui se remplit.
 // Les règles sont dans src/jeu/conditionsPrestige.ts.
 

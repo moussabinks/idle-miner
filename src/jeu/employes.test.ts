@@ -153,16 +153,16 @@ describe('mineurs employés', () => {
     const etat = partie(2)
     embaucher(etat, hasard())
     ameliorerEmploye(etat, 0)
-    ameliorerEmploye(etat, 0)
-    expect(etat.employes[0].niveau).toBe(1) // Pierre au prestige 2, pas plus
+    expect(etat.employes[0].niveau).toBe(0) // pioche en bois au prestige 2
     expect(employeBloqueAuPrestige(etat, etat.employes[0])).toBe(3)
     etat.prestige = 3
     ameliorerEmploye(etat, 0)
-    expect(etat.employes[0].niveau).toBe(2)
+    ameliorerEmploye(etat, 0)
+    expect(etat.employes[0].niveau).toBe(1) // Pierre au prestige 3, pas plus
   })
 
   it('ont un plus grand sac à chaque amélioration', () => {
-    const etat = partie(5)
+    const etat = partie(6)
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
     const tailles = [tailleSacEmploye(etat, mineur)]
@@ -178,12 +178,13 @@ describe('mineurs employés', () => {
     avancerTemps(etat, 3500, aleatoireAvecGraine(4))
     expect(etat.employes[0].profondeur).toBe(profondeurMaxEmploye(etat, etat.employes[0]))
     expect(etat.employes[0].profondeur).toBeLessThan(profondeurBedrock(etat.prestige))
+    etat.prestige = 3
     ameliorerEmploye(etat, 0)
     expect(etat.employes[0].niveau).toBe(1)
   })
 
   it('restent après un prestige avec leur pioche et leur rareté, mais repartent de la surface', () => {
-    const etat = partie(2)
+    const etat = partie(3)
     embaucher(etat, hasard())
     ameliorerEmploye(etat, 0)
     etat.employes[0].rarete = 'epique'
