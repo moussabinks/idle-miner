@@ -6,9 +6,13 @@ import './effets.css'
 import './accueil.css'
 import './personnel.css'
 import App from './App.tsx'
+import { enregistrerServiceWorker } from './installation'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
+// Le jeu marche aussi hors ligne et s'installe comme une application (voir public/sw.js).
+enregistrerServiceWorker()

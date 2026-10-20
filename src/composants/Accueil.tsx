@@ -20,6 +20,7 @@ import {
 import type { Compte } from '../useCompte'
 import { CarteClassement } from './CarteClassement'
 import { CarteCompte } from './CarteCompte'
+import { CarteInstallation } from './CarteInstallation'
 import { Personnage } from './Personnage'
 
 // Les couleurs des cartes des mondes (une par monde, pour les reconnaître d'un coup d'œil).
@@ -216,7 +217,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
   const etatDernier = dernierMonde ? charger(window.localStorage, dernierMonde.id) : null
 
   return (
-    <div className="accueil">
+    // Sur téléphone, un joueur qui a déjà des mondes les voit en premier (voir accueil.css).
+    <div className={`accueil ${mondes.length > 0 ? 'accueil-avec-mondes' : ''}`}>
       <section className="heros">
         {/* Le décor : une grotte sombre, des rochers devant, et des éclats de minerai qui brillent en flottant. */}
         <div className="heros-decor" aria-hidden="true">
@@ -304,6 +306,7 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
       </ol>
 
       <section className="accueil-mondes" id="mondes">
+        <CarteInstallation />
         <CarteCompte compte={compte} />
         <h2 className="titre-section">
           🌍 Tes mondes{' '}
