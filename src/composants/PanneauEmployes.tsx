@@ -15,7 +15,6 @@ import {
   PRIX_MANAGER,
   RARETES,
   SECONDES_PAR_PAIE,
-  SECONDES_PAYEES_MAX,
   niveauMaxAuPrestige,
 } from '../jeu/donnees'
 import {
@@ -97,11 +96,11 @@ function Chances({ etat, apercu }: { etat: EtatJeu; apercu: boolean }) {
   )
 }
 
-// Les salaires (sans le manager) : on paie 10 minutes de plus, ou tout le monde jusqu'à 1 h.
+// Les salaires (sans le manager) : on complète jusqu'à 10 minutes payées, pas plus (pour
+// payer d'avance plus longtemps, il faut le manager, au prestige 5).
 function Salaires({ etat, jouer }: Props) {
   const sansSalaire = nbSansSalaire(etat)
   const cout10 = coutSalaires(etat, SECONDES_PAR_PAIE)
-  const cout1h = coutSalaires(etat, SECONDES_PAYEES_MAX)
   return (
     <div className={`ligne-achat carte-salaires ${sansSalaire > 0 ? 'carte-alerte' : ''}`}>
       <div className="ligne-titre">
@@ -113,7 +112,7 @@ function Salaires({ etat, jouer }: Props) {
           ? sansSalaire === 1
             ? '😠 Un mineur attend son salaire : sans salaire, il ne creuse plus !'
             : `😠 ${sansSalaire} mineurs attendent leur salaire : sans salaire, ils ne creusent plus !`
-          : `Tout le monde est payé pour encore ${duree(tempsPayeMin(etat))}. On peut payer d'avance, jusqu'à 1 h.`}
+          : `Tout le monde est payé pour encore ${duree(tempsPayeMin(etat))}. On paie 10 minutes à la fois${etat.prestige < PRESTIGE_MANAGER ? ` (le manager, au prestige ${PRESTIGE_MANAGER}, s'en chargera pour toi)` : ''}.`}
       </span>
       <div className="boutons">
         <button
@@ -121,14 +120,7 @@ function Salaires({ etat, jouer }: Props) {
           disabled={!aLaSurface(etat) || !peutPayerSalaires(etat, SECONDES_PAR_PAIE)}
           onClick={() => jouer((e) => payerSalaires(e, SECONDES_PAR_PAIE))}
         >
-          💵 +10 min · {argent(cout10)}
-        </button>
-        <button
-          className="bouton bouton-petit bouton-payer"
-          disabled={!aLaSurface(etat) || !peutPayerSalaires(etat, SECONDES_PAYEES_MAX)}
-          onClick={() => jouer((e) => payerSalaires(e, SECONDES_PAYEES_MAX))}
-        >
-          💵 Payer 1 h · {argent(cout1h)}
+          💵 Payer 10 min · {argent(cout10)}
         </button>
       </div>
     </div>
@@ -314,7 +306,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
       <div className="jauges-employe">
         <Barre
           valeur={employe.tempsPaye}
-          max={SECONDES_PAYEES_MAX}
+          max={Math.max(SECONDES_PAR_PAIE, employe.tempsPaye)}
           texte={employe.tempsPaye > 0 ? `⏳ ${duree(employe.tempsPaye)}` : '😠 Plus payé'}
           couleur={employe.tempsPaye > 0 ? 'vert' : 'rouge'}
         />
@@ -397,7 +389,10 @@ export function PanneauEmployes({ etat, jouer }: Props) {
           <>
             <span className="discret">
               {avecRecruteur ? 'Commun, rare... ou mythique ? On ne refuse personne : c’est la surprise ! ' : ''}
-              Ses 10 premières minutes de salaire sont comprises.
+              Ses 10 premières minutes de salaire sont comprises. Le prix monte avec la taille de l'équipe
+              {etat.licenciements > 0 &&
+                ` (les ${etat.licenciements === 1 ? 'un mineur licencié' : `${etat.licenciements} mineurs licenciés`} pendant ce prestige comptent encore)`}
+              .
             </span>
             <Achat
               etat={etat}
@@ -428,7 +423,8 @@ export function PanneauEmployes({ etat, jouer }: Props) {
           onAnnuler={() => setALicencier(null)}
         >
           <p>
-            {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement.
+            {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement. Jusqu'au prochain
+            prestige, il compte encore dans le prix des embauches.
           </p>
           <p>
             Indemnités : <strong>{argent(indemnites(etat))}</strong>

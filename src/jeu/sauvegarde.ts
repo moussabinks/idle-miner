@@ -476,6 +476,10 @@ function migrer(donnees: unknown): unknown {
     delete etat.peculeRecu
   }
 
+  // Version 15 -> 16 (20/10) : les mineurs licenciés comptent dans le prix d'une embauche.
+  // Les anciennes parties partent de 0 licenciement.
+  if (etat.version === 15) etat = { ...etat, version: 16, licenciements: 0 }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -506,6 +510,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.talents) &&
     Array.isArray(etat.employes) &&
     typeof etat.recruteur === 'number' &&
+    typeof etat.licenciements === 'number' &&
     typeof etat.manager === 'object' &&
     typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
