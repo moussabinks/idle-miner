@@ -406,3 +406,65 @@
   font-size: 0.72rem;
   opacity: 0.7;
 }
+
+/* --- Installer le jeu comme une application (PWA) ------------------------------ */
+
+.carte-installation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  border-color: var(--accent);
+}
+
+.carte-installation-icone {
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.carte-installation-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.carte-installation-boutons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .carte-installation {
+    flex-wrap: wrap;
+  }
+
+  .carte-installation-boutons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Sur téléphone, un joueur qui a déjà des mondes les trouve tout de suite, sans faire
+   défiler l'explication du jeu (elle passe en dessous). */
+@media (max-width: 760px) {
+  .accueil-avec-mondes .accueil-mondes {
+    order: -1;
+  }
+}
+
+/* Et dans cette section, les mondes passent avant les cartes « Installer » et « Ton compte ». */
+@media (max-width: 760px) {
+  .accueil-avec-mondes .accueil-mondes {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .accueil-avec-mondes .carte-installation,
+  .accueil-avec-mondes .carte-compte {
+    order: 1;
+    margin: 18px 0 0;
+  }
+}

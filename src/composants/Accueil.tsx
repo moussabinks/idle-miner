@@ -20,6 +20,7 @@ import {
 import type { Compte } from '../useCompte'
 import { CarteClassement } from './CarteClassement'
 import { CarteCompte } from './CarteCompte'
+import { CarteInstallation } from './CarteInstallation'
 import { Personnage } from './Personnage'
 
 // Les couleurs des cartes des mondes (une par monde, pour les reconnaître d'un coup d'œil).
@@ -194,7 +195,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
   }
 
   return (
-    <div className="accueil">
+    // Sur téléphone, un joueur qui a déjà des mondes les voit en premier (voir accueil.css).
+    <div className={`accueil ${mondes.length > 0 ? 'accueil-avec-mondes' : ''}`}>
       <section className="accueil-heros">
         <div className="accueil-texte">
           <h1 className="titre accueil-titre">⛏️ Idle Miner</h1>
@@ -233,6 +235,7 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
       </section>
 
       <section className="accueil-mondes">
+        <CarteInstallation />
         <CarteCompte compte={compte} />
         <h2>
           Choisis ton monde{' '}

@@ -2755,3 +2755,126 @@ kbd {
     animation: none;
   }
 }
+
+/* =========================================================================
+   Téléphone et application installée (PWA)
+   ========================================================================= */
+
+/* Sur écran tactile : pas de zoom au double appui sur les boutons, pas de reflet bleu au toucher,
+   et pas de « tirer pour recharger » qui relancerait la page au milieu d'une partie. */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+/* Sur iPhone, Safari zoome sur un champ dont le texte fait moins de 16 px : on l'en empêche. */
+@media (hover: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* L'application installée s'affiche sous l'encoche et la barre d'état : on garde des marges. */
+.jeu,
+.accueil {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+@media (max-width: 860px) {
+  /* --- L'en-tête : sur une seule ligne, en petit -------------------------- */
+  .entete {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .entete .titre {
+    flex: 1 0 50%; /* la moitié de la ligne : les boutons passent tous les 3 à la ligne suivante */
+    font-size: 1.1rem;
+    white-space: nowrap;
+  }
+
+  .entete {
+    flex-wrap: wrap;
+  }
+
+  /* Le titre et « Recommencer à zéro » sur la 1re ligne ; les 3 boutons (monde, stats,
+     succès) se partagent la 2e ligne (28 % chacun : ils ne tiennent pas à côté du titre). */
+  .entete .lien-recommencer {
+    white-space: nowrap;
+  }
+
+  .entete .bouton-succes {
+    flex: 1 1 28%;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* --- Le bandeau : des cases plus basses --------------------------------- */
+  .hud {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .hud-case {
+    height: auto;
+    min-height: 52px;
+    padding: 6px 10px;
+  }
+
+  .hud-petits {
+    min-height: 0;
+    padding: 4px 10px;
+  }
+
+  /* La barre « 🎯 prochain objectif » remonte de 8 px sous le bandeau (personnel.css) :
+     ici le bandeau a déjà une petite marge, on la laisse respirer. */
+  .jeu .objectif {
+    margin-top: 0;
+  }
+
+  /* --- La mine prend la place qui reste au-dessus de la barre de boutons ---- */
+  .monde {
+    height: min(58dvh, 560px);
+  }
+
+  /* --- La barre de boutons reste collée en bas de l'écran, sous le pouce ---- */
+  .actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9; /* sous les fenêtres (.voile) et les notifications */
+    width: auto;
+    max-width: none;
+    gap: 6px;
+    padding: 8px max(10px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    background: rgb(21 21 26 / 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--bordure);
+  }
+
+  .actions .bouton {
+    min-height: 48px; /* assez grand pour le pouce */
+  }
+
+  /* De la place sous le dernier panneau, pour que la barre ne le cache pas. */
+  .jeu {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
