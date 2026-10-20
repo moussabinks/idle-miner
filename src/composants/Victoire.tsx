@@ -1,7 +1,9 @@
 // L'écran de victoire, quand on atteint la bedrock.
 
-import { BONUS_PRESTIGE, BONUS_VITESSE_PRESTIGE, profondeurBedrock } from '../jeu/donnees'
+import { peutPasserPrestige } from '../jeu/conditionsPrestige'
+import { profondeurBedrock } from '../jeu/donnees'
 import type { EtatJeu } from '../jeu/mineur'
+import { CartePrestige } from './CartePrestige'
 
 type Props = {
   etat: EtatJeu
@@ -16,8 +18,7 @@ function formaterTemps(secondes: number): string {
 }
 
 export function Victoire({ etat, onPrestige, onFermer }: Props) {
-  const bonusVente = Math.round((etat.prestige + 1) * BONUS_PRESTIGE * 100)
-  const bonusVitesse = Math.round((etat.prestige + 1) * BONUS_VITESSE_PRESTIGE * 100)
+  const pret = peutPasserPrestige(etat)
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-victoire">
       <div className="carte victoire">
@@ -39,16 +40,17 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           </li>
         </ul>
         <p className="discret">
-          Prestige : tu recommences à zéro, mais tes ventes rapportent +{bonusVente} % et tes pioches vont {bonusVitesse} % plus vite, et tu
-          choisis une récompense dans l'arbre de prestige. Tu gardes tes succès, tes talents, l'ascenseur, la foreuse et tes mineurs. Tu peux aussi continuer à creuser ici pour tester tes enchantements, et passer prestige plus tard à l'entrée de la mine.
-          {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvre !'}
+          Prestige : tu recommences à zéro, mais tu gardes tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la
+          foreuse et ton personnel.
+          {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvrira !'}
+          {pret
+            ? ' Tu peux aussi continuer à creuser ici, et passer prestige plus tard à l’entrée de la mine.'
+            : ' Avant, améliore au maximum ce que ce prestige permet (la carte de l’entrée de la mine te le rappelle) :'}
         </p>
+        <CartePrestige etat={etat} onPrestige={onPrestige} compacte />
         <div className="boutons boutons-centre">
-          <button className="bouton bouton-prestige" onClick={onPrestige}>
-            ⭐ Passer prestige {etat.prestige + 1}
-          </button>
           <button className="bouton" onClick={onFermer}>
-            Continuer à creuser
+            {pret ? 'Continuer à creuser' : 'Je m’en occupe !'}
           </button>
         </div>
       </div>

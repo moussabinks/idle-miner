@@ -2,19 +2,19 @@
 // du rendement de chaque source (pour l'indicateur « $/s » en haut de l'écran).
 //   - toi, quand tu creuses : la valeur moyenne d'un bloc à ta profondeur, divisée par le
 //     temps moyen pour le casser (Fortune comprise) ;
-//   - les foreuses, quand elles tournent : pour chacune, sa vitesse × la valeur moyenne d'un
-//     bloc à sa profondeur ;
-//   - chaque mineur employé : ce que rapporte un sac plein (moins son salaire), divisé par la
-//     durée d'un aller-retour complet (creuser, remonter, vendre, redescendre). La vitesse de
-//     l'ascenseur compte donc : plus il est rapide, plus les trajets sont courts.
+//   - la foreuse, quand elle tourne : sa vitesse × la valeur moyenne d'un bloc à sa profondeur ;
+//   - chaque mineur employé (payé) : ce que rapporte un sac plein, divisé par la durée d'un
+//     aller-retour complet (creuser, remonter, vendre, redescendre), moins son salaire. La
+//     vitesse de l'ascenseur compte donc : plus il est rapide, plus les trajets sont courts.
+//     Le salaire du manager est retiré aussi.
 // Ce n'est qu'une moyenne : le hasard des minerais fait varier le vrai gain.
 
-import { BLOCS, SECONDES_VENTE_EMPLOYE, dureeCasse, type IdBloc } from './donnees'
-import { secondesParMetreEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
-import { foreuseEnMarche, vitesseUneForeuse } from './foreuse'
+import { BLOCS, SECONDES_PAR_PAIE, SECONDES_VENTE_EMPLOYE, dureeCasse, type IdBloc } from './donnees'
+import { managerAuTravail, salaireEmploye, salaireManager, secondesParMetreEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
+import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { poidsDesBlocs } from './mine'
-import { CHANCE_FORTUNE_PAR_NIVEAU, auFond, bonusVente, vitesse, type EtatJeu } from './mineur'
-import { partSalaire } from './talents'
+import { auFond, bonusVente, chanceDoublement, vitesseA, type EtatJeu, type Employe } from './mineur'
+import { multiplicateurVenteChariot } from './talents'
 
 export type Revenu = {
   joueur: number
@@ -31,11 +31,12 @@ function probabilites(profondeur: number, prestige: number): { bloc: IdBloc; cha
 }
 
 // La valeur moyenne d'un bloc à une profondeur (sans les bonus de vente).
-// Avec Fortune, un minerai vaut en moyenne un peu plus (il est parfois doublé).
-export function valeurMoyenneBloc(profondeur: number, prestige: number, fortune = 0): number {
+// Avec Fortune, un minerai vaut en moyenne un peu plus : il est doublé une fois sur
+// « chanceDoublement » (0,2 pour Fortune I...).
+export function valeurMoyenneBloc(profondeur: number, prestige: number, chanceDoublement = 0): number {
   let moyenne = 0
   for (const { bloc, chance } of probabilites(profondeur, prestige)) {
-    const doublement = BLOCS[bloc].minerai ? 1 + fortune * CHANCE_FORTUNE_PAR_NIVEAU : 1
+    const doublement = BLOCS[bloc].minerai ? 1 + chanceDoublement : 1
     moyenne += chance * BLOCS[bloc].prix * doublement
   }
   return moyenne
@@ -46,29 +47,35 @@ function revenuJoueur(etat: EtatJeu): number {
   if (!auFond(etat)) return 0
   let dureeMoyenne = 0
   for (const { bloc, chance } of probabilites(etat.profondeur, etat.prestige)) {
-    dureeMoyenne += chance * dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat), etat.prestige)
+    dureeMoyenne += chance * dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesseA(etat, etat.profondeur), etat.prestige)
   }
   if (dureeMoyenne <= 0) return 0
-  return (valeurMoyenneBloc(etat.profondeur, etat.prestige, etat.enchantements.fortune) * bonusVente(etat)) / dureeMoyenne
+  return (valeurMoyenneBloc(etat.profondeur, etat.prestige, chanceDoublement(etat)) * bonusVente(etat)) / dureeMoyenne
 }
 
 function revenuForeuse(etat: EtatJeu): number {
   if (!foreuseEnMarche(etat)) return 0
-  // Chaque foreuse creuse à sa vitesse, à sa propre profondeur.
-  let total = 0
-  for (const une of etat.foreuse.foreuses) total += vitesseUneForeuse(etat, une) * valeurMoyenneBloc(une.profondeur, etat.prestige)
-  return total * bonusVente(etat)
+  const foreuse = etat.foreuse
+  return vitesseForage(etat) * valeurMoyenneBloc(foreuse.profondeur, etat.prestige) * bonusVente(etat) * multiplicateurVenteChariot(etat)
 }
 
+// Ce que rapporte un mineur par seconde, avant son salaire.
+export function revenuBrutEmploye(etat: EtatJeu, mineur: Employe): number {
+  const sac = tailleSacEmploye(etat, mineur)
+  const gainParSac = sac * valeurMoyenneBloc(mineur.profondeur, etat.prestige) * bonusVente(etat)
+  const tempsCreuse = sac / vitesseEmploye(etat, mineur)
+  const tempsTrajets = 2 * Math.max(1, mineur.profondeur - 1) * secondesParMetreEmploye(etat, mineur)
+  return gainParSac / (tempsCreuse + tempsTrajets + SECONDES_VENTE_EMPLOYE)
+}
+
+// Ce que rapportent les mineurs payés, moins leurs salaires (et celui du manager).
 function revenuMineurs(etat: EtatJeu): number {
   let total = 0
   for (const mineur of etat.employes) {
-    const sac = tailleSacEmploye(etat, mineur)
-    const gainParSac = sac * valeurMoyenneBloc(mineur.profondeur, etat.prestige) * bonusVente(etat) * (1 - partSalaire(etat))
-    const tempsCreuse = sac / vitesseEmploye(etat, mineur)
-    const tempsTrajets = 2 * Math.max(1, mineur.profondeur - 1) * secondesParMetreEmploye(etat, mineur)
-    total += gainParSac / (tempsCreuse + tempsTrajets + SECONDES_VENTE_EMPLOYE)
+    if (mineur.tempsPaye <= 0) continue // il ne travaille pas (et n'est pas payé)
+    total += revenuBrutEmploye(etat, mineur) - salaireEmploye(etat, mineur) / SECONDES_PAR_PAIE
   }
+  if (managerAuTravail(etat)) total -= salaireManager() / SECONDES_PAR_PAIE
   return total
 }
 

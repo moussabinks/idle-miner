@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { embaucher, profondeurMaxEmploye } from './employes'
+import { embaucher, profondeurMaxEmploye, salaireEmploye } from './employes'
 import { activerForeuse } from './foreuse'
 import { creerPartie, positionFront, type EtatJeu } from './mineur'
-import { revenuParSeconde, valeurMoyenneBloc } from './revenu'
+import { revenuBrutEmploye, revenuParSeconde, valeurMoyenneBloc } from './revenu'
 import { avancerTemps } from './temps'
 
 function partie(prestige: number): EtatJeu {
@@ -28,7 +28,7 @@ describe('argent généré par seconde', () => {
 
   it('les blocs valent plus en profondeur, et encore plus avec Fortune', () => {
     expect(valeurMoyenneBloc(60, 1)).toBeGreaterThan(valeurMoyenneBloc(5, 1))
-    expect(valeurMoyenneBloc(60, 1, 3)).toBeGreaterThan(valeurMoyenneBloc(60, 1))
+    expect(valeurMoyenneBloc(60, 1, 0.6)).toBeGreaterThan(valeurMoyenneBloc(60, 1))
   })
 
   it('compte la foreuse seulement quand elle tourne', () => {
@@ -42,7 +42,7 @@ describe('argent généré par seconde', () => {
 
   it('compte les mineurs, plus vite avec l’ascenseur', () => {
     const etat = partie(4)
-    embaucher(etat)
+    embaucher(etat, aleatoireAvecGraine(1))
     etat.employes[0].niveau = 3
     etat.employes[0].profondeur = 110
     const sansAscenseur = revenuParSeconde(etat, false).mineurs
@@ -51,14 +51,26 @@ describe('argent généré par seconde', () => {
     expect(revenuParSeconde(etat, false).mineurs).toBeGreaterThan(sansAscenseur)
   })
 
+  it('compte les mineurs moins leurs salaires, et pas ceux qui attendent leur salaire', () => {
+    const etat = partie(3)
+    embaucher(etat, aleatoireAvecGraine(1))
+    const mineur = etat.employes[0]
+    mineur.profondeur = profondeurMaxEmploye(etat, mineur)
+    expect(revenuParSeconde(etat, false).mineurs).toBeCloseTo(revenuBrutEmploye(etat, mineur) - salaireEmploye(etat, mineur) / 600)
+    mineur.tempsPaye = 0
+    mineur.etape = 'attend'
+    expect(revenuParSeconde(etat, false).mineurs).toBe(0)
+  })
+
   it('ressemble à ce que les mineurs rapportent vraiment', () => {
     const etat = partie(3)
-    embaucher(etat)
+    embaucher(etat, aleatoireAvecGraine(1))
     etat.employes[0].niveau = 2
     // Au fond de ce que permet sa pioche : il reste à cette profondeur pendant tout le test.
     etat.employes[0].profondeur = profondeurMaxEmploye(etat, etat.employes[0])
     etat.employes[0].etape = 'creuse'
-    const estimation = revenuParSeconde(etat, false).mineurs
+    etat.employes[0].tempsPaye = 3600 // payé d'avance pour toute l'heure du test
+    const estimation = revenuBrutEmploye(etat, etat.employes[0])
     const avant = etat.argent
     avancerTemps(etat, 3600, aleatoireAvecGraine(7))
     const reel = (etat.argent - avant) / 3600

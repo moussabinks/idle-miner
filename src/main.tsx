@@ -4,6 +4,7 @@ import './index.css'
 import './blocs.css'
 import './effets.css'
 import './accueil.css'
+import './personnel.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

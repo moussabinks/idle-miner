@@ -1839,7 +1839,8 @@ kbd {
 /* --- Les couleurs des boutons : une couleur par sorte d'action ---------------
    Creuser = or · Arrêter = rouge · Vendre = vert · Acheter = bleu · Améliorer = turquoise
    Réparer = orange · Enchanter = violet · Prestige = rose · Ascenseur = cyan
-   Se déplacer = bois · Mettre dans le sac = kaki · Charbon = anthracite · Le reste = gris. */
+   Se déplacer = bois · Mettre dans le sac = kaki · Charbon = anthracite · Le reste = gris.
+   Payer les salaires et la trésorerie = citron vert · Recruter = arc-en-ciel (voir personnel.css). */
 
 .bouton-principal,
 .bouton-creuser {
@@ -2174,10 +2175,6 @@ kbd {
 }
 
 /* Au puits, après la bedrock. */
-.carte-prestige {
-  border-color: var(--accent);
-}
-
 .bouton-aller {
   display: flex;
   align-items: center;
@@ -2579,29 +2576,26 @@ kbd {
   margin-top: 12px;
 }
 
-.carte-employe {
-  border-left: 4px solid #e07b2a;
-}
-
 /* ------------------------------------------- La galerie des mineurs employés */
 
-/* Quand on a des mineurs, une colonne de plus à droite de la foreuse : on redéclare
-   les tailles qui en dépendent (elles sont calculées à partir de --col-mineurs). */
+/* Quand on a des mineurs, une galerie de 2 cases de large à droite de la foreuse (20/10) :
+   à gauche le puits de leurs cabines, à droite le trou où ils creusent. On redéclare les
+   tailles qui en dépendent : une case est calculée comme s'il y en avait 12 par rangée
+   (les 10 de la mine + les 2 de la galerie), puis la galerie fait 2 cases. */
 .jeu.avec-mineurs {
-  --col-mineurs: 34px;
-  --colonnes-fixes: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse) + var(--col-mineurs));
-  --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-fixes)) / 10));
+  --colonnes-sans-mineurs: calc(var(--col-etiquette) + var(--col-echelle) + var(--col-ascenseur) + var(--col-foreuse));
+  --taille-case: min(46px, calc((100vw - 97px - var(--colonnes-sans-mineurs) - 6px) / 12));
+  --col-mineurs: calc(2 * var(--taille-case) + 3px);
+  --colonnes-fixes: calc(var(--colonnes-sans-mineurs) + var(--col-mineurs));
   --largeur-monde: calc(20px + var(--colonnes-fixes) + 10 * var(--taille-case) + 14 * 3px);
   --pas: calc(var(--taille-case) + 3px);
   --x-foreuse: calc(var(--x-ascenseur) + var(--col-ascenseur) + 3px + 10 * var(--pas));
   --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
+  /* Le trou où ils creusent : la deuxième case de la galerie. */
+  --x-trou-mineurs: calc(var(--x-mineurs) + var(--taille-case) + 3px);
 }
 
 @media (max-width: 480px) {
-  .jeu.avec-mineurs {
-    --col-mineurs: 22px;
-  }
-
   /* Sur téléphone, la place manque : juste l'icône et la profondeur (ou le temps). */
   .mineur-prenom {
     display: none;
@@ -2614,7 +2608,7 @@ kbd {
   position: absolute;
   top: -14px;
   left: var(--x-mineurs);
-  width: var(--col-mineurs);
+  width: var(--taille-case);
   background:
     repeating-linear-gradient(transparent 0 calc(var(--pas) - 3px), rgb(120 120 135 / 0.35) calc(var(--pas) - 3px) var(--pas)),
     radial-gradient(circle, #9a9aa8 0 1.5px, transparent 2px) 1px 0 / 4px 12px repeat-y,
@@ -2624,24 +2618,40 @@ kbd {
   pointer-events: none;
 }
 
-/* Leur poulie, leurs câbles et leurs cabines : les mêmes que ton ascenseur, dans leur colonne. */
+/* Le trou où ils creusent, à côté de leur puits : une galerie de terre étayée, une poutre par mètre. */
+.trou-mineurs {
+  position: absolute;
+  top: -14px;
+  left: var(--x-trou-mineurs);
+  width: var(--taille-case);
+  border-radius: 0 0 10px 10px;
+  background:
+    repeating-linear-gradient(transparent 0 calc(var(--pas) - 4px), #6b4a2a calc(var(--pas) - 4px) calc(var(--pas) - 1px), transparent calc(var(--pas) - 1px) var(--pas)),
+    linear-gradient(90deg, #5a3f24 0 3px, transparent 3px calc(100% - 3px), #5a3f24 calc(100% - 3px)),
+    radial-gradient(ellipse at 50% 0, rgb(255 190 110 / 0.12), transparent 70%),
+    linear-gradient(#2c211a, #1b1511);
+  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.85);
+  pointer-events: none;
+}
+
+/* Leur poulie, leurs câbles et leurs cabines : les mêmes que ton ascenseur, dans la première case. */
 .poulie-mineurs {
-  left: calc(var(--x-mineurs) + var(--col-mineurs) / 2 - 9px);
+  left: calc(var(--x-mineurs) + var(--taille-case) / 2 - 9px);
 }
 
 .cable-mineurs {
-  left: calc(var(--x-mineurs) + var(--col-mineurs) / 2 - 1px);
+  left: calc(var(--x-mineurs) + var(--taille-case) / 2 - 1px);
 }
 
 .cabine-mineur {
   left: var(--x-mineurs);
-  width: var(--col-mineurs);
+  width: var(--taille-case);
   /* Le jeu avance par petits pas : on adoucit le trajet (la caméra ne suit pas ces cabines). */
   transition: top 0.1s linear;
 }
 
 .cabine-mineur .passager {
-  width: calc(var(--col-mineurs) + 6px);
+  width: calc(var(--taille-case) + 2px);
 }
 
 /* L'étiquette passe devant le toit de la cabine. */
@@ -2649,11 +2659,11 @@ kbd {
   z-index: 3;
 }
 
-/* Un mineur employé : le personnage, son nom, et le bloc qu'il casse sous lui. */
+/* Un mineur employé : le personnage, son nom, et le bloc qu'il casse sous lui (dans la deuxième case). */
 .mineur-employe {
   position: absolute;
-  left: var(--x-mineurs);
-  width: var(--col-mineurs);
+  left: var(--x-trou-mineurs);
+  width: var(--taille-case);
   height: var(--taille-case);
   display: grid;
   place-items: end center;
@@ -2663,8 +2673,35 @@ kbd {
 }
 
 .mineur-employe .personnage {
-  width: calc(var(--col-mineurs) + 8px);
-  height: calc(var(--col-mineurs) + 8px);
+  width: calc(var(--taille-case) + 4px);
+  height: calc(var(--taille-case) + 4px);
+}
+
+/* La rareté se voit dans la mine : l'étiquette prend sa couleur, et les légendaires et
+   mythiques ont une aura qui pulse autour d'eux. */
+.mineur-nom.rarete-rare,
+.mineur-nom.rarete-epique,
+.mineur-nom.rarete-legendaire,
+.mineur-nom.rarete-mythique {
+  color: #fff;
+  background: color-mix(in srgb, var(--couleur-rarete) 75%, #000);
+  box-shadow: 0 0 6px var(--couleur-rarete);
+}
+
+.mineur-employe.rarete-legendaire::before,
+.mineur-employe.rarete-mythique::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--couleur-rarete) 55%, transparent), transparent 70%);
+  animation: aura-mineur 1.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes aura-mineur {
+  from { opacity: 0.5; scale: 0.9; }
+  to { opacity: 1; scale: 1.15; }
 }
 
 /* Son nom, en petit au-dessus de la tête. */

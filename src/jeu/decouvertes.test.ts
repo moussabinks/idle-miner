@@ -11,7 +11,7 @@ describe('stands à découvrir (la flèche du village)', () => {
     const p1 = prestige(etat, aleatoireAvecGraine(2))
     expect(decouvertesAMontrer(p1)).toEqual(['foreuse'])
     // Il va voir la foreuse : la flèche disparaît, et ne revient pas au prestige suivant.
-    marquerDecouvert(p1, 'foreuse')
+    marquerDecouvert(p1, ['foreuse'])
     expect(decouvertesAMontrer(p1)).toEqual([])
     const p2 = prestige(p1, aleatoireAvecGraine(3))
     expect(decouvertesAMontrer(p2)).toEqual(['employes'])
@@ -20,6 +20,14 @@ describe('stands à découvrir (la flèche du village)', () => {
   it('montre les deux s’il n’a encore vu aucun des deux', () => {
     const etat = creerPartie(aleatoireAvecGraine(1), 2)
     expect(decouvertesAMontrer(etat)).toEqual(['foreuse', 'employes'])
+  })
+
+  it('le recruteur au prestige 4 et le manager au prestige 5, au stand Personnel', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1), 5)
+    marquerDecouvert(etat, ['foreuse', 'employes'])
+    expect(decouvertesAMontrer(etat)).toEqual(['recruteur', 'manager'])
+    marquerDecouvert(etat, decouvertesAMontrer(etat))
+    expect(decouvertesAMontrer(etat)).toEqual([])
   })
 })
 

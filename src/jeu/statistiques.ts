@@ -26,6 +26,7 @@ export function additionnerStatistiques(a: Statistiques, b: Statistiques): Stati
     blocsForeuse: a.blocsForeuse + b.blocsForeuse,
     blocsMineurs: a.blocsMineurs + b.blocsMineurs,
     profondeurMax: Math.max(a.profondeurMax, b.profondeurMax),
+    salairesPayes: a.salairesPayes + b.salairesPayes,
   }
 }
 

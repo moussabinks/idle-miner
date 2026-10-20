@@ -5,9 +5,21 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { PRESTIGE_EMPLOYES, PRESTIGE_FOREUSE, profondeurBedrock } from './donnees'
-import { VERSION_ETAT, nouvellesStatistiques, type EtatJeu } from './mineur'
-import { TALENTS_RETIRES } from './talents'
+import { BLOCS, NIVEAUX_FORAGE, PRESTIGE_EMPLOYES, PRESTIGE_FOREUSE, profondeurBedrock, type Cout, type IdBloc } from './donnees'
+import { VERSION_ETAT, nouveauManager, nouvellesStatistiques, type EtatJeu } from './mineur'
+
+// Deux anciens talents retirés le 19/10 (« Ascenseur offert » et « Grimpeur agile ») : leurs points sont rendus.
+const TALENTS_RETIRES = ['ascenseurOffert', 'grimpeur']
+
+// Le prix des 2e, 3e, 4e et 5e foreuses, quand on pouvait en avoir plusieurs (avant le 20/10).
+const ANCIENS_PRIX_FOREUSES = [50000, 100000, 200000, 400000]
+
+// Ce que vaut un coût en argent (les minerais au prix du marché) : pour rembourser.
+function valeurEnArgent(cout: Cout): number {
+  let total = cout.argent ?? 0
+  for (const [bloc, nombre] of Object.entries(cout.materiaux)) total += (nombre ?? 0) * BLOCS[bloc as IdBloc].prix
+  return total
+}
 
 export const NB_MONDES_MAX = 5
 
@@ -429,6 +441,41 @@ function migrer(donnees: unknown): unknown {
     }
   }
 
+  // Version 14 -> 15 (20/10) : une seule foreuse, les salaires et la rareté des mineurs,
+  // le recruteur, le manager et sa trésorerie, et le nouvel arbre de prestige.
+  if (etat.version === 14) {
+    // On garde la meilleure foreuse (le plus haut niveau de forage, puis la plus profonde).
+    // Les autres sont remboursées : leur prix d'achat et leurs améliorations (minerais au prix du marché).
+    type AncienneForeuse = { niveauVitesse: number; profondeur: number; progression: number; blocsFores: number }
+    const { foreuses, ...partage } = etat.foreuse as Record<string, unknown>
+    const liste = (Array.isArray(foreuses) ? foreuses : []) as AncienneForeuse[]
+    const triees = [...liste].sort((a, b) => b.niveauVitesse - a.niveauVitesse || b.profondeur - a.profondeur)
+    const gardee = triees[0] ?? { niveauVitesse: 0, profondeur: 1, progression: 0, blocsFores: 0 }
+    let remboursement = 0
+    triees.slice(1).forEach((une, i) => {
+      remboursement += ANCIENS_PRIX_FOREUSES[i] ?? 0
+      for (let niveau = 1; niveau <= une.niveauVitesse; niveau++) remboursement += valeurEnArgent(NIVEAUX_FORAGE[niveau].cout)
+    })
+    const employes = (etat.employes as Record<string, unknown>[]).map((e) => ({ rarete: 'commun', ...e, tempsPaye: 10 * 60 }))
+    etat = {
+      ...etat,
+      version: 15,
+      argent: (etat.argent as number) + remboursement,
+      // La foreuse qui reste garde tout le charbon chargé (elle seule le brûle maintenant).
+      foreuse: { ...partage, ...gardee },
+      // Les mineurs déjà embauchés deviennent communs, avec leurs 10 premières minutes payées.
+      employes,
+      recruteur: 0,
+      manager: nouveauManager(),
+      tresorerie: 0,
+      // Le nouvel arbre de prestige : tous les points sont rendus.
+      talents: [],
+      stats: { ...nouvellesStatistiques(), ...(etat.stats as object) },
+      statsTotales: { ...nouvellesStatistiques(), ...(etat.statsTotales as object) },
+    }
+    delete etat.peculeRecu
+  }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -458,6 +505,9 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.foreuse === 'object' &&
     Array.isArray(etat.talents) &&
     Array.isArray(etat.employes) &&
+    typeof etat.recruteur === 'number' &&
+    typeof etat.manager === 'object' &&
+    typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
     typeof etat.statsTotales === 'object' &&
     typeof etat.argentGagneAvant === 'number'

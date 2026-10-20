@@ -3,10 +3,11 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { aleatoireAvecGraine, choisir, entierEntre } from '../jeu/aleatoire'
-import { employesDebloques } from '../jeu/employes'
+import { PIOCHES } from '../jeu/donnees'
+import { alerteSalaires, employesDebloques } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
-import { decouvertesAMontrer } from '../jeu/decouvertes'
-import { aLaSurface, estCassee, piocheEquipee, type Decouverte, type EtatJeu } from '../jeu/mineur'
+import { DECOUVERTES, decouvertesAMontrer } from '../jeu/decouvertes'
+import { aLaSurface, estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
 import { Icone } from './Icone'
 import { Personnage } from './Personnage'
 import { LONGUEUR_VILLAGE, STANDS, TUILE, standProche } from './stands'
@@ -76,12 +77,21 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
   const auVillage = aLaSurface(etat)
   const couleurPioche = estCassee(etat) ? null : piocheEquipee(etat).couleur
   const standActif = auVillage ? standProche(x) : null
-  // Un stand tout juste débloqué (foreuse au prestige 1, mineurs au prestige 2) : une flèche
-  // qui clignote sur le côté montre où il est, et un « Nouveau ! » saute au-dessus de lui.
+  // Un stand tout juste débloqué (foreuse au prestige 1, Personnel au prestige 2, recruteur et
+  // manager ensuite) : une flèche qui clignote sur le côté montre où il est, et un « Nouveau ! »
+  // saute au-dessus de lui.
   const aDecouvrir = auVillage ? decouvertesAMontrer(etat) : []
-  const indexCible = STANDS.findIndex((s) => s.id === aDecouvrir[0])
+  const standsNouveaux = aDecouvrir.map((id) => DECOUVERTES[id].stand)
+  const indexCible = aDecouvrir.length > 0 ? STANDS.findIndex((s) => s.id === DECOUVERTES[aDecouvrir[0]].stand) : -1
   const cible = indexCible >= 0 ? STANDS[indexCible] : null
   const versLaDroite = cible !== null && cible.x > x
+  // Des mineurs ne sont pas payés : une flèche rouge (même style) les montre au stand Personnel.
+  const alerte = auVillage ? alerteSalaires(etat) : null
+  const indexPersonnel = STANDS.findIndex((s) => s.id === 'employes')
+  const personnel = STANDS[indexPersonnel]
+  const salairesVersLaDroite = personnel.x > x
+  // Les mineurs qui attendent leur salaire, devant le stand Personnel.
+  const enAttente = etat.employes.filter((e) => e.etape === 'attend')
 
   return (
     <div ref={cadreRef} className="village">
@@ -90,9 +100,21 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
         <button className={`fleche-decouverte ${versLaDroite ? 'fleche-droite' : 'fleche-gauche'}`} onClick={() => onAllerStand(indexCible)}>
           {!versLaDroite && <span className="fleche-pointe">⬅</span>}
           <span>
-            Nouveau : <strong>{cible.nom}</strong> !
+            Nouveau : <strong>{DECOUVERTES[aDecouvrir[0]].nom}</strong> !
           </span>
           {versLaDroite && <span className="fleche-pointe">➡</span>}
+        </button>
+      )}
+      {alerte && standActif?.id !== 'employes' && (
+        <button
+          className={`fleche-decouverte fleche-salaires ${salairesVersLaDroite ? 'fleche-droite' : 'fleche-gauche'}`}
+          onClick={() => onAllerStand(indexPersonnel)}
+        >
+          {!salairesVersLaDroite && <span className="fleche-pointe">⬅</span>}
+          <span>
+            {alerte} <strong>Personnel</strong>
+          </span>
+          {salairesVersLaDroite && <span className="fleche-pointe">➡</span>}
         </button>
       )}
       <div className="nuage nuage-1" aria-hidden="true" />
@@ -132,7 +154,11 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
               disabled={!auVillage}
               title={verrouille ? `Débloqué au prestige ${stand.id === 'foreuse' ? 1 : 2}` : stand.description}
             >
-              {aDecouvrir.includes(stand.id as Decouverte) && <span className="badge-nouveau">Nouveau ! ⬇</span>}
+              {stand.id === 'employes' && alerte ? (
+                <span className="badge-nouveau badge-salaires">😠 Salaires ! ⬇</span>
+              ) : (
+                standsNouveaux.includes(stand.id as 'foreuse' | 'employes') && <span className="badge-nouveau">Nouveau ! ⬇</span>
+              )}
               <span className="panneau-bois">{stand.nom}</span>
               {stand.id === 'puits' && (
                 // L'entrée de la mine : une galerie creusée dans un rocher, étayée de poutres,
@@ -176,6 +202,19 @@ export function VueVillage({ etat, x, versLaGauche, enMarche, onAllerStand, joue
             </button>
           )
         })}
+
+        {/* Les mineurs pas payés attendent devant le stand Personnel, mécontents. */}
+        {enAttente.map((mineur, i) => (
+          <div
+            key={`${mineur.nom}-${i}`}
+            className={`mineur-attend rarete-${mineur.rarete}`}
+            style={{ left: (personnel.x + 0.9 + (i % 4) * 0.55) * TUILE - 16, bottom: 30 + Math.floor(i / 4) * 8 }}
+            title={`${mineur.nom} attend son salaire`}
+          >
+            <span className="bulle-colere">😠</span>
+            <Personnage couleurPioche={PIOCHES[mineur.niveau]?.couleur ?? null} action="repos" versLaGauche />
+          </div>
+        ))}
 
         {/* Le mineur, sur le chemin (sauf s'il vient de monter dans l'ascenseur) */}
         {auVillage && !etat.ascenseur.passager && (

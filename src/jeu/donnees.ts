@@ -221,12 +221,14 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 // niveau, puis chaque prestige permet un niveau de plus.
 //   - ascenseur : niveau 2 au prestige 0, 3 au prestige 1... jusqu'à 6 ;
 //   - forage et chariot de la foreuse (débloquée au prestige 1) : 2e niveau au prestige 1,
-//     3e au prestige 2... (les niveaux de la foreuse sont comptés à partir de 0 dans le code) ;
+//     3e au prestige 2... jusqu'au 8e au prestige 7 (les niveaux de la foreuse sont comptés à
+//     partir de 0 dans le code) ;
 //   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer au prestige 3...
+//   - recruteur (prestige 4) : niveau 1 à l'embauche, puis un niveau de plus par prestige ;
 //   - enchantements (gardés au prestige depuis le 19/10) : Efficacité I au prestige 0, puis un
 //     niveau de plus par prestige (V au prestige 4) ; Fortune et Solidité, plus rares, un niveau
 //     tous les 2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4).
-export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur' | IdEnchantement
+export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur' | 'recruteur' | IdEnchantement
 
 type Plafond = {
   prestigeDeblocage: number
@@ -237,9 +239,10 @@ type Plafond = {
 
 export const PLAFONDS: Record<IdPlafond, Plafond> = {
   ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
-  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
-  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 4 },
+  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
+  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
   mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },
+  recruteur: { prestigeDeblocage: 4, niveauAuDeblocage: 1, niveauMax: 4 },
   efficacite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 5 },
   fortune: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
   solidite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
@@ -278,6 +281,8 @@ export const RESERVE_RECHARGE_AUTO = 60
 
 // Vitesse de forage (blocs par seconde) et coût de chaque niveau.
 // La foreuse est gardée d'un prestige à l'autre : c'est là qu'on investit son argent.
+// Il n'y a qu'une seule foreuse (décidé le 20/10) : à la place des foreuses en plus, elle a
+// 8 niveaux (un de plus à chaque prestige, comme la mine qui descend de 50 m à chaque fois).
 export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
   // Plus rapide dès le départ (19/10) : avant, elle rapportait trop peu, et agrandir le
   // chariot ne servait à rien parce qu'il ne se remplissait presque jamais.
@@ -288,6 +293,9 @@ export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
   { vitesse: 5, cout: { argent: 6000, materiaux: { fer: 40, redstone: 20 } } },
   { vitesse: 8, cout: { argent: 12000, materiaux: { fer: 60, redstone: 40 } } },
   { vitesse: 12, cout: { argent: 25000, materiaux: { fer: 90, redstone: 70 } } },
+  { vitesse: 16, cout: { argent: 40000, materiaux: { fer: 130, redstone: 100 } } },
+  { vitesse: 22, cout: { argent: 65000, materiaux: { fer: 180, redstone: 140 } } },
+  { vitesse: 30, cout: { argent: 100000, materiaux: { fer: 250, redstone: 200 } } },
 ]
 
 // Taille du chariot (en objets) et coût de chaque niveau.
@@ -297,12 +305,10 @@ export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 1000, cout: { argent: 4000, materiaux: { fer: 25, redstone: 10 } } },
   { capacite: 2500, cout: { argent: 9000, materiaux: { fer: 45, redstone: 25 } } },
   { capacite: 5000, cout: { argent: 18000, materiaux: { fer: 70, redstone: 45 } } },
+  { capacite: 8000, cout: { argent: 28000, materiaux: { fer: 100, redstone: 70 } } },
+  { capacite: 12000, cout: { argent: 45000, materiaux: { fer: 140, redstone: 100 } } },
+  { capacite: 20000, cout: { argent: 70000, materiaux: { fer: 200, redstone: 150 } } },
 ]
-
-// À partir du prestige 3, on peut acheter d'autres foreuses : elles creusent ensemble,
-// partagent le chariot et le charbon. Prix de la 2e, 3e, 4e et 5e foreuse.
-export const PRESTIGE_FOREUSES_MULTIPLES = 3
-export const PRIX_FOREUSES_EN_PLUS = [50000, 100000, 200000, 400000]
 
 // La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
 export const BLOCS_FORES_PAR_METRE = 10
@@ -318,14 +324,76 @@ export const BLOCS_PAR_METRE_EMPLOYE = 5
 export const PRESTIGE_EMPLOYES = 2
 // On peut en employer 2 au prestige 2, puis 1 de plus à chaque prestige, jusqu'à 6.
 export const MAX_EMPLOYES = 6
-// Le prix d'embauche du 1er, 2e, 3e... mineur.
+// Le prix d'embauche du 1er, 2e, 3e... mineur, au prestige 2. Ensuite, il monte de 20 % à
+// chaque prestige (comme ce que rapporte la mine) : voir prixEmbauche().
 export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
+export const HAUSSE_EMBAUCHE_PAR_PRESTIGE = 1.2
+// Licencier un mineur coûte des indemnités : 40 % du prix d'une embauche (décidé le 20/10).
+export const PART_INDEMNITES = 0.4
 // Les temps morts d'un mineur entre deux séances de creusage (en secondes) :
 // un trajet (attente de l'ascenseur comprise) dure au moins DUREE_MIN_TRAJET_EMPLOYE,
 // et il passe SECONDES_VENTE_EMPLOYE au marché pour vendre sa récolte.
 export const DUREE_MIN_TRAJET_EMPLOYE = 5
 export const SECONDES_VENTE_EMPLOYE = 4
-export const NOMS_EMPLOYES = ['Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé']
+export const NOMS_EMPLOYES = [
+  'Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé', 'Zoé', 'Tom', 'Chloé', 'Sacha', 'Mila', 'Nino', 'Rose',
+  'Yanis', 'Lou', 'Axel', 'Nina', 'Timéo', 'Alba', 'Enzo', 'Iris', 'Marius', 'Luna', 'Gaspard', 'Elsa', 'Basile', 'Maya',
+]
+
+// --- Les salaires (décidé le 20/10) ---
+// Les mineurs ne prennent plus de commission sur leurs ventes : on leur paie un salaire
+// toutes les 10 minutes. Sans salaire, ils remontent attendre au stand Personnel.
+// On peut payer d'avance, jusqu'à 1 heure.
+export const SECONDES_PAR_PAIE = 10 * 60
+export const SECONDES_PAYEES_MAX = 60 * 60
+// Le salaire de 10 minutes selon l'équipement (pioche en bois, pierre, fer, diamant, netherite),
+// au prestige 0 : environ 18 % de ce que le mineur rapporte au fond de sa galerie. Il reste
+// gagnant même juste après un prestige, quand il recommence à creuser depuis la surface
+// (vérifié par simulation jusqu'au prestige 8). Le salaire monte ensuite de 15 % par prestige,
+// comme le prix des ventes (voir salaireEmploye).
+export const SALAIRES = [200, 600, 1300, 2300, 3000]
+
+// --- La rareté des mineurs (avec le recruteur, prestige 4) ---
+export type IdRarete = 'commun' | 'rare' | 'epique' | 'legendaire' | 'mythique'
+
+export type Rarete = {
+  id: IdRarete
+  nom: string
+  rendement: number // il creuse ce nombre de fois plus vite (et son sac est d'autant plus grand)
+  salaire: number // son salaire est multiplié par ce nombre
+  couleur: string // pour les étiquettes, l'animation d'embauche...
+}
+
+// Un mineur rare rapporte beaucoup plus qu'il ne coûte en plus : c'est tout l'intérêt de la rareté.
+export const RARETES: Record<IdRarete, Rarete> = {
+  commun: { id: 'commun', nom: 'Commun', rendement: 1, salaire: 1, couleur: '#b9b4ab' },
+  rare: { id: 'rare', nom: 'Rare', rendement: 1.5, salaire: 1.25, couleur: '#4f9df0' },
+  epique: { id: 'epique', nom: 'Épique', rendement: 2, salaire: 1.5, couleur: '#b06cf0' },
+  legendaire: { id: 'legendaire', nom: 'Légendaire', rendement: 3, salaire: 2, couleur: '#f5a524' },
+  mythique: { id: 'mythique', nom: 'Mythique', rendement: 5, salaire: 3, couleur: '#ff4d8d' },
+}
+
+export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendaire', 'mythique']
+
+// --- Le recruteur (prestige 4) ---
+// Il trouve des mineurs plus ou moins rares. Plus il a de niveaux, plus il en trouve de rares.
+// Il se paie seulement en argent (le fer et la redstone servent aux machines).
+export const PRESTIGE_RECRUTEUR = 4
+export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
+  { cout: { argent: 40000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
+  { cout: { argent: 80000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
+  { cout: { argent: 150000, materiaux: {} }, chances: { commun: 55, rare: 23.5, epique: 12.5, legendaire: 7, mythique: 2 } },
+  { cout: { argent: 250000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
+]
+
+// --- Le manager (prestige 5) ---
+// Il paie les salaires tout seul avec l'argent de la trésorerie (une cagnotte qu'on remplit),
+// et il se paie lui-même au passage.
+export const PRESTIGE_MANAGER = 5
+export const PRIX_MANAGER = 50000
+export const SALAIRE_MANAGER = 3000 // toutes les 10 minutes
+// Il paie un salaire dès qu'il reste moins d'une minute de payée.
+export const SECONDES_AVANT_PAIE_MANAGER = 60
 
 // L'équipement d'un mineur : il s'en occupe tout seul, on paie seulement pour un meilleur.
 // Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.

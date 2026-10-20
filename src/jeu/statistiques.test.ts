@@ -34,7 +34,7 @@ describe('statistiques', () => {
     activerForeuse(etat)
     etat.foreuse.chariot = { fer: 10 }
     vendreChariot(etat)
-    embaucher(etat)
+    embaucher(etat, aleatoireAvecGraine(1))
     avancerTemps(etat, 600, aleatoireAvecGraine(2))
     const sources = argentParSource(etat.stats)
     expect(sources.foreuse).toBeGreaterThan(0)

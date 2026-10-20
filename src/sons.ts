@@ -270,6 +270,35 @@ export const sons = {
     accords.forEach((accord, i) => accord.forEach((f) => note(f, i * 0.18, i === 3 ? 1.2 : 0.22, { type: 'triangle', volume: 0.09 })))
   },
 
+  // Le recruteur cherche un mineur : un roulement de tambour qui accélère et monte (1,6 s).
+  suspenseRecrue() {
+    let t = 0
+    for (let i = 0; i < 18; i++) {
+      bruit(t, 0.06, { filtre: 'bandpass', frequence: 260 + i * 25, volume: 0.12 + i * 0.012 })
+      note(110 + i * 9, t, 0.07, { type: 'triangle', volume: 0.06 + i * 0.004 })
+      t += 0.13 - i * 0.0055 // de plus en plus vite
+    }
+  },
+
+  // La rareté dévoilée : plus le mineur est rare, plus la fanfare est grande
+  // (rang 0 = commun, 4 = mythique).
+  revelationRecrue(rang: number) {
+    const gamme = [523, 659, 784, 1047, 1319, 1568, 2093]
+    const nbNotes = 2 + rang
+    gamme.slice(0, nbNotes).forEach((f, i) => note(f, i * 0.07, 0.35, { type: 'triangle', volume: 0.12 }))
+    if (rang >= 1) sons.pieces(2 + rang * 2, 0.1)
+    if (rang >= 2) [1047, 1319, 1568].forEach((f) => note(f, nbNotes * 0.07, 0.9, { type: 'sine', volume: 0.08 }))
+    if (rang >= 3) {
+      // Légendaire et mythique : un accord éclatant et une pluie d'étincelles.
+      ;[784, 988, 1175, 1568].forEach((f) => note(f, nbNotes * 0.07 + 0.15, 1.3, { type: 'triangle', volume: 0.08 }))
+      for (let i = 0; i < 8; i++) note(varier(2600 + i * 180, 0.05), 0.5 + i * 0.06, 0.25, { type: 'sine', volume: 0.05 })
+    }
+    if (rang >= 4) {
+      bruit(0, 0.5, { filtre: 'highpass', frequence: 4000, volume: 0.12 })
+      ;[523, 659, 784, 1047].forEach((f) => note(f / 2, 0.9, 1.6, { type: 'sawtooth', volume: 0.025 }))
+    }
+  },
+
   // La pioche qui casse : un « clang » triste.
   piocheCassee() {
     note(330, 0, 0.3, { type: 'sawtooth', volume: 0.08, vers: 160 })

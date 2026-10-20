@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { jouerPartie } from './bot'
+import { peutPasserPrestige } from './conditionsPrestige'
 import { profondeurBedrock } from './donnees'
 
 // Le bot joue 20 parties (avec des graines fixes, donc toujours les mêmes).
@@ -17,6 +18,12 @@ describe('bot de simulation (équilibrage)', () => {
       expect(partie.etat.profondeur).toBe(profondeurBedrock(0) - 1) // la dernière couche avant la bedrock
       expect(partie.etat.meilleure).toBe(4)
     }
+  })
+
+  // On ne passe prestige qu'avec tout au maximum (20/10) : au prestige 0, l'ascenseur au
+  // niveau 2 et les enchantements au niveau I. Le bot y arrive en même temps que la bedrock.
+  it('est prêt à passer prestige en arrivant à la bedrock', () => {
+    for (const partie of parties) expect(peutPasserPrestige(partie.etat)).toBe(true)
   })
 
   // La première partie (prestige 0) a une mine de 100 m depuis le 19/10 : elle est plus courte.
