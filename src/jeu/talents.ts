@@ -1,7 +1,11 @@
 // L'arbre de prestige : à chaque prestige, on gagne 1 point à dépenser dans un
-// talent. Il y a quatre branches (mineur, marchand, ingénieur, patron) de 4 talents ;
-// il faut le talent du dessus pour prendre celui du dessous.
+// talent. Il y a cinq branches de 4 talents (mineur, marchand, ingénieur, patron et
+// recrutement) ; il faut le talent du dessus pour prendre celui du dessous.
+// La branche « Recrutement » ne s'ouvre qu'une fois le recruteur embauché (prestige 4).
 // Les talents sont gardés pour toujours (ils survivent aux prestiges suivants).
+//
+// Arbre refait le 20/10 : plus de cadeaux de début de partie (pioche offerte, pécule...),
+// seulement des bonus qui durent. Tous les points ont été rendus à ce moment-là.
 //
 // Ce fichier n'importe que le *type* EtatJeu depuis mineur.ts : mineur.ts peut donc
 // lui-même utiliser aLeTalent() sans créer de boucle entre les deux fichiers.
@@ -9,24 +13,33 @@
 import type { EtatJeu } from './mineur'
 
 export type IdTalent =
-  | 'poigne'
-  | 'piochePierre'
-  | 'fortune'
-  | 'piocheFer'
-  | 'negoce'
-  | 'pecule'
-  | 'grandSac'
-  | 'tresor'
-  | 'ascenseurRapide'
+  // Mineur
+  | 'poigneDeFer'
+  | 'oeilDeLynx'
+  | 'piocheRobuste'
+  | 'briseurDeRoche'
+  // Marchand
+  | 'negociant'
+  | 'grossiste'
+  | 'chasseurDeTresors'
+  | 'grandNegociant'
+  // Ingénieur
+  | 'ascenseurExpress'
   | 'foreuseTurbo'
-  | 'moteurEconome'
   | 'grandChariot'
+  | 'moteurAutonome'
+  // Patron
   | 'contremaitre'
-  | 'grandsSacs'
-  | 'salaireReduit'
-  | 'recrue'
+  | 'sacsDEquipe'
+  | 'salairesNegocies'
+  | 'grandeEquipe'
+  // Recrutement
+  | 'oeilDuRecruteur'
+  | 'prixCasse'
+  | 'indemnitesReduites'
+  | 'mainDeMidas'
 
-export type IdBranche = 'mineur' | 'marchand' | 'ingenieur' | 'patron'
+export type IdBranche = 'mineur' | 'marchand' | 'ingenieur' | 'patron' | 'recrutement'
 
 export type Talent = {
   id: IdTalent
@@ -41,34 +54,41 @@ export const BRANCHES: { id: IdBranche; nom: string }[] = [
   { id: 'marchand', nom: 'Marchand' },
   { id: 'ingenieur', nom: 'Ingénieur' },
   { id: 'patron', nom: 'Patron' },
+  { id: 'recrutement', nom: 'Recrutement' },
 ]
-
-// Les anciens talents retirés (19/10) : ceux qui les avaient récupèrent leur point.
-export const TALENTS_RETIRES = ['ascenseurOffert', 'grimpeur']
 
 export const TALENTS: Talent[] = [
-  { id: 'poigne', branche: 'mineur', rang: 1, nom: 'Poigne de fer', description: 'Tes pioches creusent 15 % plus vite.' },
-  { id: 'piochePierre', branche: 'mineur', rang: 2, nom: 'Bon départ', description: 'Chaque partie commence avec la pioche en pierre.' },
-  { id: 'fortune', branche: 'mineur', rang: 3, nom: 'Main chanceuse', description: 'Fortune I offert au début de chaque partie.' },
-  { id: 'piocheFer', branche: 'mineur', rang: 4, nom: 'Mineur aguerri', description: 'Chaque partie commence avec la pioche en fer.' },
+  { id: 'poigneDeFer', branche: 'mineur', rang: 1, nom: 'Poigne de fer', description: 'Tes pioches creusent 15 % plus vite.' },
+  { id: 'oeilDeLynx', branche: 'mineur', rang: 2, nom: 'Œil de lynx', description: '+10 % de chance de doubler un minerai (en plus de Fortune).' },
+  { id: 'piocheRobuste', branche: 'mineur', rang: 3, nom: 'Pioche robuste', description: 'Tes pioches s’usent 30 % moins vite.' },
+  { id: 'briseurDeRoche', branche: 'mineur', rang: 4, nom: 'Briseur de roche', description: 'Tu creuses 25 % plus vite dans la roche dure.' },
 
-  { id: 'negoce', branche: 'marchand', rang: 1, nom: 'Négociant', description: 'Tes ventes rapportent 10 % de plus.' },
-  { id: 'pecule', branche: 'marchand', rang: 2, nom: 'Pécule', description: 'Chaque partie commence avec 300 $.' },
-  { id: 'grandSac', branche: 'marchand', rang: 3, nom: 'Grand sac', description: 'Chaque partie commence avec le sac de 128 places.' },
-  { id: 'tresor', branche: 'marchand', rang: 4, nom: 'Chasseur de trésors', description: 'Les coffres rapportent 2 fois plus d’argent.' },
+  { id: 'negociant', branche: 'marchand', rang: 1, nom: 'Négociant', description: 'Tes ventes rapportent 10 % de plus.' },
+  { id: 'grossiste', branche: 'marchand', rang: 2, nom: 'Grossiste', description: 'Le chariot de la foreuse se vend 20 % plus cher.' },
+  { id: 'chasseurDeTresors', branche: 'marchand', rang: 3, nom: 'Chasseur de trésors', description: 'Les coffres rapportent 2 fois plus d’argent.' },
+  { id: 'grandNegociant', branche: 'marchand', rang: 4, nom: 'Grand négociant', description: 'Toutes les ventes rapportent encore 15 % de plus.' },
 
-  { id: 'ascenseurRapide', branche: 'ingenieur', rang: 1, nom: 'Ascenseur express', description: 'L’ascenseur va 30 % plus vite (pour toi et tes mineurs).' },
-  { id: 'foreuseTurbo', branche: 'ingenieur', rang: 2, nom: 'Foreuse turbo', description: 'Les foreuses creusent 50 % plus vite.' },
-  { id: 'moteurEconome', branche: 'ingenieur', rang: 3, nom: 'Moteur économe', description: 'Chaque charbon fait tourner les foreuses 2 fois plus longtemps.' },
-  { id: 'grandChariot', branche: 'ingenieur', rang: 4, nom: 'Grand chariot', description: 'Le chariot des foreuses contient 2 fois plus.' },
+  { id: 'ascenseurExpress', branche: 'ingenieur', rang: 1, nom: 'Ascenseur express', description: 'L’ascenseur va 30 % plus vite (pour toi et tes mineurs).' },
+  { id: 'foreuseTurbo', branche: 'ingenieur', rang: 2, nom: 'Foreuse turbo', description: 'La foreuse creuse 50 % plus vite.' },
+  { id: 'grandChariot', branche: 'ingenieur', rang: 3, nom: 'Grand chariot', description: 'Le chariot de la foreuse contient 2 fois plus.' },
+  {
+    id: 'moteurAutonome',
+    branche: 'ingenieur',
+    rang: 4,
+    nom: 'Moteur autonome',
+    description: 'La recharge automatique au charbon marche dès le premier niveau de forage.',
+  },
 
   { id: 'contremaitre', branche: 'patron', rang: 1, nom: 'Contremaître', description: 'Tes mineurs creusent 25 % plus vite.' },
-  { id: 'grandsSacs', branche: 'patron', rang: 2, nom: 'Sacs d’équipe', description: 'Les sacs de tes mineurs sont 2 fois plus grands.' },
-  { id: 'salaireReduit', branche: 'patron', rang: 3, nom: 'Bon patron', description: 'Tes mineurs gardent 10 % de leurs ventes au lieu de 25 %.' },
-  { id: 'recrue', branche: 'patron', rang: 4, nom: 'Recruteur', description: 'Tu peux employer 1 mineur de plus.' },
-]
+  { id: 'sacsDEquipe', branche: 'patron', rang: 2, nom: 'Sacs d’équipe', description: 'Les sacs de tes mineurs sont 2 fois plus grands.' },
+  { id: 'salairesNegocies', branche: 'patron', rang: 3, nom: 'Salaires négociés', description: 'Les salaires de tes mineurs coûtent 25 % de moins.' },
+  { id: 'grandeEquipe', branche: 'patron', rang: 4, nom: 'Grande équipe', description: 'Tu peux employer 1 mineur de plus.' },
 
-export const PECULE_DEPART = 300
+  { id: 'oeilDuRecruteur', branche: 'recrutement', rang: 1, nom: 'Œil du recruteur', description: 'Les mineurs rares (et mieux) sortent 25 % plus souvent.' },
+  { id: 'prixCasse', branche: 'recrutement', rang: 2, nom: 'Recrutement à prix cassé', description: 'Les embauches coûtent 30 % de moins.' },
+  { id: 'indemnitesReduites', branche: 'recrutement', rang: 3, nom: 'Indemnités réduites', description: 'Licencier coûte 2 fois moins cher.' },
+  { id: 'mainDeMidas', branche: 'recrutement', rang: 4, nom: 'Main de Midas', description: 'Les mineurs mythiques sortent 2 fois plus souvent.' },
+]
 
 export function talent(id: IdTalent): Talent {
   return TALENTS.find((t) => t.id === id) as Talent
@@ -83,6 +103,11 @@ export function pointsDisponibles(etat: EtatJeu): number {
   return Math.max(0, etat.prestige - etat.talents.length)
 }
 
+// La branche « Recrutement » attend que le recruteur soit embauché.
+export function brancheOuverte(etat: EtatJeu, branche: IdBranche): boolean {
+  return branche !== 'recrutement' || etat.recruteur > 0
+}
+
 // Le talent juste au-dessus dans la même branche (null pour le premier).
 export function talentPrecedent(id: IdTalent): Talent | null {
   const t = talent(id)
@@ -90,7 +115,7 @@ export function talentPrecedent(id: IdTalent): Talent | null {
 }
 
 export function peutChoisirTalent(etat: EtatJeu, id: IdTalent): boolean {
-  if (aLeTalent(etat, id) || pointsDisponibles(etat) <= 0) return false
+  if (aLeTalent(etat, id) || pointsDisponibles(etat) <= 0 || !brancheOuverte(etat, talent(id).branche)) return false
   const precedent = talentPrecedent(id)
   return precedent === null || aLeTalent(etat, precedent.id)
 }
@@ -98,77 +123,91 @@ export function peutChoisirTalent(etat: EtatJeu, id: IdTalent): boolean {
 export function choisirTalent(etat: EtatJeu, id: IdTalent): string[] {
   if (!peutChoisirTalent(etat, id)) return []
   etat.talents.push(id)
-  // Les bonus de départ servent tout de suite (on vient en général de passer prestige).
-  appliquerTalentsDeDepart(etat)
   return [`🌟 Talent débloqué : ${talent(id).nom} !`]
-}
-
-// Les cadeaux de début de partie. On ne fait qu'« au moins » (Math.max) : appliquer
-// deux fois ne donne rien de plus, et on ne perd jamais une meilleure pioche ou un plus grand sac.
-export function appliquerTalentsDeDepart(etat: EtatJeu): void {
-  const donnerPioche = (niveau: number) => {
-    if (etat.meilleure >= niveau) return
-    etat.pioches[niveau] = 0
-    etat.niveauPioche = niveau
-    etat.meilleure = niveau
-  }
-  if (aLeTalent(etat, 'piochePierre')) donnerPioche(1)
-  if (aLeTalent(etat, 'piocheFer')) donnerPioche(2)
-  if (aLeTalent(etat, 'fortune')) etat.enchantements.fortune = Math.max(1, etat.enchantements.fortune)
-  if (aLeTalent(etat, 'grandSac')) etat.niveauSac = Math.max(2, etat.niveauSac)
-  // Le pécule n'est donné qu'une fois par partie.
-  if (aLeTalent(etat, 'pecule') && !etat.peculeRecu) {
-    etat.argent += PECULE_DEPART
-    etat.peculeRecu = true
-  }
 }
 
 // --- Les bonus permanents, lus par les règles du jeu ---
 
+// Mineur
 export function multiplicateurPioche(etat: EtatJeu): number {
-  return aLeTalent(etat, 'poigne') ? 1.15 : 1
+  return aLeTalent(etat, 'poigneDeFer') ? 1.15 : 1
 }
 
+export function chanceDoublementTalents(etat: EtatJeu): number {
+  return aLeTalent(etat, 'oeilDeLynx') ? 0.1 : 0
+}
+
+// La part de l'usure qui compte encore (Pioche robuste : 30 % de moins).
+export function multiplicateurUsure(etat: EtatJeu): number {
+  return aLeTalent(etat, 'piocheRobuste') ? 0.7 : 1
+}
+
+export function multiplicateurRocheDure(etat: EtatJeu): number {
+  return aLeTalent(etat, 'briseurDeRoche') ? 1.25 : 1
+}
+
+// Marchand
 export function bonusVenteTalents(etat: EtatJeu): number {
-  return aLeTalent(etat, 'negoce') ? 0.1 : 0
+  return (aLeTalent(etat, 'negociant') ? 0.1 : 0) + (aLeTalent(etat, 'grandNegociant') ? 0.15 : 0)
+}
+
+export function multiplicateurVenteChariot(etat: EtatJeu): number {
+  return aLeTalent(etat, 'grossiste') ? 1.2 : 1
 }
 
 export function multiplicateurCoffre(etat: EtatJeu): number {
-  return aLeTalent(etat, 'tresor') ? 2 : 1
+  return aLeTalent(etat, 'chasseurDeTresors') ? 2 : 1
 }
 
+// Ingénieur
 // Le temps d'un mètre en ascenseur : 30 % plus vite = 1 / 1,3 du temps.
 export function multiplicateurAscenseur(etat: EtatJeu): number {
-  return aLeTalent(etat, 'ascenseurRapide') ? 1 / 1.3 : 1
-}
-
-export function multiplicateurChariot(etat: EtatJeu): number {
-  return aLeTalent(etat, 'grandChariot') ? 2 : 1
-}
-
-// --- Les mineurs employés ---
-
-export function multiplicateurMineurs(etat: EtatJeu): number {
-  return aLeTalent(etat, 'contremaitre') ? 1.25 : 1
-}
-
-export function multiplicateurSacMineurs(etat: EtatJeu): number {
-  return aLeTalent(etat, 'grandsSacs') ? 2 : 1
-}
-
-// La part des ventes que les mineurs gardent pour eux (leur salaire).
-export function partSalaire(etat: EtatJeu): number {
-  return aLeTalent(etat, 'salaireReduit') ? 0.1 : 0.25
-}
-
-export function mineursEnPlus(etat: EtatJeu): number {
-  return aLeTalent(etat, 'recrue') ? 1 : 0
+  return aLeTalent(etat, 'ascenseurExpress') ? 1 / 1.3 : 1
 }
 
 export function multiplicateurForage(etat: EtatJeu): number {
   return aLeTalent(etat, 'foreuseTurbo') ? 1.5 : 1
 }
 
-export function multiplicateurCharbon(etat: EtatJeu): number {
-  return aLeTalent(etat, 'moteurEconome') ? 2 : 1
+export function multiplicateurChariot(etat: EtatJeu): number {
+  return aLeTalent(etat, 'grandChariot') ? 2 : 1
+}
+
+export function rechargeAutoDesLeDebut(etat: EtatJeu): boolean {
+  return aLeTalent(etat, 'moteurAutonome')
+}
+
+// Patron
+export function multiplicateurMineurs(etat: EtatJeu): number {
+  return aLeTalent(etat, 'contremaitre') ? 1.25 : 1
+}
+
+export function multiplicateurSacMineurs(etat: EtatJeu): number {
+  return aLeTalent(etat, 'sacsDEquipe') ? 2 : 1
+}
+
+export function multiplicateurSalaires(etat: EtatJeu): number {
+  return aLeTalent(etat, 'salairesNegocies') ? 0.75 : 1
+}
+
+export function mineursEnPlus(etat: EtatJeu): number {
+  return aLeTalent(etat, 'grandeEquipe') ? 1 : 0
+}
+
+// Recrutement
+// Les chances d'avoir un mineur rare, épique, légendaire ou mythique sont multipliées par ce nombre.
+export function multiplicateurChancesRares(etat: EtatJeu): number {
+  return aLeTalent(etat, 'oeilDuRecruteur') ? 1.25 : 1
+}
+
+export function multiplicateurPrixEmbauche(etat: EtatJeu): number {
+  return aLeTalent(etat, 'prixCasse') ? 0.7 : 1
+}
+
+export function multiplicateurIndemnites(etat: EtatJeu): number {
+  return aLeTalent(etat, 'indemnitesReduites') ? 0.5 : 1
+}
+
+export function multiplicateurMythique(etat: EtatJeu): number {
+  return aLeTalent(etat, 'mainDeMidas') ? 2 : 1
 }

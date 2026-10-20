@@ -19,5 +19,12 @@ export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoi
 // Y a-t-il quelque chose qui bouge tout seul (et donc besoin de faire avancer le temps) ?
 export function tempsQuiPasse(etat: EtatJeu): boolean {
   const foreuseTourne = etat.foreuse.active && etat.foreuse.carburant > 0
-  return etat.position !== etat.cible || etat.depart !== null || ascenseurEnMouvement(etat) || foreuseTourne || etat.employes.length > 0
+  return (
+    etat.position !== etat.cible ||
+    etat.depart !== null ||
+    ascenseurEnMouvement(etat) ||
+    foreuseTourne ||
+    etat.employes.length > 0 ||
+    etat.manager.embauche // le temps payé du manager s'écoule aussi
+  )
 }

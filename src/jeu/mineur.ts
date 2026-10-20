@@ -28,8 +28,11 @@ import {
   SECONDES_PAR_METRE_ECHELLE,
   VITESSE_MAINS_NUES,
   dureeCasse,
+  estRocheDure,
+  SECONDES_PAR_PAIE,
   type Cout,
   type IdBloc,
+  type IdRarete,
   niveauMaxAuPrestige,
   prestigePourNiveau,
   type IdEnchantement,
@@ -39,11 +42,13 @@ import {
 import { genererCouche, poidsDesBlocs } from './mine'
 import { additionnerStatistiques } from './statistiques'
 import {
-  appliquerTalentsDeDepart,
   bonusVenteTalents,
+  chanceDoublementTalents,
   multiplicateurCoffre,
   multiplicateurAscenseur,
   multiplicateurPioche,
+  multiplicateurRocheDure,
+  multiplicateurUsure,
   type IdTalent,
 } from './talents'
 
@@ -62,11 +67,13 @@ export type Statistiques = {
   diamantsTrouves: number
   // Ajouté le 19/10, pour l'écran des statistiques :
   argentForeuse: number // l'argent des chariots vendus
-  argentMineurs: number // l'argent rapporté par les mineurs employés (après leur salaire)
+  argentMineurs: number // l'argent rapporté par les ventes des mineurs employés
   blocsParType: Inventaire // les blocs que tu as cassés, par sorte
   blocsForeuse: number
   blocsMineurs: number
   profondeurMax: number // le plus bas que tu sois descendu
+  // Ajouté le 20/10 :
+  salairesPayes: number // les salaires payés aux mineurs et au manager
 }
 
 // Des statistiques toutes neuves (une nouvelle partie).
@@ -85,6 +92,7 @@ export function nouvellesStatistiques(): Statistiques {
     blocsForeuse: 0,
     blocsMineurs: 0,
     profondeurMax: 0,
+    salairesPayes: 0,
   }
 }
 
@@ -104,38 +112,44 @@ export type Ascenseur = {
   envoiAuto: boolean // true = quand le sac est plein, l'ascenseur part tout seul au marché
 }
 
-// Ce que les foreuses partagent : le charbon, le chariot et les options.
+// La foreuse (prestige 1) : une seule depuis le 20/10, avec 8 niveaux de forage.
 export type Foreuse = {
   active: boolean // activée une fois pour toutes (avec du fer et de la redstone)
-  carburant: number // secondes de forage restantes (le charbon brûlé), pour toutes les foreuses
-  niveauChariot: number // index dans NIVEAUX_CHARIOT
-  chariot: Inventaire // ce que les foreuses ont remonté
-  nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
-  rechargeAuto: boolean // les foreuses brûlent le charbon qu'elles remontent (débloqué au niveau 3 de forage)
-  // Chaque foreuse a sa vitesse et creuse son propre trou (on en achète d'autres au prestige 3).
-  foreuses: UneForeuse[]
-}
-
-// Une foreuse : son niveau de forage et où elle en est.
-export type UneForeuse = {
+  carburant: number // secondes de forage restantes (le charbon brûlé)
   niveauVitesse: number // index dans NIVEAUX_FORAGE
   profondeur: number // profondeur atteinte
   progression: number // fraction du prochain bloc foré (0 à 1)
   blocsFores: number
+  niveauChariot: number // index dans NIVEAUX_CHARIOT
+  chariot: Inventaire // ce que la foreuse a remonté
+  nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
+  rechargeAuto: boolean // elle brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
 }
+
+// Ce que fait un mineur employé : il creuse, remonte, vend, redescend... ou attend son
+// salaire au stand Personnel (« attend »).
+export type EtapeEmploye = 'creuse' | 'monte' | 'vend' | 'descend' | 'attend'
 
 // Un mineur employé (prestige 2) : il creuse tout seul dans sa propre galerie, remonte
 // vendre sa récolte quand son sac est plein, puis redescend. Les règles sont dans employes.ts.
 export type Employe = {
   nom: string
+  rarete: IdRarete // commun, rare, épique... (le recruteur en trouve de plus rares, prestige 4)
   niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
   profondeur: number // la profondeur de sa galerie
-  etape: 'creuse' | 'monte' | 'vend' | 'descend'
+  etape: EtapeEmploye
   position: number // où il est pendant ses trajets (0 = au village)
   sac: Inventaire
   progression: number // fraction du prochain bloc (en creusant), ou secondes passées au marché (en vendant)
   blocsCasses: number
-  gagne: number // ce qu'il t'a rapporté (après son salaire)
+  gagne: number // ce que ses ventes t'ont rapporté
+  tempsPaye: number // les secondes de travail déjà payées (son salaire)
+}
+
+// Le manager (prestige 5) : il paie les salaires tout seul, avec l'argent de la trésorerie.
+export type Manager = {
+  embauche: boolean
+  tempsPaye: number // lui aussi est payé (les secondes de travail déjà payées)
 }
 
 // Pour quitter le front de taille, le mineur marche d'abord jusqu'au puits (à gauche),
@@ -177,15 +191,18 @@ export type EtatJeu = {
   victoire: boolean
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
   employes: Employe[] // les mineurs employés (gardés à chaque prestige)
+  recruteur: number // le niveau du recruteur (0 = pas embauché ; gardé à chaque prestige)
+  manager: Manager // gardé à chaque prestige
+  tresorerie: number // l'argent mis de côté pour les salaires (vidé au prestige, comme l'argent)
   decouvertes: Decouverte[] // les stands débloqués que le joueur a déjà visités (voir decouvertes.ts)
   depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
-  peculeRecu: boolean // le talent « Pécule » a-t-il déjà donné son argent dans cette partie ?
 }
 
-// Les stands qui se débloquent avec les prestiges (une flèche guide le joueur jusqu'à eux).
-export type Decouverte = 'foreuse' | 'employes'
+// Ce qui se débloque avec les prestiges (une flèche guide le joueur jusqu'au bon stand) :
+// la foreuse, les mineurs, puis le recruteur et le manager (au stand Personnel).
+export type Decouverte = 'foreuse' | 'employes' | 'recruteur' | 'manager'
 
-export const VERSION_ETAT = 14
+export const VERSION_ETAT = 15
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -194,21 +211,24 @@ export const VERSION_ETAT = 14
 // Le premier mètre est l'entrée du puits, déjà creusée : on commence à creuser à -2 m.
 export const PROFONDEUR_DEPART = 2
 
+// Une foreuse toute neuve : niveau de forage 0, elle part de la surface.
 export function nouvelleForeuse(): Foreuse {
   return {
     active: false,
     carburant: 0,
+    niveauVitesse: 0,
+    profondeur: 1,
+    progression: 0,
+    blocsFores: 0,
     niveauChariot: 0,
     chariot: {},
     nonCoches: [],
     rechargeAuto: false,
-    foreuses: [uneNouvelleForeuse()],
   }
 }
 
-// Une foreuse toute neuve : niveau de forage 0, elle part de la surface.
-export function uneNouvelleForeuse(): UneForeuse {
-  return { niveauVitesse: 0, profondeur: 1, progression: 0, blocsFores: 0 }
+export function nouveauManager(): Manager {
+  return { embauche: false, tempsPaye: 0 }
 }
 
 export function nouvelAscenseur(): Ascenseur {
@@ -235,6 +255,8 @@ export type Heritage = {
   talents: IdTalent[]
   niveauAscenseur: number
   employes: Employe[]
+  recruteur: number
+  manager: Manager
   argentGagneAvant: number
   enchantements: Record<IdEnchantement, number>
   niveauSac: number
@@ -253,6 +275,8 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     talents = [],
     niveauAscenseur = 0,
     employes = [],
+    recruteur = 0,
+    manager = nouveauManager(),
     argentGagneAvant = 0,
     enchantements = { efficacite: 0, fortune: 0, solidite: 0 },
     niveauSac = 0,
@@ -295,19 +319,22 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     victoire: false,
     talents: [...talents],
     employes: structuredClone(employes),
+    recruteur,
+    manager: { ...manager },
+    tresorerie: 0,
     decouvertes: [...decouvertes],
     depart: null,
-    peculeRecu: false,
   }
-  appliquerTalentsDeDepart(etat)
   return etat
 }
 
 // Recommence une partie après la bedrock, avec un niveau de prestige en plus.
 // On garde les succès, les objets gardés au marché, les talents, et tout ce qui
-// automatise le jeu : la foreuse, le niveau de l'ascenseur et les mineurs employés.
+// automatise le jeu : la foreuse, le niveau de l'ascenseur, les mineurs employés, le
+// recruteur et le manager. L'argent (et la trésorerie) repartent de 0.
 // L'argent gagné est ajouté au total de la partie (pour le classement).
 // Le point de prestige gagné se dépense ensuite dans l'arbre (voir talents.ts).
+// On ne passe prestige qu'une fois tout amélioré au maximum : voir conditionsPrestige.ts.
 export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   return creerPartie(aleatoire, etat.prestige + 1, {
     succes: etat.succes,
@@ -316,6 +343,9 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     talents: etat.talents,
     niveauAscenseur: etat.ascenseur.niveau,
     employes: etat.employes.map(employeApresPrestige),
+    recruteur: etat.recruteur,
+    // Le manager reste, avec au moins 10 minutes payées : il a le temps de voir venir.
+    manager: etat.manager.embauche ? { embauche: true, tempsPaye: Math.max(etat.manager.tempsPaye, SECONDES_PAR_PAIE) } : nouveauManager(),
     argentGagneAvant: argentGagneTotal(etat),
     enchantements: etat.enchantements,
     niveauSac: etat.niveauSac,
@@ -329,23 +359,32 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
   })
 }
 
-// Au prestige, les foreuses gardent seulement leurs améliorations (activation, vitesse de
-// chacune, chariot, options) : plus de charbon, chariot vide, et elles repartent de la surface.
+// Au prestige, la foreuse garde seulement ses améliorations (activation, vitesse de forage,
+// chariot, options) : plus de charbon, chariot vide, et elle repart de la surface.
 export function foreuseApresPrestige(foreuse: Foreuse): Foreuse {
   return {
     ...nouvelleForeuse(),
     active: foreuse.active,
+    niveauVitesse: foreuse.niveauVitesse,
     niveauChariot: foreuse.niveauChariot,
     rechargeAuto: foreuse.rechargeAuto,
     nonCoches: [...foreuse.nonCoches],
-    foreuses: foreuse.foreuses.map((une) => ({ ...uneNouvelleForeuse(), niveauVitesse: une.niveauVitesse })),
   }
 }
 
-// Pareil pour les mineurs employés : ils gardent leur pioche, mais recommencent
-// une galerie depuis la surface, le sac vide.
+// Pareil pour les mineurs employés : ils gardent leur pioche et leur rareté, mais
+// recommencent une galerie depuis la surface, le sac vide. Comme cadeau de prestige,
+// chacun a au moins 10 minutes de salaire payées : l'équipe se met tout de suite au travail.
 export function employeApresPrestige(employe: Employe): Employe {
-  return { ...employe, profondeur: 2, etape: 'descend', position: 0, sac: {}, progression: 0 }
+  return {
+    ...employe,
+    profondeur: 2,
+    etape: 'descend',
+    position: 0,
+    sac: {},
+    progression: 0,
+    tempsPaye: Math.max(employe.tempsPaye, SECONDES_PAR_PAIE),
+  }
 }
 
 // Tout l'argent gagné depuis le début, prestiges compris (c'est ce que classe le leaderboard).
@@ -382,6 +421,11 @@ export function vitesse(etat: EtatJeu): number {
   if (estCassee(etat)) return VITESSE_MAINS_NUES
   const bonusEfficacite = 1 + 0.25 * etat.enchantements.efficacite
   return piocheEquipee(etat).vitesse * bonusEfficacite * bonusVitessePrestige(etat) * multiplicateurPioche(etat)
+}
+
+// La vitesse à une profondeur : le talent « Briseur de roche » aide dans la roche dure.
+export function vitesseA(etat: EtatJeu, profondeur: number): number {
+  return vitesse(etat) * (estRocheDure(profondeur, etat.prestige) ? multiplicateurRocheDure(etat) : 1)
 }
 
 export function tailleSac(etat: EtatJeu): number {
@@ -466,7 +510,7 @@ export function blocActuel(etat: EtatJeu): IdBloc | null {
 export function dureeBlocActuel(etat: EtatJeu): number {
   const bloc = blocActuel(etat)
   if (bloc === null) return 0
-  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesse(etat), etat.prestige)
+  return dureeCasse(BLOCS[bloc].durete, etat.profondeur, vitesseA(etat, etat.profondeur), etat.prestige)
 }
 
 // ---------------------------------------------------------------------------
@@ -516,12 +560,17 @@ export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
 // La chance de doubler un minerai avec Fortune : 20 % par niveau (Fortune III : 60 %).
 export const CHANCE_FORTUNE_PAR_NIVEAU = 0.2
 
-// Nombre d'objets obtenus en cassant un bloc (enchantement Fortune sur les minerais) :
-// 1, ou 2 si la chance de Fortune tombe.
+// La chance de doubler un minerai : Fortune, plus le talent « Œil de lynx ».
+export function chanceDoublement(etat: EtatJeu): number {
+  return etat.enchantements.fortune * CHANCE_FORTUNE_PAR_NIVEAU + chanceDoublementTalents(etat)
+}
+
+// Nombre d'objets obtenus en cassant un bloc (Fortune et Œil de lynx sur les minerais) :
+// 1, ou 2 si la chance de doublement tombe.
 export function nbDrops(etat: EtatJeu, bloc: IdBloc, aleatoire: Aleatoire): number {
-  const fortune = etat.enchantements.fortune
-  if (!BLOCS[bloc].minerai || fortune === 0) return 1
-  return aleatoire() < fortune * CHANCE_FORTUNE_PAR_NIVEAU ? 2 : 1
+  const chance = chanceDoublement(etat)
+  if (!BLOCS[bloc].minerai || chance === 0) return 1
+  return aleatoire() < chance ? 2 : 1
 }
 
 // Casse le prochain bloc de la couche en cours.
@@ -534,9 +583,9 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 
   etat.stats.tempsMinage += dureeBlocActuel(etat)
 
-  // Usure de la pioche (Solidité : 1 chance sur n+1 de l'user).
+  // Usure de la pioche (Solidité : 1 chance sur n+1 de l'user ; 30 % de moins avec « Pioche robuste »).
   if (!estCassee(etat)) {
-    const chanceUsure = 1 / (etat.enchantements.solidite + 1)
+    const chanceUsure = multiplicateurUsure(etat) / (etat.enchantements.solidite + 1)
     if (aleatoire() < chanceUsure) {
       etat.pioches[etat.niveauPioche] = usure(etat) + 1
       if (estCassee(etat)) {
@@ -651,11 +700,9 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     return messages
   }
 
-  // La pioche ne peut pas descendre plus bas : galerie horizontale.
+  // La couche du dessous est trop dure pour la pioche : galerie horizontale (on n'est jamais bloqué).
   if (suivante > profondeurMaxPioche(etat.niveauPioche, etat.prestige)) {
-    if (!etat.enGalerie) {
-      messages.push(`↔️ Ta pioche en ${piocheEquipee(etat).nom} ne descend pas plus bas : tu creuses une galerie.`)
-    }
+    if (!etat.enGalerie) messages.push(messageCoucheTropDure(etat))
     etat.enGalerie = true
     etat.coucheActuelle = genererCouche(etat.profondeur, aleatoire, etat.prestige)
     return messages
@@ -685,6 +732,19 @@ function passerCoucheSuivante(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   etat.couchesDessous.push(profondeurAGenerer < profondeurBedrock(etat.prestige) ? genererCouche(profondeurAGenerer, aleatoire, etat.prestige) : [])
 
   return messages
+}
+
+// La pioche qu'il faut pour descendre sous la profondeur actuelle (null si aucune ne suffit).
+export function piochePourDescendre(etat: EtatJeu): Pioche | null {
+  return PIOCHES.find((p) => profondeurMaxPioche(p.niveau, etat.prestige) > etat.profondeur) ?? null
+}
+
+// Le message quand la couche suivante est trop dure : quelle pioche il faut, et où la trouver.
+export function messageCoucheTropDure(etat: EtatJeu): string {
+  const pioche = piochePourDescendre(etat)
+  if (pioche === null) return `🧱 Couche trop dure : tu creuses une galerie.`
+  if (pioche.niveau in etat.pioches) return `🧱 Couche trop dure ! Équipe ta pioche en ${pioche.nom} (onglet Pioches) pour descendre plus bas.`
+  return `🧱 Couche trop dure ! Il te faut une pioche en ${pioche.nom} pour descendre plus bas : achète-la au forgeron (village).`
 }
 
 // ---------------------------------------------------------------------------

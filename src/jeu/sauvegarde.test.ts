@@ -132,15 +132,15 @@ describe('sauvegarde', () => {
     expect(etat && 'epee' in etat).toBe(false)
   })
 
-  it('rend les points des talents retirés (version 9)', () => {
+  it('met à jour une partie de la version 9 (sans mineurs)', () => {
     const stockage = fauxStockage()
     const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1), 3), version: 9, talents: ['negoce', 'ascenseurOffert', 'grimpeur'] }
     delete ancienne.employes
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage, '1')
-    expect(etat?.talents).toEqual(['negoce'])
+    expect(etat?.talents).toEqual([]) // l'arbre a été refait le 20/10 : tous les points sont rendus
     expect(etat?.employes).toEqual([])
-    expect(etat?.foreuse.foreuses).toHaveLength(1)
+    expect(etat?.foreuse.niveauVitesse).toBe(0)
   })
 
   it('les stands déjà débloqués d’une ancienne partie (version 12) sont déjà découverts', () => {
@@ -151,23 +151,67 @@ describe('sauvegarde', () => {
     expect(charger(stockage, '1')?.decouvertes).toEqual(['foreuse'])
   })
 
-  it('sépare les foreuses d’une ancienne partie (version 11) en gardant ce qu’elles avaient', () => {
+  it('une ancienne partie à 2 foreuses (version 11) garde la meilleure, l’autre est remboursée', () => {
     const stockage = fauxStockage()
     const partie = creerPartie(aleatoireAvecGraine(1), 3)
-    const { foreuses: _foreuses, ...partage } = partie.foreuse
     const ancienne = {
       ...partie,
       version: 11,
-      foreuse: { ...partage, active: true, niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490, nombre: 2 },
+      foreuse: { ...partie.foreuse, active: true, niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490, nombre: 2 },
     }
     stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
     const etat = charger(stockage, '1')
     expect(etat?.version).toBe(VERSION_ETAT)
-    expect(etat?.foreuse.foreuses).toEqual([
-      { niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 },
-      { niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 },
-    ])
+    expect(etat?.foreuse).toMatchObject({ niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 })
     expect('nombre' in (etat?.foreuse ?? {})).toBe(false)
+    expect('foreuses' in (etat?.foreuse ?? {})).toBe(false)
+    // La 2e foreuse (50 000 $) et ses 2 niveaux de forage (2 815 $ et 6 780 $, minerais compris) sont remboursés.
+    expect(etat?.argent).toBe(50000 + 2815 + 6780)
+  })
+
+  it('met à jour une partie de la version 14 : une foreuse, mineurs communs payés, arbre remis à zéro', () => {
+    const stockage = fauxStockage()
+    const partie = creerPartie(aleatoireAvecGraine(1), 4)
+    const { niveauVitesse: _n, profondeur: _p, progression: _g, blocsFores: _b, ...partage } = partie.foreuse
+    const { salairesPayes: _s, ...anciennesStats } = partie.stats
+    const mineur = { nom: 'Léo', niveau: 2, profondeur: 40, etape: 'creuse', position: 39, sac: {}, progression: 0, blocsCasses: 200, gagne: 900 }
+    const ancienne: Record<string, unknown> = {
+      ...partie,
+      version: 14,
+      argent: 100,
+      foreuse: {
+        ...partage,
+        active: true,
+        carburant: 300,
+        foreuses: [
+          { niveauVitesse: 1, profondeur: 80, progression: 0, blocsFores: 790 },
+          { niveauVitesse: 3, profondeur: 30, progression: 0.2, blocsFores: 290 },
+          { niveauVitesse: 0, profondeur: 10, progression: 0, blocsFores: 90 },
+        ],
+      },
+      employes: [mineur],
+      talents: ['negoce', 'pecule', 'contremaitre'],
+      peculeRecu: true,
+      stats: anciennesStats,
+      statsTotales: anciennesStats,
+    }
+    delete ancienne.recruteur
+    delete ancienne.manager
+    delete ancienne.tresorerie
+    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
+    const etat = charger(stockage, '1')
+    expect(etat?.version).toBe(VERSION_ETAT)
+    // On garde la foreuse au plus haut niveau de forage, avec tout le charbon.
+    expect(etat?.foreuse).toMatchObject({ active: true, carburant: 300, niveauVitesse: 3, profondeur: 30, blocsFores: 290 })
+    // Les deux autres : 50 000 $ + 100 000 $, et le niveau 1 de forage (2 815 $).
+    expect(etat?.argent).toBe(100 + 50000 + 100000 + 2815)
+    expect(etat?.employes).toEqual([{ ...mineur, rarete: 'commun', tempsPaye: 600 }])
+    expect(etat?.talents).toEqual([])
+    expect(etat?.recruteur).toBe(0)
+    expect(etat?.manager).toEqual({ embauche: false, tempsPaye: 0 })
+    expect(etat?.tresorerie).toBe(0)
+    expect(etat?.stats.salairesPayes).toBe(0)
+    expect(etat && 'peculeRecu' in etat).toBe(false)
   })
 
   it('compte le temps passé depuis la dernière sauvegarde', () => {

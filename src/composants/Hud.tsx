@@ -28,9 +28,9 @@ type Props = {
   onOuvrirArbre: () => void
 }
 
-// « 0,8 $/s », « 12 $/s », « 1 250 $/s ».
+// « 0,8 $/s », « 12 $/s », « 1 250 $/s » (négatif si les salaires coûtent plus que ce qui rentre).
 function texteRevenu(parSeconde: number): string {
-  const arrondi = parSeconde < 10 ? Math.round(parSeconde * 10) / 10 : Math.round(parSeconde)
+  const arrondi = Math.abs(parSeconde) < 10 ? Math.round(parSeconde * 10) / 10 : Math.round(parSeconde)
   return `${arrondi.toLocaleString('fr-FR')} $/s`
 }
 

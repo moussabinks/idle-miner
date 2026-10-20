@@ -5,6 +5,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from './jeu/aleatoire'
 import { BLOCS, LARGEUR_MINE, type IdBloc } from './jeu/donnees'
+import { peutPasserPrestige } from './jeu/conditionsPrestige'
+import { nbSansSalaire } from './jeu/employes'
 import { nbDansChariot } from './jeu/foreuse'
 import {
   ascenseurEnMouvement,
@@ -104,10 +106,17 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; messageAbsence: strin
   if (etat === null) return { etat: creerPartie(aleatoireNavigateur), messageAbsence: null }
 
   const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
-  const avant = nbDansChariot(etat)
+  const avant = { fores: nbDansChariot(etat), argent: etat.argent }
   avancerTemps(etat, absence, aleatoireNavigateur)
-  const fores = nbDansChariot(etat) - avant
-  const messageAbsence = fores > 0 ? `⚙️ Pendant ton absence, la foreuse a remonté ${fores} blocs.` : null
+  const fores = nbDansChariot(etat) - avant.fores
+  const gagne = etat.argent - avant.argent
+  // Ce qui s'est passé pendant l'absence : la foreuse, l'argent des mineurs, et ceux qui attendent leur salaire.
+  const morceaux: string[] = []
+  if (fores > 0) morceaux.push(`⚙️ la foreuse a remonté ${fores} blocs`)
+  if (gagne > 0) morceaux.push(`👷 tes mineurs t'ont rapporté ${gagne.toLocaleString('fr-FR')} $`)
+  const sansSalaire = nbSansSalaire(etat)
+  if (sansSalaire > 0) morceaux.push(sansSalaire === 1 ? '😠 un mineur attend son salaire' : `😠 ${sansSalaire} mineurs attendent leur salaire`)
+  const messageAbsence = morceaux.length > 0 ? `Pendant ton absence : ${morceaux.join(', ')}.` : null
   return { etat, messageAbsence }
 }
 
@@ -335,6 +344,7 @@ export function usePartie(idMonde: string) {
   }, [changerEtat, changerBlocsRestants])
 
   const passerPrestige = useCallback(() => {
+    if (!peutPasserPrestige(etatRef.current)) return
     changerBlocsRestants(0)
     changerEtat(prestige(etatRef.current, aleatoireNavigateur))
     sons.prestige()

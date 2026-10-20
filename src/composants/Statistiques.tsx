@@ -143,6 +143,7 @@ export function FenetreStatistiques({ etat, onFermer }: { etat: EtatJeu; onFerme
         <ul className="stat-petits">
           <li>⚙️ {nombre(stats.blocsForeuse)} blocs forés par la foreuse</li>
           <li>👷 {nombre(stats.blocsMineurs)} blocs creusés par les mineurs</li>
+          <li>💵 {nombre(stats.salairesPayes)} $ de salaires payés</li>
           <li>💎 {nombre(stats.diamantsTrouves)} diamants trouvés</li>
           <li>📦 {nombre(stats.coffresOuverts)} coffres ouverts</li>
           <li>🔮 {nombre(stats.geodesCassees)} géodes cassées</li>

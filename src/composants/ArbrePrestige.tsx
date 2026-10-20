@@ -1,9 +1,21 @@
-// L'arbre de prestige : quatre branches de talents (mineur, marchand, ingénieur, patron). À chaque prestige, on gagne
-// 1 point et on choisit sa récompense. Il s'ouvre tout seul après un prestige,
-// et on peut le rouvrir à l'entrée de la mine, au village (ou avec l'étoile du bandeau).
+// L'arbre de prestige : cinq branches de talents (mineur, marchand, ingénieur, patron,
+// recrutement). À chaque prestige, on gagne 1 point et on choisit sa récompense. Il s'ouvre
+// tout seul après un prestige, et on peut le rouvrir à l'entrée de la mine, au village (ou
+// avec l'étoile du bandeau). La branche Recrutement reste fermée tant qu'on n'a pas le recruteur.
 
 import { useState } from 'react'
-import { aLeTalent, BRANCHES, choisirTalent, peutChoisirTalent, pointsDisponibles, TALENTS, type IdBranche, type IdTalent } from '../jeu/talents'
+import { PRESTIGE_RECRUTEUR } from '../jeu/donnees'
+import {
+  aLeTalent,
+  BRANCHES,
+  brancheOuverte,
+  choisirTalent,
+  peutChoisirTalent,
+  pointsDisponibles,
+  TALENTS,
+  type IdBranche,
+  type IdTalent,
+} from '../jeu/talents'
 import type { EtatJeu } from '../jeu/mineur'
 import type { Action } from '../usePartie'
 import { Icone, type NomIcone } from './Icone'
@@ -13,6 +25,7 @@ const ICONES_BRANCHES: Record<IdBranche, NomIcone> = {
   marchand: 'marche',
   ingenieur: 'foreuse',
   patron: 'employes',
+  recrutement: 'recrutement',
 }
 
 type Props = {
@@ -46,10 +59,15 @@ export function ArbrePrestige({ etat, jouer, onFermer }: Props) {
 
         <div className="arbre">
           {BRANCHES.map((branche) => (
-            <div key={branche.id} className={`branche branche-${branche.id}`}>
+            <div key={branche.id} className={`branche branche-${branche.id} ${brancheOuverte(etat, branche.id) ? '' : 'branche-fermee'}`}>
               <h3 className="titre-avec-icone">
                 <Icone nom={ICONES_BRANCHES[branche.id]} taille={20} /> {branche.nom}
               </h3>
+              {!brancheOuverte(etat, branche.id) && (
+                <span className="branche-verrou">
+                  🔒 S'ouvre quand tu embauches le recruteur (stand Personnel, prestige {PRESTIGE_RECRUTEUR}).
+                </span>
+              )}
               {TALENTS.filter((t) => t.branche === branche.id).map((t) => {
                 const pris = aLeTalent(etat, t.id)
                 const possible = peutChoisirTalent(etat, t.id)

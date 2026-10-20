@@ -12,7 +12,8 @@ describe('pioches', () => {
 
 describe('dureeCasse', () => {
   it('les améliorations de la foreuse et des mineurs coûtent du fer et de la redstone (et moins d’argent)', () => {
-    for (const niveau of [...NIVEAUX_FORAGE.slice(1), ...NIVEAUX_CHARIOT.slice(2), ...NIVEAUX_EMPLOYE.slice(1)]) {
+    // Les 5 premiers niveaux restent bon marché ; les 3 derniers de la foreuse (prestiges 5 à 7) coûtent plus.
+    for (const niveau of [...NIVEAUX_FORAGE.slice(1, 5), ...NIVEAUX_CHARIOT.slice(2, 5), ...NIVEAUX_EMPLOYE.slice(1)]) {
       expect(niveau.cout.materiaux.fer).toBeGreaterThan(0)
       expect(niveau.cout.materiaux.redstone).toBeGreaterThan(0)
       expect(niveau.cout.argent).toBeLessThanOrEqual(30000)

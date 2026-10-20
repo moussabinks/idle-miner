@@ -23,7 +23,7 @@ export type Evenement =
   | { type: 'talent' }
   | { type: 'recolteMineurs'; montant: number } // un mineur employé a vendu sa récolte
   | { type: 'nouvelleCouche'; palier: boolean } // une couche finie (palier = tous les 10 m)
-  | { type: 'amelioration' } // un niveau de plus : ascenseur, foreuse, mineur, sac, pioche, enchantement
+  | { type: 'amelioration' } // un niveau de plus : ascenseur, foreuse, mineur, sac, pioche, enchantement, recruteur
 
 // Le sac et le quai de l'ascenseur ensemble : ce que le mineur a ramassé.
 function ramasse(etat: EtatJeu): Inventaire {
@@ -37,8 +37,7 @@ function ramasse(etat: EtatJeu): Inventaire {
 
 // Un seul nombre qui grandit à chaque amélioration achetée (pour la repérer facilement).
 function totalNiveaux(etat: EtatJeu): number {
-  let total = etat.ascenseur.niveau + etat.foreuse.niveauChariot + etat.niveauSac + etat.meilleure
-  for (const une of etat.foreuse.foreuses) total += une.niveauVitesse
+  let total = etat.ascenseur.niveau + etat.foreuse.niveauVitesse + etat.foreuse.niveauChariot + etat.niveauSac + etat.meilleure + etat.recruteur
   for (const niveau of Object.values(etat.enchantements)) total += niveau
   for (const mineur of etat.employes) total += mineur.niveau
   return total

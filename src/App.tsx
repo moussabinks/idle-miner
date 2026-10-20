@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
+import { CartePrestige } from './composants/CartePrestige'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
 import { Icone } from './composants/Icone'
@@ -41,7 +42,8 @@ import {
   positionFront,
   voyager,
 } from './jeu/mineur'
-import { decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
+import { peutPasserPrestige } from './jeu/conditionsPrestige'
+import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
 import { profondeurBedrock } from './jeu/donnees'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
@@ -76,11 +78,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const stand = enVille ? standProche(village.x) : null
   const prochePuits = Math.abs(village.x - X_PUITS) < 1
 
-  // Arrivé devant un stand tout juste débloqué (foreuse, mineurs) : la flèche du village disparaît.
-  const standADecouvrir = stand && decouvertesAMontrer(etat).find((id) => id === stand.id)
+  // Arrivé devant un stand tout juste débloqué (foreuse, Personnel, recruteur, manager) : la
+  // flèche du village disparaît.
+  const aDecouvrirIci = stand ? decouvertesAMontrer(etat).filter((id) => DECOUVERTES[id].stand === stand.id) : []
+  const cleDecouvertes = aDecouvrirIci.join(',')
   useEffect(() => {
-    if (standADecouvrir) jouer((e) => marquerDecouvert(e, standADecouvrir))
-  }, [standADecouvrir, jouer])
+    if (cleDecouvertes) jouer((e) => marquerDecouvert(e, decouvertesAMontrer(e).filter((id) => cleDecouvertes.split(',').includes(id))))
+  }, [cleDecouvertes, jouer])
 
   // L'écran de victoire s'affiche une seule fois, au moment où l'on atteint la bedrock.
   const [victoireAffichee, setVictoireAffichee] = useState(false)
@@ -171,7 +175,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   // Après le prestige, on choisit tout de suite sa récompense dans l'arbre.
+  // (Seulement quand tout est au maximum : voir conditionsPrestige.ts.)
   function faireLePrestige() {
+    if (!peutPasserPrestige(etat)) return
     passerPrestige()
     setVictoireAffichee(false)
     village.placer(X_PUITS)
@@ -206,19 +212,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {stand.id === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
         {stand.id === 'puits' && (
           <div className="liste-cartes">
-            {/* Après la bedrock, c'est ici qu'on passe prestige. */}
-            {etat.victoire && (
-              <div className="ligne-achat carte-prestige">
-                <strong>🏆 Bedrock atteinte !</strong>
-                <span className="discret">
-                  Passe prestige quand tu veux : tu recommences avec +15 % sur les ventes et des pioches 10 % plus rapides (à chaque prestige),
-                  et tu choisis un talent dans l'arbre de prestige.
-                </span>
-                <button className="bouton bouton-prestige" onClick={faireLePrestige}>
-                  ⭐ Passer prestige {etat.prestige + 1}
-                </button>
-              </div>
-            )}
+            {/* C'est ici qu'on passe prestige : la liste de ce qu'il reste à faire, avec sa jauge. */}
+            <CartePrestige etat={etat} onPrestige={faireLePrestige} />
 
             {etat.prestige > 0 && (
               <div className="ligne-achat">

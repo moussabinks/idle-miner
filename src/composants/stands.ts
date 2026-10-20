@@ -21,7 +21,9 @@ export const STANDS: Stand[] = [
   { id: 'bazar', nom: 'Bazar', icone: 'bazar', description: "Sacs à dos et seaux d'eau.", x: 10.5 },
   { id: 'enchanteur', nom: 'Enchanteur', icone: 'enchanteur', description: 'Enchante tes pioches avec lapis et émeraudes.', x: 13.5 },
   { id: 'foreuse', nom: 'Foreuse', icone: 'foreuse', description: 'Elle creuse toute seule si tu lui donnes du charbon.', x: 16.8 },
-  { id: 'employes', nom: 'Mineurs', icone: 'employes', description: 'Embauche des mineurs qui creusent et vendent pour toi.', x: 19.8 },
+  // Le stand du personnel (son identifiant reste « employes », pour les sauvegardes) : mineurs, salaires,
+  // recruteur (prestige 4) et manager (prestige 5).
+  { id: 'employes', nom: 'Personnel', icone: 'employes', description: 'Embauche des mineurs qui creusent et vendent pour toi, et paie leurs salaires.', x: 19.8 },
 ]
 
 // Longueur du village (en tuiles) et taille d'une tuile à l'écran (en pixels).
