@@ -89,11 +89,11 @@ function arrondiPrix(prix: number): number {
   return Math.max(100, Math.round(prix / 100) * 100)
 }
 
-// Le prix de la prochaine embauche (null si l'équipe est complète). Il dépend du nombre de
-// mineurs qu'on a, plus ceux licenciés pendant ce prestige (ils comptent encore).
+// Le prix de la prochaine embauche (null si l'équipe est complète). Il dépend seulement du
+// nombre de mineurs qu'on a en ce moment.
 export function prixEmbauche(etat: EtatJeu): number | null {
   if (etat.employes.length >= maxEmployes(etat)) return null
-  return arrondiPrix(prixDeBase(etat.employes.length + etat.licenciements) * multiplicateurPrixEmbauche(etat))
+  return arrondiPrix(prixDeBase(etat.employes.length) * multiplicateurPrixEmbauche(etat))
 }
 
 // Les indemnités d'un licenciement : 40 % du prix de la dernière embauche de l'équipe
@@ -422,7 +422,6 @@ export function licencier(etat: EtatJeu, index: number): string[] {
   if (!aLaSurface(etat) || !employe || etat.argent < prix) return []
   etat.argent -= prix
   etat.employes.splice(index, 1)
-  etat.licenciements += 1 // la prochaine embauche coûte comme s'il était encore là
   return [`👋 ${employe.nom} est parti(e). Indemnités : ${prix.toLocaleString('fr-FR')} $.`]
 }
 

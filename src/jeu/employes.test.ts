@@ -82,24 +82,17 @@ describe('mineurs employés', () => {
     expect(prixEmbauche(partie(6))).toBe(PRIX_EMBAUCHE[0])
   })
 
-  it('un mineur licencié compte encore dans le prix jusqu’au prochain prestige', () => {
+  it('licencier puis réembaucher coûte toujours le même prix (seuls les mineurs actifs comptent)', () => {
     const etat = partie(4)
     embaucher(etat, hasard())
     embaucher(etat, hasard())
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[2])
-    etat.argent = 1e9 // de quoi réembaucher plusieurs fois
-    licencier(etat, 1)
-    // Une place de libre, mais pas au prix de la 2e embauche : licencier pour réembaucher coûte de plus en plus.
-    expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[2])
-    for (let i = 0; i < 8; i++) {
-      embaucher(etat, hasard())
+    for (let i = 0; i < 5; i++) {
       licencier(etat, 1)
+      expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[1])
+      embaucher(etat, hasard())
     }
-    expect(prixEmbauche(etat)).toBe(Math.round((PRIX_EMBAUCHE[6] * 1.6 ** 4) / 100) * 100)
-    // Au prestige, le compteur repart de 0.
-    const suite = prestige(etat, aleatoireAvecGraine(1))
-    expect(suite.licenciements).toBe(0)
-    expect(prixEmbauche(suite)).toBe(PRIX_EMBAUCHE[1])
+    expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[2])
   })
 
   it('creusent, remontent vendre et te donnent tout l’argent de leurs ventes', () => {

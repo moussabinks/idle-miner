@@ -192,7 +192,6 @@ export type EtatJeu = {
   talents: IdTalent[] // l'arbre de prestige (gardé à chaque prestige)
   employes: Employe[] // les mineurs employés (gardés à chaque prestige)
   recruteur: number // le niveau du recruteur (0 = pas embauché ; gardé à chaque prestige)
-  licenciements: number // les mineurs licenciés pendant ce prestige (ils comptent encore dans le prix d'une embauche)
   manager: Manager // gardé à chaque prestige
   tresorerie: number // l'argent mis de côté pour les salaires (vidé au prestige, comme l'argent)
   decouvertes: Decouverte[] // les stands débloqués que le joueur a déjà visités (voir decouvertes.ts)
@@ -321,7 +320,6 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     talents: [...talents],
     employes: structuredClone(employes),
     recruteur,
-    licenciements: 0, // remis à zéro à chaque prestige
     manager: { ...manager },
     tresorerie: 0,
     decouvertes: [...decouvertes],

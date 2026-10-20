@@ -331,9 +331,9 @@ export const BLOCS_PAR_METRE_EMPLOYE = 5
 export const PRESTIGE_EMPLOYES = 2
 // On peut en employer 2 au prestige 2, puis 1 de plus à chaque prestige, jusqu'à 6.
 export const MAX_EMPLOYES = 6
-// Le prix d'embauche du 1er, 2e, 3e... mineur (décidé le 20/10 : il dépend du nombre de
-// mineurs, plus du prestige). Les mineurs licenciés pendant ce prestige comptent encore : on
-// ne peut pas licencier et réembaucher au même prix pour n'avoir que des mythiques.
+// Le prix d'embauche du 1er, 2e, 3e... mineur (décidé le 20/10 : il dépend seulement du nombre
+// de mineurs qu'on a en ce moment, pas du prestige ni de ceux qu'on a licenciés : licencier puis
+// réembaucher coûte toujours le même prix, plus les indemnités).
 // Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente : voir prixEmbauche().
 export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
 export const HAUSSE_APRES_LISTE = 1.6
