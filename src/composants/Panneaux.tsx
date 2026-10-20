@@ -69,6 +69,7 @@ import {
   peutReparer,
   placeLibre,
   prixProchainSac,
+  sacBloqueAuPrestige,
   quantite,
   reparer,
   valeurDe,
@@ -251,8 +252,10 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
           actuel={`${SACS[etat.niveauSac].taille} places`}
           niveau={etat.niveauSac + 1}
           niveauMax={SACS.length}
+          niveauPermis={niveauMaxAuPrestige('sac', etat.prestige) + 1}
           suivant={prochainSac && prixSac !== null ? { cout: { argent: prixSac, materiaux: {} }, texte: `⬆ ${prochainSac.taille} places` } : null}
-          possible={prixSac !== null && etat.argent >= prixSac && aLaSurface(etat)}
+          bloqueAuPrestige={sacBloqueAuPrestige(etat)}
+          possible={prixSac !== null && sacBloqueAuPrestige(etat) === null && etat.argent >= prixSac && aLaSurface(etat)}
           onAmeliorer={() => jouer(acheterSac)}
           genre="acheter"
         />

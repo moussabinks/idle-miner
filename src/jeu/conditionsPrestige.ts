@@ -2,11 +2,12 @@
 // avoir amélioré au maximum tout ce que le prestige actuel permet (ascenseur, enchantements,
 // foreuse, équipement des mineurs, recruteur). Sinon, on pourrait enchaîner les prestiges
 // sans jamais rien améliorer.
-// Le sac et les pioches ne comptent pas : ils ne sont pas limités par le prestige (et il faut
-// de toute façon la pioche en netherite pour atteindre la bedrock).
+// Le sac à dos compte aussi (plafonné par le prestige depuis le 20/10). Les pioches ne comptent
+// pas : elles ne sont pas limitées par le prestige (et il faut de toute façon la pioche en
+// netherite pour atteindre la bedrock).
 // Le panneau de l'entrée de la mine montre cette liste, avec une jauge.
 
-import { ENCHANTEMENTS, LISTE_ENCHANTEMENTS, NIVEAUX_EMPLOYE, niveauMaxAuPrestige, profondeurBedrock } from './donnees'
+import { ENCHANTEMENTS, LISTE_ENCHANTEMENTS, NIVEAUX_EMPLOYE, SACS, niveauMaxAuPrestige, profondeurBedrock } from './donnees'
 import { recruteurDebloque } from './employes'
 import { foreuseDebloquee } from './foreuse'
 import { chiffreRomain, type EtatJeu } from './mineur'
@@ -35,6 +36,10 @@ export function conditionsPrestige(etat: EtatJeu): ConditionPrestige[] {
 
   const ascenseur = niveauMaxAuPrestige('ascenseur', p)
   liste.push(condition('ascenseur', `🛗 Ascenseur au niveau ${ascenseur}`, etat.ascenseur.niveau, ascenseur))
+
+  // Le sac à dos (plafonné par le prestige depuis le 20/10).
+  const sac = niveauMaxAuPrestige('sac', p)
+  liste.push(condition('sac', `🎒 Sac de ${SACS[sac].taille} places`, etat.niveauSac + 1, sac + 1))
 
   for (const id of LISTE_ENCHANTEMENTS) {
     const max = niveauMaxAuPrestige(id, p)

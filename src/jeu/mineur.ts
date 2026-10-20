@@ -1235,9 +1235,16 @@ export function prixProchainSac(etat: EtatJeu): number | null {
   return prochain ? prochain.prix : null
 }
 
+// Le prochain sac est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
+export function sacBloqueAuPrestige(etat: EtatJeu): number | null {
+  const prochain = etat.niveauSac + 1
+  if (prixProchainSac(etat) === null || prochain <= niveauMaxAuPrestige('sac', etat.prestige)) return null
+  return prestigePourNiveau('sac', prochain)
+}
+
 export function acheterSac(etat: EtatJeu): string[] {
   const prix = prixProchainSac(etat)
-  if (!aLaSurface(etat) || prix === null || etat.argent < prix) return []
+  if (!aLaSurface(etat) || prix === null || sacBloqueAuPrestige(etat) !== null || etat.argent < prix) return []
   etat.argent -= prix
   etat.niveauSac += 1
   return [`🎒 Nouveau sac : ${tailleSac(etat)} places !`]

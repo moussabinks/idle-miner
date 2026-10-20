@@ -5,6 +5,7 @@ import {
   argentGagneTotal,
   acheterPioche,
   acheterSac,
+  sacBloqueAuPrestige,
   tailleSac,
   prixProchainSac,
   apercuVente,
@@ -644,12 +645,19 @@ describe('boutique et enchantements', () => {
     expect(etat.argent).toBe(0)
   })
 
-  it('peut agrandir le sac jusqu’à 2 048 places', () => {
+  it('agrandit le sac selon le prestige : 256 places au prestige 0, puis un sac de plus par prestige', () => {
     const etat = partieALaSurface()
     etat.argent = 1_000_000
-    while (prixProchainSac(etat) !== null) acheterSac(etat)
+    while (acheterSac(etat).length > 0);
+    expect(tailleSac(etat)).toBe(256)
+    expect(sacBloqueAuPrestige(etat)).toBe(1)
+    etat.prestige = 1
+    while (acheterSac(etat).length > 0);
+    expect(tailleSac(etat)).toBe(512)
+    etat.prestige = 3
+    while (acheterSac(etat).length > 0);
     expect(tailleSac(etat)).toBe(2048)
-    expect(acheterSac(etat)).toEqual([])
+    expect(prixProchainSac(etat)).toBeNull()
   })
 
   it('enchante avec de l’argent (× niveau²), des lapis et des émeraudes (× niveau)', () => {
