@@ -27,6 +27,7 @@ import {
   employeBloqueAuPrestige,
   indemnites,
   licencier,
+  manquePourUnePaie,
   maxEmployes,
   nbDansSacEmploye,
   payerSalaires,
@@ -396,6 +397,25 @@ describe('manager et trésorerie', () => {
     avancerTemps(etat, 5, aleatoireAvecGraine(3))
     expect(etat.manager.tempsPaye).toBeGreaterThan(0)
     expect(etat.employes[0].etape).not.toBe('attend')
+  })
+
+  it('sans assez pour tout le monde, le manager paie le plus de mineurs possible', () => {
+    const etat = partie(5)
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    const [cher, pasCher] = etat.employes
+    cher.niveau = 4
+    cher.rarete = 'mythique'
+    embaucherManager(etat)
+    for (const e of etat.employes) e.tempsPaye = 0
+    // Assez pour le manager et le moins cher, pas pour le mythique.
+    expect(manquePourUnePaie(etat)).toBe(SALAIRE_MANAGER + salaireEmploye(etat, cher) + salaireEmploye(etat, pasCher))
+    etat.manager.tempsPaye = 0
+    deposerTresorerie(etat, SALAIRE_MANAGER + salaireEmploye(etat, pasCher))
+    avancerTemps(etat, 1, aleatoireAvecGraine(3))
+    expect(pasCher.tempsPaye).toBeGreaterThan(0)
+    expect(cher.tempsPaye).toBe(0)
+    expect(manquePourUnePaie(etat)).toBeGreaterThan(0)
   })
 
   it('on peut reprendre l’argent de la trésorerie', () => {

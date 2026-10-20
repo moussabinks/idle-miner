@@ -1,7 +1,8 @@
 // L'arbre de prestige : à chaque prestige, on gagne 1 point à dépenser dans un
 // talent. Il y a cinq branches de 4 talents (mineur, marchand, ingénieur, patron et
 // recrutement) ; il faut le talent du dessus pour prendre celui du dessous.
-// La branche « Recrutement » ne s'ouvre qu'une fois le recruteur embauché (prestige 4).
+// La branche « Patron » s'ouvre avec les mineurs employés (prestige 2), la branche
+// « Recrutement » une fois le recruteur embauché (prestige 4).
 // Les talents sont gardés pour toujours (ils survivent aux prestiges suivants).
 //
 // Arbre refait le 20/10 : plus de cadeaux de début de partie (pioche offerte, pécule...),
@@ -10,6 +11,7 @@
 // Ce fichier n'importe que le *type* EtatJeu depuis mineur.ts : mineur.ts peut donc
 // lui-même utiliser aLeTalent() sans créer de boucle entre les deux fichiers.
 
+import { PRESTIGE_EMPLOYES } from './donnees'
 import type { EtatJeu } from './mineur'
 
 export type IdTalent =
@@ -103,9 +105,12 @@ export function pointsDisponibles(etat: EtatJeu): number {
   return Math.max(0, etat.prestige - etat.talents.length)
 }
 
-// La branche « Recrutement » attend que le recruteur soit embauché.
+// La branche « Patron » attend les mineurs employés (prestige 2), et la branche
+// « Recrutement » attend que le recruteur soit embauché.
 export function brancheOuverte(etat: EtatJeu, branche: IdBranche): boolean {
-  return branche !== 'recrutement' || etat.recruteur > 0
+  if (branche === 'patron') return etat.prestige >= PRESTIGE_EMPLOYES
+  if (branche === 'recrutement') return etat.recruteur > 0
+  return true
 }
 
 // Le talent juste au-dessus dans la même branche (null pour le premier).

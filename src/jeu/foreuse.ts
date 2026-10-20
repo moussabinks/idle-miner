@@ -40,6 +40,12 @@ export function capaciteChariot(etat: EtatJeu): number {
   return NIVEAUX_CHARIOT[etat.foreuse.niveauChariot].capacite * multiplicateurChariot(etat)
 }
 
+// Combien de temps (en secondes) la foreuse met pour remplir un chariot vide de cette taille
+// (« niveauChariot » : par défaut, celui qu'on a). Pour voir si chariot et forage vont bien ensemble.
+export function secondesPourRemplir(etat: EtatJeu, niveauChariot = etat.foreuse.niveauChariot): number {
+  return (NIVEAUX_CHARIOT[niveauChariot].capacite * multiplicateurChariot(etat)) / vitesseForage(etat)
+}
+
 // Combien de secondes la foreuse tourne encore avec le charbon chargé.
 export function secondesDeCharbon(etat: EtatJeu): number {
   return etat.foreuse.carburant

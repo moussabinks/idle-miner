@@ -299,15 +299,19 @@ export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
 ]
 
 // Taille du chariot (en objets) et coût de chaque niveau.
+// Revu le 20/10 : à niveaux égaux, la foreuse remplit toujours son chariot en environ 8 minutes
+// (capacité ≈ vitesse de forage du même niveau × 480 s). Améliorer seulement la foreuse remplit
+// le chariot plus vite (elle s'arrête plus tôt) ; améliorer seulement le chariot ne sert à rien
+// si la foreuse ne suit pas : on améliore les deux ensemble.
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
-  { capacite: 200, cout: { materiaux: {} } },
-  { capacite: 500, cout: { argent: 1500, materiaux: { fer: 10 } } },
-  { capacite: 1000, cout: { argent: 4000, materiaux: { fer: 25, redstone: 10 } } },
-  { capacite: 2500, cout: { argent: 9000, materiaux: { fer: 45, redstone: 25 } } },
-  { capacite: 5000, cout: { argent: 18000, materiaux: { fer: 70, redstone: 45 } } },
+  { capacite: 1000, cout: { materiaux: {} } },
+  { capacite: 1500, cout: { argent: 1500, materiaux: { fer: 10 } } },
+  { capacite: 2500, cout: { argent: 4000, materiaux: { fer: 25, redstone: 10 } } },
+  { capacite: 4000, cout: { argent: 9000, materiaux: { fer: 45, redstone: 25 } } },
+  { capacite: 6000, cout: { argent: 18000, materiaux: { fer: 70, redstone: 45 } } },
   { capacite: 8000, cout: { argent: 28000, materiaux: { fer: 100, redstone: 70 } } },
-  { capacite: 12000, cout: { argent: 45000, materiaux: { fer: 140, redstone: 100 } } },
-  { capacite: 20000, cout: { argent: 70000, materiaux: { fer: 200, redstone: 150 } } },
+  { capacite: 10500, cout: { argent: 45000, materiaux: { fer: 140, redstone: 100 } } },
+  { capacite: 15000, cout: { argent: 70000, materiaux: { fer: 200, redstone: 150 } } },
 ]
 
 // La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
@@ -335,9 +339,10 @@ export const PART_INDEMNITES = 0.4
 // et il passe SECONDES_VENTE_EMPLOYE au marché pour vendre sa récolte.
 export const DUREE_MIN_TRAJET_EMPLOYE = 5
 export const SECONDES_VENTE_EMPLOYE = 4
+// Les prénoms des mineurs (choisis le 20/10), tirés au hasard à l'embauche.
 export const NOMS_EMPLOYES = [
-  'Léo', 'Inès', 'Hugo', 'Jade', 'Malo', 'Lina', 'Noé', 'Zoé', 'Tom', 'Chloé', 'Sacha', 'Mila', 'Nino', 'Rose',
-  'Yanis', 'Lou', 'Axel', 'Nina', 'Timéo', 'Alba', 'Enzo', 'Iris', 'Marius', 'Luna', 'Gaspard', 'Elsa', 'Basile', 'Maya',
+  'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
+  'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
 ]
 
 // --- Les salaires (décidé le 20/10) ---

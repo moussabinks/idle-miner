@@ -50,6 +50,13 @@ describe('arbre de prestige', () => {
     expect(etat.talents).toEqual([])
   })
 
+  it('la branche Patron s’ouvre avec les mineurs (prestige 2)', () => {
+    expect(brancheOuverte(partie(1), 'patron')).toBe(false)
+    expect(peutChoisirTalent(partie(1), 'contremaitre')).toBe(false)
+    expect(brancheOuverte(partie(2), 'patron')).toBe(true)
+    expect(peutChoisirTalent(partie(2), 'contremaitre')).toBe(true)
+  })
+
   it('la branche Recrutement s’ouvre avec le recruteur', () => {
     const etat = partie(4)
     expect(brancheOuverte(etat, 'recrutement')).toBe(false)
