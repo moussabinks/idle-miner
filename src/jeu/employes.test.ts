@@ -149,16 +149,20 @@ describe('mineurs employés', () => {
     expect(mineur.sac).toEqual({})
   })
 
-  it('ont un meilleur équipement petit à petit : un niveau de plus par prestige', () => {
+  it('ont un meilleur équipement petit à petit : Pierre au prestige 2, Diamant au 3, Netherite au 4', () => {
     const etat = partie(2)
     embaucher(etat, hasard())
     ameliorerEmploye(etat, 0)
-    expect(etat.employes[0].niveau).toBe(0) // pioche en bois au prestige 2
+    ameliorerEmploye(etat, 0)
+    expect(etat.employes[0].niveau).toBe(1) // Pierre au prestige 2, pas plus
     expect(employeBloqueAuPrestige(etat, etat.employes[0])).toBe(3)
     etat.prestige = 3
+    for (let i = 0; i < 3; i++) ameliorerEmploye(etat, 0)
+    expect(etat.employes[0].niveau).toBe(3) // Fer puis Diamant au prestige 3
+    expect(employeBloqueAuPrestige(etat, etat.employes[0])).toBe(4)
+    etat.prestige = 4
     ameliorerEmploye(etat, 0)
-    ameliorerEmploye(etat, 0)
-    expect(etat.employes[0].niveau).toBe(1) // Pierre au prestige 3, pas plus
+    expect(etat.employes[0].niveau).toBe(4) // Netherite
   })
 
   it('ont un plus grand sac à chaque amélioration', () => {

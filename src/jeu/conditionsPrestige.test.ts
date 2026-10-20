@@ -71,7 +71,7 @@ describe('conditions pour passer prestige', () => {
     expect(peutPasserPrestige(etat)).toBe(true) // aucun mineur : rien à équiper
     embaucher(etat, aleatoireAvecGraine(2))
     expect(peutPasserPrestige(etat)).toBe(false)
-    etat.employes[0].niveau = 3 // pioche en diamant au prestige 4
+    etat.employes[0].niveau = 4 // pioche en netherite au prestige 4
     expect(peutPasserPrestige(etat)).toBe(true)
   })
 })
