@@ -563,7 +563,7 @@ Ce qu'il faut acheter **pendant** le prestige P pour remplir ses conditions (les
 | Allers-retours au village | 12 | — | 30 |
 | Argent restant à la bedrock | 4 650 $ | — | 75 494 $ |
 
-(La médiane de `bot.test.ts` est l'élément d'indice 10 de la liste triée.) La médiane des blocs est proche du haut de la cible (3 000) : un changement qui rallonge la partie peut faire échouer le test. Les chiffres plus anciens de `CONTEXTE.md` (environ 2 000 blocs et 15 min) datent d'avant les derniers réglages.
+(La médiane de `bot.test.ts` est l'élément d'indice 10 de la liste triée.) La médiane des blocs est proche du haut de la cible (3 000) : un changement qui rallonge la partie peut faire échouer le test.
 
 Le bot ne joue que le **prestige 0** : il n'y a pas de bot pour les prestiges suivants, la foreuse ni les mineurs (ceux-ci ont leurs propres tests d'équilibrage dans `employes.test.ts` et `revenu.test.ts`).
 

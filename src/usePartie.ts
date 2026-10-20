@@ -229,6 +229,22 @@ export function usePartie(idMonde: string) {
   // Le bloc sur lequel travaille chaque mineur, et depuis combien de temps.
   const travailJoueur = useRef<Travail>({ cle: '', temps: 0, reste: 0 })
 
+  // Le message « Sac plein » : ce qu'il faut faire pour continuer de creuser.
+  const prevenirSacPlein = useCallback(
+    (etatPlein: EtatJeu) =>
+      afficherToasts([
+        {
+          id: prochainId++,
+          texte:
+            etatPlein.ascenseur.niveau > 0
+              ? '🎒 Sac plein ! Envoie tes objets à la surface avec l’ascenseur (panneau Sac).'
+              : '🎒 Sac plein ! Remonte vendre au marché (bouton Village).',
+          succes: false,
+        },
+      ]),
+    [afficherToasts],
+  )
+
   // Après chaque bloc cassé : on compte, et on gère le sac plein.
   // Avec l'ascenseur, on ne s'arrête pas : les blocs en trop attendent sur son quai.
   const apresUnBloc = useCallback(
@@ -238,23 +254,14 @@ export function usePartie(idMonde: string) {
         changerBlocsRestants(0)
       } else if (!peutStocker(apres)) {
         changerBlocsRestants(0)
-        afficherToasts([
-          {
-            id: prochainId++,
-            texte:
-              apres.ascenseur.niveau > 0
-                ? '🎒 Sac plein ! Envoie tes objets à la surface avec l’ascenseur (panneau Sac).'
-                : '🎒 Sac plein ! Remonte vendre au marché (bouton Village).',
-            succes: false,
-          },
-        ])
+        prevenirSacPlein(apres)
       } else if (blocsRestantsRef.current === Infinity && estCassee(apres)) {
         // Creusage automatique : on s'arrête quand la pioche casse (pas de minage à mains nues sans le joueur).
         changerBlocsRestants(0)
         afficherToasts([{ id: prochainId++, texte: '💥 Pioche cassée : creusage automatique arrêté.', succes: false }])
       } else changerBlocsRestants(blocsRestantsRef.current - 1)
     },
-    [changerBlocsRestants, afficherToasts],
+    [changerBlocsRestants, afficherToasts, prevenirSacPlein],
   )
 
   // Un « tic » de l'horloge : le temps passe pour tout le monde.
@@ -326,14 +333,19 @@ export function usePartie(idMonde: string) {
   // Creuse des couches entières : on finit la couche en cours, puis les suivantes.
   const creuser = useCallback(
     (nbCouches: number) => {
+      // Sac plein : on ne commence pas (le bloc cassé serait perdu).
+      if (!peutStocker(etatRef.current)) return prevenirSacPlein(etatRef.current)
       const restantsCouche = etatRef.current.coucheActuelle.filter((b) => b !== null).length
       changerBlocsRestants(restantsCouche + (nbCouches - 1) * LARGEUR_MINE)
     },
-    [changerBlocsRestants],
+    [changerBlocsRestants, prevenirSacPlein],
   )
 
   // Creuse sans s'arrêter, jusqu'à ce qu'on clique sur « Arrêt » (ou que la pioche casse).
-  const creuserAuto = useCallback(() => changerBlocsRestants(Infinity), [changerBlocsRestants])
+  const creuserAuto = useCallback(() => {
+    if (!peutStocker(etatRef.current)) return prevenirSacPlein(etatRef.current)
+    changerBlocsRestants(Infinity)
+  }, [changerBlocsRestants, prevenirSacPlein])
 
   const arreter = useCallback(() => changerBlocsRestants(0), [changerBlocsRestants])
 

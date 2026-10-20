@@ -22,7 +22,7 @@ Les pioches plus loin que la suivante sont grisées : « 🔒 Pioche en X — D�
 | Bouton | Quand il apparaît | Ce qu'il fait |
 |---|---|---|
 | **🔓 Débloquer** | la pioche juste après la meilleure qu'on a | Paie le prix (argent + minerais), donne la pioche neuve et l'équipe. « ⛏️ Nouvelle pioche en X débloquée ! » |
-| **🛒 Racheter neuve** | chaque pioche déjà débloquée | Paie le prix, remet la pioche à neuf (usure 0) et l'équipe. « ⛏️ Pioche en X neuve achetée. » |
+| **🛒 Racheter neuve** | chaque pioche déjà débloquée | Paie le prix (argent + minerais de la pioche), remet la pioche à neuf (usure 0) et l'équipe. « ⛏️ Pioche en X neuve achetée. » |
 | **🔧 Réparer** | une pioche qu'on possède et qui est usée | Paie la réparation et remet la pioche à neuf. « 🔧 Pioche en X réparée (N $ et 3 Y). » Elle n'est pas équipée pour autant. |
 | **Équiper** | une pioche qu'on possède mais qu'on ne tient pas | La prend en main (gratuit). « Tu as équipé la pioche en X. » |
 
@@ -109,7 +109,7 @@ Exemples au prestige 0, sans enchantement ni talent :
 - **Au village seulement** : débloquer, racheter et réparer demandent d'être au village et immobile (`aLaSurface`). Dans la mine, le même panneau s'ouvre dans l'onglet **🧰 Pioches**, avec le message « ⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface. » : on peut seulement y **équiper** une autre pioche qu'on possède.
 - **On n'est jamais bloqué** : une pioche cassée mine encore, à mains nues. Et la profondeur max dépend de la pioche **équipée**, même cassée : on continue de descendre aussi bas qu'elle le permet. Quand la couche suivante est trop profonde pour la pioche, on creuse une **galerie horizontale** à la place, avec le message « 🧱 Couche trop dure ! Il te faut une pioche en X pour descendre plus bas : achète-la au forgeron (village). » (ou « Équipe ta pioche en X (onglet Pioches) » si on l'a déjà).
 - **Un seul déblocage à la fois** : on ne peut acheter que les pioches déjà débloquées et la suivante (`niveau ≤ meilleure + 1`).
-- **Racheter neuve demande aussi les minerais** : la logique (`peutAcheterPioche`, `acheterPioche`) exige et consomme les minerais de la pioche à chaque achat, même pour un rachat (3 diamants pour la pioche en diamant, 4 débris + 4 or pour la netherite). Mais le prix affiché à côté de « 🛒 Racheter neuve » ne montre **que l'argent**. Le bouton reste grisé tant qu'il manque ces minerais, sans que l'écran dise lesquels.
+- **Racheter neuve demande aussi les minerais** : comme pour la débloquer, il faut l'argent et les minerais de la pioche (3 diamants pour la pioche en diamant, 4 débris + 4 or pour la netherite). Le prix affiché à côté du bouton les montre (`coutPioche` dans `mineur.ts`, corrigé le 20/10 : avant, seul l'argent était affiché).
 - **Racheter ou réparer** : réparer coûte au plus la moitié du prix (+ 3 minerais), racheter coûte toujours le prix entier. Le bouton « Racheter neuve » reste affiché même pour une pioche intacte.
 - **Réparer n'équipe pas** la pioche (racheter, si).
 - **Pas de plafond par prestige** : les pioches n'ont pas d'entrée dans `PLAFONDS`.

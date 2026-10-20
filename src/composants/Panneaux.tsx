@@ -64,6 +64,7 @@ import {
   enchanter,
   enchantementBloqueAuPrestige,
   equiper,
+  coutPioche,
   peutAcheterPioche,
   peutEnchanter,
   peutReparer,
@@ -219,11 +220,11 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
                 genre="reparer"
               />
             )}
-            {/* Débloquer (avec les minerais demandés) ou racheter neuve : le prix à gauche, comme partout. */}
+            {/* Débloquer ou racheter neuve (les deux demandent l'argent et les minerais) : le prix à gauche, comme partout. */}
             {enVille && (
               <Achat
                 etat={etat}
-                cout={{ argent: pioche.prix, materiaux: prochaine ? pioche.materiaux : {} }}
+                cout={coutPioche(pioche.niveau)}
                 texte={prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'}
                 possible={peutAcheterPioche(etat, pioche.niveau)}
                 onAcheter={() => jouer((e) => acheterPioche(e, pioche.niveau))}

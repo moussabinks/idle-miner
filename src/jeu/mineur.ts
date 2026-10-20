@@ -580,6 +580,8 @@ export function casserBloc(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
   const index = indexBlocActuel(etat)
   if (!auFond(etat) || index === -1 || etat.depart !== null) return messages
+  // Sac (et quai de l'ascenseur) plein : on ne casse pas le bloc, sinon ce qu'il contient serait perdu.
+  if (!peutStocker(etat)) return messages
   const bloc = etat.coucheActuelle[index] as IdBloc
   etat.colonneMineur = index // le mineur se place au-dessus du bloc
 
@@ -1204,18 +1206,23 @@ export function reparer(etat: EtatJeu, niveau = etat.niveauPioche): string[] {
 // ---------------------------------------------------------------------------
 
 // On peut acheter (ou racheter neuve) toute pioche déjà débloquée, et débloquer la suivante.
+// Le prix d'une pioche, pour la débloquer comme pour la racheter neuve : de l'argent et ses minerais.
+export function coutPioche(niveau: number): Cout {
+  const pioche = PIOCHES[niveau]
+  return { argent: pioche.prix, materiaux: pioche.materiaux }
+}
+
 export function peutAcheterPioche(etat: EtatJeu, niveau: number): boolean {
   const pioche = PIOCHES[niveau]
   if (!pioche || niveau > etat.meilleure + 1) return false
-  return etat.argent >= pioche.prix && possede(etat, pioche.materiaux)
+  return peutPayer(etat, coutPioche(niveau))
 }
 
 export function acheterPioche(etat: EtatJeu, niveau: number): string[] {
   if (!aLaSurface(etat) || !peutAcheterPioche(etat, niveau)) return []
   const pioche = PIOCHES[niveau]
   const nouvelle = niveau > etat.meilleure
-  etat.argent -= pioche.prix
-  payerMateriaux(etat, pioche.materiaux)
+  payer(etat, coutPioche(niveau))
   etat.pioches[niveau] = 0
   etat.niveauPioche = niveau
   etat.meilleure = Math.max(etat.meilleure, niveau)
