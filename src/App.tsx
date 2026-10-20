@@ -11,6 +11,7 @@ import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { CartePrestige } from './composants/CartePrestige'
+import { ProchainObjectif } from './composants/ProchainObjectif'
 import { FetePrestige } from './composants/FetePrestige'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
@@ -26,7 +27,7 @@ import {
   PanneauPioches,
   PanneauSucces,
 } from './composants/Panneaux'
-import { STANDS, X_PUITS, standProche } from './composants/stands'
+import { STANDS, X_PUITS, standProche, type IdStand } from './composants/stands'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
 import { VueMonde } from './composants/VueMonde'
@@ -45,6 +46,7 @@ import {
 } from './jeu/mineur'
 import { peutPasserPrestige } from './jeu/conditionsPrestige'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
+import { marquerStandVu, standsAvecNouveauxNiveaux } from './jeu/objectifs'
 import { profondeurBedrock } from './jeu/donnees'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
@@ -88,6 +90,12 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     if (cleDecouvertes) jouer((e) => marquerDecouvert(e, decouvertesAMontrer(e).filter((id) => cleDecouvertes.split(',').includes(id))))
   }, [cleDecouvertes, jouer])
 
+  // Pareil pour le badge « Nouveaux niveaux » d'après un prestige : il disparaît quand on passe devant le stand.
+  const standAvecNiveaux = stand && standsAvecNouveauxNiveaux(etat).includes(stand.id) ? stand.id : null
+  useEffect(() => {
+    if (standAvecNiveaux) jouer((e) => marquerStandVu(e, standAvecNiveaux))
+  }, [standAvecNiveaux, jouer])
+
   // L'écran de victoire s'affiche une seule fois, au moment où l'on atteint la bedrock.
   const [victoireAffichee, setVictoireAffichee] = useState(false)
   const [avaitGagne, setAvaitGagne] = useState(etat.victoire)
@@ -121,6 +129,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   function allerALaMine() {
     if (enVille) village.allerVers(X_PUITS, () => jouer((e) => voyager(e, positionFront(e))))
     else jouer((e) => voyager(e, positionFront(e)))
+  }
+
+  // Le clic sur le prochain objectif : au village, on marche jusqu'au stand ; dans la mine, on remonte.
+  function allerAuStand(id: IdStand) {
+    const cible = STANDS.find((s) => s.id === id)
+    if (!cible) return
+    if (enVille) village.allerVers(cible.x)
+    else allerAuVillage()
   }
 
   function deplacerAuFront(sens: number) {
@@ -308,6 +324,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </button>
       </header>
       <Hud etat={etat} nbVentes={nbVentes} enMinage={enMinage} onOuvrirArbre={() => setArbreOuvert(true)} />
+      <ProchainObjectif etat={etat} onAllerAuStand={allerAuStand} />
 
       <main className="plateau">
         <div className="colonne-mine">

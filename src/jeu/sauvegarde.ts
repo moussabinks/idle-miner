@@ -481,6 +481,9 @@ function migrer(donnees: unknown): unknown {
   if (etat.version === 15) etat = { ...etat, version: 16 }
   delete etat.licenciements
 
+  // Version 16 -> 17 (20/10) : les stands visités depuis le dernier prestige (badge « Nouveaux niveaux »).
+  if (etat.version === 16) etat = { ...etat, version: 17, standsVus: [] }
+
   // Les torches ont été retirées du jeu (16/10) : on oublie les anciens champs.
   delete etat.torches
   delete etat.torchesPosees
@@ -514,6 +517,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.manager === 'object' &&
     typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
+    Array.isArray(etat.standsVus) &&
     typeof etat.statsTotales === 'object' &&
     typeof etat.argentGagneAvant === 'number'
   )

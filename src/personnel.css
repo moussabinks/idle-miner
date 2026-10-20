@@ -752,3 +752,111 @@
     animation: none;
   }
 }
+
+/* =========================================================================
+   Guider le joueur (20/10) : prochain objectif, « Achetable ! », « Nouveaux niveaux ! »
+   ========================================================================= */
+
+/* La barre « prochain objectif » : une seule ligne fine sous le bandeau, avec une jauge de 3 px. */
+.objectif {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  margin: -8px 0 10px;
+  padding: 4px 12px 5px;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  background: rgb(35 35 43 / 0.7);
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.objectif:disabled {
+  cursor: default;
+}
+
+.objectif:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.objectif-texte {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.objectif-texte strong {
+  color: var(--texte);
+}
+
+.objectif-piste {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.08);
+  overflow: hidden;
+}
+
+.objectif-remplie {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c8861a, #f2b33d);
+  transition: width 0.4s ease;
+}
+
+/* Atteignable : la barre se fait voir (liseré vert qui pulse doucement). */
+.objectif-pret {
+  border-color: #4fb35a;
+  color: #b8f0bc;
+  animation: objectif-pret 1.6s ease-in-out infinite;
+}
+
+.objectif-pret .objectif-remplie {
+  background: linear-gradient(90deg, #4fb35a, #8ff09a);
+}
+
+@keyframes objectif-pret {
+  0%, 100% { box-shadow: 0 0 0 transparent; }
+  50% { box-shadow: 0 0 10px rgb(79 179 90 / 0.55); }
+}
+
+/* « Achetable ! » : une petite pastille verte accrochée en haut à droite du panneau du stand. */
+.pastille-achetable {
+  position: absolute;
+  top: -17px;
+  right: -24px;
+  z-index: 2;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: linear-gradient(#5fd06a, #2f7d38);
+  border: 1px solid #1d4d22;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 8px rgb(95 208 106 / 0.7);
+  pointer-events: none;
+}
+
+/* « Nouveaux niveaux ! » : le même badge que « Nouveau ! », en jaune. */
+.badge-niveaux {
+  background: #f2b33d;
+  color: #2a1a06;
+  box-shadow: 0 0 10px rgb(242 179 61 / 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .objectif-pret {
+    animation: none;
+  }
+}
+
+/* La flèche « Nouveaux niveaux » vole plus haut que les badges des stands, pour ne pas les cacher. */
+.fleche-niveaux {
+  top: 22%;
+}
