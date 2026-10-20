@@ -29,6 +29,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 
 - **Tout est en français** : UI, noms de variables et de fonctions, commentaires. Les mots-clés et API de TS/React restent en anglais.
 - Code lisible et commenté pour un public débutant, avec des noms explicites, sans astuces obscures.
+- **Téléphone et PWA** : le jeu doit rester jouable au pouce (barre de boutons collée en bas sur petit écran, rien qui déborde en largeur). Il s'installe comme une application et marche hors ligne : `public/manifest.webmanifest`, `public/sw.js` (service worker, seulement en production), `src/installation.ts`.
 - Visuel : blocs, animations et effets en CSS (gradients, keyframes) tant qu'on n'a pas décidé d'utiliser des sprites.
 - Sons : fabriqués avec Web Audio (pas de fichier audio, donc rien à créditer) : bruitages dans `src/sons.ts`, musique et ambiances (oiseaux et vent à la surface, grotte dans la mine) dans `src/ambiance.ts`. Les deux se coupent depuis le bandeau (🔊 et 🎵).
 - Boutons : une couleur par sorte d'action (creuser, vendre, acheter, améliorer, réparer, enchanter, prestige, ascenseur, se déplacer...), voir « Les couleurs des boutons » dans `src/index.css`.

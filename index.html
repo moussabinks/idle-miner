@@ -2,9 +2,20 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover : sur iPhone, le jeu va jusque sous l'encoche (on garde des marges avec env(safe-area-inset-*)). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Idle Miner</title>
+    <meta name="description" content="Idle game de minage inspiré de Minecraft : creuse, vends tes minerais et descends jusqu'à la bedrock." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Application installable (PWA) : le manifeste, la couleur de la barre du téléphone et les icônes. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#15151a" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Idle Miner" />
   </head>
   <body>
     <div id="root"></div>
