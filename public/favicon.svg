@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- L'icône d'Idle Miner : un bloc de terre avec du minerai, et une pioche dorée. -->
+  <!-- L'icône de Mega Digger : un bloc de terre avec du minerai, et une pioche dorée. -->
   <defs>
     <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#2e2e3c"/>

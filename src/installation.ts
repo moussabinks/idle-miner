@@ -69,7 +69,7 @@ export function useInstallation() {
 
   async function installer() {
     if (!invitation) return
-    await invitation.prompt() // la fenêtre du navigateur « Installer Idle Miner ? »
+    await invitation.prompt() // la fenêtre du navigateur « Installer Mega Digger ? »
     invitation = null // une invitation ne sert qu'une fois
     setMode(modeActuel())
   }

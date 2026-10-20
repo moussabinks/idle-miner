@@ -1,4 +1,4 @@
-// Le « service worker » d'Idle Miner : un petit programme que le navigateur garde à côté
+// Le « service worker » de Mega Digger : un petit programme que le navigateur garde à côté
 // du jeu. Il range les fichiers du jeu dans un cache, pour que le jeu s'ouvre vite et
 // marche même sans réseau (dans le métro, en avion...).
 //

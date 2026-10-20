@@ -34,7 +34,7 @@ export function CarteInstallation() {
     <section className="carte carte-installation">
       <img className="carte-installation-icone" src="/icones/icone-192.png" alt="" width={48} height={48} />
       <div className="carte-installation-texte">
-        <strong>📲 Installe Idle Miner</strong>
+        <strong>📲 Installe Mega Digger</strong>
         {mode === 'bouton' ? (
           <span className="discret">Une icône sur ton écran d'accueil, le jeu en plein écran, même sans réseau.</span>
         ) : (

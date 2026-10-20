@@ -1,4 +1,4 @@
-# Idle Miner — version web
+# Mega Digger — version web (ex-Idle Miner)
 
 Idle game de minage inspiré de Minecraft : on creuse, on vend, on achète de meilleures pioches pour descendre jusqu'à la bedrock. Depuis le 19/10, la mine est plus profonde à chaque prestige : -100 m au prestige 0, puis 50 m de plus par prestige (-150, -200, -250...), contre -64 m dans la v1.
 C'est le portage web du notebook Python décrit dans [docs/idle_miner_v1.md](docs/idle_miner_v1.md). **Cette spec est la référence pour les règles et l'équilibrage** (pioches, blocs, enchantements, prestige, succès).

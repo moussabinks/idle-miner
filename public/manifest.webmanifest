@@ -1,6 +1,6 @@
 {
-  "name": "Idle Miner",
-  "short_name": "Idle Miner",
+  "name": "Mega Digger",
+  "short_name": "Mega Digger",
   "description": "Creuse, vends tes minerais et descends jusqu'à la bedrock.",
   "lang": "fr",
   "start_url": "/",
