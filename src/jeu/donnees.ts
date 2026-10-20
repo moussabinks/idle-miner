@@ -228,7 +228,7 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 //   - enchantements (gardés au prestige depuis le 19/10) : Efficacité I au prestige 0, puis un
 //     niveau de plus par prestige (V au prestige 4) ; Fortune et Solidité, plus rares, un niveau
 //     tous les 2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4).
-export type IdPlafond = 'ascenseur' | 'forage' | 'chariot' | 'mineur' | 'recruteur' | IdEnchantement
+export type IdPlafond = 'ascenseur' | 'sac' | 'forage' | 'chariot' | 'mineur' | 'recruteur' | IdEnchantement
 
 type Plafond = {
   prestigeDeblocage: number
@@ -239,6 +239,9 @@ type Plafond = {
 
 export const PLAFONDS: Record<IdPlafond, Plafond> = {
   ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
+  // Le sac à dos (20/10) : jusqu'à 256 places au prestige 0, puis un sac de plus par prestige
+  // (2 048 places au prestige 3). Les niveaux sont comptés à partir de 0 (le sac de 32 places).
+  sac: { prestigeDeblocage: 0, niveauAuDeblocage: 3, niveauMax: 6 },
   forage: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
   chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 1, niveauMax: 7 },
   mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4 },

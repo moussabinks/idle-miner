@@ -15,12 +15,13 @@ function toutFaireAuPrestige0(etat: EtatJeu): void {
   etat.victoire = true
   etat.ascenseur.niveau = 2
   etat.enchantements = { efficacite: 1, fortune: 1, solidite: 1 }
+  etat.niveauSac = 3 // 256 places
 }
 
 describe('conditions pour passer prestige', () => {
-  it('au prestige 0 : la bedrock, l’ascenseur au niveau 2 et les enchantements au niveau I', () => {
+  it('au prestige 0 : la bedrock, l’ascenseur au niveau 2, le sac de 256 places et les enchantements au niveau I', () => {
     const etat = partie(0)
-    expect(conditionsPrestige(etat).map((c) => c.id)).toEqual(['bedrock', 'ascenseur', 'enchantement-efficacite', 'enchantement-fortune', 'enchantement-solidite'])
+    expect(conditionsPrestige(etat).map((c) => c.id)).toEqual(['bedrock', 'ascenseur', 'sac', 'enchantement-efficacite', 'enchantement-fortune', 'enchantement-solidite'])
     expect(peutPasserPrestige(etat)).toBe(false)
     toutFaireAuPrestige0(etat)
     expect(peutPasserPrestige(etat)).toBe(true)
@@ -39,6 +40,7 @@ describe('conditions pour passer prestige', () => {
     const etat = partie(1)
     toutFaireAuPrestige0(etat)
     etat.ascenseur.niveau = 3
+    etat.niveauSac = 4
     etat.enchantements.efficacite = 2 // un niveau de plus par prestige
     expect(peutPasserPrestige(etat)).toBe(false)
     etat.foreuse.active = true
@@ -52,6 +54,7 @@ describe('conditions pour passer prestige', () => {
     const etat = partie(4)
     toutFaireAuPrestige0(etat)
     etat.ascenseur.niveau = 6
+    etat.niveauSac = 6
     etat.enchantements = { efficacite: 5, fortune: 3, solidite: 3 }
     etat.foreuse = { ...etat.foreuse, active: true, niveauVitesse: 4, niveauChariot: 4 }
     expect(peutPasserPrestige(etat)).toBe(false) // pas de recruteur

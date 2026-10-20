@@ -11,6 +11,7 @@ import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
 import { CartePrestige } from './composants/CartePrestige'
+import { FetePrestige } from './composants/FetePrestige'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
 import { Icone } from './composants/Icone'
@@ -59,6 +60,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const { etat, toasts, gains, eclats, trouvailles, nbVentes, enMinage, enAuto, jouer, creuser, creuserAuto, arreter, recommencer, passerPrestige } =
     usePartie(monde.id)
   const [arbreOuvert, setArbreOuvert] = useState(false)
+  const [feteOuverte, setFeteOuverte] = useState(false)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
@@ -181,7 +183,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     passerPrestige()
     setVictoireAffichee(false)
     village.placer(X_PUITS)
-    setArbreOuvert(true)
+    // D'abord la fête (confettis !), puis l'arbre de prestige quand on clique sur « Choisir mon talent ».
+    setFeteOuverte(true)
   }
 
   // --- Le panneau de droite : le stand où l'on est, ou le sac dans la mine --
@@ -384,6 +387,15 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </div>
       )}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
+      {feteOuverte && (
+        <FetePrestige
+          etat={etat}
+          onContinuer={() => {
+            setFeteOuverte(false)
+            setArbreOuvert(true)
+          }}
+        />
+      )}
       {arbreOuvert && <ArbrePrestige etat={etat} jouer={jouer} onFermer={() => setArbreOuvert(false)} />}
       {victoireAffichee && <Victoire etat={etat} onPrestige={faireLePrestige} onFermer={() => setVictoireAffichee(false)} />}
     </div>
