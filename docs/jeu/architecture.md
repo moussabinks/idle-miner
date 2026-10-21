@@ -112,7 +112,7 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `Accueil.tsx` | Écran d'accueil : logo, petit village vivant, 4 cartes « comment jouer », cartes des 5 mondes (niveau de mine, argent, mineurs, blocs ; prévient quand une partie d'avant la v21 repart de zéro), compte, installation, classement, version |
 | `SceneAccueil.tsx` | Le décor de l'accueil : un village tout fait avec des hamsters qui vont et viennent et un wagonnet |
 | `CarteCompte.tsx` | Carte du compte |
-| `CarteClassement.tsx` | Classement (20 premiers), onglets « Prestige » (le niveau de la mine) / Argent |
+| `CarteClassement.tsx` | Classement (20 premiers), onglets Niveau de mine / Argent |
 | `CarteInstallation.tsx` | Carte « Installer l'application » |
 | `Hud.tsx` | Bandeau du haut : argent et $/s, niveau de la mine et coffre, pioche, sac, mineurs, ⚡, boutons 🔊 et 🎵 |
 | `ProchainObjectif.tsx` | Barre « prochain objectif » sous le bandeau |
@@ -140,7 +140,7 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `Statistiques.tsx` | Fenêtre des statistiques |
 | `Toasts.tsx` | Notifications |
 | `Confirmation.tsx` | Fenêtre de confirmation dans le style du jeu |
-| `Personnage.tsx`, `Icone.tsx` | Restes de l'ancienne version (le personnage de la vue en coupe, l'icône du stand Personnel) : plus importés nulle part |
+| `Personnage.tsx`, `Icone.tsx` | Restes de l'ancienne version (le personnage de la vue en coupe, des icônes et le dessin du stand Personnel) : plus importés nulle part |
 
 Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (le sac au fond de la mine, l'envoi par l'ascenseur). Archivés : `ArbrePrestige.tsx`, `CartePrestige.tsx`, `FetePrestige.tsx`, `Victoire.tsx` (`archives/prestige/`) et `PanneauEnchanter.tsx` (`archives/enchanteur/`).
 

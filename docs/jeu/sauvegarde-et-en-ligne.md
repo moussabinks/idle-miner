@@ -1,9 +1,9 @@
 # Sauvegarde, comptes en ligne et classement
 
 > Comment Mega Digger garde la progression du joueur : dans le navigateur (`localStorage`), et en option en ligne sur Supabase (compte, synchronisation, classement).
-> Rédigé d'après le code au 20/10. Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (types `Village`, `Convoi`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`.
+> Rédigé d'après le code au 22/10 (la mine automatique, version 21). Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (type `Village`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`.
 
-Principe général : **le `localStorage` est la sauvegarde principale.** Le jeu y écrit à chaque changement d'état et marche entièrement sans réseau. Le compte en ligne est facultatif : il recopie tous les mondes du navigateur sur Supabase pour les retrouver sur un autre appareil, et envoie le score au classement.
+Principe général : **le `localStorage` est la sauvegarde principale.** Le jeu y écrit au plus une fois par seconde (et en quittant la page) et marche entièrement sans réseau. Le compte en ligne est facultatif : il recopie tous les mondes du navigateur sur Supabase pour les retrouver sur un autre appareil, et envoie le score au classement.
 
 ---
 
@@ -55,114 +55,80 @@ Fonctions :
 | `supprimerMonde(stockage, id)` | Retire le monde de la liste et efface ses clés `idle-miner-monde-<id>` et `-horodatage` |
 | `marquerJoue(stockage, id)` | Met `joueLe` à maintenant (le monde remonte en tête de liste) |
 | `sauvegarder(stockage, id, etat)` | Écrit l'`EtatJeu` en JSON et l'horodatage |
-| `charger(stockage, id)` | Lit la partie, la met à jour si elle est en version 18 (`migrer`, 21/10), et vérifie qu'elle est **à la version actuelle (19)** et valide (1.5). Renvoie `null` si absente, illisible, invalide ou **d'une version d'avant la 18** (pas de migration avant le village vu du ciel) |
-| `partieAncienne(stockage, id)` | Vrai si le monde contient une partie lisible d'une version plus ancienne que la 18 (`PREMIERE_VERSION_VILLAGE`, avant le village vu du ciel) : l'accueil prévient qu'elle repart de zéro |
+| `charger(stockage, id)` | Lit la partie et vérifie qu'elle est **à la version actuelle (21)** et valide (1.5). Renvoie `null` si absente, illisible, invalide ou **d'une version plus ancienne** (pas de migration : les parties d'avant la mine automatique repartent de zéro) |
+| `partieAncienne(stockage, id)` | Vrai si le monde contient une partie lisible d'une version plus ancienne que la 21 (avant la mine automatique) : l'accueil prévient qu'elle repart de zéro |
 | `secondesDepuisSauvegarde(stockage, id)` | Secondes écoulées depuis l'horodatage (0 si inconnu) |
 
-Sur l'écran d'accueil, chaque carte de monde affiche (via `charger`) la profondeur (ou « Bedrock atteinte »), l'argent, le prestige, le nombre de blocs cassés et « Joué il y a ... ». Si `charger` renvoie `null`, la carte affiche « 🏡 Partie de l'ancienne version : elle repart de zéro dans le nouveau village vu du ciel. » quand `partieAncienne` est vrai, sinon « Partie illisible : elle recommencera à zéro. » Boutons : Jouer, Renommer, Dupliquer (grisé à 5 mondes), Supprimer (avec confirmation). Le gros bouton « ▶ Jouer » du haut reprend le monde joué le plus récemment (avec « · nouveau village » si sa partie ne se lit plus) ; s'il n'y a aucun monde, il devient « ⛏️ Commencer » et crée un premier monde.
+Sur l'écran d'accueil, chaque carte de monde affiche (via `charger`) le niveau de la mine, l'argent, le nombre de mineurs, le nombre de blocs cassés et « Joué il y a ... ». Si `charger` renvoie `null`, la carte affiche « 🏡 Partie de l'ancienne version : elle repart de zéro avec la nouvelle mine automatique. » quand `partieAncienne` est vrai, sinon « Partie illisible : elle recommencera à zéro. » Boutons : Jouer, Renommer, Dupliquer (grisé à 5 mondes), Supprimer (avec confirmation). Le gros bouton « ▶ Jouer » du haut reprend le monde joué le plus récemment (avec « · nouveau village » si sa partie ne se lit plus) ; s'il n'y a aucun monde, il devient « ⛏️ Commencer » et crée un premier monde.
 
-Dans le jeu, le lien « Recommencer à zéro » (avec confirmation) remplace la partie du monde en cours par une partie neuve (succès et foreuse compris) ; le bouton « 🌍 <nom du monde> » revient à l'accueil.
+Dans le jeu, le lien « Recommencer à zéro » (avec confirmation) remplace la partie du monde en cours par une partie neuve (village et succès compris) ; le bouton « 🌍 <nom du monde> » revient à l'accueil.
 
 ### 1.4 Reprise de l'ancienne partie unique (avant le 19/10)
 
 Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienne clé `idle-miner-sauvegarde` existe : son contenu est copié dans `idle-miner-monde-1` (et `idle-miner-horodatage` dans `idle-miner-monde-1-horodatage`), les anciennes clés sont effacées, et la liste reçoit `{ id: '1', nom: 'Monde 1', couleur: 0 }` datée de l'ancien horodatage.
 
-### 1.5 La version de l'état (et la fin des migrations)
+### 1.5 La version de l'état (et la remise à zéro du 22/10)
 
-`VERSION_ETAT = 19` (dans `src/jeu/mineur.ts`, depuis le 21/10 : la clairière de 60 × 60 cases ; 18 le 20/10 : le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` passe d'abord la partie à `migrer()`, puis vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 19** avec tous les champs attendus ; sinon il renvoie `null`.
+`VERSION_ETAT = 21` (dans `src/jeu/mineur.ts`, depuis le 22/10 : **la mine automatique** ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 21** avec tous les champs attendus ; sinon il renvoie `null`.
 
-**La migration 18 → 19** (21/10, `migrer` dans `sauvegarde.ts`) : la clairière passe de 40 × 40 à 60 × 60 cases, en s'agrandissant de 10 cases de chaque côté. Dans une partie v18, tous les bâtiments, les décorations, les rails et les chemins **glissent de 10 cases** (x + 10, y + 10), pour rester à la même place par rapport à la mine, qui reste au milieu ; puis la partie passe en version 19. Testé dans `sauvegarde.test.ts`.
+**Pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
 
-**Pas de migration avant la version 18** (les anciennes migrations ont été retirées le 20/10). Décidé avec l'équipe : avec le village vu du ciel (bâtiments à poser, chargements, mineurs qui marchent), **toutes les parties d'avant repartent de zéro**. Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 17 ou moins repart de zéro.
+**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de migration (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
 
-**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, ajouter une étape dans `migrer` (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`), comme pour 18 → 19 le 21/10 ; sinon elles repartent de zéro, comme le 20/10.
-
-Pour mémoire, l'historique des migrations qui existaient jusqu'à la version 17 (retirées du code le 20/10) :
-
-| 1 → 2 | | Arrivée de la surface, de l'échelle, du marché et de l'ascenseur. Le joueur reprend au fond de la mine (`lieu: 'mine'`), ajout de `trajet: null`, `colonneMineur: 0`, `nonAVendre: []`, et d'un ascenseur non possédé |
-| 2 → 3 | | La mine descend à -128 m, déplacement sur l'échelle, ascenseur à niveaux, arrivée de la foreuse. Si `profondeur < 2`, la partie est **abandonnée** (`null` : le premier mètre est devenu l'entrée du puits). `position` = 0 si le joueur était en surface, sinon `profondeur - 1` ; `cible` = `position`. L'ascenseur devient `{ niveau: 1 si possédé sinon 0, ... }`. Ajout d'une foreuse inactive. Suppression de `lieu` et `trajet` |
-| 3 → 4 | | Ajout de l'assistant (« Emmanuel Macron »), non embauché |
-| 4 → 5 | | Couches de **10 blocs** au lieu de 6 : la couche en cours est complétée par des cases vides, les couches du dessous en répétant leurs blocs. Une partie arrêtée sur la bedrock (`profondeur >= 128`) remonte à -127 m, en galerie, avec une couche de deepslate, pour pouvoir continuer. L'ascenseur reçoit `position`/`cible` (au front), `chargement`, `passager`, `retourAuFront`, `quai`, `garder`. Ajout de `epee: false` et `stats.monstresVaincus: 0`. `colonneMineur` est ramené dans 0..9 |
-| 5 → 6 | 19/10 | Suppression des donjons, de l'épée et de l'assistant. Un bloc `donjon` devient `deepslate` sous -80 m, sinon `pierre`. Retrait du succès `monstre` et de `stats.monstresVaincus`. Arrivée de l'arbre de prestige : `talents: []`, `peculeRecu: true` |
-| 6 → 7 | | Ascenseur : `envoiDemande: false`, `envoiAuto: false`. Foreuse : `nonCoches: []`, `rechargeAuto: false` (envoi depuis le sac, inventaire à cocher, recharge automatique) |
-| 7 → 8 | | `depart: null` (le mineur marche jusqu'au puits avant de monter) |
-| 8 → 9 | | Ascenseur : `lotDemande: null` (choix des quantités à envoyer) |
-| 9 → 10 | | `employes: []` (mineurs employés), `foreuse.nombre: 1`, et retrait des talents `ascenseurOffert` et `grimpeur` (leurs points sont rendus) |
-| 10 → 11 | | `argentGagneAvant: 0` (argent gagné aux prestiges précédents, pour le classement ; inconnu pour les anciennes parties) |
-| 11 → 12 | | Chaque foreuse a son niveau et sa profondeur : `foreuse.foreuses` devient une liste de `nombre` foreuses identiques (`niveauVitesse`, `profondeur`, `progression`, `blocsFores`), le reste est partagé. Si `foreuses` existait déjà, seul le numéro de version change |
-| 12 → 13 | | `decouvertes` : `'foreuse'` si prestige ≥ 1, `'employes'` si prestige ≥ 2 (pas de flèche pour des stands déjà connus) |
-| 13 → 14 | 19/10 | Profondeur de mine par prestige (`profondeurBedrock(prestige)` = 100 m + 50 m par prestige). Une partie plus bas que sa nouvelle bedrock remonte juste au-dessus (`profondeurBedrock - 1`), ainsi que `position`, `cible` et la cabine ; `victoire: true` et `enGalerie: true`. Ajout des nouvelles statistiques (complétées à 0) et de `statsTotales` (à 0) |
-| 14 → 15 | 20/10 | **Une seule foreuse** : on garde celle de plus haut niveau de forage (puis la plus profonde), elle garde tout le charbon. Les autres sont **remboursées en argent** : leur prix d'achat (50 000, 100 000, 200 000, 400 000 $ pour les 2e à 5e) et toutes leurs améliorations de forage (minerais comptés au prix du marché). Les mineurs déjà embauchés deviennent `rarete: 'commun'` (sauf s'ils en avaient une) avec `tempsPaye: 600` (10 minutes payées). Ajout de `recruteur: 0`, `manager` (non embauché), `tresorerie: 0`. Nouvel arbre de prestige : `talents: []` (tous les points rendus). Statistiques complétées. Suppression de `peculeRecu` |
-| 15 → 16 | 20/10 | Rien (le compteur `licenciements` ajouté puis retiré le même jour). Le champ `licenciements` est supprimé **à chaque chargement**, quelle que soit la version |
-| 16 → 17 | 20/10 | `standsVus: []` (badge « Nouveaux niveaux » depuis le dernier prestige) |
-| toujours | 16/10 | Suppression des anciens champs `torches` et `torchesPosees` (torches retirées du jeu) |
-
-| 17 → 18 | 20/10 | **Pas de migration** : le village vu du ciel ; toutes les parties d'avant repartent de zéro |
+Pour mémoire : les versions 1 à 17 (avant le 20/10) avaient une chaîne de migrations (surface et échelle, foreuses, assistant, donjons, prestige, mineurs, recruteur et manager…), retirée du code le 20/10 ; elle reste dans l'historique git.
 
 ### 1.6 Ce qui est stocké : `EtatJeu` champ par champ
 
 L'état d'une partie est un objet composé uniquement de nombres, textes, listes et objets simples (aucune classe, aucune fonction) : il est sauvegardé tel quel avec `JSON.stringify`. Défini dans `src/jeu/mineur.ts`.
 
-| Champ | Type | Sens | Au prestige |
-|---|---|---|---|
-| `version` | nombre | Version du format (18) | — |
-| `position` | nombre (à virgule en mouvement) | Position du joueur sur l'échelle en mètres : 0 = village, `profondeur - 1` = front de taille (sa place dans le village vu du ciel n'est pas sauvegardée : il réapparaît devant la mine) | remis à 0 |
-| `cible` | nombre | Où le joueur se dirige sur l'échelle | remis à 0 |
-| `colonneMineur` | 0 à 9 | Colonne du mineur au-dessus de la couche en cours | remis à 0 |
-| `argent` | nombre | Argent en poche | remis à 0 |
-| `profondeur` | nombre | Profondeur de la couche en cours (1 = juste sous l'herbe ; une partie neuve commence à 2) | remis à 2 |
-| `coucheActuelle` | liste de 10 `IdBloc` ou `null` | La couche en cours ; `null` = bloc déjà cassé | régénérée |
-| `couchesDessous` | liste de couches | Les couches suivantes déjà générées (profondeur + 1, + 2...) | régénérées |
-| `enGalerie` | booléen | Vrai = on creuse à l'horizontale (profondeur max de la pioche, ou bedrock) | faux |
-| `pioches` | `{ niveau: usure }` | Pioches possédées et leur usure | gardées, toutes réparées (usure 0) |
-| `niveauPioche` | nombre | Pioche équipée | la meilleure |
-| `meilleure` | nombre | Plus haut niveau de pioche débloqué | gardé |
-| `inventaire` | `{ bloc: nombre }` | Contenu du sac | vidé |
-| `nonAVendre` | liste d'`IdBloc` | Objets décochés au marché (« Vendre tout » les garde) | gardé |
-| `ascenseur` | objet `Ascenseur` (ci-dessous) | La cabine | seul le `niveau` est gardé |
-| `foreuse` | objet `Foreuse` (ci-dessous) | La foreuse (prestige 1) | gardée sans charbon, chariot vide, repart de la surface (voir `foreuseApresPrestige`) |
-| `enchantements` | `{ efficacite, fortune, solidite }` | Niveaux d'enchantement | gardés |
-| `niveauSac` | nombre | Taille du sac à dos | gardé |
-| `seaux` | nombre | Seaux d'eau (contre la lave) | remis à 0 |
-| `prestige` | nombre | Niveau de prestige | + 1 |
-| `succes` | liste de textes | Identifiants des succès débloqués | gardés |
-| `stats` | `Statistiques` | Statistiques de cette partie | remises à 0 (ajoutées à `statsTotales`) |
-| `statsTotales` | `Statistiques` | Somme des parties d'avant (prestiges précédents) | + `stats` |
-| `argentGagneAvant` | nombre | Argent gagné pendant les prestiges précédents (classement) | devient `argentGagneAvant + stats.argentGagne` |
-| `victoire` | booléen | Bedrock atteinte dans cette partie | faux |
-| `talents` | liste d'`IdTalent` | Talents de l'arbre de prestige | gardés |
-| `employes` | liste d'`Employe` | Mineurs employés (prestige 2) | gardés (pioche et rareté), repartent de la mine (étape `descend`), sac vide, au moins 10 min payées |
-| `recruteur` | nombre | Niveau du recruteur (0 = pas embauché, prestige 4) | gardé |
-| `manager` | `{ embauche, tempsPaye }` | Le manager (prestige 5), qui paie les salaires | gardé, au moins 10 min payées |
-| `tresorerie` | nombre | Argent mis de côté pour les salaires | remis à 0 |
-| `decouvertes` | liste (`'foreuse'`, `'employes'`, `'recruteur'`, `'manager'`) | Nouveautés déjà vues devant leur bâtiment (la bulle ✨ « Nouveau » disparaît) | gardé |
-| `standsVus` | liste de textes | Bâtiments visités depuis le dernier prestige (bulle ⬆️ « Nouveaux niveaux ») | vidé |
-| `depart` | objet `Depart` ou `null` | Le mineur marche vers le puits avant de monter : `{ destination, parEchelle, temps, lot? }` | `null` |
-| `village` | objet `Village` (ci-dessous) | Le village vu du ciel (20/10) : bâtiments posés, rails, chemins, décorations | **gardé tel quel** |
-| `convois` | liste de `Convoi` (ci-dessous) | Les chargements en route vers le marché (brouette ou wagonnet) | vidé (ceux en route sont perdus) |
-| `tenue` | `{ chapeau, haut }` (`IdTenue` ou `null`) | La tenue que porte le joueur (achetée au Bazar) | gardée |
-| `tenuesAchetees` | liste d'`IdTenue` | Les tenues achetées | gardées |
+| Champ | Type | Sens |
+|---|---|---|
+| `version` | nombre | Version du format (21) |
+| `argent` | nombre | Argent en poche |
+| `inventaire` | `{ bloc: nombre }` | Contenu du sac à dos |
+| `nonAVendre` | liste d'`IdBloc` | Objets gardés au marché (ni vendus, ni emportés par le wagonnet) |
+| `niveauSac` | nombre | Taille du sac (index dans `SACS`) |
+| `niveauMine` | 1 à 5 | Niveau de la mine |
+| `coffre` | `{ niveau, contenu }` | Le coffre de la mine : sa taille (index dans `NIVEAUX_COFFRE`) et ce qu'il contient |
+| `prochainBloc` | `IdBloc` | Le bloc à cliquer, déjà tiré |
+| `clics` | nombre | Les clics déjà donnés sur ce bloc (pioche cassée : il en faut 2) |
+| `progressionMine` | nombre (0 à 1) | Fraction du prochain bloc que la mine sort toute seule |
+| `pioches` | `{ niveau: usure }` | Pioches possédées et leur usure (clics déjà donnés) |
+| `niveauPioche` | nombre | Pioche en main |
+| `meilleure` | nombre | Plus haut niveau de pioche débloqué |
+| `ascenseur` | `{ niveau }` | L'ascenseur des mineurs (0 = pas construit) |
+| `employes` | liste d'`Employe` | Mineurs employés |
+| `recruteur` | nombre | Niveau du recruteur (0 = pas embauché) |
+| `manager` | `{ embauche, tempsPaye }` | Le manager, qui paie les salaires |
+| `tresorerie` | nombre | Argent mis de côté pour les salaires |
+| `foreuse` | objet `Foreuse` | La foreuse |
+| `generateur` | objet `Generateur` | Le générateur |
+| `wagonnet` | objet `Wagonnet` | Le wagonnet |
+| `succes` | liste de textes | Identifiants des succès débloqués |
+| `stats` | `Statistiques` | Statistiques de la partie |
+| `decouvertes` | liste (`'recruteur'`, `'manager'`) | Nouveautés déjà vues devant le Personnel |
+| `village` | objet `Village` | Le village vu du ciel : bâtiments posés, rails, chemins, décorations |
+| `tenue` | `{ chapeau, haut }` (`IdTenue` ou `null`) | La tenue que porte le joueur |
+| `tenuesAchetees` | liste d'`IdTenue` | Les tenues achetées |
 
-**`Ascenseur`** : `niveau` (0 = pas construit), `position` et `cible` (en mètres, 0 = village), `chargement` (inventaire transporté ; en haut, il va dans le `reservoir`, ou devient un `Convoi` vers le marché s'il y a des rails ; ce qui ne rentre pas reste dans la cabine), `passager` (le mineur est dans la cabine), `retourAuFront` (redescend seule après avoir vidé son chargement), `quai` (blocs qui attendent au pied de l'ascenseur quand le sac est plein), `garder` (objets décochés dans le sac, que la cabine ne prend pas), `envoiDemande`, `lotDemande` (inventaire choisi, ou `null` = tous les objets cochés), `envoiAuto` (part seul quand le sac est plein).
+**`Foreuse`** : `carburant` (secondes de forage restantes), `niveauVitesse` (index dans `NIVEAUX_FORAGE`), `progression` (0 à 1 du prochain bloc), `blocsFores`, `niveauChariot` (index dans `NIVEAUX_CHARIOT`), `chariot` (inventaire foré), `nonCoches` (objets décochés), `rechargeAuto`.
 
-**`Reservoir`** (22/10, version 20) : `niveau` (index dans `NIVEAUX_RESERVOIR`, gardé au prestige) et `contenu` (ce que l'ascenseur a remonté, vidé au prestige).
+**`Generateur`** : `niveau` (index dans `NIVEAUX_GENERATEUR`), `carburant` (secondes de courant restantes), `allume`, `puiseDansLeCoffre`.
 
-**`Foreuse`** : `active`, `carburant` (secondes de forage restantes), `niveauVitesse` (index dans `NIVEAUX_FORAGE`), `profondeur`, `progression` (0 à 1 du prochain bloc), `blocsFores`, `niveauChariot` (index dans `NIVEAUX_CHARIOT`), `chariot` (inventaire remonté), `nonCoches`, `rechargeAuto`.
+**`Wagonnet`** : `niveau` (index dans `NIVEAUX_WAGONNET`), `etape` (`quai`, `aller`, `retour`), `distance` (cases déjà parcourues sur ce trajet), `chargement` (inventaire), `pousseur` (`'joueur'`, `'electricite'`, le prénom d'un mineur, ou `null`).
 
-**`Employe`** : `nom`, `rarete` (`commun`, `rare`, `epique`, `legendaire`, `mythique`), `niveau` (sa pioche, index dans `NIVEAUX_EMPLOYE`), `profondeur` (de sa galerie), `etape` (`creuse`, `monte`, `marche`, `vend`, `forge`, `descend`, `attend` ; `marche` et `forge` depuis le 20/10), `position`, `sac`, `progression` (fraction du bloc en creusant, secondes passées en marchant, au marché ou à la forge), `blocsCasses`, `gagne`, `tempsPaye` (secondes de travail déjà payées), et depuis le 20/10 : `lieu` (le bâtiment où il est, ou vers lequel il marche), `depuis` (celui d'où il part), `forgeEnAttente` (il doit passer à la forge chercher sa nouvelle pioche).
+**`Employe`** : `nom`, `rarete` (`commun`, `rare`, `epique`, `legendaire`, `mythique`), `niveau` (sa pioche, index dans `NIVEAUX_EMPLOYE`), `role` (`mineur` ou `pousseur`), `etape` (`creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend`), `progression` (blocs en creusant, ou secondes), `sac`, `blocsCasses`, `tempsPaye` (secondes de travail déjà payées), `lieu` (le bâtiment où il est, ou vers lequel il marche), `depuis` (celui d'où il part), `forgeEnAttente`.
 
-**`Village`** (20/10, `src/jeu/village.ts`) : `batiments` (liste de `{ id, x, y, miroir }` : le coin du haut de l'emprise sur la grille de 60 × 60 cases (40 × 40 avant le 21/10), et le dessin retourné ou non ; la mine est posée d'office en 25, 25), `rails` et `chemins` (listes de cases écrites `"x,y"`), `decorations` (liste de `{ n, id, x, y, miroir }`, `n` = numéro unique), `prochainNumero` (pour numéroter les décorations), `batimentsVus` (bâtiments débloqués déjà vus dans le menu Bâtiments : pastille « Nouveau »).
+**`Village`** (`src/jeu/village.ts`) : `batiments` (liste de `{ id, x, y, miroir }` : le coin du haut de l'emprise sur la grille de 60 × 60 cases ; la mine est posée d'office en 25, 25), `rails` et `chemins` (listes de cases écrites `"x,y"`), `decorations` (liste de `{ n, id, x, y, miroir }`, `n` = numéro unique), `prochainNumero`, `batimentsVus` (bâtiments débloqués déjà vus dans le menu : pastille « Nouveau »).
 
-**`Convoi`** : `chargement` (inventaire), `temps` (secondes déjà roulées), `duree` (secondes pour arriver au marché ; −1 = il attend qu'un marché soit posé), `parRails` (wagonnet ou brouette), `mineur` (le nom du mineur employé à qui il appartient, ou `null` = au joueur).
+**`Statistiques`** : `blocsCasses`, `blocsMine`, `argentGagne`, `argentForeuse`, `argentWagonnet`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `diamantsTrouves`, `salairesPayes`, `tempsDeJeu`, `voyagesWagonnet` (voir [mine-et-minage.md](mine-et-minage.md#9-les-statistiques-srcjeustatistiquests-fenêtre-)).
 
-**`Statistiques`** : `blocsCasses`, `argentGagne` (toutes sources), `tempsMinage`, `coffresOuverts`, `geodesCassees`, `lavesEteintes`, `diamantsTrouves`, et depuis le 19/10 `argentForeuse`, `argentMineurs`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `profondeurMax`, puis le 20/10 `salairesPayes`.
-
-`estUnEtatValide()` vérifie : `version === 18`, et la présence/le type de `argent`, `profondeur`, `coucheActuelle`, `couchesDessous`, `pioches`, `inventaire`, `enchantements`, `stats`, `succes`, `position`, `cible`, `nonAVendre`, `ascenseur`, `foreuse`, `talents`, `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes`, `standsVus`, `statsTotales`, `argentGagneAvant`, et depuis le 20/10 `village` (avec sa liste `batiments`), `convois`, `tenue` et `tenuesAchetees`.
+`estUnEtatValide()` vérifie : `version === 21`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `wagonnet`, `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes`, `village` (avec sa liste `batiments`), `tenue` et `tenuesAchetees`.
 
 ### 1.7 Quand le jeu sauvegarde (`src/usePartie.ts`)
 
-- **À chaque changement d'état** : un `useEffect` appelle `sauvegarder(localStorage, idMonde, etat)` dès que `etat` change (chaque action, chaque tic d'horloge qui modifie quelque chose). Il n'y a pas de bouton « Sauvegarder ».
-- Il s'exécute aussi au tout premier rendu : la partie chargée (rattrapée, voir ci-dessous) est réécrite immédiatement. Une ancienne partie (version 17 ou moins) est donc remplacée par la partie neuve dès l'ouverture du monde.
+- **Au plus une fois par seconde** : un `useEffect` appelle `sauvegarder(localStorage, idMonde, etat)` quand `etat` change, s'il s'est passé au moins 1 s depuis la dernière fois (l'horloge change l'état toutes les 50 ms : la mine tourne toujours). Il n'y a pas de bouton « Sauvegarder ».
+- **En quittant la page** (`pagehide`) et en quittant le monde : une dernière sauvegarde.
 - Une partie neuve (« Recommencer à zéro », ou monde sans partie lisible) remplace l'ancienne par cette même sauvegarde automatique.
 
 ### 1.8 Retour au jeu après une absence
@@ -171,16 +137,16 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 1. `marquerJoue` (le monde remonte en tête de liste).
 2. `charger` ; si `null` (pas de partie, partie abîmée, ou partie d'une ancienne version), une partie neuve est créée (`creerPartie`) : le joueur est au village, devant la mine, avec 0 $ et le marché à poser.
-3. Sinon, l'absence = `secondesDepuisSauvegarde`, plafonnée à **8 heures** (`ABSENCE_MAX`).
-4. `avancerTemps(etat, absence)` est appelé **en une fois** avec toute la durée : marche, échelle, ascenseur, foreuse, mineurs employés (avec leurs marches au village) et chargements vers le marché avancent (voir `src/jeu/temps.ts`).
-5. Un message s'affiche au démarrage (environ 7 s) : « Pendant ton absence : ⚙️ la foreuse a remonté N blocs, 👷 tes mineurs t'ont rapporté X $, 😠 N mineurs attendent leur salaire. » (seulement les morceaux non nuls ; X = tout l'argent gagné pendant l'absence, chargements de l'ascenseur arrivés au marché compris).
+3. Sinon, l'absence = `secondesDepuisSauvegarde`, plafonnée à **8 heures** (`ABSENCE_MAX`). Moins de 30 s : rien à rattraper.
+4. `avancerTemps(etat, absence)` est appelé avec toute la durée (il avance par morceaux d'une minute) : la mine toute seule, le générateur, la foreuse, les mineurs employés (et le manager) et le wagonnet (poussé par un mineur ou électrique) avancent (voir `src/jeu/temps.ts`).
+5. Un message s'affiche au démarrage (environ 7 s) : « Pendant ton absence : 📦 N blocs de plus dans le coffre de la mine, 🛤️ le wagonnet a rapporté X $, ⚙️ la foreuse a remonté N blocs, 😠 N mineurs attendent leur salaire. » (seulement les morceaux non nuls ; X = tout l'argent gagné pendant l'absence).
 
-Seuls la foreuse et les mineurs employés (et le manager qui les paie) produisent pendant l'absence. Le minage du joueur ne continue pas.
+Les clics du joueur, eux, ne continuent pas.
 
 ### 1.9 Hors ligne
 
 - Sans réseau, tout marche : la partie est dans le `localStorage`.
-- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation depuis le 20/10, cache `idle-miner-v2` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
+- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, cache `idle-miner-v8` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
 - Connecté mais sans réseau : le compte passe en statut « hors-ligne » et réessaie tout seul (voir 2.5).
 
 ---
@@ -225,7 +191,7 @@ C'est le seul fichier qui parle à Supabase.
 
 ### 2.4 Ce qui est envoyé : la copie de tous les mondes
 
-`exporterTout(stockage)` (dans `sauvegarde.ts`) fabrique une `SauvegardeComplete` = un objet « clé du localStorage → texte brut » contenant `idle-miner-mondes` et, pour chaque monde de la liste, `idle-miner-monde-<id>` et `idle-miner-monde-<id>-horodatage`. Copie vide s'il n'y a pas de liste. Les réglages (son, musique...) ne sont pas inclus. Les parties sont envoyées telles quelles (avec leur numéro de version) : c'est `charger` qui les lit sur l'appareil qui les reçoit. Depuis le 20/10, une partie d'une version plus ancienne récupérée en ligne n'est pas lue non plus : elle repart de zéro à l'ouverture du monde, comme dans le navigateur (puis la partie neuve est renvoyée en ligne au prochain envoi).
+`exporterTout(stockage)` (dans `sauvegarde.ts`) fabrique une `SauvegardeComplete` = un objet « clé du localStorage → texte brut » contenant `idle-miner-mondes` et, pour chaque monde de la liste, `idle-miner-monde-<id>` et `idle-miner-monde-<id>-horodatage`. Copie vide s'il n'y a pas de liste. Les réglages (son, musique...) ne sont pas inclus. Les parties sont envoyées telles quelles (avec leur numéro de version) : c'est `charger` qui les lit sur l'appareil qui les reçoit. Une partie d'une version plus ancienne récupérée en ligne n'est pas lue non plus : elle repart de zéro à l'ouverture du monde, comme dans le navigateur (puis la partie neuve est renvoyée en ligne au prochain envoi).
 
 `importerTout(stockage, copie)` **supprime tous les mondes du navigateur**, puis écrit les clés de la copie qui commencent par `idle-miner-monde` (par prudence, aucune autre clé).
 
@@ -283,9 +249,9 @@ Il n'y a **pas de fusion monde par monde** : c'est toujours l'ensemble des monde
 
 ### 3.1 Le score (`src/jeu/classement.ts`)
 
-- `Score = { prestige, argent }`.
-- `meilleurScore(copie)` : pour chaque monde de la copie de tous les mondes, relit la partie avec `charger` et garde **le meilleur prestige** et **le plus d'argent gagné**, chacun séparément (ils peuvent venir de deux mondes différents). Une partie d'une ancienne version (`charger` renvoie `null`) ne compte pas ; comme le serveur garde toujours le **meilleur** score envoyé (4.2), le classement d'un joueur ne baisse pas avec la remise à zéro du 20/10.
-- L'argent classé est `argentGagneTotal(etat)` = `argentGagneAvant + stats.argentGagne` arrondi vers le bas : tout l'argent gagné depuis le début, prestiges compris (pas l'argent en poche). Pour les parties antérieures à la v11, l'argent des prestiges d'avant est inconnu (compté 0).
+- `Score = { prestige, argent }`. Depuis le 22/10, le champ `prestige` contient **le niveau de la mine** (1 à 5) : le serveur garde ce nombre dans sa colonne `prestige` (celle de l'ancien classement), sans changer la table.
+- `meilleurScore(copie)` : pour chaque monde de la copie de tous les mondes, relit la partie avec `charger` et garde **le meilleur niveau de mine** et **le plus d'argent gagné**, chacun séparément (ils peuvent venir de deux mondes différents). Une partie d'une ancienne version (`charger` renvoie `null`) ne compte pas. Comme le serveur garde toujours le **meilleur** score envoyé (4.2), les anciens scores ne baissent pas avec la remise à zéro du 22/10 : un joueur qui avait atteint le prestige 8 garde « 8 » dans la colonne `prestige`, plus que le niveau de mine maximum (5), tant que la table n'est pas vidée.
+- L'argent classé est `stats.argentGagne` arrondi vers le bas : tout l'argent gagné dans la partie (marché, wagonnet, chariot), pas l'argent en poche.
 
 ### 3.2 L'envoi du score (`useCompte.ts`)
 
@@ -297,7 +263,7 @@ Il n'y a **pas de fusion monde par monde** : c'est toujours l'ensemble des monde
 ### 3.3 L'affichage (`src/composants/CarteClassement.tsx`)
 
 - Sur l'écran d'accueil, sous les mondes. Visible par tout le monde, même sans compte.
-- Deux onglets : **⭐ Prestige** (tri par prestige, l'argent départage) et **💰 Argent** (tri par argent, le prestige départage).
+- Deux onglets : **🕳️ Niveau de mine** (tri par la colonne `prestige`, qui contient le niveau de la mine ; l'argent départage) et **💰 Argent** (tri par argent, le niveau départage). Explications : « Le plus bas niveau de mine atteint » et « Tout l'argent gagné dans la partie », « (le meilleur de tes mondes) ». Chaque ligne affiche « 🕳️ *n* » et « 💰 *n* $ ».
 - Les **20** premiers (`NB_LIGNES`). Médailles 🥇🥈🥉 pour les 3 premiers, puis « 4. », « 5. »...
 - La ligne du joueur connecté est mise en valeur (comparaison du pseudo sans tenir compte de la casse).
 - Rechargé au changement d'onglet, au clic sur « Actualiser », et quand l'heure du dernier envoi du compte change.
@@ -336,7 +302,7 @@ Chaque joueur connecté ne voit et ne modifie que sa propre ligne.
 |---|---|---|
 | `joueur` | `uuid`, clé primaire, référence `auth.users(id)`, `on delete cascade` | Le compte |
 | `pseudo` | `text not null` | Pseudo affiché |
-| `prestige` | `integer`, défaut 0, `check (0 à 500)` | Meilleur prestige |
+| `prestige` | `integer`, défaut 0, `check (0 à 500)` | Meilleur niveau de mine depuis le 22/10 (avant : meilleur prestige) |
 | `argent` | `bigint`, défaut 0, `check (0 à 10^15)` | Plus d'argent gagné |
 | `modifie_le` | `timestamptz`, défaut `now()` | Mis à jour par le trigger |
 

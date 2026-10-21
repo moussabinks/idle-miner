@@ -121,10 +121,10 @@ Elle n'apparaît pas si le jeu est déjà installé, ou si le navigateur ne sait
 
 Sous les mondes, visible par tout le monde (même sans compte) :
 
-- titre « 🏆 Classement », deux onglets **⭐ Prestige** / **💰 Argent**, lien **Actualiser** ;
-- l'onglet « Prestige » classe en fait **le niveau de la mine** (le serveur le garde dans sa colonne `prestige`, voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#3-le-classement)). Les textes de la carte n'ont pas encore été changés : l'onglet s'appelle toujours « ⭐ Prestige », l'explication dit « Le plus haut prestige atteint » (ou « Tout l'argent gagné depuis le début, prestiges compris ») et chaque ligne affiche « ⭐ *n* » ;
+- titre « 🏆 Classement », deux onglets **🕳️ Niveau de mine** / **💰 Argent**, lien **Actualiser** ;
+- l'explication : « Le plus bas niveau de mine atteint » ou « Tout l'argent gagné dans la partie ». Le niveau de la mine est gardé par le serveur dans sa colonne `prestige` (voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#3-le-classement)) ;
 - « (le meilleur de tes mondes) », et « Connecte-toi pour apparaître dans le classement. » si on n'est pas connecté ;
-- les **20 premiers** : 🥇 🥈 🥉 puis « 4. », « 5. »…, le pseudo, ⭐ et 💰 (la valeur triée en or, l'autre en gris ; sur téléphone seule la valeur triée reste) ;
+- les **20 premiers** : 🥇 🥈 🥉 puis « 4. », « 5. »…, le pseudo, 🕳️ niveau et 💰 argent (la valeur triée en or, l'autre en gris ; sur téléphone seule la valeur triée reste) ;
 - la ligne du joueur connecté est entourée d'or ;
 - messages : « Chargement du classement… », « Personne n'est encore classé : à toi d'être le premier ! », « Impossible de charger le classement. Vérifie ta connexion. » (rouge) ;
 - il se relit quand on change d'onglet, sur « Actualiser », et après chaque envoi de la sauvegarde.

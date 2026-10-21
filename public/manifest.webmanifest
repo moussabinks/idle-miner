@@ -1,7 +1,7 @@
 {
   "name": "Mega Digger",
   "short_name": "Mega Digger",
-  "description": "Creuse, vends tes minerais et descends jusqu'à la bedrock.",
+  "description": "Creuse, vends tes minerais et automatise ta mine avec des rails électriques.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",
