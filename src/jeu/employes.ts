@@ -32,11 +32,12 @@ import {
   SECONDES_VIDAGE_EMPLOYE,
   type Cout,
   type IdBatiment,
+  type IdBloc,
   type IdRarete,
   type Rarete,
 } from './donnees'
 import { tirerBloc } from './mine'
-import { ajouterA, payer, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
+import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
 import { batimentPose, secondesAPied } from './village'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
@@ -480,11 +481,10 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       temps = Math.min(reste, Math.max(0, SECONDES_VIDAGE_EMPLOYE - employe.progression))
       employe.progression += temps
       if (employe.progression >= SECONDES_VIDAGE_EMPLOYE - 1e-9) {
-        for (const [bloc, nombre] of Object.entries(employe.sac)) {
-          const range = rangerDansCoffre(etat, bloc as Parameters<typeof rangerDansCoffre>[1], nombre ?? 0)
-          const resteSac = (nombre ?? 0) - range
-          if (resteSac > 0) employe.sac[bloc as keyof typeof employe.sac] = resteSac
-          else delete employe.sac[bloc as keyof typeof employe.sac]
+        for (const [id, nombre] of Object.entries(employe.sac)) {
+          const bloc = id as IdBloc
+          const range = rangerDansCoffre(etat, bloc, nombre ?? 0)
+          retirerDe(employe.sac, bloc, range)
         }
         if (nbDansSacEmploye(employe) > 0) {
           // Le coffre est plein : il attend, sans rien faire, qu'on le vide.

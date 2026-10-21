@@ -14,7 +14,7 @@ import {
   VITESSE_RAILS,
 } from './donnees'
 import { puissanceGenerateur, railsAlimentes } from './generateur'
-import { ajouterA, encaisser, nbDansCoffre, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu } from './mineur'
+import { ajouterA, encaisser, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu } from './mineur'
 import { batimentPose, railsMineMarche, type Case } from './village'
 
 // La ligne de rails de la mine au marché (null : pas de ligne complète, ou pas de marché).
@@ -61,10 +61,17 @@ export function secondesAllerRetour(etat: EtatJeu, vitesse = vitesseWagonnet(eta
   return (2 * longueurTrajet(ligne)) / vitesse + 2 * SECONDES_CHARGEMENT_WAGONNET
 }
 
-// Remplit le wagonnet avec le coffre (les objets les plus chers d'abord).
+// Ce que le wagonnet peut emporter du coffre : tout, sauf les objets « gardés » au marché
+// (on garde par exemple le fer pour poser des rails).
+export function aCharger(etat: EtatJeu): number {
+  return parPrix(etat.coffre.contenu).reduce((total, [bloc, nombre]) => total + (etat.nonAVendre.includes(bloc) ? 0 : nombre), 0)
+}
+
+// Remplit le wagonnet avec le coffre (les objets les plus chers d'abord, sauf ceux qu'on garde).
 function charger(etat: EtatJeu): void {
   let place = capaciteWagonnet(etat) - totalObjets(etat.wagonnet.chargement)
   for (const [bloc, nombre] of parPrix(etat.coffre.contenu)) {
+    if (etat.nonAVendre.includes(bloc)) continue
     const pris = Math.min(nombre, place)
     if (pris <= 0) continue
     ajouterA(etat.wagonnet.chargement, bloc, pris)
@@ -91,7 +98,7 @@ function vitesseDe(etat: EtatJeu, pousseur: string): number {
 
 // Le joueur peut-il pousser le wagonnet maintenant ?
 export function peutPousserWagonnet(etat: EtatJeu): boolean {
-  return ligneDuWagonnet(etat) !== null && !wagonnetEnRoute(etat) && nbDansCoffre(etat) > 0
+  return ligneDuWagonnet(etat) !== null && !wagonnetEnRoute(etat) && aCharger(etat) > 0
 }
 
 // Le joueur pousse le wagonnet jusqu'au marché (et le ramène).
@@ -128,7 +135,7 @@ export function avancerWagonnet(etat: EtatJeu, secondes: number): string[] {
   }
 
   if (w.etape === 'quai') {
-    if (nbDansCoffre(etat) === 0) return []
+    if (aCharger(etat) === 0) return []
     if (railsAlimentes(etat)) {
       partir(etat, 'electricite')
     } else {

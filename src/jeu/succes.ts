@@ -1,7 +1,7 @@
-// Les 19 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
-// et restent débloqués après un prestige.
+// Les succès du jeu. Ils sont vérifiés après chaque action et chaque moment qui passe.
 
-import { peutEncoreEnchanter, type EtatJeu } from './mineur'
+import { railsAlimentes } from './generateur'
+import type { EtatJeu } from './mineur'
 import { railsMineMarche } from './village'
 
 export type Succes = {
@@ -14,31 +14,25 @@ export type Succes = {
 
 export const SUCCES: Succes[] = [
   { id: 'premier_bloc', emoji: '⛏️', titre: 'Premier coup de pioche', description: 'Casser ton premier bloc', condition: (e) => e.stats.blocsCasses >= 1 },
-  { id: 'cent_blocs', emoji: '🧱', titre: 'Terrassier', description: 'Casser 100 blocs', condition: (e) => e.stats.blocsCasses >= 100 },
-  { id: 'mille_blocs', emoji: '🏗️', titre: 'Tunnelier', description: 'Casser 1 000 blocs', condition: (e) => e.stats.blocsCasses >= 1000 },
-  { id: 'pioche_pierre', emoji: '🪨', titre: "L'âge de pierre", description: 'Débloquer la pioche en pierre', condition: (e) => e.meilleure >= 1 },
-  { id: 'pioche_fer', emoji: '⚙️', titre: 'Âge du fer', description: 'Débloquer la pioche en fer', condition: (e) => e.meilleure >= 2 },
+  { id: 'cent_blocs', emoji: '🧱', titre: 'Terrassier', description: 'Casser 100 blocs en cliquant', condition: (e) => e.stats.blocsCasses >= 100 },
+  { id: 'mille_blocs', emoji: '🏗️', titre: 'Tunnelier', description: 'Casser 1 000 blocs en cliquant', condition: (e) => e.stats.blocsCasses >= 1000 },
+  { id: 'pioche_fer', emoji: '⚙️', titre: 'Âge du fer', description: 'Débloquer la pioche en fer', condition: (e) => e.meilleure >= 1 },
+  { id: 'pioche_or', emoji: '🥇', titre: 'Pioche dorée', description: 'Débloquer la pioche en or', condition: (e) => e.meilleure >= 2 },
   { id: 'pioche_diamant', emoji: '💎', titre: 'Diamants !', description: 'Débloquer la pioche en diamant', condition: (e) => e.meilleure >= 3 },
-  { id: 'pioche_netherite', emoji: '🔥', titre: 'Increvable', description: 'Débloquer la pioche en netherite', condition: (e) => e.meilleure >= 4 },
-  { id: 'profondeurs', emoji: '🕳️', titre: 'Spéléologue', description: 'Descendre à -60 m', condition: (e) => e.profondeur >= 60 },
-  { id: 'abimes', emoji: '🌑', titre: 'Dans les abîmes', description: 'Descendre à -105 m (possible dès le prestige 1)', condition: (e) => e.profondeur >= 105 },
-  { id: 'premier_diamant', emoji: '💠', titre: "Ça brille !", description: 'Trouver un diamant', condition: (e) => e.stats.diamantsTrouves >= 1 },
-  { id: 'coffre', emoji: '🧰', titre: 'Chasseur de trésors', description: 'Ouvrir un coffre', condition: (e) => e.stats.coffresOuverts >= 1 },
-  { id: 'geode', emoji: '🔮', titre: 'Géologue', description: 'Casser une géode', condition: (e) => e.stats.geodesCassees >= 1 },
-  { id: 'pompier', emoji: '🪣', titre: 'Pompier', description: 'Éteindre de la lave avec un seau', condition: (e) => e.stats.lavesEteintes >= 1 },
-  { id: 'riche', emoji: '💰', titre: 'Riche', description: 'Gagner 5 000 $ dans une partie', condition: (e) => e.stats.argentGagne >= 5000 },
-  {
-    id: 'enchanteur',
-    emoji: '✨',
-    titre: 'Enchanteur',
-    description: 'Mettre tous les enchantements au max permis par ton prestige',
-    condition: (e) => !peutEncoreEnchanter(e),
-  },
-  { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: 'Atteindre la bedrock, tout au fond de la mine', condition: (e) => e.victoire },
-  // Le village vu du ciel (20/10).
+  { id: 'mine_2', emoji: '🔴', titre: 'Veine de redstone', description: 'Descendre la mine au niveau 2', condition: (e) => e.niveauMine >= 2 },
+  { id: 'mine_3', emoji: '🟡', titre: 'Chercheur d’or', description: 'Descendre la mine au niveau 3', condition: (e) => e.niveauMine >= 3 },
+  { id: 'mine_4', emoji: '🟢', titre: 'Grotte aux émeraudes', description: 'Descendre la mine au niveau 4', condition: (e) => e.niveauMine >= 4 },
+  { id: 'mine_5', emoji: '🏆', titre: 'Cœur de diamant', description: 'Descendre la mine au niveau 5, tout au fond', condition: (e) => e.niveauMine >= 5 },
+  { id: 'premier_diamant', emoji: '💠', titre: 'Ça brille !', description: 'Trouver un diamant', condition: (e) => e.stats.diamantsTrouves >= 1 },
+  { id: 'patron', emoji: '👷', titre: 'Patron', description: 'Embaucher ton premier mineur', condition: (e) => e.employes.length >= 1 },
+  { id: 'equipe', emoji: '👥', titre: 'Chef d’équipe', description: 'Avoir 6 mineurs', condition: (e) => e.employes.length >= 6 },
+  { id: 'cheminot', emoji: '🛤️', titre: 'Cheminot', description: 'Relier la mine au marché avec des rails', condition: (e) => railsMineMarche(e.village) !== null },
+  { id: 'electricien', emoji: '⚡', titre: 'Électricien', description: 'Électrifier les rails avec le générateur', condition: (e) => railsAlimentes(e) },
+  { id: 'cent_voyages', emoji: '🚃', titre: 'Ligne régulière', description: 'Faire 100 voyages de wagonnet', condition: (e) => e.stats.voyagesWagonnet >= 100 },
+  { id: 'riche', emoji: '💰', titre: 'Riche', description: 'Gagner 5 000 $', condition: (e) => e.stats.argentGagne >= 5000 },
+  { id: 'millionnaire', emoji: '🤑', titre: 'Magnat', description: 'Gagner 100 000 $', condition: (e) => e.stats.argentGagne >= 100000 },
   { id: 'architecte', emoji: '🏗️', titre: 'Architecte', description: 'Poser 5 bâtiments au village', condition: (e) => e.village.batiments.length >= 6 },
   { id: 'paysagiste', emoji: '🌸', titre: 'Paysagiste', description: 'Poser 10 décorations au village', condition: (e) => e.village.decorations.length >= 10 },
-  { id: 'cheminot', emoji: '🛤️', titre: 'Cheminot', description: 'Relier la mine au marché avec des rails', condition: (e) => railsMineMarche(e.village) !== null },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.
