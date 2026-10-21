@@ -23,12 +23,27 @@ export function Perso({ x, y, qui, sens, vue, marche, saut = 0, etiquette, class
 }) {
   const e = versEcran(x, y)
   const choix = choisirVue({ sens, vue }, marche)
+  const estJoueur = qui === 'joueur'
   return (
-    <div className={`perso-village ${marche ? 'perso-marche' : ''} ${classe}`} style={{ left: e.x, top: e.y, zIndex: profondeur(x, y) + 5 }}>
-      <span className="perso-ombre" />
+    <div
+      className={`perso-village ${marche ? 'perso-marche' : ''} ${estJoueur ? 'perso-heros' : ''} ${classe}`}
+      style={{ left: e.x, top: e.y, zIndex: profondeur(x, y) + 5, ['--sens' as string]: sens }}
+    >
+      {/* Le joueur a un anneau doré sous les pieds (comme le héros de Clash of Clans). */}
+      {estJoueur && <span className="perso-anneau" />}
+      <span key={`o${saut}`} className={`perso-ombre ${saut > 0 ? 'saute' : ''}`} />
+      {/* En marchant, de petits nuages de poussière sous ses pieds. */}
+      {marche && (
+        <span className="perso-poussiere">
+          <i />
+          <i />
+        </span>
+      )}
       <div key={saut} className={`perso-saut ${saut > 0 ? 'saute' : ''}`}>
-        <div className="perso-corps">
-          <ImagePerso qui={qui} vue={choix.vue} miroir={choix.miroir} />
+        <div className="perso-penche">
+          <div className="perso-corps">
+            <ImagePerso qui={qui} vue={choix.vue} miroir={choix.miroir} />
+          </div>
         </div>
       </div>
       {etiquette}

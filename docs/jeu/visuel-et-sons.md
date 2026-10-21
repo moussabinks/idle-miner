@@ -96,14 +96,17 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 ### 4.1 Au village : `Perso` (`ElementsVillage.tsx`)
 
 - `Perso` reçoit `qui` (joueur, rareté du mineur, manager ou recruteur) et choisit l'image selon le sens de la marche (`choisirVue`) : vers la **droite** de l'écran → vue « droite » ; vers la **gauche** → « gauche » ; il **s'éloigne** → « derrière » (en miroir s'il part vers la gauche) ; **à l'arrêt** → « devant ».
-- L'image est posée **les pieds sur son point de la grille**, avec une petite ombre ovale.
-- **En marchant**, il se **dandine** (0,34 s) ; **au repos**, il respire doucement (2,4 s).
-- **Saut** (barre d'espace) : il s'écrase, monte de 26 px en s'étirant, retombe et s'écrase encore (0,5 s).
+- L'image est posée **les pieds sur son point de la grille**, avec une ombre ovale douce (dégradé), un fin contour sombre et une ombre portée : il se détache bien de l'herbe.
+- **Le joueur** (23/10) a en plus un **liseré de lumière chaude** et un **anneau doré** en pointillés sous les pieds qui brille doucement (comme le héros de Clash of Clans). Quand on touche la carte, un **repère doré** (deux anneaux qui se resserrent) marque l'endroit où il va.
+- **En marchant** : un pas toutes les 0,34 s ; à chaque pas il **s'écrase** en touchant le sol et **s'étire** en remontant (comme un dessin animé), en se dandinant ; il **penche** de 4° vers où il va, et de **petits nuages de poussière** partent en arrière de ses pieds. **Au repos**, il respire doucement (2,4 s).
+- **Saut** (barre d'espace) : il s'écrase, monte de 26 px en s'étirant, retombe et s'écrase encore (0,5 s) ; son ombre rétrécit et pâlit pendant qu'il est en l'air.
 - **Pas payé** : il tape du pied (0,4 s) sous une bulle 😠 qui saute.
 - **Pousseur** : le joueur (ou un mineur pousseur) est dessiné **juste derrière le wagonnet**, à 0,9 case, tourné dans le sens où il roule, et marche avec lui.
 - Une étiquette porte le prénom des mineurs (bord de la couleur de leur rareté), ou « Manager » / « Recruteur » en doré.
 
 Le composant `Personnage.tsx` (le personnage de l'ancienne vue en coupe) est toujours dans le dossier mais ne sert plus.
+
+**La marche du joueur** (`useJoueurVillage.ts`, 23/10) : il prend de l'**élan** au départ (30 cases/s²) et **freine** en arrivant, au lieu de démarrer et de s'arrêter d'un coup. Quand on touche la carte, son chemin (calculé case par case) est **lissé** : il va en ligne droite jusqu'au point le plus loin qu'il voit sans toucher un bâtiment, au lieu de faire des escaliers. Il ne change d'image (devant, derrière, gauche, droite) que si le mouvement va nettement d'un côté : plus de « clignotement » dans les virages.
 
 ---
 

@@ -6,9 +6,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TAILLE_GRILLE, VITESSE_JOUEUR } from './jeu/donnees'
-import { batimentPose, caseAcces, caseBloquee, trouverChemin, type Case, type Village } from './jeu/village'
+import { batimentPose, caseAcces, caseBloquee, casesBloquees, cleCase, trouverChemin, type Case, type Village } from './jeu/village'
 
 export type DirectionFleche = 'haut' | 'bas' | 'gauche' | 'droite'
+
+// Pour une marche fluide (23/10) : il prend de l'élan au départ et freine à l'arrivée, au lieu
+// de démarrer et de s'arrêter d'un coup.
+const ACCELERATION = 30 // cases par seconde, chaque seconde
+const FREINAGE = 18
 
 // Une flèche du clavier → une direction sur la grille (la vue est tournée de 45°) :
 // ↑ monte vers le haut de l'écran (x et y diminuent), → va vers la droite (x augmente, y diminue)...
@@ -26,6 +31,7 @@ export type EtatJoueurVillage = {
   vue: 'face' | 'dos' // de face quand il vient vers nous, de dos quand il s'éloigne
   marche: boolean
   saut: number // change à chaque saut (pour relancer l'animation)
+  destination: { x: number; y: number } | null // là où il va (un petit repère y est dessiné)
 }
 
 // Là où le joueur apparaît : devant l'entrée de la mine.
@@ -37,11 +43,14 @@ function departMine(village: Village): { x: number; y: number } {
 }
 
 export function useJoueurVillage(village: Village, actif: boolean) {
-  const [joueur, setJoueur] = useState<EtatJoueurVillage>(() => ({ ...departMine(village), sens: 1, vue: 'face', marche: false, saut: 0 }))
+  const [joueur, setJoueur] = useState<EtatJoueurVillage>(() => ({ ...departMine(village), sens: 1, vue: 'face', marche: false, saut: 0, destination: null }))
   const joueurRef = useRef(joueur)
   const villageRef = useRef(village)
+  // Les cases où l'on ne passe pas, calculées une fois par changement du village (pas à chaque image).
+  const bloqueesRef = useRef(casesBloquees(village))
   useEffect(() => {
     villageRef.current = village
+    bloqueesRef.current = casesBloquees(village)
   }, [village])
   const touches = useRef(new Set<DirectionFleche>())
   const chemin = useRef<{ points: { x: number; y: number }[]; quandArrive?: () => void } | null>(null)
@@ -51,18 +60,28 @@ export function useJoueurVillage(village: Village, actif: boolean) {
     setJoueur(joueurRef.current)
   }, [])
 
-  // Dans quel sens il regarde, d'après son mouvement sur la grille.
-  const orientation = (dx: number, dy: number): Pick<EtatJoueurVillage, 'sens' | 'vue'> => {
-    const ecranX = dx - dy
-    const ecranY = dx + dy
-    return {
-      sens: Math.abs(ecranX) > 0.01 ? (ecranX > 0 ? 1 : -1) : joueurRef.current.sens,
-      vue: Math.abs(ecranY) > 0.01 ? (ecranY < 0 ? 'dos' : 'face') : joueurRef.current.vue,
-    }
+  // Peut-il se tenir à cet endroit ? (pas dans un bâtiment, ni hors de la clairière)
+  const libre = (x: number, y: number) => {
+    const cx = Math.floor(x)
+    const cy = Math.floor(y)
+    return cx >= 0 && cy >= 0 && cx < TAILLE_GRILLE && cy < TAILLE_GRILLE && !bloqueesRef.current.has(cleCase(cx, cy))
   }
 
-  // Peut-il se tenir à cet endroit ? (pas dans un bâtiment, ni hors de la clairière)
-  const libre = (x: number, y: number) => !caseBloquee(villageRef.current, Math.floor(x), Math.floor(y))
+  // Sa vitesse en ce moment (en cases par seconde) : elle monte jusqu'à VITESSE_JOUEUR.
+  const vitesse = useRef(0)
+
+  // Dans quel sens il regarde, sans changer d'image à chaque petit écart (sinon il « clignote »
+  // entre deux images dans les virages) : il faut que le mouvement aille assez nettement d'un côté.
+  const regarder = (dx: number, dy: number): Pick<EtatJoueurVillage, 'sens' | 'vue'> => {
+    const ecranX = dx - dy
+    const ecranY = dx + dy
+    const longueur = Math.hypot(ecranX, ecranY)
+    if (longueur === 0) return { sens: joueurRef.current.sens, vue: joueurRef.current.vue }
+    return {
+      sens: Math.abs(ecranX) > 0.3 * longueur ? (ecranX > 0 ? 1 : -1) : joueurRef.current.sens,
+      vue: Math.abs(ecranY) > 0.3 * longueur ? (ecranY < 0 ? 'dos' : 'face') : joueurRef.current.vue,
+    }
+  }
 
   // La boucle d'animation : à chaque image, il avance un peu.
   useEffect(() => {
@@ -70,9 +89,8 @@ export function useJoueurVillage(village: Village, actif: boolean) {
     let derniereFois = performance.now()
     let image = 0
     const avancer = (maintenant: number) => {
-      const secondes = Math.min(0.1, (maintenant - derniereFois) / 1000)
+      const secondes = Math.max(0, Math.min(0.05, (maintenant - derniereFois) / 1000))
       derniereFois = maintenant
-      const pas = VITESSE_JOUEUR * secondes
       const { x, y } = joueurRef.current
 
       if (touches.current.size > 0) {
@@ -85,6 +103,8 @@ export function useJoueurVillage(village: Village, actif: boolean) {
         }
         const longueur = Math.hypot(dx, dy)
         if (longueur > 0) {
+          vitesse.current = Math.min(VITESSE_JOUEUR, vitesse.current + ACCELERATION * secondes)
+          const pas = vitesse.current * secondes
           dx = (dx / longueur) * pas
           dy = (dy / longueur) * pas
           // On glisse le long des obstacles : on essaie les deux axes séparément.
@@ -92,28 +112,61 @@ export function useJoueurVillage(village: Village, actif: boolean) {
           let ny = y
           if (libre(x + dx, y)) nx = x + dx
           if (libre(nx, y + dy)) ny = y + dy
-          changer({ x: nx, y: ny, marche: true, ...orientation(dx, dy) })
+          changer({ x: nx, y: ny, marche: true, ...regarder(dx, dy) })
         }
-      } else if (chemin.current !== null) {
-        // Il suit son chemin, point par point.
-        const cible = chemin.current.points[0]
-        const ex = cible.x - x
-        const ey = cible.y - y
-        const distance = Math.hypot(ex, ey)
-        if (distance <= pas) {
-          chemin.current.points.shift()
-          changer({ x: cible.x, y: cible.y, marche: true })
-          if (chemin.current.points.length === 0) {
-            const quandArrive = chemin.current.quandArrive
-            chemin.current = null
-            changer({ marche: false })
-            quandArrive?.()
+      } else if (chemin.current !== null && chemin.current.points.length > 0) {
+        // Il suit son chemin (déjà lissé : de grandes lignes droites), en freinant à l'arrivée.
+        const points = chemin.current.points
+        let reste = 0
+        let px = x
+        let py = y
+        for (const point of points) {
+          reste += Math.hypot(point.x - px, point.y - py)
+          px = point.x
+          py = point.y
+        }
+        const vitesseMax = Math.min(VITESSE_JOUEUR, Math.sqrt(2 * FREINAGE * reste) + 0.8)
+        vitesse.current = Math.min(vitesseMax, vitesse.current + ACCELERATION * secondes)
+        let pas = vitesse.current * secondes
+        let nx = x
+        let ny = y
+        let dernierDx = 0
+        let dernierDy = 0
+        // On avance du pas, quitte à passer un ou plusieurs points dans la même image.
+        while (pas > 0 && points.length > 0) {
+          const cible = points[0]
+          const ex = cible.x - nx
+          const ey = cible.y - ny
+          const distance = Math.hypot(ex, ey)
+          if (distance <= pas) {
+            nx = cible.x
+            ny = cible.y
+            pas -= distance
+            points.shift()
+            if (distance > 0) {
+              dernierDx = ex
+              dernierDy = ey
+            }
+          } else {
+            nx += (ex / distance) * pas
+            ny += (ey / distance) * pas
+            dernierDx = ex
+            dernierDy = ey
+            pas = 0
           }
-        } else {
-          changer({ x: x + (ex / distance) * pas, y: y + (ey / distance) * pas, marche: true, ...orientation(ex, ey) })
         }
-      } else if (joueurRef.current.marche) {
-        changer({ marche: false })
+        if (points.length === 0) {
+          const quandArrive = chemin.current.quandArrive
+          chemin.current = null
+          vitesse.current = 0
+          changer({ x: nx, y: ny, marche: false, destination: null, ...regarder(dernierDx, dernierDy) })
+          quandArrive?.()
+        } else {
+          changer({ x: nx, y: ny, marche: true, ...regarder(dernierDx, dernierDy) })
+        }
+      } else {
+        vitesse.current = 0
+        if (joueurRef.current.marche) changer({ marche: false })
       }
       image = requestAnimationFrame(avancer)
     }
@@ -125,9 +178,10 @@ export function useJoueurVillage(village: Village, actif: boolean) {
   const fleche = useCallback((direction: DirectionFleche, appuyee: boolean) => {
     if (appuyee) {
       chemin.current = null // les flèches reprennent la main
+      if (joueurRef.current.destination) changer({ destination: null })
       touches.current.add(direction)
     } else touches.current.delete(direction)
-  }, [])
+  }, [changer])
 
   const arreterFleches = useCallback(() => touches.current.clear(), [])
 
@@ -140,13 +194,18 @@ export function useJoueurVillage(village: Village, actif: boolean) {
     const depart = { x: Math.floor(joueurRef.current.x), y: Math.floor(joueurRef.current.y) }
     if (depart.x === cible.x && depart.y === cible.y) {
       chemin.current = null
+      changer({ destination: null })
       quandArrive?.()
       return
     }
     const cases = trouverChemin(villageRef.current, depart, cible) ?? [depart, cible]
-    chemin.current = { points: cases.slice(1).map((c) => ({ x: c.x + 0.5, y: c.y + 0.5 })), quandArrive }
-    if (chemin.current.points.length === 0) chemin.current.points.push({ x: cible.x + 0.5, y: cible.y + 0.5 })
-  }, [])
+    const centres = cases.slice(1).map((c) => ({ x: c.x + 0.5, y: c.y + 0.5 }))
+    if (centres.length === 0) centres.push({ x: cible.x + 0.5, y: cible.y + 0.5 })
+    // On lisse le chemin : au lieu de passer par le centre de chaque case (en escalier), il va en
+    // ligne droite jusqu'au point le plus loin qu'il voit sans obstacle.
+    chemin.current = { points: lisserChemin(villageRef.current, joueurRef.current, centres), quandArrive }
+    changer({ destination: centres[centres.length - 1] })
+  }, [changer])
 
   const sauter = useCallback(() => changer({ saut: joueurRef.current.saut + 1 }), [changer])
 
@@ -211,4 +270,46 @@ function caseLibreProche(village: Village, c: Case): Case {
     }
   }
   return c
+}
+
+// Peut-on aller en ligne droite de a à b sans toucher un bâtiment ? On regarde des points tout
+// le long du trait, et un peu à gauche et à droite (le personnage a une largeur).
+function ligneLibre(bloquees: Set<string>, a: { x: number; y: number }, b: { x: number; y: number }): boolean {
+  const longueur = Math.hypot(b.x - a.x, b.y - a.y)
+  if (longueur === 0) return true
+  const nx = -(b.y - a.y) / longueur
+  const ny = (b.x - a.x) / longueur
+  const etapes = Math.ceil(longueur / 0.25)
+  for (let i = 0; i <= etapes; i++) {
+    const t = i / etapes
+    const x = a.x + (b.x - a.x) * t
+    const y = a.y + (b.y - a.y) * t
+    for (const cote of [-0.28, 0, 0.28]) {
+      const cx = Math.floor(x + nx * cote)
+      const cy = Math.floor(y + ny * cote)
+      if (cx < 0 || cy < 0 || cx >= TAILLE_GRILLE || cy >= TAILLE_GRILLE || bloquees.has(cleCase(cx, cy))) return false
+    }
+  }
+  return true
+}
+
+// Le chemin lissé : depuis là où il est, on saute au point le plus loin qu'on voit en ligne droite.
+function lisserChemin(village: Village, depart: { x: number; y: number }, points: { x: number; y: number }[]): { x: number; y: number }[] {
+  const bloquees = casesBloquees(village) // calculé une seule fois pour tout le chemin
+  const lisse: { x: number; y: number }[] = []
+  let ici = depart
+  let i = 0
+  while (i < points.length) {
+    let loin = i
+    for (let j = points.length - 1; j > i; j--) {
+      if (ligneLibre(bloquees, ici, points[j])) {
+        loin = j
+        break
+      }
+    }
+    lisse.push(points[loin])
+    ici = points[loin]
+    i = loin + 1
+  }
+  return lisse
 }

@@ -270,10 +270,10 @@
 
 /* Quelque chose attend : le bouton respire et brille. */
 .bouton-attention {
-  animation: respire 1.4s ease-in-out infinite;
+  animation: bouton-respire 1.4s ease-in-out infinite;
 }
 
-@keyframes respire {
+@keyframes bouton-respire {
   0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgb(255 230 120 / 0)); }
   50% { filter: brightness(1.12) drop-shadow(0 0 12px rgb(255 230 120 / 0.9)); }
 }

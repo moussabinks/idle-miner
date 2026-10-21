@@ -209,7 +209,7 @@ Une ligne fine en forme de pilule juste sous le bandeau : « 🎯 **Pioche en Fe
 Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage, une **grille de 60 × 60 cases** (jamais tracée), la **mine** au milieu, et tout ce que le joueur a posé. Les règles (où poser, prix, rails) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
 
 **La caméra** :
-- elle **suit le joueur** (en douceur), ou le **wagonnet** quand le joueur le pousse ; le zoom de départ dépend de la largeur de la vue ;
+- elle **suit le joueur** en douceur, ou le **wagonnet** quand le joueur le pousse : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
 - **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
 - **zoomer** : molette (autour du point sous la souris) ou **pincer** à deux doigts, entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
 
