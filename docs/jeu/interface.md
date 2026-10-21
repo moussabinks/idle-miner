@@ -1,7 +1,7 @@
 # L'interface de Mega Digger
 
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
-> Écrit d'après le code au 20/10 (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`…). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; le style visuel, les animations et les sons sont dans [visuel-et-sons.md](visuel-et-sons.md).
+> Écrit d'après le code au 20/10 (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`…), après le passage au **village vu du ciel** (20/10). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, décorations, convois) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
 
 Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affichent au format français (`1 250 $`).
 
@@ -12,7 +12,7 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 3. [L'écran de jeu : la mise en page](#3-lécran-de-jeu--la-mise-en-page)
 4. [L'en-tête et le bandeau (HUD)](#4-len-tête-et-le-bandeau-hud)
 5. [La barre « prochain objectif »](#5-la-barre--prochain-objectif--prochainobjectiftsx)
-6. [La vue du monde : village et mine](#6-la-vue-du-monde--village-et-mine-vuemondetsx)
+6. [La vue du monde : le village vu du ciel et la mine](#6-la-vue-du-monde--le-village-vu-du-ciel-et-la-mine)
 7. [La barre de boutons d'action](#7-la-barre-de-boutons-daction)
 8. [Le panneau de droite](#8-le-panneau-de-droite)
 9. [Les composants partagés des panneaux](#9-les-composants-partagés-des-panneaux)
@@ -43,32 +43,31 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 
 ## 2. L'écran d'accueil (`Accueil.tsx`)
 
-De haut en bas :
+Refait le 20/10 dans le style des images du village (bois, or, lanternes). Derrière toute la page, le **décor de la clairière** (`fond.webp`) très assombri. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**, et les champs de texte en bois foncé. De haut en bas :
 
 ### 2.1 Le grand bandeau (« héros »)
 
-Un décor de grotte sombre (lueurs, éclats de minerai qui montent, rochers, voir [visuel-et-sons.md](visuel-et-sons.md#6-lécran-daccueil-accueilcss)), avec :
+Un cadre en bois sombre avec un filet doré. Le fond est un **petit village vivant** (`SceneAccueil.tsx`, voir [visuel-et-sons.md](visuel-et-sons.md#6-lécran-daccueil-accueilcss)) : la même vue du ciel que dans le jeu, avec la mine, les 7 bâtiments, des décorations, des rails, des hamsters mineurs qui vont et viennent entre la mine, le marché, la forge et le Personnel, un wagonnet qui fait la navette, le joueur devant la mine, le manager et le recruteur à leur poste. Ce n'est qu'un décor (pas la partie du joueur). Sur ordinateur, le village est dans la moitié droite et un voile sombre à gauche laisse lire le texte ; sur téléphone, il est en haut (centré sur la mine) et le texte passe dessous. Par-dessus :
 
-- le **logo** « ⛏️ MEGA / DIGGER » (police Luckiest Guy, lettres dorées) ;
-- l'accroche « Creuse. Vends. **Deviens riche.** » et un paragraphe d'explication (bedrock, mineurs rares/épiques/mythiques, foreuse, prestige) ;
+- le **logo** « MEGA / DIGGER » (police Luckiest Guy, lettres dorées) cloué sur un **panneau en bois** (planches, 4 clous dorés, un peu penché), avec le **hamster du joueur** à côté, sa pioche en diamant à la main ;
+- l'accroche « Creuse. Construis. **Deviens riche.** » et un paragraphe d'explication (bedrock, village à bâtir où l'on veut dans la clairière, mineurs rares/épiques/mythiques, prestige) ;
 - le **gros bouton doré** :
-  - s'il existe au moins un monde : « ▶ Jouer » + détail « *nom* · ⭐ *prestige* · -*profondeur* m » → reprend le **dernier monde joué** ;
-  - sinon : « ⛏️ Commencer à creuser / Ta première mine t'attend » → crée un monde nommé « Monde 1 » et lance la partie ;
+  - s'il existe au moins un monde : « ▶ Jouer » + détail « *nom* · ⭐ *prestige* · -*profondeur* m » (« *nom* · nouveau village » si c'est une partie d'avant le 20/10, qui va repartir de zéro) → reprend le **dernier monde joué** ;
+  - sinon : « ⛏️ Commencer / Ta clairière et ta mine t'attendent » → crée un monde nommé « Monde 1 » et lance la partie ;
   - grisé pendant que le compte se charge ou se synchronise ;
-- un lien-bouton « 🌍 Mes mondes » qui fait défiler jusqu'à la section des mondes (`#mondes`) ;
-- trois gros chiffres : « -100 m jusqu'à la bedrock », « +50 m à chaque prestige », « 5 raretés de mineurs » (calculés depuis `profondeurBedrock(0)` et `PROFONDEUR_EN_PLUS_PAR_PRESTIGE`) ;
-- à droite, une **illustration** : une coupe de la mine (ciel, soleil, une petite échoppe, herbe, puis 6 rangées étiquetées -2 m, -24 m, -70 m, -117 m, -140 m, -150 m avec terre, charbon, fer, redstone, or, lapis, émeraude, diamant, débris, lave, bedrock), le mineur qui creuse au fond de son puits, et une pastille « 🏆 Bedrock ». C'est un dessin fixe, pas la partie du joueur.
+- un bouton en bois « 🌍 Mes mondes » qui fait défiler jusqu'à la section des mondes (`#mondes`) ;
+- trois gros chiffres : « -100 m jusqu'à la bedrock », « +50 m à chaque prestige », « 7 bâtiments à poser » (calculés depuis `profondeurBedrock(0)`, `PROFONDEUR_EN_PLUS_PAR_PRESTIGE` et `LISTE_BATIMENTS`).
 
 ### 2.2 « Comment jouer » : 4 cartes numérotées
 
-| N° | Titre | Texte |
-|---|---|---|
-| 1 | ⛏️ Creuse | Couche par couche : charbon, fer, or, diamants… |
-| 2 | 💰 Vends | Au marché du village, et regarde ton argent grimper. |
-| 3 | 👷 Automatise | Ascenseur, foreuse, mineurs et manager bossent pour toi. |
-| 4 | 🏆 Prestige | Atteins la bedrock et recommence encore plus fort. |
+| N° | Image | Titre | Texte |
+|---|---|---|---|
+| 1 | portrait du mineur casqué | Creuse | Couche par couche : charbon, fer, or, diamants… jusqu'à la bedrock. |
+| 2 | le dessin du forgeron | Construis | Pose le marché, la forge, le bazar… où tu veux dans la clairière, et décore ton village. |
+| 3 | portrait du recruteur | Embauche | Des mineurs rares, épiques… mythiques creusent et vont vendre à pied ou en wagonnet. |
+| 4 | le dessin de l'arbre de prestige | Prestige | Atteins la bedrock et repars plus fort, dans une mine encore plus profonde. |
 
-Chaque carte a sa couleur (or, vert, bleu, rose) et se soulève au survol.
+Chaque carte est en bois sombre, avec une pièce dorée pour le numéro, une lueur et un titre de sa couleur (or, vert, bleu, rose), et se soulève au survol. Les portraits sont dans un médaillon rond à bord doré.
 
 ### 2.3 La section des mondes (`#mondes`)
 
@@ -81,9 +80,9 @@ Dans l'ordre :
 
 **Une carte de monde** (`CarteMonde`) :
 
-- un liseré en haut et une lueur de la couleur du monde (5 couleurs : or `#f2b33d`, bleu `#4a8af0`, turquoise `#22b5a3`, rose `#e85aa8`, violet `#9b6cf0`) ;
+- un liseré épais en haut et une lueur de la couleur du monde sur le bois (5 couleurs : or `#f2b33d`, bleu `#4a8af0`, turquoise `#22b5a3`, rose `#e85aa8`, violet `#9b6cf0`) ;
 - le titre « 🌍 *nom* », et le badge « Dernière partie » sur le premier de la liste (le dernier joué) ;
-- 4 infos : 📏 profondeur (ou « Bedrock atteinte »), 💵 argent, ⭐ Prestige *n*, ⛏️ blocs cassés. Si la sauvegarde est illisible : « Partie illisible : elle recommencera à zéro. » ;
+- 4 infos : 📏 profondeur (ou « Bedrock atteinte »), 💵 argent, ⭐ Prestige *n*, ⛏️ blocs cassés. Pour une partie d'une ancienne version (`partieAncienne`, avant le village vu du ciel), un cadre doré en pointillés : « 🏡 Partie de l'ancienne version : elle repart de zéro dans le nouveau village vu du ciel. » ; si la sauvegarde est illisible : « Partie illisible : elle recommencera à zéro. » ;
 - « Joué il y a … » (« à l'instant », « il y a 5 min », « il y a 3 h », « il y a 2 jours ») ;
 - les boutons :
 
@@ -94,7 +93,7 @@ Dans l'ordre :
 | 📄 Dupliquer | bleu (acheter) | copie le monde ; grisé s'il y a déjà 5 mondes (bulle « 5 mondes au maximum ») |
 | 🗑️ | rouge | confirmation du navigateur « Supprimer le monde « … » ? Sa partie sera perdue pour toujours. » puis suppression |
 
-**La carte « ✨ Nouveau monde »** (bordure en pointillés) : un champ nom (24 caractères, « Monde *n+1* » par défaut) et « ⛏️ Créer et jouer » (Entrée marche aussi). Avec 5 mondes, elle est remplacée par « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
+**La carte « ✨ Nouveau monde »** (bordure en pointillés brun clair) : un champ nom (24 caractères, « Monde *n+1* » par défaut) et « ⛏️ Créer et jouer » (Entrée marche aussi). Avec 5 mondes, elle est remplacée par « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
 
 ### 2.4 La carte du compte (`CarteCompte.tsx`)
 
@@ -142,24 +141,31 @@ Sous les mondes, visible par tout le monde (même sans compte) :
 
 ## 3. L'écran de jeu : la mise en page
 
+Depuis le 20/10, l'écran de jeu a **deux modes**, selon l'endroit où est le joueur (classe `jeu mode-village` ou `jeu mode-mine`, choisie par `aLaSurface(etat)`) :
+
+- **au village** : le **village vu du ciel** (`VueVillage.tsx`), une carte isométrique où l'on se promène et où l'on pose ses bâtiments ;
+- **dans la mine** (échelle, cabine, front de taille) : la **vue en coupe 2D** d'avant (`VueMonde.tsx`), où l'on creuse.
+
+On passe de l'un à l'autre par l'entrée de la mine, avec une animation (voir [§ 13](#13-navigation-village--mine)).
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ ⛏️ MEGA DIGGER        Recommencer à zéro  🌍 Monde  📊  🏅  │  en-tête
-│ [Argent][Profondeur][Pioche][Sac][🪣 🛗 ⭐ 🔊 🎵]            │  bandeau (HUD)
+│ [Argent][Lieu][Pioche][Sac][🪣 🛗 ⭐ 🔊 🎵]                   │  bandeau (HUD)
 │ 🎯 prochain objectif ································ (jauge)  │
 ├──────────────────────────────┬───────────────────────────────┤
 │  VUE DU MONDE                │  PANNEAU DE DROITE            │
-│  (village en haut,           │  (le stand où l'on est,       │
-│   puits de la mine dessous,  │   ou le sac dans la mine)     │
-│   défile verticalement)      │                               │
+│  village : carte vue du ciel │  (le bâtiment devant lequel   │
+│  mine : coupe du puits       │   on est, l'aide du village,  │
+│                              │   ou le sac dans la mine)     │
 │                              │                               │
-│ [Creuser][Auto][Village][Mine]│  notifications (toasts)      │
-│  ← → pour marcher…           │                               │
+│ [barre de 4 boutons]         │  notifications (toasts)       │
+│  ← ↑ → ↓ pour marcher…       │                               │
 └──────────────────────────────┴───────────────────────────────┘
 ```
 
-- `main.plateau` : deux colonnes sur ordinateur (`colonne-mine` à gauche, `colonne-panneaux` à droite), une seule sur téléphone (voir [§ 14](#14-téléphone-ou-ordinateur--la-mise-en-page)).
-- La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé : la mine s'élargit de 2 cases pour leur galerie.
+- `main.plateau` : deux colonnes sur ordinateur (`colonne-mine` à gauche, `colonne-panneaux` à droite ; au village, la carte prend toute la place et le panneau fait 300 à 380 px), une seule sur téléphone (voir [§ 14](#14-téléphone-ou-ordinateur--la-mise-en-page)).
+- La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé : la mine 2D s'élargit de 2 cases pour leur galerie ; et `avec-panneau` quand le panneau d'un bâtiment est ouvert.
 
 ---
 
@@ -170,7 +176,7 @@ Sous les mondes, visible par tout le monde (même sans compte) :
 | Élément | Effet |
 |---|---|
 | **⛏️ MEGA DIGGER** | le titre (pas cliquable) |
-| lien **Recommencer à zéro** | confirmation du navigateur « Effacer la partie du monde « … » et tout recommencer (succès et foreuse compris) ? » ; si OK : nouvelle partie dans ce monde, le mineur replacé devant la mine |
+| lien **Recommencer à zéro** | confirmation du navigateur « Effacer la partie du monde « … » et tout recommencer (village, succès et foreuse compris) ? » ; si OK : nouvelle partie dans ce monde (une clairière avec seulement la mine), le hamster replacé devant la mine |
 | **🌍 *nom du monde*** | retour à l'accueil (bulle : « Changer de monde (ta partie est sauvegardée automatiquement) ») |
 | **📊 Stats** | ouvre la [fenêtre des statistiques](#102-les-statistiques-statistiquestsx) |
 | **🏅 *n*/*total*** | ouvre la [fenêtre des succès](#101-les-succès) (nombre obtenus / nombre total) |
@@ -198,64 +204,60 @@ Ces trois derniers sont des pastilles grises arrondies qui passent en or au surv
 
 Une ligne fine en forme de pilule juste sous le bandeau : « 🎯 **Pioche en Fer** · 180 / 300 $ » avec une jauge dorée de 3 px dessous. Règles dans `src/jeu/objectifs.ts` :
 
-1. si une amélioration est payable tout de suite (la pioche en premier) : « ✨ **nom** · achetable au forgeron ! », bordure verte qui pulse, jauge verte pleine ;
+1. si un achat est payable tout de suite : d'abord les **bâtiments à poser** (« ✨ **Construire : Marché** · gratuit : pose-le (menu Bâtiments) ! », ou « · à poser (menu Bâtiments) ! »), puis les améliorations des bâtiments déjà posés (la pioche en premier : « ✨ **nom** · achetable au forgeron ! ») ; bordure verte qui pulse, jauge verte pleine ;
 2. sinon l'achat dont on a la plus grande part de l'argent : détail « *argent* / *prix* $ » ou « il manque *n* *minerai* » ;
 3. quand tout est acheté : « Atteindre la bedrock · -*P* / -*bedrock* m » (pas cliquable, bulle « Continue de creuser ! ») ;
 4. bedrock atteinte et tout prêt : « Prestige *n+1* · tout est prêt, à l'arbre de prestige ! ».
 
-**Clic** : au village, le mineur marche jusqu'au bon stand ; dans la mine, il remonte au village.
+**Clic** : pour une construction, ouvre le **menu Bâtiments** (dans la mine : remonte d'abord au village) ; sinon, au village, le hamster marche jusqu'au bon bâtiment (le panneau s'ouvre en arrivant) ; dans la mine, il remonte au village.
 
-Les achats regardés : pioche suivante (forgeron), ascenseur (entrée de la mine), sac (bazar), enchantements (enchanteur), activation / forage / chariot (foreuse), embauche, pioches des mineurs, recruteur, manager (Personnel).
+Les achats regardés : les bâtiments débloqués pas encore posés, puis, seulement dans les bâtiments posés : pioche suivante (forgeron), ascenseur (mine), sac (bazar), enchantements (enchanteur), activation / forage / chariot (foreuse), embauche, pioches des mineurs, recruteur, manager (Personnel).
 
 ---
 
-## 6. La vue du monde : village et mine (`VueMonde.tsx`)
+## 6. La vue du monde : le village vu du ciel et la mine
 
-Un seul grand cadre noir à bords arrondis, qui défile **verticalement** : le village en haut, puis tout le puits creusé depuis l'entrée jusqu'à 4 couches sous le front de taille. La **caméra** (le défilement) garde le joueur au milieu : elle suit directement pendant un trajet (échelle, ascenseur) et glisse en douceur pour les grands sauts (arrivée au village…). Le joueur n'est dessiné qu'à un seul endroit à la fois (village, échelle, cabine ou front).
+### 6.1 Le village vu du ciel (`VueVillage.tsx`)
 
-### 6.1 Le village (`VueVillage.tsx`)
+Une carte **isométrique** (vue du ciel à 45°, comme Clash of Clans) dans un cadre noir à bords arrondis : le décor de la clairière (une grande image de 1 536 × 1 024 px), une **grille de 40 × 40 cases** posée sur l'herbe, la **mine** au milieu au début de la partie, et tout ce que le joueur a posé : bâtiments (5 × 5 cases), rails, chemins de pavés, décorations. Les règles (où poser, prix, rails, convois) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
 
-Une bande de 250 px de haut, **plus large que l'écran** (27 tuiles de 40 px, décor jusqu'à 40 tuiles) qui défile **horizontalement** : la caméra centre le mineur, sans dépasser les bords. Les 8 stands, de gauche à droite (positions dans `src/composants/stands.ts`) :
+**La caméra** :
+- elle **suit le joueur** (en douceur) ; le zoom de départ dépend de la largeur de la vue (`largeur / 760`, entre le zoom minimum et ×2,6) ;
+- **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
+- **zoomer** : molette (autour du point sous la souris) ou **pincer** à deux doigts ; du zoom minimum (la carte remplit toujours la vue, jamais de vide sur les bords) à ×2,6.
 
-| Stand | x (tuiles) | Dessin | Fiche |
+**Ce qu'on voit** :
+- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. La mine (dessin SVG) **se creuse** au fil de la profondeur atteinte, et son chevalement montre l'ascenseur une fois construit ;
+- le **joueur** : un hamster sans casque, sa pioche à la main (de la couleur de sa pioche, rien si elle est cassée), avec la tenue achetée au Bazar ;
+- les **mineurs employés** quand ils sont au village : en marche vers le marché (un sac de minerais sur le dos), vers la forge ou vers la mine ; arrêtés devant le marché (ils vendent) ou devant la forge (ils récupèrent leur pioche) ; et devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une petite étiquette à son prénom, bordée de la couleur de sa rareté (comme son casque) ;
+- le **manager** et le **recruteur** (s'ils sont embauchés), à leur poste devant le Personnel, avec une étiquette dorée ;
+- les **chargements** qui partent au marché : un **wagonnet** sur les rails, ou une **brouette** à pied ;
+- les **bulles de notification** au-dessus des bâtiments (ci-dessous).
+
+**Toucher la carte** (un appui court, sans glisser) : un **bâtiment** → le hamster y marche (en contournant ce qui gêne), puis son panneau s'ouvre ; une **case** → il y marche. Le reste du temps, on marche avec les flèches du clavier (voir [§ 12](#12-les-contrôles--clavier-souris-tactile)).
+
+**Les bulles de notification** (`src/jeu/notifications.ts`, 20/10) remplacent les anciens badges, pastilles et flèches du village : une pilule qui saute au-dessus du bâtiment, avec 1 ou 2 icônes (la plus urgente d'abord). Survol : toutes les explications ; clic : on y va.
+
+| Sorte (couleur) | Icônes | Bâtiment | Quand |
 |---|---|---|---|
-| ⭐ Prestige | 1,5 | grand arbre magique rose et violet, étoile au sommet | [prestige.md](../batiments/prestige.md) |
-| Mine (puits) | 4,5 | entrée de galerie dans un rocher, poutres, lanterne, rails, wagonnet | [mine.md](../batiments/mine.md) |
-| 💰 Marché | 7,5 | échoppe, auvent rouge | [marche.md](../batiments/marche.md) |
-| ⚒️ Forgeron | 10,5 | échoppe, auvent gris ardoise | [forgeron.md](../batiments/forgeron.md) |
-| 🎒 Bazar | 13,5 | échoppe, auvent vert | [bazar.md](../batiments/bazar.md) |
-| 🔮 Enchanteur | 16,5 | échoppe, auvent violet | [enchanteur.md](../batiments/enchanteur.md) |
-| ⚙️ Foreuse | 19,8 | grande tour de forage (derrick) orange | [foreuse.md](../batiments/foreuse.md) |
-| 👷 Personnel | 22,8 | échoppe, auvent orange, dessin de deux mineurs casqués | [personnel.md](../batiments/personnel.md) |
+| alerte (rouge) | 😠 | Personnel | des mineurs ne sont pas payés |
+| alerte (rouge) | 🛒 / 🔥 | Foreuse | chariot plein / plus de charbon |
+| alerte (rouge) | 🔧 | Forgeron | ta pioche est cassée |
+| alerte (rouge) | 🎒 | Marché | ton sac est plein |
+| prêt (rose) | ⭐ / 🌟 | Arbre de prestige | prêt pour le prestige / points de talent à dépenser |
+| nouveau (bleu) | ✨ | Foreuse / Personnel | une nouveauté débloquée (foreuse, Personnel, recruteur, manager) pas encore vue |
+| niveaux (or) | ⬆️ | tous | le dernier prestige a débloqué de nouveaux niveaux, et on n'y est pas encore passé |
+| achat (vert) | 💰 | tous | une amélioration y est payable tout de suite |
 
-- Chaque stand est un **bouton** avec un petit panneau en bois portant son nom ; ce panneau devient **doré** quand le mineur est devant (à moins de 1,4 tuile). Survol : le dessin s'éclaircit. Bulle : la description du stand (ou « Débloqué au prestige 1/2 » s'il est verrouillé).
-- **Cliquer un stand** : le mineur y marche tout seul. Les stands sont désactivés quand on n'est pas au village.
-- **Foreuse** (avant le prestige 1) et **Personnel** (avant le prestige 2) : grisés, derrière une **barrière en bois avec un cadenas** 🔒.
-- Le mineur (une taupe avec casque, gilet et sac, voir [visuel-et-sons.md](visuel-et-sons.md#4-le-personnage-personnagetsx)) marche sur le chemin, tourné dans son sens de marche, en tenant sa pioche (rien en main si elle est cassée). Les hautes herbes du premier plan passent devant lui. Il disparaît quand il monte dans l'ascenseur.
+Arriver devant le bâtiment marque la nouveauté (ou les nouveaux niveaux) comme vue, pour de bon. Les bulles ne concernent que les bâtiments posés.
 
-**Les repères au-dessus des stands** (un seul badge à la fois, par ordre de priorité) :
+**En construction** (placement, pinceau, Modifier) : la **grille** s'affiche (traits blancs), et ce qu'on pose est un **fantôme** un peu transparent qui pulse, sur un losange **vert** (la place est libre) ou **rouge** (occupée ; le dessin rougit aussi). Voir [§ 7](#7-la-barre-de-boutons-daction).
 
-| Repère | Où | Quand |
-|---|---|---|
-| « ⭐ Prêt ! » (rose) | arbre de prestige | on peut passer prestige |
-| « 🌟 *n* point(s) ! » (rose) | arbre de prestige | il reste des points de talent |
-| « 😠 Salaires ! ⬇ » (rouge foncé) | Personnel | des mineurs ne sont pas payés |
-| « Nouveau ! ⬇ » (rouge, qui saute) | Foreuse / Personnel | une nouveauté débloquée (foreuse, Personnel, recruteur, manager) pas encore vue |
-| « ⬆ Niveaux ! » (jaune, qui saute) | entrée de la mine, bazar, enchanteur, foreuse, Personnel | le dernier prestige a débloqué de nouveaux niveaux, et on n'est pas encore passé devant |
-| « 💰 Achetable ! » (pastille verte, en plus) | tout stand non verrouillé | une amélioration y est payable tout de suite |
+### 6.2 La mine en coupe (`VueMonde.tsx`)
 
-**Les flèches sur le bord du village** (pilules qui clignotent, la pointe ⬅/➡ pousse vers le stand ; cliquables : le mineur y va) :
-- jaune « Nouveau : **Foreuse** ! » (ou Personnel, Recruteur, Manager) ;
-- jaune « ⬆ Nouveaux niveaux : **Bazar** ! » (seulement s'il n'y a pas de nouveauté à montrer), un peu plus haut ;
-- rouge « *alerte* **Personnel** » quand des salaires manquent, un peu plus bas.
+La vue d'avant, en 2D, quand on est dans la mine : un cadre noir qui défile **verticalement**, avec la caméra qui garde le joueur au milieu (directement pendant un trajet, en douceur pour les grands sauts). Tout en haut, une petite bande de **surface** (ciel, soleil, herbe et un panneau « ☀️ Village ») ; le village lui-même n'est plus dans cette vue. Les mineurs employés y creusent dans leur « univers parallèle » de la mine (chacun sa profondeur), avec une cabine chacun dans le puits commun.
 
-Elles disparaissent quand on est devant le stand concerné. Arriver devant marque la nouveauté (ou les nouveaux niveaux) comme vue, pour de bon.
-
-**Les mineurs non payés** attendent devant le stand Personnel (petits personnages de 32 px, rangés par 4, une bulle 😠 qui saute au-dessus, ils tapent du pied ; bulle « *nom* attend son salaire »).
-
-### 6.2 Le puits de la mine
-
-Sous le village, une rangée par mètre. Chaque rangée (`Rangee`) contient, de gauche à droite :
+Sous la surface, une rangée par mètre. Chaque rangée (`Rangee`) contient, de gauche à droite :
 
 | Colonne | Contenu |
 |---|---|
@@ -270,9 +272,10 @@ Sous le village, une rangée par mètre. Chaque rangée (`Rangee`) contient, de 
 - **Le front de taille** : la dernière rangée creusée, où se tient le mineur, dans la colonne choisie (ou au-dessus du bloc qu'il casse pendant le minage). Il marche vers la gauche quand il part vers le puits.
 - **La couche en cours** (juste sous le front) : le bloc que le mineur va casser est **entouré de blanc** ; pendant le minage il tremble et se fissure pendant la durée du bloc. Le mineur creuse en zigzag (son orientation suit le sens de minage).
 - **3 couches de plus** dessous, de plus en plus sombres ; puis la **bedrock** quand on y arrive.
+- **Le joueur** est le hamster de profil (`Personnage.tsx`), avec sa tenue ; les mineurs employés ont un casque de la couleur de leur rareté.
 - **Sur l'échelle** : le mineur grimpe (il se balance). **Dans la cabine** : il est dessiné dedans, derrière la grille, avec un halo doré. Une petite **caisse de minerai** apparaît dans la cabine quand elle transporte un chargement (ou qu'il y a des objets sur le quai). En route, la lampe de la cabine clignote en orange et la poulie tourne.
 - **La foreuse** : son puits descend jusqu'à elle ; sa tête (machine orange et mèche) affiche « -*n* m » (ou « ↓ -*n* m » si elle est plus bas que ce qu'on voit). En marche : halo, gyrophare, mèche qui tourne, vibration, fumée, débris. Éteinte : grisée.
-- **Les mineurs employés** : chacun a sa cabine (qu'on voit descendre avec lui, l'attendre à côté de lui, le remonter), et quand il creuse il est dessiné dans le trou à droite, au-dessus d'un bloc qui tremble. Son **étiquette** : icône d'activité (⛏️ creuse, ⏫ remonte, 💰 vend, ⏬ redescend, 😠 attend son salaire), son prénom (caché sur petit téléphone), « -*n* m » quand il creuse sinon le temps restant « *n* s », « ↓ » s'il est plus bas que la vue, et une mini-jauge de son sac. L'étiquette prend la couleur de sa rareté ; légendaires et mythiques ont une aura qui pulse ; elle passe au vert quand il remonte avec un sac plein.
+- **Les mineurs employés** : chacun a sa cabine (qu'on voit descendre avec lui, l'attendre à côté de lui, le remonter), et quand il creuse il est dessiné dans le trou à droite, au-dessus d'un bloc qui tremble. Son **étiquette** : icône d'activité (⛏️ creuse, ⏫ remonte, 🚶 marche au village, 💰 vend, 🔨 à la forge, ⏬ redescend, 😠 attend son salaire), son prénom (caché sur petit téléphone), « -*n* m » quand il creuse sinon le temps restant « *n* s », « ↓ » s'il est plus bas que la vue, et une mini-jauge de son sac. L'étiquette prend la couleur de sa rareté ; légendaires et mythiques ont une aura qui pulse ; elle passe au vert quand il remonte avec un sac plein.
 
 ### 6.3 Ce qui flotte par-dessus la vue
 
@@ -280,7 +283,7 @@ Sous le village, une rangée par mètre. Chaque rangée (`Rangee`) contient, de 
 |---|---|---|
 | **Indicateur foreuse** | collé en haut à droite | dès que la foreuse est active : mini-foreuse animée + « Foreuse -*n* m · en marche/arrêtée ». **Clic** : la vue défile jusqu'à la foreuse |
 | **Indicateur mineurs** | dessous | « 👷 *n* mineurs · ⛏️ 2 · ⏫ 1 · 💰 1… » et « 😠 *n* sans salaire ! » (passe au rouge et clignote). Pas cliquable |
-| **Bandeau « 🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l'arbre de prestige (village). »** | collé en haut | dans la mine, une fois la victoire obtenue |
+| **Bandeau « 🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l'arbre de prestige (village). »** | collé en haut | une fois la victoire obtenue |
 | **Bandeau « 🧱 Couche trop dure pour ta pioche en *X* ! »** | collé en bas, rouge-brun | dans la mine, quand la couche suivante demande une meilleure pioche (`enGalerie`) : « Équipe ta pioche en **Y** (onglet Pioches). » si on l'a, sinon « Il te faut une pioche en **Y** : achète-la au forgeron (village). » |
 | **« +X $ »** de vente | haut-milieu | grosse animation avec gerbe de 12 pièces (1,8 s), pour chaque vente du joueur |
 | **« +X $ »** petit | bas-droite | pour l'argent qui n'est pas une vente (coffre, récolte des mineurs…), 1,2 s |
@@ -290,18 +293,58 @@ Sous le village, une rangée par mètre. Chaque rangée (`Rangee`) contient, de 
 
 ## 7. La barre de boutons d'action
 
-Toujours **les 4 mêmes boutons, à la même place** (sous la vue sur ordinateur, collés en bas de l'écran sur téléphone) ; ceux qui ne servent pas à l'endroit où l'on est sont grisés.
+Toujours **4 boutons à la même place** (sous la vue sur ordinateur, collés en bas de l'écran sur téléphone). Ils changent avec le mode.
+
+**Au village** (`actions-village`) :
+
+| Bouton | Couleur | Effet |
+|---|---|---|
+| **🏗️ Bâtiments** | brique | ouvre le menu Bâtiments (et marque les nouveautés comme vues). Une **pastille rouge** qui saute compte les bâtiments **nouveaux** (pas encore vus dans le menu) **ou constructibles tout de suite** |
+| **🌸 Décos** | rose fleur | ouvre le menu Décorations |
+| **✏️ Modifier** | gris | passe en mode Modifier (déplacer, retourner, enlever ce qui est posé) |
+| **⛏️ Mine** | bois | le hamster marche jusqu'à la mine, puis on y entre (comme « Entrer dans la mine ») ; grisé pendant l'animation |
+
+**Pendant qu'on pose quelque chose** (un bâtiment, une décoration, ou un rail / un pavé qu'on déplace) (`actions-edition`) :
+
+| Bouton | Couleur | Effet |
+|---|---|---|
+| **✔ Construire ici** / **✔ Poser (*prix* $)** / **✔ Poser ici** | vert | pose le fantôme : « Construire ici » pour un nouveau bâtiment (on le paie), « Poser (*prix* $) » pour une nouvelle décoration, « Poser ici » pour un élément qu'on déplace (gratuit) ; grisé si la place n'est pas libre |
+| **↔ Retourner** | gris | le met en **miroir** (gauche ↔ droite ; l'entrée change de côté) ; pas pour les rails et les pavés |
+| **🗑️ Enlever** | rouge | seulement pour une décoration, un rail ou un pavé déjà posé : l'enlève, **sans remboursement** (un bâtiment ne s'enlève pas) |
+| **✖ Annuler** | rouge | laisse tout comme avant |
+
+Pour placer le fantôme : il apparaît sur une place libre près du joueur ; il suit la souris, on le fait glisser au doigt, ou on touche la case où le mettre (il s'y centre).
+
+**En mode pinceau** (rails ou chemin de pavés) : une consigne « 🛤️ Touche ou glisse sur les cases pour poser des rails (10 🔩 fer la case). » (ou « 🪨 … un chemin (5 $ la case). ») et **✔ Terminé** (vert). Chaque case touchée (ou survolée en glissant) reçoit un rail ou un pavé si elle est libre et qu'on peut payer.
+
+**En mode Modifier** : « ✏️ Touche un bâtiment, une décoration, un rail ou un chemin pour le déplacer. » et **✔ Terminé** (vert). L'élément touché devient un fantôme, avec la barre de placement ci-dessus.
+
+**Dans la mine** :
 
 | Bouton | Couleur | Actif quand | Effet |
 |---|---|---|---|
 | **⛏️ Creuser** | or | au front de taille, sans minage en cours | casse la **couche en cours** jusqu'au bout (tous ses blocs restants), puis s'arrête. Pendant ce temps il devient **⏹️ Arrêter** (rouge) |
 | **♾️ Auto** | or foncé | au front, sans minage, pioche pas cassée | creuse **sans s'arrêter**, couche après couche. Devient **⏹️ Arrêt** (rouge). S'arrête tout seul si la pioche casse (toast « 💥 Pioche cassée : creusage automatique arrêté. ») ou si le sac est plein. Bulle si la pioche est cassée : « Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser ») » |
-| **🏠 Village** | bois | pas au village, pas dans la cabine | arrête le minage ; le mineur marche jusqu'au puits puis remonte en ascenseur s'il est là, sinon à l'échelle |
-| **⛏️ Mine** | bois | pas au front, pas dans la cabine | descend au front : depuis le village, marche d'abord jusqu'à l'entrée de la mine, puis ascenseur (s'il attend au village) ou échelle |
+| **🏠 Village** | bois | pas dans la cabine | arrête le minage ; le mineur marche jusqu'au puits puis remonte en ascenseur s'il est là, sinon à l'échelle. En arrivant en haut, on ressort dans le village |
+| **⛏️ Front** | bois | pas au front, pas dans la cabine | redescend au front (ascenseur ou échelle) |
 
 Le minage s'arrête aussi tout seul quand il n'y a plus de place : sac plein sans ascenseur (toast « 🎒 Sac plein ! Remonte vendre au marché (bouton Village). »), ou, avec l'ascenseur, sac **et** quai pleins (« 🎒 Sac plein ! Envoie tes objets à la surface avec l'ascenseur (panneau Sac). »). Avec l'ascenseur, les blocs en trop attendent d'abord sur son quai ; si l'**envoi automatique** est coché, la cabine vient chercher les objets quand le sac est plein et on continue de creuser. Le minage s'arrête aussi si le mineur quitte le front.
 
-Sous la barre, un rappel : « ← → pour marcher dans le village » (ou « pour te déplacer dans la mine »), caché sur écran tactile.
+Sous la barre, un rappel : « ← ↑ → ↓ pour marcher · Espace pour sauter » au village, « ← → pour te déplacer · ↑ ↓ sur l'échelle » dans la mine ; caché sur écran tactile.
+
+### 7.1 Les menus Bâtiments et Décorations (`MenuConstruction.tsx`)
+
+Une grande fenêtre en bois qui monte du bas de l'écran, avec deux onglets **🏗️ Bâtiments** / **🌸 Décorations** et un bouton ✖ (clic à côté ou Échap pour fermer). En haut, le rappel de ce qu'on a : « 💵 *argent* $ · 🪨 *n* pierre · 🔩 *n* fer (dans ton sac) » (la pierre compte aussi la roche dure).
+
+- **Bâtiments** : une carte par bâtiment (Marché, Forgeron, Bazar, Enchanteur, Arbre de prestige, Foreuse, Personnel) : son image, son nom, sa description, sa taille (5 × 5 cases), puis :
+  - **✔ Construit** (carte bordée de vert) s'il est déjà posé ;
+  - **🔒 Prestige *n*** (image grisée avec un gros cadenas) s'il n'est pas encore débloqué ;
+  - sinon son **prix** (« Gratuit ! » pour le marché ; l'argent, puis « *n*/*m* 🪨 Pierre (ou roche dure) », « *n*/*m* 🔩 Fer », en vert ce qu'on a, en rouge ce qui manque) et **🏗️ Poser** (bleu, grisé si on ne peut pas payer) : le menu se ferme et le fantôme du bâtiment apparaît sur la carte.
+  - un ruban rouge « Nouveau ! » qui saute sur les bâtiments tout juste débloqués.
+  - la dernière carte : **🛤️ Rails** (prestige 2) : « Une ligne continue de la mine au marché… 3 fois plus vite qu'à pied », le nombre de cases posées, le prix (10 🔩 fer la case) et **🛤️ Poser des rails** (mode pinceau).
+- **Décorations** : d'abord **🪨 Chemin de pavés** (« Pour relier tes bâtiments. Juste joli ! », 5 $ la case, **🖌️ Poser** en mode pinceau), puis une carte par décoration avec son dessin, sa taille, « on ne passe pas à travers » si elle bloque le passage, son prix et **🌸 Poser** (ou « 🔒 Prestige *n* »).
+
+La liste, les prix et les règles : [village.md](village.md).
 
 ---
 
@@ -311,26 +354,28 @@ Il change selon l'endroit :
 
 | Où | Contenu |
 |---|---|
-| Village, entre deux stands | « Le village · Promène-toi le long du chemin avec ← →, ou clique sur un stand pour y aller. » |
-| Village, devant un stand | titre (icône + nom), description, puis le panneau du stand |
+| Village, devant aucun bâtiment | « 🏡 Ton village » : « Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, Espace pour sauter). Fais glisser la carte pour la déplacer, pince ou utilise la molette pour zoomer. » et le rôle des menus Bâtiments, Décos et Modifier (caché sur téléphone) |
+| Village, devant un bâtiment | le **panneau du bâtiment** : son icône et son nom, un bouton rond **✖** pour le fermer, sa description, puis son contenu |
 | Échelle, cabine ou front | deux onglets **🎒 Sac** et **🧰 Pioches** |
 
-### 8.1 Les panneaux des stands
+**Quand le panneau d'un bâtiment s'ouvre** : quand le joueur **arrive en marchant** devant sa porte (à moins de 1,4 case de l'entrée), au clavier ou après l'avoir touché. Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie, en sortant de la mine), pour ne pas cacher la carte sur téléphone. ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
+
+### 8.1 Les panneaux des bâtiments
 
 Le contenu détaillé (chiffres, règles) est dans chaque fiche ; voici ce qu'on voit.
 
-| Stand | Panneau | Contenu à l'écran |
+| Bâtiment | Panneau | Contenu à l'écran |
 |---|---|---|
-| ⭐ Prestige | `CartePrestige` + carte « Arbre de prestige » | la [carte du prestige](#91-la-carte-du-prestige-carteprestigetsx) avec **⭐ Passer prestige *n*** ; à partir du prestige 1, « ⭐ Arbre de prestige » avec « Tu as *n* point(s) à dépenser ! » ou « *n* talent(s) débloqué(s)… » et **Ouvrir l'arbre** (rose). Fiche : [prestige.md](../batiments/prestige.md) |
-| Mine (puits) | dans `App.tsx` | « Ta mine descend à **-*P* m**. » + « L'ascenseur t'attend : descente en *n* s. » ou « À l'échelle, il faut *n* s pour y descendre. » ; **⏬ Descendre dans la mine en ascenseur / à l'échelle** (bois) ; **🛗 Appeler l'ascenseur** (cyan, si construit mais pas au village ; grisé s'il roule) ; la ligne « 🛗 Ascenseur » pour le construire/l'améliorer. Fiche : [mine.md](../batiments/mine.md) |
+| ⭐ Arbre de prestige | `CartePrestige` + carte « Arbre de prestige » | la [carte du prestige](#91-la-carte-du-prestige-carteprestigetsx) avec **⭐ Passer prestige *n*** ; à partir du prestige 1, « ⭐ Arbre de prestige » avec « Tu as *n* point(s) à dépenser ! » ou « *n* talent(s) débloqué(s)… » et **Ouvrir l'arbre** (rose). Fiche : [prestige.md](../batiments/prestige.md) |
+| ⛏️ Mine | `PanneauMine` (dans `App.tsx`) | « Ta mine descend à **-*P* m** (la bedrock est à -*B* m). » + « L'ascenseur t'attend : descente en *n* s. » ou « À l'échelle, il faut *n* s pour y descendre. » ; le gros bouton doré **⛏️ Entrer dans la mine** ; **🛗 Appeler l'ascenseur** (cyan, si construit mais pas en haut ; grisé s'il roule) ; avec des rails jusqu'au marché et un sac pas vide, la carte **🛤️ Wagonnet** (les [jauges](#93-les-jauges-jaugestsx) du sac et **🛤️ Charger *n* objets**, cyan : ils partent vendre au marché) ; « 🛒 *n* objet(s) en route vers le marché. » ; la ligne « 🛗 Ascenseur » pour le construire/l'améliorer. Fiche : [mine.md](../batiments/mine.md) |
 | 💰 Marché | `PanneauMarche` | les [jauges](#93-les-jauges-jaugestsx) de tout le sac (le plus cher en haut), puis **💰 Vendre la sélection · +*X* $** (vert). « Ton sac est vide. Va creuser ! » si vide. Une jauge à 0 = objet « gardé » (le jeu s'en souvient). Fiche : [marche.md](../batiments/marche.md) |
 | ⚒️ Forgeron | `PanneauPioches` | une ligne par pioche : verrouillée « 🔒 … Débloque d'abord la pioche précédente », ou nom, badge « Équipée », « Vitesse x*n* · jusqu'à -*n* m · durabilité *n* », barre d'usure, **Équiper** (gris), **🔧 Réparer** (orange, prix à gauche), **🔓 Débloquer** / **🛒 Racheter neuve** (bleu). Fiche : [forgeron.md](../batiments/forgeron.md) |
-| 🎒 Bazar | `PanneauBazar` | « 🎒 Sac à dos » (ligne d'amélioration, bouton « ⬆ *n* places », bleu) ; « 🪣 Seau d'eau » + **🪣 Acheter** (bleu). Fiche : [bazar.md](../batiments/bazar.md) |
+| 🎒 Bazar | `PanneauBazar` + `PanneauTenues` | « 🎒 Sac à dos » (ligne d'amélioration, bouton « ⬆ *n* places », bleu) ; « 🪣 Seau d'eau » + **🪣 Acheter** (bleu) ; puis les **tenues** du joueur : un aperçu du hamster habillé, et deux listes **🎩 Chapeaux** et **🦺 Hauts** (acheter, porter, enlever / tenue de départ ; la tenue portée est entourée d'or). Fiches : [bazar.md](../batiments/bazar.md), [village.md](village.md) |
 | 🔮 Enchanteur | `PanneauEnchanter` | rappel des lapis/émeraudes possédés, puis une ligne par enchantement : « ✨ *nom* », description, niveau, **✨ Enchanter *II*** (violet). Fiche : [enchanteur.md](../batiments/enchanteur.md) |
-| ⚙️ Foreuse | `PanneauForeuse` | avant le prestige 1 : « 🔒 Fermé par une barrière » ; puis « Activer la foreuse » + **⚙️ Activer** (turquoise) ; une fois active : État (badge En marche / Chariot plein / Plus de charbon), barre de charbon, boutons **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **☑️ Tout sélectionner / ☐ Tout désélectionner**, **💰 Vendre la sélection** vert, **🎒 Mettre dans le sac (*n*)** kaki) ; lignes « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot ». Fiche : [foreuse.md](../batiments/foreuse.md) |
-| 👷 Personnel | `PanneauEmployes` | salaires (boutons citron vert), manager et trésorerie, recruteur, **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), une carte compacte par mineur (jauges temps payé et sac, lien licencier). Fiche : [personnel.md](../batiments/personnel.md) |
+| ⚙️ Foreuse | `PanneauForeuse` | « Activer la foreuse » + **⚙️ Activer** (turquoise) ; une fois active : État (badge En marche / Chariot plein / Plus de charbon), barre de charbon, boutons **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **☑️ Tout sélectionner / ☐ Tout désélectionner**, **💰 Vendre la sélection** vert, **🎒 Mettre dans le sac (*n*)** kaki) ; lignes « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot ». Fiche : [foreuse.md](../batiments/foreuse.md) |
+| 👷 Personnel | `PanneauEmployes` | salaires (boutons citron vert), manager et trésorerie, recruteur (le manager et le recruteur ont leur **portrait** rond à bord doré en haut de leur carte), **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), une carte compacte par mineur (jauges temps payé et sac, lien licencier). Fiche : [personnel.md](../batiments/personnel.md) |
 
-Les achats qui se font « à la surface » sont grisés tant qu'on n'est pas au village (le panneau des stands ne s'affiche de toute façon qu'au village).
+Un bâtiment n'a de panneau qu'une fois **posé** : la Foreuse et le Personnel se posent quand le prestige les débloque (menu Bâtiments). Les achats qui se font « à la surface » sont grisés tant qu'on n'est pas au village (les panneaux des bâtiments ne s'affichent de toute façon qu'au village).
 
 ### 8.2 Dans la mine : l'onglet 🎒 Sac (`Inventaire.tsx`)
 
@@ -339,7 +384,7 @@ Les achats qui se font « à la surface » sont grisés tant qu'on n'est pas au 
 **Avec ascenseur**, en haut (pour ne pas viser une cible qui bouge quand le sac se remplit) :
 - « 📦 *n* objet(s) attendent sur le quai de l'ascenseur : ils partent en premier. » s'il y en a ;
 - deux boutons côte à côte :
-  - **📦 Envoyer *n* objets** (cyan) : la cabine emporte la sélection au marché, **vendue à l'arrivée** ; « 📦 Rien à envoyer » si rien n'est choisi ; pendant le voyage : « 🛗 Là dans *n* s » / « 🛗 De retour dans *n* s » ;
+  - **📦 Envoyer *n* objets** (cyan) : la cabine remonte la sélection ; en haut, elle part au marché (en wagonnet sur les rails, sinon en brouette) où elle est **vendue à l'arrivée** ; « 📦 Rien à envoyer » si rien n'est choisi ; pendant le voyage : « 🛗 Là dans *n* s » / « 🛗 De retour dans *n* s » ;
   - **⏫ Remonter** (bois) si la cabine est à ton niveau : remonte au village **avec le sac plein**, rien n'est vendu ; sinon **🛗 Appeler l'ascenseur** (bois), avec le même minuteur pendant un voyage ;
   - les deux sont grisés pendant un voyage, une demande en cours, ou si le mineur bouge déjà ;
 - la case **Envoi automatique quand le sac est plein**.
@@ -365,7 +410,7 @@ Liseré rose à gauche (halo rose quand elle est prête) :
 - le texte : si tout est prêt, ce qu'on gagne (profondeur, % de ventes, % de vitesse, 1 point) ; sinon « Pour passer prestige : atteins la bedrock, et améliore au maximum tout ce que ce prestige permet (les niveaux 🔒 attendront le prochain). » ;
 - **⭐ Passer prestige *n+1*** (rose), grisé tant que tout n'est pas fait.
 
-Passer prestige : nouvelle partie, mineur replacé devant la mine, puis la [fête du prestige](#106-la-fête-du-prestige-feteprestigetsx), puis l'arbre.
+Passer prestige : nouvelle partie (le village et ses bâtiments sont gardés), hamster replacé devant la mine, puis la [fête du prestige](#106-la-fête-du-prestige-feteprestigetsx), puis l'arbre.
 
 ### 9.2 Lignes d'achat et d'amélioration (`Amelioration.tsx`)
 
@@ -422,7 +467,7 @@ Toutes sur un **voile noir à 70 %** qui couvre l'écran.
 
 ### 10.3 La victoire (`Victoire.tsx`)
 
-S'affiche une fois au moment où l'on atteint la bedrock : 🏆 qui scintille, « Bedrock atteinte ! », « Tu as creusé jusqu'à -*n* m… Au prochain prestige, la mine descendra jusqu'à -*n+50* m. », 4 stats (blocs cassés, $ gagnés, temps de minage, coffres ouverts), le rappel de ce qu'on garde au prestige (succès, talents, pioches, sac, enchantements, ascenseur, foreuse, personnel ; au prestige 0 : « la barrière de la foreuse s'ouvrira ! »), puis la carte du prestige en version compacte. Bouton : **Continuer à creuser** (si tout est prêt) ou **Je m'en occupe !**.
+S'affiche une fois au moment où l'on atteint la bedrock : 🏆 qui scintille, « Bedrock atteinte ! », « Tu as creusé jusqu'à -*n* m… Au prochain prestige, la mine descendra jusqu'à -*n+50* m. », 4 stats (blocs cassés, $ gagnés, temps de minage, coffres ouverts), le rappel de ce qu'on garde au prestige (succès, talents, pioches, sac, enchantements, ascenseur, foreuse, personnel ; au prestige 0 : « Et au village, la barrière de la foreuse s'ouvrira ! », texte d'avant le village vu du ciel : la foreuse se pose maintenant depuis le menu Bâtiments), puis la carte du prestige en version compacte. Bouton : **Continuer à creuser** (si tout est prêt) ou **Je m'en occupe !**.
 
 ### 10.4 La confirmation (`Confirmation.tsx`)
 
@@ -451,11 +496,13 @@ Couleurs des raretés : commun `#b9b4ab`, rare `#4f9df0`, épique `#b06cf0`, lé
 
 ### 11.1 Les toasts (`Toasts.tsx`)
 
-- Sur ordinateur : **sous le panneau de droite**, collés en bas de la colonne. Sur téléphone : **en haut au centre de l'écran** (en bas, ils cacheraient les boutons).
-- Au plus **5** à la fois, chacun **3,5 s** ; un message identique à un toast déjà affiché n'est pas répété. Ils apparaissent avec un petit rebond.
+- Sur ordinateur : **sous le panneau de droite**, collés en bas de la colonne. Sur téléphone : **en haut au centre de l'écran** (en bas, ils cacheraient les boutons), **plus petits**, et seulement les **2 derniers** (20/10 : avant, ils cachaient tout le haut de l'écran).
+- Au plus **5** à la fois (2 visibles sur téléphone), chacun **3,5 s** ; un message identique à un toast déjà affiché n'est pas répété. Ils apparaissent avec un petit rebond.
 - Les messages viennent des actions du jeu (`src/jeu`), plus :
   - **succès** : « *emoji* Succès : *titre* » (bordure et texte dorés, petite fanfare) ;
   - **sac plein** et **pioche cassée en mode Auto** (voir [§ 7](#7-la-barre-de-boutons-daction)) ;
+  - **les chargements vendus** : « 🛤️ Le wagonnet (ou 🛒 La brouette) a vendu ton chargement au marché : +*X* $ » ;
+  - **les constructions** : « 🏗️ *Bâtiment* construit ! » ;
   - **retour après une absence** (affiché 7 s) : « Pendant ton absence : ⚙️ la foreuse a remonté *n* blocs, 👷 tes mineurs t'ont rapporté *n* $, 😠 *n* mineurs attendent leur salaire. ». Le temps d'absence rattrapé est limité à **8 h**.
 
 ### 11.2 Les autres signaux
@@ -467,8 +514,11 @@ Couleurs des raretés : commun `#b9b4ab`, rare `#4f9df0`, épique `#b06cf0`, lé
 | case Sac qui clignote en rouge et tremble | bandeau, sac plein |
 | ⭐ du bandeau qui scintille | points de talent à dépenser |
 | barre « prochain objectif » qui pulse en vert | un achat est possible |
-| badges, pastilles, flèches | village ([§ 6.1](#61-le-village-vuevillagetsx)) |
+| bulles de notification au-dessus des bâtiments | village ([§ 6.1](#61-le-village-vu-du-ciel-vuevillagetsx)) |
+| pastille rouge sur 🏗️ Bâtiments, ruban « Nouveau ! » dans le menu | village, bâtiments débloqués ou constructibles |
+| lueur dorée et losange en tirets autour du bâtiment actif | village |
 | indicateur mineurs rouge clignotant | mine, salaires impayés |
+| mineurs qui tapent du pied devant le Personnel (😠) | village, salaires impayés |
 | la mine entière tremble | minerai rare trouvé |
 
 ---
@@ -477,39 +527,43 @@ Couleurs des raretés : commun `#b9b4ab`, rare `#4f9df0`, épique `#b06cf0`, lé
 
 ### 12.1 Le clavier (`App.tsx`)
 
-Seules les **4 flèches** sont utilisées (ignorées quand on écrit dans un champ). Pour marcher et grimper, seul le premier appui compte (la répétition automatique est ignorée) : on avance **tant que la touche est appuyée**, on s'arrête en la relâchant.
+Les touches sont ignorées quand on écrit dans un champ.
 
 | Où | Touche | Effet |
 |---|---|---|
-| Village | ← / → (maintenue) | marcher le long du chemin (6 tuiles/s) |
-| Village | ↓ | devant l'entrée de la mine (à moins d'1 tuile) : descendre **à l'échelle** tant qu'on tient ↓ ; ailleurs : comme le bouton **Mine** (marche jusqu'au puits puis descend) |
+| Village | ← ↑ → ↓ (maintenues) | marcher (5 cases/s) tant que la touche est appuyée. La vue est tournée de 45° : ↑ va vers le haut de l'écran, → vers la droite, etc. ; deux flèches ensemble = en diagonale. On ne traverse pas les bâtiments (on glisse le long). Appuyer une flèche reprend la main sur une marche automatique. Sans effet quand le menu Bâtiments / Décos est ouvert |
+| Village | Espace | **sauter** (ça ne sert à rien, c'est pour le plaisir) |
+| Village | Échap | annuler ce qu'on pose (fantôme, pinceau), quitter le mode Modifier, fermer le menu Bâtiments / Décos |
 | Échelle | ↑ / ↓ (maintenue) | monter / descendre ; on s'arrête sur l'échelle en relâchant |
 | Front de taille | ← / → | se déplacer d'une case (la répétition marche : on peut garder appuyé) |
-| Front de taille | ↑ (maintenue) | marcher jusqu'à l'échelle puis remonter |
+| Front de taille | ↑ | marcher jusqu'à l'échelle puis remonter |
 | Cabine | — | rien (c'est la cabine qui porte le mineur) |
 | Fenêtre de confirmation | Échap | annuler |
 
-On ne **creuse jamais au clavier** : seulement avec les boutons Creuser et Auto.
+Pour marcher et grimper, seul le premier appui compte (la répétition automatique est ignorée). Quand la fenêtre perd le focus, le hamster s'arrête. On ne **creuse jamais au clavier** : seulement avec les boutons Creuser et Auto.
 
 ### 12.2 La souris
 
-- Cliquer un **stand** ou une **flèche** du village : le mineur y marche tout seul (`useMarcheVillage.allerVers`). Appuyer une flèche du clavier pendant ce trajet l'annule.
-- Cliquer la **barre « prochain objectif »** : aller au bon stand.
-- Cliquer l'**indicateur de la foreuse** : faire défiler la vue jusqu'à elle.
-- La molette fait défiler la vue de la mine (elle a sa barre de défilement) ; la caméra se recentre sur le joueur quand il bouge.
-- Bulles (`title`) au survol sur de nombreux éléments (revenu par seconde, stands, ⭐, mineurs…).
+- **Village** : cliquer un **bâtiment** → le hamster y marche, puis le panneau s'ouvre ; cliquer une **case** → il y marche ; cliquer une **bulle de notification** → il va au bâtiment. **Glisser** déplace la carte, la **molette** zoome autour de la souris. En construction, le fantôme suit la souris.
+- Cliquer la **barre « prochain objectif »** : aller au bon bâtiment, ou ouvrir le menu Bâtiments.
+- Cliquer l'**indicateur de la foreuse** (mine) : faire défiler la vue jusqu'à elle.
+- Dans la mine, la molette fait défiler la vue (elle a sa barre de défilement) ; la caméra se recentre sur le joueur quand il bouge.
+- Bulles (`title`) au survol sur de nombreux éléments (revenu par seconde, bulles de notification, ⭐, mineurs…).
 
 ### 12.3 Le tactile
 
-Pas de geste particulier : tout se fait en touchant les boutons, les stands, les flèches et les jauges (curseurs). Sur écran tactile : pas de rappel des flèches, pas de zoom au double appui, pas de reflet bleu, pas de « tirer pour recharger », et les champs ont un texte de 16 px (pour que l'iPhone ne zoome pas). La barre de boutons a `touch-action: none` (pas de défilement ni de zoom en la maintenant).
+Au village : **toucher** (appui de moins de 0,6 s sans bouger de plus de 7 px) = comme un clic ; **glisser un doigt** = déplacer la carte (ou le fantôme, si on part de lui ; ou peindre en mode pinceau) ; **pincer à deux doigts** = zoomer. La carte a `touch-action: none` (la page ne défile pas quand on la fait glisser).
 
-### 12.4 La marche au village (`useMarcheVillage.ts`)
+Ailleurs, tout se fait en touchant les boutons et les jauges (curseurs). Sur écran tactile : pas de rappel des flèches, pas de zoom au double appui, pas de reflet bleu, pas de « tirer pour recharger », et les champs ont un texte de 16 px (pour que l'iPhone ne zoome pas). La barre de boutons a `touch-action: none` (pas de défilement ni de zoom en la maintenant).
 
-Ce n'est que de l'affichage (pas une règle du jeu) :
-- position `x` en tuiles, bornée entre 0,5 et 26 ; départ et retour de la mine à l'entrée (x = 4,5) ;
-- vitesse **6 tuiles/s**, animée à chaque image (au plus 0,1 s d'un coup) ;
-- `commencer(sens)` / `arreter()` pour les flèches tenues ; `allerVers(x, quandArrive)` pour marcher tout seul jusqu'à un endroit et faire quelque chose en arrivant (descendre dans la mine) ; `placer(x)` pour téléporter (après un prestige, « Recommencer à zéro ») ;
-- le personnage regarde dans le sens de la marche et fait de petits sauts en marchant.
+### 12.4 Le hamster au village (`useJoueurVillage.ts`)
+
+Ce n'est que de l'affichage (la logique du jeu ne sait pas où il est dans le village) :
+- position `x`, `y` en cases (à virgule) ; il apparaît **devant l'entrée de la mine** (au chargement, en sortant de la mine, après un prestige ou « Recommencer à zéro ») ;
+- vitesse **5 cases/s** (`VITESSE_JOUEUR`), animée à chaque image (au plus 0,1 s d'un coup) ;
+- `fleche(direction, appuyée)` pour le clavier (les flèches appuyées s'additionnent) ; `allerVers(case, quandArrive)` pour marcher tout seul en contournant les obstacles (chemin le plus court, en 8 directions sans couper les coins) et faire quelque chose en arrivant (entrer dans la mine) ; `sauter()` ; `placerALaMine()` ;
+- il regarde à **droite ou à gauche** selon son mouvement à l'écran, **de face** quand il vient vers nous et **de dos** quand il s'éloigne ;
+- si on pose un bâtiment sur lui, il ressort par la case libre la plus proche.
 
 ### 12.5 Les quantités choisies (`choix.ts`)
 
@@ -520,10 +574,13 @@ Ce que le joueur a sélectionné avec les jauges, gardé dans le composant (pas 
 ## 13. Navigation village ↔ mine
 
 ```
-           VILLAGE (x = 0,5 … 26)
-   marche ← →, clic sur un stand
+        VILLAGE (vue du ciel)
+   flèches, toucher une case ou un bâtiment
                  │
-     entrée de la mine (x = 4,5)
+   bâtiment Mine : « ⛏️ Entrer dans la mine » (ou bouton ⛏️ Mine)
+                 │   animation : plongée dans le trou + fondu au noir
+                 ▼
+        MINE EN COUPE (2D)
         │                    │
    échelle (↑ ↓)      ascenseur (cabine)
         │                    │
@@ -531,10 +588,10 @@ Ce que le joueur a sélectionné avec les jauges, gardé dans le composant (pas 
              (← → d'une case)
 ```
 
-- **Descendre** : bouton **Mine**, bouton « ⏬ Descendre dans la mine » du stand Mine, ou ↓. Depuis le village, le mineur marche d'abord jusqu'à l'entrée. Il prend l'ascenseur s'il attend au village, sinon l'échelle (↓ devant l'entrée force l'échelle).
-- **Remonter** : bouton **Village**, ↑, la barre d'objectif, ou **⏫ Remonter** dans le sac. Depuis le front, le mineur **marche case par case jusqu'au puits** (vers la gauche), puis prend la cabine si elle est à son niveau, sinon l'échelle.
-- **Pendant un trajet en cabine**, les boutons Village et Mine sont grisés.
-- **Appeler l'ascenseur** : depuis le stand Mine (au village) ou depuis le sac (dans la mine).
+- **Entrer dans la mine** : le gros bouton doré du panneau de la Mine, ou le bouton **⛏️ Mine** de la barre. Le hamster **marche jusqu'à l'entrée de la mine** (s'il n'y est pas déjà), puis la caméra **plonge** vers le trou (zoom ×3,2 sur le milieu de la mine, 0,75 s) pendant que l'écran devient noir ; on arrive alors dans la **vue en coupe**, qui sort du noir (0,6 s), et le mineur part vers le front de taille (ascenseur s'il attend en haut, sinon échelle).
+- **Remonter** : bouton **🏠 Village**, ↑, la barre d'objectif, ou **⏫ Remonter** dans le sac. Depuis le front, le mineur **marche case par case jusqu'au puits** (vers la gauche), puis prend la cabine si elle est à son niveau, sinon l'échelle. Arrivé en haut, on **ressort dans le village** : l'animation inverse (on part de la plongée, le noir s'éclaircit en 0,8 s et la caméra recule), et le hamster réapparaît **devant l'entrée de la mine** (sans ouvrir son panneau).
+- **Pendant un trajet en cabine**, les boutons Village et Front sont grisés.
+- **Appeler l'ascenseur** : depuis le panneau de la Mine (au village) ou depuis le sac (dans la mine).
 - L'ambiance sonore suit (oiseaux et vent au village, grotte dans la mine, de plus en plus forte en descendant).
 
 Durées et règles : [mine.md](../batiments/mine.md).
@@ -547,15 +604,15 @@ La largeur d'une case de mine s'adapte : `min(46px, (largeur de l'écran − 97 
 
 | Largeur | Ce qui change |
 |---|---|
-| **> 860 px et hauteur ≥ 560 px** (ordinateur) | le jeu prend **exactement la hauteur de la fenêtre** (largeur max 1 180 px) : la vue de la mine s'étire pour remplir, seul le panneau de droite défile s'il est trop long, plus besoin de faire défiler la page. Deux colonnes |
-| **≤ 860 px** (tablette, téléphone) | une seule colonne (vue + boutons, puis panneau) ; en-tête sur deux lignes (titre et « Recommencer à zéro », puis 🌍 / 📊 / 🏅 à parts égales) ; bandeau sur 2 colonnes (Argent, Lieu / Pioche, Sac / les petits boutons sur toute la largeur) ; vue de la mine `min(58dvh, 560px)` ; **barre de boutons collée en bas de l'écran** (fond flouté, boutons de 48 px de haut, marges pour l'encoche) ; toasts en haut au centre ; place réservée sous le dernier panneau |
+| **> 860 px et hauteur ≥ 560 px** (ordinateur) | le jeu prend **exactement la hauteur de la fenêtre** (largeur max 1 180 px) : la vue (carte du village ou mine) s'étire pour remplir, seul le panneau de droite défile s'il est trop long, plus besoin de faire défiler la page. Deux colonnes. Ailleurs, la carte du village fait `min(72vh, 680px)` de haut |
+| **≤ 860 px** (tablette, téléphone) | une seule colonne ; en-tête sur deux lignes (titre et « Recommencer à zéro », puis 🌍 / 📊 / 🏅 à parts égales) ; bandeau sur 2 colonnes (Argent, Lieu / Pioche, Sac / les petits boutons sur toute la largeur) ; **carte du village** en `calc(100dvh - 300px)` (320 px au moins), vue de la mine `min(58dvh, 560px)` ; **barre de boutons collée en bas de l'écran** (fond flouté, boutons de 48 px de haut, marges pour l'encoche) ; le **panneau d'un bâtiment** monte du bas, par-dessus la carte, juste au-dessus de la barre (50 % de la hauteur de l'écran au plus, il défile à l'intérieur) ; l'aide « 🏡 Ton village » est cachée ; le menu Bâtiments / Décos prend 82 % de la hauteur, coins arrondis en haut, cartes plus petites ; toasts en haut au centre (2 au plus) ; place réservée sous le dernier panneau |
 | **≤ 640 px** | statistiques : tuiles sur 2 colonnes, une seule colonne pour les blocs |
 | **≤ 480 px** (petit téléphone) | colonnes autour de la mine rétrécies (étiquette 26 px, échelle 12 px, ascenseur 22 px, foreuse 16 px) pour agrandir les blocs ; les **emojis des 4 boutons d'action sont cachés** ; le prénom des mineurs est caché dans la mine |
 | sans survol (`hover: none`) | rappel des flèches caché, champs à 16 px |
 
 Arbre de prestige : 5 colonnes, 3 sous 1 100 px, 2 sous 860 px, 1 sous 600 px.
 
-Accueil : sous 860 px le bandeau passe sur une colonne et « Comment jouer » sur 2 ; sous 760 px, un joueur qui a déjà des mondes les voit **juste sous le bandeau** (avant « Comment jouer », et avant les cartes Installer et Compte) ; sous 560 px, les champs du compte prennent toute la largeur ; sous 480 px le logo rétrécit, le bouton Jouer prend toute la largeur et l'illustration de la mine est cachée.
+Accueil : sous 860 px « Comment jouer » passe sur 2 colonnes ; sous 760 px, le village du bandeau passe **en haut** (290 px de haut, centré sur la mine), le logo vient à cheval sur son bas et le texte dessous, les 3 chiffres restent sur une ligne ; un joueur qui a déjà des mondes les voit **juste sous le bandeau** (avant « Comment jouer », et avant les cartes Installer et Compte) ; sous 560 px, les champs du compte prennent toute la largeur ; sous 480 px le logo et le hamster rétrécissent, le bouton Jouer prend toute la largeur et les images des cartes « Comment jouer » sont plus petites.
 
 Partout, des marges `env(safe-area-inset-*)` gardent le jeu hors de l'encoche et de la barre d'état (application installée).
 
@@ -563,33 +620,36 @@ Partout, des marges `env(safe-area-inset-*)` gardent le jeu hors de l'encoche et
 
 ## 15. Les couleurs des boutons
 
-Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/index.css`, plus `bouton-payer` et `bouton-recruter` dans `src/personnel.css`). Tous les boutons ont une bordure noire de 2 px, un relief (reflet en haut, ombre en bas), s'éclaircissent au survol, s'enfoncent de 2 px au clic, et passent à 45 % d'opacité quand ils sont grisés.
+Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/index.css`, plus `bouton-payer` et `bouton-recruter` dans `src/personnel.css`, et `bouton-construire` et `bouton-decorer` dans `src/village.css`). Tous les boutons ont une bordure noire de 2 px, un relief (reflet en haut, ombre en bas), s'éclaircissent au survol, s'enfoncent de 2 px au clic, et passent à 45 % d'opacité quand ils sont grisés.
 
 | Classe | Action | Couleur (dégradé) | Exemples |
 |---|---|---|---|
-| `bouton-creuser` (= `bouton-principal`) | creuser, jouer | **or** `#f2b33d → #c8861a`, texte foncé | ⛏️ Creuser, ▶ Jouer, Créer et jouer, Se connecter |
+| `bouton-creuser` (= `bouton-principal`) | creuser, jouer | **or** `#f2b33d → #c8861a`, texte foncé | ⛏️ Creuser, ⛏️ Entrer dans la mine (avec un halo doré), ▶ Jouer, Créer et jouer, Se connecter |
 | `bouton-creuser-x10` | creuser en continu | **or foncé** `#c98f2a → #8e5f12` | ♾️ Auto |
-| `bouton-stop` | arrêter, annuler, supprimer | **rouge** `#e5534b → #a3302a` | ⏹️ Arrêter, ✖ Annuler, 🗑️ |
-| `bouton-vendre` | vendre, confirmer | **vert** `#4fb35a → #2f7d38` | 💰 Vendre la sélection, ✔ Confirmer |
-| `bouton-acheter` | acheter | **bleu** `#4a8af0 → #2457b8` | Débloquer / Racheter une pioche, seau, sac, embaucher, Dupliquer, Créer un compte, Installer |
+| `bouton-stop` | arrêter, annuler, supprimer | **rouge** `#e5534b → #a3302a` | ⏹️ Arrêter, ✖ Annuler, 🗑️ (dont 🗑️ Enlever au village) |
+| `bouton-vendre` | vendre, confirmer | **vert** `#4fb35a → #2f7d38` | 💰 Vendre la sélection, ✔ Confirmer, ✔ Construire ici / Poser, ✔ Terminé |
+| `bouton-acheter` | acheter | **bleu** `#4a8af0 → #2457b8` | Débloquer / Racheter une pioche, seau, sac, tenues, embaucher, 🏗️ / 🌸 Poser et 🛤️ Poser des rails (menus Bâtiments et Décos), Dupliquer, Créer un compte, Installer |
 | `bouton-ameliorer` | améliorer (défaut des lignes d'amélioration) | **turquoise** `#22b5a3 → #127a6d` | ascenseur, forage, chariot, ⚙️ Activer, OK (renommer) |
 | `bouton-reparer` | réparer | **orange** `#f28a3a → #b95713` | 🔧 Réparer |
 | `bouton-enchanter` | enchanter | **violet** `#9b6cf0 → #6236b8` | ✨ Enchanter |
 | `bouton-prestige` | prestige | **rose** `#e85aa8 → #a32b70`, avec un halo rose | ⭐ Passer prestige, Ouvrir l'arbre, 🌟 Choisir mon talent |
-| `bouton-ascenseur` | ascenseur | **cyan** `#2cc3e0 → #137f99`, texte foncé | 📦 Envoyer, 🛗 Appeler l'ascenseur (au stand Mine) |
-| `bouton-voyage` | se déplacer | **bois** `#a8784a → #6f4826` | 🏠 Village, ⛏️ Mine, ⏬ Descendre, ⏫ Remonter, 🛗 Appeler (dans le sac) |
+| `bouton-ascenseur` | ascenseur, wagonnet | **cyan** `#2cc3e0 → #137f99`, texte foncé | 📦 Envoyer, 🛗 Appeler l'ascenseur (au bâtiment Mine), 🛤️ Charger le wagonnet |
+| `bouton-voyage` | se déplacer | **bois** `#a8784a → #6f4826` | 🏠 Village, ⛏️ Mine, ⛏️ Front, ⏫ Remonter, 🛗 Appeler (dans le sac) |
+| `bouton-construire` | construire | **brique** `#e0784a → #a8451f`, texte crème | 🏗️ Bâtiments (avec sa pastille rouge) |
+| `bouton-decorer` | décorer | **rose fleur** `#f28ab8 → #c2427e` | 🌸 Décos |
 | `bouton-sac` | mettre dans le sac | **kaki** `#b3ab52 → #77702a`, texte foncé | 🎒 Mettre dans le sac |
 | `bouton-charbon` | charbon | **anthracite** `#3f3f44 → #222226`, texte orange | +1, +10, Tout |
-| `bouton-payer` | payer les salaires, trésorerie | **citron vert** `#a6d936 → #66941a`, texte foncé | stand Personnel |
+| `bouton-payer` | payer les salaires, trésorerie | **citron vert** `#a6d936 → #66941a`, texte foncé | panneau du Personnel |
 | `bouton-recruter` | recruter | **arc-en-ciel** (orange → rose → violet) avec un reflet qui passe | 🎲 Recruter, bouton de la révélation |
-| `bouton-neutre` | le reste | **gris** `#4a4a58 → #383843` | Équiper, Max, Tout sélectionner, Fermer, Renommer |
+| `bouton-neutre` | le reste | **gris** `#4a4a58 → #383843` | Équiper, Max, Tout sélectionner, Fermer, Renommer, ✏️ Modifier, ↔ Retourner |
 
 Autres styles de boutons :
 - **`bouton-petit`** : version compacte (padding 6 × 10 px, texte 0,82 rem), utilisée dans les panneaux ;
-- **`bouton-mega`** : le gros bouton doré de l'accueil (qui brille et respire) ;
+- **`bouton-mega`** : le gros bouton doré de l'accueil (qui brille et respire) ; **`bouton-mondes`** : le bouton en bois « 🌍 Mes mondes » ;
+- **`bouton-fermer`** : le bouton rond ✖ des panneaux et des menus du village (rouge au survol) ;
 - **`bouton-succes`** : les pastilles grises de l'en-tête (🌍, 📊, 🏅) ;
 - **`hud-bouton`** : les petits boutons du bandeau (⭐, 🔊, 🎵) ;
 - **`lien`** : texte gris souligné, sans fond (Recommencer à zéro, Plus tard, Se déconnecter, Actualiser, licencier) ;
-- **`onglet`** : onglets avec un trait doré sous l'onglet actif (Sac / Pioches, statistiques, classement).
+- **`onglet`** : onglets avec un trait doré sous l'onglet actif (Sac / Pioches, Bâtiments / Décorations, statistiques, classement).
 
 Le focus clavier est entouré d'un trait doré.

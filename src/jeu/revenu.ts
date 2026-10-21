@@ -4,17 +4,19 @@
 //     temps moyen pour le casser (Fortune comprise) ;
 //   - la foreuse, quand elle tourne : sa vitesse × la valeur moyenne d'un bloc à sa profondeur ;
 //   - chaque mineur employé (payé) : ce que rapporte un sac plein, divisé par la durée d'un
-//     aller-retour complet (creuser, remonter, vendre, redescendre), moins son salaire. La
-//     vitesse de l'ascenseur compte donc : plus il est rapide, plus les trajets sont courts.
+//     aller-retour complet (creuser, remonter, marcher jusqu'au marché, vendre, revenir à la mine,
+//     redescendre), moins son salaire. La vitesse de l'ascenseur compte donc, et la place du
+//     marché aussi : avec des rails jusqu'au marché, il charge le wagonnet et ne marche plus.
 //     Le salaire du manager est retiré aussi.
 // Ce n'est qu'une moyenne : le hasard des minerais fait varier le vrai gain.
 
 import { BLOCS, SECONDES_PAR_PAIE, SECONDES_VENTE_EMPLOYE, dureeCasse, type IdBloc } from './donnees'
-import { managerAuTravail, salaireEmploye, salaireManager, secondesParMetreEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
+import { managerAuTravail, salaireEmploye, salaireManager, secondesMarcheEmploye, secondesParMetreEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { poidsDesBlocs } from './mine'
 import { auFond, bonusVente, chanceDoublement, vitesseA, type EtatJeu, type Employe } from './mineur'
 import { multiplicateurVenteChariot } from './talents'
+import { railsMineMarche } from './village'
 
 export type Revenu = {
   joueur: number
@@ -65,7 +67,9 @@ export function revenuBrutEmploye(etat: EtatJeu, mineur: Employe): number {
   const gainParSac = sac * valeurMoyenneBloc(mineur.profondeur, etat.prestige) * bonusVente(etat)
   const tempsCreuse = sac / vitesseEmploye(etat, mineur)
   const tempsTrajets = 2 * Math.max(1, mineur.profondeur - 1) * secondesParMetreEmploye(etat, mineur)
-  return gainParSac / (tempsCreuse + tempsTrajets + SECONDES_VENTE_EMPLOYE)
+  // Au village : l'aller-retour à pied jusqu'au marché et la vente, sauf s'il charge le wagonnet.
+  const tempsVillage = railsMineMarche(etat.village) !== null ? 0 : 2 * secondesMarcheEmploye(etat, 'puits', 'marche') + SECONDES_VENTE_EMPLOYE
+  return gainParSac / (tempsCreuse + tempsTrajets + tempsVillage)
 }
 
 // Ce que rapportent les mineurs payés, moins leurs salaires (et celui du manager).

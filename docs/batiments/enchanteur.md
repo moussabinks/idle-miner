@@ -4,18 +4,20 @@
 
 ## Où et quand
 
-- **Position** : `x = 16.5` tuiles sur le chemin du village (27 tuiles de long), entre le Bazar (13.5) et la Foreuse (19.8). On est « devant » à 1,4 tuile près (`PORTEE_STAND`).
+- **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **300 $ + 20 pierre + 5 fer** (la roche dure compte aussi comme de la pierre). Tant qu'il n'est pas posé, pas d'enchantement (la barre d'objectif propose « Construire : Enchanteur »). Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : ouvert dès le prestige 0 (niveau I des trois enchantements), sans cadenas.
-- **Au village** :
-  - une échoppe dessinée en CSS : auvent rayé **violet** (`--auvent: #7a4cc2`) et blanc, à festons, comptoir en bois avec l'icône 🔮, panneau en bois « Enchanteur » ;
-  - le panneau passe en couleur d'accent quand le mineur est devant (`stand-actif`), l'échoppe s'éclaircit au survol ;
-  - pastille verte **« 💰 Achetable ! »** quand au moins un enchantement est permis par le prestige et payable tout de suite ;
-  - badge jaune sautillant **« ⬆ Niveaux ! »** (et flèche « ⬆ Nouveaux niveaux : Enchanteur ! » si rien d'autre n'est à montrer avant) après un prestige qui relève le plafond : prestiges 2, 4, 6 et 8. Il disparaît quand on passe devant.
+- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
+- **L'ouvrir** : toucher (ou cliquer) l'enchanteur : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/enchanteur.webp`) : une tour violette avec un cristal qui flotte, un livre d'enchantement, des pioches et des gemmes. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Description** (en haut du panneau) : « Enchante tes pioches avec lapis et émeraudes. »
+- **Bulles au-dessus** (`notifications.ts`) :
+  - **💰 « Une amélioration est achetable ! »** quand au moins un enchantement est permis par le prestige et payable tout de suite ;
+  - **⬆️ « Nouveaux niveaux débloqués ! »** après un prestige qui relève le plafond : prestiges 2, 4, 6 et 8. Elle disparaît quand on passe devant.
 - Le bandeau du haut (`Hud.tsx`) affiche les enchantements actuels sous la jauge de la pioche (« Efficacité II · Fortune I… » ou « Aucun enchantement »).
 
 ## Ce qu'on peut y faire
 
-En haut du panneau : un rappel (« s'appliquent à toutes tes pioches et sont gardés au prestige ») et le nombre de 🔷 lapis et 💚 émeraudes **dans le sac**. Puis une ligne par enchantement, avec les carrés de niveaux et un bouton violet « ✨ Enchanter N ». Achat seulement à la surface, à l'arrêt. Message : « ✨ Efficacité II ! ».
+En haut du panneau : un rappel (« s'appliquent à toutes tes pioches et sont gardés au prestige ») et le nombre de 🔷 lapis et 💚 émeraudes **dans le sac**. Puis une ligne par enchantement, avec les carrés de niveaux et un bouton violet « ✨ Enchanter N ». Achat seulement au village, devant l'enchanteur, à l'arrêt. Message : « ✨ Efficacité II ! ».
 
 **Formule de coût** du niveau n (`coutEnchantement`) : argent = `argentParNiveau × n²`, lapis = `lapisParNiveau × n`, émeraudes = `emeraudesParNiveau × n`.
 
@@ -77,25 +79,28 @@ Total : 4 200 $, 18 lapis, 6 émeraudes.
 ## Lien avec le reste du jeu
 
 - **Conditions de prestige** (`conditionsPrestige.ts`) : une condition par enchantement, « ✨ Efficacité I », « ✨ Fortune I », « ✨ Solidité I »… au niveau maximum permis par le prestige actuel. Au prestige 0, il faut donc les trois au niveau I : 1 300 $, 10 lapis et 3 émeraudes en tout.
-- **Objectifs** (`objectifs.ts`) : chaque prochain niveau permis est un `achatsPossibles` (« Fortune II »…) : pastille « Achetable ! », prochain objectif « achetable à l'enchanteur ! » ou « il manque N Lapis-lazuli ». L'enchanteur est dans la liste des stands à « Nouveaux niveaux ».
+- **Objectifs** (`objectifs.ts`) : tant que l'enchanteur n'est pas posé, « Construire : Enchanteur ». Ensuite, chaque prochain niveau permis est un `achatsPossibles` (« Fortune II »…) : bulle 💰, prochain objectif « achetable à l'enchanteur ! » ou « il manque N Lapis-lazuli ». L'enchanteur est dans la liste des bâtiments à « Nouveaux niveaux ».
 - **Succès** (`succes.ts`) : « ✨ Enchanteur : mettre tous les enchantements au max », obtenu quand plus aucun enchantement n'est achetable au prestige actuel (`peutEncoreEnchanter`).
 - **Talents** (`talents.ts`) : « Œil de lynx » s'ajoute à Fortune, « Pioche robuste » à Solidité, « Poigne de fer » multiplie la vitesse comme Efficacité.
 - **Autres bâtiments** : le **Forgeron** vend et répare les pioches (Solidité espace les réparations) ; le **Marché** vend les minerais (Fortune en donne plus ; `revenu.ts` en tient compte dans ses estimations) ; les minerais se gardent dans le sac vendu au **Bazar**.
-- **Bot de simulation** (`bot.ts`) : il prend chaque enchantement dès qu'il le peut.
+- **Bot de simulation** (`bot.ts`) : il pose l'enchanteur dès qu'il peut le payer, et prend chaque enchantement dès qu'il le peut (une fois l'ascenseur construit).
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position (`x: 16.5`), nom et description du stand.
-- `src/jeu/donnees.ts` : `ENCHANTEMENTS` (coûts, niveaux max, descriptions), `LISTE_ENCHANTEMENTS`, `PLAFONDS` (efficacite, fortune, solidite), `niveauMaxAuPrestige`.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.enchanteur` : 300 $ + 20 pierre + 5 fer, 5 × 5, porte à droite), `ENCHANTEMENTS` (coûts, niveaux max, descriptions), `LISTE_ENCHANTEMENTS`, `PLAFONDS` (efficacite, fortune, solidite), `niveauMaxAuPrestige`.
+- `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/mineur.ts` : `coutEnchantement`, `enchanter`, `peutEnchanter`, `enchantementBloqueAuPrestige`, `peutEncoreEnchanter`, `chiffreRomain`, effets dans `vitesse`, `chanceDoublement`/`nbDrops`, `casserBloc` (usure) ; garde au `prestige`.
 - `src/jeu/talents.ts` : les talents qui s'ajoutent aux enchantements.
 - `src/jeu/mine.ts` : profondeurs d'apparition du lapis et des émeraudes.
 - `src/jeu/conditionsPrestige.ts` : les conditions « ✨ Enchantement N ».
-- `src/jeu/objectifs.ts` : achats, pastille « Achetable ! », badge « Nouveaux niveaux ».
+- `src/jeu/notifications.ts` : les bulles 💰 et ⬆️ au-dessus de l'enchanteur.
+- `src/jeu/objectifs.ts` : « Construire : Enchanteur », achats, badge « Nouveaux niveaux ».
 - `src/jeu/succes.ts` : le succès « Enchanteur ».
 - `src/jeu/revenu.ts` : prise en compte de Fortune dans le revenu estimé.
-- `src/composants/Panneaux.tsx` : `PanneauEnchanter`, le panneau du stand.
+- `src/composants/Panneaux.tsx` : `PanneauEnchanter`, le panneau du bâtiment.
 - `src/composants/Amelioration.tsx` : la ligne d'amélioration (carrés, cadenas, bouton).
-- `src/composants/VueVillage.tsx` : dessin de l'échoppe, badges, pastille et flèches.
+- `src/composants/MenuConstruction.tsx` : la carte de l'enchanteur dans le menu Bâtiments.
+- `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.
+- `public/images/batiments/enchanteur.webp` : le dessin de l'enchanteur.
 - `src/composants/Hud.tsx` : la liste des enchantements dans le bandeau.
-- `src/index.css`, `src/personnel.css` : couleur de l'auvent, bouton violet `bouton-enchanter`, badges et pastille.
+- `src/index.css` : le bouton violet `bouton-enchanter`.

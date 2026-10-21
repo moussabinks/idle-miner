@@ -1,0 +1,440 @@
+// Le village vu du ciel (décidé le 20/10) : une grande grille de 40 × 40 cases où le joueur
+// pose ses bâtiments, ses rails, ses chemins et ses décorations comme il veut.
+//
+// Ce fichier ne contient que la géométrie : qui occupe quelle case, où est la porte d'un
+// bâtiment, le chemin à pied d'un bâtiment à l'autre (on contourne les bâtiments), et la ligne
+// de rails entre la mine et le marché. Les actions (construire, poser des rails...) sont dans
+// batiments.ts, les wagonnets qui vont au marché dans convois.ts.
+//
+// Les coordonnées : x va vers le bas à droite de l'écran, y vers le bas à gauche (vue
+// isométrique). La case (0, 0) est le coin du haut de la clairière.
+
+import {
+  BATIMENTS,
+  DECORATIONS,
+  TAILLE_GRILLE,
+  VITESSE_MARCHE,
+  VITESSE_RAILS,
+  type IdBatiment,
+  type IdDecoration,
+} from './donnees'
+import type { EtatJeu, Inventaire } from './mineur'
+
+// ---------------------------------------------------------------------------
+// Ce qui est posé au village (sauvegardé avec la partie, gardé au prestige)
+// ---------------------------------------------------------------------------
+
+export type Case = { x: number; y: number }
+
+export type BatimentPose = {
+  id: IdBatiment
+  x: number // la case du coin du haut de son emprise
+  y: number
+  miroir: boolean // le dessin est retourné (l'entrée passe de l'autre côté)
+}
+
+export type DecorationPosee = {
+  n: number // son numéro (pour la retrouver quand on la déplace)
+  id: IdDecoration
+  x: number
+  y: number
+  miroir: boolean
+}
+
+export type Village = {
+  batiments: BatimentPose[]
+  rails: string[] // les cases de rails, écrites « x,y »
+  chemins: string[] // les cases de chemin de pavés
+  decorations: DecorationPosee[]
+  prochainNumero: number // pour numéroter les décorations
+  batimentsVus: IdBatiment[] // les bâtiments débloqués déjà vus dans le menu (pour la pastille « Nouveau »)
+}
+
+// Un chargement de minerais en route vers le marché : en wagonnet sur les rails, sinon dans une
+// brouette (à la vitesse de la marche). Il est vendu en arrivant.
+export type Convoi = {
+  chargement: Inventaire
+  temps: number // secondes déjà roulées
+  duree: number // secondes pour arriver au marché (-1 = il attend qu'on pose le marché)
+  parRails: boolean
+  mineur: string | null // le mineur employé à qui il appartient (null = à toi)
+}
+
+// La mine est posée d'office au milieu de la clairière.
+export const TAILLE_MINE = BATIMENTS.puits.taille
+export const POSITION_MINE: Case = { x: (TAILLE_GRILLE - TAILLE_MINE) / 2, y: (TAILLE_GRILLE - TAILLE_MINE) / 2 }
+
+export function nouveauVillage(): Village {
+  return {
+    batiments: [{ id: 'puits', x: POSITION_MINE.x, y: POSITION_MINE.y, miroir: false }],
+    rails: [],
+    chemins: [],
+    decorations: [],
+    prochainNumero: 1,
+    batimentsVus: [],
+  }
+}
+
+export const cleCase = (x: number, y: number) => `${x},${y}`
+
+export function lireCle(cle: string): Case {
+  const [x, y] = cle.split(',').map(Number)
+  return { x, y }
+}
+
+// ---------------------------------------------------------------------------
+// Les emprises (les cases couvertes)
+// ---------------------------------------------------------------------------
+
+export type Emprise = { x: number; y: number; taille: number }
+
+export function batimentPose(village: Village, id: IdBatiment): BatimentPose | null {
+  return village.batiments.find((b) => b.id === id) ?? null
+}
+
+export function empriseBatiment(b: { id: IdBatiment; x: number; y: number }): Emprise {
+  return { x: b.x, y: b.y, taille: BATIMENTS[b.id].taille }
+}
+
+export function empriseDecoration(d: { id: IdDecoration; x: number; y: number }): Emprise {
+  return { x: d.x, y: d.y, taille: DECORATIONS[d.id].taille }
+}
+
+export function casesDe(emprise: Emprise): Case[] {
+  const cases: Case[] = []
+  for (let dx = 0; dx < emprise.taille; dx++) for (let dy = 0; dy < emprise.taille; dy++) cases.push({ x: emprise.x + dx, y: emprise.y + dy })
+  return cases
+}
+
+export function dansLaGrille(emprise: Emprise): boolean {
+  return emprise.x >= 0 && emprise.y >= 0 && emprise.x + emprise.taille <= TAILLE_GRILLE && emprise.y + emprise.taille <= TAILLE_GRILLE
+}
+
+// Ce qui occupe une case.
+export type Occupant =
+  | { type: 'batiment'; id: IdBatiment }
+  | { type: 'decoration'; n: number }
+  | { type: 'rail' }
+  | { type: 'chemin' }
+
+// Toutes les cases occupées, et par quoi.
+export function occupation(village: Village): Map<string, Occupant> {
+  const cases = new Map<string, Occupant>()
+  for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) cases.set(cleCase(c.x, c.y), { type: 'batiment', id: b.id })
+  for (const d of village.decorations) for (const c of casesDe(empriseDecoration(d))) cases.set(cleCase(c.x, c.y), { type: 'decoration', n: d.n })
+  for (const cle of village.rails) cases.set(cle, { type: 'rail' })
+  for (const cle of village.chemins) cases.set(cle, { type: 'chemin' })
+  return cases
+}
+
+function memeOccupant(a: Occupant, b: Occupant): boolean {
+  if (a.type !== b.type) return false
+  if (a.type === 'batiment' && b.type === 'batiment') return a.id === b.id
+  if (a.type === 'decoration' && b.type === 'decoration') return a.n === b.n
+  return true
+}
+
+// Peut-on poser quelque chose sur cette emprise ? Elle doit tenir dans la clairière, sans
+// chevaucher rien d'autre (sauf « ignorer » : l'élément qu'on est en train de déplacer).
+export function empriseLibre(village: Village, emprise: Emprise, ignorer: (Occupant & { cle?: string }) | null = null): boolean {
+  if (!dansLaGrille(emprise)) return false
+  const cases = occupation(village)
+  return casesDe(emprise).every((c) => {
+    const cle = cleCase(c.x, c.y)
+    const occupant = cases.get(cle)
+    if (!occupant) return true
+    if (ignorer === null || !memeOccupant(occupant, ignorer)) return false
+    // Pour un rail ou un chemin, on n'ignore que la case qu'on déplace.
+    return ignorer.cle === undefined || ignorer.cle === cle
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Les portes et la marche
+// ---------------------------------------------------------------------------
+
+// L'entrée d'un bâtiment est-elle sur sa face avant gauche (sinon : avant droite) ?
+export function porteAGauche(b: BatimentPose): boolean {
+  return (BATIMENTS[b.id].porte === 'gauche') !== b.miroir
+}
+
+// Le point devant l'entrée du bâtiment (au milieu de sa face avant, juste dehors).
+export function porte(b: BatimentPose): { x: number; y: number } {
+  const t = BATIMENTS[b.id].taille
+  return porteAGauche(b) ? { x: b.x + t / 2, y: b.y + t + 0.5 } : { x: b.x + t + 0.5, y: b.y + t / 2 }
+}
+
+// Les cases où l'on ne peut pas marcher : les bâtiments, et les grosses décorations.
+function casesBloquees(village: Village): Set<string> {
+  const bloquees = new Set<string>()
+  for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) bloquees.add(cleCase(c.x, c.y))
+  for (const d of village.decorations) {
+    if (!DECORATIONS[d.id].bloque) continue
+    for (const c of casesDe(empriseDecoration(d))) bloquees.add(cleCase(c.x, c.y))
+  }
+  return bloquees
+}
+
+export function caseBloquee(village: Village, x: number, y: number): boolean {
+  if (x < 0 || y < 0 || x >= TAILLE_GRILLE || y >= TAILLE_GRILLE) return true
+  return casesBloquees(village).has(cleCase(x, y))
+}
+
+// La case libre où l'on se tient pour entrer dans un bâtiment : celle devant sa porte, ou à
+// défaut la case libre la plus proche autour de lui.
+export function caseAcces(village: Village, b: BatimentPose): Case {
+  const p = porte(b)
+  const devant = { x: Math.floor(p.x), y: Math.floor(p.y) }
+  const bloquees = casesBloquees(village)
+  const libre = (c: Case) => c.x >= 0 && c.y >= 0 && c.x < TAILLE_GRILLE && c.y < TAILLE_GRILLE && !bloquees.has(cleCase(c.x, c.y))
+  if (libre(devant)) return devant
+  // On cherche en cercles de plus en plus grands autour de la porte.
+  for (let rayon = 1; rayon < TAILLE_GRILLE; rayon++) {
+    let meilleure: Case | null = null
+    for (let dx = -rayon; dx <= rayon; dx++) {
+      for (let dy = -rayon; dy <= rayon; dy++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== rayon) continue
+        const c = { x: devant.x + dx, y: devant.y + dy }
+        if (!libre(c)) continue
+        if (meilleure === null || Math.hypot(dx, dy) < Math.hypot(meilleure.x - devant.x, meilleure.y - devant.y)) meilleure = c
+      }
+    }
+    if (meilleure) return meilleure
+  }
+  return devant
+}
+
+// Un petit cache : le village change rarement, mais les mineurs demandent leur chemin souvent.
+const CACHE_MAX = 200
+const cacheChemins = new Map<string, Case[] | null>()
+
+function signatureObstacles(village: Village): string {
+  const batiments = village.batiments.map((b) => `${b.id}${b.x},${b.y}`).join('|')
+  const decos = village.decorations
+    .filter((d) => DECORATIONS[d.id].bloque)
+    .map((d) => `${d.id}${d.x},${d.y}`)
+    .join('|')
+  return `${batiments}#${decos}`
+}
+
+const VOISINS = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+  { x: 1, y: 1 },
+  { x: 1, y: -1 },
+  { x: -1, y: 1 },
+  { x: -1, y: -1 },
+]
+
+// Le chemin à pied d'une case à une autre (A étoile, en 8 directions sans couper les coins).
+// Renvoie la liste des cases à traverser, départ et arrivée comprises (null s'il n'y en a pas).
+export function trouverChemin(village: Village, depart: Case, arrivee: Case): Case[] | null {
+  const cle = `${signatureObstacles(village)}>${cleCase(depart.x, depart.y)}>${cleCase(arrivee.x, arrivee.y)}`
+  if (cacheChemins.has(cle)) return cacheChemins.get(cle) ?? null
+  const resultat = aEtoile(casesBloquees(village), depart, arrivee)
+  if (cacheChemins.size >= CACHE_MAX) cacheChemins.delete(cacheChemins.keys().next().value as string)
+  cacheChemins.set(cle, resultat)
+  return resultat
+}
+
+function aEtoile(bloquees: Set<string>, depart: Case, arrivee: Case): Case[] | null {
+  const dans = (c: Case) => c.x >= 0 && c.y >= 0 && c.x < TAILLE_GRILLE && c.y < TAILLE_GRILLE
+  // Le départ et l'arrivée comptent comme libres (on peut partir de devant une porte).
+  const libre = (c: Case) => dans(c) && (!bloquees.has(cleCase(c.x, c.y)) || (c.x === arrivee.x && c.y === arrivee.y) || (c.x === depart.x && c.y === depart.y))
+  const estimation = (c: Case) => {
+    const dx = Math.abs(c.x - arrivee.x)
+    const dy = Math.abs(c.y - arrivee.y)
+    return Math.max(dx, dy) + (Math.SQRT2 - 1) * Math.min(dx, dy)
+  }
+  const cout = new Map<string, number>([[cleCase(depart.x, depart.y), 0]])
+  const venuDe = new Map<string, string>()
+  // Une liste ouverte toute simple (la grille est petite : 1 600 cases).
+  const ouverts = new Map<string, Case>([[cleCase(depart.x, depart.y), depart]])
+  while (ouverts.size > 0) {
+    let meilleureCle = ''
+    let meilleur = Infinity
+    for (const [cle, c] of ouverts) {
+      const f = (cout.get(cle) ?? Infinity) + estimation(c)
+      if (f < meilleur) {
+        meilleur = f
+        meilleureCle = cle
+      }
+    }
+    const courante = ouverts.get(meilleureCle) as Case
+    ouverts.delete(meilleureCle)
+    if (courante.x === arrivee.x && courante.y === arrivee.y) {
+      const chemin: Case[] = [courante]
+      let cle = meilleureCle
+      while (venuDe.has(cle)) {
+        cle = venuDe.get(cle) as string
+        chemin.unshift(lireCle(cle))
+      }
+      return chemin
+    }
+    for (const v of VOISINS) {
+      const suivante = { x: courante.x + v.x, y: courante.y + v.y }
+      if (!libre(suivante)) continue
+      // En diagonale, on ne coupe pas le coin d'un bâtiment.
+      if (v.x !== 0 && v.y !== 0 && (!libre({ x: courante.x + v.x, y: courante.y }) || !libre({ x: courante.x, y: courante.y + v.y }))) continue
+      const cleSuivante = cleCase(suivante.x, suivante.y)
+      const nouveauCout = (cout.get(meilleureCle) ?? 0) + (v.x !== 0 && v.y !== 0 ? Math.SQRT2 : 1)
+      if (nouveauCout < (cout.get(cleSuivante) ?? Infinity)) {
+        cout.set(cleSuivante, nouveauCout)
+        venuDe.set(cleSuivante, meilleureCle)
+        ouverts.set(cleSuivante, suivante)
+      }
+    }
+  }
+  return null
+}
+
+// La longueur d'un chemin (en cases).
+export function longueurChemin(chemin: Case[]): number {
+  let total = 0
+  for (let i = 1; i < chemin.length; i++) total += Math.hypot(chemin[i].x - chemin[i - 1].x, chemin[i].y - chemin[i - 1].y)
+  return total
+}
+
+// Le chemin à pied d'un bâtiment à un autre (de porte à porte). null si l'un des deux n'est pas posé.
+export function cheminEntre(village: Village, de: IdBatiment, vers: IdBatiment): Case[] | null {
+  const a = batimentPose(village, de)
+  const b = batimentPose(village, vers)
+  if (!a || !b) return null
+  const depart = caseAcces(village, a)
+  const arrivee = caseAcces(village, b)
+  return trouverChemin(village, depart, arrivee) ?? [depart, arrivee] // muré : il se faufile quand même
+}
+
+// La distance à pied d'un bâtiment à un autre, en cases (0 si l'un des deux n'est pas posé).
+export function distanceEntre(village: Village, de: IdBatiment, vers: IdBatiment): number {
+  const chemin = cheminEntre(village, de, vers)
+  return chemin === null ? 0 : longueurChemin(chemin)
+}
+
+// Le temps pour aller à pied d'un bâtiment à un autre (en secondes).
+export function secondesAPied(village: Village, de: IdBatiment, vers: IdBatiment): number {
+  return distanceEntre(village, de, vers) / VITESSE_MARCHE
+}
+
+// ---------------------------------------------------------------------------
+// Les rails (prestige 2)
+// ---------------------------------------------------------------------------
+
+const DIRECTIONS_RAILS = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+]
+
+// Une case touche-t-elle (par un côté) l'emprise d'un bâtiment ?
+function toucheEmprise(c: Case, emprise: Emprise): boolean {
+  return DIRECTIONS_RAILS.some((d) => {
+    const x = c.x + d.x
+    const y = c.y + d.y
+    return x >= emprise.x && y >= emprise.y && x < emprise.x + emprise.taille && y < emprise.y + emprise.taille
+  })
+}
+
+const cacheRails = new Map<string, Case[] | null>()
+
+// La ligne de rails continue qui relie deux bâtiments (la plus courte), ou null s'il n'y en a pas.
+// Une case de rails « touche » un bâtiment quand elle est collée à un de ses côtés.
+export function railsEntre(village: Village, de: IdBatiment, vers: IdBatiment): Case[] | null {
+  const a = batimentPose(village, de)
+  const b = batimentPose(village, vers)
+  if (!a || !b || village.rails.length === 0) return null
+  const cle = `${village.rails.join('|')}#${a.x},${a.y}#${b.x},${b.y}#${de}${vers}`
+  if (cacheRails.has(cle)) return cacheRails.get(cle) ?? null
+  const rails = new Set(village.rails)
+  const empriseA = empriseBatiment(a)
+  const empriseB = empriseBatiment(b)
+  // Un parcours en largeur, en partant de toutes les cases de rails collées au premier bâtiment.
+  const venuDe = new Map<string, string | null>()
+  const file: string[] = []
+  for (const cle of village.rails) {
+    if (toucheEmprise(lireCle(cle), empriseA)) {
+      venuDe.set(cle, null)
+      file.push(cle)
+    }
+  }
+  let trouve: string | null = null
+  while (file.length > 0) {
+    const cleCourante = file.shift() as string
+    const courante = lireCle(cleCourante)
+    if (toucheEmprise(courante, empriseB)) {
+      trouve = cleCourante
+      break
+    }
+    for (const d of DIRECTIONS_RAILS) {
+      const voisine = cleCase(courante.x + d.x, courante.y + d.y)
+      if (rails.has(voisine) && !venuDe.has(voisine)) {
+        venuDe.set(voisine, cleCourante)
+        file.push(voisine)
+      }
+    }
+  }
+  let resultat: Case[] | null = null
+  if (trouve !== null) {
+    resultat = []
+    let cle: string | null = trouve
+    while (cle !== null) {
+      resultat.unshift(lireCle(cle))
+      cle = venuDe.get(cle) ?? null
+    }
+  }
+  if (cacheRails.size >= CACHE_MAX) cacheRails.delete(cacheRails.keys().next().value as string)
+  cacheRails.set(cle, resultat)
+  return resultat
+}
+
+export function railsMineMarche(village: Village): Case[] | null {
+  return railsEntre(village, 'puits', 'marche')
+}
+
+// Les voisins d'une case de rails (pour dessiner les virages) : nord (y-1), est (x+1), sud (y+1), ouest (x-1).
+// Un rail collé à un bâtiment se raccorde aussi à lui.
+export function raccordsRail(village: Village, x: number, y: number): { n: boolean; e: boolean; s: boolean; o: boolean } {
+  const rails = new Set(village.rails)
+  const versBatiment = (cx: number, cy: number) =>
+    village.batiments.some((b) => (b.id === 'puits' || b.id === 'marche') && toucheEmprise({ x, y }, empriseBatiment(b)) && occupe(empriseBatiment(b), cx, cy))
+  const lie = (cx: number, cy: number) => rails.has(cleCase(cx, cy)) || versBatiment(cx, cy)
+  return { n: lie(x, y - 1), e: lie(x + 1, y), s: lie(x, y + 1), o: lie(x - 1, y) }
+}
+
+function occupe(emprise: Emprise, x: number, y: number): boolean {
+  return x >= emprise.x && y >= emprise.y && x < emprise.x + emprise.taille && y < emprise.y + emprise.taille
+}
+
+// ---------------------------------------------------------------------------
+// Les chargements qui partent de la mine vers le marché
+// ---------------------------------------------------------------------------
+
+// Combien de temps met un chargement pour aller de la mine au marché : en wagonnet si une ligne
+// de rails les relie, sinon dans une brouette à la vitesse de la marche. null : pas de marché.
+export function trajetChargement(village: Village): { duree: number; parRails: boolean } | null {
+  if (!batimentPose(village, 'marche')) return null
+  const rails = railsMineMarche(village)
+  if (rails !== null) return { duree: Math.max(1, (rails.length + 1) / VITESSE_RAILS), parRails: true }
+  return { duree: Math.max(1, secondesAPied(village, 'puits', 'marche')), parRails: false }
+}
+
+// Un chargement part vers le marché (il sera vendu en arrivant, voir convois.ts).
+export function envoyerAuMarche(etat: EtatJeu, chargement: Inventaire, mineur: string | null): void {
+  if (Object.values(chargement).every((n) => (n ?? 0) <= 0)) return
+  const trajet = trajetChargement(etat.village)
+  etat.convois.push({
+    chargement: { ...chargement },
+    temps: 0,
+    duree: trajet ? trajet.duree : -1,
+    parRails: trajet ? trajet.parRails : false,
+    mineur,
+  })
+}
+
+// Les secondes en wagonnet d'un bout à l'autre des rails (pour l'affichage).
+export function secondesEnWagonnet(nbCases: number): number {
+  return Math.max(1, (nbCases + 1) / VITESSE_RAILS)
+}

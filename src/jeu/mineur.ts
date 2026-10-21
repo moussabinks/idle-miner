@@ -35,12 +35,15 @@ import {
   type IdRarete,
   niveauMaxAuPrestige,
   prestigePourNiveau,
+  type IdBatiment,
   type IdEnchantement,
+  type IdTenue,
   type NiveauAscenseur,
   type Pioche,
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
 import { additionnerStatistiques } from './statistiques'
+import { envoyerAuMarche, nouveauVillage, type Convoi, type Village } from './village'
 import {
   bonusVenteTalents,
   chanceDoublementTalents,
@@ -102,7 +105,7 @@ export type Ascenseur = {
   niveau: number // 0 = pas encore construit
   position: number // où est la cabine, en mètres (0 = au village), comme le joueur
   cible: number // où va la cabine
-  chargement: Inventaire // ce qu'elle transporte (vendu en arrivant au village)
+  chargement: Inventaire // ce qu'elle transporte (en haut, il part au marché : voir convois.ts)
   passager: boolean // true = le mineur est dans la cabine
   retourAuFront: boolean // true = après avoir vendu, elle redescend toute seule au front de taille
   quai: Inventaire // les blocs qui attendent au pied de l'ascenseur quand le sac est plein
@@ -126,12 +129,15 @@ export type Foreuse = {
   rechargeAuto: boolean // elle brûle le charbon qu'elle remonte (débloqué au niveau 3 de forage)
 }
 
-// Ce que fait un mineur employé : il creuse, remonte, vend, redescend... ou attend son
-// salaire au stand Personnel (« attend »).
-export type EtapeEmploye = 'creuse' | 'monte' | 'vend' | 'descend' | 'attend'
+// Ce que fait un mineur employé : il creuse, remonte (ascenseur), marche dans le village (jusqu'au
+// marché, à la forge, au Personnel ou à la mine), vend, récupère sa pioche à la forge,
+// redescend... ou attend son salaire devant le bâtiment Personnel (« attend »).
+export type EtapeEmploye = 'creuse' | 'monte' | 'marche' | 'vend' | 'forge' | 'descend' | 'attend'
 
-// Un mineur employé (prestige 2) : il creuse tout seul dans sa propre galerie, remonte
-// vendre sa récolte quand son sac est plein, puis redescend. Les règles sont dans employes.ts.
+// Un mineur employé (prestige 2) : il creuse tout seul dans sa galerie de la mine (un « univers
+// parallèle » de la mine commune, avec sa propre profondeur), remonte dans sa cabine quand son
+// sac est plein, marche jusqu'au marché pour vendre (ou charge le wagonnet si des rails relient
+// la mine au marché), puis retourne à la mine. Les règles sont dans employes.ts.
 export type Employe = {
   nom: string
   rarete: IdRarete // commun, rare, épique... (le recruteur en trouve de plus rares, prestige 4)
@@ -144,6 +150,11 @@ export type Employe = {
   blocsCasses: number
   gagne: number // ce que ses ventes t'ont rapporté
   tempsPaye: number // les secondes de travail déjà payées (son salaire)
+  // Au village (20/10) : le bâtiment où il est (ou vers lequel il marche), celui d'où il part,
+  // et s'il doit passer à la forge chercher sa nouvelle pioche.
+  lieu: IdBatiment
+  depuis: IdBatiment
+  forgeEnAttente: boolean
 }
 
 // Le manager (prestige 5) : il paie les salaires tout seul, avec l'argent de la trésorerie.
@@ -197,13 +208,21 @@ export type EtatJeu = {
   decouvertes: Decouverte[] // les stands débloqués que le joueur a déjà visités (voir decouvertes.ts)
   standsVus: string[] // les stands visités depuis le dernier prestige (badge « Nouveaux niveaux », voir objectifs.ts)
   depart: Depart | null // le mineur marche jusqu'au puits avant de monter (null = il ne part pas)
+  // Le village vu du ciel (20/10) : les bâtiments posés, les rails, les chemins, les décorations
+  // (tout est gardé au prestige), et les chargements en route vers le marché.
+  village: Village
+  convois: Convoi[]
+  // La tenue du joueur (achetée au Bazar, gardée au prestige).
+  tenue: { chapeau: IdTenue | null; haut: IdTenue | null }
+  tenuesAchetees: IdTenue[]
 }
 
 // Ce qui se débloque avec les prestiges (une flèche guide le joueur jusqu'au bon stand) :
 // la foreuse, les mineurs, puis le recruteur et le manager (au stand Personnel).
 export type Decouverte = 'foreuse' | 'employes' | 'recruteur' | 'manager'
 
-export const VERSION_ETAT = 17
+// Version 18 (20/10) : le village en vue du ciel. Les parties d'avant repartent de zéro.
+export const VERSION_ETAT = 18
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -266,6 +285,9 @@ export type Heritage = {
   meilleure: number
   niveauPioche: number
   statsTotales: Statistiques
+  village: Village
+  tenue: { chapeau: IdTenue | null; haut: IdTenue | null }
+  tenuesAchetees: IdTenue[]
 }
 
 export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partial<Heritage> = {}): EtatJeu {
@@ -286,6 +308,9 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     meilleure = 0,
     niveauPioche = 0,
     statsTotales = nouvellesStatistiques(),
+    village = nouveauVillage(),
+    tenue = { chapeau: null, haut: null },
+    tenuesAchetees = [],
   } = heritage
   const couchesDessous: IdBloc[][] = []
   for (let i = 1; i <= COUCHES_EN_AVANCE; i++) couchesDessous.push(genererCouche(PROFONDEUR_DEPART + i, aleatoire, prestige))
@@ -326,6 +351,10 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     decouvertes: [...decouvertes],
     standsVus: [], // remis à zéro à chaque prestige
     depart: null,
+    village: structuredClone(village),
+    convois: [],
+    tenue: { ...tenue },
+    tenuesAchetees: [...tenuesAchetees],
   }
   return etat
 }
@@ -358,6 +387,10 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     niveauPioche: etat.meilleure,
     // Les statistiques de cette partie s'ajoutent à celles des parties d'avant.
     statsTotales: additionnerStatistiques(etat.statsTotales, etat.stats),
+    // Le village reste tel quel (bâtiments, rails, décorations), et la tenue aussi.
+    village: etat.village,
+    tenue: etat.tenue,
+    tenuesAchetees: etat.tenuesAchetees,
   })
 }
 
@@ -386,6 +419,9 @@ export function employeApresPrestige(employe: Employe): Employe {
     sac: {},
     progression: 0,
     tempsPaye: Math.max(employe.tempsPaye, SECONDES_PAR_PAIE),
+    lieu: 'puits',
+    depuis: 'puits',
+    forgeEnAttente: false,
   }
 }
 
@@ -1082,8 +1118,8 @@ export function appelerAscenseur(etat: EtatJeu): string[] {
 }
 
 // Le mineur monte dans la cabine, vers le village (0) ou vers le front de taille.
-// En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé) : il est
-// vendu en arrivant. Avec un lot vide ({}), elle ne monte que le mineur : son sac reste plein
+// En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé) : en haut, il
+// part au marché, où il est vendu. Avec un lot vide ({}), elle ne monte que le mineur : son sac reste plein
 // et rien n'est vendu (c'est le bouton « Remonter » du sac).
 export function prendreAscenseur(etat: EtatJeu, destination: number, lot?: Inventaire): string[] {
   if (!ascenseurDisponible(etat)) return []
@@ -1133,14 +1169,13 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   }
   if (ascenseurEnMouvement(etat)) return []
 
-  // La cabine est arrivée.
+  // La cabine est arrivée. En haut, son chargement part au marché (en wagonnet sur les rails,
+  // sinon dans une brouette) : il sera vendu en arrivant (voir convois.ts).
   const messages: string[] = []
   if (ascenseur.position === 0 && Object.keys(ascenseur.chargement).length > 0) {
-    const gain = valeurDe(etat, ascenseur.chargement)
+    envoyerAuMarche(etat, ascenseur.chargement, null)
     ascenseur.chargement = {}
-    etat.argent += gain
-    etat.stats.argentGagne += gain
-    messages.push(`🛗 L’ascenseur a vendu son chargement : +${gain} $`)
+    messages.push('🛗 Chargement remonté : il part au marché.')
   }
   if (ascenseur.passager) {
     ascenseur.passager = false

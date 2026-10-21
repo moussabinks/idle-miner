@@ -1,11 +1,14 @@
 // Ce qui guide le joueur au village (20/10) :
+//   - les bâtiments à construire (le marché d'abord : il est gratuit) ;
 //   - les stands où une amélioration est payable tout de suite (pastille « Achetable ! ») ;
 //   - les stands qui ont de nouveaux niveaux depuis le dernier prestige (badge et flèche
 //     « ⬆ Nouveaux niveaux ! », jusqu'à ce qu'on soit passé devant) ;
 //   - le prochain objectif (la petite barre sous le bandeau : « Pioche en Fer : 180 / 300 $ »).
 
 import {
+  BATIMENTS,
   COUT_ACTIVATION_FOREUSE,
+  LISTE_BATIMENTS,
   ENCHANTEMENTS,
   LISTE_ENCHANTEMENTS,
   NIVEAUX_EMPLOYE,
@@ -15,9 +18,11 @@ import {
   niveauMaxAuPrestige,
   profondeurBedrock,
   type Cout,
+  type IdBatiment,
   type IdBloc,
   type IdPlafond,
 } from './donnees'
+import { batimentDebloque } from './batiments'
 import { peutPasserPrestige } from './conditionsPrestige'
 import {
   coutAmeliorationEmploye,
@@ -43,20 +48,28 @@ import {
   sacBloqueAuPrestige,
   type EtatJeu,
 } from './mineur'
+import { batimentPose } from './village'
 
-// Les stands du village (les mêmes identifiants que dans src/composants/stands.ts).
-export type IdStand = 'prestige' | 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes'
+// Les stands du village : ce sont les bâtiments posés sur la grille (voir village.ts).
+export type IdStand = IdBatiment
 
-// Une amélioration qu'on peut acheter à ce prestige (pas bloquée par un cadenas).
-export type AchatPossible = { stand: IdStand; nom: string; cout: Cout }
+// Une amélioration qu'on peut acheter à ce prestige (pas bloquée par un cadenas), ou un bâtiment
+// à construire (« construction » : il s'achète dans le menu Bâtiments).
+export type AchatPossible = { stand: IdStand; nom: string; cout: Cout; construction?: boolean }
 
-// Toutes les prochaines améliorations du moment, stand par stand (le forgeron d'abord : la
-// prochaine pioche est le cœur de la progression).
+// Toutes les prochaines améliorations du moment, stand par stand : d'abord les bâtiments à
+// construire (le marché est gratuit), puis le forgeron (la prochaine pioche est le cœur de la
+// progression). On ne propose les améliorations d'un bâtiment qu'une fois qu'il est posé.
 export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   const achats: AchatPossible[] = []
+  const pose = (id: IdBatiment) => batimentPose(etat.village, id) !== null
+
+  for (const id of LISTE_BATIMENTS) {
+    if (batimentDebloque(etat, id) && !pose(id)) achats.push({ stand: id, nom: `Construire : ${BATIMENTS[id].nom}`, cout: BATIMENTS[id].cout, construction: true })
+  }
 
   const pioche = PIOCHES[etat.meilleure + 1]
-  if (pioche) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: coutPioche(pioche.niveau) })
+  if (pioche && pose('forgeron')) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: coutPioche(pioche.niveau) })
 
   const ascenseur = prochainNiveauAscenseur(etat)
   if (ascenseur && ascenseurBloqueAuPrestige(etat) === null) {
@@ -64,18 +77,18 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   }
 
   const prixSac = prixProchainSac(etat)
-  if (prixSac !== null && sacBloqueAuPrestige(etat) === null) {
+  if (prixSac !== null && sacBloqueAuPrestige(etat) === null && pose('bazar')) {
     achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })
   }
 
   for (const id of LISTE_ENCHANTEMENTS) {
     const cout = coutEnchantement(etat, id)
-    if (cout && enchantementBloqueAuPrestige(etat, id) === null) {
+    if (cout && enchantementBloqueAuPrestige(etat, id) === null && pose('enchanteur')) {
       achats.push({ stand: 'enchanteur', nom: `${ENCHANTEMENTS[id].nom} ${chiffreRomain(etat.enchantements[id] + 1)}`, cout })
     }
   }
 
-  if (foreuseDebloquee(etat)) {
+  if (foreuseDebloquee(etat) && pose('foreuse')) {
     if (!etat.foreuse.active) {
       achats.push({ stand: 'foreuse', nom: 'Activer la foreuse', cout: COUT_ACTIVATION_FOREUSE })
     } else {
@@ -88,7 +101,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     }
   }
 
-  if (employesDebloques(etat)) {
+  if (employesDebloques(etat) && pose('employes')) {
     const prix = prixEmbauche(etat)
     if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
@@ -108,9 +121,9 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   return achats
 }
 
-// Les stands où au moins une amélioration est payable tout de suite.
+// Les bâtiments posés où au moins une amélioration est payable tout de suite.
 export function standsAchetables(etat: EtatJeu): IdStand[] {
-  return [...new Set(achatsPossibles(etat).filter((a) => peutPayer(etat, a.cout)).map((a) => a.stand))]
+  return [...new Set(achatsPossibles(etat).filter((a) => !a.construction && peutPayer(etat, a.cout)).map((a) => a.stand))]
 }
 
 // --- Les nouveaux niveaux après un prestige ---------------------------------
@@ -131,6 +144,7 @@ export function standsAvecNouveauxNiveaux(etat: EtatJeu): IdStand[] {
   const stands: IdStand[] = ['puits', 'bazar', 'enchanteur', 'foreuse', 'employes']
   return stands.filter(
     (stand) =>
+      batimentPose(etat.village, stand) !== null &&
       !etat.standsVus.includes(stand) &&
       plafondsDuStand(etat, stand).some((id) => niveauMaxAuPrestige(id, etat.prestige) > niveauMaxAuPrestige(id, etat.prestige - 1)),
   )
@@ -152,6 +166,7 @@ export type Objectif = {
   valeur: number // pour la petite jauge
   max: number
   pret: boolean // on peut l'acheter tout de suite (ou passer prestige)
+  construction: boolean // c'est un bâtiment à poser (le clic ouvre le menu Bâtiments)
 }
 
 const NOMS_STANDS: Record<IdStand, string> = {
@@ -162,7 +177,7 @@ const NOMS_STANDS: Record<IdStand, string> = {
   bazar: 'au bazar',
   enchanteur: 'à l’enchanteur',
   foreuse: 'à la foreuse',
-  employes: 'au stand Personnel',
+  employes: 'au Personnel',
 }
 
 // Le premier minerai qui manque pour un achat (null s'il ne manque rien).
@@ -180,7 +195,9 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
   const achats = achatsPossibles(etat)
   const payable = achats.find((a) => peutPayer(etat, a.cout))
   if (payable) {
-    return { texte: payable.nom, detail: `achetable ${NOMS_STANDS[payable.stand]} !`, stand: payable.stand, valeur: 1, max: 1, pret: true }
+    const construction = payable.construction === true
+    const detail = construction ? (payable.cout.argent ? 'à poser (menu Bâtiments) !' : 'gratuit : pose-le (menu Bâtiments) !') : `achetable ${NOMS_STANDS[payable.stand]} !`
+    return { texte: payable.nom, detail, stand: payable.stand, valeur: 1, max: 1, pret: true, construction }
   }
   if (achats.length > 0) {
     // Le plus proche : celui dont on a la plus grande part de l'argent.
@@ -194,14 +211,14 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
         : minerai
           ? `il manque ${minerai.manque} ${nomBloc(minerai.bloc)}`
           : ''
-    return { texte: proche.nom, detail, stand: proche.stand, valeur: Math.min(etat.argent, prix), max: Math.max(1, prix), pret: false }
+    return { texte: proche.nom, detail, stand: proche.stand, valeur: Math.min(etat.argent, prix), max: Math.max(1, prix), pret: false, construction: proche.construction === true }
   }
   if (!etat.victoire) {
     const bedrock = profondeurBedrock(etat.prestige)
-    return { texte: 'Atteindre la bedrock', detail: `-${etat.profondeur} / -${bedrock} m`, stand: null, valeur: etat.profondeur, max: bedrock, pret: false }
+    return { texte: 'Atteindre la bedrock', detail: `-${etat.profondeur} / -${bedrock} m`, stand: null, valeur: etat.profondeur, max: bedrock, pret: false, construction: false }
   }
   if (peutPasserPrestige(etat)) {
-    return { texte: `Prestige ${etat.prestige + 1}`, detail: 'tout est prêt, à l’arbre de prestige !', stand: 'prestige', valeur: 1, max: 1, pret: true }
+    return { texte: `Prestige ${etat.prestige + 1}`, detail: 'tout est prêt, à l’arbre de prestige !', stand: 'prestige', valeur: 1, max: 1, pret: true, construction: false }
   }
   return null
 }

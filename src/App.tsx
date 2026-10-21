@@ -1,12 +1,17 @@
 // La page du jeu : elle assemble les composants, relie les boutons et le clavier aux actions.
 //
+// Deux vues :
+//   - le village vu du ciel (à la surface) : on s'y promène, on pose et on déplace ses bâtiments
+//     (menus Bâtiments, Décorations et Modifier), on entre dans la mine par son bâtiment ;
+//   - la mine en coupe (la vue d'avant, en 2D) : on y creuse, avec l'échelle et l'ascenseur.
+//
 // Clavier :
-//   au village : ← → pour marcher le long du chemin (garder la touche), ↓ pour descendre dans la mine ;
+//   au village : les flèches pour marcher (on peut les combiner), Espace pour sauter, Échap pour
+//   annuler ce qu'on est en train de poser ;
 //   sur l'échelle : ↑ pour monter, ↓ pour descendre (on avance tant que la touche est appuyée) ;
 //   au front de taille : ← → pour se déplacer, ↑ pour remonter (on creuse seulement avec les boutons).
-// Sur l'écran, il n'y a pas de flèches : les boutons Village et Mine font les trajets.
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { reglerLieu } from './ambiance'
 import { Accueil } from './composants/Accueil'
 import { ArbrePrestige } from './composants/ArbrePrestige'
@@ -18,25 +23,24 @@ import { FenetreStatistiques } from './composants/Statistiques'
 import { Icone } from './composants/Icone'
 import { Inventaire } from './composants/Inventaire'
 import { AmeliorationAscenseur } from './composants/Ascenseur'
+import { MenuConstruction, type OngletConstruction } from './composants/MenuConstruction'
 import { PanneauEmployes } from './composants/PanneauEmployes'
-import {
-  PanneauBazar,
-  PanneauEnchanter,
-  PanneauForeuse,
-  PanneauMarche,
-  PanneauPioches,
-  PanneauSucces,
-} from './composants/Panneaux'
-import { STANDS, X_PUITS, standProche, type IdStand } from './composants/stands'
+import { PanneauTenues } from './composants/PanneauTenues'
+import { PanneauBazar, PanneauEnchanter, PanneauForeuse, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
 import { Toasts } from './composants/Toasts'
 import { Victoire } from './composants/Victoire'
 import { VueMonde } from './composants/VueMonde'
+import { VueVillage } from './composants/VueVillage'
+import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
+import { Jauges } from './composants/Jauges'
+import { lotChoisi, type Choix } from './choix'
 import {
   aLaSurface,
   appelerAscenseur,
   arreterSurEchelle,
   ascenseurEnMouvement,
   auFond,
+  bonusVente,
   deplacerMineur,
   dureeAscenseur,
   dureeEchelle,
@@ -44,18 +48,96 @@ import {
   positionFront,
   voyager,
 } from './jeu/mineur'
+import {
+  acheterDecoration,
+  construireBatiment,
+  deplacerBatiment,
+  deplacerDecoration,
+  deplacerSol,
+  estPose,
+  marquerBatimentsVus,
+  nouveautesBatiments,
+  batimentsConstructibles,
+  peutPoserSol,
+  poserSol,
+  retirerDecoration,
+  retirerSol,
+  type TypeSol,
+} from './jeu/batiments'
+import { chargerWagonnet, nbEnRoute, wagonnetDisponible } from './jeu/convois'
 import { peutPasserPrestige } from './jeu/conditionsPrestige'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
+import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, profondeurBedrock, type IdBatiment, type IdBloc, type IdDecoration } from './jeu/donnees'
+import { notificationsBatiments } from './jeu/notifications'
 import { marquerStandVu, standsAvecNouveauxNiveaux } from './jeu/objectifs'
-import { profondeurBedrock } from './jeu/donnees'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
+import { batimentPose, caseAcces, cleCase, empriseBatiment, empriseDecoration, empriseLibre, porte, type Case, type Occupant } from './jeu/village'
 import { useCompte } from './useCompte'
-import { useMarcheVillage } from './useMarcheVillage'
+import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
 
 type OngletMine = 'sac' | 'pioches'
+
+const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }
+
+// Le panneau de la mine (au village) : entrer dans la mine, appeler l'ascenseur, l'améliorer,
+// et charger le wagonnet quand des rails relient la mine au marché.
+function PanneauMine({ etat, jouer, onEntrer }: { etat: ReturnType<typeof usePartie>['etat']; jouer: ReturnType<typeof usePartie>['jouer']; onEntrer: () => void }) {
+  const [choix, setChoix] = useState<Choix>({})
+  const cabineAuVillage = etat.ascenseur.niveau > 0 && !ascenseurEnMouvement(etat) && etat.ascenseur.position === 0
+  const wagonnet = wagonnetDisponible(etat)
+  // Les objets les plus précieux en premier, comme au marché (les objets gardés partent à 0).
+  const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  const lot = lotChoisi(choix, etat.nonAVendre, piles)
+  const nbLot = Object.values(lot).reduce((t, n) => t + (n ?? 0), 0)
+  return (
+    <div className="liste-cartes">
+      <p>
+        Ta mine descend à <strong>-{etat.profondeur} m</strong> (la bedrock est à -{profondeurBedrock(etat.prestige)} m).{' '}
+        {cabineAuVillage ? `L'ascenseur t'attend : descente en ${Math.ceil(dureeAscenseur(etat))} s.` : `À l'échelle, il faut ${Math.ceil(dureeEchelle(etat))} s pour y descendre.`}
+      </p>
+      <button className="bouton bouton-creuser bouton-entrer-mine" onClick={onEntrer}>
+        ⛏️ Entrer dans la mine
+      </button>
+      {etat.ascenseur.niveau > 0 && !cabineAuVillage && (
+        <button className="bouton bouton-petit bouton-ascenseur" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
+          🛗 Appeler l'ascenseur
+        </button>
+      )}
+
+      {/* Avec des rails jusqu'au marché, on charge le wagonnet ici : pas besoin d'aller au marché. */}
+      {wagonnet && Object.keys(etat.inventaire).length > 0 && (
+        <div className="ligne-achat">
+          <strong>🛤️ Wagonnet</strong>
+          <span className="discret">Les rails vont jusqu'au marché : charge le wagonnet, tes minerais y seront vendus à l'arrivée.</span>
+          <Jauges
+            piles={piles}
+            choix={choix}
+            gardes={etat.nonAVendre}
+            onChanger={(bloc, valeur) => setChoix({ ...choix, [bloc]: valeur })}
+            prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)}
+            onToutSelectionner={() => setChoix(Object.fromEntries(piles.map(([bloc]) => [bloc, 'max'])))}
+          />
+          <button className="bouton bouton-ascenseur" disabled={nbLot === 0} onClick={() => {
+            jouer((e) => chargerWagonnet(e, lot))
+            setChoix({})
+          }}>
+            🛤️ Charger {nbLot} objet{nbLot > 1 ? 's' : ''}
+          </button>
+        </div>
+      )}
+      {nbEnRoute(etat) > 0 && <p className="discret">🛒 {nbEnRoute(etat)} objet(s) en route vers le marché.</p>}
+
+      {/* L'ascenseur se construit et s'améliore aussi d'ici, sans descendre. */}
+      <div className="ligne-achat">
+        <strong>🛗 Ascenseur</strong>
+        <AmeliorationAscenseur etat={etat} jouer={jouer} />
+      </div>
+    </div>
+  )
+}
 
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
@@ -68,33 +150,210 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
   const [versLaGauche, setVersLaGauche] = useState(false)
 
+  // --- Où est le joueur : au village (vue du ciel) ou dans la mine (vue en coupe) ---
   const enVille = aLaSurface(etat)
   const auFront = auFond(etat)
   const dansLaCabine = etat.ascenseur.passager
+  const [transition, setTransition] = useState<'entree' | 'sortie' | null>(null)
+  const village = useJoueurVillage(etat.village, enVille)
+  const joueur = village.joueur
+
+  // On revient de la mine : le village réapparaît (on « ressort » du trou) et le joueur est devant la mine.
+  const [etaitEnVille, setEtaitEnVille] = useState(enVille)
+  if (etaitEnVille !== enVille) {
+    setEtaitEnVille(enVille)
+    if (enVille) setTransition('sortie')
+  }
+  const placerALaMine = village.placerALaMine
+  useEffect(() => {
+    if (transition === 'sortie') placerALaMine()
+  }, [transition, placerALaMine])
 
   // La musique d'ambiance suit le joueur : oiseaux et vent au village, grotte dans la mine.
-  // Où on est entre la surface et la bedrock (la grotte s'entend de plus en plus en descendant).
   const auFondDeLaMine = Math.round((etat.position / profondeurBedrock(etat.prestige)) * 50) / 50
   useEffect(() => reglerLieu(enVille, auFondDeLaMine), [enVille, auFondDeLaMine])
 
-  // La marche dans le village.
-  const village = useMarcheVillage(enVille)
-  const stand = enVille ? standProche(village.x) : null
-  const prochePuits = Math.abs(village.x - X_PUITS) < 1
+  // --- Construire, décorer, modifier -----------------------------------------
+  const [menuConstruction, setMenuConstruction] = useState<OngletConstruction | null>(null)
+  const [fantome, setFantome] = useState<Fantome | null>(null)
+  const [pinceau, setPinceau] = useState<TypeSol | null>(null)
+  const [modifier, setModifier] = useState(false)
+  const edition = fantome !== null || pinceau !== null || modifier
 
-  // Arrivé devant un stand tout juste débloqué (foreuse, Personnel, recruteur, manager) : la
-  // flèche du village disparaît.
-  const aDecouvrirIci = stand ? decouvertesAMontrer(etat).filter((id) => DECOUVERTES[id].stand === stand.id) : []
+  // Le fantôme peut-il être posé là où il est ?
+  function fantomeLibre(f: Fantome | null): boolean {
+    if (!f) return false
+    if (f.type === 'batiment') {
+      const ignorer: Occupant | null = estPose(etat, f.id) ? { type: 'batiment', id: f.id } : null
+      return empriseLibre(etat.village, empriseBatiment(f), ignorer)
+    }
+    if (f.type === 'decoration') return empriseLibre(etat.village, empriseDecoration(f), f.n !== null ? { type: 'decoration', n: f.n } : null)
+    const ignorer = f.de ? ({ type: f.sol, cle: cleCase(f.de.x, f.de.y) } as Occupant & { cle: string }) : null
+    return empriseLibre(etat.village, { x: f.x, y: f.y, taille: 1 }, ignorer)
+  }
+
+  // Une place libre pour un nouvel élément, près du joueur (en tournant autour de lui).
+  function placeProche(taille: number): Case {
+    const depart = { x: Math.round(joueur.x - taille / 2), y: Math.round(joueur.y - taille - 1) }
+    for (let rayon = 0; rayon < 40; rayon++) {
+      for (let dx = -rayon; dx <= rayon; dx++) {
+        for (let dy = -rayon; dy <= rayon; dy++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== rayon) continue
+          const c = { x: depart.x + dx, y: depart.y + dy }
+          if (empriseLibre(etat.village, { ...c, taille })) return c
+        }
+      }
+    }
+    return depart
+  }
+
+  function poserBatiment(id: IdBatiment) {
+    setMenuConstruction(null)
+    setFantome({ type: 'batiment', id, ...placeProche(BATIMENTS[id].taille), miroir: false })
+  }
+
+  function poserDecoration(id: IdDecoration) {
+    setMenuConstruction(null)
+    setFantome({ type: 'decoration', id, n: null, ...placeProche(DECORATIONS[id].taille), miroir: false })
+  }
+
+  function commencerPinceau(sol: TypeSol) {
+    setMenuConstruction(null)
+    setPinceau(sol)
+  }
+
+  function annulerEdition() {
+    setFantome(null)
+    setPinceau(null)
+  }
+
+  function terminerEdition() {
+    setFantome(null)
+    setPinceau(null)
+    setModifier(false)
+  }
+
+  function validerFantome() {
+    const f = fantome
+    if (!f || !fantomeLibre(f)) return
+    if (f.type === 'batiment') jouer((e) => (estPose(e, f.id) ? deplacerBatiment(e, f.id, f.x, f.y, f.miroir) : construireBatiment(e, f.id, f.x, f.y, f.miroir)))
+    else if (f.type === 'decoration') jouer((e) => (f.n !== null ? deplacerDecoration(e, f.n, f.x, f.y, f.miroir) : acheterDecoration(e, f.id, f.x, f.y, f.miroir)))
+    else if (f.de) jouer((e) => deplacerSol(e, f.sol, f.de as Case, { x: f.x, y: f.y }))
+    setFantome(null)
+  }
+
+  function retirerFantome() {
+    const f = fantome
+    if (!f) return
+    if (f.type === 'decoration' && f.n !== null) jouer((e) => retirerDecoration(e, f.n as number))
+    if (f.type === 'sol' && f.de) jouer((e) => retirerSol(e, f.sol, (f.de as Case).x, (f.de as Case).y))
+    setFantome(null)
+  }
+
+  function deplacerFantome(c: Case) {
+    setFantome((f) => {
+      if (!f) return f
+      const t = tailleFantome(f)
+      const x = Math.max(0, Math.min(40 - t, c.x - Math.floor(t / 2)))
+      const y = Math.max(0, Math.min(40 - t, c.y - Math.floor(t / 2)))
+      return f.x === x && f.y === y ? f : { ...f, x, y }
+    })
+  }
+
+  // En mode pinceau, chaque case touchée reçoit un rail (ou un pavé) si elle est libre.
+  function peindre(c: Case) {
+    if (pinceau === null) return
+    if (peutPoserSol(etat, pinceau, c.x, c.y)) jouer((e) => poserSol(e, pinceau, c.x, c.y))
+  }
+
+  // --- Les bâtiments : on marche jusqu'à la porte, puis le panneau s'ouvre ---
+  const [panneauFerme, setPanneauFerme] = useState(false)
+
+  // Le bâtiment devant lequel se tient le joueur (près de sa porte).
+  let batimentProche: IdBatiment | null = null
+  if (enVille && transition === null) {
+    let meilleure = 1.4
+    for (const b of etat.village.batiments) {
+      const p = porte(b)
+      const acces = caseAcces(etat.village, b)
+      const distance = Math.min(Math.hypot(p.x - joueur.x, p.y - joueur.y), Math.hypot(acces.x + 0.5 - joueur.x, acces.y + 0.5 - joueur.y))
+      if (distance < meilleure) {
+        meilleure = distance
+        batimentProche = b.id
+      }
+    }
+  }
+  // Le panneau s'ouvre quand on arrive en marchant devant un bâtiment, mais pas quand on y
+  // apparaît d'un coup (au chargement de la partie, en sortant de la mine) : sur téléphone, il
+  // cacherait la carte.
+  const [dernierProche, setDernierProche] = useState<IdBatiment | null>(null)
+  if (dernierProche !== batimentProche) {
+    setDernierProche(batimentProche)
+    setPanneauFerme(!joueur.marche)
+  }
+  const batimentActif = !edition && !panneauFerme ? batimentProche : null
+
+  const allerAuBatiment = useCallback(
+    (id: IdBatiment, quandArrive?: () => void) => {
+      const b = batimentPose(etat.village, id)
+      if (!b) return
+      setPanneauFerme(false)
+      village.allerVers(caseAcces(etat.village, b), quandArrive)
+    },
+    [etat.village, village],
+  )
+
+  // Arrivé devant un bâtiment tout juste débloqué (foreuse, Personnel, recruteur, manager) :
+  // sa notification « Nouveau » disparaît. Pareil pour le badge « Nouveaux niveaux ».
+  const aDecouvrirIci = batimentActif ? decouvertesAMontrer(etat).filter((id) => DECOUVERTES[id].stand === batimentActif) : []
   const cleDecouvertes = aDecouvrirIci.join(',')
   useEffect(() => {
     if (cleDecouvertes) jouer((e) => marquerDecouvert(e, decouvertesAMontrer(e).filter((id) => cleDecouvertes.split(',').includes(id))))
   }, [cleDecouvertes, jouer])
-
-  // Pareil pour le badge « Nouveaux niveaux » d'après un prestige : il disparaît quand on passe devant le stand.
-  const standAvecNiveaux = stand && standsAvecNouveauxNiveaux(etat).includes(stand.id) ? stand.id : null
+  const standAvecNiveaux = batimentActif && standsAvecNouveauxNiveaux(etat).includes(batimentActif) ? batimentActif : null
   useEffect(() => {
     if (standAvecNiveaux) jouer((e) => marquerStandVu(e, standAvecNiveaux))
   }, [standAvecNiveaux, jouer])
+
+  // Un toucher sur la carte du village.
+  function toucherCarte(c: Case, cible: CibleVillage | null) {
+    if (pinceau !== null) return
+    if (fantome !== null) {
+      deplacerFantome(c)
+      return
+    }
+    if (modifier) {
+      // On choisit l'élément à déplacer.
+      if (cible?.type === 'batiment') {
+        const b = batimentPose(etat.village, cible.id)
+        if (b) setFantome({ type: 'batiment', id: b.id, x: b.x, y: b.y, miroir: b.miroir })
+      } else if (cible?.type === 'decoration') {
+        const d = etat.village.decorations.find((x) => x.n === cible.n)
+        if (d) setFantome({ type: 'decoration', id: d.id, n: d.n, x: d.x, y: d.y, miroir: d.miroir })
+      } else if (cible?.type === 'rail' || cible?.type === 'chemin') {
+        setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
+      }
+      return
+    }
+    if (cible?.type === 'batiment') allerAuBatiment(cible.id)
+    else village.allerVers(c)
+  }
+
+  // --- Entrer dans la mine (et en sortir) ---
+  function entrerDansLaMine() {
+    if (transition !== null) return
+    const commencer = () => {
+      arreter()
+      setTransition('entree')
+    }
+    if (batimentProche === 'puits') commencer()
+    else allerAuBatiment('puits', commencer)
+  }
+
+  function finTransition() {
+    if (transition === 'entree') jouer((e) => voyager(e, positionFront(e)))
+    setTransition(null)
+  }
 
   // L'écran de victoire s'affiche une seule fois, au moment où l'on atteint la bedrock.
   const [victoireAffichee, setVictoireAffichee] = useState(false)
@@ -104,39 +363,34 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     if (etat.victoire) setVictoireAffichee(true)
   }
 
-  // --- Les actions des boutons et du clavier -------------------------------
+  // --- La mine : échelle, ascenseur, déplacements au front ---
 
-  // Commencer à monter (sens = -1) ou à descendre (sens = +1) l'échelle, au clavier.
-  // On avance jusqu'à ce que la touche soit relâchée. Depuis le front de taille, le
-  // mineur marche d'abord jusqu'à l'échelle.
   function commencerEchelle(sens: number) {
     arreter()
     jouer((e) => voyager(e, sens < 0 ? 0 : positionFront(e), true))
   }
 
-  function finirEchelle() {
-    jouer(arreterSurEchelle)
-  }
-
-  // Remonter au village : le mineur marche jusqu'au puits, puis prend l'ascenseur
-  // s'il est là, sinon l'échelle.
   function allerAuVillage() {
     arreter()
     jouer((e) => voyager(e, 0))
   }
 
-  // Descendre dans la mine : depuis le village, on marche d'abord jusqu'à l'entrée.
-  function allerALaMine() {
-    if (enVille) village.allerVers(X_PUITS, () => jouer((e) => voyager(e, positionFront(e))))
+  function allerAuFront() {
+    if (enVille) entrerDansLaMine()
     else jouer((e) => voyager(e, positionFront(e)))
   }
 
-  // Le clic sur le prochain objectif : au village, on marche jusqu'au stand ; dans la mine, on remonte.
-  function allerAuStand(id: IdStand) {
-    const cible = STANDS.find((s) => s.id === id)
-    if (!cible) return
-    if (enVille) village.allerVers(cible.x)
+  // Le clic sur le prochain objectif : au village, on marche jusqu'au bâtiment ; dans la mine, on remonte.
+  function allerAuStand(id: IdBatiment) {
+    if (enVille) allerAuBatiment(id)
     else allerAuVillage()
+  }
+
+  function ouvrirConstruction(onglet: OngletConstruction) {
+    setModifier(false)
+    annulerEdition()
+    setMenuConstruction(onglet)
+    if (onglet === 'batiments') jouer(marquerBatimentsVus)
   }
 
   function deplacerAuFront(sens: number) {
@@ -149,19 +403,28 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     function toucheAppuyee(evenement: KeyboardEvent) {
       if (evenement.target instanceof HTMLInputElement) return
       const touche = evenement.key
+      if (enVille) {
+        if (touche === 'Escape') {
+          annulerEdition()
+          setModifier(false)
+          setMenuConstruction(null)
+          return
+        }
+        if (touche === ' ') {
+          evenement.preventDefault()
+          if (!evenement.repeat) village.sauter()
+          return
+        }
+        const direction = FLECHES[touche]
+        if (!direction || menuConstruction !== null) return
+        evenement.preventDefault()
+        if (!evenement.repeat) village.fleche(direction, true)
+        return
+      }
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(touche)) return
       evenement.preventDefault()
-      // Une touche gardée appuyée se répète : pour marcher et grimper, seul le premier appui compte.
       const repetition = evenement.repeat
-
-      if (enVille) {
-        if (touche === 'ArrowLeft' && !repetition) village.commencer(-1)
-        if (touche === 'ArrowRight' && !repetition) village.commencer(+1)
-        if (touche === 'ArrowDown' && !repetition) {
-          if (prochePuits) commencerEchelle(+1)
-          else allerALaMine()
-        }
-      } else if (auFront) {
+      if (auFront) {
         if (touche === 'ArrowLeft') deplacerAuFront(-1)
         if (touche === 'ArrowRight') deplacerAuFront(+1)
         if (touche === 'ArrowUp' && !repetition) commencerEchelle(-1)
@@ -173,22 +436,26 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     }
 
     function toucheRelachee(evenement: KeyboardEvent) {
-      if (evenement.key === 'ArrowUp' || evenement.key === 'ArrowDown') finirEchelle()
-      if (evenement.key === 'ArrowLeft' || evenement.key === 'ArrowRight') village.arreter()
+      const direction = FLECHES[evenement.key]
+      if (direction) village.fleche(direction, false)
+      if (!enVille && (evenement.key === 'ArrowUp' || evenement.key === 'ArrowDown')) jouer(arreterSurEchelle)
     }
 
+    const perdreFocus = () => village.arreterFleches()
     window.addEventListener('keydown', toucheAppuyee)
     window.addEventListener('keyup', toucheRelachee)
+    window.addEventListener('blur', perdreFocus)
     return () => {
       window.removeEventListener('keydown', toucheAppuyee)
       window.removeEventListener('keyup', toucheRelachee)
+      window.removeEventListener('blur', perdreFocus)
     }
   })
 
   function demanderRecommencer() {
-    if (window.confirm(`Effacer la partie du monde « ${monde.nom} » et tout recommencer (succès et foreuse compris) ?`)) {
+    if (window.confirm(`Effacer la partie du monde « ${monde.nom} » et tout recommencer (village, succès et foreuse compris) ?`)) {
       recommencer()
-      village.placer(X_PUITS)
+      terminerEdition()
     }
   }
 
@@ -198,42 +465,42 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     if (!peutPasserPrestige(etat)) return
     passerPrestige()
     setVictoireAffichee(false)
-    village.placer(X_PUITS)
     // D'abord la fête (confettis !), puis l'arbre de prestige quand on clique sur « Choisir mon talent ».
     setFeteOuverte(true)
   }
 
-  // --- Le panneau de droite : le stand où l'on est, ou le sac dans la mine --
+  // --- Le panneau : le bâtiment où l'on est, ou le sac dans la mine ---
 
-  let panneau
-  if (enVille && stand === null) {
-    // Entre deux stands : on rappelle comment se promener.
+  let panneau = null
+  if (enVille && batimentActif !== null) {
+    const info = BATIMENTS[batimentActif]
     panneau = (
-      <section className="carte panneau">
-        <h2>Le village</h2>
-        <p className="discret">Promène-toi le long du chemin avec ← →, ou clique sur un stand pour y aller.</p>
-      </section>
-    )
-  } else if (enVille && stand !== null) {
-    const cabineAuVillage = etat.ascenseur.niveau > 0 && !ascenseurEnMouvement(etat) && etat.ascenseur.position === 0
-    panneau = (
-      <section className="carte panneau">
-        <h2 className="titre-stand">
-          {stand.icone && <Icone nom={stand.icone} taille={28} />}
-          {stand.nom}
-        </h2>
-        <p className="discret">{stand.description}</p>
-        {stand.id === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
-        {stand.id === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
-        {stand.id === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
-        {stand.id === 'enchanteur' && <PanneauEnchanter etat={etat} jouer={jouer} />}
-        {stand.id === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
-        {stand.id === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
-        {stand.id === 'prestige' && (
+      <section className="carte panneau panneau-batiment">
+        <div className="entete-panneau">
+          <h2 className="titre-stand">
+            <span aria-hidden="true">{info.emoji}</span> {info.nom}
+          </h2>
+          <button className="bouton-fermer" onClick={() => setPanneauFerme(true)} aria-label="Fermer">
+            ✖
+          </button>
+        </div>
+        <p className="discret">{info.description}</p>
+        {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
+        {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
+        {batimentActif === 'bazar' && (
+          <>
+            <PanneauBazar etat={etat} jouer={jouer} />
+            <PanneauTenues etat={etat} jouer={jouer} />
+          </>
+        )}
+        {batimentActif === 'enchanteur' && <PanneauEnchanter etat={etat} jouer={jouer} />}
+        {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
+        {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
+        {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} onEntrer={entrerDansLaMine} />}
+        {batimentActif === 'prestige' && (
           <div className="liste-cartes">
             {/* C'est ici qu'on passe prestige : la liste de ce qu'il reste à faire, avec sa jauge. */}
             <CartePrestige etat={etat} onPrestige={faireLePrestige} />
-
             {etat.prestige > 0 && (
               <div className="ligne-achat">
                 <strong className="titre-avec-icone">
@@ -253,34 +520,20 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             )}
           </div>
         )}
-        {stand.id === 'puits' && (
-          <div className="liste-cartes">
-
-            <p>
-              Ta mine descend à <strong>-{etat.profondeur} m</strong>.{' '}
-              {cabineAuVillage
-                ? `L'ascenseur t'attend : descente en ${Math.ceil(dureeAscenseur(etat))} s.`
-                : `À l'échelle, il faut ${Math.ceil(dureeEchelle(etat))} s pour y descendre.`}
-            </p>
-            <div className="boutons">
-              <button className="bouton bouton-voyage" onClick={allerALaMine}>
-                ⏬ Descendre dans la mine {cabineAuVillage ? 'en ascenseur' : "à l'échelle"}
-              </button>
-              {etat.ascenseur.niveau > 0 && !cabineAuVillage && (
-                <button className="bouton bouton-ascenseur" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
-                  🛗 Appeler l'ascenseur
-                </button>
-              )}
-            </div>
-
-            {/* L'ascenseur se construit et s'améliore aussi d'ici, sans descendre. */}
-            <div className="ligne-achat">
-              <strong>🛗 Ascenseur</strong>
-              <AmeliorationAscenseur etat={etat} jouer={jouer} />
-            </div>
-
-          </div>
-        )}
+      </section>
+    )
+  } else if (enVille) {
+    panneau = (
+      <section className="carte panneau panneau-aide-village">
+        <h2>🏡 Ton village</h2>
+        <p className="discret">
+          Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, <kbd>Espace</kbd> pour sauter). Fais glisser la carte pour la
+          déplacer, pince ou utilise la molette pour zoomer.
+        </p>
+        <p className="discret">
+          Les menus <strong>Bâtiments</strong> et <strong>Décos</strong> en bas servent à construire, <strong>Modifier</strong> à déplacer ou
+          retourner ce qui est posé.
+        </p>
       </section>
     )
   } else {
@@ -307,15 +560,123 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     )
   }
 
+  // La barre de boutons du bas : au village (construire, décorer, modifier, la mine), pendant qu'on
+  // pose quelque chose (valider, retourner, annuler), ou dans la mine (creuser...).
+  // La pastille du menu Bâtiments : les nouveautés pas encore vues, et ce qu'on peut construire tout de suite.
+  const nbNouveautes = new Set([...nouveautesBatiments(etat), ...batimentsConstructibles(etat)]).size
+  const libre = fantomeLibre(fantome)
+  let barre
+  if (enVille && fantome !== null) {
+    const nouveau = (fantome.type === 'batiment' && !estPose(etat, fantome.id)) || (fantome.type === 'decoration' && fantome.n === null)
+    const peutRetirer = (fantome.type === 'decoration' && fantome.n !== null) || (fantome.type === 'sol' && fantome.de !== null)
+    barre = (
+      <div className="actions actions-edition">
+        <button className="bouton bouton-vendre" disabled={!libre} onClick={validerFantome}>
+          ✔ {nouveau ? (fantome.type === 'decoration' ? `Poser (${DECORATIONS[fantome.id].prix} $)` : 'Construire ici') : 'Poser ici'}
+        </button>
+        {fantome.type !== 'sol' && (
+          <button className="bouton bouton-neutre" onClick={() => setFantome({ ...fantome, miroir: !fantome.miroir })}>
+            ↔ Retourner
+          </button>
+        )}
+        {peutRetirer && (
+          <button className="bouton bouton-stop" onClick={retirerFantome} title="Enlever (sans remboursement)">
+            🗑️ Enlever
+          </button>
+        )}
+        <button className="bouton bouton-stop" onClick={() => setFantome(null)}>
+          ✖ Annuler
+        </button>
+      </div>
+    )
+  } else if (enVille && pinceau !== null) {
+    const cout = pinceau === 'rail' ? COUT_RAIL : COUT_CHEMIN
+    barre = (
+      <div className="actions actions-edition">
+        <p className="consigne-edition">
+          {pinceau === 'rail' ? '🛤️ Touche ou glisse sur les cases pour poser des rails' : '🪨 Touche ou glisse sur les cases pour poser un chemin'} (
+          {cout.argent ? `${cout.argent} $` : `${cout.materiaux.fer} 🔩 fer`} la case).
+        </p>
+        <button className="bouton bouton-vendre" onClick={() => setPinceau(null)}>
+          ✔ Terminé
+        </button>
+      </div>
+    )
+  } else if (enVille && modifier) {
+    barre = (
+      <div className="actions actions-edition">
+        <p className="consigne-edition">✏️ Touche un bâtiment, une décoration, un rail ou un chemin pour le déplacer.</p>
+        <button className="bouton bouton-vendre" onClick={() => setModifier(false)}>
+          ✔ Terminé
+        </button>
+      </div>
+    )
+  } else if (enVille) {
+    barre = (
+      <div className="actions actions-village">
+        <button className="bouton bouton-construire" onClick={() => ouvrirConstruction('batiments')}>
+          <span className="emoji-bouton">🏗️ </span>Bâtiments
+          {nbNouveautes > 0 && <span className="badge-menu">{nbNouveautes}</span>}
+        </button>
+        <button className="bouton bouton-decorer" onClick={() => ouvrirConstruction('decorations')}>
+          <span className="emoji-bouton">🌸 </span>Décos
+        </button>
+        <button className="bouton bouton-neutre" onClick={() => setModifier(true)}>
+          <span className="emoji-bouton">✏️ </span>Modifier
+        </button>
+        <button className="bouton bouton-voyage" onClick={entrerDansLaMine} disabled={transition !== null}>
+          <span className="emoji-bouton">⛏️ </span>Mine
+        </button>
+      </div>
+    )
+  } else {
+    barre = (
+      <div className="actions">
+        {/* « Creuser » casse une couche (et devient « Arrêter » pendant ce temps). */}
+        {enMinage && !enAuto ? (
+          <button className="bouton bouton-stop" onClick={arreter}>
+            <span className="emoji-bouton">⏹️ </span>Arrêter
+          </button>
+        ) : (
+          <button className="bouton bouton-creuser" onClick={() => creuser(1)} disabled={!auFront || enMinage}>
+            <span className="emoji-bouton">⛏️ </span>Creuser
+          </button>
+        )}
+        {/* « Auto » creuse sans s'arrêter, jusqu'à ce qu'on reclique (« Arrêt »).
+            Il s'arrête aussi tout seul si la pioche casse : pas de minage à mains nues sans toi. */}
+        {enAuto ? (
+          <button className="bouton bouton-stop" onClick={arreter}>
+            <span className="emoji-bouton">⏹️ </span>Arrêt
+          </button>
+        ) : (
+          <button
+            className="bouton bouton-creuser-x10"
+            onClick={creuserAuto}
+            disabled={!auFront || enMinage || estCassee(etat)}
+            title={estCassee(etat) ? 'Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser »)' : 'Creuser sans s’arrêter'}
+          >
+            <span className="emoji-bouton">♾️ </span>Auto
+          </button>
+        )}
+        <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={dansLaCabine}>
+          <span className="emoji-bouton">🏠 </span>Village
+        </button>
+        <button className="bouton bouton-voyage" onClick={allerAuFront} disabled={auFront || dansLaCabine}>
+          <span className="emoji-bouton">⛏️ </span>Front
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className={`jeu ${etat.employes.length > 0 ? 'avec-mineurs' : ''}`}>
+    <div className={`jeu ${enVille ? 'mode-village' : 'mode-mine'} ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${batimentActif ? 'avec-panneau' : ''}`}>
       <header className="entete">
         <h1 className="titre titre-jeu">⛏️ Mega Digger</h1>
-        {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
         {/* Petit lien discret (avec confirmation) : il efface la partie de ce monde. */}
         <button className="lien lien-recommencer" onClick={demanderRecommencer}>
           Recommencer à zéro
         </button>
+        {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
         <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
           🌍 {monde.nom}
         </button>
@@ -328,62 +689,43 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </button>
       </header>
       <Hud etat={etat} nbVentes={nbVentes} enMinage={enMinage} onOuvrirArbre={() => setArbreOuvert(true)} />
-      <ProchainObjectif etat={etat} onAllerAuStand={allerAuStand} />
+      <ProchainObjectif etat={etat} onAllerAuStand={allerAuStand} onConstruire={() => (enVille ? ouvrirConstruction('batiments') : allerAuVillage())} />
 
       <main className="plateau">
         <div className="colonne-mine">
-          <VueMonde
-            etat={etat}
-            enMinage={enMinage}
-            versLaGauche={versLaGauche}
-            xVillage={village.x}
-            versLaGaucheVillage={village.versLaGauche}
-            enMarcheVillage={village.enMarche}
-            onAllerStand={(index) => village.allerVers(STANDS[index].x)}
-            gains={gains}
-            eclats={eclats}
-            trouvailles={trouvailles}
-          />
-
-          {/* La barre de boutons : toujours les mêmes 4 boutons, toujours à la même place.
-              Ceux qui ne servent pas à l'endroit où l'on est sont simplement grisés. */}
-          <div className="actions">
-            {/* « Creuser » casse une couche (et devient « Arrêter » pendant ce temps). */}
-            {enMinage && !enAuto ? (
-              <button className="bouton bouton-stop" onClick={arreter}>
-                <span className="emoji-bouton">⏹️ </span>Arrêter
-              </button>
-            ) : (
-              <button className="bouton bouton-creuser" onClick={() => creuser(1)} disabled={!auFront || enMinage}>
-                <span className="emoji-bouton">⛏️ </span>Creuser
-              </button>
-            )}
-            {/* « Auto » creuse sans s'arrêter, jusqu'à ce qu'on reclique (« Arrêt »).
-                Il s'arrête aussi tout seul si la pioche casse : pas de minage à mains nues sans toi. */}
-            {enAuto ? (
-              <button className="bouton bouton-stop" onClick={arreter}>
-                <span className="emoji-bouton">⏹️ </span>Arrêt
-              </button>
-            ) : (
-              <button
-                className="bouton bouton-creuser-x10"
-                onClick={creuserAuto}
-                disabled={!auFront || enMinage || estCassee(etat)}
-                title={estCassee(etat) ? 'Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser »)' : 'Creuser sans s’arrêter'}
-              >
-                <span className="emoji-bouton">♾️ </span>Auto
-              </button>
-            )}
-            <button className="bouton bouton-voyage" onClick={allerAuVillage} disabled={enVille || dansLaCabine}>
-              <span className="emoji-bouton">🏠 </span>Village
-            </button>
-            <button className="bouton bouton-voyage" onClick={allerALaMine} disabled={auFront || dansLaCabine}>
-              <span className="emoji-bouton">⛏️ </span>Mine
-            </button>
-          </div>
+          {enVille ? (
+            <VueVillage
+              etat={etat}
+              joueur={joueur}
+              notifications={notificationsBatiments(etat)}
+              batimentActif={batimentActif}
+              edition={edition}
+              fantome={fantome}
+              fantomeLibre={libre}
+              pinceau={pinceau !== null}
+              onTap={toucherCarte}
+              onSurvol={deplacerFantome}
+              onPeindre={peindre}
+              transition={transition}
+              onTransitionFinie={finTransition}
+            />
+          ) : (
+            <div className="entree-dans-la-mine">
+              <VueMonde etat={etat} enMinage={enMinage} versLaGauche={versLaGauche} gains={gains} eclats={eclats} trouvailles={trouvailles} />
+            </div>
+          )}
+          {barre}
           {/* Un petit rappel : on se déplace avec les flèches du clavier. */}
           <p className="aide-clavier">
-            <kbd>←</kbd> <kbd>→</kbd> {enVille ? 'pour marcher dans le village' : 'pour te déplacer dans la mine'}
+            {enVille ? (
+              <>
+                <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> pour marcher · <kbd>Espace</kbd> pour sauter
+              </>
+            ) : (
+              <>
+                <kbd>←</kbd> <kbd>→</kbd> pour te déplacer · <kbd>↑</kbd> <kbd>↓</kbd> sur l'échelle
+              </>
+            )}
           </p>
         </div>
 
@@ -394,6 +736,17 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </div>
       </main>
 
+      {menuConstruction !== null && (
+        <MenuConstruction
+          etat={etat}
+          onglet={menuConstruction}
+          onOnglet={(onglet) => ouvrirConstruction(onglet)}
+          onFermer={() => setMenuConstruction(null)}
+          onPoserBatiment={poserBatiment}
+          onPoserDecoration={poserDecoration}
+          onPinceau={commencerPinceau}
+        />
+      )}
       {succesOuverts && (
         <div className="voile" role="dialog" aria-modal="true" aria-label="Succès" onClick={() => setSuccesOuverts(false)}>
           <div className="carte fenetre-succes" onClick={(e) => e.stopPropagation()}>

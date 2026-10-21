@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { VERSION_ETAT, casserBloc, creerPartie } from './mineur'
+import { casserBloc, creerPartie } from './mineur'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
@@ -13,6 +13,7 @@ import {
   listerMondes,
   mondesDeLaCopie,
   marquerJoue,
+  partieAncienne,
   peutCreerMonde,
   renommerMonde,
   sauvegarder,
@@ -20,9 +21,6 @@ import {
   supprimerMonde,
   type Stockage,
 } from './sauvegarde'
-
-// Les anciennes parties des tests de migration sont rangées dans le monde « 1 ».
-const CLE_SAUVEGARDE = cleMonde('1')
 
 // Un faux localStorage, en mémoire.
 function fauxStockage(): Stockage & { donnees: Map<string, string> } {
@@ -48,170 +46,19 @@ describe('sauvegarde', () => {
   it("renvoie null s'il n'y a rien ou si la sauvegarde est abîmée", () => {
     const stockage = fauxStockage()
     expect(charger(stockage, '1')).toBeNull()
-    stockage.setItem(CLE_SAUVEGARDE, '{pas du json')
+    stockage.setItem(cleMonde('1'), '{pas du json')
     expect(charger(stockage, '1')).toBeNull()
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify({ version: 999 }))
+    stockage.setItem(cleMonde('1'), JSON.stringify({ version: 999 }))
     expect(charger(stockage, '1')).toBeNull()
   })
 
-  it('met à jour une sauvegarde de la version 1 (jusqu’à la dernière version)', () => {
+  it('une partie d’avant le village en vue du ciel (version 17 ou moins) repart de zéro', () => {
     const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1)), version: 1, profondeur: 10 }
-    for (const champ of ['position', 'cible', 'colonneMineur', 'nonAVendre', 'ascenseur', 'foreuse', 'talents', 'peculeRecu']) delete ancienne[champ]
-    ancienne.coucheActuelle = ['terre', 'terre', 'terre', 'terre', 'terre', 'terre']
-    ancienne.couchesDessous = [['pierre', 'fer', 'pierre', 'pierre', 'pierre', 'pierre']]
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(VERSION_ETAT)
-    expect(etat?.position).toBe(9) // au front de taille, comme avant
-    expect(etat?.ascenseur.niveau).toBe(0)
-    expect(etat?.foreuse.active).toBe(false)
-    expect(etat?.coucheActuelle).toHaveLength(10) // les couches passent de 6 à 10 blocs
-    expect(etat?.couchesDessous[0]).toEqual(['pierre', 'fer', 'pierre', 'pierre', 'pierre', 'pierre', 'pierre', 'fer', 'pierre', 'pierre'])
-    expect(etat?.talents).toEqual([])
-  })
-
-  it('met à jour une sauvegarde de la version 2 avec un ascenseur', () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = {
-      ...creerPartie(aleatoireAvecGraine(1)),
-      version: 2,
-      lieu: 'surface',
-      trajet: null,
-      ascenseur: { possede: true, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
-    }
-    for (const champ of ['position', 'cible', 'foreuse', 'talents', 'peculeRecu']) delete ancienne[champ]
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.position).toBe(0)
-    expect(etat?.ascenseur.niveau).toBe(1)
-  })
-
-  it('débloque une ancienne partie arrêtée sur la bedrock', () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = {
-      ...creerPartie(aleatoireAvecGraine(1)),
-      version: 4,
-      profondeur: 128,
-      position: 127,
-      cible: 127,
-      victoire: true,
-      coucheActuelle: [],
-      couchesDessous: [],
-      ascenseur: { niveau: 2, chargement: {}, tempsRestant: 0, tempsTotal: 0 },
-    }
-    delete ancienne.talents
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    // Au prestige 0, la bedrock est maintenant à -100 m (version 14) : la partie remonte juste au-dessus.
-    expect(etat?.profondeur).toBe(99)
-    expect(etat?.position).toBe(99)
-    expect(etat?.victoire).toBe(true)
-    expect(etat?.coucheActuelle).toHaveLength(10)
-    expect(etat?.ascenseur).toMatchObject({ niveau: 2, position: 99, cible: 99 })
-  })
-
-  it('retire les donjons, l’épée et l’assistant d’une sauvegarde de la version 5', () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = {
-      ...creerPartie(aleatoireAvecGraine(1), 2),
-      version: 5,
-      assistant: { embauche: true, colonne: 9 },
-      epee: true,
-      succes: ['premier', 'monstre'],
-    }
-    delete ancienne.talents
-    ;(ancienne.coucheActuelle as string[])[3] = 'donjon'
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(VERSION_ETAT)
-    expect(etat?.coucheActuelle[3]).toBe('pierre')
-    expect(etat?.succes).toEqual(['premier'])
-    expect(etat?.talents).toEqual([]) // ses 2 prestiges lui donnent 2 points à dépenser
-    expect(etat && 'assistant' in etat).toBe(false)
-    expect(etat && 'epee' in etat).toBe(false)
-  })
-
-  it('met à jour une partie de la version 9 (sans mineurs)', () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1), 3), version: 9, talents: ['negoce', 'ascenseurOffert', 'grimpeur'] }
-    delete ancienne.employes
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.talents).toEqual([]) // l'arbre a été refait le 20/10 : tous les points sont rendus
-    expect(etat?.employes).toEqual([])
-    expect(etat?.foreuse.niveauVitesse).toBe(0)
-  })
-
-  it('les stands déjà débloqués d’une ancienne partie (version 12) sont déjà découverts', () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(1), 1), version: 12 }
-    delete ancienne.decouvertes
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    expect(charger(stockage, '1')?.decouvertes).toEqual(['foreuse'])
-  })
-
-  it('une ancienne partie à 2 foreuses (version 11) garde la meilleure, l’autre est remboursée', () => {
-    const stockage = fauxStockage()
-    const partie = creerPartie(aleatoireAvecGraine(1), 3)
-    const ancienne = {
-      ...partie,
-      version: 11,
-      foreuse: { ...partie.foreuse, active: true, niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490, nombre: 2 },
-    }
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(VERSION_ETAT)
-    expect(etat?.foreuse).toMatchObject({ niveauVitesse: 2, profondeur: 50, progression: 0.5, blocsFores: 490 })
-    expect('nombre' in (etat?.foreuse ?? {})).toBe(false)
-    expect('foreuses' in (etat?.foreuse ?? {})).toBe(false)
-    // La 2e foreuse (50 000 $) et ses 2 niveaux de forage (2 815 $ et 6 780 $, minerais compris) sont remboursés.
-    expect(etat?.argent).toBe(50000 + 2815 + 6780)
-  })
-
-  it('met à jour une partie de la version 14 : une foreuse, mineurs communs payés, arbre remis à zéro', () => {
-    const stockage = fauxStockage()
-    const partie = creerPartie(aleatoireAvecGraine(1), 4)
-    const { niveauVitesse: _n, profondeur: _p, progression: _g, blocsFores: _b, ...partage } = partie.foreuse
-    const { salairesPayes: _s, ...anciennesStats } = partie.stats
-    const mineur = { nom: 'Léo', niveau: 2, profondeur: 40, etape: 'creuse', position: 39, sac: {}, progression: 0, blocsCasses: 200, gagne: 900 }
-    const ancienne: Record<string, unknown> = {
-      ...partie,
-      version: 14,
-      argent: 100,
-      foreuse: {
-        ...partage,
-        active: true,
-        carburant: 300,
-        foreuses: [
-          { niveauVitesse: 1, profondeur: 80, progression: 0, blocsFores: 790 },
-          { niveauVitesse: 3, profondeur: 30, progression: 0.2, blocsFores: 290 },
-          { niveauVitesse: 0, profondeur: 10, progression: 0, blocsFores: 90 },
-        ],
-      },
-      employes: [mineur],
-      talents: ['negoce', 'pecule', 'contremaitre'],
-      peculeRecu: true,
-      stats: anciennesStats,
-      statsTotales: anciennesStats,
-    }
-    delete ancienne.recruteur
-    delete ancienne.manager
-    delete ancienne.tresorerie
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(VERSION_ETAT)
-    // On garde la foreuse au plus haut niveau de forage, avec tout le charbon.
-    expect(etat?.foreuse).toMatchObject({ active: true, carburant: 300, niveauVitesse: 3, profondeur: 30, blocsFores: 290 })
-    // Les deux autres : 50 000 $ + 100 000 $, et le niveau 1 de forage (2 815 $).
-    expect(etat?.argent).toBe(100 + 50000 + 100000 + 2815)
-    expect(etat?.employes).toEqual([{ ...mineur, rarete: 'commun', tempsPaye: 600 }])
-    expect(etat?.talents).toEqual([])
-    expect(etat?.recruteur).toBe(0)
-    expect(etat?.manager).toEqual({ embauche: false, tempsPaye: 0 })
-    expect(etat?.tresorerie).toBe(0)
-    expect(etat?.stats.salairesPayes).toBe(0)
-    expect(etat && 'peculeRecu' in etat).toBe(false)
+    stockage.setItem(cleMonde('1'), JSON.stringify({ version: 17, argent: 500, profondeur: 30 }))
+    expect(charger(stockage, '1')).toBeNull()
+    expect(partieAncienne(stockage, '1')).toBe(true)
+    sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)))
+    expect(partieAncienne(stockage, '1')).toBe(false)
   })
 
   it('compte le temps passé depuis la dernière sauvegarde', () => {
@@ -305,17 +152,5 @@ describe('copie de tous les mondes (sauvegarde en ligne)', () => {
   it('renvoie une copie vide sans aucun monde', () => {
     expect(exporterTout(fauxStockage())).toEqual({})
     expect(mondesDeLaCopie({})).toEqual([])
-  })
-})
-
-describe('migration vers la version 11', () => {
-  it("ajoute l'argent gagné aux prestiges précédents (à 0)", () => {
-    const stockage = fauxStockage()
-    const ancienne: Record<string, unknown> = { ...creerPartie(aleatoireAvecGraine(3)), version: 10 }
-    delete ancienne.argentGagneAvant
-    stockage.setItem(CLE_SAUVEGARDE, JSON.stringify(ancienne))
-    const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(VERSION_ETAT)
-    expect(etat?.argentGagneAvant).toBe(0)
   })
 })

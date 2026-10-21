@@ -4,13 +4,16 @@
 
 ## Où et quand
 
-- **Position** : x = **7,5 tuiles** sur le chemin du village (le village fait 27 tuiles, une tuile = 40 px), entre l'entrée de la mine (x = 4,5) et le forgeron (x = 10,5). On est « devant » le stand à moins de **1,4 tuile** (`PORTEE_STAND`) : c'est là que son panneau s'ouvre à droite.
-- **Déblocage** : disponible **dès le prestige 0**, jamais verrouillé.
-- **Dessin au village** : une échoppe en CSS (64 × 64 px) : un **auvent rayé rouge et crème** (`--auvent: #d43b3b`) bombé avec un bord en festons, au-dessus d'un comptoir en bois qui porte l'icône **💰**. Le panneau en bois « Marché » s'allume en doré quand on est devant (`.stand-actif`). Le stand s'éclaircit au survol.
-- **Description** (bulle au survol) : « Vends tes blocs et minerais. »
-- **Badges, flèches, pastilles** : le marché n'en a **aucun**. Il n'a pas d'amélioration à acheter, donc jamais la pastille « 💰 Achetable ! », ni le badge « ⬆ Niveaux ! » après un prestige, ni la flèche « Nouveau ! ».
+- **Où** : là où tu le poses dans la clairière (20/10). C'est un bâtiment de **5 × 5 cases**, **gratuit** : c'est le premier qu'on pose, puisqu'on commence la partie avec 0 $. Au tout début, la barre « 🎯 prochain objectif » dit « Construire : Marché — gratuit : pose-le (menu Bâtiments) ! ».
+- **Le poser** : menu **🏗️ Bâtiments** → carte « 💰 Marché » → **🏗️ Poser**. Un fantôme du bâtiment suit le doigt ou la souris (vert si la place est libre, rouge sinon) ; **↔ Retourner** le met en miroir, **✔ Construire ici** le pose. Il reste posé à chaque prestige. Plus tard, **✏️ Modifier** permet de le déplacer ou de le retourner gratuitement.
+- **Déblocage** : dès le prestige 0, jamais de cadenas.
+- **La porte** : sur la face avant **gauche** du dessin (à droite s'il est retourné). C'est là qu'on se tient pour vendre, que les mineurs viennent vendre leur récolte, et que les brouettes arrivent.
+- **L'ouvrir** : toucher (ou cliquer) le marché : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre (à droite sur ordinateur, en bas de l'écran sur téléphone). Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte). Le bouton ✖ le ferme.
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/marche.webp`) : un étal en bois sous un auvent rayé rouge et crème, avec des caisses de minerais, des sacs et une balance. Il brille en doré au survol et quand son panneau est ouvert.
+- **Description** (en haut du panneau) : « Vends tes blocs et minerais. »
+- **Bulle au-dessus** (`notifications.ts`) : **🎒 « Ton sac est plein : viens vendre ! »** (bulle rouge d'alerte) quand le sac est plein. Le marché n'a pas d'amélioration : jamais de bulle 💰 « achetable » ni ⬆️ « nouveaux niveaux ».
 - **Animations et sons d'une vente** : un « +X $ » au milieu de la vue avec une gerbe de pièces (`src/effets.css`), le compteur d'argent du bandeau qui saute et défile jusqu'à la nouvelle somme, et un « ka-ching ! » de caisse (`sons.vente`) : plus la vente est grosse, plus il y a de pièces (de 3 à 12).
-- On ne peut cliquer sur le stand qu'au village. Un clic y fait marcher le mineur.
+- **Pas de marché, pas de vente** : tant qu'il n'est pas posé, on ne peut rien vendre, et les chargements de l'ascenseur **attendent à la mine** (ils partent dès que le marché est posé).
 
 ## Ce qu'on peut y faire
 
@@ -100,34 +103,39 @@ Le talent **Grossiste** (+20 %) ne compte **que** pour le chariot de la foreuse 
 ## Lien avec le reste du jeu
 
 - **Toutes les ventes utilisent le même calcul** (`valeurDe`, donc le même bonus de vente) :
-  - le **marché** (toi) ;
-  - l'**ascenseur** : les objets envoyés depuis le fond sont vendus automatiquement en arrivant au village (« 🛗 L'ascenseur a vendu son chargement : +X $ »), sans passer par le stand ;
-  - les **mineurs employés** (prestige 2) : quand leur sac est plein, ils remontent et passent **4 secondes** au marché (`SECONDES_VENTE_EMPLOYE`) pour vendre leur récolte ; tout l'argent est pour toi ;
+  - le **marché** (toi, devant sa porte) ;
+  - les **chargements en route** (20/10, `convois.ts`) : ce que l'ascenseur remonte ne se vend plus en arrivant en haut. Il part **vers le marché** et n'est vendu qu'**en y arrivant** : dans une **brouette** à pied (4 cases par seconde, le long du chemin à pied entre la porte de la mine et celle du marché, au moins 1 s), ou dans un **wagonnet** si une ligne de **rails** continue relie la mine au marché (12 cases par seconde, 3 fois plus vite). On les voit rouler sur la carte. Message à l'arrivée : « 🛒 La brouette a vendu ton chargement au marché : +X $ » ou « 🛤️ Le wagonnet a vendu ton chargement au marché : +X $ » ;
+  - le **wagonnet chargé à la main** : avec des rails mine → marché, le panneau de la mine a une section « 🛤️ Wagonnet » pour envoyer une partie du sac au marché sans y aller ;
+  - les **mineurs employés** (prestige 2) : quand leur sac est plein, ils remontent, puis **marchent jusqu'au marché** et y passent **4 secondes** (`SECONDES_VENTE_EMPLOYE`) pour vendre leur récolte avant de retourner à la mine ; avec des rails mine → marché, ils chargent plutôt le wagonnet et redescendent tout de suite. Tout l'argent est pour toi ;
   - le **chariot de la foreuse** (prestige 1) : vendu au stand Foreuse, avec en plus +20 % si on a le talent Grossiste.
+- **Où le poser** : près de la mine ! La distance à pied entre les deux portes décide du temps de trajet des brouettes et des mineurs (et donc du « $/s » des mineurs, `revenu.ts`). Avec des rails, la distance compte beaucoup moins.
 - **Garder des objets** sert aux achats des autres stands : diamants (pioche en diamant), débris antiques et or (pioche en netherite), 3 minerais pour chaque réparation au **forgeron**, lapis et émeraudes à l'**enchanteur**, fer et redstone pour l'**ascenseur** et la **foreuse**.
 - **Le revenu « $/s »** du bandeau (`src/jeu/revenu.ts`) estime ce que rapporte chaque source en appliquant le même bonus de vente.
-- **Objectifs** (`src/jeu/objectifs.ts`) : le marché ne propose aucun achat, donc il n'apparaît jamais dans `achatsPossibles`, `standsAchetables` ni `standsAvecNouveauxNiveaux`. Mais c'est lui qui fournit l'argent de presque tous les objectifs (« 180 / 300 $ »). Son nom dans les objectifs est « au marché ».
+- **Objectifs** (`src/jeu/objectifs.ts`) : tant qu'il n'est pas posé, « Construire : Marché » est le premier objectif (gratuit). Ensuite, le marché ne propose aucun achat, donc il n'apparaît jamais dans `standsAchetables` ni `standsAvecNouveauxNiveaux`. Mais c'est lui qui fournit l'argent de presque tous les objectifs (« 180 / 300 $ »). Son nom dans les objectifs est « au marché ».
 - **Conditions de prestige** (`src/jeu/conditionsPrestige.ts`) : aucune ne concerne le marché.
-- **Succès** : « 💰 Riche » demande de gagner 5 000 $ dans une partie (`stats.argentGagne`, ventes et coffres compris).
+- **Succès** : « 💰 Riche » demande de gagner 5 000 $ dans une partie (`stats.argentGagne`, ventes et coffres compris). « 🛤️ Cheminot » (20/10) : relier la mine au marché avec des rails.
 - **Classement** : l'argent gagné au total (`argentGagneTotal`) vient surtout des ventes.
 - **Arbre de prestige** : la branche **Marchand** a l'icône du marché (💰).
 - Quand le sac est plein au fond : « 🎒 Sac plein ! Remonte vendre au marché (bouton Village) ou envoie l'ascenseur. »
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position (x = 7,5), nom, icône et description du stand.
-- `src/jeu/donnees.ts` : les prix de vente (`BLOCS`) et le bonus de prestige (`BONUS_PRESTIGE` = 0,15).
-- `src/jeu/mineur.ts` : les règles de vente (`valeurDe`, `bonusVente`, `vendreLot`, `vendre`, `objetsAVendre`, `reglerVente`, `nonAVendre`) et la vente à l'arrivée de l'ascenseur.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.marche` : gratuit, 5 × 5, porte à gauche), les prix de vente (`BLOCS`), le bonus de prestige (`BONUS_PRESTIGE` = 0,15), les vitesses à pied et en wagonnet (`VITESSE_MARCHE`, `VITESSE_RAILS`) et `SECONDES_VENTE_EMPLOYE`.
+- `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`construireBatiment`, `deplacerBatiment`).
+- `src/jeu/village.ts` : la porte (`porte`, `caseAcces`), le chemin à pied (`cheminEntre`, `secondesAPied`), les rails mine → marché (`railsMineMarche`), la durée d'un chargement (`trajetChargement`) et son départ (`envoyerAuMarche`).
+- `src/jeu/convois.ts` : les brouettes et wagonnets vendus en arrivant au marché (`avancerConvois`), le wagonnet chargé à la main (`chargerWagonnet`).
+- `src/jeu/mineur.ts` : les règles de vente (`valeurDe`, `bonusVente`, `vendreLot`, `vendre`, `objetsAVendre`, `reglerVente`, `nonAVendre`), et le chargement de l'ascenseur qui part au marché.
 - `src/jeu/talents.ts` : les talents Négociant, Grand négociant (`bonusVenteTalents`) et Grossiste (`multiplicateurVenteChariot`).
 - `src/jeu/mine.ts` : à quelle profondeur apparaît chaque bloc.
-- `src/jeu/employes.ts` : la vente de la récolte des mineurs employés (`vendreRecolte`).
+- `src/jeu/employes.ts` : la marche des mineurs jusqu'au marché et la vente de leur récolte (`vendreRecolte`, `arriverEnHaut`).
 - `src/jeu/foreuse.ts` : la vente du chariot de la foreuse (`vendreChariot`, `valeurAuChariot`).
-- `src/jeu/revenu.ts` : l'estimation du revenu par seconde.
-- `src/jeu/objectifs.ts` : le nom du stand dans les objectifs (« au marché »).
+- `src/jeu/notifications.ts` : la bulle 🎒 « sac plein ».
+- `src/jeu/revenu.ts` : l'estimation du revenu par seconde (trajets à pied des mineurs compris).
+- `src/jeu/objectifs.ts` : « Construire : Marché » et le nom du stand dans les objectifs (« au marché »).
 - `src/composants/Panneaux.tsx` : le panneau du marché (`PanneauMarche`).
-- `src/composants/Jauges.tsx` : les jauges pour choisir les quantités (aussi utilisées pour l'ascenseur).
+- `src/composants/Jauges.tsx` : les jauges pour choisir les quantités (aussi utilisées pour l'ascenseur et le wagonnet).
 - `src/choix.ts` : le calcul du lot choisi avec les jauges (`lotChoisi`, `quantiteVoulue`).
-- `src/composants/VueVillage.tsx` : le dessin du stand au village.
-- `src/composants/Icone.tsx` : l'icône 💰.
-- `src/index.css` : l'échoppe, l'auvent rouge (`.stand-marche`) et le comptoir.
+- `src/composants/MenuConstruction.tsx` : la carte du marché dans le menu Bâtiments.
+- `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, les brouettes et wagonnets qui roulent, la bulle.
+- `public/images/batiments/marche.webp` : le dessin du marché.
 - `src/evenements.ts`, `src/sons.ts`, `src/effets.css` : l'événement « vente », le « ka-ching ! » et la pluie de pièces.

@@ -1,7 +1,8 @@
-// Le temps qui passe : le joueur marche jusqu'au puits, grimpe à l'échelle, les mineurs travaillent, l'ascenseur voyage et la
-// foreuse creuse. L'interface appelle avancerTemps plusieurs fois par seconde.
+// Le temps qui passe : le joueur marche jusqu'au puits, grimpe à l'échelle, les mineurs travaillent, l'ascenseur voyage, la
+// foreuse creuse et les chargements roulent vers le marché. L'interface appelle avancerTemps plusieurs fois par seconde.
 
 import type { Aleatoire } from './aleatoire'
+import { avancerConvois } from './convois'
 import { avancerEmployes } from './employes'
 import { avancerForeuse } from './foreuse'
 import { ascenseurEnMouvement, avancerAscenseur, avancerMarche, avancerSurEchelle, type EtatJeu } from './mineur'
@@ -13,6 +14,7 @@ export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoi
     ...avancerAscenseur(etat, secondes),
     ...avancerForeuse(etat, secondes, aleatoire),
     ...avancerEmployes(etat, secondes, aleatoire),
+    ...avancerConvois(etat, secondes),
   ]
 }
 
@@ -25,6 +27,7 @@ export function tempsQuiPasse(etat: EtatJeu): boolean {
     ascenseurEnMouvement(etat) ||
     foreuseTourne ||
     etat.employes.length > 0 ||
+    etat.convois.length > 0 || // des chargements roulent vers le marché
     etat.manager.embauche // le temps payé du manager s'écoule aussi
   )
 }

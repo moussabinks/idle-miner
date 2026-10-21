@@ -48,6 +48,7 @@ import {
   vitesse,
   type EtatJeu,
 } from './mineur'
+import { construireBatiment } from './batiments'
 import { verifierSucces } from './succes'
 import { avancerTemps as avancerTempsAvecAleatoire } from './temps'
 
@@ -486,8 +487,9 @@ describe('ascenseur', () => {
     expect(niveauAscenseur(etat)?.capacite).toBe(1024)
   })
 
-  it('remonte le sac, le vend en haut et redescend au front de taille', () => {
+  it('remonte le sac, l’envoie au marché et redescend au front de taille', () => {
     const etat = nouvellePartie()
+    construireBatiment(etat, 'marche', 18, 26) // le marché, juste à côté de la mine
     placerAuFront(etat, 26) // le front est à 25 m sous le village
     construireAscenseur(etat, 1)
     etat.inventaire = { fer: 10, diamant: 2 }
@@ -496,10 +498,14 @@ describe('ascenseur', () => {
     expect(etat.inventaire).toEqual({ diamant: 2 })
     expect(ascenseurDisponible(etat)).toBe(false)
 
-    avancerTemps(etat, 2.5) // 25 m à 0,1 s par mètre : arrivé en haut, il vend
-    expect(etat.argent).toBe(120)
+    avancerTemps(etat, 2.5) // 25 m à 0,1 s par mètre : arrivé en haut, le chargement part au marché
+    expect(etat.convois).toHaveLength(1)
+    expect(etat.convois[0].parRails).toBe(false) // pas de rails : dans une brouette
     avancerTemps(etat, 2.5) // redescendu jusqu'au joueur
     expect(ascenseurDisponible(etat)).toBe(true)
+    avancerTemps(etat, 10) // la brouette est arrivée au marché : c'est vendu
+    expect(etat.convois).toHaveLength(0)
+    expect(etat.argent).toBe(120)
   })
 
   it('« Remonter » ne monte que le mineur : son sac reste plein, rien n’est vendu', () => {
@@ -527,6 +533,7 @@ describe('ascenseur', () => {
 
   it('emmène le mineur au village, avec les minerais cochés', () => {
     const etat = nouvellePartie()
+    construireBatiment(etat, 'marche', 18, 26)
     placerAuFront(etat, 51) // front à 50 m
     construireAscenseur(etat, 1)
     etat.inventaire = { fer: 10, lapis: 4 }
@@ -536,8 +543,9 @@ describe('ascenseur', () => {
     expect(etat.position).toBeCloseTo(25) // à mi-chemin, avec la cabine
     avancerTemps(etat, 2.5)
     expect(aLaSurface(etat)).toBe(true)
-    expect(etat.argent).toBe(120) // le fer a été vendu en arrivant
     expect(etat.inventaire).toEqual({ lapis: 4 })
+    avancerTemps(etat, 10) // le fer part au marché, où il est vendu
+    expect(etat.argent).toBe(120)
     // L'échelle aurait pris 50 × 0,15 = 7,5 s : l'ascenseur est plus rapide.
   })
 

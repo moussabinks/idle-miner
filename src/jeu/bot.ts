@@ -2,9 +2,13 @@
 // Il sert dans les tests à vérifier l'équilibrage (combien de blocs pour
 // atteindre la bedrock ?). Il ne fait que des actions qu'un joueur peut faire :
 // il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
+// Au village (20/10), il pose ses bâtiments autour de la mine dès qu'il peut les payer (le
+// marché tout de suite, il est gratuit), et il compte le temps de marche jusqu'au marché.
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { LARGEUR_MINE, LISTE_ENCHANTEMENTS, MINERAIS_REPARATION, PIOCHES, PRIX_SEAU, type IdBloc } from './donnees'
+import { BATIMENTS, LARGEUR_MINE, LISTE_ENCHANTEMENTS, MINERAIS_REPARATION, PIOCHES, PRIX_SEAU, VITESSE_JOUEUR, type IdBatiment, type IdBloc } from './donnees'
+import { construireBatiment, estPose, peutConstruire } from './batiments'
+import { distanceEntre } from './village'
 import {
   acheterPioche,
   acheterSac,
@@ -31,17 +35,36 @@ import {
   prixProchainSac,
   prochainNiveauAscenseur,
   reparer,
+  placeLibre,
   sacPlein,
+  tailleSac,
   objetsAVendre,
+  quantite,
   equiper,
   vendreLot,
   type EtatJeu,
+  type Inventaire,
 } from './mineur'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
 
 // Le bot creuse 10 couches entre deux décisions.
 const BLOCS_PAR_SERIE = 10 * LARGEUR_MINE
+
+// Où le bot pose ses bâtiments, autour de la mine (posée en 15,15 et large de 10 cases), dans
+// l'ordre où il les construit.
+const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
+  { id: 'marche', x: 18, y: 26 },
+  { id: 'forgeron', x: 26, y: 18 },
+  { id: 'bazar', x: 12, y: 26 },
+  { id: 'enchanteur', x: 26, y: 12 },
+  { id: 'prestige', x: 9, y: 9 },
+]
+
+// L'arbre de prestige ne sert qu'à la fin : le bot le construit une fois la pioche en netherite achetée.
+function planUtile(etat: EtatJeu): typeof PLAN_DU_BOT {
+  return PLAN_DU_BOT.filter((p) => p.id !== 'prestige' || etat.meilleure >= 4)
+}
 
 export type ResultatBot = {
   etat: EtatJeu
@@ -65,8 +88,36 @@ function objetsAGarder(etat: EtatJeu): IdBloc[] {
   return garder
 }
 
+// Ce que le bot garde en petite quantité : 3 minerais de sa meilleure pioche (pour la réparer)
+// et la pierre et le fer du prochain bâtiment à construire (la pierre se paie aussi en roche
+// dure). On les enlève du lot à vendre ou à envoyer.
+function enleverReserve(etat: EtatJeu, lot: Inventaire): void {
+  const reserve: Inventaire = {}
+  const minerai = PIOCHES[etat.meilleure].reparation
+  if (minerai) reserve[minerai] = MINERAIS_REPARATION
+  const prochainBatiment = planUtile(etat).find((p) => !estPose(etat, p.id))
+  // Seulement quand il a déjà au moins la moitié de l'argent du bâtiment.
+  if (prochainBatiment && etat.argent >= (BATIMENTS[prochainBatiment.id].cout.argent ?? 0) / 2) {
+    for (const [bloc, nombre] of Object.entries(BATIMENTS[prochainBatiment.id].cout.materiaux)) {
+      // Toujours en laissant un peu de place dans le sac.
+      const garde = Math.min(nombre ?? 0, tailleSac(etat) - 8)
+      reserve[bloc as IdBloc] = (reserve[bloc as IdBloc] ?? 0) + garde
+      if (bloc === 'pierre') reserve.deepslate = (reserve.deepslate ?? 0) + Math.max(0, garde - quantite(etat, 'pierre'))
+    }
+  }
+  for (const [id, nombre] of Object.entries(reserve)) {
+    const bloc = id as IdBloc
+    if (lot[bloc] === undefined) continue
+    const reste = (lot[bloc] ?? 0) - (nombre ?? 0)
+    if (reste > 0) lot[bloc] = reste
+    else delete lot[bloc]
+  }
+}
+
 export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot {
   const etat = creerPartie(aleatoire)
+  // Le marché est gratuit : il le pose tout de suite.
+  construireBatiment(etat, 'marche', PLAN_DU_BOT[0].x, PLAN_DU_BOT[0].y)
   // L'aléatoire de la foreuse est à part : elle n'est pas débloquée au prestige 0.
   const aleatoireTemps = aleatoireAvecGraine(0)
   let profondeurPiocheFer: number | null = null
@@ -104,6 +155,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     const prochaine = PIOCHES[etat.meilleure + 1]
     if (sacPlein(etat) && etat.ascenseur.niveau === 0) return true
     if (!peutStocker(etat)) return true // plus aucune place (sac et quai pleins, d'objets gardés) : on va vendre
+    if (planUtile(etat).some((p) => peutConstruire(etat, p.id))) return true // un bâtiment à poser
     if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) return true
     return (estCassee(etat) || etat.niveauPioche !== etat.meilleure) && solutionPourLaPioche()
   }
@@ -142,27 +194,36 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
 
   // Tout ce que le bot fait au village, avant de redescendre.
   function faireLesCourses(): void {
+    // Il marche de la mine au marché (et revient), en passant devant les autres bâtiments.
+    temps += (2 * distanceEntre(etat.village, 'puits', 'marche')) / VITESSE_JOUEUR
     const prochaine = PIOCHES[etat.meilleure + 1]
-    etat.nonAVendre = objetsAGarder(etat)
+    etat.nonAVendre = [...new Set(objetsAGarder(etat))]
     // Il vend tout, sauf 3 minerais de sa meilleure pioche : de quoi la réparer quand elle cassera.
     const lot = objetsAVendre(etat)
-    const minerai = PIOCHES[etat.meilleure].reparation
-    if (minerai && lot[minerai] !== undefined) {
-      const reste = (lot[minerai] ?? 0) - MINERAIS_REPARATION
-      if (reste > 0) lot[minerai] = reste
-      else delete lot[minerai]
-    }
+    enleverReserve(etat, lot)
     vendreLot(etat, lot)
-    if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) acheterPioche(etat, prochaine.niveau)
-    for (const id of LISTE_ENCHANTEMENTS) {
-      while (peutEnchanter(etat, id)) enchanter(etat, id)
+    // Le sac est quand même presque plein d'objets gardés : il vend tout (sinon il ne pourrait
+    // plus creuser du tout).
+    if (placeLibre(etat) < 8) vendreLot(etat, etat.inventaire)
+    // Les bâtiments d'abord (dans l'ordre de son plan), puis les achats dans ceux qui sont posés.
+    for (const { id, x, y } of planUtile(etat)) {
+      if (peutConstruire(etat, id)) construireBatiment(etat, id, x, y)
+    }
+    const forgeron = estPose(etat, 'forgeron')
+    const bazar = estPose(etat, 'bazar')
+    if (forgeron && prochaine && peutAcheterPioche(etat, prochaine.niveau)) acheterPioche(etat, prochaine.niveau)
+    // Les enchantements attendent que l'ascenseur soit construit (il fait gagner bien plus de temps).
+    if (estPose(etat, 'enchanteur') && etat.ascenseur.niveau > 0) {
+      for (const id of LISTE_ENCHANTEMENTS) {
+        while (peutEnchanter(etat, id)) enchanter(etat, id)
+      }
     }
     const prixSac = prixProchainSac(etat)
-    if (prixSac !== null && etat.argent >= 2 * prixSac) acheterSac(etat)
-    if (etat.profondeur >= 36) {
+    if (bazar && prixSac !== null && etat.argent >= 2 * prixSac) acheterSac(etat)
+    if (bazar && etat.profondeur >= 36) {
       while (etat.seaux < 2 && etat.argent >= 2 * PRIX_SEAU) acheterSeau(etat)
     }
-    choisirPioche()
+    if (forgeron) choisirPioche()
   }
 
   while (!etat.victoire && etat.stats.blocsCasses < maxBlocs) {
@@ -179,8 +240,14 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
         appelerAscenseur(etat)
         attendreAscenseur()
       }
+      // Il envoie tout ce qu'il ne garde pas, sauf la réserve (réparation, prochain bâtiment).
       etat.ascenseur.garder = objetsAGarder(etat)
-      envoyerAscenseur(etat)
+      const lot: Inventaire = {}
+      for (const [id, nombre] of Object.entries(etat.inventaire)) {
+        if (!etat.ascenseur.garder.includes(id as IdBloc)) lot[id as IdBloc] = nombre
+      }
+      enleverReserve(etat, lot)
+      envoyerAscenseur(etat, lot)
     }
 
     if (doitRemonter()) {

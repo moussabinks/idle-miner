@@ -3,7 +3,7 @@
 // les 10 minutes (ou c'est le manager qui s'en charge, au prestige 5). Au prestige 4, le
 // recruteur trouve des mineurs plus ou moins rares : chaque embauche est une surprise.
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import {
   LISTE_RARETES,
@@ -127,6 +127,18 @@ function Salaires({ etat, jouer }: Props) {
   )
 }
 
+// Le titre de la carte du manager ou du recruteur, avec son portrait (le même hamster que celui
+// qui attend devant le Personnel, au village).
+function TitreChef({ role, titre, children }: { role: 'manager' | 'recruteur'; titre: string; children?: ReactNode }) {
+  return (
+    <div className="ligne-titre titre-chef">
+      <img className="portrait-chef" src={`/images/personnages/${role}.webp`} alt="" width={56} height={56} draggable={false} />
+      <strong>{titre}</strong>
+      {children}
+    </div>
+  )
+}
+
 // Le manager (prestige 5) et sa trésorerie.
 function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
@@ -140,7 +152,7 @@ function Manager({ etat, jouer }: Props) {
   if (!etat.manager.embauche) {
     return (
       <div className="ligne-achat carte-manager">
-        <strong>💼 Manager</strong>
+        <TitreChef role="manager" titre="💼 Manager" />
         <span className="discret">
           Il paie les salaires tout seul (le sien aussi : {argent(salaireManager())} toutes les 10 minutes), avec l'argent de la trésorerie. Fini
           les mineurs qui attendent !
@@ -160,10 +172,9 @@ function Manager({ etat, jouer }: Props) {
   const vide = !managerAuTravail(etat) || nbSansSalaire(etat) > 0
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
-      <div className="ligne-titre">
-        <strong>💼 Manager</strong>
+      <TitreChef role="manager" titre="💼 Manager">
         <span className={`badge ${vide ? '' : 'badge-vert'}`}>{managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
-      </div>
+      </TitreChef>
       <div className="tresorerie">
         <span>Trésorerie</span>
         <strong>{argent(etat.tresorerie)}</strong>
@@ -244,7 +255,7 @@ function Recruteur({ etat, jouer }: Props) {
   const prochain = prochainNiveauRecruteur(etat)
   return (
     <div className="ligne-achat carte-recruteur">
-      <strong>🎩 Recruteur</strong>
+      <TitreChef role="recruteur" titre="🎩 Recruteur" />
       <span className="discret">
         {etat.recruteur === 0
           ? 'Embauche-le : chaque nouveau mineur aura une rareté tirée au hasard. Plus il a de niveaux, plus les mineurs rares sortent souvent.'
@@ -342,9 +353,9 @@ export function PanneauEmployes({ etat, jouer }: Props) {
     return (
       <div className="liste-cartes">
         <div className="ligne-achat verrouille">
-          <strong>🔒 Fermé par une barrière</strong>
+          <strong>🔒 Personnel débloqué au prestige {PRESTIGE_EMPLOYES}</strong>
           <span className="discret">
-            Ce bureau d'embauche s'ouvre au prestige {PRESTIGE_EMPLOYES}. Tu pourras y employer des mineurs qui creusent pour toi, même quand
+            Ce bureau d'embauche se construit au prestige {PRESTIGE_EMPLOYES}. Tu pourras y employer des mineurs qui creusent pour toi, même quand
             le jeu est fermé.
           </span>
         </div>

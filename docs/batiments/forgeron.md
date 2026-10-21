@@ -1,17 +1,21 @@
 # ⚒️ Forgeron
 
-> Le stand où l'on débloque, rachète, répare et change de pioche : c'est la pioche qui décide de la vitesse de minage et de la profondeur qu'on peut atteindre.
+> Le bâtiment où l'on débloque, rachète, répare et change de pioche : c'est la pioche qui décide de la vitesse de minage et de la profondeur qu'on peut atteindre.
 
 ## Où et quand
 
-- **Position** : x = **10,5 tuiles** sur le chemin du village (le village fait 27 tuiles, une tuile = 40 px), entre le marché (x = 7,5) et le bazar (x = 13,5). On est « devant » le stand à moins de **1,4 tuile** (`PORTEE_STAND`) : son panneau s'ouvre alors à droite.
-- **Déblocage** : disponible **dès le prestige 0**, jamais verrouillé.
-- **Dessin au village** : une échoppe en CSS (64 × 64 px) avec un **auvent rayé gris ardoise et crème** (`--auvent: #5b5b66`), un bord en festons, et un comptoir en bois qui porte l'icône **⚒️**. Le panneau en bois « Forgeron » s'allume en doré quand on est devant. Le stand s'éclaircit au survol.
-- **Description** (bulle au survol) : « Pioches et réparations. »
-- **Pastille verte « 💰 Achetable ! »** : elle apparaît au-dessus du stand quand on a de quoi **débloquer la pioche suivante** (argent **et** minerais). Elle ne s'affiche pas pour une réparation.
-- **Pas de badge « ⬆ Niveaux ! »** après un prestige ni de flèche « Nouveau ! » : les pioches ne sont pas plafonnées par le prestige.
-- **Le mineur porte sa pioche** : au village comme dans la mine, le personnage tient une pioche de la couleur de celle qui est équipée (bois `#b5834a`, pierre `#8f8f8f`, fer `#e6e6e6`, diamant `#4ee8dc`, netherite `#6b5568`), et rien quand elle est cassée.
-- On ne peut cliquer sur le stand qu'au village. Un clic y fait marcher le mineur.
+- **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 10 pierre** (la roche dure compte aussi comme de la pierre). C'est le deuxième bâtiment à poser, dès les premiers mètres creusés : tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (la barre d'objectif propose « Construire : Forgeron »). Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Déblocage** : dès le prestige 0, jamais de cadenas.
+- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
+- **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/forgeron.webp`) : une forge en pierre et en bois avec son toit, sa cheminée qui fume, son enclume et des pioches exposées. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Description** (en haut du panneau) : « Pioches et réparations. »
+- **Bulles au-dessus** (`notifications.ts`) :
+  - **🔧 « Ta pioche est cassée : fais-la réparer ! »** (bulle rouge d'alerte) quand la pioche équipée est cassée ;
+  - **💰 « Une amélioration est achetable ! »** quand on a de quoi **débloquer la pioche suivante** (argent **et** minerais). Pas pour une réparation.
+  - Pas de bulle ⬆️ « nouveaux niveaux » après un prestige : les pioches ne sont pas plafonnées par le prestige.
+- **Le hamster porte sa pioche** : au village (sur l'épaule) comme dans la mine, le personnage tient une pioche de la couleur de celle qui est équipée (bois `#b5834a`, pierre `#8f8f8f`, fer `#e6e6e6`, diamant `#4ee8dc`, netherite `#6b5568`), et rien quand elle est cassée.
+- **Les mineurs employés y passent** (20/10) : quand tu améliores la pioche d'un mineur au Personnel, il vient la chercher ici à son prochain passage au village (voir plus bas).
 
 ## Ce qu'on peut y faire
 
@@ -106,7 +110,7 @@ Exemples au prestige 0, sans enchantement ni talent :
 
 ### Cas limites
 
-- **Au village seulement** : débloquer, racheter et réparer demandent d'être au village et immobile (`aLaSurface`). Dans la mine, le même panneau s'ouvre dans l'onglet **🧰 Pioches**, avec le message « ⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface. » : on peut seulement y **équiper** une autre pioche qu'on possède.
+- **Au village seulement** : débloquer, racheter et réparer demandent d'être au village, devant le forgeron (son panneau ouvert) et immobile (`aLaSurface`). Dans la mine, le même panneau s'ouvre dans l'onglet **🧰 Pioches**, avec le message « ⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface. » : on peut seulement y **équiper** une autre pioche qu'on possède.
 - **On n'est jamais bloqué** : une pioche cassée mine encore, à mains nues. Et la profondeur max dépend de la pioche **équipée**, même cassée : on continue de descendre aussi bas qu'elle le permet. Quand la couche suivante est trop profonde pour la pioche, on creuse une **galerie horizontale** à la place, avec le message « 🧱 Couche trop dure ! Il te faut une pioche en X pour descendre plus bas : achète-la au forgeron (village). » (ou « Équipe ta pioche en X (onglet Pioches) » si on l'a déjà).
 - **Un seul déblocage à la fois** : on ne peut acheter que les pioches déjà débloquées et la suivante (`niveau ≤ meilleure + 1`).
 - **Racheter neuve demande aussi les minerais** : comme pour la débloquer, il faut l'argent et les minerais de la pioche (3 diamants pour la pioche en diamant, 4 débris + 4 or pour la netherite). Le prix affiché à côté du bouton les montre (`coutPioche` dans `mineur.ts`, corrigé le 20/10 : avant, seul l'argent était affiché).
@@ -127,30 +131,33 @@ Exemples au prestige 0, sans enchantement ni talent :
 ## Lien avec le reste du jeu
 
 - **Conditions de prestige** (`src/jeu/conditionsPrestige.ts`) : les pioches **ne comptent pas** dans la liste, mais il faut la pioche en netherite pour atteindre la bedrock, qui est la première condition.
-- **Objectifs** (`src/jeu/objectifs.ts`) : la pioche suivante est le **premier** achat de `achatsPossibles` (« le cœur de la progression »). Si on peut la payer, le prochain objectif devient « Pioche en X — achetable au forgeron ! » et la pastille « 💰 Achetable ! » s'allume sur le stand. Sinon, la barre d'objectif montre « 180 / 300 $ » ou « il manque N Diamant ». Le forgeron n'est jamais dans `standsAvecNouveauxNiveaux` (pas de plafond).
+- **Objectifs** (`src/jeu/objectifs.ts`) : tant que le forgeron n'est pas posé, l'objectif est « Construire : Forgeron » (« à poser (menu Bâtiments) ! »). Une fois posé, la pioche suivante est le **premier** achat d'amélioration de `achatsPossibles` (« le cœur de la progression »). Si on peut la payer, le prochain objectif devient « Pioche en X — achetable au forgeron ! » et la bulle 💰 apparaît au-dessus du forgeron. Sinon, la barre d'objectif montre « 180 / 300 $ » ou « il manque N Diamant ». Le forgeron n'est jamais dans `standsAvecNouveauxNiveaux` (pas de plafond).
 - **Marché** : il faut garder des minerais au lieu de les vendre : diamants (pioche en diamant), or et débris antiques (netherite), et 3 minerais pour chaque réparation. Le bot de simulation (`src/jeu/bot.ts`) garde exprès 3 minerais de sa meilleure pioche pour la réparer, et remonte au village quand il peut acheter la pioche suivante ou quand la sienne est cassée.
 - **Enchanteur** : les enchantements s'appliquent à **toutes** les pioches et sont gardés au prestige. **Efficacité** : +25 % de vitesse par niveau. **Solidité** : la pioche s'use moins vite. **Fortune** : plus de minerais (pas d'effet sur la pioche elle-même).
 - **Arbre de prestige** : la branche **Mineur** (icône du forgeron ⚒️) contient Poigne de fer (+15 % de vitesse), Œil de lynx (+10 % de chance de doubler un minerai), Pioche robuste (-30 % d'usure) et Briseur de roche (+25 % dans la roche dure).
-- **Stand Personnel** : les pioches des mineurs employés (`NIVEAUX_EMPLOYE`) s'achètent là-bas, pas au forgeron. Elles ne s'usent pas.
+- **Stand Personnel** : les pioches des mineurs employés (`NIVEAUX_EMPLOYE`) s'achètent là-bas, pas au forgeron. Elles ne s'usent pas. Mais depuis le 20/10, **si un forgeron est posé**, le mineur amélioré vient **chercher sa pioche à la forge** : message « ⛏️ X va chercher sa pioche en … à la forge. », puis, à son prochain passage au village (après sa vente, ou tout de suite s'il attendait), il marche jusqu'à la porte du forgeron, y reste **3 secondes** (`SECONDES_FORGE_EMPLOYE`, étape « 🔨 récupère sa nouvelle pioche »), puis retourne à la mine. Sa meilleure pioche compte tout de suite (vitesse et profondeur). Sans forgeron posé, il l'a directement (« ⛏️ X a maintenant une pioche en … »).
 - **Bandeau** (`src/composants/Hud.tsx`) : la pioche équipée, sa barre de durabilité et les enchantements actifs.
 - **Succès** : « 🪨 L'âge de pierre », « ⚙️ Âge du fer », « 💎 Diamants ! » et « 🔥 Increvable » se débloquent avec les pioches en pierre, fer, diamant et netherite.
 - **Sons** : débloquer une pioche joue la petite fanfare d'amélioration (la meilleure pioche compte dans `totalNiveaux`) ; un rachat ou une réparation joue le son d'achat ; une pioche qui casse a son propre son.
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position (x = 10,5), nom, icône et description du stand.
-- `src/jeu/donnees.ts` : les pioches (`PIOCHES`), la réparation (`MINERAIS_REPARATION`, `PART_PRIX_REPARATION`), la vitesse à mains nues, `profondeurMaxPioche`, `dureeCasse` et les bonus de prestige.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.forgeron` : 20 $ + 10 pierre, 5 × 5, porte à droite), les pioches (`PIOCHES`), la réparation (`MINERAIS_REPARATION`, `PART_PRIX_REPARATION`), la vitesse à mains nues, `profondeurMaxPioche`, `dureeCasse`, les bonus de prestige et `SECONDES_FORGE_EMPLOYE`.
+- `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`construireBatiment`, `deplacerBatiment`, `payerConstruction` : la pierre puis la roche dure).
 - `src/jeu/mineur.ts` : les règles des pioches (`acheterPioche`, `peutAcheterPioche`, `equiper`, `coutReparation`, `reparer`, `vitesse`, `usure`, `estCassee`), l'usure dans `casserBloc`, les galeries, et les pioches gardées au prestige.
+- `src/jeu/employes.ts` : le passage des mineurs à la forge (`ameliorerEmploye`, `forgeEnAttente`, étape `forge`).
 - `src/jeu/talents.ts` : Poigne de fer, Pioche robuste et Briseur de roche.
-- `src/jeu/objectifs.ts` : la pioche suivante en premier objectif, la pastille « Achetable ! ».
+- `src/jeu/notifications.ts` : les bulles 🔧 « pioche cassée » et 💰 « achetable ».
+- `src/jeu/objectifs.ts` : « Construire : Forgeron », puis la pioche suivante en premier objectif.
 - `src/jeu/succes.ts` : les quatre succès des pioches.
-- `src/jeu/bot.ts` : comment le bot de simulation achète, répare et équipe ses pioches.
+- `src/jeu/bot.ts` : où le bot de simulation pose le forgeron, et comment il achète, répare et équipe ses pioches.
 - `src/composants/Panneaux.tsx` : le panneau du forgeron (`PanneauPioches`), aussi utilisé dans l'onglet 🧰 Pioches de la mine.
 - `src/composants/Amelioration.tsx` : le composant `Achat` (prix à gauche, bouton à droite).
 - `src/composants/Hud.tsx` : la pioche équipée et sa durabilité dans le bandeau.
-- `src/composants/Personnage.tsx` : le mineur et la couleur de sa pioche.
-- `src/composants/VueVillage.tsx` : le dessin du stand et la pastille au village.
-- `src/composants/Icone.tsx` : l'icône ⚒️.
-- `src/index.css` : l'échoppe, l'auvent gris (`.stand-forgeron`) et la couleur du bouton « Réparer ».
+- `src/composants/Personnage.tsx` (vue en coupe) et `src/composants/Hamster.tsx` (village) : le hamster et la couleur de sa pioche.
+- `src/composants/MenuConstruction.tsx` : la carte du forgeron dans le menu Bâtiments.
+- `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, la bulle, les mineurs qui attendent devant la forge.
+- `public/images/batiments/forgeron.webp` : le dessin de la forge.
+- `src/index.css` : la couleur du bouton « Réparer ».
 - `src/App.tsx` : l'ouverture du panneau au village et l'onglet 🧰 Pioches dans la mine.
 - `src/evenements.ts`, `src/sons.ts` : les sons d'achat, d'amélioration et de pioche cassée.
