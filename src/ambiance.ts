@@ -3,12 +3,10 @@
 //
 // - La musique : des accords doux (la mineur, fa, do, sol) joués en nappe, une basse
 //   et quelques notes de mélodie tirées au hasard dans une gamme pentatonique.
-// - À la surface (et seulement là) : le vent (un souffle filtré qui ondule) et des oiseaux.
-// - Dans la mine : une grotte qui résonne. Des gouttes d'eau (« plic », parfois « plic-ploc »)
-//   avec un vrai écho qui se répète, des petits cailloux qui roulent au loin, un grondement
-//   très grave et parfois une longue résonance. Plus on descend, plus la grotte s'entend.
+// - Au village : le vent (un souffle filtré qui ondule) et des oiseaux.
+// (L'ambiance de grotte de l'ancienne mine en coupe a été retirée le 23/10.)
 //
-// Le bouton 🎵 du bandeau coupe musique et ambiances (réglage gardé dans le localStorage).
+// Le réglage « 🎵 Musique » du menu ⚙️ coupe musique et ambiances (gardé dans le localStorage).
 
 import { contexteAudio, ecrireReglage, lireReglage, quandLeSonEstPermis } from './sons'
 
@@ -31,22 +29,15 @@ const GAMME_MELODIE = [440.0, 523.25, 587.33, 659.25, 783.99, 880.0]
 type Noeuds = {
   ctx: AudioContext
   general: GainNode // tout passe par lui (coupé par le bouton 🎵)
-  echo: ConvolverNode // la réverbération (l'écho de la grotte, le halo de la musique)
+  echo: ConvolverNode // la réverbération (le halo de la musique)
   musique: GainNode
-  surface: GainNode
-  grotte: GainNode
-  envoiEchoGrotte: GainNode
-  echoGrotte: GainNode // l'écho qui se répète (« plic... plic... plic ») des gouttes et des cailloux
+  surface: GainNode // le vent et les oiseaux
 }
 
 let active = lireReglage(CLE_MUSIQUE)
 let noeuds: Noeuds | null = null
 let numeroMesure = 0
 let prochaineMesure = 0
-
-// Où est le joueur : à la surface, ou à quelle profondeur dans la mine.
-let aLaSurface = true
-let profondeur = 0 // entre 0 (surface) et 1 (bedrock)
 
 export function musiqueActive(): boolean {
   return active
@@ -58,28 +49,6 @@ export function basculerMusique(): boolean {
   if (noeuds) noeuds.general.gain.setTargetAtTime(active ? VOLUME_GENERAL : 0, noeuds.ctx.currentTime, 0.3)
   if (active) demarrer()
   return active
-}
-
-// Appelée par l'interface quand le joueur change d'endroit : on fond les ambiances.
-// « auFond » : où il est entre la surface (0) et la bedrock (1), la mine n'ayant pas la même
-// profondeur à chaque prestige.
-export function reglerLieu(surface: boolean, auFond: number): void {
-  aLaSurface = surface
-  profondeur = auFond
-  appliquerLieu()
-}
-
-function appliquerLieu() {
-  if (!noeuds) return
-  const { ctx, surface, grotte, envoiEchoGrotte, musique } = noeuds
-  const t = ctx.currentTime
-  // Plus on est profond, plus la grotte s'entend (et plus elle résonne).
-  const fond = Math.min(1, profondeur)
-  // Le vent et les oiseaux s'arrêtent vite en entrant dans la mine (ils ne descendent pas avec toi).
-  surface.gain.setTargetAtTime(aLaSurface ? 1 : 0, t, aLaSurface ? 1.2 : 0.4)
-  grotte.gain.setTargetAtTime(aLaSurface ? 0 : 0.55 + 0.45 * fond, t, 1.2)
-  envoiEchoGrotte.gain.setTargetAtTime(aLaSurface ? 0 : 0.5 + 0.5 * fond, t, 1.2)
-  musique.gain.setTargetAtTime(aLaSurface ? VOLUME_MUSIQUE : VOLUME_MUSIQUE * 0.8, t, 1.2)
 }
 
 // ---------------------------------------------------------------------------
@@ -121,43 +90,16 @@ function demarrer() {
   musique.connect(envoiEchoMusique).connect(echo)
 
   const surface = ctx.createGain()
-  surface.gain.value = 0
+  surface.gain.value = 1
   surface.connect(general)
 
-  const grotte = ctx.createGain()
-  grotte.gain.value = 0
-  grotte.connect(general)
-  const envoiEchoGrotte = ctx.createGain()
-  envoiEchoGrotte.gain.value = 0
-  grotte.connect(envoiEchoGrotte).connect(echo)
-
-  // L'écho de la grotte : le son revient plusieurs fois, de plus en plus faible et étouffé,
-  // comme contre les parois d'une grande galerie (un retard qui se renvoie à lui-même).
-  const echoGrotte = ctx.createGain()
-  const retard = ctx.createDelay(1)
-  retard.delayTime.value = 0.38
-  const retour = ctx.createGain()
-  retour.gain.value = 0.42
-  const etouffe = ctx.createBiquadFilter()
-  etouffe.type = 'lowpass'
-  etouffe.frequency.value = 2200
-  echoGrotte.connect(retard)
-  retard.connect(etouffe).connect(retour).connect(retard)
-  etouffe.connect(grotte)
-  etouffe.connect(envoiEchoGrotte)
-
-  noeuds = { ctx, general, echo, musique, surface, grotte, envoiEchoGrotte, echoGrotte }
-  appliquerLieu()
+  noeuds = { ctx, general, echo, musique, surface }
 
   creerVent(ctx, surface)
-  creerGrondement(ctx, grotte)
 
   prochaineMesure = ctx.currentTime + 0.5
   jouerMesures()
   planifier(chanterOiseaux, 1.5, 5)
-  planifier(faireTomberGoutte, 0.6, 2.4)
-  planifier(faireRoulerCailloux, 14, 35)
-  planifier(resonner, 12, 30)
 }
 
 // Relance une action après un délai au hasard (entre min et max secondes), pour toujours.
@@ -224,7 +166,7 @@ function creerVent(ctx: AudioContext, sortie: GainNode) {
 }
 
 function chanterOiseaux() {
-  if (!noeuds || !aLaSurface) return
+  if (!noeuds) return
   const { ctx, surface } = noeuds
   const panneau = ctx.createStereoPanner()
   panneau.pan.value = Math.random() * 1.6 - 0.8
@@ -247,120 +189,6 @@ function chanterOiseaux() {
     oiseau.start(t)
     oiseau.stop(t + duree + 0.02)
   }
-}
-
-// ---------------------------------------------------------------------------
-// La mine : grondement, gouttes d'eau et résonances
-// ---------------------------------------------------------------------------
-
-function creerGrondement(ctx: AudioContext, sortie: GainNode) {
-  // Un grondement très grave et très doux (la montagne autour de soi), sans souffle :
-  // le vent, c'est seulement à la surface.
-  const souffle = bruitEnBoucle(ctx, 5)
-  const filtre = ctx.createBiquadFilter()
-  filtre.type = 'lowpass'
-  filtre.frequency.value = 70
-  filtre.Q.value = 0.5
-  const volume = ctx.createGain()
-  volume.gain.value = 0.08
-  souffle.connect(filtre).connect(volume).connect(sortie)
-  souffle.start()
-
-  // Deux notes très basses, à peine audibles, qui « bourdonnent » ensemble.
-  for (const frequence of [55, 55.7]) {
-    const bourdon = ctx.createOscillator()
-    bourdon.frequency.value = frequence
-    const volumeBourdon = ctx.createGain()
-    volumeBourdon.gain.value = 0.02
-    bourdon.connect(volumeBourdon).connect(sortie)
-    bourdon.start()
-  }
-}
-
-// Une goutte d'eau qui tombe dans une flaque : « plic ». La note monte très vite (c'est la
-// petite bulle d'air) et s'éteint aussitôt ; l'écho de la grotte la répète.
-function goutte(debut: number, hauteur: number, force: number, pan: number) {
-  if (!noeuds) return
-  const { ctx, grotte, echoGrotte } = noeuds
-  const panneau = ctx.createStereoPanner()
-  panneau.pan.value = pan
-  panneau.connect(grotte)
-  panneau.connect(echoGrotte)
-  const bulle = ctx.createOscillator()
-  bulle.type = 'sine'
-  bulle.frequency.setValueAtTime(hauteur, debut)
-  bulle.frequency.exponentialRampToValueAtTime(hauteur * 2.6, debut + 0.04)
-  const volume = ctx.createGain()
-  volume.gain.setValueAtTime(0.0001, debut)
-  volume.gain.exponentialRampToValueAtTime(force, debut + 0.004)
-  volume.gain.exponentialRampToValueAtTime(0.0001, debut + 0.09)
-  bulle.connect(volume).connect(panneau)
-  bulle.start(debut)
-  bulle.stop(debut + 0.12)
-}
-
-function faireTomberGoutte() {
-  if (!noeuds || aLaSurface) return
-  const t = noeuds.ctx.currentTime + 0.02
-  const pan = Math.random() * 1.8 - 0.9
-  const hauteur = 900 + Math.random() * 1100
-  goutte(t, hauteur, 0.2, pan)
-  // Parfois une deuxième goutte juste après, au même endroit : « plic-ploc ».
-  if (Math.random() < 0.35) goutte(t + 0.18 + Math.random() * 0.25, hauteur * (0.7 + Math.random() * 0.2), 0.13, pan)
-}
-
-// De petits cailloux qui roulent et rebondissent quelque part dans la galerie, au loin.
-function faireRoulerCailloux() {
-  if (!noeuds || aLaSurface) return
-  const { ctx, grotte, echoGrotte } = noeuds
-  const panneau = ctx.createStereoPanner()
-  panneau.pan.value = Math.random() * 1.6 - 0.8
-  // Un peu étouffés : ils sont loin.
-  const loin = ctx.createBiquadFilter()
-  loin.type = 'lowpass'
-  loin.frequency.value = 1800
-  loin.connect(panneau)
-  panneau.connect(grotte)
-  panneau.connect(echoGrotte)
-  const debut = ctx.currentTime + 0.05
-  const nombre = 4 + Math.floor(Math.random() * 5)
-  let t = debut
-  for (let i = 0; i < nombre; i++) {
-    // Chaque rebond est plus faible, et les rebonds se rapprochent (le caillou ralentit).
-    const caillou = ctx.createOscillator()
-    caillou.type = 'triangle'
-    caillou.frequency.setValueAtTime(500 + Math.random() * 500, t)
-    caillou.frequency.exponentialRampToValueAtTime(200, t + 0.04)
-    const volume = ctx.createGain()
-    volume.gain.setValueAtTime(0.0001, t)
-    volume.gain.exponentialRampToValueAtTime(0.08 * Math.pow(0.75, i), t + 0.003)
-    volume.gain.exponentialRampToValueAtTime(0.0001, t + 0.05)
-    caillou.connect(volume).connect(loin)
-    caillou.start(t)
-    caillou.stop(t + 0.06)
-    t += 0.06 + Math.random() * 0.12 * Math.pow(0.85, i)
-  }
-}
-
-function resonner() {
-  if (!noeuds || aLaSurface) return
-  const { ctx, grotte } = noeuds
-  const t = ctx.currentTime + 0.05
-  // Une longue note grave qui enfle et retombe, comme la montagne qui travaille.
-  const note = ctx.createOscillator()
-  note.type = 'triangle'
-  note.frequency.setValueAtTime(70 + Math.random() * 30, t)
-  note.frequency.exponentialRampToValueAtTime(45, t + 5)
-  const filtre = ctx.createBiquadFilter()
-  filtre.type = 'lowpass'
-  filtre.frequency.value = 300
-  const volume = ctx.createGain()
-  volume.gain.setValueAtTime(0.0001, t)
-  volume.gain.exponentialRampToValueAtTime(0.12, t + 1.8)
-  volume.gain.exponentialRampToValueAtTime(0.0001, t + 5)
-  note.connect(filtre).connect(volume).connect(grotte)
-  note.start(t)
-  note.stop(t + 5.1)
 }
 
 // ---------------------------------------------------------------------------

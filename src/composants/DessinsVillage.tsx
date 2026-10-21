@@ -280,13 +280,19 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
 type Raccords = { n: boolean; e: boolean; s: boolean; o: boolean }
 
 // Les rails (23/10) : les tuiles du dessin de l'équipe (« Tuiles de voies ferrées isométriques »,
-// sur le Drive), remises à plat en vue de dessus par un script : un morceau tout droit et un
-// virage (fabriqué en courbant le morceau droit, pour avoir exactement le même style). On les
-// pose sur la case avec la même projection que le sol, tournées dans le bon sens.
+// sur le Drive), remises à plat en vue de dessus par un script (outils/rails/) : un morceau tout
+// droit, un virage (le morceau droit courbé : exactement le même style), un T (la ligne droite et
+// deux virages qui en partent) et un croisement. Dans les tuiles à plusieurs voies, tous les
+// ballasts sont posés d'abord, puis les traverses, puis les rails : les voies se mêlent sans
+// couture. On les pose sur la case avec la même projection que le sol, tournées dans le bon sens.
 // Le joueur n'achète que des rails : chaque case choisit toute seule son dessin selon ses
-// voisines (une ligne droite se raccorde, un rail posé de côté fait un virage).
-const IMAGE_RAIL_DROIT = '/images/rails/rail_droit.webp' // relie le nord (y - 1) et le sud (y + 1)
-const IMAGE_RAIL_VIRAGE = '/images/rails/rail_virage.webp' // relie le sud (y + 1) et l'est (x + 1)
+// voisines (une ligne droite se raccorde, un rail posé de côté fait un virage ou un T).
+const IMAGES_RAILS = {
+  droit: '/images/rails/rail_droit.webp', // relie le nord (y - 1) et le sud (y + 1)
+  virage: '/images/rails/rail_virage.webp', // relie le sud (y + 1) et l'est (x + 1)
+  t: '/images/rails/rail_t.webp', // la ligne nord-sud, et l'embranchement vers l'est
+  croix: '/images/rails/rail_croix.webp', // les quatre côtés
+}
 
 type Cote = 'n' | 'e' | 's' | 'o'
 const COTES: Cote[] = ['n', 'e', 's', 'o']
@@ -296,53 +302,54 @@ const OPPOSE: Record<Cote, Cote> = { n: 's', e: 'o', s: 'n', o: 'e' }
 
 type Morceau = { image: string; quarts: number }
 
-// Combien de quarts de tour pour que le morceau de base (côtés a0, b0) relie les côtés a et b.
-function quartsPour(a0: Cote, b0: Cote, a: Cote, b: Cote): number {
+// Combien de quarts de tour pour amener le côté « depuis » sur le côté « vers ».
+function quartsDe(depuis: Cote, vers: Cote): number {
+  let c = depuis
   for (let k = 0; k < 4; k++) {
-    let x = a0
-    let y = b0
-    for (let i = 0; i < k; i++) {
-      x = QUART[x]
-      y = QUART[y]
-    }
-    if ((x === a && y === b) || (x === b && y === a)) return k
+    if (c === vers) return k
+    c = QUART[c]
   }
   return 0
 }
 
-const droit = (a: Cote): Morceau => ({ image: IMAGE_RAIL_DROIT, quarts: a === 'n' || a === 's' ? 0 : 1 })
-const virage = (a: Cote, b: Cote): Morceau => ({ image: IMAGE_RAIL_VIRAGE, quarts: quartsPour('s', 'e', a, b) })
-
-// Les morceaux de voie d'une case, selon ses voisines :
+// Le dessin d'une case, selon ses voisines :
 //   - aucune voisine, ou une seule : tout droit (vers la voisine) ;
 //   - deux voisines en face l'une de l'autre : tout droit ; à angle droit : un virage ;
-//   - trois voisines : tout droit entre les deux d'en face, et un virage vers la troisième ;
-//   - quatre : un croisement (les deux lignes droites).
-function morceauxDeVoie(r: Raccords): Morceau[] {
+//   - trois voisines (en T) : la ligne droite et deux virages vers la troisième ;
+//   - quatre : un croisement.
+function morceauDeVoie(r: Raccords): Morceau {
   const liste = COTES.filter((c) => r[c])
-  if (liste.length === 0) return [droit('n')]
-  if (liste.length === 1) return [droit(liste[0])]
-  if (liste.length === 2) {
-    const [a, b] = liste
-    return OPPOSE[a] === b ? [droit(a)] : [virage(a, b)]
-  }
+  if (liste.length === 4) return { image: IMAGES_RAILS.croix, quarts: 0 }
   if (liste.length === 3) {
-    const seul = COTES.find((c) => r[c] && !r[OPPOSE[c]]) as Cote
-    const enFace = COTES.find((c) => r[c] && r[OPPOSE[c]]) as Cote
-    return [droit(enFace), virage(seul, enFace)]
+    const branche = COTES.find((c) => r[c] && !r[OPPOSE[c]]) as Cote
+    return { image: IMAGES_RAILS.t, quarts: quartsDe('e', branche) }
   }
-  return [droit('n'), droit('e')]
+  if (liste.length === 2 && OPPOSE[liste[0]] !== liste[1]) {
+    // Le virage de base relie le sud et l'est : on le tourne jusqu'à relier les deux voisines.
+    const [a, b] = liste
+    const quarts = [0, 1, 2, 3].find((k) => {
+      let x: Cote = 's'
+      let y: Cote = 'e'
+      for (let i = 0; i < k; i++) {
+        x = QUART[x]
+        y = QUART[y]
+      }
+      return (x === a && y === b) || (x === b && y === a)
+    })
+    return { image: IMAGES_RAILS.virage, quarts: quarts ?? 0 }
+  }
+  const axe = liste[0] ?? 'n'
+  return { image: IMAGES_RAILS.droit, quarts: axe === 'n' || axe === 's' ? 0 : 1 }
 }
 
 export function CaseRail({ x, y, raccords }: { x: number; y: number; raccords: Raccords }) {
   const coin = versEcran(x, y)
   // La case vue de dessus (1 × 1) posée sur la grille isométrique : la même projection que le sol.
   const surLaCase = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${coin.x} ${coin.y})`
+  const m = morceauDeVoie(raccords)
   return (
     <g className="case-rail" transform={surLaCase}>
-      {morceauxDeVoie(raccords).map((m, i) => (
-        <image key={i} href={m.image} x="0" y="0" width="1" height="1" preserveAspectRatio="none" transform={m.quarts ? `rotate(${m.quarts * 90} 0.5 0.5)` : undefined} />
-      ))}
+      <image href={m.image} x="0" y="0" width="1" height="1" preserveAspectRatio="none" transform={m.quarts ? `rotate(${m.quarts * 90} 0.5 0.5)` : undefined} />
     </g>
   )
 }

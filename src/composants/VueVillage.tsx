@@ -30,11 +30,11 @@ import {
   CaseRail,
   DessinDecoration,
   DessinEvolutionMine,
-  DessinWagonnet,
   LosangeEmprise,
   TerrainVillage,
 } from './DessinsVillage'
 import { AmbianceVillage } from './AmbianceVillage'
+import { WagonnetVillage } from './WagonnetVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
@@ -150,6 +150,13 @@ export function VueVillage({
   })()
   // Quand le joueur pousse le wagonnet, c'est lui que la caméra suit.
   const pousse = joueurPousse(etat) && wagonnet !== null
+  // Le joueur se met à pousser le wagonnet : la caméra le suit de nouveau (même si on avait
+  // déplacé la carte à la main).
+  const [poussait, setPoussait] = useState(pousse)
+  if (poussait !== pousse) {
+    setPoussait(pousse)
+    if (pousse && libre !== null) setLibre(null)
+  }
   const suivi = pousse && wagonnet ? wagonnet : joueur
   const ecranJoueur = versEcran(suivi.x, suivi.y)
   const normale = borner({ z: zoom ?? zoomConfort, ...(libre ?? { cx: ecranJoueur.x, cy: ecranJoueur.y - 20 }) })
@@ -441,47 +448,9 @@ export function VueVillage({
     )
   }
 
-  // Le wagonnet sur les rails, et celui qui le pousse (toi ou un mineur), juste derrière lui.
-  if (wagonnet) {
-    const e = versEcran(wagonnet.x, wagonnet.y)
-    objets.push(
-      <svg
-        key="wagonnet"
-        className={`wagonnet-village ${etat.wagonnet.pousseur === 'electricite' ? 'wagonnet-electrique' : ''}`}
-        style={{ left: e.x - 20, top: e.y - 28, zIndex: profondeur(wagonnet.x, wagonnet.y) + 4 }}
-        viewBox={`${e.x - 20} ${e.y - 28} 40 34`}
-        aria-hidden="true"
-      >
-        <DessinWagonnet c={e} plein={etat.wagonnet.etape === 'aller'} />
-      </svg>,
-    )
-    const longueur = Math.hypot(wagonnet.dx, wagonnet.dy) || 1
-    const derriere = { x: wagonnet.x - (wagonnet.dx / longueur) * 0.9, y: wagonnet.y - (wagonnet.dy / longueur) * 0.9 }
-    const orientation = orienter(wagonnet.dx, wagonnet.dy)
-    const roule = etat.wagonnet.etape !== 'quai'
-    if (pousse) {
-      objets.push(
-        <Perso key="joueur" qui="joueur" x={derriere.x} y={derriere.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur" />,
-      )
-    } else if (roule) {
-      const mineur = etat.employes.find((m) => m.nom === etat.wagonnet.pousseur && m.etape === 'pousse')
-      if (mineur) {
-        objets.push(
-          <Perso
-            key="pousseur"
-            qui={RARETES[mineur.rarete] ? mineur.rarete : 'commun'}
-            x={derriere.x}
-            y={derriere.y}
-            sens={orientation.sens}
-            vue={orientation.vue}
-            marche
-            classe="perso-mineur"
-            etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>}
-          />,
-        )
-      }
-    }
-  }
+  // Le wagonnet sur les rails, et celui qui le pousse (toi ou un mineur), juste derrière lui :
+  // il a sa propre animation, à chaque image (WagonnetVillage).
+  objets.push(<WagonnetVillage key="wagonnet" etat={etat} joueurPousse={pousse} />)
 
   // Les bulles de notification au-dessus des bâtiments.
   const bulles: ReactNode[] = []

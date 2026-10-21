@@ -92,73 +92,6 @@ h2 {
   padding: 14px;
 }
 
-/* ---------------------------------------------------------------- HUD */
-
-.hud {
-  display: grid;
-  grid-template-columns: auto auto minmax(180px, 1.4fr) minmax(140px, 1fr) auto;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.hud-case {
-  background: var(--carte);
-  border: 1px solid var(--bordure);
-  border-radius: 10px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.hud-titre {
-  font-size: 0.75rem;
-  color: var(--texte-doux);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hud-argent strong {
-  color: var(--accent);
-  font-size: 1.15rem;
-  font-variant-numeric: tabular-nums; /* les chiffres ne bougent pas pendant que le compteur défile */
-}
-
-/* L'argent généré par seconde, à côté du titre « Argent ». */
-.hud-revenu {
-  margin-left: 6px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--texte-doux);
-}
-
-.hud-revenu-actif {
-  color: var(--vert);
-}
-
-.hud-enchants {
-  font-size: 0.7rem;
-  color: var(--violet);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Le bandeau a une hauteur fixe : rien ne bouge en dessous quand il change. */
-.hud-case {
-  height: 78px;
-}
-
-.hud-petits {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  font-weight: 600;
-}
-
 /* ------------------------------------------------------------- Barre */
 
 .barre {
@@ -190,28 +123,6 @@ h2 {
   text-shadow: 1px 1px 0 #000;
 }
 
-/* ---------------------------------------------------------- Plateau */
-
-.plateau {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-.colonne-mine,
-.colonne-panneaux {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-
-/* La colonne de droite prend toute la hauteur : les notifications se placent en bas. */
-.colonne-panneaux {
-  align-self: stretch;
-}
-
 /* ------------------------------------------------------------ Monde */
 
 /* Le monde : le village en haut, puis le puits creusé. On le fait défiler. */
@@ -230,34 +141,6 @@ h2 {
   scrollbar-color: #4a4a58 transparent;
 }
 
-/* Une rangée de la mine : étiquette, échelle, ascenseur, puis les 10 cases. */
-.rangee {
-  display: grid;
-  grid-template-columns: var(--col-etiquette) var(--col-echelle) var(--col-ascenseur) repeat(10, var(--taille-case)) var(--col-foreuse) var(--col-mineurs);
-  gap: 3px;
-  margin-bottom: 3px;
-  align-items: center;
-}
-
-/* La couleur du puits change avec les zones. */
-.rangee.zone-surface { --fond-zone: #4a3423; }
-.rangee.zone-cavernes { --fond-zone: #34343b; }
-.rangee.zone-mines { --fond-zone: #2b2724; }
-.rangee.zone-profondeurs { --fond-zone: #1f1f27; }
-.rangee.zone-deepslate { --fond-zone: #17171d; }
-.rangee.zone-abimes { --fond-zone: #1a0b10; }
-
-.rangee.creusee .case.vide {
-  background: var(--fond-zone);
-  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.55);
-}
-
-.rangee.front .case.vide {
-  display: grid;
-  place-items: end center;
-  overflow: visible;
-}
-
 .etiquette {
   font-size: 0.68rem;
   color: var(--texte-doux);
@@ -266,91 +149,8 @@ h2 {
   white-space: nowrap;
 }
 
-.rangee.front .etiquette,
-.rangee.couche-en-cours .etiquette {
-  color: var(--accent);
-}
-
-.emplacement {
-  position: relative;
-}
-
-/* Le puits : tout ce qu'on a creusé, avec l'échelle et l'ascenseur. */
-.puits-mine {
-  position: relative;
-  padding: 0 10px 10px;
-}
-
-/* L'échelle sur toute la hauteur du puits (de l'entrée jusqu'au front de taille). */
-.echelle-longue {
-  position: absolute;
-  top: -14px;
-  left: var(--x-echelle);
-  width: var(--col-echelle);
-  background:
-    repeating-linear-gradient(transparent 0 7px, #b07a3f 7px 10px),
-    linear-gradient(90deg, #7a4f22 0 3px, transparent 3px calc(100% - 3px), #7a4f22 calc(100% - 3px));
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-/* Le puits de l'ascenseur (en pointillés tant qu'il n'est pas construit). */
-.rail-ascenseur {
-  position: absolute;
-  top: -14px;
-  left: var(--x-ascenseur);
-  width: var(--col-ascenseur);
-  border: 1px dashed rgb(255 255 255 / 0.15);
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-/* Construit : un puits sombre, deux glissières en acier sur les côtés (avec des boulons)
-   et une traverse à chaque mètre. */
-.rail-ascenseur.construit {
-  border: none;
-  background:
-    repeating-linear-gradient(transparent 0 calc(var(--pas) - 3px), rgb(120 120 135 / 0.35) calc(var(--pas) - 3px) var(--pas)),
-    radial-gradient(circle, #9a9aa8 0 1.5px, transparent 2px) 1px 0 / 4px 12px repeat-y,
-    radial-gradient(circle, #9a9aa8 0 1.5px, transparent 2px) calc(100% - 1px) 0 / 4px 12px repeat-y,
-    linear-gradient(90deg, #55555f 0 4px, #1a1a20 4px calc(100% - 4px), #55555f calc(100% - 4px));
-  box-shadow: inset 0 0 6px rgb(0 0 0 / 0.8);
-}
-
-/* La poulie, en haut du puits (elle tourne quand la cabine bouge). */
-.poulie-ascenseur {
-  position: absolute;
-  top: -22px;
-  left: calc(var(--x-ascenseur) + var(--col-ascenseur) / 2 - 9px);
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background:
-    linear-gradient(0deg, transparent 45%, #2a2a30 45% 55%, transparent 55%),
-    linear-gradient(90deg, transparent 45%, #2a2a30 45% 55%, transparent 55%),
-    radial-gradient(circle, #2a2a30 0 3px, #9a9aa8 3px 6px, #6a6a76 6px);
-  border: 2px solid #2a2a30;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.poulie-ascenseur.tourne {
-  animation: poulie 0.6s linear infinite;
-}
-
 @keyframes poulie {
   to { transform: rotate(360deg); }
-}
-
-/* Le câble, de la poulie jusqu'au toit de la cabine. */
-.cable-ascenseur {
-  position: absolute;
-  top: -14px;
-  left: calc(var(--x-ascenseur) + var(--col-ascenseur) / 2 - 1px);
-  width: 2px;
-  background: repeating-linear-gradient(#c8c8d0 0 3px, #8a8a96 3px 6px);
-  z-index: 2;
-  pointer-events: none;
 }
 
 /* La cabine : une cage en métal. */
@@ -370,291 +170,6 @@ h2 {
      (une transition la ferait traîner derrière la caméra, comme si elle tremblait). */
   z-index: 2;
 }
-
-/* Le toit, avec le crochet du câble et une petite lampe. */
-.cabine-toit {
-  position: absolute;
-  left: -3px;
-  right: -3px;
-  top: -5px;
-  height: 6px;
-  border-radius: 2px 2px 0 0;
-  background: linear-gradient(#c9a03a, #8a6a1e);
-  border: 1px solid #2a2a30;
-  z-index: 2;
-}
-
-.cabine-lampe {
-  position: absolute;
-  right: 3px;
-  top: 1px;
-  width: 4px;
-  height: 3px;
-  border-radius: 1px;
-  background: #ffe066;
-  box-shadow: 0 0 5px 1px rgb(255 224 102 / 0.8);
-}
-
-/* En route : la lampe clignote (orange), comme un vrai monte-charge. */
-.cabine-en-route .cabine-lampe {
-  background: #ff9a3c;
-  animation: lampe-ascenseur 0.5s steps(2) infinite;
-}
-
-@keyframes lampe-ascenseur {
-  50% { opacity: 0.25; }
-}
-
-/* La grille de la cage : des barreaux, devant le passager et le chargement. */
-.cabine-grille {
-  position: absolute;
-  inset: 0 0 5px;
-  background:
-    linear-gradient(transparent 46%, rgb(150 150 165 / 0.9) 46% 54%, transparent 54%),
-    repeating-linear-gradient(90deg, rgb(160 160 175 / 0.85) 0 2px, transparent 2px 7px);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Le plancher : une plaque rayée jaune et noir. */
-.cabine-plancher {
-  position: absolute;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  height: 7px;
-  border-radius: 0 0 2px 2px;
-  background: repeating-linear-gradient(45deg, #f5c518 0 4px, #1a1a1a 4px 8px);
-  border-top: 1px solid #2a2a30;
-  z-index: 2;
-}
-
-/* Le chargement : une caisse en bois pleine de minerai. */
-.cabine-chargee {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  bottom: 5px;
-  height: 40%;
-  border-radius: 2px 2px 0 0;
-  background:
-    radial-gradient(circle at 25% 20%, #f4c518 0 2px, transparent 3px),
-    radial-gradient(circle at 55% 12%, #4ee8dc 0 2px, transparent 3px),
-    radial-gradient(circle at 80% 22%, #d01414 0 2px, transparent 3px),
-    radial-gradient(ellipse at 50% 15%, #7a7a84 0 45%, transparent 47%),
-    repeating-linear-gradient(90deg, #a8682b 0 5px, #8c5420 5px 6px);
-  border: 1px solid #3a230f;
-}
-
-/* Le mineur dans la cabine. */
-.passager {
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  width: calc(var(--col-ascenseur) + 6px);
-  height: calc(var(--taille-case) - 4px);
-  transform: translateX(-50%);
-}
-
-/* Avec le mineur dedans, la grille s'efface un peu pour qu'on le voie bien. */
-.cabine-occupee .cabine-grille {
-  opacity: 0.55;
-}
-
-.cabine-occupee {
-  box-shadow:
-    inset 0 0 0 1px #6a6a76,
-    0 0 12px rgb(255 210 90 / 0.7);
-}
-
-/* -------------------------------------------- La foreuse (prestige 1) */
-
-/* Son puits, à droite de la mine. */
-.puits-foreuse {
-  position: absolute;
-  top: -14px;
-  left: var(--x-foreuse);
-  width: var(--col-foreuse);
-  background:
-    linear-gradient(90deg, #2a2620 0 3px, rgb(0 0 0 / 0.55) 3px calc(100% - 3px), #2a2620 calc(100% - 3px)),
-    repeating-linear-gradient(transparent 0 12px, rgb(255 255 255 / 0.04) 12px 14px);
-  pointer-events: none;
-}
-
-/* La tête de la foreuse : une machine orange toute ronde (avec un hublot, un pot
-   d'échappement, un collier en acier et un gyrophare) et, dessous, une longue mèche en
-   spirale. Elle est haute de presque deux cases : sa pointe arrive en bas de sa rangée. */
-.tete-foreuse {
-  position: absolute;
-  left: var(--x-foreuse);
-  width: var(--col-foreuse);
-  height: calc(var(--taille-case) * 1.8);
-  margin-top: calc(var(--taille-case) * -0.8);
-  z-index: 2;
-  transition: top 0.3s linear;
-}
-
-/* En marche : un halo orange autour de la machine. */
-.tete-foreuse-tourne {
-  filter: drop-shadow(0 0 5px rgb(255 150 60 / 0.75));
-}
-
-/* Le gyrophare, tout en haut de la machine (il clignote quand elle fore). */
-.foreuse-lumiere {
-  position: absolute;
-  top: 2%;
-  left: 50%;
-  width: 40%;
-  height: 6%;
-  transform: translateX(-50%);
-  border-radius: 6px 6px 1px 1px;
-  background: linear-gradient(#ffe066, #f2a60c);
-  border: 1px solid #3a1a08;
-  z-index: 1;
-}
-
-.tete-foreuse-tourne .foreuse-lumiere {
-  animation: gyrophare 0.7s steps(2) infinite;
-}
-
-.foreuse-corps {
-  position: absolute;
-  inset: 7% 0 44%;
-  border-radius: 45% 45% 30% 30% / 55% 55% 35% 35%;
-  border: 2px solid #3a1a08;
-  background:
-    /* le hublot, avec son reflet */
-    radial-gradient(circle at 38% 42%, #e9fbff 0 8%, #7fd3ea 9% 22%, #2a1a10 23% 28%, transparent 29%),
-    /* le collier en acier, en bas */
-    linear-gradient(transparent 70%, #8d939c 70% 84%, #5d636c 84%),
-    linear-gradient(#ffa24d, #e2581f);
-  box-shadow: inset 0 3px 3px rgb(255 255 255 / 0.35), 0 2px 3px rgb(0 0 0 / 0.5);
-}
-
-/* Le pot d'échappement, sur le dessus. */
-.foreuse-corps::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  right: 22%;
-  width: 4px;
-  height: 6px;
-  border-radius: 2px 2px 0 0;
-  background: linear-gradient(90deg, #6a6f78, #b9bec6);
-}
-
-/* La mèche : une longue vis en acier qui tourne (la spirale défile). */
-.foreuse-meche {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 52%;
-  height: 50%;
-  transform: translateX(-50%);
-  border-radius: 0 0 50% 50% / 0 0 100% 100%;
-  clip-path: polygon(0 0, 100% 0, 62% 100%, 38% 100%);
-  background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 35% 65%, rgb(0 0 0 / 0.35)),
-    repeating-linear-gradient(155deg, #eef2f7 0 3px, #9aa1ab 3px 5px, #5d636c 5px 6px);
-}
-
-/* Quand elle tourne : un petit nuage de fumée sort du pot d'échappement. */
-.tete-foreuse-tourne .foreuse-corps::after {
-  content: '';
-  position: absolute;
-  top: -10px;
-  right: 14%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgb(220 220 220 / 0.7);
-  animation: fumee 0.9s ease-out infinite;
-}
-
-@keyframes fumee {
-  from { opacity: 0.8; transform: translate(0, 0) scale(0.5); }
-  to { opacity: 0; transform: translate(4px, -12px) scale(1.6); }
-}
-
-.tete-foreuse-eteinte {
-  filter: grayscale(0.6) brightness(0.7);
-}
-
-/* En marche : la mèche tourne et la foreuse vibre. */
-.tete-foreuse-tourne .foreuse-corps {
-  animation: tremble 0.15s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tete-foreuse-tourne .foreuse-corps::after {
-    animation: none;
-    display: none;
-  }
-}
-
-.tete-foreuse-tourne .foreuse-meche {
-  animation: meche 0.25s linear infinite;
-}
-
-@keyframes meche {
-  from { background-position: 0 0; }
-  to { background-position: 0 16px; }
-}
-
-/* Des petits cailloux projetés pendant le forage. */
-.foreuse-debris i {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 1px;
-  background: #9a8f80;
-  animation: debris 0.6s ease-out infinite;
-}
-
-.foreuse-debris i:nth-child(2) { animation-delay: 0.2s; --sens: -1; }
-.foreuse-debris i:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes debris {
-  from { opacity: 1; transform: translate(0, 0); }
-  to { opacity: 0; transform: translate(calc(var(--sens, 1) * 12px), -10px); }
-}
-
-.foreuse-etiquette {
-  position: absolute;
-  top: -14px;
-  right: 0;
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #f5c518;
-  white-space: nowrap;
-  text-shadow: 1px 1px 0 #000;
-}
-
-/* Le joueur pendant qu'il grimpe à l'échelle. */
-.joueur-echelle {
-  position: absolute;
-  left: calc(var(--x-echelle) + var(--col-echelle) / 2 - var(--taille-case) / 2);
-  width: var(--taille-case);
-  height: var(--taille-case);
-  z-index: 3;
-  display: grid;
-  place-items: center;
-}
-
-.porte-joueur {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: end center;
-}
-
-/* Lumière naturelle : les couches sous le mineur s'assombrissent avec la distance. */
-.rangee.ombre-1 .case { filter: brightness(0.85); }
-.rangee.ombre-2 .case { filter: brightness(0.68); }
-.rangee.ombre-3 .case { filter: brightness(0.52); }
-.rangee.ombre-4 .case { filter: brightness(0.38); }
 
 /* Les « +X $ » qui s'envolent. */
 .gains {
@@ -682,68 +197,6 @@ h2 {
 @keyframes envol {
   from { opacity: 1; transform: translateY(10px) scale(1); }
   to { opacity: 0; transform: translateY(-40px) scale(1.25); }
-}
-
-.bandeau-galerie {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: rgb(10 10 14 / 0.85);
-  margin: 0;
-  padding: 4px 10px;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--accent);
-}
-
-/* L'indicateur de la foreuse, collé en haut à droite de la vue de la mine. */
-/* Les rappels en haut à droite de la mine (foreuse, mineurs) : ils restent visibles. */
-.indicateurs {
-  position: sticky;
-  top: 6px;
-  float: right;
-  margin: 6px 6px -80px 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.indicateur-foreuse {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px 4px 4px;
-  border-radius: 8px;
-  border: 2px solid #111;
-  background: rgb(20 20 26 / 0.92);
-  color: #f5c518;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.indicateur-foreuse .mini-foreuse {
-  position: relative;
-  width: 18px;
-  height: 24px;
-}
-
-.mini-foreuse .foreuse-corps {
-  inset: 0 0 45%;
-}
-
-.mini-foreuse .foreuse-meche {
-  width: 50%;
-}
-
-.indicateur-foreuse.tourne .foreuse-meche {
-  animation: meche 0.25s linear infinite;
-}
-
-.indicateur-foreuse.tourne .foreuse-corps {
-  animation: tremble 0.15s linear infinite;
 }
 
 /* Une ligne d'amélioration (la même partout : Amelioration.tsx). */
@@ -785,14 +238,8 @@ h2 {
 
 /* Le dernier niveau acheté « pop » quand il apparaît (juste après un achat). */
 .niveaux i.niveau-achete:last-of-type,
-.niveaux i.niveau-achete:has(+ .niveau-libre),
-.niveaux i.niveau-achete:has(+ .niveau-bloque) {
+.niveaux i.niveau-achete:has(+ .niveau-libre) {
   animation: niveau-pop 0.45s ease-out;
-}
-
-.niveaux i.niveau-bloque {
-  background: repeating-linear-gradient(135deg, var(--carte-claire) 0 2px, var(--fond) 2px 4px);
-  opacity: 0.7;
 }
 
 @keyframes niveau-pop {
@@ -828,57 +275,6 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-/* ------------------------------------------------------- Personnage */
-
-.personnage {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: 50% 100%;
-  filter: drop-shadow(2px 3px 0 rgb(0 0 0 / 0.45));
-  transform-origin: 50% 100%;
-  pointer-events: none;
-}
-
-/* En train de creuser : il donne de grands coups de pioche vers le bloc (penché en avant). */
-.personnage-creuse {
-  animation: frappe 0.32s ease-in-out infinite;
-}
-
-.personnage-creuse.vers-la-gauche {
-  animation-name: frappe-gauche;
-}
-
-@keyframes frappe {
-  0%, 100% { rotate: -7deg; }
-  55% { rotate: 9deg; translate: 2px 0; }
-}
-
-@keyframes frappe-gauche {
-  0%, 100% { rotate: 7deg; }
-  55% { rotate: -9deg; translate: -2px 0; }
-}
-
-/* En train de marcher : petits sauts. */
-.personnage-marche {
-  animation: pas 0.25s ease-in-out;
-}
-
-@keyframes pas {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -12%; }
-}
-
-/* Sur l'échelle : il se balance. */
-.personnage-grimpe {
-  animation: grimpe 0.4s ease-in-out infinite alternate;
-}
-
-@keyframes grimpe {
-  from { rotate: -6deg; translate: 0 2px; }
-  to { rotate: 6deg; translate: 0 -2px; }
 }
 
 /* ---------------------------------------------------------- Boutons */
@@ -924,19 +320,6 @@ kbd {
   font-size: 0.8rem;
   font-weight: 700;
   text-align: center;
-}
-
-/* Le haut de la page : le titre, et le petit bouton des succès à droite. */
-.entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.entete .titre {
-  margin: 0;
 }
 
 .bouton-succes {
@@ -985,12 +368,6 @@ kbd {
 .fenetre-stats h3 {
   margin: 0 0 10px;
   font-size: 0.95rem;
-}
-
-.choix-periode {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--bordure);
 }
 
 /* Les grands chiffres. */
@@ -1536,17 +913,6 @@ kbd {
   justify-content: flex-start;
 }
 
-.titre-avec-icone {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.succes-repliable summary {
-  cursor: pointer;
-  font-weight: 700;
-}
-
 .inventaire .boutons {
   margin-top: 10px;
 }
@@ -1554,14 +920,6 @@ kbd {
 /* Inventaire */
 .inventaire > .discret:first-child {
   margin-top: 0;
-}
-
-.inventaire-ligne {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  cursor: pointer;
 }
 
 .inventaire input[type='checkbox'],
@@ -1573,18 +931,6 @@ kbd {
   accent-color: #22b8d8;
   cursor: pointer;
   flex-shrink: 0;
-}
-
-/* Le bouton d'envoi par l'ascenseur, sous le sac. */
-.envoi-ascenseur {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px; /* en haut du sac, au-dessus de la liste */
-}
-
-.envoi-ascenseur .discret {
-  margin: 0;
 }
 
 .case-option {
@@ -1689,43 +1035,6 @@ kbd {
   z-index: 10;
 }
 
-.victoire {
-  max-width: 440px;
-  text-align: center;
-  border-color: var(--accent);
-  animation: eclat 0.5s ease-out;
-}
-
-.victoire h2 {
-  font-size: 1.5rem;
-  color: var(--accent);
-}
-
-.victoire-trophee {
-  font-size: 3.5rem;
-  animation: scintille 1.5s ease-in-out infinite;
-}
-
-.victoire-stats {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.victoire-stats li {
-  background: var(--carte-claire);
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 0.85rem;
-}
-
-.victoire-stats strong {
-  display: block;
-  font-size: 1.05rem;
-}
-
 /* ------------------------------------------------------------- Pied */
 
 .pied {
@@ -1752,32 +1061,8 @@ kbd {
     max-width: 1180px;
   }
 
-  .entete {
-    margin-bottom: 8px;
-  }
-
   .titre {
     font-size: 1.35rem;
-  }
-
-  .hud {
-    margin-bottom: 10px;
-  }
-
-  .hud-case {
-    height: 62px;
-    padding: 6px 10px;
-  }
-
-  .plateau {
-    flex: 1;
-    min-height: 0;
-    align-items: stretch;
-  }
-
-  .colonne-mine {
-    min-height: 0;
-    gap: 8px;
   }
 
   .monde {
@@ -1785,30 +1070,6 @@ kbd {
     height: auto;
     min-height: 0;
   }
-
-  .colonne-panneaux {
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  /* Le panneau défile tout seul s'il est trop long (les notifications restent dessous). */
-  .colonne-panneaux > .panneau {
-    flex: 0 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-width: thin;
-  }
-}
-
-/* Le petit lien « Recommencer à zéro », dans l'en-tête. */
-.lien-recommencer {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--texte-doux);
-}
-
-.entete .lien-recommencer + .bouton-monde {
-  margin-left: 0;
 }
 
 /* ----------------------------------------------------------- Mobile */
@@ -1826,37 +1087,12 @@ kbd {
   .etiquette {
     font-size: 0.55rem;
   }
-
-  .actions .emoji-bouton {
-    display: none;
-  }
 }
 
 @media (max-width: 860px) {
-  .plateau {
-    grid-template-columns: 1fr;
-  }
-
-  .colonne-mine {
-    align-items: center;
-  }
 
   .actions {
     width: 100%;
-  }
-
-  .hud {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .hud-pioche,
-  .hud-sac {
-    grid-column: span 1;
-  }
-
-  .hud-petits {
-    grid-column: 1 / -1;
-    justify-content: center;
   }
 }
 
@@ -1883,50 +1119,11 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .poulie-ascenseur.tourne,
-  .cabine-en-route .cabine-lampe,
   .personnage,
-  .nuage,
-  .decor-herbe,
-  .indicateur-foreuse .foreuse-meche,
-  .indicateur-foreuse .foreuse-corps,
-  .foreuse-debris i,
-  .tete-foreuse-tourne .foreuse-corps,
-  .tete-foreuse-tourne .foreuse-meche,
-  .tete-foreuse-tourne .foreuse-lumiere,
-  .derrick-tourne .derrick-moteur,
-  .derrick-tourne .derrick-meche,
-  .derrick-tourne .derrick-aura,
-  .derrick-tourne .derrick-gyrophare,
-  .derrick-tourne .derrick-roue,
-  .derrick-tourne .derrick-moteur::after,
-  .gain,
-  .toast,
-  .victoire-trophee {
+.gain,
+.toast {
     animation: none;
   }
-}
-
-.indicateur-mineurs {
-  color: #ffb35c;
-  cursor: default;
-  padding-left: 8px;
-}
-
-/* Les deux boutons de l'ascenseur, dans le sac de la mine. */
-.boutons-ascenseur {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.boutons-ascenseur .bouton {
-  padding-left: 6px;
-  padding-right: 6px;
-}
-
-.carte-ascenseur {
-  margin-top: 12px;
 }
 
 /* ------------------------------------------- La galerie des mineurs employés */
@@ -1946,167 +1143,6 @@ kbd {
   --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
   /* Le trou où ils creusent : la deuxième case de la galerie. */
   --x-trou-mineurs: calc(var(--x-mineurs) + var(--taille-case) + 3px);
-}
-
-@media (max-width: 480px) {
-  /* Sur téléphone, la place manque : juste l'icône et la profondeur (ou le temps). */
-  .mineur-prenom {
-    display: none;
-  }
-}
-
-/* Le puits d'ascenseur des mineurs, jusqu'au plus profond d'entre eux : comme le tien,
-   un puits sombre avec deux glissières en acier (et leurs boulons) et une traverse par mètre. */
-.galerie-mineurs {
-  position: absolute;
-  top: -14px;
-  left: var(--x-mineurs);
-  width: var(--taille-case);
-  background:
-    repeating-linear-gradient(transparent 0 calc(var(--pas) - 3px), rgb(120 120 135 / 0.35) calc(var(--pas) - 3px) var(--pas)),
-    radial-gradient(circle, #9a9aa8 0 1.5px, transparent 2px) 1px 0 / 4px 12px repeat-y,
-    radial-gradient(circle, #9a9aa8 0 1.5px, transparent 2px) calc(100% - 1px) 0 / 4px 12px repeat-y,
-    linear-gradient(90deg, #55555f 0 4px, #1a1a20 4px calc(100% - 4px), #55555f calc(100% - 4px));
-  box-shadow: inset 0 0 6px rgb(0 0 0 / 0.8);
-  pointer-events: none;
-}
-
-/* Le trou où ils creusent, à côté de leur puits : une galerie de terre étayée, une poutre par mètre. */
-.trou-mineurs {
-  position: absolute;
-  top: -14px;
-  left: var(--x-trou-mineurs);
-  width: var(--taille-case);
-  border-radius: 0 0 10px 10px;
-  background:
-    repeating-linear-gradient(transparent 0 calc(var(--pas) - 4px), #6b4a2a calc(var(--pas) - 4px) calc(var(--pas) - 1px), transparent calc(var(--pas) - 1px) var(--pas)),
-    linear-gradient(90deg, #5a3f24 0 3px, transparent 3px calc(100% - 3px), #5a3f24 calc(100% - 3px)),
-    radial-gradient(ellipse at 50% 0, rgb(255 190 110 / 0.12), transparent 70%),
-    linear-gradient(#2c211a, #1b1511);
-  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.85);
-  pointer-events: none;
-}
-
-/* Leur poulie, leurs câbles et leurs cabines : les mêmes que ton ascenseur, dans la première case. */
-.poulie-mineurs {
-  left: calc(var(--x-mineurs) + var(--taille-case) / 2 - 9px);
-}
-
-.cable-mineurs {
-  left: calc(var(--x-mineurs) + var(--taille-case) / 2 - 1px);
-}
-
-.cabine-mineur {
-  left: var(--x-mineurs);
-  width: var(--taille-case);
-  /* Le jeu avance par petits pas : on adoucit le trajet (la caméra ne suit pas ces cabines). */
-  transition: top 0.1s linear;
-}
-
-.cabine-mineur .passager {
-  width: calc(var(--taille-case) + 2px);
-}
-
-/* L'étiquette passe devant le toit de la cabine. */
-.cabine-mineur .mineur-nom {
-  z-index: 3;
-}
-
-/* Un mineur employé : le personnage, son nom, et le bloc qu'il casse sous lui (dans la deuxième case). */
-.mineur-employe {
-  position: absolute;
-  left: var(--x-trou-mineurs);
-  width: var(--taille-case);
-  height: var(--taille-case);
-  display: grid;
-  place-items: end center;
-  transition: top 0.12s linear; /* il bouge par petits pas : on adoucit */
-  z-index: 3;
-  pointer-events: none;
-}
-
-.mineur-employe .personnage {
-  width: calc(var(--taille-case) + 4px);
-  height: calc(var(--taille-case) + 4px);
-}
-
-/* La rareté se voit dans la mine : l'étiquette prend sa couleur, et les légendaires et
-   mythiques ont une aura qui pulse autour d'eux. */
-.mineur-nom.rarete-rare,
-.mineur-nom.rarete-epique,
-.mineur-nom.rarete-legendaire,
-.mineur-nom.rarete-mythique {
-  color: #fff;
-  background: color-mix(in srgb, var(--couleur-rarete) 75%, #000);
-  box-shadow: 0 0 6px var(--couleur-rarete);
-}
-
-.mineur-employe.rarete-legendaire::before,
-.mineur-employe.rarete-mythique::before {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--couleur-rarete) 55%, transparent), transparent 70%);
-  animation: aura-mineur 1.2s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes aura-mineur {
-  from { opacity: 0.5; scale: 0.9; }
-  to { opacity: 1; scale: 1.15; }
-}
-
-/* Son nom, en petit au-dessus de la tête. */
-.mineur-nom {
-  position: absolute;
-  top: -15px;
-  right: 0; /* calé à droite : la galerie est au bord de la mine, l'étiquette ne doit pas en sortir */
-  padding: 0 4px;
-  border-radius: 3px;
-  background: rgb(0 0 0 / 0.65);
-  color: #ffb35c;
-  font-size: 0.55rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-/* Le bloc qu'il est en train de casser, juste sous ses pieds (il tremble).
-   Sélecteur double : il doit passer devant « .case { position: relative } » de blocs.css. */
-.mineur-employe .mineur-bloc {
-  position: absolute;
-  top: 100%;
-  left: 2px;
-  right: 2px;
-  height: calc(var(--taille-case) - 6px);
-  margin-top: 3px;
-  animation: tremble 0.15s linear infinite;
-}
-
-/* La petite jauge de son sac à dos, sous son nom. */
-.mineur-sac {
-  display: block;
-  height: 2px;
-  margin: 1px 0 1px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, #ffb35c calc(var(--remplissage) * 100%), rgb(255 255 255 / 0.2) 0);
-}
-
-/* Sac plein (il remonte vendre) : l'étiquette passe au vert, comme les boutons de vente. */
-.mineur-monte .mineur-nom {
-  color: #7be08a;
-}
-
-
-@media (prefers-reduced-motion: reduce) {
-  .mineur-employe,
-  .cabine-mineur {
-    transition: none;
-  }
-
-  .mineur-employe .mineur-bloc {
-    animation: none;
-  }
 }
 
 /* =========================================================================
@@ -2146,53 +1182,6 @@ button {
 }
 
 @media (max-width: 860px) {
-  /* --- L'en-tête : sur une seule ligne, en petit -------------------------- */
-  .entete {
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  .entete .titre {
-    flex: 1 0 50%; /* la moitié de la ligne : les boutons passent tous les 3 à la ligne suivante */
-    font-size: 1.1rem;
-    white-space: nowrap;
-  }
-
-  .entete {
-    flex-wrap: wrap;
-  }
-
-  /* Le titre et « Recommencer à zéro » sur la 1re ligne ; les 3 boutons (monde, stats,
-     succès) se partagent la 2e ligne (28 % chacun : ils ne tiennent pas à côté du titre). */
-  .entete .lien-recommencer {
-    white-space: nowrap;
-  }
-
-  .entete .bouton-succes {
-    flex: 1 1 28%;
-    padding: 6px 8px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* --- Le bandeau : des cases plus basses --------------------------------- */
-  .hud {
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  .hud-case {
-    height: auto;
-    min-height: 52px;
-    padding: 6px 10px;
-  }
-
-  .hud-petits {
-    min-height: 0;
-    padding: 4px 10px;
-  }
 
   /* La barre « 🎯 prochain objectif » remonte de 8 px sous le bandeau (personnel.css) :
      ici le bandeau a déjà une petite marge, on la laisse respirer. */

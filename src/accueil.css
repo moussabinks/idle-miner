@@ -480,13 +480,6 @@
   color: var(--accent);
 }
 
-/* Le titre du jeu, en haut à gauche pendant la partie : la même police que le logo. */
-.titre-jeu {
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
-  font-weight: 400;
-  letter-spacing: 1px;
-}
-
 /* --- Les mondes --------------------------------------------------------- */
 
 .accueil-mondes h2 {
@@ -582,11 +575,6 @@
   border-top-color: #6e4420;
   border-style: dashed;
   background: rgb(40 24 10 / 0.6);
-}
-
-/* Le bouton du monde en cours, dans le jeu (à côté des succès). */
-.entete .bouton-monde {
-  margin-left: auto;
 }
 
 /* --- Le compte (au-dessus des mondes) --------------------------------------- */
@@ -739,8 +727,7 @@
 .bouton-mega-titre,
 .heros-chiffres strong,
 .etape strong,
-.titre-section,
-.titre-jeu {
+.titre-section {
   text-transform: uppercase;
 }
 

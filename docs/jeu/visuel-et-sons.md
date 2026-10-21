@@ -104,8 +104,6 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 - **Pousseur** : le joueur (ou un mineur pousseur) est dessiné **juste derrière le wagonnet**, à 0,9 case, tourné dans le sens où il roule, et marche avec lui.
 - Une étiquette porte le prénom des mineurs (bord de la couleur de leur rareté), ou « Manager » / « Recruteur » en doré.
 
-Le composant `Personnage.tsx` (le personnage de l'ancienne vue en coupe) est toujours dans le dossier mais ne sert plus.
-
 **La marche du joueur** (`useJoueurVillage.ts`, 23/10) : il prend de l'**élan** au départ (30 cases/s²) et **freine** en arrivant, au lieu de démarrer et de s'arrêter d'un coup. Quand on touche la carte, son chemin (calculé case par case) est **lissé** : il va en ligne droite jusqu'au point le plus loin qu'il voit sans toucher un bâtiment, au lieu de faire des escaliers. Il ne change d'image (devant, derrière, gauche, droite) que si le mouvement va nettement d'un côté : plus de « clignotement » dans les virages.
 
 ---
@@ -194,10 +192,14 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
   - **un panneau en bois** planté sur le sol de devant, à gauche, avec « Niv. *N* ».
 - **Les rails** (`CaseRail`, 23/10) : les tuiles du dessin de l'équipe (« Tuiles de voies ferrées isométriques » sur le Drive : ballast de terre et de cailloux, traverses en bois, rails en acier avec leurs attaches). Un script les a remises à plat en vue de dessus, puis on les repose sur chaque case avec la même projection que le sol (`public/images/rails/`) :
   - `rail_droit.webp` : un morceau tout droit d'une case (deux traverses, raccordable sans couture) ;
-  - `rail_virage.webp` : le virage, fabriqué en **courbant** le morceau droit en quart de cercle (rayon d'une demi-case autour d'un coin) : exactement le même style.
+  - `rail_virage.webp` : le virage, fabriqué en **courbant** le morceau droit en quart de cercle (rayon d'une demi-case autour d'un coin) : exactement le même style ;
+  - `rail_t.webp` : le **T** (embranchement) : la ligne droite et **deux virages** qui en partent vers le côté, pour que le wagonnet puisse tourner d'un côté comme de l'autre ;
+  - `rail_croix.webp` : le **croisement** : les deux lignes droites l'une sur l'autre.
 
-  On n'achète que des rails : chaque case **choisit toute seule** son dessin selon ses voisines (et la mine ou le marché collés à elle, `raccordsRail`), en tournant la tuile d'un quart de tour si besoin : seule ou avec une voisine → tout droit vers elle ; deux voisines en face → tout droit ; deux voisines à angle droit → **virage** ; trois voisines → tout droit plus un virage vers la troisième ; quatre → croisement. Le **wagonnet suit la voie** : tout droit au milieu des cases, en quart de cercle dans les virages (`traceDeLaVoie` dans `iso.ts`). L'image du menu Bâtiments (`images/batiments/rails.webp`) est le morceau droit de la planche.
-- **Le wagonnet** (`DessinWagonnet`) : une petite benne grise au bord doré sur deux roues, avec son ombre. **À l'aller**, il est **plein** (trois minerais qui dépassent : turquoise, jaune, rouge) ; au retour et au quai, vide. Il glisse le long de la ligne selon sa distance (`distanceDepuisLaMine`), à chaque image quand c'est le joueur qui pousse. **Électrique**, il a une **lueur jaune** (`.wagonnet-electrique`). Son pousseur (le joueur ou un mineur) marche derrière lui.
+  Pour que les voies se mêlent sans couture, le morceau droit est séparé en trois calques (le ballast, refait au propre ; les traverses ; les rails) : dans le T et le croisement, tous les ballasts sont posés d'abord, puis toutes les traverses, puis tous les rails (`outils/rails/calques.py`).
+
+  On n'achète que des rails : chaque case **choisit toute seule** son dessin selon ses voisines (et la mine ou le marché collés à elle, `raccordsRail`), en tournant la tuile d'un quart de tour si besoin : seule ou avec une voisine → tout droit vers elle ; deux voisines en face → tout droit ; deux voisines à angle droit → **virage** ; trois voisines → **T** ; quatre → **croisement**. Le **wagonnet suit la voie** : tout droit au milieu des cases, en quart de cercle dans les virages (`traceDeLaVoie` dans `iso.ts`). L'image du menu Bâtiments (`images/batiments/rails.webp`) est le morceau droit de la planche.
+- **Le wagonnet** (`WagonnetVillage.tsx`, 23/10) : une **benne en volume** (vue de 3/4 : le fond, quatre parois grises plus claires du côté de la lumière, un bord doré, quatre roues), **tournée dans le sens de la voie** : elle pivote dans les virages. **À l'aller**, elle est **pleine** (des minerais turquoise, jaune, rouge et gris qui dépassent) ; au retour et au quai, vide. **Électrique**, elle a une **lueur jaune**. Pour qu'il roule **bien fluide**, il a sa propre animation à chaque image : le jeu ne donne sa position que 20 fois par seconde, alors entre deux nouvelles, on le fait avancer tout seul à sa vitesse. Son pousseur (le joueur ou un mineur) marche derrière lui **le long de la voie** (dans les virages aussi). Quand le joueur commence à pousser, la caméra le suit de nouveau, même si on avait déplacé la carte.
 - **Le rayon du générateur** (`RayonGenerateur`) : un cercle de *R* cases autour du centre du générateur, dessiné comme un polygone de 64 points projeté sur la grille (une ellipse à l'écran). **Pointillés jaunes** (`rgb(255 214 60)`) avec un fond jaune très léger. Quand on est devant le générateur ou qu'on le pose : plus épais, plus visible, et les **pointillés tournent** (`rayon-tourne`, 1,6 s). Sans courant : **gris**. Caché s'il ne donne pas de courant et qu'on ne le regarde pas.
 - **Les chemins** (`CaseChemin`) : des pavés gris clair sur de la terre beige.
 - **Les décorations** (`DessinDecoration`) : fleurs, buisson, rocher, tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs, fontaine (son jet pulse), statue du hamster d'or.
@@ -237,7 +239,14 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `suspenseRecrue` | début de la révélation d'une recrue (`RevelationRecrue.tsx`) | roulement de tambour qui accélère et monte (~1,6 s) |
 | `revelationRecrue(rang)` | la rareté dévoilée | fanfare **plus grande selon la rareté** : 2 notes (commun) à 6 notes (mythique), pièces, accords, étincelles |
 
-Retirés le 22/10 (avec la mine en coupe, ses blocs spéciaux et le prestige) : `lave`, `coffre`, `geode`, `nouvelleCouche`, `ding` (l'ascenseur), `pas` (l'échelle), `talent` et `prestige`.
+| `pas` | toutes les 0,34 s pendant que le joueur marche (`App.tsx`) | un petit froissement d'herbe |
+| `construction` | un nouveau bâtiment est posé (`App.tsx`) | trois coups de marteau sur du bois, puis trois notes |
+| `rail` | une case de rails posée au pinceau (`App.tsx`) | un « clang » de métal et la traverse en bois |
+| `wagonnet` | le wagonnet passe sur un joint de rail (une fois par case, `WagonnetVillage.tsx`) | « ta-tac », plus doux quand il est électrique |
+| `cloche` | le wagonnet arrive au marché | une petite cloche |
+| `electricite` | on met de la redstone dans le générateur | un grésillement électrique qui monte |
+
+Retirés le 22/10 (avec la mine en coupe, ses blocs spéciaux et le prestige) : `lave`, `coffre`, `geode`, `nouvelleCouche`, `ding` (l'ascenseur), l'ancien `pas` (l'échelle), `talent` et `prestige`.
 
 ### 8.2 L'ambiance (`src/ambiance.ts`)
 
@@ -254,7 +263,7 @@ Construite une seule fois, au premier clic, et qui tourne en continu. Tout passe
 - le **vent** : un souffle filtré qui forcit et faiblit lentement ;
 - des **oiseaux** toutes les 1,5 à 5 s : 2 à 5 petits gazouillis aigus qui glissent, placés au hasard à gauche ou à droite.
 
-L'interface appelle `reglerLieu(true, 0)` une fois (`App.tsx`) : on est toujours « à la surface ». L'ambiance de **grotte** (gouttes d'eau avec écho, cailloux qui roulent, grondement) est toujours dans `ambiance.ts`, mais on ne l'entend plus (on ne descend plus dans la mine). Quand l'onglet est caché, tout le son est mis en pause et reprend au retour.
+L'ambiance de **grotte** de l'ancienne mine en coupe (gouttes d'eau, cailloux, grondement) a été retirée le 23/10. Quand l'onglet est caché, tout le son est mis en pause et reprend au retour.
 
 ---
 

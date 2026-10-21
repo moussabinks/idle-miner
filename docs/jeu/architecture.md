@@ -140,9 +140,10 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `Statistiques.tsx` | Fenêtre des statistiques |
 | `Toasts.tsx` | Notifications |
 | `Confirmation.tsx` | Fenêtre de confirmation dans le style du jeu |
-| `Personnage.tsx`, `Icone.tsx` | Restes de l'ancienne version (le personnage de la vue en coupe, des icônes et le dessin du stand Personnel) : plus importés nulle part |
+| `WagonnetVillage.tsx` | Le wagonnet sur les rails (une benne en volume tournée dans le sens de la voie) et son pousseur, avec sa propre animation à chaque image ; les bruits du wagonnet |
+| `AmbianceVillage.tsx` | Papillons, oiseaux et ombres des nuages |
 
-Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (le sac au fond de la mine, l'envoi par l'ascenseur). Archivés : `ArbrePrestige.tsx`, `CartePrestige.tsx`, `FetePrestige.tsx`, `Victoire.tsx` (`archives/prestige/`) et `PanneauEnchanter.tsx` (`archives/enchanteur/`).
+Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (le sac au fond de la mine, l'envoi par l'ascenseur) ; le 23/10 : `Personnage.tsx` et `Icone.tsx` (restes de la vue en coupe), l'ambiance de grotte de `ambiance.ts` et le CSS de l'ancienne mine, du prestige et de l'enchanteur (environ 1 500 lignes). Les scripts qui fabriquent les tuiles des rails sont dans `outils/rails/`. Archivés : `ArbrePrestige.tsx`, `CartePrestige.tsx`, `FetePrestige.tsx`, `Victoire.tsx` (`archives/prestige/`) et `PanneauEnchanter.tsx` (`archives/enchanteur/`).
 
 ### 3.5 `public/` : fichiers servis tels quels
 
