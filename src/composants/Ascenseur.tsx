@@ -23,7 +23,7 @@ function etatCabine(etat: EtatJeu): string {
   const reste = `${Math.ceil(secondesAvantArretAscenseur(etat))} s`
   if (ascenseur.passager) return ascenseur.cible === 0 ? `tu montes au village… ${reste}` : `tu descends dans la mine… ${reste}`
   if (ascenseurEnMouvement(etat)) {
-    if (ascenseur.retourAuFront) return `au marché · retour dans ${reste}`
+    if (ascenseur.retourAuFront) return `vers le réservoir · retour dans ${reste}`
     if (ascenseur.cible === etat.position) return `arrive dans ${reste}`
     return `en route… ${reste}`
   }

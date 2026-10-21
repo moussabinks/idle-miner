@@ -394,7 +394,7 @@ Un bâtiment n'a de panneau qu'une fois **posé** : la Foreuse et le Personnel s
   - les deux sont grisés pendant un voyage, une demande en cours, ou si le mineur bouge déjà ;
 - la case **Envoi automatique quand le sac est plein**.
 
-Puis « Choisis combien l'ascenseur emporte de chaque objet au marché. » et les [jauges](#93-les-jauges-jaugestsx) (dans l'**ordre d'arrivée** : un nouvel objet arrive en bas). Une jauge à 0 = objet gardé (aussi pour l'envoi automatique).
+Puis « Choisis combien l'ascenseur remonte de chaque objet : en haut, il les range dans le réservoir de la mine (n / 200), d'où tu les portes au marché. » et les [jauges](#93-les-jauges-jaugestsx) (dans l'**ordre d'arrivée** : un nouvel objet arrive en bas). Une jauge à 0 = objet gardé (aussi pour l'envoi automatique).
 
 Tout en bas : la ligne « 🛗 Ascenseur » pour le construire (« Il remonte tes minerais (et toi) jusqu'au marché, sans échelle. ») ou l'améliorer, directement depuis la mine.
 

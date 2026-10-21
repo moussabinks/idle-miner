@@ -7,7 +7,7 @@
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
-import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, versEcran, type Point } from './iso'
+import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -175,80 +175,55 @@ type PropsEvolutionMine = {
   x: number
   y: number
   miroir: boolean
-  fraction: number // la profondeur atteinte, de 0 (à peine creusée) à 1 (la bedrock)
   profondeur: number // en mètres, pour le panneau
-  nbCages: number // une cage d'ascenseur par ascenseur : le tien, puis une par mineur employé
-  enMouvement: boolean // une cabine roule (les poulies tournent)
+  ascenseur: boolean // l'ascenseur est construit (on voit sa cabine)
+  hauteurCabine: number // où est la cabine : 0 = en haut (au village), 1 = tout en bas (au front)
 }
 
-// Les points utiles de l'image de la mine, en pixels de l'image (public/images/batiments/mine.webp).
+// Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) :
+// la cabine (posée en haut du puits), et le devant (la barrière et le sol de devant), dessiné
+// par-dessus la cabine quand elle descend.
+const IMAGE_CABINE = '/images/batiments/mine-cabine.webp'
+const IMAGE_DEVANT_MINE = '/images/batiments/mine-devant.webp'
+
+// Les points utiles de l'image de la mine, en pixels de l'image.
 const POINTS_MINE = {
-  // le fond du trou (la partie en pierre)
-  fond: [[822, 603], [1503, 677], [1539, 973], [883, 960]] as [number, number][],
-  centre: [1193, 805] as [number, number],
-  // le pied du panneau de profondeur, devant l'entrée de la galerie
-  panneau: [343, 701] as [number, number],
-  // les places des cages d'ascenseur, le long du mur du fond, dans le trou
-  cages: [[1170, 614], [1415, 681], [1636, 750], [1302, 730], [1517, 791], [1043, 671], [1658, 866]] as [number, number][],
+  // où les deux câbles sortent du treuil, et où ils s'accrochent à la cabine (posée en haut)
+  treuil: [[632, 264], [732, 253]] as [number, number][],
+  accroches: [[634, 476], [744, 545]] as [number, number][],
+  // le pied du panneau de profondeur, sur le sol de devant à gauche
+  panneau: [250, 470] as [number, number],
 }
 
-// Un point de l'image de la mine posée en (x, y), à l'écran.
-function pointMine(x: number, y: number, [px, py]: [number, number], miroir: boolean): Point {
-  return pointSurSprite(CALAGES.puits, x, y, 10, miroir, px, py)
-}
+// De combien de pixels de l'image la cabine descend : tout en haut (au ras du treuil) et tout en
+// bas (cachée à moitié derrière la barrière de devant). Sans ascenseur, les câbles pendent au fond.
+const CABINE_EN_HAUT = -150
+const CABINE_EN_BAS = 35
+const CABLES_SANS_ASCENSEUR = 240
 
-// Une cage d'ascenseur : deux montants d'acier, une poutre, une poulie, le câble et la cabine
-// rayée jaune et noir (la tienne a un toit doré).
-function CageAscenseur({ p, numero, enMouvement }: { p: Point; numero: number; enMouvement: boolean }) {
-  const haut = 48
-  const demi = 6
-  const cabine = numero === 0 ? '#f2b33d' : '#9aa3ad'
-  return (
-    <g className="cage-ascenseur">
-      <ellipse cx={p.x} cy={p.y + 1} rx={demi + 3} ry="3" fill="rgb(0 0 0 / 0.35)" />
-      {/* Les montants et les entretoises */}
-      <rect x={p.x - demi - 1.5} y={p.y - haut} width="3" height={haut} fill="#5b636d" stroke="#22272d" strokeWidth="0.8" />
-      <rect x={p.x + demi - 1.5} y={p.y - haut} width="3" height={haut} fill="#6f7882" stroke="#22272d" strokeWidth="0.8" />
-      <path
-        d={`M${p.x - demi} ${p.y - haut + 6} L${p.x + demi} ${p.y - haut + 20} M${p.x + demi} ${p.y - haut + 6} L${p.x - demi} ${p.y - haut + 20}`}
-        stroke="#4a5058"
-        strokeWidth="1.2"
-      />
-      <rect x={p.x - demi - 3} y={p.y - haut - 3} width={2 * demi + 6} height="4" rx="1.2" fill="#3d434a" stroke="#1a1d21" strokeWidth="0.8" />
-      {/* La poulie */}
-      <g transform={`translate(${p.x} ${p.y - haut - 7})`}>
-        <g className={enMouvement ? 'poulie-tourne' : undefined}>
-          <circle r="5" fill="#c9cfd6" stroke="#2a2f35" strokeWidth="1.3" />
-          <path d="M-4 0 H4 M0 -4 V4" stroke="#2a2f35" strokeWidth="1.1" />
-        </g>
-      </g>
-      {/* Le câble et la cabine */}
-      <line x1={p.x} y1={p.y - haut - 3} x2={p.x} y2={p.y - 17} stroke="#1a1a1a" strokeWidth="1" />
-      <rect x={p.x - 5} y={p.y - 17} width="10" height="13" rx="1.2" fill="#2b2b2b" stroke="#111" strokeWidth="0.8" />
-      <rect x={p.x - 5} y={p.y - 19} width="10" height="3" rx="1" fill={cabine} stroke="#111" strokeWidth="0.6" />
-      <path d={`M${p.x - 5} ${p.y - 6} h10`} stroke="#f2c230" strokeWidth="2.2" strokeDasharray="2 2" />
-      <rect x={p.x - 3} y={p.y - 14} width="6" height="5" fill="#ffd86b" opacity="0.7" />
-    </g>
-  )
-}
-
-export function DessinEvolutionMine({ x, y, miroir, fraction, profondeur, nbCages, enMouvement }: PropsEvolutionMine) {
-  const f = Math.max(0, Math.min(1, fraction))
-  // Le fond du trou (la partie en pierre) devient de plus en plus sombre en descendant, avec une
-  // lueur de minerais au fond quand on est bas.
-  const fond = POINTS_MINE.fond.map((p) => pointMine(x, y, p, miroir))
-  const centre = pointMine(x, y, POINTS_MINE.centre, miroir)
-  const panneau = pointMine(x, y, POINTS_MINE.panneau, miroir)
+export function DessinEvolutionMine({ x, y, miroir, profondeur, ascenseur, hauteurCabine }: PropsEvolutionMine) {
+  const calage = CALAGES.puits
+  const f = Math.max(0, Math.min(1, hauteurCabine))
+  const decalage = ascenseur ? CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * f : CABLES_SANS_ASCENSEUR
+  const panneau = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.panneau)
   return (
     <g className="evolution-mine">
-      <polygon points={fond.map((p) => `${p.x},${p.y}`).join(' ')} fill="#0c0a12" opacity={0.08 + 0.42 * f} style={{ mixBlendMode: 'multiply' }} />
-      {f > 0.35 && <ellipse cx={centre.x} cy={centre.y} rx={34 + 20 * f} ry={14 + 8 * f} fill="#7fd6ff" opacity={0.08 + 0.18 * f} className="lueur-fond-mine" />}
-      {POINTS_MINE.cages.slice(0, nbCages)
-        .map((place, i) => ({ i, p: pointMine(x, y, place, miroir) }))
-        .map(({ i, p }) => (
-          <CageAscenseur key={i} p={p} numero={i} enMouvement={enMouvement} />
-        ))}
-      {/* Le panneau de profondeur, planté devant l'entrée de la galerie. */}
+      {/* Les câbles, la cabine et le devant, posés comme l'image de la mine (miroir compris). */}
+      <g transform={transformationSprite(calage, x, y, 10, miroir)}>
+        {POINTS_MINE.treuil.map(([tx, ty], i) => {
+          const [ax, ay] = POINTS_MINE.accroches[i]
+          const chemin = `M${tx} ${ty} L${ax} ${ay + decalage}`
+          return (
+            <g key={i} className="cable-mine">
+              <path d={chemin} stroke="#2b2b30" strokeWidth="9" strokeLinecap="round" />
+              <path d={chemin} stroke="#a9adb5" strokeWidth="5" strokeDasharray="5 4" strokeLinecap="round" />
+            </g>
+          )
+        })}
+        {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
+        <image href={IMAGE_DEVANT_MINE} x="0" y="0" width={calage.largeur} height={calage.hauteur} />
+      </g>
+      {/* Le panneau de profondeur, planté sur le sol de devant. */}
       <g transform={`translate(${panneau.x} ${panneau.y})`}>
         <rect x="-2" y="-30" width="4" height="30" fill="#6b4422" stroke="#2a1608" strokeWidth="0.8" />
         <rect x="-21" y="-42" width="42" height="17" rx="3" fill="#a8743e" stroke="#4a2c12" strokeWidth="1.5" />

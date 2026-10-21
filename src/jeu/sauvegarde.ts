@@ -223,7 +223,7 @@ const PREMIERE_VERSION_VILLAGE = 18
 //     (la mine reste au milieu).
 export function migrer(donnees: unknown): unknown {
   if (typeof donnees !== 'object' || donnees === null) return donnees
-  const etat = donnees as { version?: unknown; village?: Partial<Village> }
+  const etat = donnees as { version?: unknown; village?: Partial<Village>; reservoir?: unknown }
   if (etat.version === 18 && etat.village) {
     const v = etat.village
     const decaler = <T extends { x: number; y: number }>(o: T): T => ({ ...o, x: o.x + 10, y: o.y + 10 })
@@ -239,6 +239,11 @@ export function migrer(donnees: unknown): unknown {
       chemins: (v.chemins ?? []).map(decalerCle),
     }
     etat.version = 19
+  }
+  // Version 20 (22/10) : le réservoir en haut de la mine (vide au départ).
+  if (etat.version === 19) {
+    etat.reservoir = { niveau: 0, contenu: {} }
+    etat.version = 20
   }
   return etat
 }
@@ -299,6 +304,7 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.village === 'object' &&
     Array.isArray(etat.village?.batiments) &&
     Array.isArray(etat.convois) &&
+    typeof etat.reservoir === 'object' &&
     typeof etat.tenue === 'object' &&
     Array.isArray(etat.tenuesAchetees)
   )

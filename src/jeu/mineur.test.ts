@@ -3,6 +3,8 @@ import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { LARGEUR_MINE, PIOCHES, profondeurBedrock, profondeurMaxPioche } from './donnees'
 import {
   argentGagneTotal,
+  capaciteReservoir,
+  prendreDuReservoir,
   acheterPioche,
   acheterSac,
   sacBloqueAuPrestige,
@@ -487,7 +489,7 @@ describe('ascenseur', () => {
     expect(niveauAscenseur(etat)?.capacite).toBe(1024)
   })
 
-  it('remonte le sac, l’envoie au marché et redescend au front de taille', () => {
+  it('remonte le sac jusqu’au réservoir de la mine (rien n’est vendu) et redescend au front', () => {
     const etat = nouvellePartie()
     construireBatiment(etat, 'marche', 18, 26) // le marché, juste à côté de la mine
     placerAuFront(etat, 26) // le front est à 25 m sous le village
@@ -498,13 +500,56 @@ describe('ascenseur', () => {
     expect(etat.inventaire).toEqual({ diamant: 2 })
     expect(ascenseurDisponible(etat)).toBe(false)
 
-    avancerTemps(etat, 2.5) // 25 m à 0,1 s par mètre : arrivé en haut, le chargement part au marché
-    expect(etat.convois).toHaveLength(1)
-    expect(etat.convois[0].parRails).toBe(false) // pas de rails : dans une brouette
+    avancerTemps(etat, 2.5) // 25 m à 0,1 s par mètre : arrivé en haut, tout va dans le réservoir
+    expect(etat.reservoir.contenu).toEqual({ fer: 10 })
+    expect(etat.convois).toHaveLength(0)
     avancerTemps(etat, 2.5) // redescendu jusqu'au joueur
     expect(ascenseurDisponible(etat)).toBe(true)
-    avancerTemps(etat, 10) // la brouette est arrivée au marché : c'est vendu
-    expect(etat.convois).toHaveLength(0)
+    avancerTemps(etat, 10)
+    expect(etat.argent).toBe(0) // il faut aller chercher le fer et le vendre soi-même
+  })
+
+  it('le réservoir se vide dans le sac, puis on vend au marché', () => {
+    const etat = partieALaSurface()
+    etat.reservoir.contenu = { fer: 10, pierre: 50 }
+    etat.niveauSac = 0 // 32 places
+    expect(prendreDuReservoir(etat)).not.toEqual([])
+    expect(etat.inventaire).toEqual({ fer: 10, pierre: 22 }) // les plus chers d'abord, jusqu'à remplir le sac
+    expect(etat.reservoir.contenu).toEqual({ pierre: 28 })
+    expect(prendreDuReservoir(etat)).toEqual(['🎒 Ton sac est plein : va d’abord vendre au marché.'])
+    // Dans la mine, on ne peut pas y toucher.
+    etat.position = 5
+    etat.inventaire = {}
+    expect(prendreDuReservoir(etat)).toEqual([])
+  })
+
+  it('quand le réservoir est plein, le reste attend dans la cabine', () => {
+    const etat = nouvellePartie()
+    placerAuFront(etat, 11)
+    construireAscenseur(etat, 1)
+    etat.reservoir.contenu = { pierre: capaciteReservoir(etat) - 5 }
+    etat.inventaire = { fer: 10 }
+    envoyerAscenseur(etat)
+    avancerTemps(etat, 1) // en haut
+    expect(etat.reservoir.contenu.fer).toBe(5)
+    expect(etat.ascenseur.chargement).toEqual({ fer: 5 })
+    avancerTemps(etat, 1) // la cabine redescend avec ce qui reste : rien n'est perdu
+    etat.inventaire = { or: 3 }
+    envoyerAscenseur(etat)
+    expect(etat.ascenseur.chargement).toEqual({ fer: 5, or: 3 })
+  })
+
+  it('avec des rails jusqu’au marché, le wagonnet emporte ce qui remonte', () => {
+    const etat = nouvellePartie()
+    construireBatiment(etat, 'marche', 25, 36) // juste sous la mine
+    etat.village.rails = ['25,35']
+    placerAuFront(etat, 11)
+    construireAscenseur(etat, 1)
+    etat.inventaire = { fer: 10 }
+    envoyerAscenseur(etat)
+    avancerTemps(etat, 1) // en haut, le fer part en wagonnet (une seule case de rails : vendu tout de suite)
+    expect(etat.reservoir.contenu).toEqual({})
+    avancerTemps(etat, 1)
     expect(etat.argent).toBe(120)
   })
 
@@ -544,8 +589,7 @@ describe('ascenseur', () => {
     avancerTemps(etat, 2.5)
     expect(aLaSurface(etat)).toBe(true)
     expect(etat.inventaire).toEqual({ lapis: 4 })
-    avancerTemps(etat, 10) // le fer part au marché, où il est vendu
-    expect(etat.argent).toBe(120)
+    expect(etat.reservoir.contenu).toEqual({ fer: 10 }) // le fer attend dans le réservoir
     // L'échelle aurait pris 50 × 0,15 = 7,5 s : l'ascenseur est plus rapide.
   })
 

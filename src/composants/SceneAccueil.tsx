@@ -21,6 +21,7 @@ import {
 } from '../jeu/village'
 import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
+import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
@@ -156,7 +157,7 @@ function objetsFixes(): ReactNode[] {
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
         <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
-          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} fraction={0.55} profondeur={84} nbCages={MINEURS_SCENE.length + 1} enMouvement />
+          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} profondeur={84} ascenseur hauteurCabine={0.35} />
         </BoiteSvg>,
       )
     } else {
@@ -294,9 +295,11 @@ export function SceneAccueil() {
     <div ref={boiteRef} className="scene-accueil" aria-hidden="true">
       <div className="monde-village" style={{ transform: `scale(${z}) translate(${-gauche}px, ${-haut}px)` }}>
         <TerrainVillage />
+        <SolPlage />
         {SOL}
         <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>
+        <ObjetsPlage />
         <ForetDevant vue={vueForet} />
       </div>
     </div>

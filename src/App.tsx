@@ -37,6 +37,11 @@ import { lotChoisi, type Choix } from './choix'
 import {
   aLaSurface,
   appelerAscenseur,
+  placeLibre,
+  capaciteReservoir,
+  envoyerReservoir,
+  nbDansReservoir,
+  prendreDuReservoir,
   arreterSurEchelle,
   ascenseurEnMouvement,
   auFond,
@@ -94,15 +99,23 @@ type OngletMine = 'sac' | 'pioches'
 const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }
 
 // Le panneau de la mine (au village) : entrer dans la mine, appeler l'ascenseur, l'améliorer,
-// et charger le wagonnet quand des rails relient la mine au marché.
+// vider le réservoir (ce que l'ascenseur a remonté) dans son sac pour aller le vendre au
+// marché, et charger le wagonnet quand des rails relient la mine au marché.
 function PanneauMine({ etat, jouer, onEntrer }: { etat: ReturnType<typeof usePartie>['etat']; jouer: ReturnType<typeof usePartie>['jouer']; onEntrer: () => void }) {
   const [choix, setChoix] = useState<Choix>({})
+  const [choixReservoir, setChoixReservoir] = useState<Choix>({})
   const cabineAuVillage = etat.ascenseur.niveau > 0 && !ascenseurEnMouvement(etat) && etat.ascenseur.position === 0
   const wagonnet = wagonnetDisponible(etat)
   // Les objets les plus précieux en premier, comme au marché (les objets gardés partent à 0).
   const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const lot = lotChoisi(choix, etat.nonAVendre, piles)
   const nbLot = Object.values(lot).reduce((t, n) => t + (n ?? 0), 0)
+  // Le réservoir : ce que l'ascenseur a remonté, les plus précieux en premier.
+  const pilesReservoir = (Object.entries(etat.reservoir.contenu) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
+  const lotReservoir = lotChoisi(choixReservoir, [], pilesReservoir)
+  const nbLotReservoir = Object.values(lotReservoir).reduce((t, n) => t + (n ?? 0), 0)
+  const dansReservoir = nbDansReservoir(etat)
+  const placeSac = placeLibre(etat)
   return (
     <div className="liste-cartes">
       <p>
@@ -116,6 +129,49 @@ function PanneauMine({ etat, jouer, onEntrer }: { etat: ReturnType<typeof usePar
         <button className="bouton bouton-petit bouton-ascenseur" disabled={ascenseurEnMouvement(etat)} onClick={() => jouer(appelerAscenseur)}>
           🛗 Appeler l'ascenseur
         </button>
+      )}
+
+      {/* Le réservoir : l'ascenseur y range ce qu'il remonte. On le met dans son sac pour aller le
+          vendre au marché (ou, avec des rails, on l'envoie en wagonnet). */}
+      {etat.ascenseur.niveau > 0 && (
+        <div className="ligne-achat">
+          <strong>📦 Réservoir · {dansReservoir} / {capaciteReservoir(etat)}</strong>
+          <span className="discret">
+            {dansReservoir === 0
+              ? 'Vide. L’ascenseur y range ce qu’il remonte de la mine.'
+              : 'Ce que l’ascenseur a remonté. Mets-le dans ton sac, puis va le vendre au marché.'}
+          </span>
+          {dansReservoir > 0 && (
+            <>
+              <Jauges
+                piles={pilesReservoir}
+                choix={choixReservoir}
+                gardes={[]}
+                onChanger={(bloc, valeur) => setChoixReservoir({ ...choixReservoir, [bloc]: valeur })}
+                prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)}
+                onToutSelectionner={() => setChoixReservoir(Object.fromEntries(pilesReservoir.map(([bloc]) => [bloc, 'max'])))}
+              />
+              <div className="boutons">
+                <button
+                  className="bouton bouton-sac"
+                  disabled={nbLotReservoir === 0 || placeSac === 0}
+                  onClick={() => {
+                    jouer((e) => prendreDuReservoir(e, lotReservoir))
+                    setChoixReservoir({})
+                  }}
+                >
+                  🎒 Mettre dans le sac ({Math.min(nbLotReservoir, placeSac)})
+                </button>
+                {wagonnet && (
+                  <button className="bouton bouton-ascenseur" onClick={() => jouer(envoyerReservoir)}>
+                    🛤️ Tout en wagonnet
+                  </button>
+                )}
+              </div>
+              {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
+            </>
+          )}
+        </div>
       )}
 
       {/* Avec des rails jusqu'au marché, on charge le wagonnet ici : pas besoin d'aller au marché. */}

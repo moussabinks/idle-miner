@@ -22,6 +22,7 @@ import {
   profondeurBedrock,
   profondeurMaxPioche,
   MINERAIS_REPARATION,
+  NIVEAUX_RESERVOIR,
   PART_PRIX_REPARATION,
   SACS,
   SECONDES_PAR_CASE,
@@ -43,7 +44,7 @@ import {
 } from './donnees'
 import { genererCouche, poidsDesBlocs } from './mine'
 import { additionnerStatistiques } from './statistiques'
-import { envoyerAuMarche, nouveauVillage, type Convoi, type Village } from './village'
+import { envoyerAuMarche, nouveauVillage, railsMineMarche, type Convoi, type Village } from './village'
 import {
   bonusVenteTalents,
   chanceDoublementTalents,
@@ -105,7 +106,7 @@ export type Ascenseur = {
   niveau: number // 0 = pas encore construit
   position: number // où est la cabine, en mètres (0 = au village), comme le joueur
   cible: number // où va la cabine
-  chargement: Inventaire // ce qu'elle transporte (en haut, il part au marché : voir convois.ts)
+  chargement: Inventaire // ce qu'elle transporte (en haut, il va dans le réservoir, ou au marché par les rails)
   passager: boolean // true = le mineur est dans la cabine
   retourAuFront: boolean // true = après avoir vendu, elle redescend toute seule au front de taille
   quai: Inventaire // les blocs qui attendent au pied de l'ascenseur quand le sac est plein
@@ -113,6 +114,13 @@ export type Ascenseur = {
   envoiDemande: boolean // true = on a demandé un envoi : la cabine vient, puis repart chargée
   lotDemande: Inventaire | null // ce qu'on a choisi d'envoyer (null = tous les objets cochés)
   envoiAuto: boolean // true = quand le sac est plein, l'ascenseur part tout seul au marché
+}
+
+// Le réservoir en haut de la mine (22/10) : ce que l'ascenseur remonte y attend que le joueur
+// vienne le chercher (voir prendreDuReservoir). Son niveau est gardé au prestige, pas son contenu.
+export type Reservoir = {
+  niveau: number // index dans NIVEAUX_RESERVOIR
+  contenu: Inventaire
 }
 
 // La foreuse (prestige 1) : une seule depuis le 20/10, avec 8 niveaux de forage.
@@ -212,6 +220,7 @@ export type EtatJeu = {
   // (tout est gardé au prestige), et les chargements en route vers le marché.
   village: Village
   convois: Convoi[]
+  reservoir: Reservoir // en haut de la mine : ce que l'ascenseur a remonté (22/10)
   // La tenue du joueur (achetée au Bazar, gardée au prestige).
   tenue: { chapeau: IdTenue | null; haut: IdTenue | null }
   tenuesAchetees: IdTenue[]
@@ -222,7 +231,8 @@ export type EtatJeu = {
 export type Decouverte = 'foreuse' | 'employes' | 'recruteur' | 'manager'
 
 // Version 18 (20/10) : le village en vue du ciel. Les parties d'avant repartent de zéro.
-export const VERSION_ETAT = 19
+// Version 20 (22/10) : le réservoir en haut de la mine.
+export const VERSION_ETAT = 20
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -274,6 +284,7 @@ export type Heritage = {
   foreuse: Foreuse
   talents: IdTalent[]
   niveauAscenseur: number
+  niveauReservoir: number
   employes: Employe[]
   recruteur: number
   manager: Manager
@@ -297,6 +308,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     foreuse = nouvelleForeuse(),
     talents = [],
     niveauAscenseur = 0,
+    niveauReservoir = 0,
     employes = [],
     recruteur = 0,
     manager = nouveauManager(),
@@ -353,6 +365,7 @@ export function creerPartie(aleatoire: Aleatoire, prestige = 0, heritage: Partia
     depart: null,
     village: structuredClone(village),
     convois: [],
+    reservoir: { niveau: niveauReservoir, contenu: {} },
     tenue: { ...tenue },
     tenuesAchetees: [...tenuesAchetees],
   }
@@ -373,6 +386,7 @@ export function prestige(etat: EtatJeu, aleatoire: Aleatoire): EtatJeu {
     foreuse: foreuseApresPrestige(etat.foreuse),
     talents: etat.talents,
     niveauAscenseur: etat.ascenseur.niveau,
+    niveauReservoir: etat.reservoir.niveau, // le réservoir garde sa taille, mais repart vide
     employes: etat.employes.map(employeApresPrestige),
     recruteur: etat.recruteur,
     // Le manager reste, avec au moins 10 minutes payées : il a le temps de voir venir.
@@ -1056,12 +1070,13 @@ export function reglerChargement(etat: EtatJeu, bloc: IdBloc, envoyer: boolean):
 }
 
 // Remplit la cabine : d'abord ce qui attend sur le quai, puis le sac (sauf les objets
-// décochés), les plus précieux en premier, dans la limite de sa capacité.
+// décochés), les plus précieux en premier, dans la limite de sa capacité. Ce qui est déjà dans
+// la cabine y reste (quand le réservoir était plein, elle est redescendue avec).
 function chargerCabine(etat: EtatJeu, lot?: Inventaire): Inventaire {
   const niveau = niveauAscenseur(etat)
-  const chargement: Inventaire = {}
+  const chargement: Inventaire = { ...etat.ascenseur.chargement }
   if (niveau === null) return chargement
-  let place = niveau.capacite
+  let place = niveau.capacite - totalObjets(chargement)
   const parPrix = (a: [string, number | undefined], b: [string, number | undefined]) => BLOCS[b[0] as IdBloc].prix - BLOCS[a[0] as IdBloc].prix
 
   for (const [id, nombre] of Object.entries(etat.ascenseur.quai).sort(parPrix)) {
@@ -1094,7 +1109,7 @@ export function envoyerAscenseur(etat: EtatJeu, lot?: Inventaire): string[] {
   etat.ascenseur.chargement = chargement
   etat.ascenseur.cible = 0
   etat.ascenseur.retourAuFront = true
-  return ['🛗 L’ascenseur remonte ton chargement au marché.']
+  return [railsVersLeMarche(etat) ? '🛗 L’ascenseur remonte ton chargement : le wagonnet l’emmènera au marché.' : '🛗 L’ascenseur remonte ton chargement au réservoir de la mine.']
 }
 
 // Le bouton « Envoyer à la surface » du sac : si la cabine est là, elle part tout de suite ;
@@ -1119,7 +1134,7 @@ export function appelerAscenseur(etat: EtatJeu): string[] {
 
 // Le mineur monte dans la cabine, vers le village (0) ou vers le front de taille.
 // En montant, la cabine emporte le « lot » choisi (ou tout ce qui n'est pas gardé) : en haut, il
-// part au marché, où il est vendu. Avec un lot vide ({}), elle ne monte que le mineur : son sac reste plein
+// va dans le réservoir (ou au marché par le wagonnet, s'il y a des rails). Avec un lot vide ({}), elle ne monte que le mineur : son sac reste plein
 // et rien n'est vendu (c'est le bouton « Remonter » du sac).
 export function prendreAscenseur(etat: EtatJeu, destination: number, lot?: Inventaire): string[] {
   if (!ascenseurDisponible(etat)) return []
@@ -1169,14 +1184,10 @@ export function avancerAscenseur(etat: EtatJeu, secondes: number): string[] {
   }
   if (ascenseurEnMouvement(etat)) return []
 
-  // La cabine est arrivée. En haut, son chargement part au marché (en wagonnet sur les rails,
-  // sinon dans une brouette) : il sera vendu en arrivant (voir convois.ts).
+  // La cabine est arrivée. En haut, son chargement va dans le réservoir de la mine (le joueur
+  // viendra le chercher pour le vendre), ou part au marché en wagonnet s'il y a des rails.
   const messages: string[] = []
-  if (ascenseur.position === 0 && Object.keys(ascenseur.chargement).length > 0) {
-    envoyerAuMarche(etat, ascenseur.chargement, null)
-    ascenseur.chargement = {}
-    messages.push('🛗 Chargement remonté : il part au marché.')
-  }
+  if (ascenseur.position === 0) messages.push(...viderCabine(etat))
   if (ascenseur.passager) {
     ascenseur.passager = false
     messages.push(etat.position === 0 ? '☀️ Te voilà au village !' : `⛏️ Au front de taille, à -${etat.profondeur} m.`)
@@ -1343,4 +1354,94 @@ export function enchanter(etat: EtatJeu, id: IdEnchantement): string[] {
 
 export function chiffreRomain(n: number): string {
   return ['0', 'I', 'II', 'III', 'IV', 'V'][n] ?? String(n)
+}
+
+// ---------------------------------------------------------------------------
+// Le réservoir en haut de la mine (22/10)
+// ---------------------------------------------------------------------------
+
+// Le nombre total d'objets d'un inventaire.
+export function totalObjets(inventaire: Inventaire): number {
+  return Object.values(inventaire).reduce((total, n) => total + (n ?? 0), 0)
+}
+
+export function capaciteReservoir(etat: EtatJeu): number {
+  return NIVEAUX_RESERVOIR[Math.min(etat.reservoir.niveau, NIVEAUX_RESERVOIR.length - 1)].capacite
+}
+
+export function nbDansReservoir(etat: EtatJeu): number {
+  return totalObjets(etat.reservoir.contenu)
+}
+
+export function reservoirPlein(etat: EtatJeu): boolean {
+  return nbDansReservoir(etat) >= capaciteReservoir(etat)
+}
+
+// La cabine arrêtée en haut vide son chargement : par les rails jusqu'au marché s'il y en a,
+// sinon dans le réservoir, tant qu'il reste de la place (les objets les plus chers d'abord).
+// Ce qui ne rentre pas reste dans la cabine : il remontera au prochain voyage.
+export function viderCabine(etat: EtatJeu): string[] {
+  const ascenseur = etat.ascenseur
+  if (ascenseur.position !== 0 || ascenseurEnMouvement(etat) || totalObjets(ascenseur.chargement) === 0) return []
+  if (railsVersLeMarche(etat)) {
+    envoyerAuMarche(etat, ascenseur.chargement, null)
+    ascenseur.chargement = {}
+    return ['🛤️ Chargement remonté : le wagonnet l’emmène au marché.']
+  }
+  let place = capaciteReservoir(etat) - nbDansReservoir(etat)
+  let range = 0
+  const parPrix = Object.entries(ascenseur.chargement).sort(([a], [b]) => BLOCS[b as IdBloc].prix - BLOCS[a as IdBloc].prix)
+  for (const [id, nombre] of parPrix) {
+    const bloc = id as IdBloc
+    const pris = Math.min(nombre ?? 0, place)
+    if (pris <= 0) continue
+    etat.reservoir.contenu[bloc] = (etat.reservoir.contenu[bloc] ?? 0) + pris
+    const reste = (nombre ?? 0) - pris
+    if (reste > 0) ascenseur.chargement[bloc] = reste
+    else delete ascenseur.chargement[bloc]
+    place -= pris
+    range += pris
+  }
+  if (totalObjets(ascenseur.chargement) > 0) return ['📦 Le réservoir de la mine est plein ! Viens le vider et va vendre au marché.']
+  return range > 0 ? [`📦 ${range} objet${range > 1 ? 's' : ''} rangé${range > 1 ? 's' : ''} dans le réservoir de la mine.`] : []
+}
+
+// Prendre ce qui est dans le réservoir pour le mettre dans son sac (à la mine, au village) :
+// le lot choisi, ou tout, les objets les plus chers d'abord, tant qu'il y a de la place.
+export function prendreDuReservoir(etat: EtatJeu, lot?: Inventaire): string[] {
+  if (!aLaSurface(etat)) return []
+  let place = placeLibre(etat)
+  if (place <= 0) return ['🎒 Ton sac est plein : va d’abord vendre au marché.']
+  let pris = 0
+  const parPrix = Object.entries(etat.reservoir.contenu).sort(([a], [b]) => BLOCS[b as IdBloc].prix - BLOCS[a as IdBloc].prix)
+  for (const [id, nombre] of parPrix) {
+    const bloc = id as IdBloc
+    const voulu = lot ? Math.min(nombre ?? 0, Math.floor(lot[bloc] ?? 0)) : (nombre ?? 0)
+    const n = Math.min(voulu, place)
+    if (n <= 0) continue
+    etat.inventaire[bloc] = (etat.inventaire[bloc] ?? 0) + n
+    const reste = (nombre ?? 0) - n
+    if (reste > 0) etat.reservoir.contenu[bloc] = reste
+    else delete etat.reservoir.contenu[bloc]
+    place -= n
+    pris += n
+  }
+  if (pris === 0) return []
+  // De la place s'est libérée : la cabine qui attend en haut, encore chargée, se vide.
+  const messages = [`🎒 ${pris} objet${pris > 1 ? 's' : ''} pris dans le réservoir : va les vendre au marché !`]
+  messages.push(...viderCabine(etat))
+  return messages
+}
+
+// Avec des rails jusqu'au marché, tout le réservoir part en wagonnet.
+export function envoyerReservoir(etat: EtatJeu): string[] {
+  if (!aLaSurface(etat) || !railsVersLeMarche(etat) || nbDansReservoir(etat) === 0) return []
+  envoyerAuMarche(etat, etat.reservoir.contenu, null)
+  etat.reservoir.contenu = {}
+  return ['🛤️ Le wagonnet part au marché avec tout le réservoir.']
+}
+
+// Des rails relient-ils la mine au marché ? (Alors le wagonnet emporte ce qui remonte.)
+function railsVersLeMarche(etat: EtatJeu): boolean {
+  return railsMineMarche(etat.village) !== null
 }

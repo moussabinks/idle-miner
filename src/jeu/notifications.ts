@@ -7,7 +7,7 @@ import { peutPasserPrestige } from './conditionsPrestige'
 import { DECOUVERTES, decouvertesAMontrer } from './decouvertes'
 import { alerteSalaires } from './employes'
 import { chariotPlein } from './foreuse'
-import { estCassee, sacPlein, type EtatJeu } from './mineur'
+import { estCassee, nbDansReservoir, reservoirPlein, sacPlein, type EtatJeu } from './mineur'
 import { standsAchetables, standsAvecNouveauxNiveaux } from './objectifs'
 import { pointsDisponibles } from './talents'
 import { batimentPose } from './village'
@@ -33,6 +33,8 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   else if (etat.foreuse.active && etat.foreuse.carburant <= 0) ajouter('foreuse', { icone: '🔥', texte: 'Plus de charbon !', sorte: 'alerte' })
   if (estCassee(etat)) ajouter('forgeron', { icone: '🔧', texte: 'Ta pioche est cassée : fais-la réparer !', sorte: 'alerte' })
   if (sacPlein(etat)) ajouter('marche', { icone: '🎒', texte: 'Ton sac est plein : viens vendre !', sorte: 'alerte' })
+  if (reservoirPlein(etat)) ajouter('puits', { icone: '📦', texte: 'Le réservoir de la mine est plein : viens le vider !', sorte: 'alerte' })
+  else if (nbDansReservoir(etat) > 0) ajouter('puits', { icone: '📦', texte: `${nbDansReservoir(etat)} objet(s) dans le réservoir : porte-les au marché`, sorte: 'pret' })
 
   // Le prestige.
   if (peutPasserPrestige(etat)) ajouter('prestige', { icone: '⭐', texte: 'Prêt pour le prestige !', sorte: 'pret' })

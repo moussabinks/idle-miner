@@ -836,3 +836,66 @@
     animation: none;
   }
 }
+
+/* La plage (22/10) : la mer qui bouge, les reflets, le feu de camp, les lanternes. */
+.objets-plage {
+  position: absolute;
+  pointer-events: none;
+  z-index: 89000;
+}
+.sol-plage .ecume {
+  animation: ecume-plage 4.5s ease-in-out infinite;
+}
+.sol-plage .vague {
+  animation: vague-plage 5.5s ease-in-out infinite;
+}
+.sol-plage .vague-2 {
+  animation-duration: 7s;
+  animation-delay: -2s;
+}
+.sol-plage .reflet-mer {
+  animation: reflet-plage 4s ease-in-out infinite;
+}
+.objets-plage .flamme {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flamme-plage 0.7s ease-in-out infinite alternate;
+}
+.objets-plage .lueur-feu,
+.objets-plage .lueur-lanterne {
+  animation: lueur-plage 1.6s ease-in-out infinite alternate;
+}
+.objets-plage .barque-flotte,
+.objets-plage .ecume-rocher {
+  animation: flotte-plage 3.2s ease-in-out infinite;
+}
+@keyframes ecume-plage {
+  0%, 100% { transform: translate(0, 0); opacity: 0.92; }
+  50% { transform: translate(-2px, 2.5px); opacity: 0.6; }
+}
+@keyframes vague-plage {
+  0%, 100% { transform: translate(0, 0); stroke-dashoffset: 0; opacity: 0.85; }
+  50% { transform: translate(-3px, 3px); stroke-dashoffset: 18; opacity: 0.4; }
+}
+@keyframes reflet-plage {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.9; }
+}
+@keyframes flamme-plage {
+  from { transform: scale(1, 0.9) skewX(-4deg); }
+  to { transform: scale(0.94, 1.08) skewX(4deg); }
+}
+@keyframes lueur-plage {
+  from { opacity: 0.16; }
+  to { opacity: 0.32; }
+}
+@keyframes flotte-plage {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sol-plage *,
+  .objets-plage * {
+    animation: none !important;
+  }
+}

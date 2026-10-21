@@ -7,9 +7,9 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, profondeurBedrock, type IdBatiment } from '../jeu/donnees'
+import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
 import { foreuseEnMarche } from '../jeu/foreuse'
-import { ascenseurEnMouvement, type EtatJeu, type Employe } from '../jeu/mineur'
+import { positionFront, type EtatJeu, type Employe } from '../jeu/mineur'
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
@@ -34,6 +34,7 @@ import {
   TerrainVillage,
 } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
+import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
   HAUTEUR_MONDE,
@@ -301,10 +302,9 @@ export function VueVillage({
             x={b.x}
             y={b.y}
             miroir={b.miroir}
-            fraction={Math.min(1, etat.profondeur / profondeurBedrock(etat.prestige))}
             profondeur={etat.profondeur}
-            nbCages={(etat.ascenseur.niveau > 0 ? 1 : 0) + etat.employes.length}
-            enMouvement={ascenseurEnMouvement(etat) || etat.employes.some((m) => m.etape === 'monte' || m.etape === 'descend')}
+            ascenseur={etat.ascenseur.niveau > 0}
+            hauteurCabine={etat.ascenseur.position / Math.max(1, positionFront(etat))}
           />
         </BoiteSvg>,
       )
@@ -533,9 +533,11 @@ export function VueVillage({
     >
       <div className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`} style={styleMonde}>
         <TerrainVillage />
+        <SolPlage />
         {sol}
         <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>
+        <ObjetsPlage />
         <ForetDevant vue={vueForet} />
         <div className="bulles-village">{bulles}</div>
       </div>

@@ -4,6 +4,8 @@
 // il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
 // Au village (20/10), il pose ses bâtiments autour de la mine dès qu'il peut les payer (le
 // marché tout de suite, il est gratuit), et il compte le temps de marche jusqu'au marché.
+// Depuis le 22/10, l'ascenseur range ce qu'il remonte dans le réservoir de la mine : le bot
+// remonte le vider (quand il est au tiers plein) et fait des allers-retours jusqu'au marché.
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { BATIMENTS, LARGEUR_MINE, LISTE_ENCHANTEMENTS, MINERAIS_REPARATION, PIOCHES, PRIX_SEAU, VITESSE_JOUEUR, type IdBatiment, type IdBloc } from './donnees'
@@ -41,6 +43,9 @@ import {
   objetsAVendre,
   quantite,
   equiper,
+  capaciteReservoir,
+  nbDansReservoir,
+  prendreDuReservoir,
   vendreLot,
   type EtatJeu,
   type Inventaire,
@@ -155,6 +160,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     const prochaine = PIOCHES[etat.meilleure + 1]
     if (sacPlein(etat) && etat.ascenseur.niveau === 0) return true
     if (!peutStocker(etat)) return true // plus aucune place (sac et quai pleins, d'objets gardés) : on va vendre
+    if (nbDansReservoir(etat) >= capaciteReservoir(etat) / 3) return true // le réservoir de la mine se remplit
     if (planUtile(etat).some((p) => peutConstruire(etat, p.id))) return true // un bâtiment à poser
     if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) return true
     return (estCassee(etat) || etat.niveauPioche !== etat.meilleure) && solutionPourLaPioche()
@@ -205,6 +211,14 @@ export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot
     // Le sac est quand même presque plein d'objets gardés : il vend tout (sinon il ne pourrait
     // plus creuser du tout).
     if (placeLibre(etat) < 8) vendreLot(etat, etat.inventaire)
+    // Puis il vide le réservoir de la mine : un aller-retour au marché par sac rempli.
+    while (nbDansReservoir(etat) > 0 && prendreDuReservoir(etat).length > 0) {
+      temps += (2 * distanceEntre(etat.village, 'puits', 'marche')) / VITESSE_JOUEUR
+      const lotReservoir = objetsAVendre(etat)
+      enleverReserve(etat, lotReservoir)
+      vendreLot(etat, lotReservoir)
+      if (placeLibre(etat) < 8) vendreLot(etat, etat.inventaire)
+    }
     // Les bâtiments d'abord (dans l'ordre de son plan), puis les achats dans ceux qui sont posés.
     for (const { id, x, y } of planUtile(etat)) {
       if (peutConstruire(etat, id)) construireBatiment(etat, id, x, y)
