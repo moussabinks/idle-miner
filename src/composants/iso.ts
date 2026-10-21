@@ -62,19 +62,24 @@ export function profondeur(x: number, y: number): number {
 // bâtiment ne déborde pas de ses 5 × 5 cases, comme dans Clash of Clans).
 type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; droite: Point; retrait?: number }
 
-// Les bâtiments de 5 × 5 sont dessinés un peu en retrait de leur emprise.
-export const RETRAIT_BATIMENT = 0.3
+// De combien de cases on rentre un bâtiment de 5 × 5 dans son emprise. Depuis le 22/10, les dessins
+// de l'équipe sont posés sur une dalle de 5 × 5 pavés : le pied de cette dalle tombe pile sur le
+// bord de l'emprise, sans retrait ni débordement sur les cases voisines.
+export const RETRAIT_BATIMENT = 0
 
+// Les coins mesurés sont ceux du pied de la dalle de pavés (là où elle touche l'herbe), mesurés
+// par un script sur les images détourées (22/10).
 export const CALAGES: Record<IdBatiment, Calage> = {
   // La mine (10 × 10) : l'image fournie, upscalée et rendue plus nette, sans la redresser (21/10).
   puits: { largeur: 2109, hauteur: 1346, gauche: { x: 9, y: 722 }, bas: { x: 1259, y: 1336 }, droite: { x: 2099, y: 766 }, retrait: 0 },
-  bazar: { largeur: 1120, hauteur: 1020, gauche: { x: 2, y: 726 }, bas: { x: 458, y: 1016 }, droite: { x: 1116, y: 718 } },
-  enchanteur: { largeur: 1120, hauteur: 1022, gauche: { x: 0, y: 704 }, bas: { x: 520, y: 1020 }, droite: { x: 1118, y: 678 } },
-  foreuse: { largeur: 1120, hauteur: 1130, gauche: { x: 2, y: 752 }, bas: { x: 568, y: 1128 }, droite: { x: 1116, y: 792 } },
-  forgeron: { largeur: 1120, hauteur: 1016, gauche: { x: 4, y: 686 }, bas: { x: 444, y: 1014 }, droite: { x: 1116, y: 706 } },
-  marche: { largeur: 1120, hauteur: 914, gauche: { x: 2, y: 636 }, bas: { x: 480, y: 910 }, droite: { x: 1118, y: 562 } },
-  employes: { largeur: 1120, hauteur: 1020, gauche: { x: 2, y: 670 }, bas: { x: 436, y: 1014 }, droite: { x: 1114, y: 732 } },
-  prestige: { largeur: 1120, hauteur: 1030, gauche: { x: 2, y: 712 }, bas: { x: 452, y: 1026 }, droite: { x: 1114, y: 788 } },
+  bazar: { largeur: 1037, hauteur: 945, gauche: { x: 2, y: 652 }, bas: { x: 520, y: 942 }, droite: { x: 1034, y: 653 } },
+  employes: { largeur: 1074, hauteur: 1046, gauche: { x: 2, y: 724 }, bas: { x: 530, y: 1043 }, droite: { x: 1071, y: 726 } },
+  enchanteur: { largeur: 1111, hauteur: 1013, gauche: { x: 2, y: 682 }, bas: { x: 548, y: 1010 }, droite: { x: 1108, y: 687 } },
+  foreuse: { largeur: 971, hauteur: 913, gauche: { x: 2, y: 608 }, bas: { x: 483, y: 910 }, droite: { x: 968, y: 612 } },
+  forgeron: { largeur: 1091, hauteur: 994, gauche: { x: 2, y: 670 }, bas: { x: 546, y: 991 }, droite: { x: 1088, y: 673 } },
+  generateur: { largeur: 1107, hauteur: 1040, gauche: { x: 2, y: 708 }, bas: { x: 553, y: 1037 }, droite: { x: 1104, y: 711 } },
+  marche: { largeur: 1089, hauteur: 1027, gauche: { x: 2, y: 703 }, bas: { x: 512, y: 1024 }, droite: { x: 1073, y: 702 } },
+  prestige: { largeur: 1084, hauteur: 1066, gauche: { x: 2, y: 746 }, bas: { x: 538, y: 1063 }, droite: { x: 1081, y: 756 } },
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer
@@ -118,6 +123,7 @@ export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   marche: '/images/batiments/marche.webp',
   employes: '/images/batiments/employes.webp',
   prestige: '/images/batiments/prestige.webp',
+  generateur: '/images/batiments/generateur.webp',
 }
 
 // La hauteur (en pixels) de ce qui dépasse au-dessus d'une décoration (pour sa boîte SVG).

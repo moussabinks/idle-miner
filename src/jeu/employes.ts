@@ -668,6 +668,7 @@ const DESTINATIONS: Record<IdBatiment, string> = {
   enchanteur: 'se promène',
   foreuse: 'se promène',
   prestige: 'se promène',
+  generateur: 'se promène',
 }
 
 // Ce que fait un mineur, en quelques mots (pour l'affichage), avec le temps qu'il lui reste.

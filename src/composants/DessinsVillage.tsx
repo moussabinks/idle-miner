@@ -5,6 +5,7 @@
 // Tout est dessiné dans les coordonnées de l'image du monde (voir iso.ts).
 
 import { memo, type ReactNode } from 'react'
+import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
 import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, versEcran, type Point } from './iso'
 
@@ -60,6 +61,64 @@ function losangeClairiere(marge: number): string {
   return [versEcran(-marge, -marge), versEcran(n + marge, -marge), versEcran(n + marge, n + marge), versEcran(-marge, n + marge)].map((p) => `${p.x},${p.y}`).join(' ')
 }
 
+// Les petits détails sur l'herbe de la clairière (22/10) : des touffes d'herbe, quelques brins
+// plus clairs, et de temps en temps une petite fleur ou un caillou, pour que le damier ait l'air
+// vivant. Toujours aux mêmes places (hasard à graine fixe). Ils sont au sol : les bâtiments, les
+// chemins et les personnages passent par-dessus.
+type Detail = { sorte: 'touffe' | 'brins' | 'fleur' | 'caillou'; x: number; y: number; echelle: number; miroir: boolean; couleur: string }
+
+const COULEURS_FLEURS = ['#ffffff', '#ffe066', '#ff8fb1', '#c9a2ff']
+
+function semerDetails(): Detail[] {
+  const hasard = aleatoireAvecGraine(2210)
+  const details: Detail[] = []
+  const n = TAILLE_GRILLE
+  for (let cx = 0; cx < n; cx++) {
+    for (let cy = 0; cy < n; cy++) {
+      // Environ deux détails pour trois cases, posés n'importe où dans la case.
+      if (hasard() > 0.65) continue
+      const x = cx + 0.1 + hasard() * 0.8
+      const y = cy + 0.1 + hasard() * 0.8
+      const tirage = hasard()
+      const sorte = tirage < 0.6 ? 'touffe' : tirage < 0.88 ? 'brins' : tirage < 0.96 ? 'fleur' : 'caillou'
+      const e = versEcran(x, y)
+      details.push({
+        sorte,
+        x: e.x,
+        y: e.y,
+        echelle: 0.8 + hasard() * 0.45,
+        miroir: hasard() < 0.5,
+        couleur: COULEURS_FLEURS[Math.floor(hasard() * COULEURS_FLEURS.length)],
+      })
+    }
+  }
+  // Du fond vers l'avant, pour qu'une touffe plus basse passe devant.
+  return details.sort((a, b) => a.y - b.y)
+}
+
+const DETAILS_HERBE = semerDetails()
+
+// Les dessins des détails (centrés sur leur pied, en pixels du monde).
+function DetailsHerbe() {
+  return (
+    <g className="details-herbe">
+      {DETAILS_HERBE.map((d, i) => {
+        const transformation = `translate(${d.x.toFixed(1)} ${d.y.toFixed(1)}) scale(${(d.miroir ? -1 : 1) * d.echelle} ${d.echelle})`
+        if (d.sorte === 'touffe') return <use key={i} href="#touffe-herbe" transform={transformation} />
+        if (d.sorte === 'brins') return <use key={i} href="#brins-herbe" transform={transformation} />
+        if (d.sorte === 'caillou') return <use key={i} href="#caillou-herbe" transform={transformation} />
+        return (
+          <g key={i} transform={transformation}>
+            <use href="#tige-fleur" />
+            <circle cx="0.6" cy="-5.2" r="1.5" fill={d.couleur} stroke="rgb(0 0 0 / 0.25)" strokeWidth="0.4" />
+            <circle cx="0.6" cy="-5.2" r="0.55" fill="#f2b33d" />
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 // Tout le sol, dessiné une seule fois (il ne change jamais). Du plus loin au plus près :
 // - une herbe sombre partout (le sous-bois, sous les arbres de la forêt) ;
 // - une large auréole d'herbe plus claire autour de la clairière, aux bords très flous ;
@@ -80,6 +139,14 @@ export const TerrainVillage = memo(function TerrainVillage() {
           <rect x="1" width="1" height="1" fill={VERT_FONCE} />
           <rect y="1" width="1" height="1" fill={VERT_FONCE} />
         </pattern>
+        {/* Les petits détails de l'herbe (voir DetailsHerbe) */}
+        <path id="touffe-herbe" d="M-3.6 0 Q-3.4 -3 -5 -5.4 Q-2.2 -3.6 -1.6 0 Z M-1.4 0 Q-1 -4.4 0.2 -7 Q0.8 -3.8 1 0 Z M0.8 0 Q2 -3.2 4.6 -4.8 Q2.8 -2.4 2.8 0 Z" fill="#5f9a2a" />
+        <path id="brins-herbe" d="M-1.6 0 Q-1.6 -2.6 -2.8 -4.4 M0 0 Q0.2 -3 1 -5.2 M1.4 0 Q2 -1.8 3.2 -2.8" stroke="#a5d65a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+        <path id="tige-fleur" d="M0 0 Q-0.2 -2.6 0.6 -5 M0 -1.6 Q-1.6 -2.2 -2.2 -1.2" stroke="#4e8a24" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+        <g id="caillou-herbe">
+          <ellipse cx="0" cy="-0.6" rx="2.4" ry="1.3" fill="#9a958c" />
+          <ellipse cx="-0.5" cy="-1" rx="1.2" ry="0.55" fill="#c4bfb5" />
+        </g>
         <filter id="flou-aureole" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="38" />
         </filter>
@@ -95,6 +162,7 @@ export const TerrainVillage = memo(function TerrainVillage() {
       <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
       <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
       <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
+      <DetailsHerbe />
     </svg>
   )
 })

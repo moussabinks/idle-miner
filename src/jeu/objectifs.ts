@@ -65,6 +65,8 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   const pose = (id: IdBatiment) => batimentPose(etat.village, id) !== null
 
   for (const id of LISTE_BATIMENTS) {
+    // Le générateur ne sert encore à rien : on ne pousse pas le joueur à le construire.
+    if (id === 'generateur') continue
     if (batimentDebloque(etat, id) && !pose(id)) achats.push({ stand: id, nom: `Construire : ${BATIMENTS[id].nom}`, cout: BATIMENTS[id].cout, construction: true })
   }
 
@@ -178,6 +180,7 @@ const NOMS_STANDS: Record<IdStand, string> = {
   enchanteur: 'à l’enchanteur',
   foreuse: 'à la foreuse',
   employes: 'au Personnel',
+  generateur: 'au générateur',
 }
 
 // Le premier minerai qui manque pour un achat (null s'il ne manque rien).

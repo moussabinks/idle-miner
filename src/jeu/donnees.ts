@@ -537,7 +537,7 @@ export function dureeCasse(durete: number, profondeur: number, vitesse: number, 
 export const TAILLE_GRILLE = 60
 
 // Les bâtiments du village (les mêmes identifiants que les anciens stands, pour les objectifs).
-export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes' | 'prestige'
+export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes' | 'prestige' | 'generateur'
 
 export type InfoBatiment = {
   id: IdBatiment
@@ -635,10 +635,22 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     prestige: 2,
     cout: { argent: 3000, materiaux: { pierre: 80, fer: 30 } },
   },
+  // Ajouté le 22/10 avec son dessin : il ne sert encore à rien (son rôle viendra plus tard). On
+  // peut déjà le poser ; il n'est pas proposé dans le « prochain objectif » (voir objectifs.ts).
+  generateur: {
+    id: 'generateur',
+    nom: 'Générateur',
+    emoji: '⚡',
+    description: 'Une machine à éclairs. À quoi servira-t-elle ? Bientôt…',
+    taille: 5,
+    porte: 'droite',
+    prestige: 0,
+    cout: { argent: 1000, materiaux: { pierre: 40, fer: 15 } },
+  },
 }
 
 // L'ordre du menu « Bâtiments » (la mine est déjà posée au début de la partie).
-export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige', 'foreuse', 'employes']
+export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige', 'foreuse', 'employes', 'generateur']
 
 // Les rails (prestige 2) : 10 fer par case. Une ligne de rails continue de la mine au marché
 // fait voyager les minerais en wagonnet, 3 fois plus vite qu'à pied.

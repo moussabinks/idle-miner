@@ -27,6 +27,7 @@ Depuis le 20/10, le village n'est plus un chemin avec des stands à des places f
 | 🌸 Arbre de prestige | 5 × 5 | face avant droite | 800 $ + 30 pierre + 10 fer | prestige 0 | [prestige.md](prestige.md) |
 | ⚙️ Foreuse | 5 × 5 | face avant gauche | 1 500 $ + 50 pierre + 20 fer | prestige 1 | [foreuse.md](foreuse.md) |
 | 👷 Personnel | 5 × 5 | face avant droite | 3 000 $ + 80 pierre + 30 fer | prestige 2 | [personnel.md](personnel.md) |
+| ⚡ Générateur | 5 × 5 | face avant droite | 1 000 $ + 40 pierre + 15 fer | prestige 0 | [generateur.md](generateur.md) |
 | 🛤️ Rails (une case) | 1 × 1 | — | **10 fer** la case | prestige 2 | [../jeu/village.md](../jeu/village.md) |
 
 Notes :
