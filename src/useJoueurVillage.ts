@@ -150,7 +150,7 @@ export function useJoueurVillage(village: Village, actif: boolean) {
 
   const sauter = useCallback(() => changer({ saut: joueurRef.current.saut + 1 }), [changer])
 
-  // Le remettre devant la mine (en sortant de la mine, après un prestige...).
+  // Le remettre devant la mine (au chargement de la partie...).
   const placerALaMine = useCallback(() => {
     touches.current.clear()
     chemin.current = null
