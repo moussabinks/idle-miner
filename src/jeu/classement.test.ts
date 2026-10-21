@@ -14,12 +14,12 @@ function fauxStockage(): Stockage {
 }
 
 describe('classement', () => {
-  it('prend le meilleur prestige et le plus d’argent gagné parmi les mondes', () => {
+  it('prend le meilleur niveau de mine et le plus d’argent gagné parmi les mondes', () => {
     const stockage = fauxStockage()
-    const avance = creerPartie(aleatoireAvecGraine(1), 3)
+    const avance = creerPartie(aleatoireAvecGraine(1))
+    avance.niveauMine = 3
     avance.stats.argentGagne = 500
-    avance.argentGagneAvant = 20_000
-    const riche = creerPartie(aleatoireAvecGraine(2), 1)
+    const riche = creerPartie(aleatoireAvecGraine(2))
     riche.stats.argentGagne = 90_000.7
     creerMonde(stockage, 'Avancé', avance)
     creerMonde(stockage, 'Riche', riche)

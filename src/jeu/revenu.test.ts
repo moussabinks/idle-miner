@@ -1,80 +1,33 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { embaucher, profondeurMaxEmploye, salaireEmploye } from './employes'
-import { activerForeuse } from './foreuse'
-import { creerPartie, positionFront, type EtatJeu } from './mineur'
-import { revenuBrutEmploye, revenuParSeconde, valeurMoyenneBloc } from './revenu'
-import { avancerTemps } from './temps'
+import { SECONDES_PAR_PAIE } from './donnees'
+import { embaucher, salaireEmploye } from './employes'
+import { valeurMoyenneBloc } from './mine'
+import { creerPartie } from './mineur'
+import { revenuBrutEmploye, revenuParSeconde } from './revenu'
 
-function partie(prestige: number): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1), prestige)
-  etat.argent = 1_000_000
-  return etat
-}
-
-describe('argent généré par seconde', () => {
-  it('vaut 0 au début, quand rien ne travaille', () => {
-    expect(revenuParSeconde(partie(0), false).total).toBe(0)
+describe('revenu par seconde', () => {
+  it('la mine toute seule : son débit × la valeur moyenne d’un bloc', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    expect(revenuParSeconde(etat).mine).toBeCloseTo(0.2 * valeurMoyenneBloc(1))
+    etat.coffre.contenu = { pierre: 100 } // coffre plein : la mine s'arrête
+    expect(revenuParSeconde(etat).total).toBe(0)
   })
 
-  it('compte ce que tu creuses, au fond de la mine', () => {
-    const etat = partie(0)
-    expect(revenuParSeconde(etat, true).joueur).toBe(0) // au village : tu ne creuses pas
-    etat.position = positionFront(etat)
-    etat.cible = etat.position
-    expect(revenuParSeconde(etat, true).joueur).toBeGreaterThan(0)
-    expect(revenuParSeconde(etat, false).joueur).toBe(0)
-  })
-
-  it('les blocs valent plus en profondeur, et encore plus avec Fortune', () => {
-    expect(valeurMoyenneBloc(60, 1)).toBeGreaterThan(valeurMoyenneBloc(5, 1))
-    expect(valeurMoyenneBloc(60, 1, 0.6)).toBeGreaterThan(valeurMoyenneBloc(60, 1))
-  })
-
-  it('compte la foreuse seulement quand elle tourne', () => {
-    const etat = partie(1)
-    etat.inventaire = { fer: 10, redstone: 5 }
-    activerForeuse(etat)
-    expect(revenuParSeconde(etat, false).foreuse).toBe(0) // pas de charbon
-    etat.foreuse.carburant = 100
-    expect(revenuParSeconde(etat, false).foreuse).toBeGreaterThan(0)
-  })
-
-  it('compte les mineurs, plus vite avec l’ascenseur', () => {
-    const etat = partie(4)
-    embaucher(etat, aleatoireAvecGraine(1))
-    etat.employes[0].niveau = 3
-    etat.employes[0].profondeur = 110
-    const sansAscenseur = revenuParSeconde(etat, false).mineurs
-    etat.ascenseur.niveau = 6
-    expect(sansAscenseur).toBeGreaterThan(0)
-    expect(revenuParSeconde(etat, false).mineurs).toBeGreaterThan(sansAscenseur)
-  })
-
-  it('compte les mineurs moins leurs salaires, et pas ceux qui attendent leur salaire', () => {
-    const etat = partie(3)
-    embaucher(etat, aleatoireAvecGraine(1))
+  it('un mineur rapporte plus que son salaire', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2))
     const mineur = etat.employes[0]
-    mineur.profondeur = profondeurMaxEmploye(etat, mineur)
-    expect(revenuParSeconde(etat, false).mineurs).toBeCloseTo(revenuBrutEmploye(etat, mineur) - salaireEmploye(etat, mineur) / 600)
-    mineur.tempsPaye = 0
-    mineur.etape = 'attend'
-    expect(revenuParSeconde(etat, false).mineurs).toBe(0)
+    expect(revenuBrutEmploye(etat, mineur) * SECONDES_PAR_PAIE).toBeGreaterThan(salaireEmploye(mineur))
+    expect(revenuParSeconde(etat).mineurs).toBeGreaterThan(0)
   })
 
-  it('ressemble à ce que les mineurs rapportent vraiment', () => {
-    const etat = partie(3)
-    embaucher(etat, aleatoireAvecGraine(1))
-    etat.employes[0].niveau = 2
-    // Au fond de ce que permet sa pioche : il reste à cette profondeur pendant tout le test.
-    etat.employes[0].profondeur = profondeurMaxEmploye(etat, etat.employes[0])
-    etat.employes[0].etape = 'creuse'
-    etat.employes[0].tempsPaye = 3600 // payé d'avance pour toute l'heure du test
-    const estimation = revenuBrutEmploye(etat, etat.employes[0])
-    const avant = etat.argent
-    avancerTemps(etat, 3600, aleatoireAvecGraine(7))
-    const reel = (etat.argent - avant) / 3600
-    expect(reel).toBeGreaterThan(estimation * 0.75)
-    expect(reel).toBeLessThan(estimation * 1.25)
+  it('un pousseur ne creuse pas', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2))
+    etat.employes[0].role = 'pousseur'
+    expect(revenuBrutEmploye(etat, etat.employes[0])).toBe(0)
   })
 })

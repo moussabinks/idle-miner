@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { casserBloc, creerPartie } from './mineur'
+import { cliquerMine, creerPartie } from './mineur'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
@@ -37,7 +37,7 @@ describe('sauvegarde', () => {
   it('retrouve exactement la partie sauvegardée', () => {
     const aleatoire = aleatoireAvecGraine(1)
     const etat = creerPartie(aleatoire)
-    for (let i = 0; i < 20; i++) casserBloc(etat, aleatoire)
+    for (let i = 0; i < 20; i++) cliquerMine(etat, aleatoire)
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', etat)
     expect(charger(stockage, '1')).toEqual(etat)
@@ -52,31 +52,12 @@ describe('sauvegarde', () => {
     expect(charger(stockage, '1')).toBeNull()
   })
 
-  it('une partie d’avant le village en vue du ciel (version 17 ou moins) repart de zéro', () => {
+  it('une partie d’avant la mine automatique (version 20 ou moins) repart de zéro', () => {
     const stockage = fauxStockage()
-    stockage.setItem(cleMonde('1'), JSON.stringify({ version: 17, argent: 500, profondeur: 30 }))
+    stockage.setItem(cleMonde('1'), JSON.stringify({ version: 20, argent: 500, profondeur: 30 }))
     expect(charger(stockage, '1')).toBeNull()
     expect(partieAncienne(stockage, '1')).toBe(true)
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)))
-    expect(partieAncienne(stockage, '1')).toBe(false)
-  })
-
-  it('une partie de la version 18 (clairière de 40 cases) glisse de 10 cases dans la clairière de 60', () => {
-    const stockage = fauxStockage()
-    const etat = creerPartie(aleatoireAvecGraine(1))
-    const ancien = JSON.parse(JSON.stringify(etat))
-    ancien.version = 18
-    ancien.village.batiments = [{ id: 'puits', x: 15, y: 15, miroir: false }, { id: 'marche', x: 17, y: 27, miroir: true }]
-    ancien.village.rails = ['20,25', '21,25']
-    ancien.village.chemins = ['3,4']
-    ancien.village.decorations = [{ n: 1, id: 'fontaine', x: 2, y: 30, miroir: false }]
-    stockage.setItem(cleMonde('1'), JSON.stringify(ancien))
-    const charge = charger(stockage, '1')
-    expect(charge?.version).toBe(20)
-    expect(charge?.village.batiments).toEqual([{ id: 'puits', x: 25, y: 25, miroir: false }, { id: 'marche', x: 27, y: 37, miroir: true }])
-    expect(charge?.village.rails).toEqual(['30,35', '31,35'])
-    expect(charge?.village.chemins).toEqual(['13,14'])
-    expect(charge?.village.decorations[0]).toMatchObject({ x: 12, y: 40 })
     expect(partieAncienne(stockage, '1')).toBe(false)
   })
 
@@ -144,7 +125,7 @@ describe('copie de tous les mondes (sauvegarde en ligne)', () => {
     const aleatoire = aleatoireAvecGraine(7)
     const ordinateur = fauxStockage()
     const etat = creerPartie(aleatoire)
-    for (let i = 0; i < 30; i++) casserBloc(etat, aleatoire)
+    for (let i = 0; i < 30; i++) cliquerMine(etat, aleatoire)
     const premier = creerMonde(ordinateur, 'Ma save', etat, 1000)!
     creerMonde(ordinateur, 'Test', creerPartie(aleatoire), 2000)
 
