@@ -370,12 +370,11 @@ L'argent gagné sert aussi au **classement** en ligne : `argentGagneAvant` (pres
 - Contenu :
   - 🏆 **« Bedrock atteinte ! »**, « Tu as creusé jusqu'à -X m. Bravo, mineur ! Au prochain prestige, la mine descendra jusqu'à -Y m. » (X = bedrock du prestige, Y = celle du suivant) ;
   - 4 chiffres de la partie : **blocs cassés**, **$ gagnés**, **temps de minage** (« N min SS s »), **coffres ouverts** ;
-  - ce que garde le prestige : « tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la foreuse et ton personnel » ; au prestige 0, en plus : « Et au village, la barrière de la foreuse s'ouvrira ! » ;
+  - ce que garde le prestige : « ton village, tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la foreuse et ton personnel » ; au prestige 0, en plus : « Et tu pourras construire la foreuse au village (menu Bâtiments) ! » ;
   - si tout est prêt : on peut aussi continuer à creuser et passer prestige plus tard à l'arbre de prestige ; sinon : « Avant, améliore au maximum ce que ce prestige permet… » ;
   - la **carte de prestige** en version compacte : badge « N/M » ou « Prêt ! », jauge « Prêt pour le prestige : N/M », la liste des conditions **pas encore remplies** (bedrock, ascenseur, sac, enchantements, puis foreuse, mineurs, recruteur selon le prestige ; détail dans [prestige.md](../batiments/prestige.md)) et le bouton **⭐ Passer prestige N** (grisé tant que tout n'est pas fait) ;
   - un bouton pour fermer : **« Continuer à creuser »** (si prêt) ou **« Je m'en occupe ! »**.
 - Passer prestige depuis cet écran : nouvelle partie au prestige suivant, mineur replacé devant la mine au village (tous les bâtiments et décorations restent posés), fête (confettis), puis l'arbre de prestige pour choisir un talent.
-- Remarque (20/10) : deux phrases de l'écran datent encore de l'ancien village (« la barrière de la foreuse s'ouvrira », « le bâtiment tout à gauche du village ») ; au village vu du ciel, la foreuse se pose depuis le menu Bâtiments et l'arbre de prestige est là où le joueur l'a posé.
 
 ---
 

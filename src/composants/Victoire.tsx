@@ -40,7 +40,7 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           </li>
         </ul>
         <p className="discret">
-          Prestige : tu recommences à zéro, mais tu gardes tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la
+          Prestige : tu recommences à zéro, mais tu gardes ton village, tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la
           foreuse et ton personnel.
           {etat.prestige === 0 && ' Et tu pourras construire la foreuse au village (menu Bâtiments) !'}
           {pret

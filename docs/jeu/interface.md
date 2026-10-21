@@ -467,7 +467,7 @@ Toutes sur un **voile noir à 70 %** qui couvre l'écran.
 
 ### 10.3 La victoire (`Victoire.tsx`)
 
-S'affiche une fois au moment où l'on atteint la bedrock : 🏆 qui scintille, « Bedrock atteinte ! », « Tu as creusé jusqu'à -*n* m… Au prochain prestige, la mine descendra jusqu'à -*n+50* m. », 4 stats (blocs cassés, $ gagnés, temps de minage, coffres ouverts), le rappel de ce qu'on garde au prestige (succès, talents, pioches, sac, enchantements, ascenseur, foreuse, personnel ; au prestige 0 : « Et au village, la barrière de la foreuse s'ouvrira ! », texte d'avant le village vu du ciel : la foreuse se pose maintenant depuis le menu Bâtiments), puis la carte du prestige en version compacte. Bouton : **Continuer à creuser** (si tout est prêt) ou **Je m'en occupe !**.
+S'affiche une fois au moment où l'on atteint la bedrock : 🏆 qui scintille, « Bedrock atteinte ! », « Tu as creusé jusqu'à -*n* m… Au prochain prestige, la mine descendra jusqu'à -*n+50* m. », 4 stats (blocs cassés, $ gagnés, temps de minage, coffres ouverts), le rappel de ce qu'on garde au prestige (village, succès, talents, pioches, sac, enchantements, ascenseur, foreuse, personnel ; au prestige 0 : « Et tu pourras construire la foreuse au village (menu Bâtiments) ! »), puis la carte du prestige en version compacte. Bouton : **Continuer à creuser** (si tout est prêt) ou **Je m'en occupe !**.
 
 ### 10.4 La confirmation (`Confirmation.tsx`)
 
