@@ -6,7 +6,7 @@
 // La caméra : on fait glisser la carte avec la souris ou le doigt, on zoome avec la molette ou en
 // pinçant. Elle suit le joueur quand il marche.
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
@@ -155,6 +155,43 @@ export function VueVillage({
     cameraRef.current = camera
   })
 
+  // La caméra affichée (23/10) : elle rejoint la caméra voulue en douceur, à chaque image de
+  // l'écran (au lieu d'une transition CSS relancée à chaque pas du joueur, qui saccadait). Quand
+  // on fait glisser la carte ou qu'on zoome, elle y va tout de suite.
+  const mondeRef = useRef<HTMLDivElement>(null)
+  const afficheeRef = useRef({ z: camera.z, cx: camera.cx, cy: camera.cy })
+  const miseEnPageRef = useRef({ milieuX, hauteur: taille.h })
+  const appliquerCamera = useCallback(() => {
+    const c = afficheeRef.current
+    const { milieuX: mx, hauteur } = miseEnPageRef.current
+    if (mondeRef.current) mondeRef.current.style.transform = `translate(${mx - c.cx * c.z}px, ${hauteur / 2 - c.cy * c.z}px) scale(${c.z})`
+  }, [])
+  useLayoutEffect(() => {
+    miseEnPageRef.current = { milieuX, hauteur: taille.h }
+    if (!cameraRef.current.douce) afficheeRef.current = { z: cameraRef.current.z, cx: cameraRef.current.cx, cy: cameraRef.current.cy }
+    appliquerCamera()
+  })
+  useEffect(() => {
+    let image = 0
+    let avant = performance.now()
+    const suivre = (maintenant: number) => {
+      // (le temps d’une image peut être un peu négatif à la première image : on le borne à 0)
+      const secondes = Math.max(0, Math.min(0.1, (maintenant - avant) / 1000))
+      avant = maintenant
+      const voulue = cameraRef.current
+      const c = afficheeRef.current
+      // Plus elle est loin, plus elle va vite (elle rattrape environ 90 % de l'écart en 0,25 s).
+      const k = voulue.douce ? 1 - Math.exp(-secondes * 9) : 1
+      const nouvelle = { z: c.z + (voulue.z - c.z) * k, cx: c.cx + (voulue.cx - c.cx) * k, cy: c.cy + (voulue.cy - c.cy) * k }
+      const bouge = Math.abs(nouvelle.cx - c.cx) + Math.abs(nouvelle.cy - c.cy) + Math.abs(nouvelle.z - c.z) * 100 > 0.01
+      afficheeRef.current = nouvelle
+      if (bouge) appliquerCamera()
+      image = requestAnimationFrame(suivre)
+    }
+    image = requestAnimationFrame(suivre)
+    return () => cancelAnimationFrame(image)
+  }, [appliquerCamera])
+
   // --- Souris, doigts, molette ------------------------------------------------
 
   const pointeurs = useRef(new Map<number, { x: number; y: number }>())
@@ -164,7 +201,7 @@ export function VueVillage({
   // Un point de l'écran (dans la vue) → un point du monde.
   const versMonde = useCallback(
     (sx: number, sy: number): Point => {
-      const c = cameraRef.current
+      const c = afficheeRef.current // ce qu'on voit vraiment à l'écran
       const rect = conteneurRef.current?.getBoundingClientRect()
       const ox = rect ? sx - rect.left : sx
       const oy = rect ? sy - rect.top : sy
@@ -321,6 +358,12 @@ export function VueVillage({
         <DessinDecoration id={fantome.id} x={fantome.x} y={fantome.y} taille={t} miroir={fantome.miroir} />
       </BoiteSvg>,
     )
+  }
+
+  // Là où le joueur va : un petit repère doré qui pulse sur le sol (comme dans Clash of Clans).
+  if (joueur.destination && !pousse) {
+    const d = versEcran(joueur.destination.x, joueur.destination.y)
+    objets.push(<span key="destination" className="repere-destination" style={{ left: d.x, top: d.y, zIndex: profondeur(joueur.destination.x, joueur.destination.y) }} />)
   }
 
   // Le joueur (quand il pousse le wagonnet, il est dessiné avec lui, plus bas).
@@ -535,11 +578,6 @@ export function VueVillage({
     }
   }, [zoomArrondi])
 
-  const styleMonde: CSSProperties = {
-    transform: `translate(${milieuX - camera.cx * camera.z}px, ${taille.h / 2 - camera.cy * camera.z}px) scale(${camera.z})`,
-    transition: !camera.douce ? 'none' : 'transform 0.18s linear',
-  }
-
   return (
     <div
       ref={conteneurRef}
@@ -551,7 +589,7 @@ export function VueVillage({
       onWheel={molette}
       aria-label="Le village vu du ciel"
     >
-      <div className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`} style={styleMonde}>
+      <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`}>
         <TerrainVillage />
         <SolPlage />
         {sol}

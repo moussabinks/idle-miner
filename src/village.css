@@ -236,19 +236,39 @@
 
 .perso-ombre {
   position: absolute;
-  left: -12px;
-  top: -4px;
-  width: 24px;
-  height: 8px;
+  left: -13px;
+  top: -5px;
+  width: 26px;
+  height: 10px;
   border-radius: 50%;
-  background: rgb(0 0 0 / 0.32);
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.18) 70%, rgb(0 0 0 / 0));
+}
+
+/* Pendant un saut, l'ombre rétrécit et pâlit (il s'éloigne du sol). */
+.perso-ombre.saute {
+  animation: ombre-saut 0.5s cubic-bezier(0.3, 0.7, 0.5, 1);
+}
+
+@keyframes ombre-saut {
+  0%, 100% { scale: 1; opacity: 1; }
+  45% { scale: 0.55; opacity: 0.5; }
 }
 
 .perso-saut,
+.perso-penche,
 .perso-corps {
   position: absolute;
   left: 0;
   top: 0;
+}
+
+/* Le personnage penche un peu vers où il va quand il marche (--sens : 1 à droite, -1 à gauche). */
+.perso-penche {
+  transition: rotate 0.25s ease;
+}
+
+.perso-marche .perso-penche {
+  rotate: calc(var(--sens, 1) * 4deg);
 }
 
 .image-perso {
@@ -256,9 +276,54 @@
   left: 0;
   top: 0;
   max-width: none;
-  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.35));
+  /* Un léger contour sombre, puis une ombre douce : il se détache bien de l'herbe. */
+  filter: drop-shadow(0 0 0.6px rgb(30 18 8 / 0.9)) drop-shadow(0 2px 1.5px rgb(0 0 0 / 0.3));
   -webkit-user-drag: none;
   user-select: none;
+}
+
+/* Le joueur (le héros) : un liseré de lumière chaude, pour qu'on le repère tout de suite. */
+.perso-heros .image-perso {
+  filter: drop-shadow(0 0 0.6px rgb(30 18 8 / 0.9)) drop-shadow(0 0 2px rgb(255 226 140 / 0.85)) drop-shadow(0 2px 1.5px rgb(0 0 0 / 0.3));
+}
+
+/* L'anneau doré sous le joueur : il tourne et brille doucement. */
+.perso-anneau {
+  position: absolute;
+  left: -15px;
+  top: -6px;
+  width: 30px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px dashed rgb(255 224 110 / 0.95);
+  box-shadow: 0 0 6px rgb(255 214 90 / 0.6), inset 0 0 4px rgb(255 214 90 / 0.5);
+  animation: anneau-heros 2.4s linear infinite;
+}
+
+@keyframes anneau-heros {
+  0%, 100% { opacity: 0.65; scale: 1; }
+  50% { opacity: 1; scale: 1.08; }
+}
+
+/* La poussière sous ses pieds quand il marche : deux petits nuages qui partent en arrière. */
+.perso-poussiere i {
+  position: absolute;
+  left: -3px;
+  top: -4px;
+  width: 7px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(240 230 200 / 0.75);
+  animation: poussiere 0.68s ease-out infinite;
+}
+
+.perso-poussiere i:nth-child(2) {
+  animation-delay: 0.34s;
+}
+
+@keyframes poussiere {
+  0% { translate: 0 0; scale: 0.4; opacity: 0.9; }
+  100% { translate: calc(var(--sens, 1) * -12px) -5px; scale: 1.6; opacity: 0; }
 }
 
 .perso-saut.saute {
@@ -266,22 +331,28 @@
 }
 
 @keyframes saut {
-  0% { translate: 0 0; scale: 1.08 0.9; }
-  15% { scale: 0.94 1.08; }
+  0% { translate: 0 0; scale: 1.12 0.86; }
+  15% { scale: 0.92 1.1; }
   45% { translate: 0 -26px; scale: 1 1; }
   80% { translate: 0 0; scale: 1 1; }
-  90% { scale: 1.1 0.88; }
+  90% { scale: 1.14 0.86; }
   100% { translate: 0 0; scale: 1 1; }
 }
 
-/* En marchant, il sautille en se dandinant (autour de ses pieds). */
+/* En marchant : un pas toutes les 0,34 s. À chaque pas, il s'écrase un peu en touchant le sol
+   et s'étire en montant (comme un dessin animé), en se dandinant autour de ses pieds. */
 .perso-marche .perso-corps {
-  animation: dandine 0.34s ease-in-out infinite alternate;
+  animation: pas 0.68s linear infinite;
 }
 
-@keyframes dandine {
-  from { translate: 0 0; rotate: -3deg; }
-  to { translate: 0 -4px; rotate: 3deg; }
+@keyframes pas {
+  0% { translate: 0 0; rotate: -3deg; scale: 1.06 0.94; }
+  12% { translate: 0 -3px; scale: 0.97 1.04; }
+  25% { translate: 0 -4.5px; rotate: 0deg; scale: 1 1.02; }
+  50% { translate: 0 0; rotate: 3deg; scale: 1.06 0.94; }
+  62% { translate: 0 -3px; scale: 0.97 1.04; }
+  75% { translate: 0 -4.5px; rotate: 0deg; scale: 1 1.02; }
+  100% { translate: 0 0; rotate: -3deg; scale: 1.06 0.94; }
 }
 
 /* Au repos : il respire doucement. */
@@ -291,7 +362,7 @@
 
 @keyframes respire {
   0%, 100% { scale: 1 1; }
-  50% { scale: 1.02 0.98; }
+  50% { scale: 1.025 0.975; }
 }
 
 .etiquette-perso {
@@ -939,6 +1010,8 @@
   .badge-menu,
   .pastille-nouveau,
   .perso-village .perso-corps,
+  .perso-anneau,
+  .perso-poussiere i,
   .sprite-vibre,
   .fantome,
   .poulie-tourne,
@@ -1313,6 +1386,45 @@
   .vol-oiseaux,
   .oiseau,
   .sprite-electrique {
+    animation: none;
+  }
+}
+
+/* Le repère de destination du joueur : deux anneaux dorés qui se resserrent sur la case. */
+.repere-destination {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.repere-destination::before,
+.repere-destination::after {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: -6px;
+  width: 24px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 224 102 / 0.95);
+  box-shadow: 0 0 6px rgb(255 214 90 / 0.8);
+  animation: repere 1s ease-out infinite;
+}
+
+.repere-destination::after {
+  animation-delay: 0.5s;
+}
+
+@keyframes repere {
+  from { scale: 1.6; opacity: 0; }
+  40% { opacity: 1; }
+  to { scale: 0.5; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repere-destination::before,
+  .repere-destination::after {
     animation: none;
   }
 }

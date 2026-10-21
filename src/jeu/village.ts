@@ -153,7 +153,7 @@ export function porte(b: BatimentPose): { x: number; y: number } {
 }
 
 // Les cases où l'on ne peut pas marcher : les bâtiments, et les grosses décorations.
-function casesBloquees(village: Village): Set<string> {
+export function casesBloquees(village: Village): Set<string> {
   const bloquees = new Set<string>()
   for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) bloquees.add(cleCase(c.x, c.y))
   for (const d of village.decorations) {
