@@ -2,9 +2,9 @@
 // de l'image de fond, et inversement. C'est seulement de l'affichage : la logique du jeu ne
 // connaît que les cases (src/jeu/village.ts).
 //
-// L'image du décor (public/images/village/fond.webp) fait 1 536 × 1 024 pixels. La clairière y
-// est un losange : son coin du haut (la case 0, 0) est en (801 ; 57), et une case fait 33 pixels
-// de large sur 19 de haut (40 cases d'un coin à l'autre).
+// Le monde est mesuré en pixels : la clairière y est un losange, son coin du haut (la case 0, 0)
+// est en (801 ; 57), et une case fait 33 pixels de large sur 19 de haut (40 cases d'un coin à
+// l'autre). Le sol en damier et la forêt autour sont dessinés par le jeu (TerrainVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import { porte, porteAGauche, type BatimentPose, type Case } from '../jeu/village'
@@ -17,6 +17,12 @@ export const DEMI_LARGEUR = 660 / TAILLE_GRILLE
 export const DEMI_HAUTEUR = 382.8 / TAILLE_GRILLE
 
 export type Point = { x: number; y: number }
+
+// Jusqu'où la caméra peut aller (en pixels du monde) : la clairière et une bande de forêt tout
+// autour. On ne voit jamais le bord du décor (la forêt continue bien plus loin).
+export const LIMITES_CAMERA = { x0: -80, y0: -140, x1: 1680, y1: 1020 }
+// Le terrain dessiné (la forêt qui se répète) déborde largement des limites de la caméra.
+export const LIMITES_TERRAIN = { x0: -700, y0: -700, x1: 2300, y1: 1700 }
 
 // Une position sur la grille (en cases, à virgule) → un point de l'image du monde (en pixels).
 export function versEcran(x: number, y: number): Point {
@@ -42,22 +48,29 @@ export function profondeur(x: number, y: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Les dessins des bâtiments (des images en vue isométrique)
+// Les dessins des bâtiments (des images en vue isométrique, upscalées par IA le 21/10)
 // ---------------------------------------------------------------------------
 
 // Pour chaque image : sa taille, et les trois coins du sol de son dessin (gauche, bas, droite),
 // en pixels de l'image. On déforme très légèrement l'image pour que ces trois coins tombent
 // pile sur les coins de l'emprise du bâtiment (5 × 5 cases) : le dessin colle à la grille.
-type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; droite: Point }
+// « retrait » : de combien de cases on rentre le dessin à l'intérieur de son emprise (pour qu'un
+// bâtiment ne déborde pas de ses 5 × 5 cases, comme dans Clash of Clans).
+type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; droite: Point; retrait?: number }
 
-export const CALAGES: Record<Exclude<IdBatiment, 'puits'>, Calage> = {
-  bazar: { largeur: 560, hauteur: 510, gauche: { x: 1, y: 363 }, bas: { x: 229, y: 508 }, droite: { x: 558, y: 359 } },
-  enchanteur: { largeur: 560, hauteur: 511, gauche: { x: 0, y: 352 }, bas: { x: 260, y: 510 }, droite: { x: 559, y: 339 } },
-  foreuse: { largeur: 560, hauteur: 565, gauche: { x: 1, y: 376 }, bas: { x: 284, y: 564 }, droite: { x: 558, y: 396 } },
-  forgeron: { largeur: 560, hauteur: 508, gauche: { x: 2, y: 343 }, bas: { x: 222, y: 507 }, droite: { x: 558, y: 353 } },
-  marche: { largeur: 560, hauteur: 457, gauche: { x: 1, y: 318 }, bas: { x: 240, y: 455 }, droite: { x: 559, y: 281 } },
-  employes: { largeur: 560, hauteur: 510, gauche: { x: 1, y: 335 }, bas: { x: 218, y: 507 }, droite: { x: 557, y: 366 } },
-  prestige: { largeur: 560, hauteur: 515, gauche: { x: 1, y: 356 }, bas: { x: 226, y: 513 }, droite: { x: 557, y: 394 } },
+// Les bâtiments de 5 × 5 sont dessinés un peu en retrait de leur emprise.
+export const RETRAIT_BATIMENT = 0.3
+
+export const CALAGES: Record<IdBatiment, Calage> = {
+  // La mine (10 × 10) : l'image fournie, redressée pour que son emprise soit déjà un losange du jeu.
+  puits: { largeur: 1680, hauteur: 1004, gauche: { x: 40, y: 500 }, bas: { x: 840, y: 964 }, droite: { x: 1640, y: 500 }, retrait: 0 },
+  bazar: { largeur: 1120, hauteur: 1020, gauche: { x: 2, y: 726 }, bas: { x: 458, y: 1016 }, droite: { x: 1116, y: 718 } },
+  enchanteur: { largeur: 1120, hauteur: 1022, gauche: { x: 0, y: 704 }, bas: { x: 520, y: 1020 }, droite: { x: 1118, y: 678 } },
+  foreuse: { largeur: 1120, hauteur: 1130, gauche: { x: 2, y: 752 }, bas: { x: 568, y: 1128 }, droite: { x: 1116, y: 792 } },
+  forgeron: { largeur: 1120, hauteur: 1016, gauche: { x: 4, y: 686 }, bas: { x: 444, y: 1014 }, droite: { x: 1116, y: 706 } },
+  marche: { largeur: 1120, hauteur: 914, gauche: { x: 2, y: 636 }, bas: { x: 480, y: 910 }, droite: { x: 1118, y: 562 } },
+  employes: { largeur: 1120, hauteur: 1020, gauche: { x: 2, y: 670 }, bas: { x: 436, y: 1014 }, droite: { x: 1114, y: 732 } },
+  prestige: { largeur: 1120, hauteur: 1030, gauche: { x: 2, y: 712 }, bas: { x: 452, y: 1026 }, droite: { x: 1114, y: 788 } },
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille) : les trois coins du
@@ -67,9 +80,10 @@ export function transformationSprite(calage: Calage, x: number, y: number, taill
   const g = miroir ? { x: calage.largeur - calage.droite.x, y: calage.droite.y } : calage.gauche
   const b = miroir ? { x: calage.largeur - calage.bas.x, y: calage.bas.y } : calage.bas
   const d = miroir ? { x: calage.largeur - calage.gauche.x, y: calage.gauche.y } : calage.droite
-  const G = versEcran(x, y + taille)
-  const B = versEcran(x + taille, y + taille)
-  const D = versEcran(x + taille, y)
+  const r = calage.retrait ?? RETRAIT_BATIMENT
+  const G = versEcran(x + r, y + taille - r)
+  const B = versEcran(x + taille - r, y + taille - r)
+  const D = versEcran(x + taille - r, y + r)
   // On cherche a, b, c, d, e, f tels que : X = a·u + c·v + e et Y = b·u + d·v + f
   // pour les trois couples de points (u, v) → (X, Y).
   const det = g.x * (b.y - d.y) - g.y * (b.x - d.x) + (b.x * d.y - d.x * b.y)
@@ -87,7 +101,8 @@ export function transformationSprite(calage: Calage, x: number, y: number, taill
   return `matrix(${a}, ${bb}, ${c}, ${dd}, ${e}, ${f}) ${retourne}`.trim()
 }
 
-export const IMAGES_BATIMENTS: Record<Exclude<IdBatiment, 'puits'>, string> = {
+export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
+  puits: '/images/batiments/mine.webp',
   bazar: '/images/batiments/bazar.webp',
   enchanteur: '/images/batiments/enchanteur.webp',
   foreuse: '/images/batiments/foreuse.webp',

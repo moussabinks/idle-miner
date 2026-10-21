@@ -73,7 +73,18 @@ import { marquerStandVu, standsAvecNouveauxNiveaux } from './jeu/objectifs'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { pointsDisponibles } from './jeu/talents'
-import { batimentPose, caseAcces, cleCase, empriseBatiment, empriseDecoration, empriseLibre, porte, type Case, type Occupant } from './jeu/village'
+import {
+  RAYON_BATIMENT,
+  batimentPose,
+  caseAccesProche,
+  cleCase,
+  distanceAuBatiment,
+  empriseBatiment,
+  empriseDecoration,
+  empriseLibre,
+  type Case,
+  type Occupant,
+} from './jeu/village'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
@@ -148,6 +159,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   const [ongletMine, setOngletMine] = useState<OngletMine>('sac')
+  // Le petit menu ⚙️ (changer de monde, recommencer), l'aide ❔ du village, et le panneau du sac
+  // dans la mine sur téléphone (il s'ouvre avec le bouton 🎒 : sinon il cacherait la mine).
+  const [reglagesOuverts, setReglagesOuverts] = useState(false)
+  const [aideOuverte, setAideOuverte] = useState(false)
+  const [sacOuvert, setSacOuvert] = useState(false)
   const [versLaGauche, setVersLaGauche] = useState(false)
 
   // --- Où est le joueur : au village (vue du ciel) ou dans la mine (vue en coupe) ---
@@ -176,6 +192,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // --- Construire, décorer, modifier -----------------------------------------
   const [menuConstruction, setMenuConstruction] = useState<OngletConstruction | null>(null)
   const [fantome, setFantome] = useState<Fantome | null>(null)
+  // Le placement se fait en deux temps : le fantôme suit la souris, un clic sur la carte le
+  // « fixe » (sans rien construire), puis le bouton « Construire ici » le pose. Sinon, en allant
+  // vers le bouton, la souris emmenait le bâtiment avec elle.
+  const [fantomeFixe, setFantomeFixe] = useState(false)
   const [pinceau, setPinceau] = useState<TypeSol | null>(null)
   const [modifier, setModifier] = useState(false)
   const edition = fantome !== null || pinceau !== null || modifier
@@ -209,11 +229,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
 
   function poserBatiment(id: IdBatiment) {
     setMenuConstruction(null)
+    setFantomeFixe(false)
     setFantome({ type: 'batiment', id, ...placeProche(BATIMENTS[id].taille), miroir: false })
   }
 
   function poserDecoration(id: IdDecoration) {
     setMenuConstruction(null)
+    setFantomeFixe(false)
     setFantome({ type: 'decoration', id, n: null, ...placeProche(DECORATIONS[id].taille), miroir: false })
   }
 
@@ -266,17 +288,22 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     if (peutPoserSol(etat, pinceau, c.x, c.y)) jouer((e) => poserSol(e, pinceau, c.x, c.y))
   }
 
-  // --- Les bâtiments : on marche jusqu'à la porte, puis le panneau s'ouvre ---
+  // --- Les bâtiments : on marche jusqu'à eux, puis le panneau s'ouvre ---
   const [panneauFerme, setPanneauFerme] = useState(false)
 
-  // Le bâtiment devant lequel se tient le joueur (près de sa porte).
+  // Le bâtiment près duquel se tient le joueur : à moins de RAYON_BATIMENT cases de son bord,
+  // de n'importe quel côté (plus besoin de chercher la porte).
+  // Le bâtiment qu'on a touché pour y aller : s'il est assez près, c'est lui qu'on ouvre (même si
+  // un autre bâtiment voisin est aussi près, par exemple entre la forge et la mine).
+  const [batimentVise, setBatimentVise] = useState<IdBatiment | null>(null)
   let batimentProche: IdBatiment | null = null
-  if (enVille && transition === null) {
-    let meilleure = 1.4
+  const vise = batimentVise ? batimentPose(etat.village, batimentVise) : null
+  if (enVille && transition === null && vise && distanceAuBatiment(vise, joueur.x, joueur.y) < RAYON_BATIMENT) {
+    batimentProche = vise.id
+  } else if (enVille && transition === null) {
+    let meilleure = RAYON_BATIMENT
     for (const b of etat.village.batiments) {
-      const p = porte(b)
-      const acces = caseAcces(etat.village, b)
-      const distance = Math.min(Math.hypot(p.x - joueur.x, p.y - joueur.y), Math.hypot(acces.x + 0.5 - joueur.x, acces.y + 0.5 - joueur.y))
+      const distance = distanceAuBatiment(b, joueur.x, joueur.y)
       if (distance < meilleure) {
         meilleure = distance
         batimentProche = b.id
@@ -298,9 +325,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       const b = batimentPose(etat.village, id)
       if (!b) return
       setPanneauFerme(false)
-      village.allerVers(caseAcces(etat.village, b), quandArrive)
+      setBatimentVise(id)
+      // Il marche jusqu'au côté du bâtiment le plus proche de lui.
+      village.allerVers(caseAccesProche(etat.village, b, joueur), quandArrive)
     },
-    [etat.village, village],
+    [etat.village, village, joueur],
   )
 
   // Arrivé devant un bâtiment tout juste débloqué (foreuse, Personnel, recruteur, manager) :
@@ -319,11 +348,15 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   function toucherCarte(c: Case, cible: CibleVillage | null) {
     if (pinceau !== null) return
     if (fantome !== null) {
+      // Un clic pose le fantôme à cet endroit et l'y fixe : on peut alors aller cliquer sur
+      // « Construire ici » sans l'emmener. Un autre clic le déplace (il reste fixé).
       deplacerFantome(c)
+      setFantomeFixe(true)
       return
     }
     if (modifier) {
-      // On choisit l'élément à déplacer.
+      // On choisit l'élément à déplacer : il est déjà à sa place, donc fixé.
+      setFantomeFixe(true)
       if (cible?.type === 'batiment') {
         const b = batimentPose(etat.village, cible.id)
         if (b) setFantome({ type: 'batiment', id: b.id, x: b.x, y: b.y, miroir: b.miroir })
@@ -336,7 +369,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       return
     }
     if (cible?.type === 'batiment') allerAuBatiment(cible.id)
-    else village.allerVers(c)
+    else {
+      setBatimentVise(null)
+      village.allerVers(c)
+    }
   }
 
   // --- Entrer dans la mine (et en sortir) ---
@@ -418,7 +454,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         const direction = FLECHES[touche]
         if (!direction || menuConstruction !== null) return
         evenement.preventDefault()
-        if (!evenement.repeat) village.fleche(direction, true)
+        if (!evenement.repeat) {
+          setBatimentVise(null)
+          village.fleche(direction, true)
+        }
         return
       }
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(touche)) return
@@ -522,23 +561,31 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         )}
       </section>
     )
-  } else if (enVille) {
+  } else if (enVille && aideOuverte) {
     panneau = (
       <section className="carte panneau panneau-aide-village">
-        <h2>🏡 Ton village</h2>
+        <div className="entete-panneau">
+          <h2>🏡 Ton village</h2>
+          <button className="bouton-fermer" onClick={() => setAideOuverte(false)} aria-label="Fermer">
+            ✖
+          </button>
+        </div>
         <p className="discret">
           Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, <kbd>Espace</kbd> pour sauter). Fais glisser la carte pour la
           déplacer, pince ou utilise la molette pour zoomer.
         </p>
         <p className="discret">
-          Les menus <strong>Bâtiments</strong> et <strong>Décos</strong> en bas servent à construire, <strong>Modifier</strong> à déplacer ou
-          retourner ce qui est posé.
+          Les boutons <strong>Bâtiments</strong> et <strong>Décos</strong> en bas à droite servent à construire, <strong>Modifier</strong> à
+          déplacer ou retourner ce qui est posé, et <strong>Mine</strong> (en bas à gauche) à descendre creuser.
         </p>
       </section>
     )
-  } else {
+  } else if (!enVille) {
     panneau = (
-      <section className="carte panneau">
+      <section className={`carte panneau panneau-sac ${sacOuvert ? 'sac-ouvert' : ''}`}>
+        <button className="bouton-fermer fermer-sac" onClick={() => setSacOuvert(false)} aria-label="Fermer le sac">
+          ✖
+        </button>
         <nav className="onglets" role="tablist">
           <button role="tab" aria-selected={ongletMine === 'sac'} className={`onglet ${ongletMine === 'sac' ? 'actif' : ''}`} onClick={() => setOngletMine('sac')}>
             🎒 Sac
@@ -571,6 +618,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     const peutRetirer = (fantome.type === 'decoration' && fantome.n !== null) || (fantome.type === 'sol' && fantome.de !== null)
     barre = (
       <div className="actions actions-edition">
+        {!fantomeFixe && <p className="consigne-edition">👆 Clique (ou touche) la carte pour placer, puis valide.</p>}
         <button className="bouton bouton-vendre" disabled={!libre} onClick={validerFantome}>
           ✔ {nouveau ? (fantome.type === 'decoration' ? `Poser (${DECORATIONS[fantome.id].prix} $)` : 'Construire ici') : 'Poser ici'}
         </button>
@@ -613,20 +661,28 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     )
   } else if (enVille) {
     barre = (
+      // Comme dans Clash of Clans : de gros boutons ronds posés sur la carte, la mine en bas à
+      // gauche, la construction en bas à droite.
       <div className="actions actions-village">
-        <button className="bouton bouton-construire" onClick={() => ouvrirConstruction('batiments')}>
-          <span className="emoji-bouton">🏗️ </span>Bâtiments
-          {nbNouveautes > 0 && <span className="badge-menu">{nbNouveautes}</span>}
+        <button className="bouton bouton-rond bouton-voyage bouton-rond-gros" onClick={entrerDansLaMine} disabled={transition !== null}>
+          <span className="icone-rond" aria-hidden="true">⛏️</span>
+          <span className="texte-rond">Mine</span>
         </button>
-        <button className="bouton bouton-decorer" onClick={() => ouvrirConstruction('decorations')}>
-          <span className="emoji-bouton">🌸 </span>Décos
-        </button>
-        <button className="bouton bouton-neutre" onClick={() => setModifier(true)}>
-          <span className="emoji-bouton">✏️ </span>Modifier
-        </button>
-        <button className="bouton bouton-voyage" onClick={entrerDansLaMine} disabled={transition !== null}>
-          <span className="emoji-bouton">⛏️ </span>Mine
-        </button>
+        <div className="groupe-boutons-ronds">
+          <button className="bouton bouton-rond bouton-neutre" onClick={() => setModifier(true)}>
+            <span className="icone-rond" aria-hidden="true">✏️</span>
+            <span className="texte-rond">Modifier</span>
+          </button>
+          <button className="bouton bouton-rond bouton-decorer" onClick={() => ouvrirConstruction('decorations')}>
+            <span className="icone-rond" aria-hidden="true">🌸</span>
+            <span className="texte-rond">Décos</span>
+          </button>
+          <button className="bouton bouton-rond bouton-construire bouton-rond-gros" onClick={() => ouvrirConstruction('batiments')}>
+            <span className="icone-rond" aria-hidden="true">🏗️</span>
+            <span className="texte-rond">Bâtiments</span>
+            {nbNouveautes > 0 && <span className="badge-menu">{nbNouveautes}</span>}
+          </button>
+        </div>
       </div>
     )
   } else {
@@ -664,56 +720,93 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         <button className="bouton bouton-voyage" onClick={allerAuFront} disabled={auFront || dansLaCabine}>
           <span className="emoji-bouton">⛏️ </span>Front
         </button>
+        {/* Sur téléphone, le sac s'ouvre par-dessus la mine avec ce bouton (sur ordinateur, il est toujours là). */}
+        <button className={`bouton bouton-mettre-sac bouton-sac-telephone ${sacOuvert ? 'actif' : ''}`} onClick={() => setSacOuvert(!sacOuvert)}>
+          <span className="emoji-bouton">🎒 </span>Sac
+        </button>
       </div>
     )
   }
 
   return (
-    <div className={`jeu ${enVille ? 'mode-village' : 'mode-mine'} ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${batimentActif ? 'avec-panneau' : ''}`}>
-      <header className="entete">
-        <h1 className="titre titre-jeu">⛏️ Mega Digger</h1>
-        {/* Petit lien discret (avec confirmation) : il efface la partie de ce monde. */}
-        <button className="lien lien-recommencer" onClick={demanderRecommencer}>
-          Recommencer à zéro
-        </button>
-        {/* Le monde en cours : on clique pour revenir à l'écran d'accueil (la partie est sauvegardée). */}
-        <button className="bouton-succes bouton-monde" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
-          🌍 {monde.nom}
-        </button>
-        {/* Les statistiques et les succès : de petits boutons discrets, ils s'ouvrent dans une fenêtre. */}
-        <button className="bouton-succes" onClick={() => setStatsOuvertes(true)} title="Voir les statistiques">
-          📊 Stats
-        </button>
-        <button className="bouton-succes" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
-          🏅 {etat.succes.length}/{SUCCES.length}
-        </button>
-      </header>
-      <Hud etat={etat} nbVentes={nbVentes} enMinage={enMinage} onOuvrirArbre={() => setArbreOuvert(true)} />
-      <ProchainObjectif etat={etat} onAllerAuStand={allerAuStand} onConstruire={() => (enVille ? ouvrirConstruction('batiments') : allerAuVillage())} />
+    <div className={`jeu plein-ecran ${enVille ? 'mode-village' : 'mode-mine'} ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${panneau ? 'avec-panneau' : ''}`}>
+      {/* La scène prend tout l'écran : le village vu du ciel, ou la mine en coupe. */}
+      <main className="scene">
+        {enVille ? (
+          <VueVillage
+            etat={etat}
+            joueur={joueur}
+            notifications={notificationsBatiments(etat)}
+            batimentActif={batimentActif}
+            fantome={fantome}
+            fantomeLibre={libre}
+            pinceau={pinceau !== null}
+            onTap={toucherCarte}
+            onSurvol={(c) => {
+              if (!fantomeFixe) deplacerFantome(c)
+            }}
+            onGlisser={deplacerFantome}
+            onPeindre={peindre}
+            transition={transition}
+            onTransitionFinie={finTransition}
+            panneauOuvert={panneau !== null}
+          />
+        ) : (
+          <div className="entree-dans-la-mine">
+            <VueMonde etat={etat} enMinage={enMinage} versLaGauche={versLaGauche} gains={gains} eclats={eclats} trouvailles={trouvailles} />
+          </div>
+        )}
+      </main>
 
-      <main className="plateau">
-        <div className="colonne-mine">
-          {enVille ? (
-            <VueVillage
-              etat={etat}
-              joueur={joueur}
-              notifications={notificationsBatiments(etat)}
-              batimentActif={batimentActif}
-              edition={edition}
-              fantome={fantome}
-              fantomeLibre={libre}
-              pinceau={pinceau !== null}
-              onTap={toucherCarte}
-              onSurvol={deplacerFantome}
-              onPeindre={peindre}
-              transition={transition}
-              onTransitionFinie={finTransition}
-            />
-          ) : (
-            <div className="entree-dans-la-mine">
-              <VueMonde etat={etat} enMinage={enMinage} versLaGauche={versLaGauche} gains={gains} eclats={eclats} trouvailles={trouvailles} />
-            </div>
-          )}
+      {/* Tout le reste est posé par-dessus la scène, comme dans Clash of Clans. */}
+      <div className="interface">
+        <div className="interface-haut">
+          {/* En haut à gauche : le monde, les stats, les succès, les réglages (et l'aide au village). */}
+          <nav className="boutons-coin" aria-label="Menu du jeu">
+            <button className="bouton-coin" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
+              <span aria-hidden="true">🌍</span>
+              <span className="texte-coin">{monde.nom}</span>
+            </button>
+            <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Voir les statistiques">
+              <span aria-hidden="true">📊</span>
+              <span className="texte-coin">Stats</span>
+            </button>
+            <button className="bouton-coin" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
+              <span aria-hidden="true">🏅</span>
+              <span className="texte-coin">
+                {etat.succes.length}/{SUCCES.length}
+              </span>
+            </button>
+            {enVille && (
+              <button className={`bouton-coin ${aideOuverte ? 'actif' : ''}`} onClick={() => setAideOuverte(!aideOuverte)} title="Aide">
+                <span aria-hidden="true">❔</span>
+                <span className="texte-coin">Aide</span>
+              </button>
+            )}
+            <button className={`bouton-coin ${reglagesOuverts ? 'actif' : ''}`} onClick={() => setReglagesOuverts(!reglagesOuverts)} title="Réglages">
+              <span aria-hidden="true">⚙️</span>
+              <span className="texte-coin">Réglages</span>
+            </button>
+            {reglagesOuverts && (
+              <div className="menu-reglages carte">
+                <button className="bouton bouton-petit bouton-neutre" onClick={onQuitter}>
+                  🌍 Changer de monde
+                </button>
+                {/* Avec confirmation : il efface la partie de ce monde. */}
+                <button className="bouton bouton-petit bouton-stop" onClick={demanderRecommencer}>
+                  🔄 Recommencer à zéro
+                </button>
+              </div>
+            )}
+          </nav>
+          <Hud etat={etat} nbVentes={nbVentes} enMinage={enMinage} onOuvrirArbre={() => setArbreOuvert(true)} />
+        </div>
+        <ProchainObjectif etat={etat} onAllerAuStand={allerAuStand} onConstruire={() => (enVille ? ouvrirConstruction('batiments') : allerAuVillage())} />
+
+        {/* Le panneau du bâtiment (ou le sac dans la mine), par-dessus la carte. */}
+        {panneau && <div className="panneau-flottant">{panneau}</div>}
+
+        <div className="interface-bas">
           {barre}
           {/* Un petit rappel : on se déplace avec les flèches du clavier. */}
           <p className="aide-clavier">
@@ -729,12 +822,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </p>
         </div>
 
-        <div className="colonne-panneaux">
-          {panneau}
-          {/* Les notifications, sous le panneau de droite : bien visibles, sans cacher le jeu. */}
-          <Toasts toasts={toasts} />
-        </div>
-      </main>
+        <Toasts toasts={toasts} />
+      </div>
 
       {menuConstruction !== null && (
         <MenuConstruction
