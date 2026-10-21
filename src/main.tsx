@@ -7,6 +7,7 @@ import './accueil.css'
 import './personnel.css'
 import './village.css'
 import './plein-ecran.css'
+import './interface.css'
 import App from './App.tsx'
 import { enregistrerServiceWorker } from './installation'
 

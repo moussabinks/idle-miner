@@ -8,7 +8,8 @@
 // annuler ce qu'on est en train de poser.
 
 import { useCallback, useEffect, useState } from 'react'
-import { reglerLieu } from './ambiance'
+import { basculerMusique, musiqueActive, reglerLieu } from './ambiance'
+import { basculerSon, sonActif } from './sons'
 import { Accueil } from './composants/Accueil'
 import { ProchainObjectif } from './composants/ProchainObjectif'
 import { Gains } from './composants/Gains'
@@ -55,10 +56,18 @@ import {
   type Case,
   type Occupant,
 } from './jeu/village'
+import { capaciteCoffre, coffrePlein, nbDansCoffre, nbDansSac, sacPlein, valeurDe } from './jeu/mineur'
 import { joueurPousse } from './jeu/wagonnet'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
+
+// « 950 », « 12 k », « 3,2 M » : un montant en court, pour les petits badges.
+function nombreAbrege(n: number): string {
+  if (n < 1000) return String(Math.floor(n))
+  if (n < 1_000_000) return `${Math.floor(n / 1000)} k`
+  return `${(n / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M`
+}
 
 const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }
 
@@ -70,6 +79,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
   const [reglagesOuverts, setReglagesOuverts] = useState(false)
   const [aideOuverte, setAideOuverte] = useState(false)
+  // Le son et la musique se règlent dans le menu ⚙️.
+  const [son, setSon] = useState(sonActif)
+  const [musique, setMusique] = useState(musiqueActive)
 
   // Pendant que le joueur pousse le wagonnet, il fait l'aller-retour avec lui : il ne marche pas.
   const pousse = joueurPousse(etat)
@@ -410,6 +422,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // La barre de boutons du bas : au village (construire, décorer, modifier, la mine), ou pendant
   // qu'on pose quelque chose (valider, retourner, annuler).
   // La pastille du menu Bâtiments : les nouveautés pas encore vues, et ce qu'on peut construire tout de suite.
+  const coffreRempli = coffrePlein(etat)
+  const remplissageCoffre = nbDansCoffre(etat) / Math.max(1, capaciteCoffre(etat))
   const nbNouveautes = new Set([...nouveautesBatiments(etat), ...batimentsConstructibles(etat)]).size
   const libre = fantomeLibre(fantome)
   let barre
@@ -464,20 +478,47 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       // Comme dans Clash of Clans : de gros boutons ronds posés sur la carte, la mine en bas à
       // gauche, la construction en bas à droite.
       <div className="actions actions-village">
-        <button className="bouton bouton-rond bouton-voyage bouton-rond-gros" onClick={allerALaMine} disabled={pousse}>
-          <span className="icone-rond" aria-hidden="true">⛏️</span>
-          <span className="texte-rond">{pousse ? 'Wagonnet…' : 'Mine'}</span>
-        </button>
         <div className="groupe-boutons-ronds">
-          <button className="bouton bouton-rond bouton-neutre" onClick={() => setModifier(true)}>
+          {/* La mine : son anneau doré se remplit avec le coffre. */}
+          <button
+            className={`bouton bouton-rond bouton-rond-gros bouton-mine ${coffreRempli ? 'bouton-attention' : ''}`}
+            style={{ ['--remplissage' as string]: `${Math.round(remplissageCoffre * 100)}%` }}
+            onClick={allerALaMine}
+            disabled={pousse}
+            title={`Aller à la mine · coffre ${nbDansCoffre(etat)} / ${capaciteCoffre(etat)}`}
+          >
+            <span className="icone-rond" aria-hidden="true">⛏️</span>
+            <span className="texte-rond">{pousse ? 'Wagonnet…' : 'Mine'}</span>
+            {coffreRempli && <span className="badge-menu">!</span>}
+          </button>
+          {/* Le marché : seulement quand on a quelque chose à vendre dans son sac. */}
+          {batimentPose(etat.village, 'marche') && nbDansSac(etat) > 0 && (
+            <button
+              className={`bouton bouton-rond bouton-marche-rapide ${sacPlein(etat) ? 'bouton-attention' : ''}`}
+              onClick={() => !pousse && allerAuBatiment('marche')}
+              disabled={pousse}
+              title={`Aller vendre au marché · ${valeurDe(etat.inventaire).toLocaleString('fr-FR')} $ dans ton sac`}
+            >
+              <span className="icone-rond" aria-hidden="true">💰</span>
+              <span className="texte-rond">Vendre</span>
+              <span className="badge-menu badge-vert">{nombreAbrege(valeurDe(etat.inventaire))} $</span>
+            </button>
+          )}
+        </div>
+        <div className="groupe-boutons-ronds">
+          <button className="bouton bouton-rond bouton-petit-rond bouton-neutre" onClick={() => setModifier(true)} title="Déplacer ou retourner ce qui est posé">
             <span className="icone-rond" aria-hidden="true">✏️</span>
             <span className="texte-rond">Modifier</span>
           </button>
-          <button className="bouton bouton-rond bouton-decorer" onClick={() => ouvrirConstruction('decorations')}>
+          <button className="bouton bouton-rond bouton-decorer" onClick={() => ouvrirConstruction('decorations')} title="Fleurs, arbres, chemins...">
             <span className="icone-rond" aria-hidden="true">🌸</span>
             <span className="texte-rond">Décos</span>
           </button>
-          <button className="bouton bouton-rond bouton-construire bouton-rond-gros" onClick={() => ouvrirConstruction('batiments')}>
+          <button
+            className={`bouton bouton-rond bouton-construire bouton-rond-gros ${nbNouveautes > 0 ? 'bouton-attention' : ''}`}
+            onClick={() => ouvrirConstruction('batiments')}
+            title="Construire des bâtiments et poser des rails"
+          >
             <span className="icone-rond" aria-hidden="true">🏗️</span>
             <span className="texte-rond">Bâtiments</span>
             {nbNouveautes > 0 && <span className="badge-menu">{nbNouveautes}</span>}
@@ -515,32 +556,30 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         <div className="interface-haut">
           {/* En haut à gauche : le monde, les stats, les succès, l'aide et les réglages. */}
           <nav className="boutons-coin" aria-label="Menu du jeu">
-            <button className="bouton-coin" onClick={onQuitter} title="Changer de monde (ta partie est sauvegardée automatiquement)">
-              <span aria-hidden="true">🌍</span>
-              <span className="texte-coin">{monde.nom}</span>
-            </button>
-            <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Voir les statistiques">
+            <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Statistiques">
               <span aria-hidden="true">📊</span>
-              <span className="texte-coin">Stats</span>
             </button>
-            <button className="bouton-coin" onClick={() => setSuccesOuverts(true)} title="Voir les succès">
+            <button className="bouton-coin" onClick={() => setSuccesOuverts(true)} title={`Succès : ${etat.succes.length} / ${SUCCES.length}`}>
               <span aria-hidden="true">🏅</span>
-              <span className="texte-coin">
-                {etat.succes.length}/{SUCCES.length}
-              </span>
+              <span className="compteur-coin">{etat.succes.length}</span>
             </button>
             <button className={`bouton-coin ${aideOuverte ? 'actif' : ''}`} onClick={() => setAideOuverte(!aideOuverte)} title="Aide">
               <span aria-hidden="true">❔</span>
-              <span className="texte-coin">Aide</span>
             </button>
             <button className={`bouton-coin ${reglagesOuverts ? 'actif' : ''}`} onClick={() => setReglagesOuverts(!reglagesOuverts)} title="Réglages">
               <span aria-hidden="true">⚙️</span>
-              <span className="texte-coin">Réglages</span>
             </button>
             {reglagesOuverts && (
               <div className="menu-reglages carte">
+                <strong className="menu-reglages-titre">🌍 {monde.nom}</strong>
                 <button className="bouton bouton-petit bouton-neutre" onClick={onQuitter}>
                   🌍 Changer de monde
+                </button>
+                <button className="bouton bouton-petit bouton-neutre" onClick={() => setSon(basculerSon())}>
+                  {son ? '🔊 Son : oui' : '🔇 Son : non'}
+                </button>
+                <button className="bouton bouton-petit bouton-neutre" onClick={() => setMusique(basculerMusique())}>
+                  {musique ? '🎵 Musique : oui' : '🎵 Musique : non'}
                 </button>
                 {/* Avec confirmation : il efface la partie de ce monde. */}
                 <button className="bouton bouton-petit bouton-stop" onClick={demanderRecommencer}>

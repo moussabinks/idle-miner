@@ -34,6 +34,7 @@ import {
   LosangeEmprise,
   TerrainVillage,
 } from './DessinsVillage'
+import { AmbianceVillage } from './AmbianceVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
@@ -289,7 +290,11 @@ export function VueVillage({
       )
       continue
     }
-    const classes = [actif ? 'sprite-actif' : '', b.id === 'foreuse' && foreuseEnMarche(etat) ? 'sprite-vibre' : ''].join(' ')
+    const classes = [
+      actif ? 'sprite-actif' : '',
+      b.id === 'foreuse' && foreuseEnMarche(etat) ? 'sprite-vibre' : '',
+      b.id === 'generateur' && generateurEnMarche(etat) && !actif ? 'sprite-electrique' : '',
+    ].join(' ')
     objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe={classes} />)
   }
 
@@ -448,11 +453,19 @@ export function VueVillage({
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onTap({ x: b.x, y: b.y }, { type: 'batiment', id: b.id })}
       >
-        {liste.slice(0, 2).map((n, i) => (
-          <span key={i} className="bulle-icone">
-            {n.icone}
+        {/* La plus urgente en grand (son icône et deux mots), et combien d'autres attendent. */}
+        <span className="bulle-medaille">
+          <span className="bulle-icone">{liste[0].icone}</span>
+        </span>
+        <span className="bulle-court">{liste[0].court}</span>
+        {liste.length > 1 && <span className="bulle-compte">+{liste.length - 1}</span>}
+        {liste[0].sorte === 'achat' && (
+          <span className="bulle-etincelles">
+            <i />
+            <i />
+            <i />
           </span>
-        ))}
+        )}
       </button>,
     )
   }
@@ -546,6 +559,7 @@ export function VueVillage({
         <div className="objets-village">{objets}</div>
         <ObjetsPlage />
         <ForetDevant vue={vueForet} />
+        <AmbianceVillage />
         <div className="bulles-village">{bulles}</div>
       </div>
     </div>

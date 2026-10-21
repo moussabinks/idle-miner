@@ -166,29 +166,28 @@ Un seul mode (classe `jeu plein-ecran mode-village`) : le **village vu du ciel**
 
 ### 4.1 Les boutons du coin (`App.tsx`)
 
-Une colonne de boutons carrés en bois, en haut à gauche (54 px, 44 px sur téléphone, sans texte).
+Une colonne de petits boutons carrés en bois, en haut à gauche, **sans texte** (42 px, 38 px sur téléphone ; le nom est dans l'info-bulle). Depuis le 23/10, il y en a 4 :
 
 | Bouton | Effet |
 |---|---|
-| **🌍 *nom du monde*** | retour à l'accueil (bulle : « Changer de monde (ta partie est sauvegardée automatiquement) ») |
-| **📊 Stats** | ouvre la [fenêtre des statistiques](#102-les-statistiques-statistiquestsx) |
-| **🏅 *n*/*total*** | ouvre la [fenêtre des succès](#101-les-succès) |
-| **❔ Aide** | ouvre ou ferme le panneau « 🏡 Ton village » (comment se déplacer, creuser, vendre, poser des rails, construire) |
-| **⚙️ Réglages** | ouvre un petit menu : **🌍 Changer de monde** et **🔄 Recommencer à zéro** (confirmation « Effacer la partie du monde « … » et tout recommencer (village et succès compris) ? ») |
+| **📊** | ouvre la [fenêtre des statistiques](#102-les-statistiques-statistiquestsx) |
+| **🏅** (avec un badge doré : le nombre de succès) | ouvre la [fenêtre des succès](#101-les-succès) |
+| **❔** | ouvre ou ferme le panneau « 🏡 Ton village » (comment se déplacer, creuser, vendre, poser des rails, construire) |
+| **⚙️** | ouvre un petit menu : le nom du monde, **🌍 Changer de monde**, **🔊 Son : oui / non**, **🎵 Musique : oui / non** et **🔄 Recommencer à zéro** (confirmation « Effacer la partie du monde « … » et tout recommencer (village et succès compris) ? ») |
 
-### 4.2 Le bandeau (`Hud.tsx`)
+### 4.2 Le bandeau (`Hud.tsx`, styles dans `src/interface.css`)
 
-5 cases de hauteur fixe pour que rien ne bouge en dessous :
+Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 px sur téléphone, sur deux lignes si besoin). Chaque case a une icône dans un rond, une valeur et une mini-jauge ; le détail est dans l'info-bulle. Une case **rougit et palpite** quand il faut agir.
 
-| Case | Titre (petit) | Contenu |
+| Case | Contenu | Alerte |
 |---|---|---|
-| **Argent** | « Argent 📈 *x* $/s » : ce que la mine produit par seconde (`revenuParSeconde`), vert s'il est positif ; il peut être négatif si les salaires coûtent plus que ce qui sort. Bulle : le détail mine / mineurs / foreuse | « 💵 *montant* $ » en or. Le nombre **défile** jusqu'à la nouvelle valeur et **saute** à chaque vente |
-| **Mine** | « 🕳️ Mine niv. *N* · *nom du niveau* », ou « 📦 Coffre plein ! Va vendre » | la barre du coffre « 📦 *n* / *capacité* » (dorée ; rouge, la case clignote et tremble quand il est plein) |
-| **Pioche** | « *emoji* Pioche en *nom* », ou « 💥 Pioche cassée (2 clics par bloc) » | barre de durabilité verte « *reste* / *max* » (rouge « Cassée ! ») |
-| **Sac** | « 🎒 Sac », ou « 🎒 Sac plein ! Va vendre au marché » | barre dorée « *n* / *taille* » ; **sac plein** : barre rouge, la case clignote |
-| **Petits** | — | « 👷 *n* » (si on a des mineurs), « ⚡ » (si les rails sont électriques), bouton **🔊/🔇**, bouton **🎵** |
+| **💵 Argent** | le montant en or (en court au-delà de 10 000 : « 12,5 k », « 3,2 M » ; il **défile** jusqu'à la nouvelle valeur et **saute** à chaque vente), dessous « +*x*/s » : ce que la mine produit par seconde (`revenuParSeconde`), en vert s'il est positif. Info-bulle : le détail mine / mineurs / foreuse | — |
+| **📦 Coffre** (badge doré : le niveau de la mine) | « *n*/*capacité* » et une jauge dorée | coffre plein |
+| **⛏️ Pioche** | « *reste*/*max* » et une jauge verte (« 💥 Cassée ») | pioche cassée |
+| **🎒 Sac** | « *n*/*taille* » et une jauge bleue | sac plein |
+| **👷 / ⚡** (si on a des mineurs ou des rails électriques) | « 👷 *n* » (« 😠 » si quelqu'un n'est pas payé), « ⚡ » qui brille si les rails sont électriques | mineurs sans salaire |
 
-- **🔊 / 🔇** : coupe ou remet les bruitages. **🎵** : coupe ou remet musique et ambiances. Voir [visuel-et-sons.md § 9](visuel-et-sons.md#9-les-boutons--et-).
+Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 9](visuel-et-sons.md#9-les-boutons--et-).
 
 ---
 
@@ -225,19 +224,19 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 **Toucher la carte** (un appui court, sans glisser) : un **bâtiment** → le hamster y marche (en contournant ce qui gêne), puis son panneau s'ouvre ; une **case** → il y marche. Pendant qu'il pousse le wagonnet, les touchers ne font rien.
 
-**Les bulles de notification** (`src/jeu/notifications.ts`) : une pilule qui saute au-dessus du bâtiment, avec 1 ou 2 icônes (la plus urgente d'abord). Survol : toutes les explications ; clic : on y va.
+**Les bulles de notification** (`src/jeu/notifications.ts`, refaites le 23/10) : au-dessus du bâtiment, une **médaille ronde** avec l'icône de la plus urgente, **deux mots** dans un ruban de couleur (« Plein ! », « Salaires ! », « Achetable »…) et un petit « +*n* » s'il y a d'autres choses à faire là-bas. Elle apparaît avec un petit rebond, sautille, et un reflet passe sur la médaille. Les **alertes** ont en plus un anneau rouge qui s'élargit (comme un radar), les **achats** des étincelles dorées. Survol : toutes les explications ; clic : on y va.
 
-| Sorte (couleur) | Icônes | Bâtiment | Quand |
+| Sorte (couleur) | Icône · mots | Bâtiment | Quand |
 |---|---|---|---|
-| alerte (rouge) | 😠 | Personnel | des mineurs ne sont pas payés |
-| alerte (rouge) | 🛒 / 🔥 | Foreuse | chariot plein / plus de charbon |
-| alerte (rouge) | 🔴 | Générateur | allumé, plus de redstone |
-| alerte (rouge) | 🔧 | Forgeron | ta pioche est cassée |
-| alerte (rouge) | 🎒 | Marché | ton sac est plein |
-| alerte (rouge) | 📦 | Mine | le coffre est plein |
-| prêt (rose) | 📦 | Mine | au moins 20 objets dans le coffre, sans rails jusqu'au marché |
-| nouveau (bleu) | ✨ | Personnel | le recruteur ou le manager vient de se débloquer, pas encore vu |
-| achat (vert) | 💰 | tous | une amélioration y est payable tout de suite |
+| alerte (rouge) | 😠 · Salaires ! | Personnel | des mineurs ne sont pas payés |
+| alerte (rouge) | 🛒 · Plein ! / 🔥 · Charbon ? | Foreuse | chariot plein / plus de charbon |
+| alerte (rouge) | 🔴 · Redstone ? | Générateur | allumé, plus de redstone |
+| alerte (rouge) | 🔧 · Réparer | Forgeron | ta pioche est cassée |
+| alerte (rouge) | 🎒 · Vendre ! | Marché | ton sac est plein |
+| alerte (rouge) | 📦 · Plein ! | Mine | le coffre est plein |
+| prêt (rose) | 📦 · *nombre* | Mine | au moins 20 objets dans le coffre, sans rails jusqu'au marché |
+| nouveau (bleu) | ✨ · Nouveau | Personnel | le recruteur ou le manager vient de se débloquer, pas encore vu |
+| achat (vert) | ⬆️ · Achetable | tous | une amélioration y est payable tout de suite |
 
 **En construction** (placement, pinceau, Modifier) : la grille s'affiche, et ce qu'on pose est un **fantôme** un peu transparent qui pulse, sur un losange **vert** (libre) ou **rouge** (occupé). Voir [§ 7](#7-les-boutons-du-bas).
 
@@ -247,14 +246,15 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 ## 7. Les boutons du bas
 
-**Au village** (`actions-village`, de gros boutons ronds comme dans Clash of Clans) :
+**Au village** (`actions-village`, de gros boutons ronds et brillants comme dans Clash of Clans, avec un reflet en haut ; ils se soulèvent au survol et s'enfoncent au clic) :
 
 | Bouton | Couleur | Effet |
 |---|---|---|
-| **⛏️ Mine** (en bas à gauche) | bois | le hamster marche jusqu'à la mine et son panneau s'ouvre (le bloc à cliquer). Pendant qu'il pousse le wagonnet : grisé, « Wagonnet… » |
-| **🏗️ Bâtiments** | brique | ouvre le menu Bâtiments (et marque les nouveautés comme vues). Une **pastille rouge** qui saute compte les bâtiments **nouveaux** ou **constructibles tout de suite** |
+| **⛏️ Mine** (en bas à gauche) | doré, avec un **anneau qui se remplit comme le coffre** | le hamster marche jusqu'à la mine et son panneau s'ouvre (le bloc à cliquer). Coffre plein : badge « ! » et le bouton respire. Pendant qu'il pousse le wagonnet : grisé, « Wagonnet… » |
+| **💰 Vendre** (à côté de la Mine) | vert, avec un badge : ce que vaut le sac | n'apparaît que si le marché est posé et que le sac n'est pas vide : le hamster va au marché. Sac plein : le bouton respire |
+| **✏️ Modifier** (plus petit) | gris | passe en mode Modifier (déplacer, retourner, enlever ce qui est posé) |
 | **🌸 Décos** | rose fleur | ouvre le menu Décorations |
-| **✏️ Modifier** | gris | passe en mode Modifier (déplacer, retourner, enlever ce qui est posé) |
+| **🏗️ Bâtiments** | brique | ouvre le menu Bâtiments (et marque les nouveautés comme vues). Une **pastille rouge** compte les bâtiments **nouveaux** ou **constructibles tout de suite**, et le bouton respire |
 
 **Pendant qu'on pose quelque chose** (`actions-edition`) :
 

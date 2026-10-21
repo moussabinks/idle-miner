@@ -65,7 +65,7 @@ function losangeClairiere(marge: number): string {
 // plus clairs, et de temps en temps une petite fleur ou un caillou, pour que le damier ait l'air
 // vivant. Toujours aux mêmes places (hasard à graine fixe). Ils sont au sol : les bâtiments, les
 // chemins et les personnages passent par-dessus.
-type Detail = { sorte: 'touffe' | 'brins' | 'fleur' | 'caillou'; x: number; y: number; echelle: number; miroir: boolean; couleur: string }
+type Detail = { sorte: 'touffe' | 'brins' | 'fleur' | 'caillou' | 'champignon' | 'trefle'; x: number; y: number; echelle: number; miroir: boolean; couleur: string }
 
 const COULEURS_FLEURS = ['#ffffff', '#ffe066', '#ff8fb1', '#c9a2ff']
 
@@ -80,7 +80,7 @@ function semerDetails(): Detail[] {
       const x = cx + 0.1 + hasard() * 0.8
       const y = cy + 0.1 + hasard() * 0.8
       const tirage = hasard()
-      const sorte = tirage < 0.6 ? 'touffe' : tirage < 0.88 ? 'brins' : tirage < 0.96 ? 'fleur' : 'caillou'
+      const sorte = tirage < 0.5 ? 'touffe' : tirage < 0.72 ? 'brins' : tirage < 0.86 ? 'fleur' : tirage < 0.92 ? 'trefle' : tirage < 0.975 ? 'caillou' : 'champignon'
       const e = versEcran(x, y)
       details.push({
         sorte,
@@ -98,6 +98,27 @@ function semerDetails(): Detail[] {
 
 const DETAILS_HERBE = semerDetails()
 
+// De grandes taches d'herbe plus sombre ou plus claire (23/10), très floues : le damier n'a
+// plus l'air tout plat, comme un vrai pré. Toujours aux mêmes places.
+const TACHES_HERBE = (() => {
+  const hasard = aleatoireAvecGraine(2310)
+  return Array.from({ length: 26 }, () => {
+    const e = versEcran(2 + hasard() * (TAILLE_GRILLE - 4), 2 + hasard() * (TAILLE_GRILLE - 4))
+    const claire = hasard() < 0.45
+    return { x: e.x, y: e.y, rx: 40 + hasard() * 90, ry: 20 + hasard() * 40, couleur: claire ? '#a6d659' : '#5e9a2a', opacite: 0.22 + hasard() * 0.2 }
+  })
+})()
+
+function TachesHerbe() {
+  return (
+    <g className="taches-herbe" filter="url(#flou-taches)">
+      {TACHES_HERBE.map((t, i) => (
+        <ellipse key={i} cx={t.x} cy={t.y} rx={t.rx} ry={t.ry} fill={t.couleur} opacity={t.opacite} />
+      ))}
+    </g>
+  )
+}
+
 // Les dessins des détails (centrés sur leur pied, en pixels du monde).
 function DetailsHerbe() {
   return (
@@ -107,6 +128,8 @@ function DetailsHerbe() {
         if (d.sorte === 'touffe') return <use key={i} href="#touffe-herbe" transform={transformation} />
         if (d.sorte === 'brins') return <use key={i} href="#brins-herbe" transform={transformation} />
         if (d.sorte === 'caillou') return <use key={i} href="#caillou-herbe" transform={transformation} />
+        if (d.sorte === 'trefle') return <use key={i} href="#trefle-herbe" transform={transformation} />
+        if (d.sorte === 'champignon') return <use key={i} href="#champignon-herbe" transform={transformation} />
         return (
           <g key={i} transform={transformation}>
             <use href="#tige-fleur" />
@@ -147,6 +170,20 @@ export const TerrainVillage = memo(function TerrainVillage() {
           <ellipse cx="0" cy="-0.6" rx="2.4" ry="1.3" fill="#9a958c" />
           <ellipse cx="-0.5" cy="-1" rx="1.2" ry="0.55" fill="#c4bfb5" />
         </g>
+        <g id="trefle-herbe">
+          <circle cx="-1.2" cy="-1.4" r="1.3" fill="#4f9a2c" />
+          <circle cx="1.2" cy="-1.4" r="1.3" fill="#56a432" />
+          <circle cx="0" cy="-2.8" r="1.3" fill="#5fae36" />
+        </g>
+        <g id="champignon-herbe">
+          <rect x="-0.7" y="-3" width="1.4" height="3" rx="0.6" fill="#f3e6d2" />
+          <path d="M-3 -2.6 Q-2.8 -5.6 0 -5.8 Q2.8 -5.6 3 -2.6 Z" fill="#e0483c" />
+          <circle cx="-1.2" cy="-4.2" r="0.55" fill="#fff" />
+          <circle cx="1.1" cy="-3.6" r="0.45" fill="#fff" />
+        </g>
+        <filter id="flou-taches" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="16" />
+        </filter>
         <filter id="flou-aureole" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="38" />
         </filter>
@@ -162,6 +199,7 @@ export const TerrainVillage = memo(function TerrainVillage() {
       <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
       <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
       <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
+      <TachesHerbe />
       <DetailsHerbe />
     </svg>
   )
