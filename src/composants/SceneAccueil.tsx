@@ -39,6 +39,7 @@ const BATIMENTS_SCENE: BatimentPose[] = [
   { id: 'prestige', x: 33, y: 10, miroir: false },
   { id: 'bazar', x: 43, y: 14, miroir: false },
   { id: 'foreuse', x: 41, y: 32, miroir: false },
+  { id: 'generateur', x: 36, y: 4, miroir: false },
 ]
 
 const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: boolean }[] = [

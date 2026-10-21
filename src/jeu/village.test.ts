@@ -80,7 +80,7 @@ describe('le village vu du ciel', () => {
 
   it('la foreuse et le Personnel se débloquent avec le prestige, avec une pastille « Nouveau »', () => {
     const p0 = partie(0)
-    expect(nouveautesBatiments(p0)).toEqual(['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige'])
+    expect(nouveautesBatiments(p0)).toEqual(['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige', 'generateur'])
     marquerBatimentsVus(p0)
     expect(nouveautesBatiments(p0)).toEqual([])
     p0.argent = 100_000

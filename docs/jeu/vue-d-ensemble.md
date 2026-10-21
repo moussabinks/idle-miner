@@ -31,6 +31,7 @@
 | [enchanteur.md](../batiments/enchanteur.md) | 🔮 Enchanteur : Efficacité, Fortune, Solidité | prestige 0 |
 | [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui creuse seule | prestige 1 |
 | [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, salaires, recruteur, manager | prestige 2 (recruteur 4, manager 5) |
+| [generateur.md](../batiments/generateur.md) | ⚡ Générateur : pas encore de rôle | prestige 0 |
 
 Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md), référence historique des règles), l'état du projet et le journal ([../../CONTEXTE.md](../../CONTEXTE.md)), les règles de code ([../../CLAUDE.md](../../CLAUDE.md)).
 
