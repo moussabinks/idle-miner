@@ -1,11 +1,12 @@
-// La vue du monde : le village en haut, puis tout le puits creusé depuis le début
-// jusqu'au front de taille. L'échelle et l'ascenseur longent le puits sur la gauche,
-// et la foreuse (au prestige 1) creuse son propre puits sur la droite.
+// La mine en coupe (la vue 2D) : la surface en haut, puis tout le puits creusé depuis le début
+// jusqu'au front de taille. L'échelle et l'ascenseur longent le puits sur la gauche, la foreuse
+// (au prestige 1) creuse son propre puits sur la droite, et les mineurs employés leur galerie
+// (leur « univers parallèle » de la mine). Le village lui-même est dans VueVillage (vue du ciel).
 // La « caméra » suit le joueur : la vue défile toute seule quand il bouge.
 
 import { Fragment, memo, useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { BLOCS, LARGEUR_MINE, PIOCHES, estRocheDure, profondeurBedrock, zoneDe, type IdBloc } from '../jeu/donnees'
-import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, nbSansSalaire, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
+import { activiteEmploye, iconeActiviteEmploye, nbDansSacEmploye, nbSansSalaire, rareteDe, secondesRestantesEmploye, tailleSacEmploye } from '../jeu/employes'
 import { foreuseDebloquee, foreuseEnMarche } from '../jeu/foreuse'
 import {
   aLaSurface,
@@ -24,17 +25,11 @@ import {
 import { MINERAIS_RARES } from '../evenements'
 import type { Eclat, Gain, Trouvaille } from '../usePartie'
 import { Personnage } from './Personnage'
-import { VueVillage } from './VueVillage'
 
 type Props = {
   etat: EtatJeu
   enMinage: boolean
   versLaGauche: boolean
-  // La marche au village
-  xVillage: number
-  versLaGaucheVillage: boolean
-  enMarcheVillage: boolean
-  onAllerStand: (index: number) => void
   gains: Gain[]
   eclats: Eclat[]
   trouvailles: Trouvaille[]
@@ -206,6 +201,8 @@ function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRange
           </span>
         )
         const couleurPioche = PIOCHES[mineur.niveau]?.couleur ?? PIOCHES[0].couleur
+        // Son casque a la couleur de sa rareté (comme sa carte au Personnel).
+        const habits = { casque: rareteDe(mineur).couleur }
         return (
           <Fragment key={index}>
             {/* Le câble, de la poulie jusqu'au toit de sa cabine. */}
@@ -222,7 +219,7 @@ function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRange
               {!creuse && etiquette(cabinePlusBas)}
               {enRoute && (
                 <div className="passager">
-                  <Personnage couleurPioche={couleurPioche} action="repos" />
+                  <Personnage couleurPioche={couleurPioche} action="repos" habits={habits} />
                 </div>
               )}
               <span className="cabine-grille" aria-hidden="true" />
@@ -235,7 +232,7 @@ function GalerieMineurs({ etat, derniereRangee }: { etat: EtatJeu; derniereRange
                 title={`${mineur.nom} : ${activiteEmploye(etat, mineur)}`}
               >
                 {etiquette(mineurPlusBas)}
-                <Personnage couleurPioche={couleurPioche} action="creuse" />
+                <Personnage couleurPioche={couleurPioche} action="creuse" habits={habits} />
                 {!mineurPlusBas && (
                   <span className={`mineur-bloc case bloc ${estRocheDure(mineur.profondeur, etat.prestige) ? 'bloc-deepslate roche-deepslate' : 'bloc-pierre roche-pierre'}`} aria-hidden="true" />
                 )}
@@ -256,10 +253,6 @@ export function VueMonde({
   etat,
   enMinage,
   versLaGauche,
-  xVillage,
-  versLaGaucheVillage,
-  enMarcheVillage,
-  onAllerStand,
   gains,
   eclats,
   trouvailles,
@@ -404,14 +397,11 @@ export function VueMonde({
         </div>
       )}
 
-      <VueVillage
-        etat={etat}
-        x={xVillage}
-        versLaGauche={versLaGaucheVillage}
-        enMarche={enMarcheVillage}
-        onAllerStand={onAllerStand}
-        joueurRef={joueurVillageRef}
-      />
+      {/* La surface, tout en haut du puits : le ciel, l'herbe et le chevalement de la mine. */}
+      <div className="surface-mine" aria-hidden="true">
+        <span className="surface-soleil" />
+        <span className="surface-panneau">☀️ Village</span>
+      </div>
 
       <div className="puits-mine">
         {/* L'échelle descend du puits jusqu'au front de taille. */}
@@ -438,7 +428,7 @@ export function VueMonde({
               )}
               {dansLaCabine && (
                 <div ref={joueurCabineRef} className="passager">
-                  <Personnage couleurPioche={couleurPioche} action="repos" />
+                  <Personnage couleurPioche={couleurPioche} action="repos" habits={etat.tenue} />
                 </div>
               )}
               {/* La grille passe devant le passager et le chargement. */}
@@ -451,7 +441,7 @@ export function VueMonde({
         {/* Le joueur sur l'échelle. */}
         {surEchelle && (
           <div ref={joueurEchelleRef} className="joueur-echelle" style={{ top: `calc(var(--pas) * ${etat.position - 1})` }}>
-            <Personnage couleurPioche={couleurPioche} action="grimpe" />
+            <Personnage couleurPioche={couleurPioche} action="grimpe" habits={etat.tenue} />
           </div>
         )}
 
@@ -473,6 +463,7 @@ export function VueMonde({
                     {/* S'il part vers le puits, il marche vers la gauche, case par case. */}
                     <Personnage
                       couleurPioche={couleurPioche}
+                      habits={etat.tenue}
                       action={etat.depart ? 'marche' : enMinage ? 'creuse' : 'repos'}
                       // Il part vers le puits (à gauche), il creuse dans le sens de la couche
                       // (en zigzag), ou il regarde là où on l'a fait marcher.

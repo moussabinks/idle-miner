@@ -295,10 +295,10 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
     return (
       <div className="liste-cartes">
         <div className="ligne-achat verrouille">
-          <strong>🔒 Fermé par une barrière</strong>
+          <strong>🔒 Foreuse débloquée au prestige {PRESTIGE_FOREUSE}</strong>
           <span className="discret">
-            Cet espace s'ouvre au prestige {PRESTIGE_FOREUSE}. Atteins la bedrock (-{profondeurBedrock(etat.prestige)} m) puis passe prestige pour y installer une foreuse
-            qui creuse toute seule.
+            Atteins la bedrock (-{profondeurBedrock(etat.prestige)} m) puis passe prestige : tu pourras construire une foreuse qui creuse
+            toute seule.
           </span>
         </div>
       </div>

@@ -1,8 +1,10 @@
-// Les mineurs employés (débloqués au prestige 2), le stand Personnel.
-// Chaque mineur creuse tout seul dans sa propre galerie. Quand son sac est plein, il
-// remonte au village dans sa propre cabine d'ascenseur, vend sa récolte au marché (tout
-// l'argent est pour toi), puis redescend. Les trajets et la vente prennent du temps :
-// pendant ce temps-là, il ne creuse pas.
+// Les mineurs employés (débloqués au prestige 2), le bâtiment Personnel.
+// Chaque mineur creuse tout seul dans sa galerie de la mine commune (un « univers parallèle »,
+// avec sa propre profondeur). Quand son sac est plein, il remonte dans sa cabine d'ascenseur,
+// puis marche jusqu'au marché pour vendre sa récolte (tout l'argent est pour toi) et retourne
+// à la mine. Si une ligne de rails relie la mine au marché, il charge le wagonnet et redescend
+// tout de suite. Quand on améliore sa pioche, il va d'abord la chercher à la forge.
+// Les trajets et la vente prennent du temps : pendant ce temps-là, il ne creuse pas.
 //
 // Depuis le 20/10, on leur paie un salaire toutes les 10 minutes (sans manager, on ne paie que
 // 10 minutes à la fois). Sans salaire, un mineur remonte et attend, mécontent, au stand Personnel.
@@ -34,6 +36,7 @@ import {
   SALAIRE_MANAGER,
   SALAIRES,
   SECONDES_AVANT_PAIE_MANAGER,
+  SECONDES_FORGE_EMPLOYE,
   SECONDES_PAR_PAIE,
   SECONDES_VENTE_EMPLOYE,
   depuisReference,
@@ -41,6 +44,7 @@ import {
   prestigePourNiveau,
   profondeurBedrock,
   type Cout,
+  type IdBatiment,
   type IdRarete,
   type Rarete,
 } from './donnees'
@@ -57,6 +61,7 @@ import {
   multiplicateurSacMineurs,
   multiplicateurSalaires,
 } from './talents'
+import { batimentPose, envoyerAuMarche, railsMineMarche, secondesAPied } from './village'
 
 // Le travail des mineurs avance par morceaux de 30 secondes au plus : après une longue
 // absence, le manager a ainsi le temps de payer les salaires entre deux morceaux.
@@ -138,11 +143,18 @@ export function secondesParMetreEmploye(etat: EtatJeu, employe: Employe): number
   return Math.max(parMetre, DUREE_MIN_TRAJET_EMPLOYE / longueurTrajet)
 }
 
+// Le temps d'une marche dans le village, d'un bâtiment à un autre (0 si l'un des deux n'est pas posé).
+export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBatiment): number {
+  return secondesAPied(etat.village, de, vers)
+}
+
 // Combien de secondes avant qu'il ait fini son étape en cours (trajet ou vente).
 // Pendant qu'il creuse : le temps qu'il lui faut pour remplir son sac.
 export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): number {
   if (employe.etape === 'attend') return 0
   if (employe.etape === 'vend') return Math.max(0, SECONDES_VENTE_EMPLOYE - employe.progression)
+  if (employe.etape === 'forge') return Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression)
+  if (employe.etape === 'marche') return Math.max(0, secondesMarcheEmploye(etat, employe.depuis, employe.lieu) - employe.progression)
   if (employe.etape === 'creuse') {
     const place = tailleSacEmploye(etat, employe) - nbDansSacEmploye(employe)
     return Math.max(0, (place - employe.progression) / vitesseEmploye(etat, employe))
@@ -410,6 +422,9 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     blocsCasses: 0,
     gagne: 0,
     tempsPaye: SECONDES_PAR_PAIE,
+    lieu: 'puits',
+    depuis: 'puits',
+    forgeEnAttente: false,
   })
   const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
   return [`👷 ${nom}${titre} est embauché(e) ! Il descend creuser.`]
@@ -433,6 +448,11 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   if (cout === null || !peutAmeliorerEmploye(etat, employe)) return []
   payer(etat, cout)
   employe.niveau += 1
+  // Il ira chercher sa nouvelle pioche à la forge (s'il y en a une) à son prochain passage au village.
+  if (batimentPose(etat.village, 'forgeron')) {
+    employe.forgeEnAttente = true
+    return [`⛏️ ${employe.nom} va chercher sa pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} à la forge.`]
+  }
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
 }
 
@@ -450,31 +470,87 @@ function vendreRecolte(etat: EtatJeu, employe: Employe): void {
   employe.sac = {}
 }
 
-// Plus de salaire : il arrive au village et attend au stand Personnel.
-function attendreSalaire(employe: Employe): string {
-  employe.etape = 'attend'
-  employe.position = 0
+// Il part à pied vers un bâtiment du village.
+function partir(employe: Employe, de: IdBatiment, vers: IdBatiment): void {
+  employe.etape = 'marche'
+  employe.depuis = de
+  employe.lieu = vers
   employe.progression = 0
-  return `😠 ${employe.nom} n’est plus payé(e) : il attend son salaire au stand Personnel.`
+}
+
+// Ce qu'il fait ensuite, quand il est au village (« ici ») : attendre son salaire au Personnel
+// s'il n'est plus payé, sinon passer à la forge si une nouvelle pioche l'y attend, sinon
+// retourner à la mine (et redescendre).
+function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
+  employe.lieu = ici
+  employe.progression = 0
+  if (employe.tempsPaye <= 0) {
+    // Déjà devant le Personnel (il vient d'y marcher) : il attend.
+    if (ici === 'employes') {
+      employe.etape = 'attend'
+      return []
+    }
+    // Pas de bâtiment Personnel posé : il attend là où il est.
+    if (!batimentPose(etat.village, 'employes')) {
+      employe.etape = 'attend'
+      return [`😠 ${employe.nom} n’est plus payé(e) : il attend son salaire.`]
+    }
+    partir(employe, ici, 'employes')
+    return [`😠 ${employe.nom} n’est plus payé(e) : il va attendre son salaire devant le Personnel.`]
+  }
+  if (employe.forgeEnAttente) {
+    if (!batimentPose(etat.village, 'forgeron')) employe.forgeEnAttente = false
+    else if (ici === 'forgeron') {
+      employe.etape = 'forge'
+      return []
+    } else {
+      partir(employe, ici, 'forgeron')
+      return []
+    }
+  }
+  if (ici === 'puits') {
+    employe.etape = 'descend'
+    employe.position = 0
+    return []
+  }
+  partir(employe, ici, 'puits')
+  return []
+}
+
+// Il arrive en haut de la mine avec son sac : il charge le wagonnet si des rails vont au marché,
+// sinon il y va à pied.
+function arriverEnHaut(etat: EtatJeu, employe: Employe): string[] {
+  employe.position = 0
+  if (nbDansSacEmploye(employe) > 0) {
+    if (railsMineMarche(etat.village) !== null) {
+      envoyerAuMarche(etat, employe.sac, employe.nom)
+      employe.sac = {}
+      return suite(etat, employe, 'puits')
+    }
+    partir(employe, 'puits', 'marche')
+    return []
+  }
+  return suite(etat, employe, 'puits')
 }
 
 function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
   let reste = secondes
   // On avance étape par étape (utile après une longue absence : plusieurs allers-retours).
-  while (reste > 1e-9) {
+  // Le compteur évite de tourner en rond si un trajet dure 0 seconde (bâtiments collés).
+  let etapes = 0
+  while (reste > 1e-9 && etapes++ < 1000) {
     // Plus de salaire : il arrête de creuser (ou fait demi-tour) et remonte.
     if (employe.tempsPaye <= 0 && (employe.etape === 'creuse' || employe.etape === 'descend')) {
       if (employe.etape === 'creuse') employe.position = employe.profondeur - 1
       employe.etape = 'monte'
       employe.progression = 0
     }
-    // Il attend au stand Personnel : il repart dès qu'il est payé.
+    // Il attend devant le Personnel : il repart dès qu'il est payé.
     if (employe.etape === 'attend') {
       if (employe.tempsPaye <= 0) break
-      employe.etape = 'descend'
-      employe.position = 0
-      employe.progression = 0
+      messages.push(...suite(etat, employe, 'employes'))
+      continue
     }
 
     let temps: number
@@ -501,22 +577,42 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         employe.position = employe.profondeur - 1
         employe.progression = 0
       }
-    } else if (employe.etape === 'vend') {
-      // Au marché : il vend sa récolte (ça prend quelques secondes), puis il redescend
-      // (ou il va attendre son salaire, s'il n'est plus payé).
-      temps = Math.min(reste, SECONDES_VENTE_EMPLOYE - employe.progression)
+    } else if (employe.etape === 'vend' || employe.etape === 'forge') {
+      // Au marché, il vend sa récolte ; à la forge, il récupère sa nouvelle pioche (ça prend
+      // quelques secondes). Ensuite, il retourne à la mine (ou va attendre son salaire).
+      const duree = employe.etape === 'vend' ? SECONDES_VENTE_EMPLOYE : SECONDES_FORGE_EMPLOYE
+      temps = Math.min(reste, duree - employe.progression)
       employe.progression += temps
-      if (employe.progression >= SECONDES_VENTE_EMPLOYE - 1e-9) {
-        vendreRecolte(etat, employe)
-        if (employe.tempsPaye - temps <= 0) {
-          messages.push(attendreSalaire(employe))
+      if (employe.progression >= duree - 1e-9) {
+        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
+        reste -= temps
+        if (employe.etape === 'vend') {
+          vendreRecolte(etat, employe)
+          messages.push(...suite(etat, employe, 'marche'))
         } else {
-          employe.etape = 'descend'
-          employe.progression = 0
+          employe.forgeEnAttente = false
+          messages.push(...suite(etat, employe, 'forgeron'))
         }
+        continue
+      }
+    } else if (employe.etape === 'marche') {
+      // Une marche dans le village, d'un bâtiment à un autre.
+      const duree = secondesMarcheEmploye(etat, employe.depuis, employe.lieu)
+      temps = Math.min(reste, Math.max(0, duree - employe.progression))
+      employe.progression += temps
+      if (employe.progression >= duree - 1e-9) {
+        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
+        reste -= temps
+        if (employe.lieu === 'marche') {
+          employe.etape = 'vend'
+          employe.progression = 0
+        } else {
+          messages.push(...suite(etat, employe, employe.lieu))
+        }
+        continue
       }
     } else {
-      // Un trajet : vers le village (monte) ou vers sa galerie (descend).
+      // Un trajet en ascenseur : vers le village (monte) ou vers sa galerie (descend).
       const parMetre = secondesParMetreEmploye(etat, employe)
       const arrivee = employe.etape === 'monte' ? 0 : employe.profondeur - 1
       const metres = Math.abs(arrivee - employe.position)
@@ -524,14 +620,11 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       employe.position += Math.sign(arrivee - employe.position) * (temps / parMetre)
       if (temps >= metres * parMetre) {
         employe.position = arrivee
-        if (employe.etape === 'descend') {
-          employe.etape = 'creuse'
-        } else if (nbDansSacEmploye(employe) === 0 && employe.tempsPaye - temps <= 0) {
-          messages.push(attendreSalaire(employe)) // rien à vendre : il va directement attendre
-        } else {
-          employe.etape = 'vend'
-          employe.progression = 0
-        }
+        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
+        reste -= temps
+        if (employe.etape === 'descend') employe.etape = 'creuse'
+        else messages.push(...arriverEnHaut(etat, employe))
+        continue
       }
     }
     reste -= temps
@@ -547,7 +640,7 @@ function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   if (!manager.embauche || manager.tempsPaye <= 0) return []
   manager.tempsPaye = Math.max(0, manager.tempsPaye - secondes)
   if (manager.tempsPaye > 0) return []
-  return ['💼 Ton manager n’est plus payé : la trésorerie est vide ! Remplis-la au stand Personnel.']
+  return ['💼 Ton manager n’est plus payé : la trésorerie est vide ! Remplis-la au Personnel.']
 }
 
 export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
@@ -565,21 +658,37 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
   return [...new Set(messages)]
 }
 
+// Où il marche, en quelques mots.
+const DESTINATIONS: Record<IdBatiment, string> = {
+  puits: 'retourne à la mine',
+  marche: 'porte sa récolte au marché',
+  forgeron: 'va chercher sa pioche à la forge',
+  employes: 'va attendre son salaire au Personnel',
+  bazar: 'se promène',
+  enchanteur: 'se promène',
+  foreuse: 'se promène',
+  prestige: 'se promène',
+}
+
 // Ce que fait un mineur, en quelques mots (pour l'affichage), avec le temps qu'il lui reste.
 export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
   const secondes = Math.ceil(secondesRestantesEmploye(etat, employe))
-  if (employe.etape === 'attend') return '😠 attend son salaire au stand Personnel'
+  if (employe.etape === 'attend') return '😠 attend son salaire devant le Personnel'
   if (employe.etape === 'creuse') return `⛏️ creuse à -${employe.profondeur} m (sac plein dans ${secondes} s)`
-  if (employe.etape === 'monte') return employe.tempsPaye <= 0 ? `😠 plus payé : remonte (${secondes} s)` : `⏫ sac plein : remonte au marché (${secondes} s)`
+  if (employe.etape === 'monte') return employe.tempsPaye <= 0 ? `😠 plus payé : remonte (${secondes} s)` : `⏫ sac plein : remonte (${secondes} s)`
+  if (employe.etape === 'marche') return `🚶 ${DESTINATIONS[employe.lieu]} (${secondes} s)`
   if (employe.etape === 'vend') return `💰 vend sa récolte au marché (${secondes} s)`
+  if (employe.etape === 'forge') return `🔨 récupère sa nouvelle pioche (${secondes} s)`
   return `⏬ redescend dans sa galerie (${secondes} s)`
 }
 
-// L'icône de ce qu'il fait (pour la bulle au-dessus de sa tête, dans la mine).
+// L'icône de ce qu'il fait (pour la bulle au-dessus de sa tête).
 export function iconeActiviteEmploye(employe: Employe): string {
-  if (employe.etape === 'attend' || (employe.etape === 'monte' && employe.tempsPaye <= 0)) return '😠'
+  if (employe.etape === 'attend' || ((employe.etape === 'monte' || employe.etape === 'marche') && employe.tempsPaye <= 0)) return '😠'
   if (employe.etape === 'creuse') return '⛏️'
   if (employe.etape === 'monte') return '⏫'
+  if (employe.etape === 'marche') return '🚶'
   if (employe.etape === 'vend') return '💰'
+  if (employe.etape === 'forge') return '🔨'
   return '⏬'
 }

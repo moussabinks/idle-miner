@@ -1,26 +1,31 @@
 # ⛏️ Mine (entrée du puits)
 
-> L'entrée de la mine, à gauche du village : on y descend par l'échelle ou par l'ascenseur, et on y construit et améliore l'ascenseur qui remonte les minerais au marché.
+> L'entrée de la mine, au milieu de la clairière : on y entre pour creuser (la vue en coupe, en 2D), on y descend par l'échelle ou par l'ascenseur, et on y construit et améliore l'ascenseur qui remonte les minerais vers le marché.
 
 ## Où et quand
 
-- **Position** : à **x = 4,5 tuiles** sur le chemin (identifiant `'puits'`, nom affiché « Mine », sans icône), entre l'arbre de prestige (x = 1,5) et le marché (x = 7,5). On est « devant » un stand à 1,4 tuile près. C'est aussi `X_PUITS` : le mineur y est replacé après un prestige ou en recommençant une partie.
+- **Où** : la mine est **déjà posée** au début de la partie, **au milieu de la clairière** (cases 15 à 24 de la grille de 40 × 40, `POSITION_MINE`). C'est le seul bâtiment de **10 × 10 cases** (identifiant `'puits'`, nom affiché « Mine »). Elle n'est pas dans le menu Bâtiments (rien à payer), mais **✏️ Modifier** permet de la déplacer ou de la retourner comme les autres, gratuitement. Elle reste à sa place à chaque prestige.
 - **Déblocage** : disponible **dès le début** (prestige 0), jamais de cadenas.
-- **Dessin au village** (CSS, `src/index.css`) : une galerie creusée dans un rocher, étayée de poutres, avec des rails, un wagonnet de minerai et une **lanterne** qui vacille (animation de 1,8 s). Le dessin s'éclaircit un peu au survol.
-- **Badges et flèches** :
-  - pastille **« 💰 Achetable ! »** quand le prochain niveau de l'ascenseur est permis par le prestige et payable tout de suite (argent + minerais **dans le sac**) ;
-  - après un prestige qui relève le plafond de l'ascenseur (prestiges 1 à 4), badge **« ⬆ Niveaux ! »** et flèche jaune **« ⬆ Nouveaux niveaux : Mine ! »** jusqu'à ce qu'on passe devant.
-- **Dans la mine** (`VueMonde.tsx`) : le puits longe la mine à gauche ; l'**échelle** descend jusqu'au front de taille, à côté du **rail de l'ascenseur** (grisé tant qu'il n'est pas construit). Une fois construit : une poulie en haut (qui tourne pendant les trajets), un câble, et une cabine (toit avec lampe, grille, plancher rayé, petite caisse de minerai quand elle est chargée ou que le quai n'est pas vide). Le mineur est dessiné dans la cabine quand il voyage dedans. Le bandeau affiche `🛗 <niveau>` quand l'ascenseur existe.
+- **La porte** : au milieu de sa face avant **gauche** (à droite si elle est retournée). C'est là que le hamster se tient en sortant de la mine, et que partent les brouettes et les mineurs.
+- **L'ouvrir** : toucher (ou cliquer) la mine : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre en arrivant devant (à moins de 1,4 case de la porte). Au chargement d'une partie, le hamster est déjà devant la mine, mais le panneau reste fermé (il ne s'ouvre qu'en arrivant en marchant).
+- **Le dessin au village** (SVG fait à la main, `DessinMine` dans `DessinsVillage.tsx`, 20/10) : un grand trou carré entouré d'un rebord de pierres grises, avec des poteaux aux chapeaux dorés et des lanternes aux coins, une échelle qui descend, et à l'entrée des rails qui sortent, un wagonnet et un panneau « MINE ». **Le trou se creuse avec toi** : de **1 palier** de terre (une mine à peine creusée) à **6 paliers** de plus en plus sombres, selon la profondeur atteinte par rapport à la bedrock (`1 + min(5, ⌊fraction × 6⌋)`) ; le fond devient de plus en plus noir, avec une petite lueur au-delà de 30 % de la profondeur. Avant l'ascenseur, une simple **grue en bois** ; une fois construit, un **chevalement** avec sa poulie (qui tourne quand une cabine roule), son câble et sa cabine (en haut quand elle attend au village). Une **petite poulie par mineur employé**.
+- **Bulles au-dessus** (`notifications.ts`) : **⬆️ « Nouveaux niveaux débloqués ! »** après un prestige qui relève le plafond de l'ascenseur (prestiges 1 à 4), jusqu'à ce qu'on passe devant ; **💰 « Une amélioration est achetable ! »** quand le prochain niveau de l'ascenseur est permis et payable tout de suite (argent + minerais **dans le sac**).
+- **Dans la mine** (`VueMonde.tsx`) : le puits longe la mine à gauche ; l'**échelle** descend jusqu'au front de taille, à côté du **rail de l'ascenseur** (grisé tant qu'il n'est pas construit). Une fois construit : une poulie en haut (qui tourne pendant les trajets), un câble, et une cabine (toit avec lampe, grille, plancher rayé, petite caisse de minerai quand elle est chargée ou que le quai n'est pas vide). Le mineur est dessiné dans la cabine quand il voyage dedans. Le bandeau affiche `🛗 <niveau>` quand l'ascenseur existe. En haut de la vue, une bande de ciel avec le panneau « ☀️ Village » rappelle qu'on est sous le village.
 
 ## Ce qu'on peut y faire
 
 ### Au stand (au village)
 
-- Le panneau rappelle la profondeur de la mine (« Ta mine descend à -X m ») et le temps de descente : « L'ascenseur t'attend : descente en N s » si la cabine est au village, sinon « À l'échelle, il faut N s ».
-- **⏬ Descendre dans la mine en ascenseur / à l'échelle** : le mineur marche jusqu'au puits, puis prend l'ascenseur s'il est là (au village et à l'arrêt), sinon l'échelle, jusqu'au front de taille. (Même effet que le bouton **⛏️ Mine** de la barre du bas.)
+- Le panneau rappelle la profondeur de la mine (« Ta mine descend à -X m (la bedrock est à -Y m) ») et le temps de descente : « L'ascenseur t'attend : descente en N s » si la cabine est au village, sinon « À l'échelle, il faut N s pour y descendre ».
+- **⛏️ Entrer dans la mine** (le gros bouton doré, 20/10) : si le hamster n'est pas devant la mine, il y marche d'abord ; puis la caméra **plonge dans le trou** (zoom × 3,2 sur le milieu de la mine, en 0,75 s) en passant au noir, et l'écran devient la **vue en coupe en 2D** (celle d'avant le village vu du ciel) : le mineur prend l'ascenseur s'il est là (au village et à l'arrêt), sinon l'échelle, jusqu'au front de taille. Le bouton **⛏️ Mine** de la barre du bas (au village) fait la même chose.
 - **🛗 Appeler l'ascenseur** (si construit et pas au village) : la cabine vient au village. Grisé pendant qu'elle roule.
+- **🛤️ Wagonnet** (20/10, seulement si une ligne de **rails** continue relie la mine au marché, et qu'il y a quelque chose dans le sac) : une jauge par objet (les plus chers d'abord, les objets gardés à 0) et le bouton **« 🛤️ Charger N objets »** : ils partent au marché en wagonnet et y sont vendus à l'arrivée (« 🛤️ Le wagonnet part au marché avec ton chargement. »). Pas besoin d'aller au marché.
+- « 🛒 N objet(s) en route vers le marché » : ce qui roule encore (brouettes et wagonnets à toi).
 - **🛗 Ascenseur** : construire (niveau 1) ou améliorer, sans descendre. Les niveaux au-delà du plafond affichent « 🔒 … · au prestige N ». Impossible pendant que la cabine roule.
-- Au clavier, devant le puits : **↓** commence à descendre l'échelle (on avance tant que la touche est appuyée) ; ailleurs dans le village, ↓ fait marcher jusqu'au puits puis descendre.
+
+### Ressortir de la mine
+
+Dans la mine, le bouton **🏠 Village** de la barre du bas remonte le mineur (ascenseur ou échelle). Arrivé en haut, la vue repasse au **village vu du ciel** : on sort du noir et la caméra remonte du fond du trou (0,8 s), le hamster est replacé **devant la porte de la mine**, et le panneau de la mine reste fermé (pour voir la carte). Les flèches du clavier y font de nouveau marcher le hamster.
 
 ### Les niveaux de l'ascenseur (`NIVEAUX_ASCENSEUR`)
 
@@ -37,7 +42,7 @@
 
 ### Au fond de la mine (panneau « 🎒 Sac »)
 
-- **📦 Envoyer N objets** : la cabine emporte au marché ce qu'on a choisi avec les jauges du sac (une jauge à 0 = objet « gardé », mémorisé) ; ce chargement est **vendu en arrivant au village** (avec les bonus de vente), puis la cabine **redescend toute seule** au front. Si elle n'est pas là, on l'appelle et elle repartira chargée.
+- **📦 Envoyer N objets** : la cabine emporte ce qu'on a choisi avec les jauges du sac (une jauge à 0 = objet « gardé », mémorisé) ; arrivé en haut, ce chargement **part vers le marché** (20/10) : en brouette à pied, ou en wagonnet s'il y a des rails jusqu'au marché, et il y est **vendu en arrivant** (avec les bonus de vente). La cabine, elle, **redescend toute seule** au front. Si elle n'est pas là, on l'appelle et elle repartira chargée.
 - **⏫ Remonter** (si la cabine est à ton niveau) : remonte seulement le mineur, **sac plein, rien n'est vendu**.
 - **🛗 Appeler l'ascenseur** (sinon) : la cabine vient au niveau du mineur. Pendant un voyage, les boutons sont grisés et comptent les secondes (« Là dans N s », « De retour dans N s »).
 - **Envoi automatique quand le sac est plein** (case à cocher) : pendant qu'on creuse, dès que le sac est plein (ou que le quai n'est pas vide), l'ascenseur part tout seul avec les objets cochés ; on continue de creuser.
@@ -46,7 +51,9 @@
 
 ### La barre du bas
 
-**⛏️ Creuser** (finit la couche en cours), **♾️ Auto** (creuse sans s'arrêter, s'arrête si la pioche casse), **🏠 Village** (remonter), **⛏️ Mine** (descendre). Au clavier, au front : ← → pour se déplacer, ↑ pour monter l'échelle ; sur l'échelle : ↑ / ↓.
+Dans la mine : **⛏️ Creuser** (finit la couche en cours), **♾️ Auto** (creuse sans s'arrêter, s'arrête si la pioche casse), **🏠 Village** (remonter), **⛏️ Front** (retourner au front de taille). Au clavier, au front : ← → pour se déplacer, ↑ pour monter l'échelle ; sur l'échelle : ↑ / ↓.
+
+Au village, la barre devient **🏗️ Bâtiments**, **🌸 Décos**, **✏️ Modifier** et **⛏️ Mine** (entrer dans la mine, comme le bouton du panneau).
 
 ## Règles et comportement
 
@@ -64,9 +71,10 @@
 - À la construction, la cabine est posée **là où se trouve le joueur** (au village si on la construit au stand).
 - **Quai** : quand le sac est plein, les blocs en trop attendent sur le quai de l'ascenseur, jusqu'à la **capacité** de la cabine. Quand le sac (et le quai) sont pleins, le minage s'arrête avec « 🎒 Sac plein ! » ; sans ascenseur, il n'y a pas de quai, donc il s'arrête dès que le sac est plein.
 - **Chargement** : d'abord le quai, puis le sac, **les objets les plus chers en premier**, dans la limite de la capacité.
-- Remonter avec le bouton **🏠 Village** en prenant la cabine emporte aussi le sac (les objets non gardés), vendu à l'arrivée ; seul **⏫ Remonter** du sac garde tout.
+- Remonter avec le bouton **🏠 Village** en prenant la cabine emporte aussi le sac (les objets non gardés), qui part au marché à l'arrivée ; seul **⏫ Remonter** du sac garde tout.
+- **Le chargement arrivé en haut** (20/10, `envoyerAuMarche`) devient un « convoi » qui roule vers le marché : brouette à **4 cases/s** le long du chemin à pied (au moins 1 s), ou wagonnet à **12 cases/s** sur une ligne de rails continue mine → marché (`trajetChargement`). Message : « 🛗 Chargement remonté : il part au marché. » **Sans marché posé, il attend à la mine** et part dès qu'on pose le marché.
 - La cabine **suit le front de taille** quand on descend d'une couche, si elle y attendait.
-- Les **mineurs employés** ont leurs propres cabines, aussi rapides que ton ascenseur (au moins comme un niveau 1 si tu n'en as pas).
+- Les **mineurs employés** ont **une cabine chacun**, dans ce même puits (une petite poulie par mineur sur le dessin du village), aussi rapides que ton ascenseur (au moins comme un niveau 1 si tu n'en as pas). Chacun creuse dans sa galerie, avec sa propre profondeur (« un univers parallèle » de la même mine), et remonte par sa cabine.
 
 ### La mine elle-même
 
@@ -95,33 +103,40 @@
 
 ### Hors ligne
 
-Quand on rouvre un monde, le temps écoulé (au plus **8 heures**) est rattrapé : les trajets en cours (échelle, cabine) se terminent, et un chargement de cabine arrivé au village est vendu. Le mineur, lui, **ne creuse pas** pendant l'absence.
+Quand on rouvre un monde, le temps écoulé (au plus **8 heures**) est rattrapé : les trajets en cours (échelle, cabine) se terminent, un chargement de cabine arrivé en haut part au marché, et les brouettes et wagonnets en route arrivent et sont vendus. Le mineur, lui, **ne creuse pas** pendant l'absence.
 
 ### Au prestige
 
 - **Gardé** : le **niveau de l'ascenseur** ; les pioches débloquées (toutes réparées, la meilleure équipée).
-- **Remis à zéro** : la mine (nouvelle mine plus profonde, on repart à -2 m), le mineur au village, la cabine attend au village, le **quai et le chargement vidés**, les objets « gardés » et l'envoi automatique remis à leur état de départ.
+- **Gardé aussi** : la place de la mine dans la clairière (et tout le village : bâtiments, rails, chemins, décorations).
+- **Remis à zéro** : la mine (nouvelle mine plus profonde, on repart à -2 m, et le trou du dessin repart à 1 palier), le mineur au village, la cabine attend au village, le **quai et le chargement vidés**, les chargements encore en route vers le marché (perdus), les objets « gardés » et l'envoi automatique remis à leur état de départ.
 
 ## Lien avec le reste du jeu
 
 - **Conditions de prestige** : « Atteindre la bedrock (-X m) » et « 🛗 Ascenseur au niveau N » (plafond du prestige) en font partie.
 - **Objectifs** (`objectifs.ts`) : « Construire l'ascenseur » / « Ascenseur niveau N » est un achat du stand `puits` (« achetable à l'entrée de la mine ! ») ; quand il n'y a plus rien à acheter, l'objectif devient « Atteindre la bedrock » (avec la jauge de profondeur).
-- **Marché** : la cabine vend son chargement à l'arrivée, aux mêmes prix et bonus que le marché. **Forgeron** : pioches pour descendre plus bas. **Bazar** : sacs et seaux d'eau contre la lave. **Enchanteur** : Efficacité, Fortune et Solidité utilisées au fond. **Foreuse** et **Personnel** : ils creusent leurs propres puits à droite de la mine, dans la même mine du prestige.
-- **Succès** liés : Spéléologue (-60 m), Dans les abîmes (-105 m), Bedrock !, Chasseur de trésors, Géologue, Pompier, Ça brille !.
+- **Marché** : le chargement de la cabine y est vendu en arrivant (brouette ou wagonnet), aux mêmes prix et bonus que le marché. Plus le marché est près de la mine (ou relié par des rails), plus ça va vite. **Forgeron** : pioches pour descendre plus bas. **Bazar** : sacs et seaux d'eau contre la lave. **Enchanteur** : Efficacité, Fortune et Solidité utilisées au fond. **Foreuse** et **Personnel** : ils creusent leurs propres puits à droite de la mine, dans la même mine du prestige.
+- **Rails** (prestige 2, 10 fer la case) : une case de rails collée à un côté de la mine et une autre collée au marché, reliées par des rails qui se touchent par un côté, forment une ligne : voir [../jeu/village.md](../jeu/village.md).
+- **Succès** liés : Spéléologue (-60 m), Dans les abîmes (-105 m), Bedrock !, Chasseur de trésors, Géologue, Pompier, Ça brille !, et (20/10) Cheminot (rails mine → marché).
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position du puits (x = 4,5, `X_PUITS`).
-- `src/composants/VueVillage.tsx` : dessin de l'entrée de la mine, pastilles et badges.
-- `src/App.tsx` : panneau du stand (descendre, appeler l'ascenseur), barre de boutons et clavier.
+- `src/jeu/donnees.ts` : `BATIMENTS.puits` (10 × 10, porte à gauche), `NIVEAUX_ASCENSEUR`, `PLAFONDS`, `profondeurBedrock`, `BLOCS`, `PIOCHES`, vitesses, `VITESSE_MARCHE`, `VITESSE_RAILS`.
+- `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails mine → marché (`railsMineMarche`), le départ d'un chargement (`trajetChargement`, `envoyerAuMarche`).
+- `src/jeu/convois.ts` : les chargements qui roulent vers le marché et le wagonnet chargé à la main (`avancerConvois`, `wagonnetDisponible`, `chargerWagonnet`, `nbEnRoute`).
+- `src/jeu/batiments.ts` : déplacer ou retourner la mine (`deplacerBatiment`).
+- `src/jeu/notifications.ts` : les bulles ⬆️ et 💰 au-dessus de la mine.
+- `src/App.tsx` : le panneau de la mine au village (`PanneauMine` : entrer, appeler l'ascenseur, wagonnet, ascenseur), l'entrée et la sortie de la mine (transitions), les barres de boutons et le clavier.
+- `src/composants/DessinsVillage.tsx` : le dessin de la mine au village (`DessinMine` : paliers, grue ou chevalement, poulies des mineurs).
+- `src/composants/VueVillage.tsx` : la mine sur la carte, la plongée de la caméra et le passage au noir.
+- `src/useJoueurVillage.ts` : le hamster replacé devant la mine en sortant (`placerALaMine`).
 - `src/composants/Ascenseur.tsx` : bloc « construire / améliorer » et état de la cabine.
 - `src/composants/Inventaire.tsx` : sac au fond, envoi, remontée, envoi automatique.
-- `src/composants/VueMonde.tsx` : dessin du puits, de l'échelle, de la cabine et des couches.
+- `src/composants/VueMonde.tsx` : la vue en coupe (2D) : puits, échelle, cabine, couches, la bande « ☀️ Village » en haut.
 - `src/composants/Amelioration.tsx` : affichage commun d'un niveau (cadenas « au prestige N »).
-- `src/jeu/mineur.ts` : déplacements, échelle, ascenseur, quai, minage, galeries, mains nues.
+- `src/jeu/mineur.ts` : déplacements, échelle, ascenseur, quai, minage, galeries, mains nues, chargement remonté qui part au marché.
 - `src/jeu/mine.ts` : génération des couches et apparition des minerais.
-- `src/jeu/donnees.ts` : `NIVEAUX_ASCENSEUR`, `PLAFONDS`, `profondeurBedrock`, `BLOCS`, `PIOCHES`, vitesses.
-- `src/jeu/temps.ts` : le temps qui passe (marche, échelle, cabine).
+- `src/jeu/temps.ts` : le temps qui passe (marche, échelle, cabine, chargements en route).
 - `src/usePartie.ts` : boucle de minage, envoi automatique, rattrapage hors ligne (8 h max).
 - `src/jeu/objectifs.ts` : achat « Ascenseur » du stand `puits` et badge « Nouveaux niveaux ».
-- `src/index.css` : styles de l'entrée de la mine (rocher, poutres, lanterne, wagonnet).
+- `src/village.css` : la carte, la plongée dans la mine (`.fondu-mine`, `.entree-dans-la-mine`), le bouton « Entrer dans la mine ».

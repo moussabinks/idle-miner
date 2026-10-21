@@ -40,11 +40,11 @@ export function Victoire({ etat, onPrestige, onFermer }: Props) {
           </li>
         </ul>
         <p className="discret">
-          Prestige : tu recommences à zéro, mais tu gardes tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la
+          Prestige : tu recommences à zéro, mais tu gardes ton village, tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la
           foreuse et ton personnel.
-          {etat.prestige === 0 && ' Et au village, la barrière de la foreuse s’ouvrira !'}
+          {etat.prestige === 0 && ' Et tu pourras construire la foreuse au village (menu Bâtiments) !'}
           {pret
-            ? ' Tu peux aussi continuer à creuser ici, et passer prestige plus tard à l’arbre de prestige (le bâtiment tout à gauche du village).'
+            ? ' Tu peux aussi continuer à creuser ici, et passer prestige plus tard au bâtiment Arbre de prestige du village.'
             : ' Avant, améliore au maximum ce que ce prestige permet (l’arbre de prestige du village te le rappelle) :'}
         </p>
         <CartePrestige etat={etat} onPrestige={onPrestige} compacte />

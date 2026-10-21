@@ -1,24 +1,28 @@
 # ⭐ Arbre de prestige
 
-> Le grand arbre magique tout à gauche du village : on y voit ce qu'il reste à faire avant le prestige, on passe prestige, et on dépense ses points de talent.
+> Le grand cerisier magique du village : on y voit ce qu'il reste à faire avant le prestige, on passe prestige, et on dépense ses points de talent.
 
 ## Où et quand
 
-- **Position** : tout à gauche du chemin, à **x = 1,5 tuiles** (identifiant `'prestige'`, nom affiché « Prestige », icône étoile). On est « devant » un stand à 1,4 tuile près. Le puits (entrée de la mine) est juste à côté, à x = 4,5.
+- **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases** (identifiant `'prestige'`, nom affiché « Arbre de prestige », emoji 🌸), acheté une fois dans le menu **🏗️ Bâtiments** pour **800 $ + 30 pierre + 10 fer** (la roche dure compte aussi comme de la pierre). C'est le bâtiment le plus cher du prestige 0 : on le pose au fil de la première partie, avant d'arriver à la bedrock. Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : disponible **dès le prestige 0** (jamais de cadenas). La partie « Arbre de prestige » (bouton « Ouvrir l'arbre ») n'apparaît dans le panneau qu'à partir du **prestige 1**.
-- **Dessin au village** (CSS seulement, `src/personnel.css`) : un grand arbre rose et doré (tronc, trois touffes de feuillage qui bougent doucement, 5 fruits qui scintillent, une ⭐ qui pulse au sommet) entouré d'une **aura** qui pulse en 2,6 s. Quand on **peut passer prestige** (classe `arbre-pret`), l'aura pulse beaucoup plus vite (0,9 s). Les animations sont coupées si le système demande « moins de mouvement » (`prefers-reduced-motion`).
-- **Badges** au-dessus du bâtiment :
-  - `⭐ Prêt !` quand toutes les conditions du prestige sont remplies ;
-  - sinon `🌟 N point(s) !` s'il reste des points de talent à dépenser.
-  - Ce bâtiment n'a jamais la pastille « 💰 Achetable ! » ni le badge « ⬆ Niveaux ! » (il n'a pas d'amélioration à acheter).
+- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
+- **L'ouvrir** : toucher (ou cliquer) l'arbre : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/prestige.webp`) : un grand cerisier rose aux cristaux qui brillent, sur une estrade en pierre avec un tapis rouge, des bannières et des lanternes. Il brille en doré au survol et quand son panneau est ouvert.
+- **Description** (en haut du panneau) : « Passe prestige et choisis tes talents dans l'arbre. »
+- **Bulles au-dessus** (`notifications.ts`, bulles roses « prêt ») :
+  - **⭐ « Prêt pour le prestige ! »** quand toutes les conditions du prestige sont remplies ;
+  - **🌟 « N point(s) de talent à dépenser »** s'il reste des points de talent.
+  - Jamais de bulle 💰 « achetable » ni ⬆️ « nouveaux niveaux » (il n'a pas d'amélioration à acheter).
+- **Pas encore posé ?** On peut quand même passer prestige depuis l'**écran de victoire** (il a la même carte et le même bouton), et ouvrir l'arbre des talents avec le bouton ⭐ du bandeau. Tant qu'il n'est pas posé, la barre d'objectif propose « Construire : Arbre de prestige ».
 - **Ailleurs à l'écran** :
   - dans le bandeau (`Hud.tsx`), à partir du prestige 1, un bouton `⭐ <prestige>` (avec `· N points !` s'il en reste) ouvre l'arbre depuis n'importe où ; son infobulle rappelle les bonus (ventes +15 % × prestige, pioches +10 % × prestige) ;
   - dans la mine, une fois la bedrock atteinte, le bandeau « 🏆 Bedrock atteinte : creuse encore ici, ou passe prestige à l'arbre de prestige (village). » ;
-  - la barre « prochain objectif » envoie ici (« Prestige N+1 — tout est prêt, à l'arbre de prestige ! ») quand tout est fait.
+  - la barre « prochain objectif » envoie ici (« Prestige N+1 — tout est prêt, à l'arbre de prestige ! ») quand tout est fait : un clic fait marcher le hamster jusqu'à l'arbre.
 
 ## Ce qu'on peut y faire
 
-Devant le bâtiment, le panneau de droite affiche :
+Devant le bâtiment, le panneau (à droite sur ordinateur, en bas sur téléphone) affiche :
 
 ### 1. La carte du prestige (`CartePrestige.tsx`)
 
@@ -78,13 +82,13 @@ Ce que le prestige actuel permet (donc ce qu'il faut atteindre pour passer au su
 
 - **1 point par prestige** : points disponibles = prestige − nombre de talents pris (jamais négatif).
 - Dans une branche, il faut **le talent du dessus** pour prendre celui du dessous (rang 1 → 4).
-- La branche **Patron** est fermée avant le **prestige 2** (« 🔒 S'ouvre avec les mineurs employés ») ; la branche **Recrutement** reste fermée tant que le **recruteur n'est pas embauché** (stand Personnel, prestige 4).
+- La branche **Patron** est fermée avant le **prestige 2** (« 🔒 S'ouvre avec les mineurs employés ») ; la branche **Recrutement** reste fermée tant que le **recruteur n'est pas embauché** (au Personnel, prestige 4).
 - Les talents sont **gardés pour toujours**. L'arbre a été refait le 20/10 (seulement des bonus qui durent) et tous les points ont été rendus à ce moment-là.
 
 ### Ce qui se passe quand on clique sur « Passer prestige »
 
 1. Le jeu revérifie les conditions (`peutPasserPrestige`), arrête le minage en cours, crée la nouvelle partie (`prestige()` dans `mineur.ts`) et joue la fanfare.
-2. Le mineur est replacé devant le puits, l'écran de victoire se ferme.
+2. Le joueur repart du village (la nouvelle mine commence à -2 m) ; s'il était dans la mine, il ressort devant la porte de la mine. L'écran de victoire se ferme.
 3. **La fête** (`FetePrestige.tsx`) : flash, rayons, grande étoile qui tourne, 90 confettis, et le résumé : « 💰 Ventes +15 % × P », « ⛏️ Pioches 10 % × P plus rapides », « 🕳️ Mine jusqu'à -… m », « 🌟 +1 point dans l'arbre de prestige ».
 4. Le bouton **« 🌟 Choisir mon talent »** ouvre directement l'arbre.
 
@@ -99,7 +103,9 @@ Ce que le prestige actuel permet (donc ce qu'il faut atteindre pour passer au su
 | Foreuse : activation, niveaux de forage et de chariot, options (mais **plus de charbon, chariot vide, elle repart de la surface**) | Les stands « vus » (pour le badge « ⬆ Niveaux ! ») |
 | Mineurs : pioche et rareté (mais galerie depuis la surface, sac vide), avec **au moins 10 minutes de salaire payées** | |
 | Recruteur ; manager (avec au moins 10 minutes payées) | |
-| Argent gagné au total (pour le classement), stands découverts | |
+| Argent gagné au total (pour le classement), stands découverts | Les chargements encore en route vers le marché |
+| **Tout le village** (20/10) : bâtiments posés (à leur place, retournés ou non), rails, chemins, décorations | |
+| **Les tenues** achetées au Bazar et la tenue portée | |
 
 ### Bonus de prestige (permanents, ils s'additionnent)
 
@@ -115,25 +121,29 @@ Ce que le prestige actuel permet (donc ce qu'il faut atteindre pour passer au su
 
 ## Lien avec le reste du jeu
 
-- **Écran de victoire** (`Victoire.tsx`) : quand on atteint la bedrock, il affiche une version compacte de la carte (seulement les conditions qui manquent) et le même bouton de prestige, en rappelant que l'arbre est « le bâtiment tout à gauche du village ».
-- **Objectifs** (`objectifs.ts`) : `prochainObjectif` propose d'abord les achats possibles (forgeron, puits, bazar, enchanteur, foreuse, Personnel) ; quand il n'en reste plus, « Atteindre la bedrock », puis « Prestige N+1 » vers le stand `prestige`. Après un prestige, `standsAvecNouveauxNiveaux` signale (badge « ⬆ Niveaux ! » et flèche jaune) les stands dont le plafond vient de monter : puits, bazar, enchanteur, foreuse, Personnel.
-- **Autres bâtiments** : chaque condition renvoie à un stand : l'ascenseur à la **Mine** (ou dans le sac au fond), le sac au **Bazar**, les enchantements à l'**Enchanteur**, la foreuse à la **Foreuse**, les mineurs et le recruteur au **Personnel**. Le prestige 1 débloque la foreuse, le 2 les mineurs, le 4 le recruteur, le 5 le manager.
+- **Écran de victoire** (`Victoire.tsx`) : quand on atteint la bedrock, il affiche une version compacte de la carte (seulement les conditions qui manquent) et le même bouton de prestige. Son texte rappelle qu'on peut aussi passer prestige plus tard « au bâtiment Arbre de prestige du village » et, au prestige 0, qu'on pourra ensuite construire la foreuse (menu Bâtiments).
+- **Objectifs** (`objectifs.ts`) : `prochainObjectif` propose d'abord les bâtiments à construire (« Construire : … », l'arbre de prestige compris), puis les achats possibles des bâtiments posés (forgeron, mine, bazar, enchanteur, foreuse, Personnel) ; quand il n'en reste plus, « Atteindre la bedrock », puis « Prestige N+1 » vers le bâtiment `prestige`. Après un prestige, `standsAvecNouveauxNiveaux` signale (bulle ⬆️ au-dessus du bâtiment) les bâtiments posés dont le plafond vient de monter : mine, bazar, enchanteur, foreuse, Personnel.
+- **Le menu Bâtiments** : à chaque prestige, ce qui se débloque y prend la pastille « Nouveau ! » : la foreuse au prestige 1, le Personnel et les rails au prestige 2. Des décorations (cerisier P1, fontaine P2, statue P4) et des tenues (haut-de-forme P1, gilet doré P2, couronne P3) se débloquent aussi.
+- **Autres bâtiments** : chaque condition renvoie à un bâtiment : l'ascenseur à la **Mine** (ou dans le sac au fond), le sac au **Bazar**, les enchantements à l'**Enchanteur**, la foreuse à la **Foreuse**, les mineurs et le recruteur au **Personnel**. Le prestige 1 débloque la foreuse, le 2 les mineurs, le 4 le recruteur, le 5 le manager.
 - **Succès** : « Bedrock ! » se débloque avec la même condition que la première ligne de la carte.
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position (x = 1,5), nom et description du bâtiment.
-- `src/composants/VueVillage.tsx` : dessin de l'arbre magique et badges « ⭐ Prêt ! » / « 🌟 N points ! ».
-- `src/App.tsx` : panneau du stand (carte + bouton « Ouvrir l'arbre »), enchaînement prestige → fête → arbre.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.prestige` : 800 $ + 30 pierre + 10 fer, 5 × 5, porte à droite), `PLAFONDS`, `profondeurBedrock`, `BONUS_PRESTIGE`, `BONUS_VITESSE_PRESTIGE`.
+- `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
+- `src/jeu/notifications.ts` : les bulles ⭐ « prêt » et 🌟 « points ».
+- `src/App.tsx` : panneau du bâtiment (carte + bouton « Ouvrir l'arbre »), enchaînement prestige → fête → arbre.
 - `src/composants/CartePrestige.tsx` : la liste des conditions, la jauge et le bouton « Passer prestige ».
 - `src/composants/ArbrePrestige.tsx` : la fenêtre de l'arbre des talents.
 - `src/composants/FetePrestige.tsx` : l'animation de félicitations.
 - `src/composants/Victoire.tsx` : écran de la bedrock, avec la carte compacte.
 - `src/composants/Hud.tsx` : bouton ⭐ du bandeau qui ouvre l'arbre.
+- `src/composants/MenuConstruction.tsx` : la carte de l'arbre dans le menu Bâtiments.
+- `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.
+- `public/images/batiments/prestige.webp` : le dessin du cerisier.
 - `src/jeu/conditionsPrestige.ts` : les conditions du prestige.
 - `src/jeu/talents.ts` : les 20 talents, les points, les bonus.
-- `src/jeu/donnees.ts` : `PLAFONDS`, `profondeurBedrock`, `BONUS_PRESTIGE`, `BONUS_VITESSE_PRESTIGE`.
-- `src/jeu/mineur.ts` : `prestige()`, `creerPartie()` et ce qui est gardé (`Heritage`).
+- `src/jeu/mineur.ts` : `prestige()`, `creerPartie()` et ce qui est gardé (`Heritage` : village et tenues compris).
 - `src/jeu/objectifs.ts` : prochain objectif et badges « Nouveaux niveaux ».
 - `src/usePartie.ts` : `passerPrestige` (vérification, nouvelle partie, son).
-- `src/personnel.css` : styles et animations de l'arbre et de la carte du prestige.
+- `src/personnel.css` : styles de la carte du prestige.

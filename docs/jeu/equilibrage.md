@@ -1,7 +1,7 @@
 # Équilibrage : toutes les données et les formules
 
-> Toutes les tables chiffrées du jeu et les formules globales, réunies au même endroit, d'après le code au 20/10 (`src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `talents.ts`, `foreuse.ts`, `employes.ts`, `revenu.ts`, `conditionsPrestige.ts`, `bot.ts`, `bot.test.ts`).
-> Pour le fonctionnement de chaque bâtiment (boutons, messages, cas limites), voir les fiches de [../batiments/](../batiments/README.md). Pour le concept et la progression en un coup d'œil, voir [vue-d-ensemble.md](vue-d-ensemble.md).
+> Toutes les tables chiffrées du jeu et les formules globales, réunies au même endroit, d'après le code au 20/10 (`src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `talents.ts`, `foreuse.ts`, `employes.ts`, `village.ts`, `batiments.ts`, `convois.ts`, `tenues.ts`, `revenu.ts`, `conditionsPrestige.ts`, `bot.ts`, `bot.test.ts`).
+> Pour le fonctionnement de chaque bâtiment (boutons, messages, cas limites), voir les fiches de [../batiments/](../batiments/README.md). Pour le village vu du ciel (grille, placement, menus), voir [village.md](village.md). Pour le concept et la progression en un coup d'œil, voir [vue-d-ensemble.md](vue-d-ensemble.md).
 
 Conventions : les profondeurs sont en mètres positifs (« 35 » = -35 m). « Mine de référence » = la mine de 150 m pour laquelle les profondeurs des données sont écrites (c'est la vraie mine au prestige 1). Les niveaux « code » commencent à 0 quand c'est le cas dans le code (sac, foreuse, pioches des mineurs).
 
@@ -21,11 +21,12 @@ Conventions : les profondeurs sont en mètres positifs (« 35 » = -35 m). « Mi
 12. [Bonus de prestige](#bonus-de-prestige)
 13. [Foreuse](#foreuse)
 14. [Mineurs employés, salaires, raretés, recruteur, manager](#mineurs-employés)
-15. [Les talents](#les-talents)
-16. [Revenus par seconde (`revenu.ts`)](#revenus-par-seconde)
-17. [Ce que coûte chaque prestige](#ce-que-coûte-chaque-prestige)
-18. [Le bot de simulation](#le-bot-de-simulation)
-19. [Durées de jeu attendues](#durées-de-jeu-attendues)
+15. [Le village : constructions, rails, décorations, tenues, trajets](#le-village)
+16. [Les talents](#les-talents)
+17. [Revenus par seconde (`revenu.ts`)](#revenus-par-seconde)
+18. [Ce que coûte chaque prestige](#ce-que-coûte-chaque-prestige)
+19. [Le bot de simulation](#le-bot-de-simulation)
+20. [Durées de jeu attendues](#durées-de-jeu-attendues)
 
 ---
 
@@ -47,7 +48,7 @@ Conventions : les profondeurs sont en mètres positifs (« 35 » = -35 m). « Mi
 | `POIDS_ROCHE` | 100 | poids de la roche de base dans le tirage |
 | Horloge (`usePartie.ts`) | tic de 50 ms | tout avance au même rythme (plus souvent pendant les trajets, sans changer la vitesse) |
 | Absence max (`ABSENCE_MAX`) | 8 h | temps rattrapé au retour (foreuse, mineurs, manager, trajets) |
-| `VERSION_ETAT` | 17 | version de la sauvegarde |
+| `VERSION_ETAT` | 18 | version de la sauvegarde (le village vu du ciel, 20/10 : les parties d'avant repartent de zéro) |
 
 ## La mine et sa mise à l'échelle
 
@@ -217,7 +218,7 @@ Seulement sur les minerais (`minerai: true`) : 1 objet, ou 2 si le tirage tombe 
 ## Ventes, coffres, géodes, lave
 
 - **Bonus de vente** (`bonusVente`) : `1 + 0,15 × prestige + 0,10 (Négociant) + 0,15 (Grand négociant)`.
-- **Prix d'un lot** (`valeurDe`) : `round(Σ quantité × prix de base × bonus de vente)` (arrondi une fois, sur le total). Même calcul pour le marché, la cabine d'ascenseur qui arrive au village, et les ventes des mineurs employés.
+- **Prix d'un lot** (`valeurDe`) : `round(Σ quantité × prix de base × bonus de vente)` (arrondi une fois, sur le total). Même calcul pour le marché, les chargements (brouette ou wagonnet) qui arrivent au marché, et les ventes des mineurs employés.
 - **Chariot de la foreuse** (`valeurAuChariot`) : `round(valeurDe(lot) × 1,2 si talent Grossiste)`.
 - **Coffre** : `argent = ((entier 20 à 60) + profondeur réelle × (entier 3 à 8)) × 2 si Chasseur de trésors`, + 1 minerai de `MINERAIS_COFFRE` présent à cette profondeur (dans le sac, ou sur le quai). L'argent compte dans l'argent gagné.
 - **Géode** : 3 à 6 améthystes (entier au hasard).
@@ -251,7 +252,7 @@ Table `NIVEAUX_ASCENSEUR` (niveau 0 = pas construit). Les minerais se paient ave
 | 5 | 9 000 $ + 80 fer + 50 redstone | 512 | 0,02 s | 3 |
 | 6 | 18 000 $ + 120 fer + 80 redstone | 1 024 | 0,015 s | 4 |
 
-Total : 34 950 $ + 303 fer + 180 redstone. Temps par mètre ÷ 1,3 avec le talent Ascenseur express. Échelle, pour comparer : 0,15 s/m. La cabine charge d'abord le quai, puis le sac, les objets les plus chers d'abord, dans la limite de la capacité. Détail : [../batiments/mine.md](../batiments/mine.md).
+Total : 34 950 $ + 303 fer + 180 redstone. Temps par mètre ÷ 1,3 avec le talent Ascenseur express. Échelle, pour comparer : 0,15 s/m. La cabine charge d'abord le quai, puis le sac, les objets les plus chers d'abord, dans la limite de la capacité. En haut, son chargement ne se vend plus tout de suite (20/10) : il part au marché en brouette ou en wagonnet et se vend en arrivant (voir [Le village](#le-village)). Détail : [../batiments/mine.md](../batiments/mine.md).
 
 ## Enchantements
 
@@ -366,8 +367,10 @@ Détail : [../batiments/foreuse.md](../batiments/foreuse.md).
 | `MAX_EMPLOYES` | 6 ; `maxEmployes = min(6, prestige) + 1 (Grande équipe)` |
 | `PRIX_EMBAUCHE` | 5 000, 12 000, 25 000, 50 000, 90 000, 150 000, 250 000 $ (selon le nombre de mineurs **actuels**), puis × `HAUSSE_APRES_LISTE = 1,6` à chaque fois ; × 0,7 avec Recrutement à prix cassé ; arrondi à la centaine (100 $ au moins) |
 | `PART_INDEMNITES` | 0,4 : `indemnités = arrondi(prix de base de la n-ième embauche × 0,4 × 0,5 si Indemnités réduites)`, n = taille actuelle de l'équipe (donc 40 % du prix payé pour le dernier mineur arrivé, sans la réduction « prix cassé ») ; arrondi à la centaine, 100 $ au moins |
-| `DUREE_MIN_TRAJET_EMPLOYE` | 5 s : un trajet complet dure au moins 5 s |
-| `SECONDES_VENTE_EMPLOYE` | 4 s au marché pour vendre |
+| `DUREE_MIN_TRAJET_EMPLOYE` | 5 s : un trajet en cabine (montée ou descente) dure au moins 5 s |
+| `SECONDES_VENTE_EMPLOYE` | 4 s au marché pour vendre (seulement quand il y va à pied) |
+| `SECONDES_FORGE_EMPLOYE` | 3 s à la forge pour récupérer une nouvelle pioche (20/10) |
+| `VITESSE_MARCHE` | 4 cases/s : sa vitesse à pied dans le village (20/10, voir [Le village](#le-village)) |
 | `BLOCS_PAR_METRE_EMPLOYE` | 5 : il descend d'1 m tous les 5 blocs (jusqu'à sa profondeur max) |
 | `PAS_EMPLOYES` | le travail avance par morceaux de 30 s (pour que le manager paie entre deux morceaux) |
 | `NOMS_EMPLOYES` | Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot |
@@ -392,7 +395,16 @@ temps par mètre (trajet) = max(temps/m de ton ascenseur (ou 0,1 × talent si pa
 salaire (10 min) = round(SALAIRES[pioche] × salaire de la rareté × (1 + 0,15 × prestige) × 0,75 (Salaires négociés))
 ```
 
-Boucle : descend → creuse (jusqu'au sac plein) → monte → vend (4 s, tout l'argent pour le joueur, au bonus de vente) → redescend. Le temps payé s'écoule pendant tout le travail ; sans temps payé, il remonte, vend, puis attend au stand Personnel.
+Boucle (refaite le 20/10, avec le village vu du ciel) :
+
+1. **descend** dans sa cabine (une cabine par mineur, dans le puits de la mine commune ; il creuse sa propre galerie, avec sa propre profondeur) → **creuse** jusqu'au sac plein → **monte**.
+2. En haut, deux cas (`arriverEnHaut`) :
+   - des **rails relient la mine au marché** : il vide son sac dans le **wagonnet** (un convoi, vendu en arrivant au marché, voir [Le village](#le-village)) et repart tout de suite ;
+   - sinon, il **marche** jusqu'au marché (`etape: 'marche'`, `distance à pied ÷ 4` s), **vend** 4 s (tout l'argent pour le joueur, au bonus de vente), puis remarche jusqu'à la mine.
+3. Après une **amélioration de sa pioche** (si le forgeron est posé), il passe d'abord à la **forge** (`forgeEnAttente`) : marche jusqu'au forgeron, 3 s sur place, puis retour à la mine. Sans forgeron posé, la pioche est changée tout de suite.
+4. Il **redescend** (étape `descend`) et recommence.
+
+Le temps payé s'écoule pendant tout le travail (trajets, marche et vente compris). Sans temps payé, il remonte, vend (ou charge le wagonnet), puis **marche jusqu'au bâtiment Personnel et y attend** (étape `attend`, 😠) ; s'il n'y a pas de Personnel posé, il attend là où il est. Dès qu'il est payé, il retourne à la mine. Si deux bâtiments sont collés (trajet de 0 s), une boucle de sécurité limite le nombre d'étapes par tic.
 
 ### Salaires
 
@@ -445,6 +457,89 @@ Sans recruteur : 100 % commun. Talents : rare, épique, légendaire et mythique 
 
 Ordre de paie : lui-même d'abord (s'il n'est pas payé, il ne paie personne), puis les mineurs du moins cher au plus cher. La trésorerie repart de 0 au prestige. Détail : [../batiments/personnel.md](../batiments/personnel.md).
 
+## Le village
+
+Le village vu du ciel (20/10) : une grille de **40 × 40 cases** (`TAILLE_GRILLE`) où l'on pose les bâtiments, les rails, les chemins et les décorations. Le fonctionnement (menus, placement, Modifier, notifications) est dans [village.md](village.md) ; ici, seulement les chiffres.
+
+### Les bâtiments (`BATIMENTS`, `batiments.ts`)
+
+| Bâtiment | Taille | Entrée (sans miroir) | Débloqué au prestige | Prix pour le poser |
+|---|---|---|---:|---|
+| ⛏️ Mine | 10 × 10 | face avant gauche | 0 | déjà posée au milieu de la clairière (case 15, 15) |
+| 💰 Marché | 5 × 5 | face avant gauche | 0 | **gratuit** (on commence avec 0 $) |
+| ⚒️ Forgeron | 5 × 5 | face avant droite | 0 | 20 $ + 10 pierre |
+| 🎒 Bazar | 5 × 5 | face avant droite | 0 | 60 $ + 15 pierre |
+| 🔮 Enchanteur | 5 × 5 | face avant droite | 0 | 300 $ + 20 pierre + 5 fer |
+| 🌸 Arbre de prestige | 5 × 5 | face avant droite | 0 | 800 $ + 30 pierre + 10 fer |
+| ⚙️ Foreuse | 5 × 5 | face avant gauche | 1 | 1 500 $ + 50 pierre + 20 fer |
+| 👷 Personnel | 5 × 5 | face avant droite | 2 | 3 000 $ + 80 pierre + 30 fer |
+
+- Total au prestige 0 (marché, forgeron, bazar, enchanteur, arbre) : **1 180 $ + 75 pierre + 15 fer**. Tous les bâtiments : **5 680 $ + 205 pierre + 65 fer**.
+- On paie **une seule fois** : les bâtiments restent posés au prestige (tout le village est gardé). Les déplacer ou les retourner (miroir, l'entrée change de côté) est **gratuit**. On ne peut pas les enlever.
+- **La pierre se paie aussi en roche dure** (`pierreDisponible = pierre + roche dure`) : on prend d'abord la pierre du sac, puis la roche dure pour le reste (plus bas dans la mine, il n'y a plus de pierre : on n'est jamais bloqué). Les minerais se paient avec le sac, comme partout.
+- On ne pose rien hors de la clairière ni sur une case déjà occupée (bâtiment, décoration, rail ou chemin).
+
+### Rails, chemins, décorations
+
+| Élément | Prix | Débloqué au prestige | Remarques |
+|---|---|---:|---|
+| 🛤️ Rail (1 case) | **10 fer** (`COUT_RAIL`) | 2 (`PRESTIGE_RAILS`) | une ligne continue (cases collées par un côté) d'une case qui touche la mine à une case qui touche le marché fait rouler les chargements en wagonnet |
+| 🪨 Chemin de pavés (1 case) | 5 $ (`COUT_CHEMIN`) | 0 | seulement joli : on marche aussi vite dessus |
+
+Enlever un rail, un chemin ou une décoration ne rembourse rien ; les déplacer est gratuit.
+
+Décorations (`DECORATIONS`, payées en argent seulement). « Bloque » = on ne marche pas à travers (le chemin des personnages la contourne).
+
+| Décoration | Taille | Prix | Bloque | Prestige |
+|---|---|---:|:---:|---:|
+| Fleurs rouges | 1 × 1 | 15 $ | non | 0 |
+| Fleurs jaunes | 1 × 1 | 15 $ | non | 0 |
+| Fleurs violettes | 1 × 1 | 20 $ | non | 0 |
+| Buisson | 1 × 1 | 30 $ | non | 0 |
+| Rocher | 1 × 1 | 25 $ | oui | 0 |
+| Tonneau | 1 × 1 | 40 $ | oui | 0 |
+| Banc | 1 × 1 | 60 $ | oui | 0 |
+| Lanterne | 1 × 1 | 80 $ | oui | 0 |
+| Caisse de minerais | 1 × 1 | 120 $ | oui | 0 |
+| Grand arbre | 2 × 2 | 150 $ | oui | 0 |
+| Sapin | 2 × 2 | 150 $ | oui | 0 |
+| Cerisier en fleurs | 2 × 2 | 600 $ | oui | 1 |
+| Fontaine | 2 × 2 | 2 500 $ | oui | 2 |
+| Statue du hamster d'or | 2 × 2 | 20 000 $ | oui | 4 |
+
+### Les tenues du joueur (`TENUES`, au Bazar)
+
+Seulement pour le style, payées en argent, **gardées au prestige** ; on change de tenue gratuitement (`tenues.ts`). Un chapeau et un haut à la fois.
+
+| Chapeau | Prix | Prestige | | Haut | Prix | Prestige |
+|---|---:|---:|---|---|---:|---:|
+| Bandana rouge | 150 $ | 0 | | Gilet en cuir | 400 $ | 0 |
+| Casquette bleue | 300 $ | 0 | | Salopette de mineur | 900 $ | 0 |
+| Chapeau de paille | 600 $ | 0 | | Gilet doré | 12 000 $ | 2 |
+| Casque de chantier | 1 200 $ | 0 | | | | |
+| Haut-de-forme | 5 000 $ | 1 | | | | |
+| Couronne | 30 000 $ | 3 | | | | |
+
+### Vitesses et trajets
+
+| Constante | Valeur | Qui |
+|---|---|---|
+| `VITESSE_JOUEUR` | 5 cases/s | le joueur (il marche un peu plus vite que ses mineurs) |
+| `VITESSE_MARCHE` | 4 cases/s | les mineurs employés, et la brouette qui porte un chargement à pied |
+| `VITESSE_RAILS` | 12 cases/s | le wagonnet sur les rails (3 fois plus vite qu'à pied) |
+| `SECONDES_FORGE_EMPLOYE` | 3 s | un mineur à la forge, après l'amélioration de sa pioche |
+| `SECONDES_VENTE_EMPLOYE` | 4 s | un mineur au marché (seulement à pied) |
+
+- **Distance à pied** (`distanceEntre`) : de la case devant l'entrée d'un bâtiment à celle de l'autre (ou la case libre la plus proche si l'entrée est bouchée), par le plus court chemin en 8 directions (une diagonale compte √2, on ne coupe pas le coin d'un bâtiment), en contournant les bâtiments et les décorations qui bloquent (`trouverChemin`, A étoile).
+- **Un chargement vers le marché** (`trajetChargement`, `convois.ts`) : ce que remonte l'ascenseur du joueur, ce que le joueur charge lui-même dans le wagonnet (rails seulement), et la récolte des mineurs quand il y a des rails. Il est **vendu en arrivant**, au bonus de vente.
+  - en wagonnet : `max(1, (cases de rails + 1) ÷ 12)` s ;
+  - sinon en brouette : `max(1, distance à pied mine → marché ÷ 4)` s ;
+  - pas de marché posé : le chargement attend à la mine, et part dès que le marché est posé.
+  - Les chargements encore en route sont perdus au prestige (`convois` repart vide).
+- **Les mineurs au village** (`revenu.ts`, `tempsVillage`) : sans rails, chaque sac coûte `2 × (distance mine → marché ÷ 4) + 4 s` de plus ; avec des rails, 0 s (il vide son sac dans le wagonnet et redescend).
+
+Exemples (calculés avec `distanceEntre`) : marché posé en (18, 26), juste sous la mine → 12 cases à pied, soit 3 s en brouette, 2,4 s pour le joueur et 10 s d'aller-retour + vente pour un mineur ; avec une seule case de rail entre les deux, le wagonnet met 1 s. Marché en (26, 18), à droite de la mine → 8,8 cases.
+
 ## Les talents
 
 1 point par prestige ; 5 branches de 4 talents (rang 1 en haut) ; il faut le rang précédent. Branche Patron ouverte dès le prestige 2, Recrutement une fois le recruteur embauché.
@@ -488,8 +583,10 @@ foreuse (seulement si elle tourne)
 
 chaque mineur payé
    = [sac × valeur moyenne (sa profondeur) × bonus de vente]
-     ÷ [sac ÷ vitesse + 2 × max(1, profondeur − 1) × temps par mètre + 4 s]
+     ÷ [sac ÷ vitesse + 2 × max(1, profondeur − 1) × temps par mètre + temps au village]
      − salaire ÷ 600
+   temps au village (20/10) = 0 s si des rails relient la mine au marché (il charge le wagonnet),
+                              sinon 2 × (distance à pied mine → marché ÷ 4) + 4 s de vente
 manager au travail : − 3 000 ÷ 600 = − 5 $/s
 
 total = joueur + foreuse + mineurs   (peut être négatif)
@@ -532,12 +629,13 @@ Ce qu'il faut acheter **pendant** le prestige P pour remplir ses conditions (les
 
 ### Ce qu'il fait
 
+- **Le village** (20/10) : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (18, 26) dès le départ (gratuit), puis, dès qu'il peut les payer, le **forgeron** (26, 18), le **bazar** (12, 26), l'**enchanteur** (26, 12) et l'**arbre de prestige** (9, 9). Il paie la construction comme un joueur (argent, pierre ou roche dure, fer). L'arbre de prestige ne l'intéresse qu'une fois la pioche en netherite achetée (dans les 20 parties mesurées, il atteint la bedrock avant de le poser : 5 bâtiments, la mine comprise). Il n'achète que dans les bâtiments déjà posés.
 - Il creuse par **séries de 10 couches** (100 blocs), comme « Creuser » répété, en s'arrêtant si plus rien ne peut se ranger (sac et quai pleins), mais toujours au moins un bloc.
 - Il **construit et améliore l'ascenseur dès qu'il peut**, directement dans la mine (jusqu'au plafond : niveau 2).
-- Sac plein avec un ascenseur : il attend ou appelle la cabine et **l'envoie au marché** avec tout ce qui n'est pas gardé.
-- Il **remonte au village** si : le sac est plein sans ascenseur ; il peut payer la pioche suivante ; ou sa pioche est cassée (ou n'est pas la meilleure) et remonter permettrait d'y remédier.
-- Au village : il **garde** diamants (avant la pioche en diamant), débris et or (avant la netherite), lapis et émeraudes (tant qu'il reste un enchantement à prendre), les minerais du prochain niveau d'ascenseur, et **3 minerais de réparation** de sa meilleure pioche ; il vend le reste ; il achète la pioche suivante, **tous les enchantements possibles**, le sac suivant s'il a **2 fois son prix**, et (à partir de -36 m) jusqu'à **2 seaux** s'il a 2 fois leur prix ; puis il répare, rachète ou équipe la meilleure pioche possible.
-- Le temps compté = temps de minage + trajets (échelle à 0,15 s/m, cabine) + attentes de l'ascenseur.
+- Sac plein avec un ascenseur : il attend ou appelle la cabine et **l'envoie** avec tout ce qui n'est pas gardé, **moins sa réserve** (ci-dessous). Le chargement part au marché en brouette et se vend en arrivant.
+- Il **remonte au village** si : le sac est plein sans ascenseur ; plus rien ne peut se ranger ; il peut payer un bâtiment de son plan ; il peut payer la pioche suivante ; ou sa pioche est cassée (ou n'est pas la meilleure) et remonter permettrait d'y remédier.
+- Au village : il **marche** de la mine au marché et revient (`2 × distance ÷ VITESSE_JOUEUR` secondes ajoutées au temps à chaque visite). Il **garde** diamants (avant la pioche en diamant), débris et or (avant la netherite), lapis et émeraudes (tant qu'il reste un enchantement à prendre), les minerais du prochain niveau d'ascenseur, et une **réserve** : 3 minerais de réparation de sa meilleure pioche, et la pierre et le fer du prochain bâtiment de son plan (dès qu'il a la moitié de son prix en argent ; la roche dure remplace la pierre qui manque ; jamais plus que la taille du sac − 8). Il vend le reste (et tout, si le sac reste presque plein d'objets gardés : moins de 8 places libres). Puis, dans l'ordre : les **bâtiments** de son plan qu'il peut payer, la pioche suivante (au forgeron), **tous les enchantements possibles** (à l'enchanteur, **seulement une fois l'ascenseur construit** : il fait gagner bien plus de temps), le sac suivant s'il a **2 fois son prix** et (à partir de -36 m) jusqu'à **2 seaux** s'il a 2 fois leur prix (au bazar) ; enfin il répare, rachète ou équipe la meilleure pioche possible.
+- Le temps compté = temps de minage + trajets (échelle à 0,15 s/m, cabine) + attentes de l'ascenseur + marche au village.
 
 ### Ce que vérifie `bot.test.ts`
 
@@ -552,18 +650,18 @@ Ce qu'il faut acheter **pendant** le prestige P pour remplir ses conditions (les
 | Allers-retours | plus de 3 remontées au village |
 | Pioche en fer | achetée entre -15 et -70 m |
 
-### Résultats mesurés (20/10, code actuel)
+### Résultats mesurés (20/10, avec le village vu du ciel)
 
 | Mesure (20 parties) | Minimum | Médiane | Maximum |
 |---|---:|---:|---:|
-| Blocs pour la bedrock | 1 700 | **2 870** | 7 330 |
-| Temps de jeu simulé | 12,7 min | **20,5 min** | 56,9 min |
-| Profondeur à l'achat de la pioche en fer | -25 m | — | -44 m |
-| Profondeur à la construction de l'ascenseur | -18 m | — | -50 m |
-| Allers-retours au village | 12 | — | 30 |
-| Argent restant à la bedrock | 4 650 $ | — | 75 494 $ |
+| Blocs pour la bedrock | 1 670 | **2 610** | 4 170 |
+| Temps de jeu simulé | 14,7 min | **21,2 min** | 37,3 min |
+| Profondeur à l'achat de la pioche en fer | -20 m | — | -47 m |
+| Profondeur à la construction de l'ascenseur | -23 m | — | -58 m |
+| Allers-retours au village | 15 | — | 29 |
+| Argent restant à la bedrock | 604 $ | 17 927 $ | 44 493 $ |
 
-(La médiane de `bot.test.ts` est l'élément d'indice 10 de la liste triée.) La médiane des blocs est proche du haut de la cible (3 000) : un changement qui rallonge la partie peut faire échouer le test.
+(La médiane de `bot.test.ts` est l'élément d'indice 10 de la liste triée.) Avant le village (même jour, stands sur un chemin) : 2 870 blocs et 20,5 min de médiane. La partie dure un peu plus longtemps (marche jusqu'au marché, constructions à payer), avec un peu moins de blocs cassés. La médiane des blocs reste dans le haut de la cible (3 000) : un changement qui rallonge la partie peut faire échouer le test.
 
 Le bot ne joue que le **prestige 0** : il n'y a pas de bot pour les prestiges suivants, la foreuse ni les mineurs (ceux-ci ont leurs propres tests d'équilibrage dans `employes.test.ts` et `revenu.test.ts`).
 
@@ -571,12 +669,14 @@ Le bot ne joue que le **prestige 0** : il n'y a pas de bot pour les prestiges su
 
 | Repère | Valeur | Source |
 |---|---|---|
-| Première partie (prestige 0, mine de 100 m) | **10 à 25 min** et **1 300 à 3 000 blocs** (médianes) ; mesuré : 20,5 min, 2 870 blocs | `CLAUDE.md`, `bot.test.ts` |
+| Première partie (prestige 0, mine de 100 m) | **10 à 25 min** et **1 300 à 3 000 blocs** (médianes) ; mesuré : 21,2 min, 2 610 blocs | `CLAUDE.md`, `bot.test.ts` |
 | Remplir un chariot de foreuse | ≈ 8 min (500 s) à niveaux de forage et de chariot égaux | `NIVEAUX_CHARIOT` |
 | Une paie de mineur | 10 min | `SECONDES_PAR_PAIE` |
 | Un charbon dans la foreuse | 20 s | `SECONDES_PAR_CHARBON` |
 | Rattrapage hors ligne | 8 h au plus | `ABSENCE_MAX` |
 | Remonter de -100 m à l'échelle | ≈ 15 s (0,15 s/m) | `SECONDES_PAR_METRE_ECHELLE` |
 | Remonter de -100 m en ascenseur | ≈ 10 s (niveau 1) à ≈ 1,5 s (niveau 6) | `NIVEAUX_ASCENSEUR` |
+| Un chargement de la mine au marché | 1 à quelques secondes : distance à pied ÷ 4 en brouette, (rails + 1) ÷ 12 en wagonnet (1 s au moins) | `trajetChargement` |
+| Le joueur traverse la clairière (40 cases) | ≈ 8 s (5 cases/s) | `VITESSE_JOUEUR` |
 
 Le code ne donne **pas** de durée cible pour les prestiges 1 et suivants (aucun test ne la mesure).

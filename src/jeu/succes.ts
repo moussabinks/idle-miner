@@ -1,7 +1,8 @@
-// Les 16 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
+// Les 19 succès du jeu. Ils sont vérifiés après chaque bloc et chaque action,
 // et restent débloqués après un prestige.
 
 import { peutEncoreEnchanter, type EtatJeu } from './mineur'
+import { railsMineMarche } from './village'
 
 export type Succes = {
   id: string
@@ -34,6 +35,10 @@ export const SUCCES: Succes[] = [
     condition: (e) => !peutEncoreEnchanter(e),
   },
   { id: 'bedrock', emoji: '🏆', titre: 'Bedrock !', description: 'Atteindre la bedrock, tout au fond de la mine', condition: (e) => e.victoire },
+  // Le village vu du ciel (20/10).
+  { id: 'architecte', emoji: '🏗️', titre: 'Architecte', description: 'Poser 5 bâtiments au village', condition: (e) => e.village.batiments.length >= 6 },
+  { id: 'paysagiste', emoji: '🌸', titre: 'Paysagiste', description: 'Poser 10 décorations au village', condition: (e) => e.village.decorations.length >= 10 },
+  { id: 'cheminot', emoji: '🛤️', titre: 'Cheminot', description: 'Relier la mine au marché avec des rails', condition: (e) => railsMineMarche(e.village) !== null },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

@@ -527,3 +527,210 @@ export function dureeCasse(durete: number, profondeur: number, vitesse: number, 
   const malusProfondeur = estRocheDure(profondeur, prestige) ? 1.5 : 1
   return ((durete * malusProfondeur) / vitesse) * VITESSE_JEU
 }
+
+// ---------------------------------------------------------------------------
+// Le village en vue du ciel (décidé le 20/10) : une grande grille où l'on pose les bâtiments
+// ---------------------------------------------------------------------------
+
+// La clairière fait 40 × 40 cases. Chaque bâtiment fait 5 × 5 cases, sauf la mine (10 × 10).
+// Les rails, les chemins et les petites décorations font 1 case.
+export const TAILLE_GRILLE = 40
+
+// Les bâtiments du village (les mêmes identifiants que les anciens stands, pour les objectifs).
+export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes' | 'prestige'
+
+export type InfoBatiment = {
+  id: IdBatiment
+  nom: string
+  emoji: string
+  description: string
+  taille: number // en cases (carré)
+  // Le côté de l'entrée sur le dessin (sans miroir) : la face avant gauche ou la face avant droite.
+  porte: 'gauche' | 'droite'
+  prestige: number // à partir de quel prestige on peut le poser
+  cout: Cout // le prix pour le poser (une seule fois : les bâtiments restent au prestige)
+}
+
+// Le marché est gratuit : au début de la partie, on a 0 $. Les autres coûtent un peu d'argent,
+// de la pierre et du fer, juste assez pour qu'on les pose au fil de la première partie
+// (le forgeron dès les premiers mètres, l'enchanteur et l'arbre de prestige plus tard).
+export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
+  puits: {
+    id: 'puits',
+    nom: 'Mine',
+    emoji: '⛏️',
+    description: 'L’entrée de la mine : l’échelle et l’ascenseur pour descendre.',
+    taille: 10,
+    porte: 'gauche',
+    prestige: 0,
+    cout: { materiaux: {} },
+  },
+  marche: {
+    id: 'marche',
+    nom: 'Marché',
+    emoji: '💰',
+    description: 'Vends tes blocs et minerais.',
+    taille: 5,
+    porte: 'gauche',
+    prestige: 0,
+    cout: { materiaux: {} },
+  },
+  forgeron: {
+    id: 'forgeron',
+    nom: 'Forgeron',
+    emoji: '⚒️',
+    description: 'Pioches et réparations.',
+    taille: 5,
+    porte: 'droite',
+    prestige: 0,
+    cout: { argent: 20, materiaux: { pierre: 10 } },
+  },
+  bazar: {
+    id: 'bazar',
+    nom: 'Bazar',
+    emoji: '🎒',
+    description: 'Sacs à dos, seaux d’eau et tenues.',
+    taille: 5,
+    porte: 'droite',
+    prestige: 0,
+    cout: { argent: 60, materiaux: { pierre: 15 } },
+  },
+  enchanteur: {
+    id: 'enchanteur',
+    nom: 'Enchanteur',
+    emoji: '🔮',
+    description: 'Enchante tes pioches avec lapis et émeraudes.',
+    taille: 5,
+    porte: 'droite',
+    prestige: 0,
+    cout: { argent: 300, materiaux: { pierre: 20, fer: 5 } },
+  },
+  prestige: {
+    id: 'prestige',
+    nom: 'Arbre de prestige',
+    emoji: '🌸',
+    description: 'Passe prestige et choisis tes talents dans l’arbre.',
+    taille: 5,
+    porte: 'droite',
+    prestige: 0,
+    cout: { argent: 800, materiaux: { pierre: 30, fer: 10 } },
+  },
+  foreuse: {
+    id: 'foreuse',
+    nom: 'Foreuse',
+    emoji: '⚙️',
+    description: 'Elle creuse toute seule si tu lui donnes du charbon.',
+    taille: 5,
+    porte: 'gauche',
+    prestige: 1,
+    cout: { argent: 1500, materiaux: { pierre: 50, fer: 20 } },
+  },
+  employes: {
+    id: 'employes',
+    nom: 'Personnel',
+    emoji: '👷',
+    description: 'Embauche des mineurs qui creusent et vendent pour toi, et paie leurs salaires.',
+    taille: 5,
+    porte: 'droite',
+    prestige: 2,
+    cout: { argent: 3000, materiaux: { pierre: 80, fer: 30 } },
+  },
+}
+
+// L'ordre du menu « Bâtiments » (la mine est déjà posée au début de la partie).
+export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige', 'foreuse', 'employes']
+
+// Les rails (prestige 2) : 10 fer par case. Une ligne de rails continue de la mine au marché
+// fait voyager les minerais en wagonnet, 3 fois plus vite qu'à pied.
+export const PRESTIGE_RAILS = 2
+export const COUT_RAIL: Cout = { materiaux: { fer: 10 } }
+
+// Les chemins de pavés : seulement pour faire joli (5 $ la case).
+export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
+
+// Les vitesses au village, en cases par seconde : à pied (les mineurs, la brouette qui porte
+// le chargement de l'ascenseur) et en wagonnet sur les rails.
+export const VITESSE_MARCHE = 4
+export const VITESSE_RAILS = 12
+// Le joueur marche un peu plus vite que ses mineurs (c'est lui le patron).
+export const VITESSE_JOUEUR = 5
+// Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.
+export const SECONDES_FORGE_EMPLOYE = 3
+
+// Les décorations : seulement pour faire joli. Les fleurs, buissons et chemins se traversent ;
+// les arbres, rochers, lanternes, fontaines... bloquent le passage.
+export type IdDecoration =
+  | 'fleurs-rouges'
+  | 'fleurs-jaunes'
+  | 'fleurs-violettes'
+  | 'buisson'
+  | 'rocher'
+  | 'tonneau'
+  | 'caisse'
+  | 'lanterne'
+  | 'banc'
+  | 'arbre'
+  | 'sapin'
+  | 'cerisier'
+  | 'fontaine'
+  | 'statue'
+
+export type InfoDecoration = {
+  id: IdDecoration
+  nom: string
+  taille: 1 | 2
+  prix: number
+  bloque: boolean // true = on ne peut pas marcher à travers
+  prestige: number
+}
+
+export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
+  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1, prix: 15, bloque: false, prestige: 0 },
+  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1, prix: 15, bloque: false, prestige: 0 },
+  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1, prix: 20, bloque: false, prestige: 0 },
+  buisson: { id: 'buisson', nom: 'Buisson', taille: 1, prix: 30, bloque: false, prestige: 0 },
+  rocher: { id: 'rocher', nom: 'Rocher', taille: 1, prix: 25, bloque: true, prestige: 0 },
+  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1, prix: 40, bloque: true, prestige: 0 },
+  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1, prix: 120, bloque: true, prestige: 0 },
+  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1, prix: 80, bloque: true, prestige: 0 },
+  banc: { id: 'banc', nom: 'Banc', taille: 1, prix: 60, bloque: true, prestige: 0 },
+  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2, prix: 150, bloque: true, prestige: 0 },
+  sapin: { id: 'sapin', nom: 'Sapin', taille: 2, prix: 150, bloque: true, prestige: 0 },
+  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2, prix: 600, bloque: true, prestige: 1 },
+  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2, prix: 2500, bloque: true, prestige: 2 },
+  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2, prix: 20000, bloque: true, prestige: 4 },
+}
+
+export const LISTE_DECORATIONS = Object.keys(DECORATIONS) as IdDecoration[]
+
+// ---------------------------------------------------------------------------
+// Les tenues du joueur (au Bazar) : seulement pour le style, gardées au prestige
+// ---------------------------------------------------------------------------
+
+export type PartieTenue = 'chapeau' | 'haut'
+export type IdTenue =
+  | 'bandana'
+  | 'casquette'
+  | 'paille'
+  | 'chantier'
+  | 'haut-de-forme'
+  | 'couronne'
+  | 'gilet-cuir'
+  | 'salopette'
+  | 'gilet-or'
+
+export type InfoTenue = { id: IdTenue; nom: string; partie: PartieTenue; prix: number; prestige: number }
+
+export const TENUES: Record<IdTenue, InfoTenue> = {
+  bandana: { id: 'bandana', nom: 'Bandana rouge', partie: 'chapeau', prix: 150, prestige: 0 },
+  casquette: { id: 'casquette', nom: 'Casquette bleue', partie: 'chapeau', prix: 300, prestige: 0 },
+  paille: { id: 'paille', nom: 'Chapeau de paille', partie: 'chapeau', prix: 600, prestige: 0 },
+  chantier: { id: 'chantier', nom: 'Casque de chantier', partie: 'chapeau', prix: 1200, prestige: 0 },
+  'haut-de-forme': { id: 'haut-de-forme', nom: 'Haut-de-forme', partie: 'chapeau', prix: 5000, prestige: 1 },
+  couronne: { id: 'couronne', nom: 'Couronne', partie: 'chapeau', prix: 30000, prestige: 3 },
+  'gilet-cuir': { id: 'gilet-cuir', nom: 'Gilet en cuir', partie: 'haut', prix: 400, prestige: 0 },
+  salopette: { id: 'salopette', nom: 'Salopette de mineur', partie: 'haut', prix: 900, prestige: 0 },
+  'gilet-or': { id: 'gilet-or', nom: 'Gilet doré', partie: 'haut', prix: 12000, prestige: 2 },
+}
+
+export const LISTE_TENUES = Object.keys(TENUES) as IdTenue[]

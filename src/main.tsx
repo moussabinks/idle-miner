@@ -5,6 +5,7 @@ import './blocs.css'
 import './effets.css'
 import './accueil.css'
 import './personnel.css'
+import './village.css'
 import App from './App.tsx'
 import { enregistrerServiceWorker } from './installation'
 

@@ -6,11 +6,18 @@
 //   après une mise à jour), et on prend celle du cache si le réseau ne répond pas.
 // - Les fichiers de /assets/ : leur nom change à chaque version (index-AbC123.js), donc
 //   une fois rangés ils ne changent plus : on les prend directement dans le cache.
-// - Les autres fichiers du site (icônes, manifeste) : le cache d'abord, puis on le met à jour.
+// - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v1'
-const FICHIERS_DE_BASE = ['/', '/manifest.webmanifest', '/favicon.svg', '/icones/icone-192.png', '/icones/icone-512.png']
+const CACHE = 'idle-miner-v2'
+// Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
+// village serait vide hors ligne.
+const IMAGES_DU_VILLAGE = [
+  '/images/village/fond.webp',
+  ...['bazar', 'employes', 'enchanteur', 'foreuse', 'forgeron', 'marche', 'prestige', 'rails'].map((nom) => `/images/batiments/${nom}.webp`),
+  ...['manager', 'mineur', 'recruteur'].map((nom) => `/images/personnages/${nom}.webp`),
+]
+const FICHIERS_DE_BASE = ['/', '/manifest.webmanifest', '/favicon.svg', '/icones/icone-192.png', '/icones/icone-512.png', ...IMAGES_DU_VILLAGE]
 
 self.addEventListener('install', (evenement) => {
   evenement.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FICHIERS_DE_BASE)))

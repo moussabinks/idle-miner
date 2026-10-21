@@ -1,21 +1,23 @@
 # 🎒 Bazar
 
-> La boutique d'équipement du village : on y agrandit son sac à dos (7 tailles, de 32 à 2 048 places) et on y achète des seaux d'eau pour éteindre la lave.
+> La boutique d'équipement du village : on y agrandit son sac à dos (7 tailles, de 32 à 2 048 places), on y achète des seaux d'eau pour éteindre la lave, et (20/10) des tenues pour le hamster.
 
 ## Où et quand
 
-- **Position** : `x = 13.5` tuiles sur le chemin du village (qui fait 27 tuiles), entre le Forgeron (10.5) et l'Enchanteur (16.5). On est « devant » le stand à 1,4 tuile près (`PORTEE_STAND`), et c'est là que son panneau s'ouvre à droite.
+- **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 15 pierre** (la roche dure compte aussi comme de la pierre). Tant qu'il n'est pas posé, pas de sac plus grand, de seau ni de tenue (la barre d'objectif propose « Construire : Bazar »). Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : ouvert dès le début (prestige 0), sans cadenas.
-- **Au village** :
-  - une échoppe dessinée en CSS : auvent rayé **vert** (`--auvent: #2f8f4a`) et blanc, à festons, au-dessus d'un comptoir en bois avec l'icône 🎒 ; le panneau en bois « Bazar » sous l'échoppe ;
-  - le panneau passe en couleur d'accent (jaune, lueur) quand le mineur est devant (`stand-actif`), et l'échoppe s'éclaircit au survol ;
-  - pastille verte **« 💰 Achetable ! »** quand le prochain sac est à la fois permis par le prestige et payable (le seau ne compte pas) ;
-  - badge jaune sautillant **« ⬆ Niveaux ! »** (et la flèche « ⬆ Nouveaux niveaux : Bazar ! » si aucun autre stand n'est à montrer avant) après un prestige qui a débloqué un sac de plus : aux prestiges 2, 3, 4 et 5. Il disparaît dès qu'on passe devant le stand. Pas de badge au prestige 1 (le plafond reste à 128 places).
+- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
+- **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/bazar.webp`) : une échoppe en bois et en pierre, avec ses étals de sacs et d'équipement. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Description** (en haut du panneau) : « Sacs à dos, seaux d'eau et tenues. »
+- **Bulles au-dessus** (`notifications.ts`) :
+  - **💰 « Une amélioration est achetable ! »** quand le prochain sac est à la fois permis par le prestige et payable (le seau et les tenues ne comptent pas) ;
+  - **⬆️ « Nouveaux niveaux débloqués ! »** après un prestige qui a débloqué un sac de plus : aux prestiges 2, 3, 4 et 5. Elle disparaît dès qu'on passe devant. Pas de bulle au prestige 1 (le plafond reste à 128 places).
 - Le bandeau du haut (`Hud.tsx`) montre en permanence le remplissage du sac (`n / taille`, la case clignote en rouge quand il est plein) et le nombre de seaux (`🪣 n`).
 
 ## Ce qu'on peut y faire
 
-Tous les achats se font **à la surface, à l'arrêt** (`aLaSurface`) et se paient **seulement en argent**.
+Tous les achats se font **au village, devant le bazar, à l'arrêt** (`aLaSurface`) et se paient **seulement en argent**.
 
 ### 🎒 Sac à dos (bouton bleu « ⬆ N places »)
 
@@ -38,6 +40,28 @@ Coût total de 32 à 2 048 places : 61 980 $. Message à l'achat : « 🎒 Nouve
 - **Prix : 25 $** le seau (`PRIX_SEAU`), un par clic, **sans limite** de nombre.
 - Le panneau rappelle : « Transforme une lave en obsidienne (60 $) au lieu de brûler ton sac. Tu en as N. »
 - Message à l'achat : « 🪣 Seau d'eau acheté. »
+
+### 👕 Tenues du hamster (20/10, `PanneauTenues.tsx`)
+
+Juste pour le style : elles ne donnent aucun bonus. Au début, le hamster du joueur n'a **ni casque ni chapeau**, juste une chemise toute simple et sa pioche. Le panneau montre le hamster avec sa tenue du moment, et deux listes : **🎩 Chapeaux** et **🦺 Hauts**.
+
+| Tenue | Partie | Prix | À partir du prestige |
+|---|---|---:|---|
+| Bandana rouge | chapeau | 150 $ | 0 |
+| Casquette bleue | chapeau | 300 $ | 0 |
+| Chapeau de paille | chapeau | 600 $ | 0 |
+| Casque de chantier | chapeau | 1 200 $ | 0 |
+| Haut-de-forme | chapeau | 5 000 $ | 1 |
+| Couronne | chapeau | 30 000 $ | 3 |
+| Gilet en cuir | haut | 400 $ | 0 |
+| Salopette de mineur | haut | 900 $ | 0 |
+| Gilet doré | haut | 12 000 $ | 2 |
+
+- Une tenue pas encore permise affiche « 🔒 … au prestige N ».
+- **Acheter** (bouton bleu avec le prix) : on la paie une fois et **on la porte tout de suite** (« 👕 … acheté(e) : tu le portes déjà ! »).
+- **Porter** : changer pour une tenue déjà achetée est **gratuit** (bouton « Porter », « ✔ Portée » pour celle qu'on a). Les liens **« Enlever »** (chapeau) et **« Tenue de départ »** (haut) reviennent à la tenue de base.
+- On voit la tenue partout : sur la carte du village, dans l'aperçu du Bazar, et dans la vue en coupe de la mine.
+- **Au prestige** : les tenues achetées et la tenue portée sont **gardées** (comme tout le village).
 
 ## Règles et comportement
 
@@ -71,23 +95,29 @@ Coût total de 32 à 2 048 places : 61 980 $. Message à l'achat : « 🎒 Nouve
 ## Lien avec le reste du jeu
 
 - **Conditions de prestige** (`conditionsPrestige.ts`) : « 🎒 Sac de N places » où N est le plus grand sac permis au prestige actuel (128 places aux prestiges 0 et 1, 256 au prestige 2…). Les seaux ne comptent pas.
-- **Objectifs** (`objectifs.ts`) : le prochain sac fait partie des `achatsPossibles` (« Sac de N places »), ce qui allume la pastille « Achetable ! » et peut devenir le prochain objectif (« achetable au bazar ! »). Le bazar est aussi dans la liste des stands qui peuvent avoir de « Nouveaux niveaux » (plafond `sac`).
+- **Objectifs** (`objectifs.ts`) : tant que le bazar n'est pas posé, « Construire : Bazar ». Ensuite, le prochain sac fait partie des `achatsPossibles` (« Sac de N places »), ce qui fait apparaître la bulle 💰 et peut devenir le prochain objectif (« achetable au bazar ! »). Le bazar est aussi dans la liste des bâtiments qui peuvent avoir de « Nouveaux niveaux » (plafond `sac`). Les tenues ne sont jamais des objectifs.
 - **Succès** (`succes.ts`) : « 🪣 Pompier : éteindre de la lave avec un seau ».
 - **Statistiques** : nombre de laves éteintes.
-- **Autres bâtiments** : on vend le contenu du sac au **Marché** ; l'**ascenseur** (entrée de la mine) remonte le sac et recueille le trop-plein sur son quai ; les minerais du sac servent à payer le **Forgeron**, l'**Enchanteur** et la **Foreuse**. Les mineurs employés ont leur propre sac, lié à leur pioche (stand Personnel), pas au Bazar.
+- **Autres bâtiments** : on vend le contenu du sac au **Marché** ; l'**ascenseur** (entrée de la mine) remonte le sac et recueille le trop-plein sur son quai ; les minerais du sac servent à payer le **Forgeron**, l’**Enchanteur** et la **Foreuse**, et (20/10) la pierre et le fer des **bâtiments** à poser. Les mineurs employés ont leur propre sac, lié à leur pioche (au Personnel), pas au Bazar.
 - **Bot de simulation** (`bot.ts`) : il garde 2 seaux d'avance et achète le sac suivant quand il a deux fois son prix.
 
 ## Fichiers du code
 
-- `src/composants/stands.ts` : position (`x: 13.5`), nom et description du stand.
-- `src/jeu/donnees.ts` : `SACS` (tailles et prix), `PRIX_SEAU`, `PLAFONDS.sac`, `niveauMaxAuPrestige`, `prestigePourNiveau`.
-- `src/jeu/mineur.ts` : `acheterSac`, `prixProchainSac`, `sacBloqueAuPrestige`, `acheterSeau`, `tailleSac`, `placeLibre`, effet de la lave dans `recolter`, garde du sac au `prestige`.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.bazar` : 60 $ + 15 pierre, 5 × 5, porte à droite), `SACS` (tailles et prix), `PRIX_SEAU`, `PLAFONDS.sac`, `niveauMaxAuPrestige`, `prestigePourNiveau`, les tenues (`TENUES`, `LISTE_TENUES`).
+- `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
+- `src/jeu/mineur.ts` : `acheterSac`, `prixProchainSac`, `sacBloqueAuPrestige`, `acheterSeau`, `tailleSac`, `placeLibre`, effet de la lave dans `recolter`, garde du sac, des tenues (`tenue`, `tenuesAchetees`) au `prestige`.
+- `src/jeu/tenues.ts` : `tenueDebloquee`, `peutAcheterTenue`, `acheterTenue`, `porterTenue`.
 - `src/jeu/mine.ts` : profondeur d'apparition de la lave.
 - `src/jeu/conditionsPrestige.ts` : la condition « Sac de N places ».
-- `src/jeu/objectifs.ts` : achat « Sac de N places », pastille « Achetable ! », badge « Nouveaux niveaux ».
+- `src/jeu/notifications.ts` : les bulles 💰 et ⬆️ au-dessus du bazar.
+- `src/jeu/objectifs.ts` : « Construire : Bazar », achat « Sac de N places », badge « Nouveaux niveaux ».
 - `src/jeu/succes.ts` : le succès « Pompier ».
-- `src/composants/Panneaux.tsx` : `PanneauBazar`, le panneau du stand.
+- `src/composants/Panneaux.tsx` : `PanneauBazar` (sacs et seaux).
+- `src/composants/PanneauTenues.tsx` : les tenues, avec l'aperçu du hamster.
+- `src/composants/Hamster.tsx` : le hamster du village et ses chapeaux et hauts ; `src/composants/Personnage.tsx` : le même dans la vue en coupe.
 - `src/composants/Amelioration.tsx` : la ligne d'amélioration (carrés de niveaux, cadenas, bouton).
-- `src/composants/VueVillage.tsx` : dessin de l'échoppe, badges, pastille et flèches.
+- `src/composants/MenuConstruction.tsx` : la carte du bazar dans le menu Bâtiments.
+- `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.
+- `public/images/batiments/bazar.webp` : le dessin du bazar.
 - `src/composants/Hud.tsx` : jauge du sac et nombre de seaux dans le bandeau.
-- `src/index.css`, `src/personnel.css` : couleur de l'auvent, échoppe, badges et pastille.
+- `src/village.css` : les tenues (`.tenues`, `.ligne-tenue`) et les bulles.

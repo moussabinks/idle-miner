@@ -1,7 +1,7 @@
 # ⛏️ La mine et le minage
 
 > Comment la mine est générée, ce que fait le mineur pas à pas, et tout ce qui tourne autour : événements, découvertes, succès, temps qui passe (et hors ligne), statistiques et écran de victoire.
-> Écrit d'après le code au 20/10. Les règles de l'ascenseur, des pioches, du sac, des enchantements, de la foreuse et des mineurs employés ont leur fiche : [mine.md](../batiments/mine.md) (échelle, ascenseur, quai), [forgeron.md](../batiments/forgeron.md) (pioches, usure, réparation), [bazar.md](../batiments/bazar.md) (sac, seaux), [enchanteur.md](../batiments/enchanteur.md), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [prestige.md](../batiments/prestige.md).
+> Écrit d'après le code au 20/10. Le village vu du ciel (d'où l'on entre dans la mine) est décrit dans [village.md](village.md). Les règles de l'ascenseur, des pioches, du sac, des enchantements, de la foreuse et des mineurs employés ont leur fiche : [mine.md](../batiments/mine.md) (échelle, ascenseur, quai), [forgeron.md](../batiments/forgeron.md) (pioches, usure, réparation), [bazar.md](../batiments/bazar.md) (sac, seaux), [enchanteur.md](../batiments/enchanteur.md), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [prestige.md](../batiments/prestige.md).
 
 ---
 
@@ -165,6 +165,8 @@ Tout l'état d'une partie tient dans un objet `EtatJeu` (sauvegardé tel quel en
 - **Au front, ← / →** : une case à gauche ou à droite (bornée de 0 à 9). Annule un départ en cours vers le puits.
 - **Partir vers le haut depuis le front** (`voyager`) : si le mineur n'est pas en colonne 0, il **marche d'abord jusqu'au puits**, à **0,12 s par case** ; puis il prend l'**ascenseur** s'il est là (cabine arrêtée à sa hauteur), sinon l'**échelle** (**0,15 s par mètre** ; ≈ 14,7 s pour remonter de -99 m au prestige 0). Détails de l'échelle et de l'ascenseur : [mine.md](../batiments/mine.md).
 - **Descendre** : du village vers le front, même logique (ascenseur au village s'il y attend, sinon échelle).
+- **Entrer dans la mine** (20/10, `App.tsx`) : au village (vu du ciel), on touche le bâtiment **Mine** puis le bouton **« ⛏️ Entrer dans la mine »** de son panneau, ou le bouton **⛏️ Mine** de la barre du bas. Le hamster marche jusqu'à l'entrée de la mine, la caméra plonge dans le trou (fondu au noir, transition `entree`), puis on passe dans la **vue en coupe** (la vue 2D d'avant) et le mineur descend vers le front (ascenseur s'il attend en haut, sinon échelle). Le haut de cette vue garde une bande de ciel avec le panneau « ☀️ Village ».
+- **Remonter au village** : bouton **🏠 Village** (ou ↑ sur l'échelle jusqu'en haut). Arrivé à la position 0, l'écran repasse au village vu du ciel (transition `sortie`) et le hamster réapparaît **devant l'entrée de la mine**. Pour vendre son sac, il faut ensuite **marcher jusqu'au marché** (le panneau du marché s'ouvre devant sa porte).
 - **Relâcher la flèche sur l'échelle** : il s'arrête au prochain barreau (un appui très court fait toujours bouger d'un mètre).
 - Messages d'arrivée : « ☀️ Te voilà au village ! » ou « ⛏️ Au front de taille, à -X m. ».
 
@@ -202,6 +204,7 @@ Conditions : le mineur est au fond, ne marche pas vers le puits, et il reste un 
    - bloc spécial → son effet (coffre, lave, géode, voir plus haut) ;
    - bloc normal → **1 objet**, ou **2** si c'est un minerai « Fortune » et que la chance de doublement tombe (`20 % × niveau de Fortune + 10 % avec Œil de lynx` ; Fortune III + Œil de lynx = 70 %). Les diamants obtenus (1 ou 2) comptent dans « diamants trouvés ».
    - **Rangement** (`stocker`) : d'abord dans le **sac** tant qu'il y a de la place, puis le reste sur le **quai de l'ascenseur** (s'il est construit, jusqu'à la capacité de la cabine), et ce qui ne tient nulle part est **perdu** (« 🎒 Sac plein ! Remonte vendre au marché (bouton Village) ou envoie l'ascenseur. »). Tailles de sac : [bazar.md](../batiments/bazar.md).
+   - **L'ascenseur ne vend plus en arrivant** (20/10) : quand la cabine arrive en haut avec un chargement, celui-ci **part au marché** (« 🛗 Chargement remonté : il part au marché. ») : dans une **brouette** à la vitesse de la marche, ou dans un **wagonnet** si des rails relient la mine au marché (prestige 2). Il est vendu en arrivant au marché (« 🛒 La brouette / 🛤️ Le wagonnet a vendu ton chargement au marché : +X $ »). Sans marché posé, il attend à la mine. Durées : [equilibrage.md](equilibrage.md#le-village), règles : `src/jeu/convois.ts`.
 5. La case devient vide. Si c'était le dernier bloc de la couche → **couche suivante** (ci-dessous).
 
 ### Finir une couche (`passerCoucheSuivante`)
@@ -226,7 +229,7 @@ Profondeur max des pioches (la couche la plus basse qu'on peut creuser ; netheri
 
 ### Les boutons de minage (`src/usePartie.ts`, `src/App.tsx`)
 
-La barre du bas a toujours 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **🏠 Village**, **⛏️ Mine**.
+Dans la mine, la barre du bas a 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **🏠 Village** (remonter), **⛏️ Front** (retourner au front de taille). Au village, elle a d'autres boutons (Bâtiments, Décos, Modifier, Mine : voir [village.md](village.md)).
 
 - **⛏️ Creuser** (seulement au front) : casse tous les blocs **restants de la couche en cours** (un compteur de blocs à casser). Il devient **⏹️ Arrêter** pendant ce temps. Marche aussi à mains nues.
 - **♾️ Auto** : creuse sans fin (couche après couche) jusqu'à **⏹️ Arrêt**. Grisé si la pioche est cassée, et **s'arrête tout seul quand la pioche casse** (« 💥 Pioche cassée : creusage automatique arrêté. »).
@@ -236,9 +239,9 @@ La barre du bas a toujours 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **�
 
 ### Pas à pas : une partie typique au prestige 0
 
-1. Au village, avec la pioche en bois offerte (vitesse 2, durabilité 60) et un sac de 32 places, 0 $. On descend à l'échelle jusqu'au front (position 1 m, juste au-dessus de la couche -2 m).
+1. Au village, devant la mine (au milieu de la clairière), avec la pioche en bois offerte (vitesse 2, durabilité 60) et un sac de 32 places, 0 $. On pose le **marché** (gratuit, menu Bâtiments), puis on entre dans la mine et on descend à l'échelle jusqu'au front (position 1 m, juste au-dessus de la couche -2 m).
 2. « Creuser » : terre et gravier (≈ 0,1 s chacun), puis pierre à 1 $ dès -5 m ; charbon et fer à partir de -6 m.
-3. Sac plein (32 objets) → on remonte vendre au marché, on achète une pioche en pierre (40 $), on répare, un plus grand sac…
+3. Sac plein (32 objets) → on remonte et on marche jusqu'au marché pour vendre ; on pose le forgeron (20 $ + 10 pierre) pour acheter une pioche en pierre (40 $) et réparer, le bazar (60 $ + 15 pierre) pour un plus grand sac… (garder un peu de pierre ou de roche dure pour les bâtiments).
 4. À -23 m, la pioche en bois ne descend plus : galerie horizontale jusqu'à la pioche en pierre (-47 m), puis fer (300 $, -75 m), diamant (2 000 $ + 3 diamants, -91 m), netherite (3 000 $ + 4 débris + 4 or, jusqu'à la bedrock).
 5. Coffres dès -13 m, lave dès -32 m (prévoir des seaux), géodes dès -40 m, roche dure 1,5 × plus lente dès -63 m, débris dès -75 m.
 6. Après la couche -99 m : victoire, écran de victoire, galeries infinies ; prestige quand tout est au plafond ([prestige.md](../batiments/prestige.md)).
@@ -249,10 +252,10 @@ La barre du bas a toujours 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **�
 
 ### L'horloge (`src/usePartie.ts`)
 
-- L'horloge ne tourne que s'il se passe quelque chose : le joueur bouge (ou marche vers le puits), l'ascenseur roule, la foreuse tourne (active avec du carburant), il y a au moins un mineur employé, le manager est embauché, ou on est en train de creuser.
+- L'horloge ne tourne que s'il se passe quelque chose : le joueur bouge (ou marche vers le puits), l'ascenseur roule, la foreuse tourne (active avec du carburant), il y a au moins un mineur employé, un chargement roule vers le marché, le manager est embauché, ou on est en train de creuser. (La marche du hamster dans le village vu du ciel est seulement de l'affichage, `src/useJoueurVillage.ts` : elle n'est pas dans `EtatJeu`.)
 - Elle bat **20 fois par seconde** (toutes les 50 ms), ou **à chaque image** (≈ 60/s) quand le joueur ou la cabine se déplace, pour un mouvement fluide.
 - Chaque tic compte **au plus 1 seconde** (si l'onglet était en pause, le temps au-delà n'est pas rattrapé pendant la partie).
-- À chaque tic, dans l'ordre : `avancerTemps` (`src/jeu/temps.ts`) fait avancer **la marche vers le puits, l'échelle, l'ascenseur, la foreuse, puis les mineurs employés** ; ensuite l'envoi automatique ; ensuite le minage du joueur.
+- À chaque tic, dans l'ordre : `avancerTemps` (`src/jeu/temps.ts`) fait avancer **la marche vers le puits, l'échelle, l'ascenseur, la foreuse, les mineurs employés, puis les chargements en route vers le marché** (`avancerConvois`) ; ensuite l'envoi automatique ; ensuite le minage du joueur.
 
 ### Le travail sur un bloc (`src/travail.ts`)
 
@@ -262,10 +265,10 @@ La barre du bas a toujours 4 boutons : **⛏️ Creuser**, **♾️ Auto**, **�
 
 - La sauvegarde (`localStorage`) est écrite **à chaque changement** d'état, avec l'heure.
 - En rouvrant un monde, le temps écoulé depuis la dernière sauvegarde, **plafonné à 8 heures**, est joué d'un seul coup avec `avancerTemps` :
-  - les trajets en cours (marche, échelle, cabine) se terminent ; un chargement de cabine arrivé au village est vendu (une cabine qui devait redescendre repart ensuite en temps réel) ;
+  - les trajets en cours (marche, échelle, cabine) se terminent ; un chargement de cabine arrivé en haut part au marché et y est vendu, comme les chargements déjà en route (une cabine qui devait redescendre repart ensuite en temps réel) ;
   - la **foreuse** et les **mineurs employés** travaillent selon leurs propres règles ([foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md)) ;
   - **le joueur ne creuse pas** pendant l'absence (le minage reprend à l'arrêt).
-- Un message s'affiche (7 s environ) s'il y a quelque chose à dire : « Pendant ton absence : ⚙️ la foreuse a remonté N blocs, 👷 tes mineurs t'ont rapporté X $, 😠 N mineurs attendent leur salaire. ».
+- Un message s'affiche (7 s environ) s'il y a quelque chose à dire : « Pendant ton absence : ⚙️ la foreuse a remonté N blocs, 👷 tes mineurs t'ont rapporté X $, 😠 N mineurs attendent leur salaire. » (le montant « rapporté » est tout l'argent gagné pendant l'absence, chargements de l'ascenseur compris).
 
 ---
 
@@ -280,7 +283,7 @@ Ce ne sont **pas des règles** : après chaque action ou tic, l'interface compar
 | `nouvelleCouche` | on descend d'un mètre | son ; `palier` = son spécial tous les 10 m |
 | `amelioration` | un niveau de plus (ascenseur, foreuse, chariot, sac, pioche débloquée, enchantement, recruteur, pioche d'un mineur) | petite fanfare (remplace le son d'achat) |
 | `achat` | l'argent baisse | son d'achat |
-| `vente` | l'argent monte sans bloc cassé ni talent (marché, chariot, ascenseur) | grosse animation « +X $ » (1,8 s), le compteur d'argent saute |
+| `vente` | l'argent monte sans bloc cassé ni talent (marché, chariot, chargement arrivé au marché) | grosse animation « +X $ » (1,8 s), le compteur d'argent saute |
 | `recolteMineurs` | un mineur employé a vendu | petit son de pièces |
 | `piocheCassee` | la pioche équipée vient de casser | son |
 | `talent` | un talent pris dans l'arbre de prestige | son |
@@ -293,22 +296,22 @@ Autres gains d'argent (coffre…) : petit « +X $ » (1,2 s). Les messages (toas
 
 ## 6. Les découvertes (`src/jeu/decouvertes.ts`)
 
-Quand un stand se débloque avec le prestige, une **flèche clignotante** au village montre sa direction (et un « Nouveau ! » au-dessus du stand), jusqu'à ce que le joueur arrive devant ; elle disparaît alors pour de bon (gardé d'un prestige à l'autre).
+Quand quelque chose se débloque avec le prestige, une **bulle ✨ « Nouveau : X ! »** saute au-dessus du bâtiment concerné au village (`src/jeu/notifications.ts`, sorte `nouveau`, si le bâtiment est posé), jusqu'à ce que le joueur arrive devant ; elle disparaît alors pour de bon (gardé d'un prestige à l'autre). Depuis le village vu du ciel (20/10), il n'y a plus de flèche au bord de l'écran. Pour les **bâtiments** eux-mêmes (foreuse au prestige 1, Personnel au prestige 2), c'est le menu **Bâtiments** qui prévient : pastille « Nouveau ! » sur la carte et compteur sur le bouton, jusqu'à ce qu'on ouvre le menu (`batimentsVus`, voir [village.md](village.md)).
 
-| Découverte | Débloquée au | Stand | Nom sur la flèche |
+| Découverte | Débloquée au | Bâtiment | Nom dans la bulle |
 |---|---|---|---|
 | `foreuse` | prestige 1 | Foreuse | Foreuse |
 | `employes` | prestige 2 | Personnel | Personnel |
 | `recruteur` | prestige 4 | Personnel | Recruteur |
 | `manager` | prestige 5 | Personnel | Manager |
 
-S'il n'y a pas de nouveauté à montrer, la même flèche jaune peut indiquer un stand qui a de **nouveaux niveaux** après un prestige (voir [mine.md](../batiments/mine.md) et `objectifs.ts`).
+Les autres bulles des bâtiments (urgences, prestige prêt, nouveaux niveaux ⬆️, amélioration achetable 💰) sont décrites dans [village.md](village.md) ; les nouveaux niveaux viennent de `objectifs.ts` (`standsAvecNouveauxNiveaux`, seulement pour les bâtiments posés).
 
 ---
 
 ## 7. Les succès (`src/jeu/succes.ts`)
 
-**16 succès**, vérifiés après **chaque action et chaque tic** (donc aussi pendant les trajets ou le travail de la foreuse). Ils sont **gardés au prestige**. **Aucune récompense** en jeu : un toast « <emoji> Succès : <titre> », un son, et la case allumée dans la fenêtre 🏅 Succès (« N / 16 succès débloqués »).
+**19 succès** (3 de plus le 20/10, pour le village), vérifiés après **chaque action et chaque tic** (donc aussi pendant les trajets ou le travail de la foreuse). Ils sont **gardés au prestige**. **Aucune récompense** en jeu : un toast « <emoji> Succès : <titre> », un son, et la case allumée dans la fenêtre 🏅 Succès (« N / 19 succès débloqués »).
 
 | | Titre | Description affichée | Condition exacte dans le code |
 |---|---|---|---|
@@ -328,8 +331,11 @@ S'il n'y a pas de nouveauté à montrer, la même flèche jaune peut indiquer un
 | 💰 | Riche | Gagner 5 000 $ dans une partie | argent gagné ≥ 5 000 $ dans la partie en cours (toutes sources : ventes, coffres, ascenseur, foreuse, mineurs) |
 | ✨ | Enchanteur | Mettre tous les enchantements au max permis par ton prestige | plus aucun enchantement achetable **à ce prestige** (chacun au maximum ou au plafond du prestige : au prestige 0, Efficacité I + Fortune I + Solidité I suffisent) |
 | 🏆 | Bedrock ! | Atteindre la bedrock, tout au fond de la mine | `victoire` vraie (couche bedrock − 1 finie) |
+| 🏗️ | Architecte | Poser 5 bâtiments au village | au moins **6 bâtiments posés, la mine comprise** (donc 5 posés par le joueur) |
+| 🌸 | Paysagiste | Poser 10 décorations au village | au moins 10 décorations posées (les chemins et les rails ne comptent pas) |
+| 🛤️ | Cheminot | Relier la mine au marché avec des rails | une ligne de rails continue va de la mine au marché (`railsMineMarche`) |
 
-Les compteurs « dans la partie en cours » repartent de 0 à chaque prestige, mais un succès obtenu reste obtenu.
+Les compteurs « dans la partie en cours » repartent de 0 à chaque prestige, mais un succès obtenu reste obtenu. Le village, lui, est gardé au prestige : Architecte, Paysagiste et Cheminot restent vrais.
 
 ---
 
@@ -341,9 +347,9 @@ Ce qui est compté (`Statistiques`), pour **cette partie** (`stats`, remis à 0 
 |---|---|
 | `blocsCasses` | chaque bloc cassé **par le joueur** (spéciaux compris) |
 | `blocsParType` | le même, sorte par sorte |
-| `argentGagne` | **tout** l'argent gagné : ventes au marché, chargements de l'ascenseur, coffres, chariots de la foreuse, ventes des mineurs |
+| `argentGagne` | **tout** l'argent gagné : ventes au marché, chargements (ascenseur, wagonnet) vendus en arrivant au marché, coffres, chariots de la foreuse, ventes des mineurs |
 | `argentForeuse` | l'argent des chariots de la foreuse vendus |
-| `argentMineurs` | l'argent rapporté par les ventes des mineurs employés |
+| `argentMineurs` | l'argent rapporté par les ventes des mineurs employés (au marché, ou par leur wagonnet) |
 | `tempsMinage` | la somme des durées calculées des blocs du joueur (temps « théorique », sans le minimum de 0,08 s ni les trajets) |
 | `coffresOuverts`, `geodesCassees`, `lavesEteintes` | chaque coffre, géode, lave éteinte au seau |
 | `diamantsTrouves` | les diamants récoltés par le joueur (2 si Fortune double) |
@@ -364,11 +370,11 @@ L'argent gagné sert aussi au **classement** en ligne : `argentGagneAvant` (pres
 - Contenu :
   - 🏆 **« Bedrock atteinte ! »**, « Tu as creusé jusqu'à -X m. Bravo, mineur ! Au prochain prestige, la mine descendra jusqu'à -Y m. » (X = bedrock du prestige, Y = celle du suivant) ;
   - 4 chiffres de la partie : **blocs cassés**, **$ gagnés**, **temps de minage** (« N min SS s »), **coffres ouverts** ;
-  - ce que garde le prestige : « tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la foreuse et ton personnel » ; au prestige 0, en plus : « Et au village, la barrière de la foreuse s'ouvrira ! » ;
+  - ce que garde le prestige : « ton village, tes succès, tes talents, tes pioches, ton sac, tes enchantements, l'ascenseur, la foreuse et ton personnel » ; au prestige 0, en plus : « Et tu pourras construire la foreuse au village (menu Bâtiments) ! » ;
   - si tout est prêt : on peut aussi continuer à creuser et passer prestige plus tard à l'arbre de prestige ; sinon : « Avant, améliore au maximum ce que ce prestige permet… » ;
   - la **carte de prestige** en version compacte : badge « N/M » ou « Prêt ! », jauge « Prêt pour le prestige : N/M », la liste des conditions **pas encore remplies** (bedrock, ascenseur, sac, enchantements, puis foreuse, mineurs, recruteur selon le prestige ; détail dans [prestige.md](../batiments/prestige.md)) et le bouton **⭐ Passer prestige N** (grisé tant que tout n'est pas fait) ;
   - un bouton pour fermer : **« Continuer à creuser »** (si prêt) ou **« Je m'en occupe ! »**.
-- Passer prestige depuis cet écran : nouvelle partie au prestige suivant, mineur replacé devant la mine au village, fête (confettis), puis l'arbre de prestige pour choisir un talent.
+- Passer prestige depuis cet écran : nouvelle partie au prestige suivant, mineur replacé devant la mine au village (tous les bâtiments et décorations restent posés), fête (confettis), puis l'arbre de prestige pour choisir un talent.
 
 ---
 
@@ -378,9 +384,11 @@ L'argent gagné sert aussi au **classement** en ligne : `argentGagneAvant` (pres
 - `src/jeu/aleatoire.ts` : aléatoire injectable, générateur à graine.
 - `src/jeu/donnees.ts` : `BLOCS`, `PIOCHES`, `LARGEUR_MINE`, `profondeurBedrock`, mise à l'échelle, roche dure, zones, `dureeCasse`.
 - `src/jeu/mineur.ts` : état de la partie, déplacements, minage, récolte, couches, galeries, victoire.
-- `src/jeu/temps.ts` : ce qui avance tout seul ; `src/travail.ts` : le temps passé sur un bloc.
+- `src/jeu/temps.ts` : ce qui avance tout seul (dont les chargements vers le marché) ; `src/travail.ts` : le temps passé sur un bloc.
+- `src/jeu/convois.ts` : les chargements (brouette, wagonnet) qui vont de la mine au marché et s'y vendent ; `src/jeu/village.ts` : le trajet et sa durée (`trajetChargement`).
 - `src/usePartie.ts` : horloge, boutons Creuser / Auto, sac plein, envoi automatique, hors ligne (8 h), sauvegarde, sons et animations.
 - `src/evenements.ts` : événements pour les sons et animations.
-- `src/jeu/decouvertes.ts`, `src/jeu/succes.ts`, `src/jeu/statistiques.ts` (+ `src/composants/Statistiques.tsx`).
+- `src/jeu/decouvertes.ts`, `src/jeu/notifications.ts` (les bulles au-dessus des bâtiments), `src/jeu/succes.ts`, `src/jeu/statistiques.ts` (+ `src/composants/Statistiques.tsx`).
 - `src/composants/Victoire.tsx`, `src/composants/CartePrestige.tsx`, `src/jeu/conditionsPrestige.ts`.
-- `src/composants/VueMonde.tsx` : dessin de la mine (couches, bedrock, bandeaux de galerie et de victoire).
+- `src/composants/VueMonde.tsx` : dessin de la mine en coupe (couches, bedrock, bandeaux de galerie et de victoire, bande de ciel en haut).
+- `src/App.tsx` : l'entrée dans la mine et la sortie (transitions `entree` / `sortie`), `src/composants/VueVillage.tsx` : la plongée de la caméra dans la mine.

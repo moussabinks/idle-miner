@@ -511,56 +511,6 @@
   overflow-y: auto;
 }
 
-/* --- Au village : les mineurs pas payés, et la flèche rouge des salaires ---------- */
-.fleche-salaires {
-  top: calc(34% + 40px);
-  border-color: #5a1210;
-  background: linear-gradient(#ff8a7a, #d63a2f);
-  color: #fff;
-  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 14px rgb(229 83 75 / 0.85);
-}
-
-.badge-salaires {
-  background: #b8241c;
-}
-
-/* Un mineur qui attend son salaire devant le stand Personnel : il tape du pied, une bulle de colère au-dessus. */
-.mineur-attend {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  z-index: 2;
-  animation: tape-du-pied 0.5s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-.mineur-attend .personnage {
-  width: 32px;
-  height: 32px;
-}
-
-.bulle-colere {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%); /* l'animation « badge-saute » garde ce décalage */
-  font-size: 0.9rem;
-  filter: drop-shadow(0 0 4px rgb(229 83 75 / 0.9));
-  animation: badge-saute 0.6s ease-in-out infinite alternate;
-}
-
-@keyframes tape-du-pied {
-  from { translate: 0 0; }
-  to { translate: 0 -2px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mineur-attend,
-  .bulle-colere {
-    animation: none;
-  }
-}
-
 /* --- Dans la mine ---------------------------------------------------------------- */
 /* La couche du dessous est trop dure (20/10) : un message plus gros, collé en bas de la vue. */
 .bandeau-trop-dur {
@@ -825,208 +775,28 @@
   50% { box-shadow: 0 0 10px rgb(79 179 90 / 0.55); }
 }
 
-/* « Achetable ! » : une petite pastille verte accrochée en haut à droite du panneau du stand. */
-.pastille-achetable {
-  position: absolute;
-  top: -17px;
-  right: -24px;
-  z-index: 2;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: linear-gradient(#5fd06a, #2f7d38);
-  border: 1px solid #1d4d22;
-  color: #fff;
-  font-size: 0.6rem;
-  font-weight: 800;
-  white-space: nowrap;
-  box-shadow: 0 0 8px rgb(95 208 106 / 0.7);
-  pointer-events: none;
-}
-
-/* « Nouveaux niveaux ! » : le même badge que « Nouveau ! », en jaune. */
-.badge-niveaux {
-  background: #f2b33d;
-  color: #2a1a06;
-  box-shadow: 0 0 10px rgb(242 179 61 / 0.8);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .objectif-pret {
     animation: none;
   }
 }
 
-/* La flèche « Nouveaux niveaux » vole plus haut que les badges des stands, pour ne pas les cacher. */
-.fleche-niveaux {
-  top: 22%;
+/* Le portrait du manager et du recruteur, en haut de leur carte (20/10). */
+.titre-chef {
+  justify-content: flex-start;
 }
 
-/* =========================================================================
-   L'arbre de prestige du village (20/10) : le bâtiment tout à gauche.
-   Un grand arbre magique : tronc tordu, trois boules de feuillage rose et violet,
-   des fruits dorés qui brillent, une étoile au sommet et une aura qui pulse.
-   ========================================================================= */
-.arbre-magique {
-  position: relative;
-  width: 104px;
-  height: 118px;
-  margin: 0 -18px; /* plus large que les autres stands, comme la foreuse */
+.titre-chef .badge {
+  margin-left: auto;
 }
 
-.arbre-aura {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 150px;
-  height: 150px;
-  translate: -50% 10%;
+.portrait-chef {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(232 90 168 / 0.45), rgb(255 211 107 / 0.15) 45%, transparent 70%);
-  animation: aura-arbre 2.6s ease-in-out infinite alternate;
-}
-
-@keyframes aura-arbre {
-  from { opacity: 0.6; scale: 0.92; }
-  to { opacity: 1; scale: 1.06; }
-}
-
-/* Prêt pour le prestige : l'aura devient dorée et pulse plus vite. */
-.arbre-pret .arbre-aura {
-  background: radial-gradient(circle, rgb(255 211 107 / 0.7), rgb(232 90 168 / 0.3) 45%, transparent 72%);
-  animation-duration: 0.9s;
-}
-
-.arbre-tronc {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 22px;
-  height: 58px;
-  translate: -50% 0;
-  border-radius: 8px 8px 4px 4px;
-  background:
-    repeating-linear-gradient(80deg, transparent 0 5px, rgb(0 0 0 / 0.18) 5px 7px),
-    linear-gradient(90deg, #4a2c1a, #7a4a2a 50%, #4a2c1a);
-  box-shadow: inset 0 -6px 8px rgb(0 0 0 / 0.35);
-}
-
-/* Les racines, de chaque côté du tronc. */
-.arbre-tronc::before,
-.arbre-tronc::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  width: 18px;
-  height: 10px;
-  border-radius: 50% 50% 0 0;
-  background: #5a3420;
-}
-
-.arbre-tronc::before {
-  left: -12px;
-  rotate: -18deg;
-}
-
-.arbre-tronc::after {
-  right: -12px;
-  rotate: 18deg;
-}
-
-.arbre-feuillage {
-  position: absolute;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.35), transparent 40%),
-    radial-gradient(circle, #ff8ac8, #c2408a 70%, #8a2a64);
-  box-shadow: inset 0 -8px 12px rgb(60 0 40 / 0.35), 0 0 14px rgb(232 90 168 / 0.5);
-  animation: feuillage-bouge 3s ease-in-out infinite alternate;
-}
-
-.arbre-feuillage-1 {
-  left: 6px;
-  bottom: 46px;
-  width: 52px;
-  height: 46px;
-}
-
-.arbre-feuillage-2 {
-  right: 6px;
-  bottom: 50px;
-  width: 54px;
-  height: 48px;
-  background:
-    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.35), transparent 40%),
-    radial-gradient(circle, #c99bff, #8a5fd4 70%, #5a3a9a);
-  animation-delay: -1s;
-}
-
-.arbre-feuillage-3 {
-  left: 50%;
-  bottom: 64px;
-  width: 62px;
-  height: 52px;
-  translate: -50% 0;
-  animation-delay: -2s;
-}
-
-@keyframes feuillage-bouge {
-  from { rotate: -3deg; }
-  to { rotate: 3deg; }
-}
-
-/* Les fruits dorés qui scintillent dans le feuillage. */
-.arbre-fruits i {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff, #ffd36b 45%, #e0920f);
-  box-shadow: 0 0 8px #ffd36b;
-  animation: fruit-scintille 1.6s ease-in-out infinite alternate;
-}
-
-.arbre-fruits i:nth-child(1) { left: 20px; bottom: 62px; }
-.arbre-fruits i:nth-child(2) { left: 46px; bottom: 92px; animation-delay: -0.4s; }
-.arbre-fruits i:nth-child(3) { right: 20px; bottom: 70px; animation-delay: -0.8s; }
-.arbre-fruits i:nth-child(4) { left: 36px; bottom: 80px; animation-delay: -1.2s; }
-.arbre-fruits i:nth-child(5) { right: 30px; bottom: 86px; animation-delay: -0.6s; }
-
-@keyframes fruit-scintille {
-  from { scale: 0.8; opacity: 0.7; }
-  to { scale: 1.15; opacity: 1; }
-}
-
-/* L'étoile au sommet, qui tourne doucement sur elle-même. */
-.arbre-etoile {
-  position: absolute;
-  left: 50%;
-  bottom: 100px;
-  translate: -50% 0;
-  font-size: 1.3rem;
-  filter: drop-shadow(0 0 8px #ffd36b);
-  animation: etoile-arbre 2.4s ease-in-out infinite;
-}
-
-@keyframes etoile-arbre {
-  0%, 100% { rotate: -12deg; scale: 1; }
-  50% { rotate: 12deg; scale: 1.15; }
-}
-
-.stand:hover:not(:disabled) .arbre-magique {
-  filter: brightness(1.15);
-}
-
-/* Le badge « ⭐ Prêt ! » (ou « 🌟 2 points ! ») au-dessus de l'arbre. */
-.badge-prestige {
-  background: linear-gradient(#ff8ac8, #b8337c);
-  box-shadow: 0 0 12px rgb(232 90 168 / 0.9);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .arbre-aura,
-  .arbre-feuillage,
-  .arbre-fruits i,
-  .arbre-etoile {
-    animation: none;
-  }
+  object-fit: cover;
+  object-position: 50% 28%;
+  border: 2px solid #c8962e;
+  box-shadow: 0 0 0 2px #3a2210, 0 0 12px rgb(255 190 80 / 0.3);
 }

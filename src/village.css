@@ -1,0 +1,897 @@
+/* =========================================================================
+   Le village vu du ciel (20/10) : la carte isométrique, les bâtiments, les personnages,
+   les wagonnets, les bulles de notification, les menus Bâtiments / Décorations / Modifier,
+   et le passage dans la mine.
+   ========================================================================= */
+
+/* --- La mise en page : la carte prend toute la place à gauche ------------------ */
+
+.mode-village .plateau {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+}
+
+.mode-village .colonne-mine {
+  min-width: 0;
+}
+
+.mode-village .actions {
+  width: 100%;
+}
+
+.vue-village {
+  position: relative;
+  width: 100%;
+  height: min(72vh, 680px);
+  overflow: hidden;
+  border-radius: 14px;
+  border: 3px solid #000;
+  background: #24401b;
+  box-shadow: inset 0 0 40px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.35);
+  touch-action: none; /* on fait glisser la carte avec le doigt, sans faire défiler la page */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.vue-village:active {
+  cursor: grabbing;
+}
+
+.mode-placement,
+.mode-pinceau {
+  cursor: crosshair;
+}
+
+.monde-village {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1536px;
+  height: 1024px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.fond-village,
+.sol-village,
+.objets-village,
+.bulles-village {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1536px;
+  height: 1024px;
+}
+
+.fond-village,
+.sol-village {
+  pointer-events: none;
+}
+
+.objets-village,
+.bulles-village {
+  pointer-events: none;
+}
+
+/* Les bulles passent devant tout (les objets ont un z-index selon leur profondeur). */
+.bulles-village {
+  z-index: 100000;
+}
+
+/* --- Les bâtiments ------------------------------------------------------------- */
+
+.sprite-batiment {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  pointer-events: auto;
+  filter: drop-shadow(2px 8px 6px rgb(0 0 0 / 0.35));
+  transition: filter 0.2s;
+}
+
+.sprite-batiment:hover,
+.sprite-actif {
+  filter: drop-shadow(0 0 10px rgb(255 214 90 / 0.95)) drop-shadow(2px 8px 6px rgb(0 0 0 / 0.35));
+}
+
+/* La foreuse qui tourne vibre un peu. */
+.sprite-vibre {
+  animation: vibre-batiment 0.16s steps(2) infinite;
+}
+
+@keyframes vibre-batiment {
+  0% { translate: 0 0; }
+  100% { translate: 0.8px -0.6px; }
+}
+
+.boite-svg {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sprite-mine [data-cible] {
+  pointer-events: auto;
+}
+
+.sprite-mine.sprite-actif {
+  filter: drop-shadow(0 0 10px rgb(255 214 90 / 0.95));
+}
+
+/* Ce qu'on est en train de poser : un peu transparent, rougi s'il ne peut pas aller là. */
+.fantome {
+  opacity: 0.8;
+  pointer-events: none !important;
+  animation: fantome 1s ease-in-out infinite alternate;
+}
+
+.fantome-bloque {
+  filter: sepia(1) saturate(4) hue-rotate(-40deg) brightness(0.9);
+}
+
+@keyframes fantome {
+  from { opacity: 0.62; }
+  to { opacity: 0.9; }
+}
+
+/* La mine : la poulie du chevalement tourne quand une cabine roule, les lanternes vacillent. */
+.poulie-tourne {
+  animation: tourne-poulie 0.7s linear infinite;
+}
+
+@keyframes tourne-poulie {
+  to { rotate: 360deg; }
+}
+
+.lanterne-mine circle,
+.lueur-lanterne {
+  animation: vacille 1.8s ease-in-out infinite alternate;
+}
+
+.lueur-fond {
+  animation: vacille 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes vacille {
+  from { opacity: 0.25; }
+  to { opacity: 0.55; }
+}
+
+.jet-fontaine {
+  animation: jet 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes jet {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* --- Le sol : rails, chemins, grille, emprises ------------------------------------ */
+
+.case-rail .ballast {
+  fill: #8a7a64;
+  stroke: #5e5244;
+  stroke-width: 0.6;
+}
+
+.case-rail .traverses line {
+  stroke: #7a4a22;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.case-rail .rail-ombre {
+  fill: none;
+  stroke: #26262c;
+  stroke-width: 3.6;
+  stroke-linecap: round;
+}
+
+.case-rail .rail-acier {
+  fill: none;
+  stroke: #d2d3dc;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.grille-village line {
+  stroke: rgb(255 255 255 / 0.22);
+  stroke-width: 0.7;
+}
+
+.emprise {
+  stroke-width: 2;
+}
+
+.emprise-libre {
+  fill: rgb(80 220 100 / 0.32);
+  stroke: #6ff07f;
+}
+
+.emprise-occupee {
+  fill: rgb(240 70 60 / 0.35);
+  stroke: #ff6a5a;
+}
+
+.emprise-active {
+  fill: rgb(255 210 80 / 0.14);
+  stroke: rgb(255 214 90 / 0.85);
+  stroke-width: 1.6;
+  stroke-dasharray: 6 4;
+  animation: tirets 1s linear infinite;
+}
+
+@keyframes tirets {
+  to { stroke-dashoffset: -20; }
+}
+
+/* --- Les personnages ------------------------------------------------------------- */
+
+.perso-village {
+  position: absolute;
+  width: 38px;
+  height: 46px;
+  margin-left: -19px;
+  margin-top: -44px;
+  pointer-events: none;
+}
+
+.perso-ombre {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 22px;
+  height: 7px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.32);
+}
+
+.perso-saut,
+.perso-retourne {
+  width: 100%;
+  height: 100%;
+}
+
+/* Il se retourne en douceur : le dessin s'aplatit puis s'ouvre de l'autre côté. */
+.perso-retourne {
+  transform: scaleX(var(--sens, 1));
+  transition: transform 0.24s ease-in-out;
+}
+
+.perso-saut.saute {
+  animation: saut 0.5s cubic-bezier(0.3, 0.7, 0.5, 1);
+}
+
+@keyframes saut {
+  0% { translate: 0 0; scale: 1.08 0.9; }
+  15% { scale: 0.94 1.08; }
+  45% { translate: 0 -26px; scale: 1 1; }
+  80% { translate: 0 0; scale: 1 1; }
+  90% { scale: 1.1 0.88; }
+  100% { translate: 0 0; scale: 1 1; }
+}
+
+.hamster {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(1px 2px 0 rgb(0 0 0 / 0.35));
+}
+
+/* En marchant, il sautille et ses pieds avancent l'un après l'autre. */
+.perso-marche .hamster-corps {
+  animation: dandine 0.34s ease-in-out infinite alternate;
+  transform-origin: 52px 118px;
+}
+
+@keyframes dandine {
+  from { translate: 0 0; rotate: -3deg; }
+  to { translate: 0 -5px; rotate: 3deg; }
+}
+
+.perso-marche .pied-g {
+  animation: pied 0.34s ease-in-out infinite alternate;
+}
+
+.perso-marche .pied-d {
+  animation: pied 0.34s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes pied {
+  from { translate: 0 0; }
+  to { translate: 0 -5px; }
+}
+
+/* Au repos : il respire doucement. */
+.perso-village:not(.perso-marche) .hamster-corps {
+  animation: respire 2.4s ease-in-out infinite;
+  transform-origin: 52px 118px;
+}
+
+@keyframes respire {
+  0%, 100% { scale: 1 1; }
+  50% { scale: 1.02 0.98; }
+}
+
+.lampe-frontale {
+  filter: drop-shadow(0 0 4px #fff3a0);
+}
+
+.etiquette-perso {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  translate: -50% -2px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgb(20 16 12 / 0.75);
+  border: 1px solid var(--couleur-rarete, #8a5a2b);
+  color: #fff;
+  font-size: 6.5px;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.etiquette-chef {
+  border-color: #e2b13a;
+  color: #ffe19a;
+}
+
+.perso-colere .hamster-corps {
+  animation: tape-du-pied 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes tape-du-pied {
+  from { rotate: -4deg; }
+  to { rotate: 4deg; }
+}
+
+.bulle-colere-village {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  translate: -50% 0;
+  font-size: 11px;
+  animation: bulle-saute 0.8s ease-in-out infinite alternate;
+}
+
+/* Le manager et le recruteur à leur poste : ils se balancent tranquillement. */
+.perso-poste .hamster-corps {
+  animation: respire 3s ease-in-out infinite;
+}
+
+.wagonnet-village {
+  position: absolute;
+  width: 40px;
+  height: 34px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* --- Les bulles de notification au-dessus des bâtiments ------------------------- */
+
+.bulle-notif {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+  translate: -50% -100%;
+  padding: 3px 7px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: linear-gradient(#ffe48a, #f2a821);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), 0 0 12px rgb(255 214 90 / 0.8);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: bulle-saute 0.9s ease-in-out infinite alternate;
+}
+
+.bulle-notif::after {
+  /* La petite pointe sous la bulle. */
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 9px;
+  height: 9px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: inherit;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  z-index: -1;
+}
+
+.bulle-alerte {
+  background: linear-gradient(#ff8a7a, #d63a2f);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), 0 0 14px rgb(229 83 75 / 0.9);
+}
+
+.bulle-pret {
+  background: linear-gradient(#ff9ad0, #c8338a);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), 0 0 14px rgb(232 90 168 / 0.9);
+}
+
+.bulle-nouveau {
+  background: linear-gradient(#9fd0ff, #3f7fe0);
+}
+
+.bulle-achat {
+  background: linear-gradient(#8ff09a, #2f9d40);
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), 0 0 12px rgb(95 208 106 / 0.8);
+}
+
+.bulle-icone {
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.4));
+}
+
+@keyframes bulle-saute {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-6px) scale(1.06); }
+}
+
+/* --- Entrer dans la mine (et en sortir) ----------------------------------------- */
+
+.fondu-mine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.2), #000 70%);
+}
+
+.fondu-entree {
+  animation: fondu-noir 0.75s ease-in forwards;
+}
+
+.fondu-sortie {
+  animation: fondu-noir 0.8s ease-out reverse forwards;
+}
+
+@keyframes fondu-noir {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* La vue en coupe apparaît en sortant du noir. */
+.entree-dans-la-mine {
+  display: contents;
+}
+
+.entree-dans-la-mine > .monde {
+  animation: sortie-du-noir 0.6s ease-out;
+}
+
+@keyframes sortie-du-noir {
+  from { filter: brightness(0); }
+  to { filter: brightness(1); }
+}
+
+/* La surface, tout en haut de la vue en coupe. */
+.surface-mine {
+  position: relative;
+  height: 70px;
+  background: linear-gradient(#4f97e0, #a8d4f5 70%, #5aa83c 70%, #4a8f30);
+  border-bottom: 4px solid #6e4520;
+  overflow: hidden;
+}
+
+.surface-soleil {
+  position: absolute;
+  right: 22px;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: #ffe35c;
+  box-shadow: 0 0 18px #ffe35c;
+}
+
+.surface-panneau {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  translate: -50% 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #a8743e;
+  border: 2px solid #4a2c12;
+  color: #2a1406;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+/* --- La barre de boutons du village ------------------------------------------------ */
+
+.bouton-construire {
+  position: relative;
+  background: linear-gradient(#e0784a, #a8451f);
+  color: #fff6ec;
+}
+
+.bouton-decorer {
+  background: linear-gradient(#f28ab8, #c2427e);
+  color: #fff;
+}
+
+.actions-village .bouton {
+  overflow: visible;
+}
+
+.badge-menu {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: #e5534b;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 16px;
+  animation: bulle-saute 0.8s ease-in-out infinite alternate;
+}
+
+.actions-edition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions-edition .bouton {
+  flex: 1 1 120px;
+}
+
+.consigne-edition {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #ffe19a;
+  text-align: center;
+}
+
+/* --- Le panneau d'un bâtiment ------------------------------------------------------- */
+
+.entete-panneau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.entete-panneau h2 {
+  margin: 0;
+}
+
+.bouton-fermer {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  background: linear-gradient(#5a5a68, #383843);
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.bouton-fermer:hover {
+  background: linear-gradient(#e5534b, #a3302a);
+}
+
+.panneau-batiment {
+  border-color: #8a5a2b;
+  background: linear-gradient(#2b241e, #23232b 120px);
+}
+
+.bouton-entrer-mine {
+  font-size: 1.1rem;
+  padding: 14px;
+  box-shadow: 0 0 16px rgb(242 179 61 / 0.5);
+}
+
+/* --- Les tenues (au Bazar) ---------------------------------------------------------- */
+
+.tenues {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.apercu-tenue {
+  width: 88px;
+  height: 104px;
+  padding: 6px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 70%, #4a3a26, #1d1814 70%);
+  border: 2px solid #8a5a2b;
+}
+
+.choix-tenues {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.titre-partie-tenue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liste-tenues {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ligne-tenue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--carte-claire);
+  font-size: 0.85rem;
+}
+
+.tenue-portee {
+  outline: 2px solid var(--accent);
+}
+
+.tenue-bloquee {
+  opacity: 0.55;
+}
+
+/* --- Les menus Bâtiments et Décorations ------------------------------------------- */
+
+.voile-construction {
+  align-items: flex-end;
+}
+
+.fenetre-construction {
+  width: min(900px, 100%);
+  max-height: min(86dvh, 760px);
+  overflow-y: auto;
+  border: 3px solid #8a5a2b;
+  background: linear-gradient(#2e2418, #1f1a14);
+  box-shadow: 0 -6px 30px rgb(0 0 0 / 0.6);
+  animation: monte-menu 0.28s ease-out;
+}
+
+@keyframes monte-menu {
+  from { translate: 0 40px; opacity: 0; }
+  to { translate: 0 0; opacity: 1; }
+}
+
+.entete-construction {
+  position: sticky;
+  top: -14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -14px -14px 6px;
+  padding: 10px 14px 0;
+  background: #2e2418;
+}
+
+.entete-construction .onglets {
+  flex: 1;
+  margin: 0;
+}
+
+.grille-construction {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.carte-construction {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 2px solid #8a5a2b;
+  background: linear-gradient(#3e3022, #2a2119);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.08), 0 4px 0 rgb(0 0 0 / 0.35);
+}
+
+.carte-construction strong {
+  color: #ffe19a;
+}
+
+.construction-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.construction-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 120px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 75%, #5a8f3a, #2a4a1c 75%);
+  overflow: hidden;
+}
+
+.construction-image img {
+  max-width: 92%;
+  max-height: 112px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.4));
+}
+
+.construction-chemin {
+  background:
+    radial-gradient(circle at 30% 30%, #c4c0b6 18%, transparent 19%),
+    radial-gradient(circle at 70% 35%, #a8a49c 18%, transparent 19%),
+    radial-gradient(circle at 35% 72%, #a8a49c 18%, transparent 19%),
+    radial-gradient(circle at 70% 70%, #c4c0b6 18%, transparent 19%),
+    #b49a72;
+  background-size: 60px 60px;
+}
+
+.apercu-deco {
+  width: 90px;
+  height: 110px;
+  overflow: visible;
+}
+
+.construction-bloquee .construction-image img,
+.construction-bloquee .construction-image svg {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.construction-cadenas {
+  position: absolute;
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 2px #000);
+}
+
+.construction-posee {
+  border-color: #4fb35a;
+}
+
+.construction-achat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.construction-verrou {
+  color: var(--texte-doux);
+  font-weight: 700;
+}
+
+.prix-gratuit {
+  font-weight: 900;
+}
+
+.pastille-nouveau {
+  position: absolute;
+  top: 8px;
+  right: -6px;
+  z-index: 1;
+  padding: 2px 10px;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(#ff6a5a, #c8302a);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.4);
+  animation: bulle-saute 0.8s ease-in-out infinite alternate;
+}
+
+/* --- Ordinateur : la carte prend toute la hauteur --------------------------------- */
+
+@media (min-width: 861px) and (min-height: 560px) {
+  .vue-village {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+}
+
+/* --- Téléphone : la carte en grand, le panneau du bâtiment par-dessus, en bas ------- */
+
+@media (max-width: 860px) {
+  .mode-village .plateau {
+    grid-template-columns: 1fr;
+  }
+
+  .vue-village {
+    height: calc(100dvh - 300px);
+    min-height: 320px;
+  }
+
+  /* L'aide du village prend trop de place sur un petit écran. */
+  .mode-village .panneau-aide-village {
+    display: none;
+  }
+
+  /* Le panneau d'un bâtiment glisse depuis le bas, au-dessus de la barre de boutons. */
+  .mode-village .panneau-batiment {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 8;
+    max-height: 50dvh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 30px rgb(0 0 0 / 0.65);
+    animation: monte-menu 0.25s ease-out;
+  }
+
+  /* Les messages restent petits, et on n'en montre que deux à la fois. */
+  .toast {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .toast:nth-last-child(n + 3) {
+    display: none;
+  }
+
+  .fenetre-construction {
+    max-height: 82dvh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .voile-construction {
+    padding: 0;
+  }
+
+  .grille-construction {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+
+  .construction-image {
+    height: 92px;
+  }
+
+  .construction-image img {
+    max-height: 86px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bulle-notif,
+  .badge-menu,
+  .pastille-nouveau,
+  .perso-marche .hamster-corps,
+  .perso-village .hamster-corps,
+  .sprite-vibre,
+  .fantome,
+  .poulie-tourne,
+  .emprise-active {
+    animation: none;
+  }
+
+  .perso-retourne {
+    transition: none;
+  }
+}
