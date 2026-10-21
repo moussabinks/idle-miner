@@ -222,7 +222,7 @@ export type EtatJeu = {
 export type Decouverte = 'foreuse' | 'employes' | 'recruteur' | 'manager'
 
 // Version 18 (20/10) : le village en vue du ciel. Les parties d'avant repartent de zéro.
-export const VERSION_ETAT = 18
+export const VERSION_ETAT = 19
 
 // ---------------------------------------------------------------------------
 // Création d'une partie

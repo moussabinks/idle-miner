@@ -1,14 +1,19 @@
-// Les personnages du village (vue du ciel) : des hamsters de trois quarts, dans le style des
-// dessins du jeu (fourrure orange, ventre crème, oreilles roses, bottes en cuir).
+// Le hamster dessiné en SVG, de trois quarts (fourrure orange, ventre crème, oreilles roses,
+// bottes en cuir). Depuis le 21/10, les personnages du jeu sont les images des planches de
+// l'équipe (sprites.ts) ; ce dessin ne sert plus qu'à l'aperçu des tenues du Bazar (chapeau et
+// haut), qu'on ne peut pas encore enfiler aux images.
 //   - le joueur : sans casque au début, sa pioche à la main, et la tenue achetée au Bazar ;
 //   - les mineurs employés : un casque de la couleur de leur rareté, un sac à dos, leur pioche ;
 //   - le manager : gilet rayé, chemise et cravate rouge, un porte-documents ;
 //   - le recruteur : casquette verte, lunettes rondes, manteau vert et nœud papillon.
-// On les voit de face quand ils viennent vers nous, de dos quand ils s'éloignent. Ils se
-// retournent en douceur (gauche / droite) et sautillent en marchant (voir village.css).
 
 import type { IdTenue } from '../jeu/donnees'
-import { CONTOUR, CREME, FOURRURE, FOURRURE_CLAIRE } from './Personnage'
+
+// Les couleurs du hamster.
+const FOURRURE = '#ec8a3c'
+const FOURRURE_CLAIRE = '#f6a85a'
+const CREME = '#fde7c6'
+const CONTOUR = '#5a2a0c'
 
 export type RoleHamster = 'joueur' | 'mineur' | 'manager' | 'recruteur'
 

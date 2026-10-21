@@ -7,7 +7,7 @@ Ces fiches décrivent le code au 20/10 : **les mettre à jour quand on change un
 
 ## Où sont les bâtiments ? Là où tu les poses (20/10)
 
-Depuis le 20/10, le village n'est plus un chemin avec des stands à des places fixes : c'est une **clairière de 40 × 40 cases** vue du ciel (à 45°, comme Clash of Clans). Au début de la partie, il n'y a que la **mine**, posée au milieu (cases 15 à 24). Tous les autres bâtiments s'achètent dans le menu **🏗️ Bâtiments** (en bas de l'écran) et **se posent où on veut**, sur des cases libres :
+Depuis le 20/10, le village n'est plus un chemin avec des stands à des places fixes : c'est une **clairière de 60 × 60 cases** (40 × 40 avant le 21/10) vue du ciel (à 45°, comme Clash of Clans). Au début de la partie, il n'y a que la **mine**, posée au milieu (cases 25 à 34). Tous les autres bâtiments s'achètent dans le menu **🏗️ Bâtiments** (en bas de l'écran) et **se posent où on veut**, sur des cases libres :
 
 - chaque bâtiment fait **5 × 5 cases**, la mine **10 × 10** ;
 - tant qu'il n'est pas débloqué, il a un **cadenas** et le prestige qu'il faut ; une pastille **« Nouveau ! »** montre ceux qui viennent de se débloquer, et le bouton 🏗️ Bâtiments porte un badge avec leur nombre (les nouveautés pas encore vues + ce qu'on peut construire tout de suite) ;

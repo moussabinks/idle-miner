@@ -61,6 +61,25 @@ describe('sauvegarde', () => {
     expect(partieAncienne(stockage, '1')).toBe(false)
   })
 
+  it('une partie de la version 18 (clairière de 40 cases) glisse de 10 cases dans la clairière de 60', () => {
+    const stockage = fauxStockage()
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    const ancien = JSON.parse(JSON.stringify(etat))
+    ancien.version = 18
+    ancien.village.batiments = [{ id: 'puits', x: 15, y: 15, miroir: false }, { id: 'marche', x: 17, y: 27, miroir: true }]
+    ancien.village.rails = ['20,25', '21,25']
+    ancien.village.chemins = ['3,4']
+    ancien.village.decorations = [{ n: 1, id: 'fontaine', x: 2, y: 30, miroir: false }]
+    stockage.setItem(cleMonde('1'), JSON.stringify(ancien))
+    const charge = charger(stockage, '1')
+    expect(charge?.version).toBe(19)
+    expect(charge?.village.batiments).toEqual([{ id: 'puits', x: 25, y: 25, miroir: false }, { id: 'marche', x: 27, y: 37, miroir: true }])
+    expect(charge?.village.rails).toEqual(['30,35', '31,35'])
+    expect(charge?.village.chemins).toEqual(['13,14'])
+    expect(charge?.village.decorations[0]).toMatchObject({ x: 12, y: 40 })
+    expect(partieAncienne(stockage, '1')).toBe(false)
+  })
+
   it('compte le temps passé depuis la dernière sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)

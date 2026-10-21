@@ -43,7 +43,7 @@ Coût total de 32 à 2 048 places : 61 980 $. Message à l'achat : « 🎒 Nouve
 
 ### 👕 Tenues du hamster (20/10, `PanneauTenues.tsx`)
 
-Juste pour le style : elles ne donnent aucun bonus. Au début, le hamster du joueur n'a **ni casque ni chapeau**, juste une chemise toute simple et sa pioche. Le panneau montre le hamster avec sa tenue du moment, et deux listes : **🎩 Chapeaux** et **🦺 Hauts**.
+Juste pour le style : elles ne donnent aucun bonus. Au début, le hamster du joueur n'a **ni casque ni chapeau**, juste une chemise toute simple et sa pioche. Le panneau montre le hamster avec sa tenue du moment (depuis le 21/10, c'est le seul endroit où elle se voit : le personnage du jeu est l'image de la planche du mineur), et deux listes : **🎩 Chapeaux** et **🦺 Hauts**.
 
 | Tenue | Partie | Prix | À partir du prestige |
 |---|---|---:|---|
@@ -114,7 +114,7 @@ Juste pour le style : elles ne donnent aucun bonus. Au début, le hamster du jou
 - `src/jeu/succes.ts` : le succès « Pompier ».
 - `src/composants/Panneaux.tsx` : `PanneauBazar` (sacs et seaux).
 - `src/composants/PanneauTenues.tsx` : les tenues, avec l'aperçu du hamster.
-- `src/composants/Hamster.tsx` : le hamster du village et ses chapeaux et hauts ; `src/composants/Personnage.tsx` : le même dans la vue en coupe.
+- `src/composants/Hamster.tsx` : le hamster en SVG de l'aperçu des tenues, avec ses chapeaux et hauts. Depuis le 21/10, les personnages du jeu sont les images des planches (`sprites.ts`) : **les tenues ne se voient que dans cet aperçu**, en attendant une planche du joueur avec ses tenues.
 - `src/composants/Amelioration.tsx` : la ligne d'amélioration (carrés de niveaux, cadenas, bouton).
 - `src/composants/MenuConstruction.tsx` : la carte du bazar dans le menu Bâtiments.
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.

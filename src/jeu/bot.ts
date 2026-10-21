@@ -51,14 +51,14 @@ import { avancerTemps } from './temps'
 // Le bot creuse 10 couches entre deux décisions.
 const BLOCS_PAR_SERIE = 10 * LARGEUR_MINE
 
-// Où le bot pose ses bâtiments, autour de la mine (posée en 15,15 et large de 10 cases), dans
+// Où le bot pose ses bâtiments, autour de la mine (posée en 25,25 et large de 10 cases), dans
 // l'ordre où il les construit.
 const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
-  { id: 'marche', x: 18, y: 26 },
-  { id: 'forgeron', x: 26, y: 18 },
-  { id: 'bazar', x: 12, y: 26 },
-  { id: 'enchanteur', x: 26, y: 12 },
-  { id: 'prestige', x: 9, y: 9 },
+  { id: 'marche', x: 28, y: 36 },
+  { id: 'forgeron', x: 36, y: 28 },
+  { id: 'bazar', x: 22, y: 36 },
+  { id: 'enchanteur', x: 36, y: 22 },
+  { id: 'prestige', x: 19, y: 19 },
 ]
 
 // L'arbre de prestige ne sert qu'à la fin : le bot le construit une fois la pioche en netherite achetée.

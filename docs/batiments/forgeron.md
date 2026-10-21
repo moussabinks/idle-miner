@@ -154,7 +154,7 @@ Exemples au prestige 0, sans enchantement ni talent :
 - `src/composants/Panneaux.tsx` : le panneau du forgeron (`PanneauPioches`), aussi utilisé dans l'onglet 🧰 Pioches de la mine.
 - `src/composants/Amelioration.tsx` : le composant `Achat` (prix à gauche, bouton à droite).
 - `src/composants/Hud.tsx` : la pioche équipée et sa durabilité dans le bandeau.
-- `src/composants/Personnage.tsx` (vue en coupe) et `src/composants/Hamster.tsx` (village) : le hamster et la couleur de sa pioche.
+- `src/composants/Personnage.tsx` (vue en coupe) et `src/composants/sprites.ts` (village) : le hamster. Depuis le 21/10, ce sont les images des planches : la couleur de la pioche équipée ne se voit plus sur le personnage.
 - `src/composants/MenuConstruction.tsx` : la carte du forgeron dans le menu Bâtiments.
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, la bulle, les mineurs qui attendent devant la forge.
 - `public/images/batiments/forgeron.webp` : le dessin de la forge.

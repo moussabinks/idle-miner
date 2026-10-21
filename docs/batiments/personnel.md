@@ -170,7 +170,7 @@ Chaque amélioration donne une meilleure pioche **et** un plus grand sac. Payé 
 - `src/composants/Confirmation.tsx` : la fenêtre de confirmation du licenciement.
 - `src/composants/MenuConstruction.tsx` : la carte du Personnel dans le menu Bâtiments (cadenas, « Nouveau ! »).
 - `src/composants/VueVillage.tsx` : les mineurs qui marchent, vendent, passent à la forge ou attendent (😠), le manager et le recruteur devant le bâtiment, les wagonnets, la bulle.
-- `src/composants/Hamster.tsx` : les hamsters du village (mineur casqué à la couleur de sa rareté, manager en costume, recruteur à casquette verte) ; `src/composants/Personnage.tsx` : les mineurs de la vue en coupe, avec le même casque.
+- `src/composants/sprites.ts` et `public/images/personnages/sprites/` (21/10) : les images des personnages tirées des planches (mineur vu devant, derrière, gauche et droite, casque recoloré à la couleur de sa rareté ; manager et recruteur vus de face) ; `src/composants/Personnage.tsx` : les mêmes images dans la vue en coupe.
 - `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : un personnage posé sur la grille, sa place devant un bâtiment (`devant`), sa marche le long d'un chemin (`surLeChemin`, `orienter`).
 - `src/composants/VueMonde.tsx` : la galerie des mineurs dans la mine (`GalerieMineurs`).
 - `public/images/batiments/employes.webp` : le dessin du bâtiment ; `public/images/personnages/manager.webp`, `recruteur.webp` : les portraits du panneau.

@@ -6,7 +6,7 @@
 
 import { memo, type ReactNode } from 'react'
 import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
-import { DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, versEcran, type Point } from './iso'
+import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, versEcran, type Point } from './iso'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -113,22 +113,21 @@ type PropsEvolutionMine = {
   enMouvement: boolean // une cabine roule (les poulies tournent)
 }
 
-// Un point de l'image de la mine, en cases depuis le coin de son emprise (u vers la droite,
-// v vers la gauche de l'écran). Retournée en miroir, la gauche et la droite s'échangent.
-function pointMine(x: number, y: number, u: number, v: number, miroir: boolean): Point {
-  return miroir ? versEcran(x + v, y + u) : versEcran(x + u, y + v)
+// Les points utiles de l'image de la mine, en pixels de l'image (public/images/batiments/mine.webp).
+const POINTS_MINE = {
+  // le fond du trou (la partie en pierre)
+  fond: [[822, 603], [1503, 677], [1539, 973], [883, 960]] as [number, number][],
+  centre: [1193, 805] as [number, number],
+  // le pied du panneau de profondeur, devant l'entrée de la galerie
+  panneau: [343, 701] as [number, number],
+  // les places des cages d'ascenseur, le long du mur du fond, dans le trou
+  cages: [[1170, 614], [1415, 681], [1636, 750], [1302, 730], [1517, 791], [1043, 671], [1658, 866]] as [number, number][],
 }
 
-// Les places des cages, le long du mur du fond, dans le trou (d'après l'image de la mine).
-const PLACES_CAGES: [number, number][] = [
-  [4.2, 3.8],
-  [5.8, 3.1],
-  [7.4, 2.5],
-  [5.6, 4.1],
-  [7.1, 3.5],
-  [4.0, 4.9],
-  [8.4, 3.4],
-]
+// Un point de l'image de la mine posée en (x, y), à l'écran.
+function pointMine(x: number, y: number, [px, py]: [number, number], miroir: boolean): Point {
+  return pointSurSprite(CALAGES.puits, x, y, 10, miroir, px, py)
+}
 
 // Une cage d'ascenseur : deux montants d'acier, une poutre, une poulie, le câble et la cabine
 // rayée jaune et noir (la tienne a un toit doré).
@@ -169,20 +168,15 @@ export function DessinEvolutionMine({ x, y, miroir, fraction, profondeur, nbCage
   const f = Math.max(0, Math.min(1, fraction))
   // Le fond du trou (la partie en pierre) devient de plus en plus sombre en descendant, avec une
   // lueur de minerais au fond quand on est bas.
-  const fond = [
-    pointMine(x, y, 2.6, 5.4, miroir),
-    pointMine(x, y, 6.2, 2.6, miroir),
-    pointMine(x, y, 8.6, 5.0, miroir),
-    pointMine(x, y, 5.2, 8.2, miroir),
-  ]
-  const centre = pointMine(x, y, 5.6, 5.3, miroir)
-  const panneau = pointMine(x, y, 1.2, 8.4, miroir)
+  const fond = POINTS_MINE.fond.map((p) => pointMine(x, y, p, miroir))
+  const centre = pointMine(x, y, POINTS_MINE.centre, miroir)
+  const panneau = pointMine(x, y, POINTS_MINE.panneau, miroir)
   return (
     <g className="evolution-mine">
       <polygon points={fond.map((p) => `${p.x},${p.y}`).join(' ')} fill="#0c0a12" opacity={0.08 + 0.42 * f} style={{ mixBlendMode: 'multiply' }} />
       {f > 0.35 && <ellipse cx={centre.x} cy={centre.y} rx={34 + 20 * f} ry={14 + 8 * f} fill="#7fd6ff" opacity={0.08 + 0.18 * f} className="lueur-fond-mine" />}
-      {PLACES_CAGES.slice(0, nbCages)
-        .map((place, i) => ({ i, p: pointMine(x, y, place[0], place[1], miroir) }))
+      {POINTS_MINE.cages.slice(0, nbCages)
+        .map((place, i) => ({ i, p: pointMine(x, y, place, miroir) }))
         .map(({ i, p }) => (
           <CageAscenseur key={i} p={p} numero={i} enMouvement={enMouvement} />
         ))}

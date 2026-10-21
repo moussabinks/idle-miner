@@ -5,30 +5,58 @@
 import { memo, type ReactNode } from 'react'
 import { BATIMENTS, type IdBatiment } from '../jeu/donnees'
 import { CALAGES, IMAGES_BATIMENTS, profondeur, transformationSprite, versEcran } from './iso'
+import { ECHELLE_SPRITE, choisirVue, spritePerso, type QuiSprite, type VueSprite } from './sprites'
 
-// Un personnage posé dans le monde (ses pieds sur le point de la grille).
-export function Perso({ x, y, sens, vue, marche, saut = 0, etiquette, classe = '', children }: {
+// Un personnage posé dans le monde (ses pieds sur le point de la grille). On le dessine avec
+// l'image qui correspond au sens de sa marche (devant, derrière, gauche ou droite : voir
+// sprites.ts), et il sautille en marchant.
+export function Perso({ x, y, qui, sens, vue, marche, saut = 0, etiquette, classe = '' }: {
   x: number
   y: number
+  qui: QuiSprite
   sens: 1 | -1
   vue: 'face' | 'dos'
   marche: boolean
   saut?: number
   etiquette?: ReactNode
   classe?: string
-  children: (vue: 'face' | 'dos') => ReactNode
 }) {
   const e = versEcran(x, y)
+  const choix = choisirVue({ sens, vue }, marche)
   return (
     <div className={`perso-village ${marche ? 'perso-marche' : ''} ${classe}`} style={{ left: e.x, top: e.y, zIndex: profondeur(x, y) + 5 }}>
       <span className="perso-ombre" />
       <div key={saut} className={`perso-saut ${saut > 0 ? 'saute' : ''}`}>
-        <div className="perso-retourne" style={{ ['--sens' as string]: sens }}>
-          {children(vue)}
+        <div className="perso-corps">
+          <ImagePerso qui={qui} vue={choix.vue} miroir={choix.miroir} />
         </div>
       </div>
       {etiquette}
     </div>
+  )
+}
+
+// L'image du personnage, ses pieds au bas du cadre (au milieu). En miroir, elle se retourne
+// autour de ses pieds.
+export function ImagePerso({ qui, vue, miroir = false, echelle = ECHELLE_SPRITE }: { qui: QuiSprite; vue: VueSprite; miroir?: boolean; echelle?: number }) {
+  const { fichier, calage } = spritePerso(qui, vue)
+  return (
+    <img
+      className="image-perso"
+      src={fichier}
+      alt=""
+      draggable={false}
+      width={calage.largeur}
+      height={calage.hauteur}
+      style={{
+        width: calage.largeur * echelle,
+        height: calage.hauteur * echelle,
+        marginLeft: -calage.pied.x * echelle,
+        marginTop: -calage.pied.y * echelle,
+        transformOrigin: `${calage.pied.x * echelle}px 0`,
+        transform: miroir ? 'scaleX(-1)' : undefined,
+      }}
+    />
   )
 }
 

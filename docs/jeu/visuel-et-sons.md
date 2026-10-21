@@ -1,7 +1,7 @@
 # Le visuel et les sons de Mega Digger
 
 > Le style graphique, les animations, le décor, les bruitages, la musique et l'application installable (PWA).
-> Écrit d'après le code au 20/10, après le passage au **village vu du ciel** : `src/index.css`, `src/blocs.css`, `src/effets.css`, `src/personnel.css`, `src/accueil.css`, `src/village.css`, `src/composants/*.tsx` (dont `iso.ts`, `DessinsVillage.tsx`, `Hamster.tsx`, `SceneAccueil.tsx`), `src/sons.ts`, `src/ambiance.ts`, `src/installation.ts`, `public/` (dont `public/images/`). Les règles du village (grille, construction, rails, décorations) sont dans [village.md](village.md). Ce que fait chaque bouton est dans [interface.md](interface.md) ; les dessins propres à chaque bâtiment sont aussi détaillés dans les fiches [docs/batiments/](../batiments/README.md).
+> Écrit d'après le code au 20/10, après le passage au **village vu du ciel** : `src/index.css`, `src/blocs.css`, `src/effets.css`, `src/personnel.css`, `src/accueil.css`, `src/village.css`, `src/composants/*.tsx` (dont `iso.ts`, `DessinsVillage.tsx`, `sprites.ts`, `SceneAccueil.tsx`), `src/sons.ts`, `src/ambiance.ts`, `src/installation.ts`, `public/` (dont `public/images/`). Les règles du village (grille, construction, rails, décorations) sont dans [village.md](village.md). Ce que fait chaque bouton est dans [interface.md](interface.md) ; les dessins propres à chaque bâtiment sont aussi détaillés dans les fiches [docs/batiments/](../batiments/README.md).
 
 ## Sommaire
 
@@ -23,9 +23,10 @@
 - **La mine en coupe est dessinée en CSS** (dégradés, ombres, `clip-path`, `@keyframes`) : les blocs, l'échelle, l'ascenseur, la foreuse, les effets. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « plus de pixel art, pour ne pas ressembler à Minecraft »).
 - **Le village vu du ciel utilise de vraies images** (décidé le 20/10, avec le passage à la vue du ciel) :
   - **les arbres de la forêt** : `public/images/village/arbres/` (21/10), les 12 arbres dessinés par l'équipe, upscalés par IA (×4) et détourés (leur ombre transparente gardée). L'ancien décor `fond.webp` et la tuile de forêt floue ne sont plus utilisés : le sol est dessiné par le jeu et la forêt est faite d'arbres posés un par un (voir § 7) ;
-  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, enchanteur, arbre de prestige, foreuse, Personnel, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, **upscalés par IA le 21/10** (Real-ESRGAN, ×4 puis ramenés à 1 120 px de large, le double d'avant : nets même au zoom maximum), et la **mine** (`mine.webp`, 1 680 px, l'image fournie redressée en perspective sur 10 × 10 cases). Chacun est **calé sur la grille** par une matrice CSS : l'image est agrandie **sans déformation** (21/10) pour que les coins gauche et droit de son pied (mesurés à la main dans `CALAGES`) couvrent la largeur de son emprise de 5 × 5 cases, **en retrait de 0,3 case**, le milieu du pied au milieu de l'emprise (`transformationSprite`, `RETRAIT_BATIMENT` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe ;
-  - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel).
-- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins et chapeaux dorés, lanternes) : la mine qui se creuse, les rails, les chemins de pavés, les décorations, le wagonnet et la brouette (`DessinsVillage.tsx`), et les hamsters (`Hamster.tsx`, `Personnage.tsx`). Les autres SVG : l'icône du Personnel (`Icone.tsx`) et le favicon.
+  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, enchanteur, arbre de prestige, foreuse, Personnel, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, **upscalés par IA le 21/10** (Real-ESRGAN, ×4 puis ramenés à 1 120 px de large, le double d'avant : nets même au zoom maximum), et la **mine** (`mine.webp`, 2 109 × 1 346 px : depuis le 21/10, l'image upscalée gardée telle quelle, sans la redresser, détourée et rendue plus nette, calée sur 10 × 10 cases sans retrait). Chacun est **calé sur la grille** par une matrice CSS : l'image est agrandie **sans déformation** (21/10) pour que les coins gauche et droit de son pied (mesurés à la main dans `CALAGES`) couvrent la largeur de son emprise de 5 × 5 cases, **en retrait de 0,3 case**, le milieu du pied au milieu de l'emprise (`transformationSprite`, `RETRAIT_BATIMENT` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe ;
+  - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel) ;
+  - **les personnages** (21/10) : `public/images/personnages/sprites/*.webp`, découpés dans les planches de l'équipe (voir [§ 4](#4-les-personnages--des-hamsters)).
+- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins et chapeaux dorés, lanternes) : la mine qui se creuse, les rails, les chemins de pavés, les décorations, le wagonnet et la brouette (`DessinsVillage.tsx`). Les autres SVG : l'icône du Personnel (`Icone.tsx`) et le favicon.
 - **Style cartoon** : formes rondes, cailloux irréguliers, auvents bombés, panneaux en bois arrondis, contours sombres.
 - **Thème sombre** (`color-scheme: dark`). Les couleurs de base (`:root` de `index.css`) :
 
@@ -94,16 +95,18 @@ Chaque case est un **galet arrondi** (`border-radius` irrégulier, qui varie d'u
 
 ## 4. Les personnages : des hamsters
 
-Depuis le 20/10, tous les personnages sont des **hamsters** tout ronds, dans le style des images du jeu : fourrure orange `#ec8a3c` (reflets `#f6a85a`), ventre et joues crème `#fde7c6`, oreilles et nez roses, deux dents, moustaches, contour brun `#5a2a0c`, bottes en cuir. Ils sont dessinés en SVG (nets à toutes les tailles).
+Tous les personnages sont des **hamsters**. Depuis le 21/10, ce sont des **images** (et plus des dessins SVG) : les planches de chaque personnage fournies par l'équipe (vues DEVANT, DERRIÈRE, GAUCHE, DROITE), découpées en une image par vue, détourées (rembg), les bottes nettoyées à la main (`public/images/personnages/sprites/`, 26 images). Ce n'est pas de la vraie 3D (impossible avec ces images) : on montre la vue qui va avec le sens de la marche, ce qui donne l'impression d'un personnage en volume, de trois quarts. Le calage (taille de chaque image, point entre ses deux pieds) est dans `src/composants/sprites.ts` : `spritePerso(qui, vue)` donne l'image, `ECHELLE_SPRITE` = 46 / 370 (un mineur fait environ 46 px du monde de haut, petit à côté des bâtiments).
 
-| Qui | Comment le reconnaître |
+| Qui | Images |
 |---|---|
-| **Le joueur** | **sans casque**, sa **pioche** à la main (de la couleur de sa pioche équipée, rien si elle est cassée), une simple ceinture au début ; il porte la **tenue** achetée au Bazar (chapeau : bandana, casquette, chapeau de paille, casque de chantier, haut-de-forme, couronne ; haut : gilet en cuir, salopette, gilet doré) |
-| **Un mineur employé** | un **casque de la couleur de sa rareté** (les mêmes couleurs que les cartes : commun `#b9b4ab`, rare `#4f9df0`, épique `#b06cf0`, légendaire `#f5a524`, mythique `#ff4d8d`) avec une **lampe frontale** qui luit, des bretelles, un sac à dos, sa pioche ; un **sac de minerais** sur le dos quand il va vendre au marché |
-| **Le manager** | en **costume** : gilet rayé, chemise et **cravate rouge**, sourcils froncés, un **porte-documents** |
-| **Le recruteur** | **casquette verte**, **lunettes rondes**, manteau vert et nœud papillon |
+| **Le joueur** | il n'a **pas encore de planche à lui** : il prend celle du mineur, avec le **casque jaune** d'origine (`joueur_devant`, `_derriere`, `_gauche`, `_droite`) |
+| **Un mineur employé** | la même planche, le **casque recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique) : `mineur_<rareté>_<vue>` |
+| **Le manager** | seulement sa vue de face (`manager_devant`) : il reste à son poste |
+| **Le recruteur** | seulement sa vue de face (`recruteur_devant`) |
 
-Couleur du fer des pioches :
+**Les tenues du Bazar** (chapeaux, hauts) **ne se voient plus sur le personnage** depuis le 21/10 : seul l'aperçu du panneau des tenues (`PanneauTenues.tsx`) les montre, avec l'ancien hamster en SVG (`Hamster.tsx`, qui ne sert plus qu'à ça). Il faudra une planche du joueur (sans casque, avec ses tenues) de l'équipe. La couleur de la pioche ne se voit pas non plus sur les images.
+
+Couleur du fer des pioches (dans l'interface ; plus dessinée sur les personnages depuis le 21/10) :
 
 | Pioche | Couleur du fer |
 |---|---|
@@ -113,25 +116,25 @@ Couleur du fer des pioches :
 | Diamant | `#4ee8dc` |
 | Netherite | `#6b5568` |
 
-### 4.1 Au village : `Hamster.tsx` (de trois quarts)
+### 4.1 Au village : `Perso` (`ElementsVillage.tsx`)
 
-- On le voit **de face** quand il vient vers nous et **de dos** quand il s'éloigne (le visage disparaît, le sac à dos passe devant).
-- Il **se retourne en douceur** à gauche ou à droite : le dessin s'aplatit puis s'ouvre de l'autre côté (`scaleX`, 0,24 s), au lieu de sauter d'un coup.
-- **En marchant**, il se **dandine** (il penche et sautille, 0,34 s) et ses **pieds** avancent l'un après l'autre ; **au repos**, il respire doucement (2,4 s ; 3 s pour le manager et le recruteur à leur poste).
+- `Perso` reçoit `qui` (joueur, rareté du mineur, manager ou recruteur) et choisit l'image selon le sens de la marche (`choisirVue` dans `sprites.ts`) : il vient vers nous en allant vers la **droite** de l'écran → vue « droite » ; vers la **gauche** → vue « gauche » ; il **s'éloigne** → vue « derrière » (retournée en miroir s'il part vers la gauche) ; **à l'arrêt** → vue « devant ».
+- L'image est posée **les pieds sur son point de la grille** (le point entre ses pieds, mesuré dans chaque image), avec une petite ombre ovale et un léger contour d'ombre.
+- **En marchant**, il se **dandine** (il penche et sautille, `dandine`, 0,34 s) ; **au repos**, il respire doucement (`respire`, 2,4 s).
 - **Saut** (barre d'espace) : il s'écrase, monte de 26 px en s'étirant, retombe et s'écrase encore (0,5 s).
 - **Pas payé** : il tape du pied (0,4 s) sous une bulle 😠 qui saute.
-- Chaque personnage fait 38 × 46 px (ses pieds sur son point de la grille), avec une petite ombre ovale et un léger contour d'ombre. Une étiquette de 6,5 px porte le prénom des mineurs (bord de la couleur de leur rareté), ou « Manager » / « Recruteur » en doré.
+- Une étiquette de 6,5 px porte le prénom des mineurs (bord de la couleur de leur rareté), ou « Manager » / « Recruteur » en doré.
 
-### 4.2 Dans la mine en coupe : `Personnage.tsx` (de profil)
+### 4.2 Dans la mine en coupe : `Personnage.tsx`
 
-Le même hamster, vu de profil (64 × 64), pour la vue 2D (avant le 20/10, c'était une taupe casquée) : le joueur avec sa tenue, les mineurs employés avec leur casque de rareté (et sa lampe) et un sac à dos. Il tient sa pioche, qui pivote autour de la main :
+Les mêmes images, pour la vue 2D (le mineur employé avec l'image de sa rareté, retrouvée par la couleur de son casque : `quiSelonCasque`) : **de profil** (gauche ou droite) quand il creuse ou marche, **de dos** quand il grimpe à l'échelle, **de face** au repos (dans une cabine d'ascenseur). Il n'y a plus de pioche dessinée à part : c'est tout le personnage qui bascule pour frapper.
 
 | Action | Animation |
 |---|---|
 | `repos` | immobile |
-| `creuse` | la pioche frappe (rotation de -35° à +40°, 0,32 s en boucle) |
-| `marche` | un petit saut (0,25 s) |
-| `grimpe` | se balance de gauche à droite (0,4 s en boucle) |
+| `creuse` | il frappe : il bascule de -7° à +9° vers le bloc (`frappe`, `frappe-gauche` s'il est tourné à gauche, 0,32 s en boucle) |
+| `marche` | un petit saut (`pas`, 0,25 s) |
+| `grimpe` | se balance de gauche à droite (de dos, 0,4 s en boucle) |
 
 Il est retourné (`scaleX(-1)`) quand il va vers la gauche, et a une petite ombre portée pour se voir sur les fonds sombres.
 
@@ -190,13 +193,13 @@ Couleurs des trouvailles : charbon `#c9c9c9`, fer `#ecc7a8`, redstone `#ff4d4d`,
 Refait le 20/10 dans la même direction artistique que le village (bois, or, lanternes) :
 
 - **Le fond de la page** : un dégradé brun très sombre avec une lueur verte en haut, fixe. L'accueil a son propre empilement (`isolation: isolate`) pour que ce fond passe devant celui de la page.
-- **Le bandeau « héros »** : un cadre en bois sombre (`#4a2c12`, 5 px) avec un filet doré à l'intérieur, coins de 22 px. Dedans, **un petit village vivant** (`SceneAccueil.tsx`) dessiné exactement comme dans le jeu (mêmes images, mêmes dessins SVG, mêmes hamsters) :
+- **Le bandeau « héros »** : un cadre en bois sombre (`#4a2c12`, 5 px) avec un filet doré à l'intérieur, coins de 22 px. Dedans, **un petit village vivant** (`SceneAccueil.tsx`) dessiné exactement comme dans le jeu (mêmes images, mêmes dessins SVG, mêmes personnages) :
   - la mine (creusée à mi-hauteur, avec son ascenseur), les 7 bâtiments (le marché et le forgeron retournés), 26 décorations (fontaine, statue, cerisiers, sapins, arbres, lanternes, tonneau, caisse, banc, rocher, buissons, fleurs), un bout de rails avec un virage et des chemins de pavés ;
-  - 4 mineurs (légendaire, épique, rare, mythique) qui font des **allers-retours** entre la mine et le marché, la forge ou le Personnel (2,2 cases/s, une pause de 1,2 s à chaque bout, un sac de minerais sur le dos vers le marché), un **wagonnet** qui fait la navette sur les rails, le joueur immobile devant la mine (pioche en diamant), le manager et le recruteur devant le Personnel ;
+  - 4 mineurs (légendaire, épique, rare, mythique) qui font des **allers-retours** entre la mine et le marché, la forge ou le Personnel (2,2 cases/s, une pause de 1,2 s à chaque bout, un sac de minerais sur le dos vers le marché), un **wagonnet** qui fait la navette sur les rails, le joueur immobile devant la mine, le manager et le recruteur devant le Personnel ;
   - tout est posé dans la moitié droite de la clairière ; le cadrage remplit la boîte comme une photo recadrée : sur un écran large, le village entier tient dans la moitié droite ; sur une boîte étroite (téléphone), on voit le milieu de la mine, un peu plus gros, dans le haut ;
   - animé à chaque image (`requestAnimationFrame`) ; ce qui ne bouge pas n'est dessiné qu'une fois ; avec « mouvements réduits », la scène reste figée ;
   - un **voile** brun sombre à gauche (de 92 % à transparent) pour lire le texte, et une ombre en bas. Sur téléphone, le voile part du bas de la scène et devient le fond brun du texte.
-- **Le logo** : « MEGA » et « DIGGER » en lettres dorées dégradées (crème → or → orange), contour brun épais, ombre portée, et un **reflet blanc** qui passe dessus (3,5 s), cloués sur un **panneau en bois** (planches horizontales `#8c5a2c`, bordure `#3a2210`, 4 **clous dorés** dans les coins, ombre, penché de -2°). À côté, le **hamster du joueur** avec sa pioche en diamant, qui donne de temps en temps un petit coup (il se penche et saute, 2,6 s).
+- **Le logo** : « MEGA » et « DIGGER » en lettres dorées dégradées (crème → or → orange), contour brun épais, ombre portée, et un **reflet blanc** qui passe dessus (3,5 s), cloués sur un **panneau en bois** (planches horizontales `#8c5a2c`, bordure `#3a2210`, 4 **clous dorés** dans les coins, ombre, penché de -2°). À côté, le **hamster du joueur** (depuis le 21/10, son image vue de droite, `joueur_droite.webp`), qui donne de temps en temps un petit coup (il se penche et saute, 2,6 s).
 - **L'accroche** en Luckiest Guy blanc, « Deviens riche. » en doré lumineux.
 - **Le gros bouton Jouer** : doré, gros relief brun en dessous, halo, reflet qui passe (3 s) et **respire** (grossit de 3 %, 2 s) ; se soulève au survol et s'enfonce au clic. **« Mes mondes »** est un bouton en bois.
 - **Les 4 cartes « Comment jouer »** : en bois sombre avec un filet doré, une lueur de leur couleur en haut, un **numéro dans une pièce dorée** en haut à gauche, une image (portrait rond à bord doré du mineur et du recruteur, ou le dessin détouré du forgeron et de l'arbre de prestige), le titre dans leur couleur ; elles se soulèvent au survol.
@@ -212,8 +215,8 @@ Refait le 20/10 : le village est une carte **isométrique** (vue du ciel à 45°
 
 ### 7.1 La projection (`iso.ts`)
 
-- Le monde est mesuré en pixels : la clairière y est un **losange** dont le coin du haut (la case 0, 0) est en (801 ; 57), et la grille fait **40 × 40 cases**. La caméra ne sort jamais de `LIMITES_CAMERA` (la clairière et une bande de forêt) ; le terrain dessiné va bien plus loin (`LIMITES_TERRAIN`).
-- Une case fait **33 × 19 px** à l'écran (demi-largeur 16,5 px, demi-hauteur 9,57 px). Une position de la grille (x, y) donne le point `(801 + (x − y) × 16,5 ; 57,2 + (x + y) × 9,57)` (`versEcran`), et l'inverse (`versGrille`) sert à savoir quelle case on touche.
+- Le monde est mesuré en pixels : la clairière y est un **losange** dont le coin du haut (la case 0, 0) est en (1 131 ; 57), et la grille fait **60 × 60 cases** (40 × 40 avant le 21/10). Le monde fait **2 262 × 1 407 px** (`LARGEUR_MONDE`, `HAUTEUR_MONDE`). La caméra ne sort jamais de `LIMITES_CAMERA` (la clairière et une bande de forêt) ; le terrain dessiné va bien plus loin (`LIMITES_TERRAIN`).
+- Une case fait **33 × 19 px** à l'écran (demi-largeur 16,5 px, demi-hauteur 9,57 px : les constantes `DEMI_LARGEUR` et `DEMI_HAUTEUR`, qui ne dépendent plus de la taille de la grille). Une position de la grille (x, y) donne le point `(1 131 + (x − y) × 16,5 ; 57,2 + (x + y) × 9,57)` (`versEcran`), et l'inverse (`versGrille`) sert à savoir quelle case on touche.
 - **Ordre d'affichage** : plus un objet est bas sur l'écran (plus près de nous), plus il passe devant. Son `z-index` est `(x + y) × 100` au centre de son emprise (`profondeur`) ; un personnage +5, un wagonnet +4, ce qu'on pose 99 999.
 - La caméra (`VueVillage.tsx`) déplace et agrandit tout le monde d'un coup (`translate` + `scale`), en douceur (0,18 s) quand elle suit le joueur.
 
@@ -232,12 +235,12 @@ Refait le 20/10 : le village est une carte **isométrique** (vue du ciel à 45°
 ### 7.3 Les dessins
 
 - **Les bâtiments** : les images calées sur la grille (voir [§ 1](#1-le-style-général)), avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon (l'entrée change de côté). Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne (0,16 s). Ce qu'on pose (le fantôme) est un peu transparent et pulse (1 s) ; il **rougit** (sépia + teinte) quand la place est prise.
-- **La mine** (21/10) : l'image fournie (`mine.webp`), calée sur ses 10 × 10 cases comme les bâtiments, et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG) : une **cage d'ascenseur** en acier (montants, entretoises, poulie qui **tourne** quand une cabine roule, câble, cabine rayée jaune et noir) pour ton ascenseur (toit doré) et une par mineur employé, posées en quinconce le long du mur du fond ; le **fond du trou** qui s'assombrit avec la profondeur (et une lueur bleutée de minerais quand on est bas) ; un **panneau en bois** avec la profondeur devant la galerie. Retournée en miroir, tout est inversé ensemble.
+- **La mine** (21/10) : l'image fournie (`mine.webp`), calée sur ses 10 × 10 cases comme les bâtiments, et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG, placé depuis le 21/10 à partir de points de l'image, `POINTS_MINE`, convertis par `pointSurSprite` dans `iso.ts`) : une **cage d'ascenseur** en acier (montants, entretoises, poulie qui **tourne** quand une cabine roule, câble, cabine rayée jaune et noir) pour ton ascenseur (toit doré) et une par mineur employé, posées en quinconce le long du mur du fond ; le **fond du trou** qui s'assombrit avec la profondeur (et une lueur bleutée de minerais quand on est bas) ; un **panneau en bois** avec la profondeur devant la galerie. Retournée en miroir, tout est inversé ensemble.
 - **Les rails** (`CaseRail`) : du ballast gris, des traverses en bois, deux rails en acier (avec leur ombre). Chaque case **se raccorde toute seule** à ses voisines (et à la mine ou au marché collés à elle) : une ligne droite, ou un **virage** en quart de cercle autour d'un coin de la case.
 - **Les chemins** (`CaseChemin`) : des pavés gris clair sur de la terre beige.
 - **Les décorations** (`DessinDecoration`) : fleurs rouges, jaunes ou violettes, buisson, rocher, tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs (2 × 2 cases), fontaine (son jet pulse, 1,2 s), statue du hamster d'or. Elles peuvent être retournées aussi.
 - **Les chargements** (`DessinWagonnet`) : un **wagonnet** rempli de minerais sur les rails, une **brouette** à pied.
-- **Les personnages** : voir [§ 4.1](#41-au-village--hamstertsx-de-trois-quarts).
+- **Les personnages** : voir [§ 4.1](#41-au-village--perso-elementsvillagetsx).
 
 ### 7.4 Les bulles de notification
 
@@ -350,7 +353,7 @@ Toutes ont le même dessin : sur un fond carré arrondi gris-bleu très sombre (
 
 Enregistré **seulement en production** (`enregistrerServiceWorker` dans `src/installation.ts`, appelé par `main.tsx` ; en développement le cache gênerait), au chargement de la page, avec `updateViaCache: 'none'`. S'il échoue (navigation privée…), le jeu marche quand même, sans hors ligne.
 
-- Cache **`idle-miner-v4`** (21/10 : images en haute définition puis arbres ; `idle-miner-v2` le 20/10). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, les 9 images de `images/batiments/` (dont la mine), les 3 portraits de `images/personnages/` ; sans elles, le village serait vide hors ligne), et prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
+- Cache **`idle-miner-v5`** (21/10 : images en haute définition, arbres (v4), puis images des personnages (v5) ; `idle-miner-v2` le 20/10). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, les 9 images de `images/batiments/` (dont la mine), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/` ; sans elles, le village serait vide hors ligne), et prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
 - Seules les requêtes **GET de notre propre site** passent par lui (Supabase n'est jamais mis en cache).
 
 | Requête | Stratégie |

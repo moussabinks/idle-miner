@@ -2,27 +2,32 @@
 // de l'image de fond, et inversement. C'est seulement de l'affichage : la logique du jeu ne
 // connaît que les cases (src/jeu/village.ts).
 //
-// Le monde est mesuré en pixels : la clairière y est un losange, son coin du haut (la case 0, 0)
-// est en (801 ; 57), et une case fait 33 pixels de large sur 19 de haut (40 cases d'un coin à
-// l'autre). Le sol en damier et la forêt autour sont dessinés par le jeu (TerrainVillage).
+// Le monde est mesuré en pixels : la clairière y est un losange (60 × 60 cases), son coin du haut
+// (la case 0, 0) est en (1131 ; 57), et une case fait 33 pixels de large sur 19 de haut. Le sol
+// en damier et la forêt autour sont dessinés par le jeu (TerrainVillage, ForetVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import { porte, porteAGauche, type BatimentPose, type Case } from '../jeu/village'
 
-export const LARGEUR_MONDE = 1536
-export const HAUTEUR_MONDE = 1024
-const ORIGINE = { x: 801, y: 57.2 }
-// La moitié de la largeur et de la hauteur d'une case à l'écran.
-export const DEMI_LARGEUR = 660 / TAILLE_GRILLE
-export const DEMI_HAUTEUR = 382.8 / TAILLE_GRILLE
+// La moitié de la largeur et de la hauteur d'une case à l'écran (la taille des images des
+// bâtiments est calée dessus : elle ne change pas si la clairière grandit).
+export const DEMI_LARGEUR = 16.5
+export const DEMI_HAUTEUR = 9.57
+// Une marge autour de la clairière, à gauche et en haut.
+const MARGE = { x: 141, y: 57.2 }
+const ORIGINE = { x: MARGE.x + TAILLE_GRILLE * DEMI_LARGEUR, y: MARGE.y }
+// La taille du monde (la clairière et ses marges), en pixels. Les mêmes chiffres sont dans
+// village.css (.monde-village) : les changer ensemble.
+export const LARGEUR_MONDE = 2262
+export const HAUTEUR_MONDE = 1407
 
 export type Point = { x: number; y: number }
 
 // Jusqu'où la caméra peut aller (en pixels du monde) : la clairière et une bande de forêt tout
 // autour. On ne voit jamais le bord du décor (la forêt continue bien plus loin).
-export const LIMITES_CAMERA = { x0: -80, y0: -140, x1: 1680, y1: 1020 }
-// Le terrain dessiné (la forêt qui se répète) déborde largement des limites de la caméra.
-export const LIMITES_TERRAIN = { x0: -700, y0: -700, x1: 2300, y1: 1700 }
+export const LIMITES_CAMERA = { x0: -80, y0: -140, x1: LARGEUR_MONDE + 78, y1: HAUTEUR_MONDE - 4 }
+// Le terrain dessiné (l'herbe sous la forêt) déborde largement des limites de la caméra.
+export const LIMITES_TERRAIN = { x0: -700, y0: -700, x1: LARGEUR_MONDE + 700, y1: HAUTEUR_MONDE + 680 }
 
 // Une position sur la grille (en cases, à virgule) → un point de l'image du monde (en pixels).
 export function versEcran(x: number, y: number): Point {
@@ -61,8 +66,8 @@ type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; dro
 export const RETRAIT_BATIMENT = 0.3
 
 export const CALAGES: Record<IdBatiment, Calage> = {
-  // La mine (10 × 10) : l'image fournie, redressée pour que son emprise soit déjà un losange du jeu.
-  puits: { largeur: 1680, hauteur: 1004, gauche: { x: 40, y: 500 }, bas: { x: 840, y: 964 }, droite: { x: 1640, y: 500 }, retrait: 0 },
+  // La mine (10 × 10) : l'image fournie, upscalée et rendue plus nette, sans la redresser (21/10).
+  puits: { largeur: 2109, hauteur: 1346, gauche: { x: 9, y: 722 }, bas: { x: 1259, y: 1336 }, droite: { x: 2099, y: 766 }, retrait: 0 },
   bazar: { largeur: 1120, hauteur: 1020, gauche: { x: 2, y: 726 }, bas: { x: 458, y: 1016 }, droite: { x: 1116, y: 718 } },
   enchanteur: { largeur: 1120, hauteur: 1022, gauche: { x: 0, y: 704 }, bas: { x: 520, y: 1020 }, droite: { x: 1118, y: 678 } },
   foreuse: { largeur: 1120, hauteur: 1130, gauche: { x: 2, y: 752 }, bas: { x: 568, y: 1128 }, droite: { x: 1116, y: 792 } },
@@ -79,6 +84,13 @@ export const CALAGES: Record<IdBatiment, Calage> = {
 // tous exactement le même angle, l'image était penchée et tassée.) Avec « miroir », l'image est
 // retournée (la gauche passe à droite).
 export function transformationSprite(calage: Calage, x: number, y: number, taille: number, miroir: boolean): string {
+  const { echelle, e, f } = placementSprite(calage, x, y, taille, miroir)
+  const retourne = miroir ? `matrix(-1, 0, 0, 1, ${calage.largeur}, 0)` : ''
+  return `matrix(${echelle}, 0, 0, ${echelle}, ${e}, ${f}) ${retourne}`.trim()
+}
+
+// L'échelle et le décalage (e, f) de l'image posée sur son emprise.
+function placementSprite(calage: Calage, x: number, y: number, taille: number, miroir: boolean): { echelle: number; e: number; f: number } {
   const r = calage.retrait ?? RETRAIT_BATIMENT
   const gauche = versEcran(x + r, y + taille - r)
   const droite = versEcran(x + taille - r, y + r)
@@ -87,10 +99,14 @@ export function transformationSprite(calage: Calage, x: number, y: number, taill
   const milieuImageX = miroir ? calage.largeur - (calage.gauche.x + calage.droite.x) / 2 : (calage.gauche.x + calage.droite.x) / 2
   const milieuImageY = (calage.gauche.y + calage.droite.y) / 2
   const milieu = versEcran(x + taille / 2, y + taille / 2)
-  const e = milieu.x - milieuImageX * echelle
-  const f = milieu.y - milieuImageY * echelle
-  const retourne = miroir ? `matrix(-1, 0, 0, 1, ${calage.largeur}, 0)` : ''
-  return `matrix(${echelle}, 0, 0, ${echelle}, ${e}, ${f}) ${retourne}`.trim()
+  return { echelle, e: milieu.x - milieuImageX * echelle, f: milieu.y - milieuImageY * echelle }
+}
+
+// Où tombe, à l'écran, un point de l'image d'un bâtiment (en pixels de l'image) : pour dessiner
+// par-dessus (les cages d'ascenseur de la mine, par exemple), miroir compris.
+export function pointSurSprite(calage: Calage, x: number, y: number, taille: number, miroir: boolean, px: number, py: number): Point {
+  const { echelle, e, f } = placementSprite(calage, x, y, taille, miroir)
+  return { x: e + (miroir ? calage.largeur - px : px) * echelle, y: f + py * echelle }
 }
 
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
