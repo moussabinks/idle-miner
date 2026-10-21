@@ -54,17 +54,17 @@ export function BoiteSvg({ x, y, taille, hauteur, marge = 12, classe = '', style
 const VERT_CLAIR = '#86c13f'
 const VERT_FONCE = '#79b437'
 
-// La forêt : une image qui se répète sans raccord (public/images/village/foret.webp, fabriquée à
-// partir de la forêt du décor fourni, upscalée par IA). Elle fait 768 pixels du monde de côté.
-const TAILLE_FORET = 768
-
 // Le losange de la clairière, un peu agrandi (marge en cases), en points « x,y ».
 function losangeClairiere(marge: number): string {
   const n = TAILLE_GRILLE
   return [versEcran(-marge, -marge), versEcran(n + marge, -marge), versEcran(n + marge, n + marge), versEcran(-marge, n + marge)].map((p) => `${p.x},${p.y}`).join(' ')
 }
 
-// Tout le terrain, dessiné une seule fois (il ne change jamais).
+// Tout le sol, dessiné une seule fois (il ne change jamais). Du plus loin au plus près :
+// - une herbe sombre partout (le sous-bois, sous les arbres de la forêt) ;
+// - une large auréole d'herbe plus claire autour de la clairière, aux bords très flous ;
+// - le damier, dont le bord se fond dans cette herbe (sur un peu plus d'une case) : on passe
+//   doucement du damier à l'herbe, puis aux arbres (voir ForetVillage), sans coupure nette.
 export const TerrainVillage = memo(function TerrainVillage() {
   const { x0, y0, x1, y1 } = LIMITES_TERRAIN
   const l = x1 - x0
@@ -80,27 +80,21 @@ export const TerrainVillage = memo(function TerrainVillage() {
           <rect x="1" width="1" height="1" fill={VERT_FONCE} />
           <rect y="1" width="1" height="1" fill={VERT_FONCE} />
         </pattern>
-        <pattern id="motif-foret" patternUnits="userSpaceOnUse" width={TAILLE_FORET} height={TAILLE_FORET}>
-          <image href="/images/village/foret.webp" width={TAILLE_FORET} height={TAILLE_FORET} />
-        </pattern>
-        <filter id="flou-lisiere" x="-10%" y="-10%" width="120%" height="120%">
+        <filter id="flou-aureole" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="38" />
+        </filter>
+        <filter id="flou-bord-damier" x="-10%" y="-10%" width="120%" height="120%">
           <feGaussianBlur stdDeviation="9" />
         </filter>
-        {/* La forêt partout, sauf sur la clairière (avec un bord adouci). */}
-        <mask id="masque-foret" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
-          <rect x={x0} y={y0} width={l} height={h} fill="#fff" />
-          <polygon points={losangeClairiere(1.2)} fill="#000" filter="url(#flou-lisiere)" />
+        {/* Le damier s'efface doucement sur son bord. */}
+        <mask id="masque-damier" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
+          <polygon points={losangeClairiere(0.5)} fill="#fff" filter="url(#flou-bord-damier)" />
         </mask>
-        {/* Une ombre douce de la forêt sur le bord de la clairière. */}
-        <filter id="ombre-lisiere" x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur stdDeviation="6" />
-        </filter>
       </defs>
-      {/* Sous la forêt : une bande d'herbe un peu plus sombre autour de la clairière. */}
-      <rect x={x0} y={y0} width={l} height={h} fill="#4f8a26" />
-      <polygon points={losangeClairiere(0)} fill="url(#motif-damier)" />
-      <polygon points={losangeClairiere(0)} fill="none" stroke="#2f5a14" strokeWidth="14" opacity="0.45" filter="url(#ombre-lisiere)" />
-      <rect x={x0} y={y0} width={l} height={h} fill="url(#motif-foret)" mask="url(#masque-foret)" />
+      <rect x={x0} y={y0} width={l} height={h} fill="#2f5e1d" />
+      <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
+      <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
+      <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
     </svg>
   )
 })

@@ -154,7 +154,7 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | `icones/icone-192.png`, `icones/icone-512.png` | Icônes de l'application |
 | `icones/icone-maskable-512.png` | Icône « maskable » (Android) |
 | `icones/apple-touch-icon.png` | Icône pour l'écran d'accueil iOS |
-| `images/village/foret.webp` | La forêt autour de la clairière : une tuile qui se répète sans raccord (21/10) |
+| `images/village/arbres/arbre01.webp` … `arbre12.webp` | Les 12 arbres de la forêt (dessins fournis, upscalés et détourés, 21/10) |
 | `images/batiments/*.webp` | Les images des bâtiments (bazar, employes, enchanteur, foreuse, forgeron, marche, prestige) et des rails (carte du menu) |
 | `images/personnages/*.webp` | Les portraits du manager, du mineur et du recruteur (accueil, stand Personnel) |
 

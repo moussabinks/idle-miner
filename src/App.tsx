@@ -391,6 +391,30 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     setTransition(null)
   }
 
+  // Pendant la partie, le navigateur ne zoome pas la page (sinon les boutons grossissaient et
+  // sortaient de l'écran) : seul le zoom de la carte marche (molette, pincement sur la carte).
+  // On bloque Ctrl + molette et le pincement du pavé tactile, Ctrl + / Ctrl -, et le pincement
+  // de Safari sur iPhone.
+  useEffect(() => {
+    const molette = (e: WheelEvent) => {
+      if (e.ctrlKey) e.preventDefault()
+    }
+    const touches = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) e.preventDefault()
+    }
+    const geste = (e: Event) => e.preventDefault()
+    window.addEventListener('wheel', molette, { passive: false })
+    window.addEventListener('keydown', touches)
+    document.addEventListener('gesturestart', geste)
+    document.addEventListener('gesturechange', geste)
+    return () => {
+      window.removeEventListener('wheel', molette)
+      window.removeEventListener('keydown', touches)
+      document.removeEventListener('gesturestart', geste)
+      document.removeEventListener('gesturechange', geste)
+    }
+  }, [])
+
   // L'écran de victoire s'affiche une seule fois, au moment où l'on atteint la bedrock.
   const [victoireAffichee, setVictoireAffichee] = useState(false)
   const [avaitGagne, setAvaitGagne] = useState(etat.victoire)

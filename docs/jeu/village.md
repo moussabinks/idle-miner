@@ -22,7 +22,8 @@
 - La clairière est une grille de **40 × 40 cases** (`TAILLE_GRILLE`). Sur l'écran, c'est un losange : la case (0, 0) est en haut, les x vont vers le bas à droite, les y vers le bas à gauche.
 - **Le terrain est dessiné par le jeu** (21/10, `TerrainVillage` dans `DessinsVillage.tsx`), il n'y a plus d'image de décor qu'on agrandit (elle devenait floue) :
   - **le sol de la clairière est un damier** vert clair / vert foncé, une case sur deux, comme le sol de Clash of Clans. Le quadrillage n'est jamais tracé : on devine les cases grâce au damier, et elles ne servent qu'à poser les bâtiments ;
-  - **la forêt** tout autour est une image qui se répète sans raccord (`public/images/village/foret.webp`, 1 536 pixels de côté pour 768 pixels du monde). Elle a été fabriquée avec la forêt du décor fourni, upscalée par IA (Real-ESRGAN) : des touffes d'arbres découpées avec des bords fondus et posées au hasard. Elle continue bien plus loin que là où la caméra peut aller, avec une lisière adoucie et une ombre sur le bord de la clairière ;
+  - **entre le damier et la forêt, une transition douce** : le bord du damier s'efface sur une case dans une herbe un peu plus foncée, puis une large auréole d'herbe se fond dans le sous-bois sombre ;
+  - **la forêt** : les **12 arbres dessinés par l'équipe** (feuillus, sapins, palmiers, bambous, saules…), upscalés par IA et détourés (`public/images/village/arbres/`), au même angle que les bâtiments (leur petite dalle d'herbe a le même rapport que les cases). Le jeu en plante environ 1 300 tout autour de la clairière, toujours aux mêmes places (hasard à graine fixe, `ForetVillage.tsx`) : clairsemés tout près du bord (une lisière naturelle, une case d'herbe libre avant le premier arbre), puis serrés, et au fond de plus gros arbres un peu plus sombres (effet de profondeur). Les arbres du bas de la carte passent devant les bâtiments et les personnages. Pour rester fluide, ils sont dessinés dans des tuiles de « toile » (canvas) de 384 pixels du monde, redessinées plus finement après un zoom pour celles qu'on voit ;
   - **la caméra est bornée** (`LIMITES_CAMERA` dans `iso.ts`) : on ne peut ni la faire glisser ni dézoomer au-delà de la clairière et d'une bande de forêt. On ne voit donc jamais de bord de décor.
 - Une case fait 33 pixels du monde de large sur 19 de haut (`iso.ts`).
 - **Tailles** : chaque bâtiment fait **5 × 5 cases**, la **mine 10 × 10**. Les rails, les chemins et les petites décorations font **1 case**, les arbres, la fontaine et la statue **2 × 2**.
@@ -69,7 +70,7 @@ Le bouton **✏️ Modifier** permet de toucher l'élément à changer (bâtimen
 
 Si on pose un bâtiment sur le hamster, il est poussé sur la case libre la plus proche.
 
-**Les bâtiments font bien 5 × 5 cases** : leur image est même dessinée un peu en retrait de leur emprise (0,3 case de chaque côté, `RETRAIT_BATIMENT`), pour qu'elle ne déborde pas sur les cases voisines du damier.
+**Les bâtiments font bien 5 × 5 cases** : leur image est dessinée un peu en retrait de leur emprise (0,3 case de chaque côté, `RETRAIT_BATIMENT`), pour qu'elle ne déborde pas sur les cases voisines du damier. Depuis le 21/10, elle n'est **plus jamais déformée** : on l'agrandit d'un seul coup pour que sa largeur tienne dans l'emprise (avant, on forçait les trois coins du pied du dessin sur ceux de l'emprise, ce qui penchait et tassait les bâtiments). Une ombre douce au sol, sous chaque bâtiment, le pose sur l'herbe.
 
 ## 4. Les rails et le wagonnet (prestige 2)
 
@@ -183,7 +184,8 @@ Les bulles ✨ et ⬆️ disparaissent quand on arrive devant le bâtiment.
 | `src/jeu/village.test.ts` | Les tests du village (construction, chemins, rails, convois, mineurs, notifications, tenues). |
 | `src/composants/VueVillage.tsx` | La carte vue du ciel (caméra, toucher, glisser, pincer, fantôme, personnages, bulles). |
 | `src/composants/iso.ts` | Case de la grille ↔ point de l'écran, calage des images des bâtiments, où se tiennent les personnages. |
-| `src/composants/DessinsVillage.tsx` | Les dessins SVG : le terrain (damier et forêt), ce qui évolue sur la mine (cages, profondeur), rails, chemins, décorations, wagonnet. |
+| `src/composants/DessinsVillage.tsx` | Les dessins SVG : le terrain (damier, herbe autour), ce qui évolue sur la mine (cages, profondeur), rails, chemins, décorations, wagonnet. |
+| `src/composants/ForetVillage.tsx`, `src/composants/arbres.ts` | La forêt : où sont plantés les arbres, leurs tuiles de toile ; la taille et le pied de chaque image d'arbre. |
 | `src/composants/ElementsVillage.tsx` | Un personnage posé sur la grille, l'image d'un bâtiment. |
 | `src/composants/Hamster.tsx` | Les hamsters (joueur, mineur, manager, recruteur). |
 | `src/composants/MenuConstruction.tsx` | Les menus Bâtiments et Décorations. |

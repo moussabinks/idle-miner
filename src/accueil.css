@@ -363,8 +363,8 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(rgb(20 11 4 / 0.8), rgb(14 8 3 / 0.93)),
-    url('/images/village/foret.webp') center / 768px repeat;
+    radial-gradient(ellipse at 50% 0%, rgb(60 90 30 / 0.35), transparent 60%),
+    linear-gradient(#1c1408, #0f0a05);
 }
 
 /* Les cartes de l'accueil (compte, mondes, classement...) sont en bois sombre, filet doré. */

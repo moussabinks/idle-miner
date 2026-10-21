@@ -4,7 +4,7 @@
 // Rien n'est joué ici : c'est une image qui bouge. Elle remplit toute sa boîte, comme une photo
 // recadrée (« cover »).
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { DECORATIONS, RARETES, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
 import {
   batimentPose,
@@ -21,6 +21,7 @@ import {
 } from '../jeu/village'
 import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
+import { ForetDerriere, ForetDevant } from './ForetVillage'
 import { Hamster } from './Hamster'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
@@ -246,6 +247,9 @@ export function SceneAccueil() {
   const gauche = borner(vise.x - centreX / z, x0, x1 - taille.l / z)
   const haut = borner(vise.y - centreY / z, y0, y1 - taille.h / z)
 
+  // Ce qu'on voit de la forêt (elle ne change que si la boîte change de taille).
+  const vueForet = useMemo(() => ({ x0: gauche, y0: haut, x1: gauche + taille.l / z, y1: haut + taille.h / z, z }), [gauche, haut, taille, z])
+
   // Les bâtiments, les décorations et le joueur ne bougent pas : on les dessine une seule fois
   // (React ne redessine pas un élément qui n'a pas changé).
   const objets: ReactNode[] = [...OBJETS_FIXES]
@@ -299,7 +303,9 @@ export function SceneAccueil() {
       <div className="monde-village" style={{ transform: `scale(${z}) translate(${-gauche}px, ${-haut}px)` }}>
         <TerrainVillage />
         {SOL}
+        <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>
+        <ForetDevant vue={vueForet} />
       </div>
     </div>
   )
