@@ -1,128 +1,98 @@
 # ⚙️ Foreuse
 
-> Une machine débloquée au prestige 1 : on pose son bâtiment, on l'active une fois, on la nourrit au charbon, et elle creuse toute seule en remplissant un grand chariot qu'on vient vider devant elle, au village.
+> Une machine débloquée au **niveau 2 de la mine** : on pose son bâtiment, on la nourrit au charbon, et elle fore toute seule en remplissant son propre chariot, qu'on vient vider devant elle. Dans le rayon du générateur, elle fore plus vite.
 
 ## Où et quand
 
-- **Où** : là où tu la poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **1 500 $ + 50 pierre + 20 fer** (la roche dure compte aussi comme de la pierre). Poser le bâtiment ne suffit pas : il faut encore **activer** la machine dans son panneau (voir plus bas). Elle reste posée à chaque prestige ; **✏️ Modifier** la déplace ou la retourne (miroir) gratuitement.
-- **Déblocage** : au **prestige 1** (`PRESTIGE_FOREUSE = 1`, et `BATIMENTS.foreuse.prestige = 1`). Avant, sa carte du menu Bâtiments a un **cadenas** « 🔒 Prestige 1 ». Au prestige 1, la carte prend la pastille **« Nouveau ! »** (jusqu'à ce qu'on ouvre le menu) et le bouton 🏗️ Bâtiments la compte dans son badge (tant qu'elle est nouvelle ou qu'on peut la payer).
+- **Où** : là où tu la poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **800 $ + 60 pierre + 30 fer** (les minerais se prennent dans le sac, puis dans le coffre de la mine). Une fois posée, elle est prête : il n'y a plus d'activation à payer. **✏️ Modifier** la déplace ou la retourne (miroir) gratuitement.
+- **Déblocage** : au **niveau 2 de la mine** (`BATIMENTS.foreuse.niveauMine = 2`). Avant, sa carte du menu Bâtiments a un **cadenas** « 🔒 Mine niveau 2 ». Au déblocage, la carte prend la pastille **« Nouveau ! »** (jusqu'à ce qu'on ouvre le menu) et le bouton 🏗️ Bâtiments la compte dans son badge.
 - **La porte** : sur la face avant **gauche** du dessin (à droite si elle est retournée).
-- **L'ouvrir** : toucher (ou cliquer) la foreuse : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté (21/10).
+- **L'ouvrir** : toucher (ou cliquer) la foreuse : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/foreuse.webp`) : une grande foreuse jaune et noire en spirale sur un bâti en bois, avec des wagonnets d'or. Quand elle tourne (`foreuseEnMarche`), le bâtiment **vibre** un peu (classe `sprite-vibre`).
+- **Description** (en haut du panneau) : « Elle creuse toute seule avec du charbon, et plus vite avec de l'électricité. »
 - **Bulles au-dessus** (`notifications.ts`), de la plus urgente à la moins urgente :
-  - **🛒 « Le chariot est plein : viens le vider ! »** (alerte rouge) quand elle est active et que le chariot est plein ;
-  - sinon **🔥 « Plus de charbon ! »** (alerte rouge) quand elle est active sans charbon ;
-  - **✨ « Nouveau : Foreuse ! »** tant qu'on n'est pas allé devant après le déblocage (`decouvertes.ts`) ;
-  - **⬆️ « Nouveaux niveaux débloqués ! »** après un prestige qui a débloqué un niveau de forage ou de chariot, jusqu'à ce qu'on passe devant (`objectifs.ts`) ;
-  - **💰 « Une amélioration est achetable ! »** quand l'activation ou une amélioration est payable tout de suite.
-- **Dans la mine** (vue en coupe) : la foreuse creuse son propre puits sur la droite de la mine (une tête jaune et noire avec une lumière, une mèche, des débris quand elle tourne, et une étiquette « -X m », ou « ↓ -X m » si elle est plus bas que ce qu'on voit).
+  - **🛒 « Le chariot est plein : viens le vider ! »** (alerte rouge) ;
+  - sinon **🔥 « Plus de charbon ! »** (alerte rouge) ;
+  - **💰 « Une amélioration est achetable ! »** quand un niveau de forage ou de chariot est payable tout de suite.
 
 ## Ce qu'on peut y faire
 
-Toutes les actions demandent d'être au village, devant la foreuse (son panneau ouvert).
+### 1. La remplir de charbon (État)
 
-### 1. Activer la foreuse (une seule fois)
+- Un badge donne l'état : **En marche**, **Chariot plein** ou **Plus de charbon**. On voit aussi sa vitesse (« 0,8 bloc(s) par seconde », avec « (⚡ boostée par le générateur) » si elle l'est) et le nombre de blocs forés.
+- Une jauge dorée montre les secondes de charbon restantes (pleine à 200 s, ou plus si on en a mis plus).
+- « 1 charbon = 20 s · tu en as *N* (sac + coffre) » et les boutons **+1**, **+10** et **Tout** (anthracite) : on met du charbon **du sac, puis du coffre de la mine**. « 🔥 +*N* charbon dans la foreuse. »
+- Si elle n'est pas boostée : « ⚡ Dans le rayon du générateur allumé, elle fore plus vite. »
 
-| Coût | Effet |
-|---|---|
-| **5 000 $ + 10 fer + 5 redstone** | La foreuse devient active **pour toujours** (même après les prestiges suivants). |
+### 2. La recharge automatique (case à cocher)
 
-### 2. La remplir de charbon
+- Disponible à partir du **3e niveau de forage** (`NIVEAU_RECHARGE_AUTO = 2`, compté à partir de 0). Avant, le panneau affiche « 🔒 Recharge automatique au charbon : débloquée au niveau 3 de forage. »
+- Cochée, la foreuse **brûle le charbon qu'elle fore** tant que sa réserve est sous **60 secondes** (`RESERVE_RECHARGE_AUTO`) ; au-delà, le charbon va dans le chariot comme les autres blocs.
 
-- Boutons **+1**, **+10** et **Tout** : on met du charbon **de son sac** dans la foreuse.
-- **1 charbon = 20 secondes de forage** (`SECONDES_PAR_CHARBON`).
-- Une jauge montre les secondes de charbon restantes (elle est pleine à 200 s, ou plus si on en a mis plus).
-- Un badge donne l'état : **En marche**, **Chariot plein** ou **Plus de charbon**. On voit aussi sa profondeur, sa vitesse et le nombre de blocs forés.
+### 3. Vider le chariot
 
-### 3. La recharge automatique (case à cocher)
-
-- Disponible à partir du **niveau 3 de forage** (`NIVEAU_RECHARGE_AUTO = 2`, compté à partir de 0), ou **dès le niveau 1** avec le talent « Moteur autonome ». Avant, le panneau affiche « 🔒 Recharge automatique au charbon : débloquée au niveau 3 de forage ».
-- Cochée, la foreuse **brûle le charbon qu'elle remonte** tant que sa réserve est sous **60 secondes** (`RESERVE_RECHARGE_AUTO`) ; au-delà, le charbon va dans le chariot comme les autres blocs.
-
-### 4. Vider le chariot
-
-- La liste du chariot est triée du bloc le plus cher au moins cher, avec la quantité et la valeur de chaque bloc.
+- Une barre violette « *n* / *capacité* », puis la liste du chariot, triée du bloc le plus cher au moins cher, avec la quantité et la valeur de chaque bloc.
 - On **coche / décoche** chaque objet, ou tout d'un coup (« ☑️ Tout sélectionner » / « ☐ Tout désélectionner »). Les objets décochés restent dans le chariot.
-- **💰 Vendre la sélection** : vend les objets cochés, au prix du marché (avec le bonus de prestige de +15 % par prestige et les talents de vente), **+20 % avec le talent « Grossiste »**.
-- **🎒 Mettre dans le sac** : met les objets cochés dans son sac, tant qu'il reste de la place (pratique pour récupérer du fer, de la redstone, des diamants…).
+- **💰 Vendre la sélection** (vert) : vend les objets cochés, au prix du marché, **sans aller au marché**. « 💰 Chariot vendu : +*X* $ »
+- **🎒 Mettre dans le sac** (kaki) : met les objets cochés dans son sac, tant qu'il reste de la place.
 
-### 5. Améliorer la vitesse de forage (8 niveaux)
+### 4. Améliorer la vitesse de forage (6 niveaux, `NIVEAUX_FORAGE`)
 
-| Niveau | Vitesse (blocs/s) | Coût | Prestige requis |
-|---|---|---|---|
-| 1 | 2 | (de base) | 1 |
-| 2 | 3 | 2 500 $ + 20 fer + 5 redstone | 2 |
-| 3 | 5 | 6 000 $ + 40 fer + 20 redstone | 3 |
-| 4 | 8 | 12 000 $ + 60 fer + 40 redstone | 4 |
-| 5 | 12 | 25 000 $ + 90 fer + 70 redstone | 5 |
-| 6 | 16 | 40 000 $ + 130 fer + 100 redstone | 6 |
-| 7 | 22 | 65 000 $ + 180 fer + 140 redstone | 7 |
-| 8 | 30 | 100 000 $ + 250 fer + 200 redstone | 8 |
+| Niveau | Vitesse (blocs/s, sans électricité) | Coût |
+|---|---:|---|
+| 1 | 0,5 | (de base) |
+| 2 | 0,8 | 1 500 $ + 30 fer + 10 redstone |
+| 3 | 1,2 | 4 000 $ + 60 fer + 30 redstone |
+| 4 | 1,8 | 10 000 $ + 100 fer + 60 redstone |
+| 5 | 2,6 | 25 000 $ + 100 redstone + 30 or |
+| 6 | 3,6 | 60 000 $ + 60 or + 15 émeraude |
 
-Avec le talent **« Foreuse turbo »**, la vitesse est multipliée par **1,5**.
+Tout le forage : 100 500 $ + 190 fer + 200 redstone + 90 or + 15 émeraude. Message : « ⚙️ Foreuse plus rapide : *N* blocs par seconde. »
 
-### 6. Agrandir le chariot (8 niveaux)
+### 5. Agrandir le chariot (6 niveaux, `NIVEAUX_CHARIOT`)
 
-| Niveau | Capacité (objets) | Coût | Prestige requis | Plein en (forage du même niveau) |
-|---|---|---|---|---|
-| 1 | 1 000 | (de base) | 1 | ~8 min (500 s) |
-| 2 | 1 500 | 1 500 $ + 10 fer | 2 | ~8 min |
-| 3 | 2 500 | 4 000 $ + 25 fer + 10 redstone | 3 | ~8 min |
-| 4 | 4 000 | 9 000 $ + 45 fer + 25 redstone | 4 | ~8 min |
-| 5 | 6 000 | 18 000 $ + 70 fer + 45 redstone | 5 | ~8 min |
-| 6 | 8 000 | 28 000 $ + 100 fer + 70 redstone | 6 | ~8 min |
-| 7 | 10 500 | 45 000 $ + 140 fer + 100 redstone | 7 | ~8 min (477 s) |
-| 8 | 15 000 | 70 000 $ + 200 fer + 150 redstone | 8 | ~8 min |
+| Niveau | Capacité | Coût | Plein en (forage du même niveau, sans électricité) |
+|---|---:|---|---|
+| 1 | 200 | (de base) | ~7 min (400 s) |
+| 2 | 400 | 1 000 $ + 20 fer | ~8 min (500 s) |
+| 3 | 800 | 3 000 $ + 50 fer + 15 redstone | ~11 min |
+| 4 | 1 600 | 8 000 $ + 90 fer + 40 redstone | ~15 min |
+| 5 | 3 000 | 20 000 $ + 80 redstone + 20 or | ~19 min |
+| 6 | 6 000 | 50 000 $ + 50 or + 10 émeraude | ~28 min |
 
-Avec le talent **« Grand chariot »**, la capacité est **doublée**. Le panneau affiche le temps pour remplir le chariot ; s'il se remplit en moins de 6 minutes, il conseille : « ⚠️ Ta foreuse remplit le chariot vite : agrandis-le… ».
-
-Pour tout monter au niveau 8 : forage = 250 500 $ + 770 fer + 575 redstone ; chariot = 175 500 $ + 590 fer + 400 redstone.
+Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 400 places · plein en 8 min »). Message : « 🛒 Chariot plus grand : *N* places. »
 
 ## Règles et comportement
 
-- **Quand elle tourne** : seulement si elle est **active**, qu'il lui reste **du charbon**, et que **le chariot n'est pas plein** (`foreuseEnMarche`). Elle ne brûle pas de charbon pour rien : quand le chariot est plein, elle s'arrête (message « 🛒 Le chariot de la foreuse est plein : viens le vider au village. », et la bulle 🛒 saute au-dessus du bâtiment) ; quand le charbon est fini : « 🔥 La foreuse n'a plus de charbon. » (bulle 🔥).
-- **Ce qu'elle remonte** : un bloc tiré au hasard selon sa profondeur (comme dans la mine du prestige en cours), mais **jamais de lave, de coffre ni de géode**. L'enchantement Fortune ne s'applique pas à elle.
-- **Elle descend** d'**1 mètre tous les 10 blocs forés** (`BLOCS_FORES_PAR_METRE`), en partant de -1 m, jusqu'à **1 m au-dessus de la bedrock** du prestige (par exemple -149 m au prestige 1, -199 m au prestige 2). Plus elle est profonde, plus elle trouve de minerais rares.
-- **Les plafonds par prestige** (`PLAFONDS.forage` et `PLAFONDS.chariot` dans `donnees.ts`) : débloqués au prestige 1 au niveau de base, puis **un niveau de plus par prestige**, jusqu'au 8e.
-
-  | Prestige | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 et + |
-  |---|---|---|---|---|---|---|---|---|
-  | Niveau max de forage et de chariot | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-
-  Un niveau au-dessus du plafond s'affiche avec un cadenas « 🔒 Prestige X ». Les améliorations demandent aussi que la foreuse soit activée.
-- **Il n'y a qu'une seule foreuse** (décidé le 20/10). Les anciennes sauvegardes à plusieurs foreuses gardent la meilleure et sont remboursées des autres.
-- **Hors ligne** : quand on rouvre un monde, le jeu rattrape le temps passé, **au plus 8 heures** (`ABSENCE_MAX` dans `usePartie.ts`). La foreuse continue donc de forer (tant qu'elle a du charbon et de la place), et la recharge automatique continue aussi. Un message dit « Pendant ton absence : ⚙️ la foreuse a remonté N blocs ».
-- **Au prestige** (`foreuseApresPrestige` dans `mineur.ts`) :
-  - **gardé** : l'activation, le niveau de forage, le niveau du chariot, la case « recharge automatique », les objets décochés ;
-  - **remis à zéro** : le charbon chargé, **le contenu du chariot (perdu s'il n'a pas été vidé !)**, la profondeur (elle repart de -1 m), le compteur de blocs forés.
+- **Quand elle tourne** : seulement si elle est **posée**, qu'il lui reste **du charbon**, et que **le chariot n'est pas plein** (`foreuseEnMarche`). Elle ne brûle pas de charbon pour rien : chariot plein, elle s'arrête (« 🛒 Le chariot de la foreuse est plein : viens le vider. ») ; plus de charbon : « 🔥 La foreuse n'a plus de charbon. »
+- **Le charbon** : **1 charbon = 20 secondes** (`SECONDES_PAR_CHARBON`), quelle que soit la vitesse : **3 charbons par minute**, 180 par heure. Plus elle fore vite, plus chaque charbon rapporte.
+- **Ce qu'elle remonte** : un bloc tiré au hasard selon le **niveau de la mine**, avec les mêmes chances que la mine (`tirerBloc`). Elle ne double jamais (la chance de doubler n'est que pour les clics du joueur). Ses blocs vont dans **son chariot**, pas dans le coffre de la mine.
+- **L'électricité** : dans le rayon du générateur allumé (le centre de la foreuse dans le cercle, `foreuseAlimentee`), elle fore **× (1 + 0,5 × la puissance du générateur)** plus vite : × 1,5 au niveau 1 du générateur, jusqu'à × 2,5 au niveau 5. Elle ne brûle **pas plus** de charbon. Voir [generateur.md](generateur.md).
+- **Il n'y a qu'une seule foreuse**.
+- **Hors ligne** : quand on rouvre un monde, le jeu rattrape le temps passé, **au plus 8 heures**. La foreuse continue donc de forer (tant qu'elle a du charbon et de la place), et la recharge automatique continue aussi. Un message dit « ⚙️ la foreuse a remonté *N* blocs ».
 
 ## Lien avec le reste du jeu
 
-- **Conditions de prestige** (`conditionsPrestige.ts`), dès que la foreuse est débloquée :
-  - « ⚙️ Foreuse activée » ;
-  - « ⚙️ Forage au niveau N » et « 🛒 Chariot au niveau N », où N est le plafond du prestige en cours (pas demandé au prestige 1, où l'activer suffit).
-- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Foreuse » (menu Bâtiments) ; une fois posée, « Activer la foreuse », « Forage X blocs/s » et « Chariot de X places » apparaissent dans les achats possibles (bulle 💰, prochain objectif « …à la foreuse ! ») ; bulle ⬆️ après un prestige qui ouvre un niveau.
-- **Talents** (`talents.ts`) : branche Ingénieur — « Foreuse turbo » (+50 % de vitesse), « Grand chariot » (×2 places), « Moteur autonome » (recharge automatique dès le niveau 1) ; branche Marchand — « Grossiste » (chariot vendu 20 % plus cher).
-- **Autres bâtiments** : la foreuse se paie surtout en **fer et redstone**, comme l'ascenseur (Mine) ; le **charbon** vient de la mine (ou du chariot lui-même, mis dans le sac) ; on peut revendre ce qu'elle remonte directement depuis son panneau, sans passer par le Marché.
-- **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc à sa profondeur, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus) et `blocsForeuse`.
+- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, prochain objectif « …à la foreuse ! »).
+- **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1) ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché. Le **générateur** la booste.
+- **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc au niveau de la mine, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus, la part « ⚙️ Foreuse » de l'écran 📊) et `blocsForeuse`.
+- **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend le chariot quand il est à moitié plein, et améliore le forage et le chariot quand il a plus de 3 000 $.
 
 ## Fichiers du code
 
-- `src/jeu/foreuse.ts` : toutes les règles (activation, charbon, forage seconde après seconde, chariot, améliorations, recharge automatique).
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.foreuse` : 1 500 $ + 50 pierre + 20 fer, 5 × 5, porte à gauche, prestige 1) et les chiffres (`COUT_ACTIVATION_FOREUSE`, `SECONDES_PAR_CHARBON`, `NIVEAUX_FORAGE`, `NIVEAUX_CHARIOT`, `PLAFONDS`…).
+- `src/jeu/foreuse.ts` : toutes les règles (charbon, forage seconde après seconde, chariot, améliorations, recharge automatique, vitesse électrique).
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.foreuse` : 800 $ + 60 pierre + 30 fer, 5 × 5, porte à gauche, niveau 2 de la mine) et les chiffres (`SECONDES_PAR_CHARBON`, `NIVEAU_RECHARGE_AUTO`, `RESERVE_RECHARGE_AUTO`, `BONUS_ELECTRIQUE_FOREUSE`, `NIVEAUX_FORAGE`, `NIVEAUX_CHARIOT`).
+- `src/jeu/generateur.ts` : `foreuseAlimentee`, `puissanceGenerateur`.
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`batimentDebloque`, `construireBatiment`, `deplacerBatiment`).
-- `src/jeu/mineur.ts` : le type `Foreuse`, `nouvelleForeuse()` et ce qui est gardé au prestige (`foreuseApresPrestige`).
+- `src/jeu/mineur.ts` : le type `Foreuse` et `nouvelleForeuse()`.
 - `src/jeu/temps.ts` : fait avancer la foreuse avec le reste du jeu (`avancerTemps`).
 - `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) et le message « Pendant ton absence ».
-- `src/jeu/conditionsPrestige.ts` : les conditions « Foreuse activée », « Forage » et « Chariot » du prestige.
-- `src/jeu/notifications.ts` : les bulles 🛒, 🔥, ✨, ⬆️ et 💰 au-dessus de la foreuse.
-- `src/jeu/objectifs.ts` : « Construire : Foreuse », achats, badge « Nouveaux niveaux », prochain objectif.
-- `src/jeu/decouvertes.ts` : la bulle « Nouveau : Foreuse ! » au déblocage.
-- `src/jeu/talents.ts` : les talents qui améliorent la foreuse.
+- `src/jeu/notifications.ts` : les bulles 🛒, 🔥 et 💰 au-dessus de la foreuse.
+- `src/jeu/objectifs.ts` : « Construire : Foreuse », achats, prochain objectif.
 - `src/jeu/revenu.ts` et `src/jeu/statistiques.ts` : ce qu'elle rapporte ($/s et statistiques).
+- `src/jeu/foreuse.test.ts` : les tests.
 - `src/composants/Panneaux.tsx` : le panneau du bâtiment (`PanneauForeuse`).
 - `src/composants/MenuConstruction.tsx` : la carte de la foreuse dans le menu Bâtiments (cadenas, « Nouveau ! »).
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, la vibration et les bulles.
 - `public/images/batiments/foreuse.webp` : le dessin de la foreuse.
-- `src/composants/VueMonde.tsx` : le puits de la foreuse dans la mine (`PuitsForeuse`).
-- `src/index.css` : le dessin et les animations de la tête de forage dans la mine, la couleur du bouton charbon ; `src/village.css` : la vibration du bâtiment (`.sprite-vibre`).
+- `src/village.css` : la vibration du bâtiment (`.sprite-vibre`) ; `src/index.css` : la couleur du bouton charbon.
