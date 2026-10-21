@@ -52,28 +52,6 @@
   box-shadow: none;
 }
 
-/* Dans la mine : la coupe est au milieu, entre le bandeau et les boutons (et à gauche du
-   panneau du sac sur ordinateur). Elle prend toute la hauteur qui reste. */
-.plein-ecran.mode-mine .scene {
-  top: 96px;
-  bottom: 84px;
-  right: calc(var(--largeur-panneau) + 24px);
-  display: flex;
-  justify-content: center;
-}
-
-.plein-ecran .entree-dans-la-mine {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.plein-ecran .entree-dans-la-mine > .monde {
-  flex: 1;
-  height: auto;
-  min-height: 0;
-}
-
 /* --- Le calque de l'interface : il laisse passer les clics vers la carte, sauf sur les
        boutons et les panneaux eux-mêmes. ---------------------------------------------- */
 
@@ -133,16 +111,6 @@
   box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.25), 0 1px 0 #2a1608;
 }
 
-.texte-coin {
-  max-width: 48px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.56rem;
-  font-weight: 800;
-  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
-}
-
 .menu-reglages {
   position: absolute;
   top: 0;
@@ -156,37 +124,6 @@
   border: 2px solid #4a2c12;
   background: linear-gradient(#36220f, #22150a);
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
-}
-
-/* --- En haut à droite : le bandeau, en petites cases sombres --------------------- */
-
-.plein-ecran .hud {
-  margin: 0 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-  min-width: 0;
-  pointer-events: auto;
-}
-
-.plein-ecran .hud-case {
-  height: auto;
-  min-height: 50px;
-  padding: 5px 10px;
-  border: 2px solid #4a2c12;
-  background: rgb(24 15 8 / 0.84);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
-}
-
-.plein-ecran .hud-pioche {
-  width: 210px;
-}
-
-.plein-ecran .hud-sac {
-  width: 180px;
 }
 
 /* --- Le prochain objectif : une pastille sous le bandeau, à droite ---------------- */
@@ -224,13 +161,6 @@
   animation: monte-menu 0.22s ease-out;
 }
 
-/* Dans la mine, le sac est toujours là (sur ordinateur) : il prend toute la hauteur. */
-.plein-ecran.mode-mine .panneau-flottant > .panneau {
-  flex: 1;
-  animation: none;
-}
-
-.fermer-sac,
 .bouton-sac-telephone {
   display: none;
 }
@@ -255,15 +185,6 @@
 
 .plein-ecran .actions > * {
   pointer-events: auto;
-}
-
-/* Dans la mine : la barre au milieu, sous la coupe. */
-.plein-ecran.mode-mine .interface-bas {
-  right: calc(var(--largeur-panneau) + 24px);
-}
-
-.plein-ecran.mode-mine .actions {
-  width: min(640px, 100%);
 }
 
 /* Au village : la mine en bas à gauche, la construction en bas à droite. */
@@ -375,14 +296,6 @@
   .jeu.plein-ecran {
     --largeur-panneau: 350px;
   }
-
-  .plein-ecran .hud-pioche {
-    width: 170px;
-  }
-
-  .plein-ecran .hud-sac {
-    width: 150px;
-  }
 }
 
 /* =========================================================================
@@ -397,40 +310,8 @@
     font-size: 1.05rem;
   }
 
-  .texte-coin {
-    display: none;
-  }
-
   .menu-reglages {
     left: 52px;
-  }
-
-  /* Le bandeau : de petites cases sur deux lignes. */
-  .plein-ecran .hud {
-    gap: 4px;
-  }
-
-  .plein-ecran .hud-case {
-    min-height: 40px;
-    padding: 3px 8px;
-    border-radius: 8px;
-  }
-
-  .plein-ecran .hud-enchants {
-    display: none;
-  }
-
-  .plein-ecran .hud-titre {
-    font-size: 0.66rem;
-  }
-
-  .plein-ecran .hud-argent strong {
-    font-size: 0.95rem;
-  }
-
-  .plein-ecran .hud-pioche,
-  .plein-ecran .hud-sac {
-    width: calc(50% - 2px);
   }
 
   .plein-ecran .barre {
@@ -486,77 +367,12 @@
     left: 50%;
   }
 
-  /* Les petits compteurs (seaux, ascenseur, prestige, son) : sur une ligne, en petit. */
-  .plein-ecran .hud-petits {
-    gap: 8px;
-    font-size: 0.8rem;
-  }
-
-  .plein-ecran .hud-petits .hud-bouton {
-    padding: 2px 6px;
-    white-space: nowrap;
-  }
-
-  /* --- Dans la mine : la coupe sur tout l'écran, le sac s'ouvre avec 🎒 ------------- */
-  .plein-ecran.mode-mine .scene {
-    top: 132px;
-    bottom: calc(var(--marge-bas) + 64px);
-    right: 0;
-  }
-
-  .plein-ecran.mode-mine .interface-bas {
-    right: var(--marge-droite);
-  }
-
-  .plein-ecran.mode-mine .actions {
-    position: static;
-    width: 100%;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    padding: 0;
-    background: none;
-    border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .plein-ecran.mode-mine .actions .bouton {
-    padding-left: 2px;
-    padding-right: 2px;
-    font-size: 0.82rem;
-  }
-
   .bouton-sac-telephone {
     display: block;
   }
 
   .bouton-sac-telephone.actif {
     border-color: var(--accent);
-  }
-
-  .plein-ecran.mode-mine .panneau-flottant {
-    max-height: 62dvh;
-  }
-
-  .plein-ecran.mode-mine .panneau-sac {
-    display: none;
-  }
-
-  .plein-ecran.mode-mine .panneau-sac.sac-ouvert {
-    display: block;
-    position: relative;
-    padding-top: 42px;
-  }
-
-  .fermer-sac {
-    display: block;
-    position: absolute;
-    top: 8px;
-    right: 8px;
-  }
-
-  /* Dans la mine, l'objectif passe en haut (en bas, il cacherait la coupe). */
-  .plein-ecran.mode-mine .objectif {
-    display: none;
   }
 
   /* La barre d'édition et la barre du village ne sont plus dans un bandeau sombre. */

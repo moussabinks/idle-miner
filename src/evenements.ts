@@ -14,6 +14,7 @@ export type Evenement =
   | { type: 'achat' }
   | { type: 'piocheCassee' }
   | { type: 'wagonnet'; montant: number } // le wagonnet a vendu le coffre au marché
+  | { type: 'electricite' } // on a mis de la redstone dans le générateur
   | { type: 'amelioration' } // un niveau de plus : mine, coffre, ascenseur, foreuse, mineur, sac, pioche...
 
 // Un seul nombre qui grandit à chaque amélioration achetée (pour la repérer facilement).
@@ -47,6 +48,9 @@ export function evenementsEntre(avant: EtatJeu, apres: EtatJeu): Evenement[] {
   if (totalNiveaux(apres) > totalNiveaux(avant)) evenements.push({ type: 'amelioration' })
 
   if (!estCassee(avant) && estCassee(apres) && avant.niveauPioche === apres.niveauPioche) evenements.push({ type: 'piocheCassee' })
+
+  // De la redstone dans le générateur (à la main : plus de 10 secondes de courant d'un coup).
+  if (apres.generateur.carburant > avant.generateur.carburant + 10 && apres.stats.tempsDeJeu === avant.stats.tempsDeJeu) evenements.push({ type: 'electricite' })
 
   // L'argent du wagonnet : discret (il fait beaucoup de voyages).
   const gainWagonnet = apres.stats.argentWagonnet - avant.stats.argentWagonnet

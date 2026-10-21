@@ -56,57 +56,11 @@
   animation: trouvaille 1.8s ease-out forwards;
 }
 
-.trouvaille-charbon { --couleur-rare: #c9c9c9; }
-.trouvaille-fer { --couleur-rare: #ecc7a8; }
-.trouvaille-redstone { --couleur-rare: #ff4d4d; }
-.trouvaille-amethyste { --couleur-rare: #c9a2ff; }
-.trouvaille-obsidienne { --couleur-rare: #a26ad8; }
-.trouvaille-lapis { --couleur-rare: #4a7eea; }
-.trouvaille-or { --couleur-rare: #ffd84a; }
-.trouvaille-emeraude { --couleur-rare: #4cf08a; }
-.trouvaille-diamant { --couleur-rare: #7ff5ec; }
-.trouvaille-debris { --couleur-rare: #e0965f; }
-
 .trouvaille .mini-bloc {
   width: 20px;
   height: 20px;
   animation: tourne-bloc 0.9s ease-in-out infinite alternate;
 }
-
-/* Des rayons de lumière qui tournent derrière. */
-.trouvaille-rayons {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  width: 90px;
-  height: 90px;
-  margin: -45px 0 0 -45px;
-  z-index: -1;
-  border-radius: 50%;
-  background: repeating-conic-gradient(var(--couleur-rare, #fff) 0 8deg, transparent 8deg 30deg);
-  mask: radial-gradient(circle, #000 20%, transparent 70%);
-  opacity: 0.55;
-  animation: rayons 1.8s linear forwards;
-}
-
-.etincelles i {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  background: #fff;
-  box-shadow: 0 0 6px var(--couleur-rare, #fff);
-  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-  transform: scale(2);
-  animation: etincelle 1s ease-out forwards;
-}
-
-.etincelles i:nth-child(1) { --x: -34px; --y: -26px; }
-.etincelles i:nth-child(2) { --x: 30px; --y: -34px; animation-delay: 0.1s; }
-.etincelles i:nth-child(3) { --x: 60px; --y: -8px; animation-delay: 0.2s; }
-.etincelles i:nth-child(4) { --x: -22px; --y: 22px; animation-delay: 0.15s; }
-.etincelles i:nth-child(5) { --x: 80px; --y: 18px; animation-delay: 0.3s; }
 
 @keyframes trouvaille {
   0% { opacity: 0; transform: translate(-50%, 20px) scale(0.4); }
@@ -200,110 +154,6 @@
   100% { transform: scale(1); }
 }
 
-/* Une couche finie : la profondeur du bandeau fait un petit bond. */
-.profondeur-saute {
-  display: inline-block;
-  animation: profondeur-saute 0.35s ease-out;
-}
-
-@keyframes profondeur-saute {
-  0% { transform: translateY(-4px); color: #9fe3ff; }
-  100% { transform: translateY(0); }
-}
-
-/* Un minerai rare : toute la mine tremble un court instant. */
-.puits-mine:has(.trouvaille-rare) {
-  animation: secousse 0.35s ease-out;
-}
-
-@keyframes secousse {
-  0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-3px, 1px); }
-  40% { transform: translate(3px, -1px); }
-  60% { transform: translate(-2px, 1px); }
-  80% { transform: translate(1px, 0); }
-}
-
-/* --- Sac plein : la case du bandeau clignote en rouge et tremble un peu ------ */
-
-.hud-alerte {
-  border-color: var(--rouge);
-  animation: alerte-sac 1.4s ease-in-out infinite;
-}
-
-.hud-alerte .hud-titre {
-  color: #ff8a84;
-  font-weight: 800;
-}
-
-@keyframes alerte-sac {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(229 83 75 / 0); transform: translateX(0); }
-  10% { transform: translateX(-3px); }
-  20% { transform: translateX(3px); }
-  30% { transform: translateX(-2px); }
-  40% { transform: translateX(0); }
-  50% { box-shadow: 0 0 0 4px rgb(229 83 75 / 0.55), 0 0 18px rgb(229 83 75 / 0.6); }
-}
-
-/* --- Les petits boutons du bandeau (son, arbre de prestige) --------------- */
-
-.hud-bouton {
-  background: var(--carte-claire);
-  border: 1px solid var(--bordure);
-  border-radius: 6px;
-  color: inherit;
-  font: inherit;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.hud-bouton-coupe {
-  opacity: 0.5;
-  text-decoration: line-through;
-}
-
-.hud-bouton:hover {
-  border-color: var(--accent);
-}
-
-.hud-bouton.a-depenser {
-  border-color: var(--accent);
-  box-shadow: 0 0 10px rgb(242 179 61 / 0.6);
-  animation: scintille 1.4s ease-in-out infinite;
-}
-
-/* --- L'arbre de prestige ------------------------------------------------- */
-
-.arbre-prestige {
-  max-width: 1180px;
-  width: 100%;
-  max-height: calc(100vh - 32px);
-  overflow-y: auto;
-  border-color: var(--accent);
-  animation: eclat 0.4s ease-out;
-}
-
-.arbre-prestige h2 {
-  justify-content: center;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-
-.points-arbre {
-  text-align: center;
-  font-weight: 700;
-  margin: 4px 0;
-}
-
-.points-a-depenser {
-  color: var(--accent);
-  font-size: 1.1rem;
-}
-
-.arbre-prestige > .discret {
-  text-align: center;
-}
-
 .arbre {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -322,112 +172,6 @@
   justify-content: center;
   margin: 0;
   font-size: 1rem;
-}
-
-.branche-mineur { --couleur-branche: #6fb8ff; }
-.branche-marchand { --couleur-branche: #f2b33d; }
-.branche-ingenieur { --couleur-branche: #5cc95c; }
-.branche-patron { --couleur-branche: #e07b2a; }
-.branche-recrutement { --couleur-branche: #ff4d8d; }
-
-/* La branche Recrutement, tant qu'on n'a pas le recruteur : grisée, avec un cadenas. */
-.branche-fermee .talent {
-  filter: grayscale(0.8);
-}
-
-.branche-verrou {
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px dashed var(--couleur-branche);
-  font-size: 0.75rem;
-  color: var(--texte-doux);
-  text-align: center;
-}
-
-.talent {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 2px solid var(--bordure);
-  background: var(--carte-claire);
-  color: inherit;
-  font: inherit;
-  font-size: 0.82rem;
-}
-
-/* Le petit trait qui relie un talent au suivant. */
-.talent + .talent::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -16px;
-  width: 4px;
-  height: 14px;
-  margin-left: -2px;
-  background: var(--bordure);
-}
-
-.talent-pris + .talent::before {
-  background: var(--couleur-branche);
-}
-
-.talent strong {
-  font-size: 0.92rem;
-}
-
-.talent em {
-  font-style: normal;
-  font-weight: 700;
-  font-size: 0.78rem;
-  color: var(--texte-doux);
-}
-
-.talent-pris {
-  border-color: var(--couleur-branche);
-  background: color-mix(in srgb, var(--couleur-branche) 18%, var(--carte-claire));
-}
-
-.talent-pris em {
-  color: var(--couleur-branche);
-}
-
-.talent-disponible {
-  cursor: pointer;
-  border-color: var(--couleur-branche);
-  border-style: dashed;
-  animation: talent-attend 1.6s ease-in-out infinite;
-}
-
-.talent-disponible:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 14px var(--couleur-branche);
-}
-
-.talent-disponible em {
-  color: var(--accent);
-}
-
-.talent-verrouille {
-  opacity: 0.5;
-}
-
-.talent-nouveau {
-  animation: talent-nouveau 0.7s ease-out;
-}
-
-@keyframes talent-attend {
-  0%, 100% { box-shadow: 0 0 0 transparent; }
-  50% { box-shadow: 0 0 12px var(--couleur-branche); }
-}
-
-@keyframes talent-nouveau {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.08); box-shadow: 0 0 26px var(--couleur-branche); }
-  100% { transform: scale(1); }
 }
 
 @media (max-width: 1100px) {
@@ -450,27 +194,17 @@
 
 @media (prefers-reduced-motion: reduce) {
   .eclat,
-  .trouvaille,
-  .trouvaille .mini-bloc,
-  .trouvaille-rayons,
-  .etincelles i,
-  .gain-vente-texte,
-  .piece,
-  .argent-saute,
-  .profondeur-saute,
-  .puits-mine:has(.trouvaille-rare),
-  .niveaux i,
-  .hud-alerte,
-  .hud-bouton.a-depenser,
-  .talent-disponible,
-  .talent-nouveau {
+.trouvaille,
+.trouvaille .mini-bloc,
+.gain-vente-texte,
+.piece,
+.argent-saute,
+.niveaux i {
     animation: none;
   }
 
   .eclat,
-  .piece,
-  .etincelles i,
-  .trouvaille-rayons {
+.piece {
     display: none;
   }
 }

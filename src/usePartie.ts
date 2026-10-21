@@ -61,6 +61,9 @@ function jouerSons(evenements: Evenement[]): void {
       case 'wagonnet':
         sons.pieces(3)
         break
+      case 'electricite':
+        sons.electricite()
+        break
     }
   }
 }

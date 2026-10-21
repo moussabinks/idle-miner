@@ -8,8 +8,8 @@
 // annuler ce qu'on est en train de poser.
 
 import { useCallback, useEffect, useState } from 'react'
-import { basculerMusique, musiqueActive, reglerLieu } from './ambiance'
-import { basculerSon, sonActif } from './sons'
+import { basculerMusique, musiqueActive } from './ambiance'
+import { basculerSon, sonActif, sons } from './sons'
 import { Accueil } from './composants/Accueil'
 import { ProchainObjectif } from './composants/ProchainObjectif'
 import { Gains } from './composants/Gains'
@@ -88,8 +88,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const village = useJoueurVillage(etat.village, true)
   const joueur = village.joueur
 
-  // La musique d'ambiance : oiseaux et vent au village.
-  useEffect(() => reglerLieu(true, 0), [])
+  // Le bruit des pas quand le joueur marche (un pas toutes les 0,34 s, comme son animation).
+  const marche = joueur.marche
+  useEffect(() => {
+    if (!marche) return
+    sons.pas()
+    const minuteur = window.setInterval(() => sons.pas(), 340)
+    return () => clearInterval(minuteur)
+  }, [marche])
 
   // --- Construire, décorer, modifier -----------------------------------------
   const [menuConstruction, setMenuConstruction] = useState<OngletConstruction | null>(null)
@@ -160,7 +166,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   function validerFantome() {
     const f = fantome
     if (!f || !fantomeLibre(f)) return
-    if (f.type === 'batiment') jouer((e) => (estPose(e, f.id) ? deplacerBatiment(e, f.id, f.x, f.y, f.miroir) : construireBatiment(e, f.id, f.x, f.y, f.miroir)))
+    if (f.type === 'batiment') {
+      const nouveau = !estPose(etat, f.id)
+      const apres = jouer((e) => (estPose(e, f.id) ? deplacerBatiment(e, f.id, f.x, f.y, f.miroir) : construireBatiment(e, f.id, f.x, f.y, f.miroir)))
+      if (nouveau && estPose(apres, f.id)) sons.construction()
+    }
     else if (f.type === 'decoration') jouer((e) => (f.n !== null ? deplacerDecoration(e, f.n, f.x, f.y, f.miroir) : acheterDecoration(e, f.id, f.x, f.y, f.miroir)))
     else if (f.de) jouer((e) => deplacerSol(e, f.sol, f.de as Case, { x: f.x, y: f.y }))
     setFantome(null)
@@ -187,7 +197,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // En mode pinceau, chaque case touchée reçoit un rail (ou un pavé) si elle est libre.
   function peindre(c: Case) {
     if (pinceau === null) return
-    if (peutPoserSol(etat, pinceau, c.x, c.y)) jouer((e) => poserSol(e, pinceau, c.x, c.y))
+    if (!peutPoserSol(etat, pinceau, c.x, c.y)) return
+    jouer((e) => poserSol(e, pinceau, c.x, c.y))
+    if (pinceau === 'rail') sons.rail()
   }
 
 

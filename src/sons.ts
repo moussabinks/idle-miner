@@ -128,12 +128,12 @@ function bruit(debut: number, duree: number, options: OptionsBruit = {}) {
   source.stop(t + duree + 0.02)
 }
 
-// Un petit écart au hasard, pour que deux coups de pioche ne sonnent pas pareil.
 // La série de minerais (pour la note qui monte) : une gamme pentatonique, toujours jolie.
 const GAMME_SERIE = [1047, 1175, 1319, 1568, 1760, 2093, 2349, 2637]
 let serieMinerais = 0
 let dernierMinerai = 0
 
+// Un petit écart au hasard, pour que deux coups de pioche ne sonnent pas pareil.
 function varier(valeur: number, ecart = 0.08): number {
   return valeur * (1 - ecart + Math.random() * 2 * ecart)
 }
@@ -250,5 +250,49 @@ export const sons = {
   piocheCassee() {
     note(330, 0, 0.3, { type: 'sawtooth', volume: 0.08, vers: 160 })
     bruit(0, 0.12, { filtre: 'bandpass', frequence: 3000, volume: 0.15 })
+  },
+
+  // --- Le village (23/10) ---
+
+  // Un pas dans l'herbe : un petit froissement doux (gauche, droite : un peu différents).
+  pas() {
+    bruit(0, 0.07, { filtre: 'bandpass', frequence: varier(900, 0.25), volume: 0.05 })
+    note(varier(140, 0.15), 0, 0.05, { type: 'sine', volume: 0.03, vers: 90 })
+  },
+
+  // On construit un bâtiment : trois coups de marteau sur du bois, puis une petite fanfare.
+  construction() {
+    for (let i = 0; i < 3; i++) {
+      bruit(i * 0.16, 0.06, { filtre: 'bandpass', frequence: varier(1400, 0.1), volume: 0.28 })
+      note(varier(220, 0.05), i * 0.16, 0.08, { type: 'triangle', volume: 0.18, vers: 120 })
+    }
+    ;[523, 659, 784].forEach((f, i) => note(f, 0.55 + i * 0.07, 0.25, { type: 'triangle', volume: 0.1 }))
+  },
+
+  // On pose un rail : un « clang » de métal, et la traverse en bois.
+  rail() {
+    note(varier(880, 0.06), 0, 0.18, { type: 'square', volume: 0.04, vers: 620 })
+    note(varier(1320, 0.06), 0, 0.12, { type: 'sine', volume: 0.06 })
+    bruit(0, 0.05, { filtre: 'lowpass', frequence: 700, volume: 0.15 })
+  },
+
+  // Le wagonnet passe sur un joint de rail : « ta-tac », plus doux s'il est loin.
+  wagonnet(volume = 1) {
+    bruit(0, 0.035, { filtre: 'bandpass', frequence: varier(2200, 0.1), volume: 0.06 * volume })
+    bruit(0.07, 0.035, { filtre: 'bandpass', frequence: varier(1900, 0.1), volume: 0.05 * volume })
+    note(varier(180, 0.1), 0, 0.05, { type: 'triangle', volume: 0.03 * volume, vers: 110 })
+  },
+
+  // Le wagonnet arrive au marché : une petite cloche.
+  cloche() {
+    note(1568, 0, 0.6, { type: 'sine', volume: 0.12 })
+    note(3136, 0, 0.3, { type: 'sine', volume: 0.03 })
+    note(1318, 0.18, 0.7, { type: 'sine', volume: 0.1 })
+  },
+
+  // Le générateur reçoit de la redstone : un grésillement électrique qui monte.
+  electricite() {
+    note(120, 0, 0.35, { type: 'sawtooth', volume: 0.05, vers: 480 })
+    bruit(0.05, 0.25, { filtre: 'highpass', frequence: 3500, volume: 0.08 })
   },
 }

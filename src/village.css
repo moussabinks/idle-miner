@@ -138,22 +138,8 @@
   to { opacity: 0.9; }
 }
 
-/* La mine : la poulie du chevalement tourne quand une cabine roule, les lanternes vacillent. */
-.poulie-tourne {
-  animation: tourne-poulie 0.7s linear infinite;
-}
-
-@keyframes tourne-poulie {
-  to { rotate: 360deg; }
-}
-
-.lanterne-mine circle,
 .lueur-lanterne {
   animation: vacille 1.8s ease-in-out infinite alternate;
-}
-
-.lueur-fond {
-  animation: vacille 2.6s ease-in-out infinite alternate;
 }
 
 @keyframes vacille {
@@ -171,7 +157,6 @@
 }
 
 /* --- Le sol : rails, chemins, grille, emprises ------------------------------------ */
-
 
 .emprise {
   stroke-width: 2;
@@ -564,77 +549,6 @@
   50% { opacity: 1; scale: 1.2; rotate: 45deg; }
 }
 
-
-/* --- Entrer dans la mine (et en sortir) ----------------------------------------- */
-
-.fondu-mine {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 50% 50%, rgb(0 0 0 / 0.2), #000 70%);
-}
-
-.fondu-entree {
-  animation: fondu-noir 0.75s ease-in forwards;
-}
-
-.fondu-sortie {
-  animation: fondu-noir 0.8s ease-out reverse forwards;
-}
-
-@keyframes fondu-noir {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* La vue en coupe apparaît en sortant du noir. */
-.entree-dans-la-mine {
-  display: contents;
-}
-
-.entree-dans-la-mine > .monde {
-  animation: sortie-du-noir 0.6s ease-out;
-}
-
-@keyframes sortie-du-noir {
-  from { filter: brightness(0); }
-  to { filter: brightness(1); }
-}
-
-/* La surface, tout en haut de la vue en coupe. */
-.surface-mine {
-  position: relative;
-  height: 70px;
-  background: linear-gradient(#4f97e0, #a8d4f5 70%, #5aa83c 70%, #4a8f30);
-  border-bottom: 4px solid #6e4520;
-  overflow: hidden;
-}
-
-.surface-soleil {
-  position: absolute;
-  right: 22px;
-  top: 8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: #ffe35c;
-  box-shadow: 0 0 18px #ffe35c;
-}
-
-.surface-panneau {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  translate: -50% 0;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: #a8743e;
-  border: 2px solid #4a2c12;
-  color: #2a1406;
-  font-size: 0.75rem;
-  font-weight: 900;
-}
-
 /* --- La barre de boutons du village ------------------------------------------------ */
 
 .bouton-construire {
@@ -982,15 +896,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bulle-notif,
-  .badge-menu,
-  .pastille-nouveau,
-  .perso-village .perso-corps,
-  .perso-anneau,
-  .perso-poussiere i,
-  .sprite-vibre,
-  .fantome,
-  .poulie-tourne,
-  .emprise-active {
+.badge-menu,
+.pastille-nouveau,
+.perso-village .perso-corps,
+.perso-anneau,
+.perso-poussiere i,
+.sprite-vibre,
+.fantome,
+.emprise-active {
     animation: none;
   }
 }
