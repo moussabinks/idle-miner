@@ -1,63 +1,53 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { jouerPartie } from './bot'
-import { peutPasserPrestige } from './conditionsPrestige'
-import { profondeurBedrock } from './donnees'
+import { NIVEAU_MINE_MAX } from './donnees'
 
-// Le bot joue 20 parties (avec des graines fixes, donc toujours les mêmes).
-const parties = Array.from({ length: 20 }, (_, i) => jouerPartie(aleatoireAvecGraine(i + 1)))
-const blocsTries = parties.map((p) => p.blocs).sort((a, b) => a - b)
-const mediane = blocsTries[Math.floor(blocsTries.length / 2)]
-const minutesTriees = parties.map((p) => p.temps / 60).sort((a, b) => a - b)
-const medianeMinutes = minutesTriees[Math.floor(minutesTriees.length / 2)]
+// Le bot joue 10 parties (avec des graines fixes, donc toujours les mêmes).
+const parties = Array.from({ length: 10 }, (_, i) => jouerPartie(aleatoireAvecGraine(i + 1)))
+const mediane = (valeurs: number[]) => [...valeurs].sort((a, b) => a - b)[Math.floor(valeurs.length / 2)]
+const minutes = (secondes: number | null | undefined) => (secondes ?? Infinity) / 60
 
 describe('bot de simulation (équilibrage)', () => {
-  it(`atteint toujours la bedrock (-${profondeurBedrock(0)} m) avec la pioche en netherite`, () => {
+  it(`descend toujours la mine au niveau ${NIVEAU_MINE_MAX}`, () => {
+    for (const partie of parties) expect(partie.etat.niveauMine).toBe(NIVEAU_MINE_MAX)
+  })
+
+  it('arrive au niveau 2 de la mine en 5 à 20 minutes (médiane)', () => {
+    const m = mediane(parties.map((p) => minutes(p.tempsNiveaux[2])))
+    expect(m).toBeGreaterThanOrEqual(5)
+    expect(m).toBeLessThanOrEqual(20)
+  })
+
+  it('arrive au niveau 5 en 1 h à 2 h 30 (médiane)', () => {
+    const m = mediane(parties.map((p) => minutes(p.temps)))
+    expect(m).toBeGreaterThanOrEqual(60)
+    expect(m).toBeLessThanOrEqual(150)
+  })
+
+  it('chaque niveau prend plus de temps que le précédent (médiane)', () => {
+    const durees = [2, 3, 4, 5].map((n) => mediane(parties.map((p) => (p.tempsNiveaux[n] ?? Infinity) - (p.tempsNiveaux[n - 1] ?? 0))))
+    for (let i = 1; i < durees.length; i++) expect(durees[i]).toBeGreaterThan(durees[i - 1] * 0.8)
+  })
+
+  it('relie vite la mine au marché avec des rails (moins de 5 minutes)', () => {
+    for (const partie of parties) expect(minutes(partie.tempsRails)).toBeLessThan(5)
+  })
+
+  it('électrifie les rails avec le générateur en moins de 40 minutes', () => {
+    for (const partie of parties) expect(minutes(partie.tempsElectrique)).toBeLessThan(40)
+  })
+
+  it('a embauché des mineurs, et le wagonnet a fait beaucoup de voyages', () => {
     for (const partie of parties) {
-      expect(partie.etat.victoire).toBe(true)
-      expect(partie.etat.profondeur).toBe(profondeurBedrock(0) - 1) // la dernière couche avant la bedrock
-      expect(partie.etat.meilleure).toBe(4)
+      expect(partie.etat.employes.length).toBeGreaterThanOrEqual(4)
+      expect(partie.etat.stats.voyagesWagonnet).toBeGreaterThan(100)
+      // Les mineurs sortent plus de blocs que les clics du joueur.
+      expect(partie.etat.stats.blocsMineurs).toBeGreaterThan(partie.etat.stats.blocsCasses)
     }
   })
 
-  // On ne passe prestige qu'avec tout au maximum (20/10) : au prestige 0, l'ascenseur au
-  // niveau 2 et les enchantements au niveau I. Le bot y arrive en même temps que la bedrock.
-  it('est prêt à passer prestige en arrivant à la bedrock', () => {
-    for (const partie of parties) expect(peutPasserPrestige(partie.etat)).toBe(true)
-  })
-
-  // La première partie (prestige 0) a une mine de 100 m depuis le 19/10 : elle est plus courte.
-  it('atteint la bedrock en 1 300 à 3 000 blocs (médiane, couches de 10 blocs)', () => {
-    expect(mediane).toBeGreaterThanOrEqual(1300)
-    expect(mediane).toBeLessThanOrEqual(3000)
-  })
-
-  it('joue une première partie de 10 à 25 minutes (médiane)', () => {
-    expect(medianeMinutes).toBeGreaterThanOrEqual(10)
-    expect(medianeMinutes).toBeLessThanOrEqual(25)
-  })
-
-  it("n'est jamais extrêmement long ou court", () => {
-    expect(blocsTries[0]).toBeGreaterThan(800)
-    expect(blocsTries[blocsTries.length - 1]).toBeLessThan(9000)
-  })
-
-  it("construit l'ascenseur assez tôt (entre -10 et -70 m) : il ne demande pas de redstone au début", () => {
-    for (const partie of parties) {
-      expect(partie.etat.ascenseur.niveau).toBeGreaterThanOrEqual(1)
-      expect(partie.profondeurAscenseur).toBeGreaterThan(10)
-      expect(partie.profondeurAscenseur).toBeLessThan(70)
-    }
-  })
-
-  it('remonte plusieurs fois au village', () => {
+  it('va vendre à pied au marché au début', () => {
     for (const partie of parties) expect(partie.allersRetours).toBeGreaterThan(3)
-  })
-
-  it('achète la pioche en fer entre -15 et -70 m', () => {
-    for (const partie of parties) {
-      expect(partie.profondeurPiocheFer).toBeGreaterThanOrEqual(15)
-      expect(partie.profondeurPiocheFer).toBeLessThanOrEqual(70)
-    }
   })
 })

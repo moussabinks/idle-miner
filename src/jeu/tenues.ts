@@ -1,12 +1,12 @@
 // Les tenues du joueur (20/10), vendues au Bazar : un chapeau et un haut, seulement pour le
 // style. Au début, le hamster n'a qu'une chemise toute simple ; les tenues achetées sont
-// gardées au prestige, et on change de tenue gratuitement.
+// et on change de tenue gratuitement.
 
 import { TENUES, type IdTenue, type PartieTenue } from './donnees'
-import { aLaSurface, type EtatJeu } from './mineur'
+import type { EtatJeu } from './mineur'
 
 export function tenueDebloquee(etat: EtatJeu, id: IdTenue): boolean {
-  return etat.prestige >= TENUES[id].prestige
+  return etat.niveauMine >= TENUES[id].niveauMine
 }
 
 export function peutAcheterTenue(etat: EtatJeu, id: IdTenue): boolean {
@@ -15,7 +15,7 @@ export function peutAcheterTenue(etat: EtatJeu, id: IdTenue): boolean {
 
 // Acheter une tenue : on la porte tout de suite.
 export function acheterTenue(etat: EtatJeu, id: IdTenue): string[] {
-  if (!aLaSurface(etat) || !peutAcheterTenue(etat, id)) return []
+  if (!peutAcheterTenue(etat, id)) return []
   etat.argent -= TENUES[id].prix
   etat.tenuesAchetees = [...etat.tenuesAchetees, id]
   etat.tenue = { ...etat.tenue, [TENUES[id].partie]: id }

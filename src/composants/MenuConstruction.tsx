@@ -1,12 +1,13 @@
 // Le menu « Bâtiments » et le menu « Décorations » du village (20/10).
 //   - Bâtiments : tous les bâtiments du jeu, avec leur prix (le marché est gratuit) ou le
-//     prestige qu'il faut (cadenas). On en choisit un, puis on le pose où on veut sur la carte.
-//     Les rails (prestige 2, 10 fer la case) sont là aussi.
+//     niveau de mine qu'il faut (cadenas). On en choisit un, puis on le pose où on veut sur la
+//     carte. Les rails (3 fer la case) sont là aussi.
+// Les minerais se paient avec ceux du sac, puis ceux du coffre de la mine.
 //   - Décorations : des fleurs, des arbres, des lanternes... et des chemins de pavés, seulement
 //     pour faire joli (payés en argent).
 // Aucune règle du jeu ici : on lit l'état et on appelle les fonctions de src/jeu/batiments.ts.
 
-import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, LISTE_BATIMENTS, LISTE_DECORATIONS, PRESTIGE_RAILS, type Cout, type IdBatiment, type IdDecoration } from '../jeu/donnees'
+import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, LISTE_BATIMENTS, LISTE_DECORATIONS, type Cout, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import {
   batimentDebloque,
   decorationDebloquee,
@@ -14,11 +15,9 @@ import {
   nouveautesBatiments,
   peutAcheterDecoration,
   peutConstruire,
-  pierreDisponible,
-  railsDebloques,
   type TypeSol,
 } from '../jeu/batiments'
-import { quantite, type EtatJeu } from '../jeu/mineur'
+import { disponible, type EtatJeu } from '../jeu/mineur'
 import { BLOCS, type IdBloc } from '../jeu/donnees'
 import { DessinDecoration } from './DessinsVillage'
 import { IMAGES_BATIMENTS, hauteurDecoration, versEcran } from './iso'
@@ -35,7 +34,7 @@ type Props = {
   onPinceau: (sol: TypeSol) => void
 }
 
-// Le prix d'une construction : la pierre peut aussi se payer en roche dure.
+// Le prix d'une construction (les minerais du sac et du coffre de la mine comptent).
 function PrixConstruction({ etat, cout }: { etat: EtatJeu; cout: Cout }) {
   if (!cout.argent && Object.keys(cout.materiaux).length === 0) return <span className="ok prix-gratuit">Gratuit !</span>
   return (
@@ -43,10 +42,10 @@ function PrixConstruction({ etat, cout }: { etat: EtatJeu; cout: Cout }) {
       {cout.argent !== undefined && <span className={etat.argent >= cout.argent ? 'ok' : 'manque'}>{cout.argent.toLocaleString('fr-FR')} $</span>}
       {Object.entries(cout.materiaux).map(([id, nombre]) => {
         const bloc = id as IdBloc
-        const possede = bloc === 'pierre' ? pierreDisponible(etat) : quantite(etat, bloc)
+        const possede = disponible(etat, bloc)
         return (
-          <span key={bloc} className={possede >= (nombre ?? 0) ? 'ok' : 'manque'} title={bloc === 'pierre' ? 'La roche dure compte aussi comme de la pierre.' : undefined}>
-            {Math.min(possede, nombre ?? 0)}/{nombre} {BLOCS[bloc].emoji} {bloc === 'pierre' ? 'Pierre (ou roche dure)' : BLOCS[bloc].nom}
+          <span key={bloc} className={possede >= (nombre ?? 0) ? 'ok' : 'manque'}>
+            {Math.min(possede, nombre ?? 0)}/{nombre} {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
           </span>
         )
       })}
@@ -91,7 +90,7 @@ function CarteBatiment({ etat, id, nouveau, onPoser }: { etat: EtatJeu; id: IdBa
         {pose ? (
           <span className="ok">✔ Construit</span>
         ) : !debloque ? (
-          <span className="construction-verrou">🔒 Prestige {info.prestige}</span>
+          <span className="construction-verrou">🔒 Mine niveau {info.niveauMine}</span>
         ) : (
           <>
             <PrixConstruction etat={etat} cout={info.cout} />
@@ -124,7 +123,7 @@ export function MenuConstruction({ etat, onglet, onOnglet, onFermer, onPoserBati
           </button>
         </div>
         <p className="discret">
-          💵 {Math.floor(etat.argent).toLocaleString('fr-FR')} $ · 🪨 {pierreDisponible(etat)} pierre · 🔩 {quantite(etat, 'fer')} fer (dans ton sac)
+          💵 {Math.floor(etat.argent).toLocaleString('fr-FR')} $ · 🪨 {disponible(etat, 'pierre')} pierre · 🔩 {disponible(etat, 'fer')} fer (sac + coffre de la mine)
         </p>
 
         {onglet === 'batiments' && (
@@ -132,27 +131,20 @@ export function MenuConstruction({ etat, onglet, onOnglet, onFermer, onPoserBati
             {LISTE_BATIMENTS.map((id) => (
               <CarteBatiment key={id} etat={etat} id={id} nouveau={nouveautes.includes(id)} onPoser={() => onPoserBatiment(id)} />
             ))}
-            <article className={`carte-construction ${railsDebloques(etat) ? '' : 'construction-bloquee'}`}>
+            <article className="carte-construction">
               <div className="construction-image">
                 <img src="/images/batiments/rails.webp" alt="" draggable={false} />
-                {!railsDebloques(etat) && <span className="construction-cadenas">🔒</span>}
               </div>
               <div className="construction-texte">
                 <strong>🛤️ Rails</strong>
-                <span className="discret">Une ligne continue de la mine au marché : les minerais y vont en wagonnet, 3 fois plus vite qu’à pied (toi et tes mineurs).</span>
+                <span className="discret">Relie la mine au marché par une ligne continue : le wagonnet y emporte le coffre de la mine. Poussé par toi ou un mineur, ou tout seul avec le générateur !</span>
                 <span className="discret">1 case · {etat.village.rails.length} posée{etat.village.rails.length > 1 ? 's' : ''}</span>
               </div>
               <div className="construction-achat">
-                {railsDebloques(etat) ? (
-                  <>
-                    <PrixConstruction etat={etat} cout={COUT_RAIL} />
-                    <button className="bouton bouton-petit bouton-acheter" onClick={() => onPinceau('rail')}>
-                      🛤️ Poser des rails
-                    </button>
-                  </>
-                ) : (
-                  <span className="construction-verrou">🔒 Prestige {PRESTIGE_RAILS}</span>
-                )}
+                <PrixConstruction etat={etat} cout={COUT_RAIL} />
+                <button className="bouton bouton-petit bouton-acheter" onClick={() => onPinceau('rail')}>
+                  🛤️ Poser des rails
+                </button>
               </div>
             </article>
           </div>
@@ -198,7 +190,7 @@ export function MenuConstruction({ etat, onglet, onOnglet, onFermer, onPoserBati
                         </button>
                       </>
                     ) : (
-                      <span className="construction-verrou">🔒 Prestige {deco.prestige}</span>
+                      <span className="construction-verrou">🔒 Mine niveau {deco.niveauMine}</span>
                     )}
                   </div>
                 </article>

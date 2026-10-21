@@ -1,291 +1,240 @@
-// Bot de simulation : il joue une partie complète tout seul.
-// Il sert dans les tests à vérifier l'équilibrage (combien de blocs pour
-// atteindre la bedrock ?). Il ne fait que des actions qu'un joueur peut faire :
-// il creuse, remonte à l'échelle pour vendre et acheter, puis redescend.
-// Au village (20/10), il pose ses bâtiments autour de la mine dès qu'il peut les payer (le
-// marché tout de suite, il est gratuit), et il compte le temps de marche jusqu'au marché.
-// Depuis le 22/10, l'ascenseur range ce qu'il remonte dans le réservoir de la mine : le bot
-// remonte le vider (quand il est au tiers plein) et fait des allers-retours jusqu'au marché.
+// Bot de simulation : il joue une partie complète tout seul (22/10 : la mine automatique).
+// Il sert dans les tests à vérifier l'équilibrage (combien de temps pour descendre la mine au
+// niveau 5 ?). Il ne fait que des actions qu'un joueur peut faire :
+//   - devant la mine, il clique sur le bloc (2 clics par seconde) ;
+//   - quand le coffre se remplit, il le vide dans son sac et va vendre au marché (à pied) ;
+//   - il pose ses bâtiments, embauche des mineurs, paie leurs salaires, améliore tout ;
+//   - il relie la mine au marché avec des rails, met un mineur à pousser le wagonnet, puis
+//     électrifie la ligne avec le générateur.
+// Les achats se font sans compter la marche (on suppose qu'il passe devant en allant vendre).
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { BATIMENTS, LARGEUR_MINE, LISTE_ENCHANTEMENTS, MINERAIS_REPARATION, PIOCHES, PRIX_SEAU, VITESSE_JOUEUR, type IdBatiment, type IdBloc } from './donnees'
-import { construireBatiment, estPose, peutConstruire } from './batiments'
-import { distanceEntre } from './village'
+import { BATIMENTS, PIOCHES, SECONDES_PAR_PAIE, VITESSE_JOUEUR, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { construireBatiment, estPose, peutConstruire, peutPoserSol, poserSol } from './batiments'
+import {
+  ameliorerEmploye,
+  ameliorerRecruteur,
+  changerRole,
+  coutAmeliorationEmploye,
+  deposerTresorerie,
+  depensesParPaie,
+  embaucher,
+  embaucherManager,
+  managerDebloque,
+  nbSansSalaire,
+  payerSalaires,
+  peutAmeliorerRecruteur,
+  peutPayerSalaires,
+  prixEmbauche,
+  salairesParPaie,
+  tempsPayeMin,
+} from './employes'
+import { ameliorerChariot, ameliorerForage, nbDansChariot, peutAmeliorerChariot, peutAmeliorerForage, remplirForeuse, vendreChariot, capaciteChariot } from './foreuse'
+import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, railsAlimentes, remplirGenerateur } from './generateur'
 import {
   acheterPioche,
   acheterSac,
-  acheterSeau,
-  allerA,
-  appelerAscenseur,
-  ascenseurEnMouvement,
+  agrandirCoffre,
   ameliorerAscenseur,
-  ascenseurDisponible,
-  casserBloc,
+  capaciteCoffre,
+  cliquerMine,
   creerPartie,
-  enchanter,
-  envoyerAscenseur,
+  descendreNiveauMine,
   estCassee,
-  niveauAscenseur,
+  nbDansCoffre,
+  objetsAVendre,
   peutAcheterPioche,
-  peutAmeliorerAscenseur,
-  peutEnchanter,
-  peutEncoreEnchanter,
+  peutPayer,
   peutReparer,
-  positionFront,
-  prendreAscenseur,
-  peutStocker,
+  prendreDuCoffre,
   prixProchainSac,
   prochainNiveauAscenseur,
+  prochainNiveauCoffre,
+  prochainNiveauMine,
   reparer,
-  placeLibre,
-  sacPlein,
-  tailleSac,
-  objetsAVendre,
-  quantite,
-  equiper,
-  capaciteReservoir,
-  nbDansReservoir,
-  prendreDuReservoir,
-  vendreLot,
+  vendre,
   type EtatJeu,
   type Inventaire,
 } from './mineur'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
+import { distanceEntre, railsMineMarche } from './village'
+import { ameliorerWagonnet, prochainNiveauWagonnet, wagonnetEnRoute } from './wagonnet'
 
-// Le bot creuse 10 couches entre deux décisions.
-const BLOCS_PAR_SERIE = 10 * LARGEUR_MINE
-
-// Où le bot pose ses bâtiments, autour de la mine (posée en 25,25 et large de 10 cases), dans
-// l'ordre où il les construit.
+// Où le bot pose ses bâtiments autour de la mine (posée en 25,25 et large de 10 cases).
 const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
-  { id: 'marche', x: 28, y: 36 },
-  { id: 'forgeron', x: 36, y: 28 },
-  { id: 'bazar', x: 22, y: 36 },
-  { id: 'enchanteur', x: 36, y: 22 },
-  { id: 'prestige', x: 19, y: 19 },
+  { id: 'marche', x: 28, y: 38 },
+  { id: 'forgeron', x: 36, y: 24 },
+  { id: 'employes', x: 19, y: 31 },
+  { id: 'bazar', x: 19, y: 25 },
+  { id: 'generateur', x: 35, y: 37 },
+  { id: 'foreuse', x: 36, y: 31 },
 ]
 
-// L'arbre de prestige ne sert qu'à la fin : le bot le construit une fois la pioche en netherite achetée.
-function planUtile(etat: EtatJeu): typeof PLAN_DU_BOT {
-  return PLAN_DU_BOT.filter((p) => p.id !== 'prestige' || etat.meilleure >= 4)
-}
+// Les rails de la mine (dont le bas est en y = 34) au marché (dont le haut est en y = 38).
+const RAILS_DU_BOT = [
+  { x: 30, y: 35 },
+  { x: 30, y: 36 },
+  { x: 30, y: 37 },
+]
+
+const CLICS_PAR_SECONDE = 2
+const PAS = 1 // le bot décide toutes les secondes
 
 export type ResultatBot = {
   etat: EtatJeu
-  blocs: number // blocs cassés pour atteindre la bedrock
-  temps: number // temps de jeu simulé (minage + échelle + attente), en secondes
-  profondeurPiocheFer: number | null // profondeur à l'achat de la pioche en fer
-  profondeurAscenseur: number | null // profondeur à la construction de l'ascenseur
-  allersRetours: number // nombre de fois où le bot est remonté au village
+  temps: number // temps de jeu simulé, en secondes
+  tempsNiveaux: Record<number, number> // l'heure (en s) où la mine est arrivée à chaque niveau
+  tempsRails: number | null // quand la mine a été reliée au marché
+  tempsElectrique: number | null // quand les rails ont été électrifiés
+  allersRetours: number // les voyages à pied jusqu'au marché
 }
 
-// Ce que le bot décoche au marché : ce qu'il lui faut pour les pioches,
-// les enchantements et l'ascenseur.
-function objetsAGarder(etat: EtatJeu): IdBloc[] {
-  const garder: IdBloc[] = []
-  if (etat.meilleure < 3) garder.push('diamant')
-  if (etat.meilleure < 4) garder.push('debris', 'or')
-  if (peutEncoreEnchanter(etat)) garder.push('lapis', 'emeraude')
-  // Les minerais du prochain niveau de l'ascenseur (l'argent, lui, vient des ventes).
-  const prochainAscenseur = prochainNiveauAscenseur(etat)
-  if (prochainAscenseur !== null) garder.push(...(Object.keys(prochainAscenseur.cout.materiaux) as IdBloc[]))
-  return garder
-}
-
-// Ce que le bot garde en petite quantité : 3 minerais de sa meilleure pioche (pour la réparer)
-// et la pierre et le fer du prochain bâtiment à construire (la pierre se paie aussi en roche
-// dure). On les enlève du lot à vendre ou à envoyer.
-function enleverReserve(etat: EtatJeu, lot: Inventaire): void {
-  const reserve: Inventaire = {}
-  const minerai = PIOCHES[etat.meilleure].reparation
-  if (minerai) reserve[minerai] = MINERAIS_REPARATION
-  const prochainBatiment = planUtile(etat).find((p) => !estPose(etat, p.id))
-  // Seulement quand il a déjà au moins la moitié de l'argent du bâtiment.
-  if (prochainBatiment && etat.argent >= (BATIMENTS[prochainBatiment.id].cout.argent ?? 0) / 2) {
-    for (const [bloc, nombre] of Object.entries(BATIMENTS[prochainBatiment.id].cout.materiaux)) {
-      // Toujours en laissant un peu de place dans le sac.
-      const garde = Math.min(nombre ?? 0, tailleSac(etat) - 8)
-      reserve[bloc as IdBloc] = (reserve[bloc as IdBloc] ?? 0) + garde
-      if (bloc === 'pierre') reserve.deepslate = (reserve.deepslate ?? 0) + Math.max(0, garde - quantite(etat, 'pierre'))
-    }
-  }
-  for (const [id, nombre] of Object.entries(reserve)) {
-    const bloc = id as IdBloc
-    if (lot[bloc] === undefined) continue
-    const reste = (lot[bloc] ?? 0) - (nombre ?? 0)
-    if (reste > 0) lot[bloc] = reste
-    else delete lot[bloc]
-  }
-}
-
-export function jouerPartie(aleatoire: Aleatoire, maxBlocs = 40000): ResultatBot {
+export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): ResultatBot {
   const etat = creerPartie(aleatoire)
-  // Le marché est gratuit : il le pose tout de suite.
-  construireBatiment(etat, 'marche', PLAN_DU_BOT[0].x, PLAN_DU_BOT[0].y)
-  // L'aléatoire de la foreuse est à part : elle n'est pas débloquée au prestige 0.
   const aleatoireTemps = aleatoireAvecGraine(0)
-  let profondeurPiocheFer: number | null = null
-  let profondeurAscenseur: number | null = null
+  const tempsNiveaux: Record<number, number> = { 1: 0 }
+  let tempsRails: number | null = null
+  let tempsElectrique: number | null = null
   let allersRetours = 0
   let temps = 0
 
-  // Laisse passer un peu de temps (l'ascenseur et l'échelle avancent).
   function attendre(secondes: number): void {
     temps += secondes
     avancerTemps(etat, secondes, aleatoireTemps)
   }
 
-  // Attend que la cabine de l'ascenseur s'arrête.
-  function attendreAscenseur(): void {
-    const niveau = niveauAscenseur(etat)
-    while (niveau !== null && ascenseurEnMouvement(etat)) {
-      attendre(Math.abs(etat.ascenseur.cible - etat.ascenseur.position) * niveau.secondesParMetre + 0.01)
-    }
+  // Les prochains achats qui demandent des minerais : le bot les garde (le wagonnet ne les
+  // emporte pas, et il ne les vend pas au marché).
+  function prochainsCouts(): Cout[] {
+    const couts: Cout[] = []
+    const batiment = PLAN_DU_BOT.find((p) => !estPose(etat, p.id) && etat.niveauMine >= BATIMENTS[p.id].niveauMine)
+    if (batiment) couts.push(BATIMENTS[batiment.id].cout)
+    const pioche = PIOCHES[etat.meilleure + 1]
+    if (pioche) couts.push(pioche.cout)
+    if (estCassee(etat)) couts.push(PIOCHES[etat.niveauPioche].reparation)
+    const niveau = prochainNiveauMine(etat)
+    if (niveau) couts.push(niveau.cout)
+    const coffre = prochainNiveauCoffre(etat)
+    if (coffre) couts.push(coffre.cout)
+    if (railsMineMarche(etat.village) === null) couts.push({ materiaux: { fer: 3 * RAILS_DU_BOT.length } })
+    if (estPose(etat, 'generateur')) couts.push({ materiaux: { redstone: 20 } })
+    return couts
   }
 
-  // Va quelque part dans le puits : en ascenseur s'il est là, sinon à l'échelle.
-  function voyager(position: number): void {
-    if (etat.ascenseur.niveau > 0) attendreAscenseur()
-    if (ascenseurDisponible(etat) && prendreAscenseur(etat, position).length > 0) {
-      attendreAscenseur()
-      return
+  // Ce qu'il garde : de chaque minerai, ce que demande le plus gourmand des prochains achats
+  // (jamais plus de la moitié du coffre en tout).
+  function reserve(): Inventaire {
+    const garde: Inventaire = {}
+    for (const cout of prochainsCouts()) {
+      for (const [bloc, nombre] of Object.entries(cout.materiaux)) garde[bloc as IdBloc] = Math.max(garde[bloc as IdBloc] ?? 0, nombre ?? 0)
     }
-    allerA(etat, position)
-    attendre(Math.abs(etat.cible - etat.position) * 0.15 + 0.01)
+    return garde
   }
 
-  // Faut-il remonter ? Pour vendre (si l'ascenseur ne le fait pas), ou pour dépenser son argent.
-  function doitRemonter(): boolean {
-    const prochaine = PIOCHES[etat.meilleure + 1]
-    if (sacPlein(etat) && etat.ascenseur.niveau === 0) return true
-    if (!peutStocker(etat)) return true // plus aucune place (sac et quai pleins, d'objets gardés) : on va vendre
-    if (nbDansReservoir(etat) >= capaciteReservoir(etat) / 3) return true // le réservoir de la mine se remplit
-    if (planUtile(etat).some((p) => peutConstruire(etat, p.id))) return true // un bâtiment à poser
-    if (prochaine && peutAcheterPioche(etat, prochaine.niveau)) return true
-    return (estCassee(etat) || etat.niveauPioche !== etat.meilleure) && solutionPourLaPioche()
+  function reglerGarde(): void {
+    const garde = reserve()
+    // On garde un minerai tant qu'on n'en a pas assez (ensuite, le surplus part au marché).
+    etat.nonAVendre = (Object.keys(garde) as IdBloc[]).filter((bloc) => (etat.coffre.contenu[bloc] ?? 0) < (garde[bloc] ?? 0) * 1.5 && nbDansCoffre(etat) < capaciteCoffre(etat) * 0.8)
   }
 
-  // Une pioche qu'on peut utiliser (ou réparer) au village : la meilleure d'abord.
-  function piocheUtilisable(niveau: number): boolean {
-    if (!(niveau in etat.pioches)) return false
-    const intacte = (etat.pioches[niveau] ?? 0) < PIOCHES[niveau].durabilite
-    return intacte || peutReparer(etat, niveau) || peutAcheterPioche(etat, niveau)
+  // Un voyage à pied : il prend le coffre (sauf ce qu'il garde) et va le vendre au marché.
+  function allerVendre(): void {
+    const garde = reserve()
+    const lot: Inventaire = {}
+    for (const [id, nombre] of Object.entries(etat.coffre.contenu)) {
+      const bloc = id as IdBloc
+      const surplus = (nombre ?? 0) - (etat.nonAVendre.includes(bloc) ? (garde[bloc] ?? 0) : 0)
+      if (surplus > 0) lot[bloc] = surplus
+    }
+    prendreDuCoffre(etat, lot)
+    const aller = distanceEntre(etat.village, 'puits', 'marche') / VITESSE_JOUEUR
+    attendre(aller)
+    etat.nonAVendre = []
+    if (Object.keys(objetsAVendre(etat)).length > 0) vendre(etat)
+    attendre(aller)
+    allersRetours += 1
   }
 
-  // Est-ce que remonter servirait à quelque chose pour la pioche (réparer, racheter, changer) ?
-  function solutionPourLaPioche(): boolean {
-    for (let niveau = etat.meilleure; niveau >= 0; niveau--) {
-      if (niveau === etat.niveauPioche && !estCassee(etat)) return false // déjà la meilleure possible
-      if (piocheUtilisable(niveau)) return true
-    }
-    return false
-  }
+  function acheterSiPossible(): void {
+    for (const { id, x, y } of PLAN_DU_BOT) if (peutConstruire(etat, id)) construireBatiment(etat, id, x, y)
 
-  // Au village : on reprend la meilleure pioche qu'on peut (réparée avec l'argent et 3 minerais,
-  // ou rachetée neuve) ; sinon une moins bonne qu'on possède encore, en attendant.
-  function choisirPioche(): void {
-    for (let niveau = etat.meilleure; niveau >= 0; niveau--) {
-      if (!(niveau in etat.pioches)) continue
-      if ((etat.pioches[niveau] ?? 0) >= PIOCHES[niveau].durabilite) {
-        if (peutReparer(etat, niveau)) reparer(etat, niveau)
-        else if (peutAcheterPioche(etat, niveau)) acheterPioche(etat, niveau)
-      }
-      if ((etat.pioches[niveau] ?? 0) < PIOCHES[niveau].durabilite) {
-        equiper(etat, niveau)
-        return
-      }
+    // Les rails d'abord : c'est le début de l'automatisation.
+    if (estPose(etat, 'marche') && railsMineMarche(etat.village) === null) {
+      for (const c of RAILS_DU_BOT) if (peutPoserSol(etat, 'rail', c.x, c.y)) poserSol(etat, 'rail', c.x, c.y)
     }
-  }
 
-  // Tout ce que le bot fait au village, avant de redescendre.
-  function faireLesCourses(): void {
-    // Il marche de la mine au marché (et revient), en passant devant les autres bâtiments.
-    temps += (2 * distanceEntre(etat.village, 'puits', 'marche')) / VITESSE_JOUEUR
-    const prochaine = PIOCHES[etat.meilleure + 1]
-    etat.nonAVendre = [...new Set(objetsAGarder(etat))]
-    // Il vend tout, sauf 3 minerais de sa meilleure pioche : de quoi la réparer quand elle cassera.
-    const lot = objetsAVendre(etat)
-    enleverReserve(etat, lot)
-    vendreLot(etat, lot)
-    // Le sac est quand même presque plein d'objets gardés : il vend tout (sinon il ne pourrait
-    // plus creuser du tout).
-    if (placeLibre(etat) < 8) vendreLot(etat, etat.inventaire)
-    // Puis il vide le réservoir de la mine : un aller-retour au marché par sac rempli.
-    while (nbDansReservoir(etat) > 0 && prendreDuReservoir(etat).length > 0) {
-      temps += (2 * distanceEntre(etat.village, 'puits', 'marche')) / VITESSE_JOUEUR
-      const lotReservoir = objetsAVendre(etat)
-      enleverReserve(etat, lotReservoir)
-      vendreLot(etat, lotReservoir)
-      if (placeLibre(etat) < 8) vendreLot(etat, etat.inventaire)
+    if (estCassee(etat) && peutReparer(etat)) reparer(etat)
+    const pioche = PIOCHES[etat.meilleure + 1]
+    if (pioche && estPose(etat, 'forgeron') && peutAcheterPioche(etat, pioche.niveau)) acheterPioche(etat, pioche.niveau)
+
+    const niveau = prochainNiveauMine(etat)
+    if (niveau && peutPayer(etat, niveau.cout)) {
+      descendreNiveauMine(etat, aleatoire)
+      tempsNiveaux[etat.niveauMine] = temps
     }
-    // Les bâtiments d'abord (dans l'ordre de son plan), puis les achats dans ceux qui sont posés.
-    for (const { id, x, y } of planUtile(etat)) {
-      if (peutConstruire(etat, id)) construireBatiment(etat, id, x, y)
+
+    // Les salaires : le bot paie dès que quelqu'un a moins d'une minute payée.
+    if (!etat.manager.embauche && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
+      payerSalaires(etat, SECONDES_PAR_PAIE)
     }
-    const forgeron = estPose(etat, 'forgeron')
-    const bazar = estPose(etat, 'bazar')
-    if (forgeron && prochaine && peutAcheterPioche(etat, prochaine.niveau)) acheterPioche(etat, prochaine.niveau)
-    // Les enchantements attendent que l'ascenseur soit construit (il fait gagner bien plus de temps).
-    if (estPose(etat, 'enchanteur') && etat.ascenseur.niveau > 0) {
-      for (const id of LISTE_ENCHANTEMENTS) {
-        while (peutEnchanter(etat, id)) enchanter(etat, id)
-      }
+    if (etat.manager.embauche && etat.tresorerie < depensesParPaie(etat) * 2) deposerTresorerie(etat, Math.max(0, etat.argent - 500))
+
+    // Il garde toujours de quoi payer une paie d'avance.
+    const marge = () => salairesParPaie(etat) + 20
+    const prix = prixEmbauche(etat)
+    if (estPose(etat, 'employes') && prix !== null && etat.argent >= prix + marge()) embaucher(etat, aleatoire)
+    for (let i = 0; i < etat.employes.length; i++) {
+      const cout = coutAmeliorationEmploye(etat.employes[i])
+      if (cout && etat.argent >= (cout.argent ?? 0) + marge() && peutPayer(etat, cout)) ameliorerEmploye(etat, i)
     }
+    if (peutAmeliorerRecruteur(etat)) ameliorerRecruteur(etat)
+    if (managerDebloque(etat) && !etat.manager.embauche && etat.argent >= 20000) embaucherManager(etat)
+
+    // Un pousseur pour le wagonnet, tant que les rails ne sont pas électriques.
+    const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
+    if (railsMineMarche(etat.village) && !railsAlimentes(etat) && pousseurs.length === 0 && etat.employes.length >= 2) changerRole(etat, 0, 'pousseur')
+    if (railsAlimentes(etat)) etat.employes.forEach((e, i) => e.role === 'pousseur' && changerRole(etat, i, 'mineur'))
+
+    // Le générateur : il le remplit de redstone, puis le laisse se servir dans le coffre.
+    if (estPose(etat, 'generateur')) {
+      if (etat.generateur.carburant < 120) remplirGenerateur(etat, 10)
+      if (puisageDisponible(etat) && !etat.generateur.puiseDansLeCoffre) basculerPuisage(etat)
+      const prochain = prochainNiveauGenerateur(etat)
+      if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 2 && peutPayer(etat, prochain.cout)) ameliorerGenerateur(etat)
+    }
+
+    // La foreuse : du charbon, et il vend son chariot quand il est à moitié plein.
+    if (estPose(etat, 'foreuse')) {
+      if (etat.foreuse.carburant < 60) remplirForeuse(etat, 10)
+      if (nbDansChariot(etat) >= capaciteChariot(etat) / 2) vendreChariot(etat)
+      if (peutAmeliorerForage(etat) && etat.argent > 3000) ameliorerForage(etat)
+      if (peutAmeliorerChariot(etat) && etat.argent > 3000) ameliorerChariot(etat)
+    }
+
+    // Les améliorations de la mine, avec une marge (l'argent sert d'abord aux niveaux).
+    const ascenseur = prochainNiveauAscenseur(etat)
+    if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout)) ameliorerAscenseur(etat)
+    const coffre = prochainNiveauCoffre(etat)
+    if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
+    const wagonnet = prochainNiveauWagonnet(etat)
+    if (wagonnet && railsMineMarche(etat.village) && !wagonnetEnRoute(etat) && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout)) ameliorerWagonnet(etat)
     const prixSac = prixProchainSac(etat)
-    if (bazar && prixSac !== null && etat.argent >= 2 * prixSac) acheterSac(etat)
-    if (bazar && etat.profondeur >= 36) {
-      while (etat.seaux < 2 && etat.argent >= 2 * PRIX_SEAU) acheterSeau(etat)
-    }
-    if (forgeron) choisirPioche()
+    if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }
 
-  while (!etat.victoire && etat.stats.blocsCasses < maxBlocs) {
-    // L'ascenseur se construit et s'améliore directement dans la mine.
-    while (peutAmeliorerAscenseur(etat) && !ascenseurEnMouvement(etat)) {
-      ameliorerAscenseur(etat)
-      if (profondeurAscenseur === null) profondeurAscenseur = etat.profondeur
-    }
-
-    // Il remonte le sac quand il est plein (on l'attend, ou on l'appelle, s'il n'est pas là).
-    if (sacPlein(etat) && etat.ascenseur.niveau > 0 && etat.position > 0) {
-      attendreAscenseur()
-      if (!ascenseurDisponible(etat)) {
-        appelerAscenseur(etat)
-        attendreAscenseur()
-      }
-      // Il envoie tout ce qu'il ne garde pas, sauf la réserve (réparation, prochain bâtiment).
-      etat.ascenseur.garder = objetsAGarder(etat)
-      const lot: Inventaire = {}
-      for (const [id, nombre] of Object.entries(etat.inventaire)) {
-        if (!etat.ascenseur.garder.includes(id as IdBloc)) lot[id as IdBloc] = nombre
-      }
-      enleverReserve(etat, lot)
-      envoyerAscenseur(etat, lot)
-    }
-
-    if (doitRemonter()) {
-      allersRetours += 1
-      voyager(0)
-      faireLesCourses()
-      if (profondeurPiocheFer === null && etat.meilleure >= 2) profondeurPiocheFer = etat.profondeur
-      voyager(positionFront(etat))
-    }
-
-    // Toujours retourner au front de taille avant de creuser (au début, on part du village).
-    if (etat.position !== positionFront(etat)) voyager(positionFront(etat))
-
-    // Comme un joueur qui clique sur « Creuser x10 » : 10 couches d'affilée,
-    // en s'arrêtant si le sac est plein (on ne casse jamais un bloc qu'on ne pourrait pas ranger).
-    for (let i = 0; i < BLOCS_PAR_SERIE && !etat.victoire && peutStocker(etat); i++) {
-      const tempsAvant = etat.stats.tempsMinage
-      casserBloc(etat, aleatoire)
-      const duree = etat.stats.tempsMinage - tempsAvant
-      temps += duree
-      avancerTemps(etat, duree, aleatoireTemps) // l'ascenseur voyage pendant qu'on creuse
-      verifierSucces(etat)
-    }
+  while (etat.niveauMine < 5 && temps < maxSecondes) {
+    reglerGarde()
+    acheterSiPossible()
+    // Sans wagonnet, il va vendre à pied quand le coffre est à moitié plein.
+    const wagonnetActif = railsMineMarche(etat.village) !== null && etat.employes.some((e) => e.role === 'pousseur' || railsAlimentes(etat))
+    if (!wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) / 2) allerVendre()
+    for (let i = 0; i < CLICS_PAR_SECONDE * PAS; i++) cliquerMine(etat, aleatoire)
+    attendre(PAS)
+    if (railsMineMarche(etat.village) && tempsRails === null) tempsRails = temps
+    if (railsAlimentes(etat) && tempsElectrique === null) tempsElectrique = temps
+    verifierSucces(etat)
   }
 
-  return { etat, blocs: etat.stats.blocsCasses, temps, profondeurPiocheFer, profondeurAscenseur, allersRetours }
+  return { etat, temps, tempsNiveaux, tempsRails, tempsElectrique, allersRetours }
 }

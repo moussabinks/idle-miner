@@ -90,7 +90,8 @@ export async function envoyerScore(joueur: Joueur, score: Score): Promise<void> 
   if (error) throw new Error(error.message)
 }
 
-// Les meilleurs joueurs, au prestige (l'argent départage) ou à l'argent (le prestige départage).
+// Les meilleurs joueurs, au niveau de la mine (colonne « prestige » ; l'argent départage) ou à
+// l'argent (le niveau de la mine départage).
 // Lisible même sans compte.
 export async function lireClassement(tri: TriClassement, nombre: number): Promise<LigneClassement[]> {
   const autre: TriClassement = tri === 'prestige' ? 'argent' : 'prestige'

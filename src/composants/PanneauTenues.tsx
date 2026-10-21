@@ -2,7 +2,7 @@
 // On voit le hamster avec sa tenue, on achète (une fois) puis on change gratuitement.
 
 import { LISTE_TENUES, TENUES, type IdTenue, type PartieTenue } from '../jeu/donnees'
-import { estCassee, piocheEquipee, type EtatJeu } from '../jeu/mineur'
+import { estCassee, piocheEnMain, type EtatJeu } from '../jeu/mineur'
 import { acheterTenue, peutAcheterTenue, porterTenue, tenueDebloquee } from '../jeu/tenues'
 import type { Action } from '../usePartie'
 import { Hamster } from './Hamster'
@@ -17,7 +17,7 @@ function LigneTenue({ etat, jouer, id }: Props & { id: IdTenue }) {
     return (
       <li className="ligne-tenue tenue-bloquee">
         <span>🔒 {tenue.nom}</span>
-        <span className="discret">au prestige {tenue.prestige}</span>
+        <span className="discret">au niveau {tenue.niveauMine} de la mine</span>
       </li>
     )
   }
@@ -61,10 +61,10 @@ export function PanneauTenues({ etat, jouer }: Props) {
   return (
     <div className="ligne-achat panneau-tenues">
       <strong>👕 Tenues</strong>
-      <span className="discret">Juste pour le style : tu les gardes au prestige.</span>
+      <span className="discret">Juste pour le style.</span>
       <div className="tenues">
         <div className="apercu-tenue" aria-hidden="true">
-          <Hamster role="joueur" couleurPioche={estCassee(etat) ? null : piocheEquipee(etat).couleur} chapeau={etat.tenue.chapeau} haut={etat.tenue.haut} />
+          <Hamster role="joueur" couleurPioche={estCassee(etat) ? null : piocheEnMain(etat).couleur} chapeau={etat.tenue.chapeau} haut={etat.tenue.haut} />
         </div>
         <div className="choix-tenues">
           <Partie etat={etat} jouer={jouer} partie="chapeau" titre="🎩 Chapeaux" />

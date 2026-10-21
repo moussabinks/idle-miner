@@ -1,5 +1,6 @@
 // Le classement des joueurs (leaderboard), sur l'écran d'accueil.
-// Deux onglets : au prestige et à l'argent gagné. Tout le monde peut le voir ;
+// Deux onglets : au niveau de la mine (gardé dans la colonne « prestige » du serveur) et à
+// l'argent gagné. Tout le monde peut le voir ;
 // pour y apparaître, il faut un compte (le score part avec la sauvegarde en ligne).
 
 import { useEffect, useState } from 'react'
@@ -51,7 +52,7 @@ export function CarteClassement({ joueur, dernierEnvoi }: { joueur: Joueur | nul
           <li key={ligne.pseudo} className={joueur && ligne.pseudo.toLowerCase() === joueur.pseudo.toLowerCase() ? 'classement-moi' : ''}>
             <span className="classement-rang">{MEDAILLES[rang] ?? `${rang + 1}.`}</span>
             <span className="classement-pseudo">{ligne.pseudo}</span>
-            <span className={tri === 'prestige' ? 'classement-valeur' : 'classement-autre'}>⭐ {ligne.prestige}</span>
+            <span className={tri === 'prestige' ? 'classement-valeur' : 'classement-autre'}>🕳️ {ligne.prestige}</span>
             <span className={tri === 'argent' ? 'classement-valeur' : 'classement-autre'}>💰 {ligne.argent.toLocaleString('fr-FR')} $</span>
           </li>
         ))}
@@ -64,7 +65,7 @@ export function CarteClassement({ joueur, dernierEnvoi }: { joueur: Joueur | nul
         <h2>🏆 Classement</h2>
         <nav className="onglets classement-onglets" role="tablist">
           <button role="tab" aria-selected={tri === 'prestige'} className={`onglet ${tri === 'prestige' ? 'actif' : ''}`} onClick={() => changerTri('prestige')}>
-            ⭐ Prestige
+            🕳️ Niveau de mine
           </button>
           <button role="tab" aria-selected={tri === 'argent'} className={`onglet ${tri === 'argent' ? 'actif' : ''}`} onClick={() => changerTri('argent')}>
             💰 Argent
@@ -75,7 +76,7 @@ export function CarteClassement({ joueur, dernierEnvoi }: { joueur: Joueur | nul
         </button>
       </div>
       <p className="discret classement-explication">
-        {tri === 'prestige' ? 'Le plus haut prestige atteint' : "Tout l'argent gagné depuis le début, prestiges compris"} (le meilleur de tes
+        {tri === 'prestige' ? 'Le plus bas niveau de mine atteint' : "Tout l'argent gagné dans la partie"} (le meilleur de tes
         mondes).{joueur ? '' : ' Connecte-toi pour apparaître dans le classement.'}
       </p>
       {contenu}

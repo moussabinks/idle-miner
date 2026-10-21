@@ -76,12 +76,10 @@ export const CALAGES: Record<IdBatiment, Calage> = {
   puits: { largeur: 1233, hauteur: 774, gauche: { x: 3, y: 403.4 }, bas: { x: 625, y: 765.4 }, droite: { x: 1225, y: 418.6 } },
   bazar: { largeur: 1037, hauteur: 945, gauche: { x: 2, y: 652 }, bas: { x: 520, y: 942 }, droite: { x: 1034, y: 653 } },
   employes: { largeur: 1074, hauteur: 1046, gauche: { x: 2, y: 724 }, bas: { x: 530, y: 1043 }, droite: { x: 1071, y: 726 } },
-  enchanteur: { largeur: 1111, hauteur: 1013, gauche: { x: 2, y: 682 }, bas: { x: 548, y: 1010 }, droite: { x: 1108, y: 687 } },
   foreuse: { largeur: 971, hauteur: 913, gauche: { x: 2, y: 608 }, bas: { x: 483, y: 910 }, droite: { x: 968, y: 612 } },
   forgeron: { largeur: 1091, hauteur: 994, gauche: { x: 2, y: 670 }, bas: { x: 546, y: 991 }, droite: { x: 1088, y: 673 } },
   generateur: { largeur: 1107, hauteur: 1040, gauche: { x: 2, y: 708 }, bas: { x: 553, y: 1037 }, droite: { x: 1104, y: 711 } },
   marche: { largeur: 1089, hauteur: 1027, gauche: { x: 2, y: 703 }, bas: { x: 512, y: 1024 }, droite: { x: 1073, y: 702 } },
-  prestige: { largeur: 1084, hauteur: 1066, gauche: { x: 2, y: 746 }, bas: { x: 538, y: 1063 }, droite: { x: 1081, y: 756 } },
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer
@@ -119,12 +117,10 @@ export function pointSurSprite(calage: Calage, x: number, y: number, taille: num
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   puits: '/images/batiments/mine.webp',
   bazar: '/images/batiments/bazar.webp',
-  enchanteur: '/images/batiments/enchanteur.webp',
   foreuse: '/images/batiments/foreuse.webp',
   forgeron: '/images/batiments/forgeron.webp',
   marche: '/images/batiments/marche.webp',
   employes: '/images/batiments/employes.webp',
-  prestige: '/images/batiments/prestige.webp',
   generateur: '/images/batiments/generateur.webp',
 }
 

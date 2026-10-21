@@ -9,12 +9,12 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v7'
+const CACHE = 'idle-miner-v8'
 // Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
 // village serait vide hors ligne. (21/10 : images en haute définition et arbres, d'où le cache v4.)
 const IMAGES_DU_VILLAGE = [
   ...Array.from({ length: 12 }, (_, i) => `/images/village/arbres/arbre${String(i + 1).padStart(2, '0')}.webp`),
-  ...['mine', 'bazar', 'employes', 'enchanteur', 'foreuse', 'forgeron', 'marche', 'prestige', 'rails'].map((nom) => `/images/batiments/${nom}.webp`),
+  ...['mine', 'mine-cabine', 'mine-devant', 'bazar', 'employes', 'foreuse', 'forgeron', 'generateur', 'marche', 'rails'].map((nom) => `/images/batiments/${nom}.webp`),
   ...['manager', 'mineur', 'recruteur'].map((nom) => `/images/personnages/${nom}.webp`),
   // Les personnages vus de devant, de derrière, de gauche et de droite (src/composants/sprites.ts).
   ...['joueur', 'mineur_commun', 'mineur_rare', 'mineur_epique', 'mineur_legendaire', 'mineur_mythique'].flatMap((nom) =>

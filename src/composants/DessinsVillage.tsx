@@ -175,9 +175,9 @@ type PropsEvolutionMine = {
   x: number
   y: number
   miroir: boolean
-  profondeur: number // en mètres, pour le panneau
+  niveau: number // le niveau de la mine (1 à 5), pour le panneau
   ascenseur: boolean // l'ascenseur est construit (on voit sa cabine)
-  hauteurCabine: number // où est la cabine : 0 = en haut (au village), 1 = tout en bas (au front)
+  hauteurCabine: number // où est la cabine : 0 = en haut (au village), 1 = tout en bas
 }
 
 // Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) :
@@ -191,7 +191,7 @@ const POINTS_MINE = {
   // où les deux câbles sortent du treuil, et où ils s'accrochent à la cabine (posée en haut)
   treuil: [[632, 264], [732, 253]] as [number, number][],
   accroches: [[634, 476], [744, 545]] as [number, number][],
-  // le pied du panneau de profondeur, sur le sol de devant à gauche
+  // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
   panneau: [250, 470] as [number, number],
 }
 
@@ -201,7 +201,7 @@ const CABINE_EN_HAUT = -150
 const CABINE_EN_BAS = 35
 const CABLES_SANS_ASCENSEUR = 240
 
-export function DessinEvolutionMine({ x, y, miroir, profondeur, ascenseur, hauteurCabine }: PropsEvolutionMine) {
+export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCabine }: PropsEvolutionMine) {
   const calage = CALAGES.puits
   const f = Math.max(0, Math.min(1, hauteurCabine))
   const decalage = ascenseur ? CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * f : CABLES_SANS_ASCENSEUR
@@ -223,12 +223,12 @@ export function DessinEvolutionMine({ x, y, miroir, profondeur, ascenseur, haute
         {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
         <image href={IMAGE_DEVANT_MINE} x="0" y="0" width={calage.largeur} height={calage.hauteur} />
       </g>
-      {/* Le panneau de profondeur, planté sur le sol de devant. */}
+      {/* Le panneau du niveau de la mine, planté sur le sol de devant. */}
       <g transform={`translate(${panneau.x} ${panneau.y})`}>
         <rect x="-2" y="-30" width="4" height="30" fill="#6b4422" stroke="#2a1608" strokeWidth="0.8" />
         <rect x="-21" y="-42" width="42" height="17" rx="3" fill="#a8743e" stroke="#4a2c12" strokeWidth="1.5" />
         <text x="0" y="-29.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#2a1606" fontFamily="system-ui, sans-serif">
-          -{profondeur} m
+          Niv. {niveau}
         </text>
       </g>
     </g>
@@ -567,30 +567,23 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
 }
 
 // ---------------------------------------------------------------------------
-// Le wagonnet (sur les rails) et la brouette (à pied)
+// Le wagonnet (sur les rails)
 // ---------------------------------------------------------------------------
 
-export function DessinWagonnet({ c, parRails }: { c: Point; parRails: boolean }) {
-  if (!parRails) {
-    return (
-      <g transform={`translate(${c.x} ${c.y})`}>
-        <ellipse cx="0" cy="2" rx="11" ry="4" fill="rgb(0 0 0 / 0.25)" />
-        <path d="M-10 -10 L8 -10 L5 -2 L-8 -2 Z" fill="#9a6532" stroke="#3a2210" strokeWidth="1.2" />
-        <circle cx="-4" cy="-12" r="2.8" fill="#ffd84a" />
-        <circle cx="2" cy="-12.5" r="2.6" fill="#4ee8dc" />
-        <circle cx="6" cy="1" r="3" fill="#3a3a42" stroke="#111" />
-        <path d="M-10 -8 L-16 -4" stroke="#6b4422" strokeWidth="2" strokeLinecap="round" />
-      </g>
-    )
-  }
+export function DessinWagonnet({ c, plein = true }: { c: Point; plein?: boolean }) {
   return (
     <g transform={`translate(${c.x} ${c.y})`}>
       <ellipse cx="0" cy="3" rx="13" ry="5" fill="rgb(0 0 0 / 0.25)" />
+      {/* Le chargement (des minerais qui dépassent), seulement quand il est plein. */}
+      {plein && (
+        <>
+          <circle cx="-5" cy="-15" r="3.4" fill="#4ee8dc" />
+          <circle cx="2" cy="-16" r="3.2" fill="#ffd84a" />
+          <circle cx="7" cy="-14" r="3" fill="#e04848" />
+        </>
+      )}
       <path d="M-12 -13 L12 -13 L9 0 L-9 0 Z" fill="#6e6e78" stroke="#25252b" strokeWidth="1.3" />
       <path d="M-12 -13 L12 -13" stroke="#e2b13a" strokeWidth="2" />
-      <circle cx="-5" cy="-15" r="3.4" fill="#4ee8dc" />
-      <circle cx="2" cy="-16" r="3.2" fill="#ffd84a" />
-      <circle cx="7" cy="-14" r="3" fill="#e04848" />
       <circle cx="-6" cy="1" r="2.6" fill="#2a2a30" />
       <circle cx="6" cy="1" r="2.6" fill="#2a2a30" />
     </g>

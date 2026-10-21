@@ -1,35 +1,26 @@
-// Les mineurs employés (débloqués au prestige 2), le bâtiment Personnel.
-// Chaque mineur creuse tout seul dans sa galerie de la mine commune (un « univers parallèle »,
-// avec sa propre profondeur). Quand son sac est plein, il remonte dans sa cabine d'ascenseur,
-// puis marche jusqu'au marché pour vendre sa récolte (tout l'argent est pour toi) et retourne
-// à la mine. Si une ligne de rails relie la mine au marché, il charge le wagonnet et redescend
-// tout de suite. Quand on améliore sa pioche, il va d'abord la chercher à la forge.
-// Les trajets et la vente prennent du temps : pendant ce temps-là, il ne creuse pas.
-//
-// Depuis le 20/10, on leur paie un salaire toutes les 10 minutes (sans manager, on ne paie que
-// 10 minutes à la fois). Sans salaire, un mineur remonte et attend, mécontent, au stand Personnel.
-// Au prestige 4, le recruteur trouve des mineurs plus ou moins rares (un mineur mythique
-// rapporte 5 fois plus) ; au prestige 5, le manager paie les salaires tout seul, avec
-// l'argent mis dans la trésorerie.
-// Les mineurs continuent pendant que le jeu est fermé (tant qu'ils sont payés), et restent
-// après un prestige.
+// Les mineurs employés (dès le début, au bâtiment Personnel, 22/10).
+// Un mineur creuse lentement au fond de la mine, remonte quand son sac est plein, le vide dans
+// le coffre de la mine, puis redescend. L'ascenseur raccourcit ses trajets.
+// Un mineur peut aussi être « pousseur » : il attend au quai et pousse le wagonnet jusqu'au
+// marché dès que le coffre n'est pas vide (voir wagonnet.ts). Avec le générateur, plus besoin.
+// On leur paie un salaire toutes les 10 minutes (sans manager, 10 minutes à la fois) : sans
+// salaire, un mineur va attendre, mécontent, devant le Personnel.
+// Au niveau 3 de la mine, le recruteur trouve des mineurs plus ou moins rares (un mineur
+// mythique creuse 5 fois plus) ; au niveau 4, le manager paie les salaires avec la trésorerie.
+// Quand on améliore sa pioche, un mineur va d'abord la chercher à la forge.
 
 import { choisir, type Aleatoire } from './aleatoire'
 import {
-  BLOCS_PAR_METRE_EMPLOYE,
-  BONUS_PRESTIGE,
-  DUREE_MIN_TRAJET_EMPLOYE,
+  EMPLOYES_NIVEAU_1,
+  EMPLOYES_PAR_NIVEAU,
   HAUSSE_APRES_LISTE,
   LISTE_RARETES,
-  MAX_EMPLOYES,
-  NIVEAUX_ASCENSEUR,
   NIVEAUX_EMPLOYE,
   NIVEAUX_RECRUTEUR,
+  NIVEAU_MINE_MANAGER,
+  NIVEAU_MINE_RECRUTEUR,
   NOMS_EMPLOYES,
   PART_INDEMNITES,
-  PRESTIGE_EMPLOYES,
-  PRESTIGE_MANAGER,
-  PRESTIGE_RECRUTEUR,
   PRIX_EMBAUCHE,
   PRIX_MANAGER,
   RARETES,
@@ -38,204 +29,156 @@ import {
   SECONDES_AVANT_PAIE_MANAGER,
   SECONDES_FORGE_EMPLOYE,
   SECONDES_PAR_PAIE,
-  SECONDES_VENTE_EMPLOYE,
-  depuisReference,
-  niveauMaxAuPrestige,
-  prestigePourNiveau,
-  profondeurBedrock,
+  SECONDES_VIDAGE_EMPLOYE,
   type Cout,
   type IdBatiment,
+  type IdBloc,
   type IdRarete,
   type Rarete,
 } from './donnees'
-import { tirerBlocNormal } from './mine'
-import { aLaSurface, payer, peutPayer, secondesParMetreAscenseur, valeurDe, type EtatJeu, type Employe } from './mineur'
-import {
-  mineursEnPlus,
-  multiplicateurAscenseur,
-  multiplicateurChancesRares,
-  multiplicateurIndemnites,
-  multiplicateurMineurs,
-  multiplicateurMythique,
-  multiplicateurPrixEmbauche,
-  multiplicateurSacMineurs,
-  multiplicateurSalaires,
-} from './talents'
-import { batimentPose, envoyerAuMarche, railsMineMarche, secondesAPied } from './village'
+import { tirerBloc } from './mine'
+import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
+import { batimentPose, secondesAPied } from './village'
 
-// Le travail des mineurs avance par morceaux de 30 secondes au plus : après une longue
-// absence, le manager a ainsi le temps de payer les salaires entre deux morceaux.
+// Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
+// a ainsi le temps de payer les salaires entre deux morceaux.
 const PAS_EMPLOYES = 30
 
 // ---------------------------------------------------------------------------
 // Informations
 // ---------------------------------------------------------------------------
 
-export function employesDebloques(etat: EtatJeu): boolean {
-  return etat.prestige >= PRESTIGE_EMPLOYES
-}
-
-// 2 au prestige 2, 3 au prestige 3... (6 au plus, +1 avec le talent « Grande équipe »).
+// 4 mineurs au niveau 1 de la mine, puis 2 de plus par niveau.
 export function maxEmployes(etat: EtatJeu): number {
-  if (!employesDebloques(etat)) return 0
-  return Math.min(MAX_EMPLOYES, etat.prestige) + mineursEnPlus(etat)
+  return EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU * (etat.niveauMine - 1)
 }
 
-// Le prix de base de la n-ième embauche (n = 0 pour la première) : la liste, puis 60 % de plus
-// à chaque fois.
+// Le prix de base de la n-ième embauche (n = 0 pour la première).
 function prixDeBase(n: number): number {
   const dernier = PRIX_EMBAUCHE.length - 1
   if (n <= dernier) return PRIX_EMBAUCHE[n]
   return PRIX_EMBAUCHE[dernier] * HAUSSE_APRES_LISTE ** (n - dernier)
 }
 
-// Arrondi à la centaine (des prix faciles à lire).
+// Des prix faciles à lire : à la dizaine sous 1 000 $, à la centaine au-dessus.
 function arrondiPrix(prix: number): number {
-  return Math.max(100, Math.round(prix / 100) * 100)
+  if (prix < 1000) return Math.max(10, Math.round(prix / 10) * 10)
+  return Math.round(prix / 100) * 100
 }
 
-// Le prix de la prochaine embauche (null si l'équipe est complète). Il dépend seulement du
-// nombre de mineurs qu'on a en ce moment.
+// Le prix de la prochaine embauche (null si l'équipe est complète).
 export function prixEmbauche(etat: EtatJeu): number | null {
   if (etat.employes.length >= maxEmployes(etat)) return null
-  return arrondiPrix(prixDeBase(etat.employes.length) * multiplicateurPrixEmbauche(etat))
+  return arrondiPrix(prixDeBase(etat.employes.length))
 }
 
-// Les indemnités d'un licenciement : 40 % du prix de la dernière embauche de l'équipe
-// (2 fois moins avec le talent « Indemnités réduites »).
+// Les indemnités d'un licenciement : 40 % du prix de la dernière place de l'équipe.
 export function indemnites(etat: EtatJeu): number {
-  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.length - 1)) * PART_INDEMNITES * multiplicateurIndemnites(etat))
+  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.length - 1)) * PART_INDEMNITES)
 }
 
 export function rareteDe(employe: Employe): Rarete {
   return RARETES[employe.rarete] ?? RARETES.commun
 }
 
-// La taille de son sac à dos : elle grandit avec son équipement, sa rareté (un mineur mythique
-// porte 5 fois plus) et le talent « Sacs d'équipe ».
-export function tailleSacEmploye(etat: EtatJeu, employe: Employe): number {
-  return Math.round(NIVEAUX_EMPLOYE[employe.niveau].sac * multiplicateurSacMineurs(etat) * rareteDe(employe).rendement)
+export function tailleSacEmploye(employe: Employe): number {
+  return Math.round(NIVEAUX_EMPLOYE[employe.niveau].sac * rareteDe(employe).rendement)
 }
 
 export function nbDansSacEmploye(employe: Employe): number {
-  let total = 0
-  for (const nombre of Object.values(employe.sac)) total += nombre ?? 0
-  return total
+  return totalObjets(employe.sac)
 }
 
 // Blocs cassés par seconde (un mineur rare creuse plus vite).
-export function vitesseEmploye(etat: EtatJeu, employe: Employe): number {
-  return NIVEAUX_EMPLOYE[employe.niveau].vitesse * multiplicateurMineurs(etat) * rareteDe(employe).rendement
+export function vitesseEmploye(employe: Employe): number {
+  return NIVEAUX_EMPLOYE[employe.niveau].vitesse * rareteDe(employe).rendement
 }
 
-// Jusqu'où descend un mineur, selon sa pioche, dans la mine de ce prestige (sans toucher la bedrock).
-export function profondeurMaxEmploye(etat: EtatJeu, employe: Employe): number {
-  return Math.min(depuisReference(NIVEAUX_EMPLOYE[employe.niveau].profMax, etat.prestige), profondeurBedrock(etat.prestige) - 1)
+// Ce qu'un mineur fait sortir de la mine en moyenne, par seconde (creusage et trajets compris).
+export function blocsParSecondeEmploye(etat: EtatJeu, employe: Employe): number {
+  const sac = tailleSacEmploye(employe)
+  const cycle = sac / vitesseEmploye(employe) + 2 * secondesTrajetMineur(etat) + SECONDES_VIDAGE_EMPLOYE
+  return sac / cycle
 }
 
-// Les mineurs ont leur propre ascenseur (une cabine chacun) : il va aussi vite que le tien,
-// et au moins comme un ascenseur de niveau 1 si tu n'as pas encore construit le tien.
-// Un trajet complet dure quand même au moins DUREE_MIN_TRAJET_EMPLOYE (il faut attendre la
-// cabine, charger le sac...) : sinon, près de la surface, ce serait instantané.
-export function secondesParMetreEmploye(etat: EtatJeu, employe: Employe): number {
-  const parMetre = etat.ascenseur.niveau > 0 ? secondesParMetreAscenseur(etat) : NIVEAUX_ASCENSEUR[0].secondesParMetre * multiplicateurAscenseur(etat)
-  const longueurTrajet = Math.max(1, employe.profondeur - 1) // du village jusqu'au fond de sa galerie
-  return Math.max(parMetre, DUREE_MIN_TRAJET_EMPLOYE / longueurTrajet)
-}
-
-// Le temps d'une marche dans le village, d'un bâtiment à un autre (0 si l'un des deux n'est pas posé).
 export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBatiment): number {
   return secondesAPied(etat.village, de, vers)
 }
 
-// Combien de secondes avant qu'il ait fini son étape en cours (trajet ou vente).
-// Pendant qu'il creuse : le temps qu'il lui faut pour remplir son sac.
+// Combien de secondes avant qu'il ait fini son étape en cours.
 export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): number {
-  if (employe.etape === 'attend') return 0
-  if (employe.etape === 'vend') return Math.max(0, SECONDES_VENTE_EMPLOYE - employe.progression)
-  if (employe.etape === 'forge') return Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression)
-  if (employe.etape === 'marche') return Math.max(0, secondesMarcheEmploye(etat, employe.depuis, employe.lieu) - employe.progression)
-  if (employe.etape === 'creuse') {
-    const place = tailleSacEmploye(etat, employe) - nbDansSacEmploye(employe)
-    return Math.max(0, (place - employe.progression) / vitesseEmploye(etat, employe))
+  switch (employe.etape) {
+    case 'creuse':
+      return Math.max(0, (tailleSacEmploye(employe) - nbDansSacEmploye(employe) - employe.progression) / vitesseEmploye(employe))
+    case 'monte':
+    case 'descend':
+      return Math.max(0, secondesTrajetMineur(etat) - employe.progression)
+    case 'vide':
+      return Math.max(0, SECONDES_VIDAGE_EMPLOYE - employe.progression)
+    case 'forge':
+      return Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression)
+    case 'marche':
+      return Math.max(0, secondesMarcheEmploye(etat, employe.depuis, employe.lieu) - employe.progression)
+    default:
+      return 0
   }
-  const arrivee = employe.etape === 'monte' ? 0 : employe.profondeur - 1
-  return Math.abs(arrivee - employe.position) * secondesParMetreEmploye(etat, employe)
 }
 
-// Le prix du prochain équipement (en argent seulement), null s'il a déjà le meilleur.
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
 
-// Le prochain équipement est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
-export function employeBloqueAuPrestige(etat: EtatJeu, employe: Employe): number | null {
-  const prochain = employe.niveau + 1
-  if (coutAmeliorationEmploye(employe) === null || prochain <= niveauMaxAuPrestige('mineur', etat.prestige)) return null
-  return prestigePourNiveau('mineur', prochain)
-}
-
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   const cout = coutAmeliorationEmploye(employe)
-  return cout !== null && employeBloqueAuPrestige(etat, employe) === null && peutPayer(etat, cout)
+  return cout !== null && peutPayer(etat, cout)
 }
 
 // ---------------------------------------------------------------------------
 // Les salaires
 // ---------------------------------------------------------------------------
 
-// Le salaire de 10 minutes d'un mineur : selon son équipement et sa rareté. Il monte de
-// 15 % par prestige, comme le prix des ventes (25 % de moins avec « Salaires négociés »).
-export function salaireEmploye(etat: EtatJeu, employe: Employe): number {
-  const base = SALAIRES[employe.niveau] * rareteDe(employe).salaire
-  return Math.round(base * (1 + BONUS_PRESTIGE * etat.prestige) * multiplicateurSalaires(etat))
+// Le salaire de 10 minutes d'un mineur, selon sa pioche et sa rareté.
+export function salaireEmploye(employe: Employe): number {
+  return Math.round(SALAIRES[employe.niveau] * rareteDe(employe).salaire)
 }
 
-// Combien de secondes on peut encore lui payer : sans manager, on paie au plus 10 minutes à
-// la fois (on complète jusqu'à 10 minutes payées).
+// Sans manager, on paie au plus 10 minutes à la fois.
 function secondesPayables(employe: Employe, secondes: number): number {
   return Math.max(0, Math.min(secondes, SECONDES_PAR_PAIE - employe.tempsPaye))
 }
 
-// Le prix de quelques secondes de travail payées d'avance.
-function prixDuTemps(etat: EtatJeu, employe: Employe, secondes: number): number {
-  return Math.ceil((salaireEmploye(etat, employe) * secondes) / SECONDES_PAR_PAIE)
+function prixDuTemps(employe: Employe, secondes: number): number {
+  return Math.ceil((salaireEmploye(employe) * secondes) / SECONDES_PAR_PAIE)
 }
 
 // Ce que coûte de payer `secondes` de plus à chaque mineur (sans dépasser 10 minutes payées).
-// Avec secondes = SECONDES_PAR_PAIE, c'est le prix pour que tout le monde soit payé 10 minutes.
 export function coutSalaires(etat: EtatJeu, secondes: number): number {
-  return etat.employes.reduce((total, e) => total + prixDuTemps(etat, e, secondesPayables(e, secondes)), 0)
+  return etat.employes.reduce((total, e) => total + prixDuTemps(e, secondesPayables(e, secondes)), 0)
 }
 
-// Les salaires de toute l'équipe pour 10 minutes (pour l'affichage).
 export function salairesParPaie(etat: EtatJeu): number {
-  return etat.employes.reduce((total, e) => total + salaireEmploye(etat, e), 0)
+  return etat.employes.reduce((total, e) => total + salaireEmploye(e), 0)
 }
 
-// Le moins de temps payé dans l'équipe (en secondes).
 export function tempsPayeMin(etat: EtatJeu): number {
   return etat.employes.length === 0 ? 0 : Math.min(...etat.employes.map((e) => e.tempsPaye))
 }
 
-// Les mineurs qui ne sont plus payés (ils attendent, ou ils remontent pour attendre).
 export function nbSansSalaire(etat: EtatJeu): number {
   return etat.employes.filter((e) => e.tempsPaye <= 0).length
 }
 
-// Les boutons « Payer » du stand Personnel (ils disparaissent quand on a le manager).
 export function peutPayerSalaires(etat: EtatJeu, secondes: number): boolean {
   const cout = coutSalaires(etat, secondes)
   return !etat.manager.embauche && cout > 0 && etat.argent >= cout
 }
 
-// Paie `secondes` de travail de plus à chaque mineur (jusqu'à 10 minutes payées).
 export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
-  if (!aLaSurface(etat) || !peutPayerSalaires(etat, secondes)) return []
+  if (!peutPayerSalaires(etat, secondes)) return []
   let paye = 0
   for (const employe of etat.employes) {
     const temps = secondesPayables(employe, secondes)
-    paye += prixDuTemps(etat, employe, temps)
+    paye += prixDuTemps(employe, temps)
     employe.tempsPaye += temps
   }
   etat.argent -= paye
@@ -243,7 +186,6 @@ export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
   return [`💵 Salaires payés (${paye.toLocaleString('fr-FR')} $) : tes mineurs travaillent encore ${Math.floor(tempsPayeMin(etat) / 60)} min.`]
 }
 
-// Le message d'alerte du village quand quelqu'un n'est pas payé (null si tout va bien).
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
   if (etat.manager.embauche && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Trésorerie vide : personne n’est payé !'
@@ -252,26 +194,23 @@ export function alerteSalaires(etat: EtatJeu): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Le manager (prestige 5) et la trésorerie
+// Le manager (niveau 4 de la mine) et la trésorerie
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
-  return etat.prestige >= PRESTIGE_MANAGER
+  return etat.niveauMine >= NIVEAU_MINE_MANAGER
 }
 
-// Le manager travaille tant qu'il est payé.
 export function managerAuTravail(etat: EtatJeu): boolean {
   return etat.manager.embauche && etat.manager.tempsPaye > 0
 }
 
-// Son salaire de 10 minutes, payé par la trésorerie.
 export function salaireManager(): number {
   return SALAIRE_MANAGER
 }
 
-// Embaucher le manager : ses 10 premières minutes sont comprises dans le prix.
 export function embaucherManager(etat: EtatJeu): string[] {
-  if (!aLaSurface(etat) || !managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
+  if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
   etat.argent -= PRIX_MANAGER
   etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE }
   return ['💼 Manager embauché ! Mets de l’argent dans la trésorerie : il paiera les salaires tout seul.']
@@ -279,7 +218,7 @@ export function embaucherManager(etat: EtatJeu): string[] {
 
 export function deposerTresorerie(etat: EtatJeu, montant: number): string[] {
   const mis = Math.floor(Math.min(montant, etat.argent))
-  if (!aLaSurface(etat) || !etat.manager.embauche || mis <= 0) return []
+  if (!etat.manager.embauche || mis <= 0) return []
   etat.argent -= mis
   etat.tresorerie += mis
   return [`💼 +${mis.toLocaleString('fr-FR')} $ dans la trésorerie.`]
@@ -287,26 +226,21 @@ export function deposerTresorerie(etat: EtatJeu, montant: number): string[] {
 
 export function retirerTresorerie(etat: EtatJeu, montant: number): string[] {
   const pris = Math.floor(Math.min(montant, etat.tresorerie))
-  if (!aLaSurface(etat) || pris <= 0) return []
+  if (pris <= 0) return []
   etat.tresorerie -= pris
   etat.argent += pris
   return [`💼 ${pris.toLocaleString('fr-FR')} $ repris de la trésorerie.`]
 }
 
-// Ce qu'il manque dans la trésorerie pour payer une fois (10 minutes) toute l'équipe, manager compris.
-export function manquePourUnePaie(etat: EtatJeu): number {
-  return Math.max(0, depensesParPaie(etat) - etat.tresorerie)
-}
-
-// Ce que coûtent 10 minutes de toute l'équipe, manager compris (pour savoir combien de temps tient la trésorerie).
 export function depensesParPaie(etat: EtatJeu): number {
   return salairesParPaie(etat) + (etat.manager.embauche ? salaireManager() : 0)
 }
 
-// Le manager paie les salaires qui arrivent à leur fin (moins d'une minute payée), avec la
-// trésorerie. Il commence par lui-même (sans lui, plus personne n'est payé), puis les mineurs
-// du moins cher au plus cher : s'il n'y a pas de quoi payer tout le monde, le plus de mineurs
-// possible continuent de travailler.
+export function manquePourUnePaie(etat: EtatJeu): number {
+  return Math.max(0, depensesParPaie(etat) - etat.tresorerie)
+}
+
+// Le manager paie d'abord son propre salaire, puis les mineurs du moins cher au plus cher.
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
   if (!manager.embauche) return
@@ -316,9 +250,9 @@ function payerParManager(etat: EtatJeu): void {
     manager.tempsPaye += SECONDES_PAR_PAIE
   }
   if (!managerAuTravail(etat)) return
-  const parSalaire = [...etat.employes].sort((a, b) => salaireEmploye(etat, a) - salaireEmploye(etat, b))
+  const parSalaire = [...etat.employes].sort((a, b) => salaireEmploye(a) - salaireEmploye(b))
   for (const employe of parSalaire) {
-    const salaire = salaireEmploye(etat, employe)
+    const salaire = salaireEmploye(employe)
     if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.tresorerie >= salaire) {
       etat.tresorerie -= salaire
       etat.stats.salairesPayes += salaire
@@ -328,56 +262,36 @@ function payerParManager(etat: EtatJeu): void {
 }
 
 // ---------------------------------------------------------------------------
-// Le recruteur (prestige 4) et la rareté
+// Le recruteur (niveau 3 de la mine) et la rareté
 // ---------------------------------------------------------------------------
 
 export function recruteurDebloque(etat: EtatJeu): boolean {
-  return etat.prestige >= PRESTIGE_RECRUTEUR
+  return etat.niveauMine >= NIVEAU_MINE_RECRUTEUR
 }
 
-// Le prochain niveau du recruteur (le niveau 1, c'est l'embaucher), null s'il est au maximum.
 export function prochainNiveauRecruteur(etat: EtatJeu) {
   return NIVEAUX_RECRUTEUR[etat.recruteur] ?? null
 }
 
-// Le prochain niveau est-il bloqué par le prestige ? Renvoie le prestige qu'il faut (null = pas bloqué).
-export function recruteurBloqueAuPrestige(etat: EtatJeu): number | null {
-  const prochain = etat.recruteur + 1
-  if (prochainNiveauRecruteur(etat) === null || prochain <= niveauMaxAuPrestige('recruteur', etat.prestige)) return null
-  return prestigePourNiveau('recruteur', prochain)
-}
-
 export function peutAmeliorerRecruteur(etat: EtatJeu): boolean {
   const prochain = prochainNiveauRecruteur(etat)
-  return recruteurDebloque(etat) && prochain !== null && recruteurBloqueAuPrestige(etat) === null && peutPayer(etat, prochain.cout)
+  return recruteurDebloque(etat) && prochain !== null && peutPayer(etat, prochain.cout)
 }
 
 export function ameliorerRecruteur(etat: EtatJeu): string[] {
   const prochain = prochainNiveauRecruteur(etat)
-  if (!aLaSurface(etat) || prochain === null || !peutAmeliorerRecruteur(etat)) return []
+  if (prochain === null || !peutAmeliorerRecruteur(etat)) return []
   payer(etat, prochain.cout)
   etat.recruteur += 1
   if (etat.recruteur === 1) return ['🎩 Recruteur embauché ! Tes prochaines embauches peuvent être rares, épiques... ou mythiques !']
   return [`🎩 Recruteur niveau ${etat.recruteur} : plus de chances de trouver des mineurs rares !`]
 }
 
-// Les chances (en %) de chaque rareté à la prochaine embauche. Sans recruteur : tous communs.
 export function chancesRecrutement(etat: EtatJeu): Record<IdRarete, number> {
   if (etat.recruteur <= 0) return { commun: 100, rare: 0, epique: 0, legendaire: 0, mythique: 0 }
-  const base = NIVEAUX_RECRUTEUR[Math.min(etat.recruteur, NIVEAUX_RECRUTEUR.length) - 1].chances
-  const bonus = multiplicateurChancesRares(etat)
-  const chances = {
-    commun: 0,
-    rare: base.rare * bonus,
-    epique: base.epique * bonus,
-    legendaire: base.legendaire * bonus,
-    mythique: base.mythique * bonus * multiplicateurMythique(etat),
-  }
-  chances.commun = 100 - chances.rare - chances.epique - chances.legendaire - chances.mythique
-  return chances
+  return { ...NIVEAUX_RECRUTEUR[Math.min(etat.recruteur, NIVEAUX_RECRUTEUR.length) - 1].chances }
 }
 
-// Tire la rareté du prochain mineur.
 export function tirerRarete(etat: EtatJeu, aleatoire: Aleatoire): IdRarete {
   const chances = chancesRecrutement(etat)
   let tirage = aleatoire() * 100
@@ -390,7 +304,6 @@ export function tirerRarete(etat: EtatJeu, aleatoire: Aleatoire): IdRarete {
   return 'commun'
 }
 
-// Un prénom pas encore pris dans l'équipe (avec un numéro si tous le sont).
 function prenomAuHasard(etat: EtatJeu, aleatoire: Aleatoire): string {
   const pris = new Set(etat.employes.map((e) => e.nom))
   const libres = NOMS_EMPLOYES.filter((nom) => !pris.has(nom))
@@ -399,14 +312,13 @@ function prenomAuHasard(etat: EtatJeu, aleatoire: Aleatoire): string {
 }
 
 // ---------------------------------------------------------------------------
-// Actions (au village)
+// Actions (au Personnel)
 // ---------------------------------------------------------------------------
 
-// Embauche un mineur : il est payé pour ses 10 premières minutes, puis il descend creuser.
-// Avec le recruteur, sa rareté est tirée au hasard (on ne refuse personne : c'est le jeu !).
+// Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
-  if (!aLaSurface(etat) || prix === null || etat.argent < prix) return []
+  if (prix === null || etat.argent < prix) return []
   etat.argent -= prix
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
@@ -414,13 +326,11 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     nom,
     rarete,
     niveau: 0,
-    profondeur: 2,
+    role: 'mineur',
     etape: 'descend',
-    position: 0,
-    sac: {},
     progression: 0,
+    sac: {},
     blocsCasses: 0,
-    gagne: 0,
     tempsPaye: SECONDES_PAR_PAIE,
     lieu: 'puits',
     depuis: 'puits',
@@ -430,25 +340,22 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   return [`👷 ${nom}${titre} est embauché(e) ! Il descend creuser.`]
 }
 
-// Licencier un mineur : on paie ses indemnités, et il part avec son équipement.
 export function licencier(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
   const prix = indemnites(etat)
-  if (!aLaSurface(etat) || !employe || etat.argent < prix) return []
+  if (!employe || etat.argent < prix || employe.etape === 'pousse') return []
   etat.argent -= prix
   etat.employes.splice(index, 1)
   return [`👋 ${employe.nom} est parti(e). Indemnités : ${prix.toLocaleString('fr-FR')} $.`]
 }
 
-// Une meilleure pioche pour un mineur : il creuse plus vite et plus profond.
 export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
-  if (!aLaSurface(etat) || !employe) return []
+  if (!employe) return []
   const cout = coutAmeliorationEmploye(employe)
   if (cout === null || !peutAmeliorerEmploye(etat, employe)) return []
   payer(etat, cout)
   employe.niveau += 1
-  // Il ira chercher sa nouvelle pioche à la forge (s'il y en a une) à son prochain passage au village.
   if (batimentPose(etat.village, 'forgeron')) {
     employe.forgeEnAttente = true
     return [`⛏️ ${employe.nom} va chercher sa pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} à la forge.`]
@@ -456,21 +363,27 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
 }
 
+// Changer le rôle d'un mineur : il creuse, ou il pousse le wagonnet. Il finit ce qu'il fait,
+// puis change (un mineur au fond remonte d'abord vider son sac).
+export function changerRole(etat: EtatJeu, index: number, role: RoleEmploye): string[] {
+  const employe = etat.employes[index]
+  if (!employe || employe.role === role) return []
+  employe.role = role
+  if (role === 'pousseur' && (employe.etape === 'creuse' || employe.etape === 'descend')) {
+    employe.etape = 'monte'
+    employe.progression = 0
+  }
+  if (role === 'mineur' && employe.etape === 'quai') {
+    employe.etape = 'descend'
+    employe.progression = 0
+  }
+  return [role === 'pousseur' ? `🛤️ ${employe.nom} va pousser le wagonnet.` : `⛏️ ${employe.nom} retourne creuser.`]
+}
+
 // ---------------------------------------------------------------------------
 // Le travail, seconde après seconde
 // ---------------------------------------------------------------------------
 
-// Vend la récolte d'un mineur : tout est pour toi (son salaire est payé à part).
-function vendreRecolte(etat: EtatJeu, employe: Employe): void {
-  const gain = valeurDe(etat, employe.sac)
-  etat.argent += gain
-  etat.stats.argentGagne += gain
-  etat.stats.argentMineurs += gain
-  employe.gagne += gain
-  employe.sac = {}
-}
-
-// Il part à pied vers un bâtiment du village.
 function partir(employe: Employe, de: IdBatiment, vers: IdBatiment): void {
   employe.etape = 'marche'
   employe.depuis = de
@@ -478,22 +391,16 @@ function partir(employe: Employe, de: IdBatiment, vers: IdBatiment): void {
   employe.progression = 0
 }
 
-// Ce qu'il fait ensuite, quand il est au village (« ici ») : attendre son salaire au Personnel
-// s'il n'est plus payé, sinon passer à la forge si une nouvelle pioche l'y attend, sinon
-// retourner à la mine (et redescendre).
+// Ce qu'il fait ensuite quand il est au village, devant « ici » : attendre son salaire au
+// Personnel s'il n'est plus payé, passer à la forge si une pioche l'y attend, sinon reprendre
+// son travail à la mine (redescendre, ou attendre le wagonnet au quai).
 function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
   employe.lieu = ici
   employe.progression = 0
   if (employe.tempsPaye <= 0) {
-    // Déjà devant le Personnel (il vient d'y marcher) : il attend.
-    if (ici === 'employes') {
+    if (ici === 'employes' || !batimentPose(etat.village, 'employes')) {
       employe.etape = 'attend'
       return []
-    }
-    // Pas de bâtiment Personnel posé : il attend là où il est.
-    if (!batimentPose(etat.village, 'employes')) {
-      employe.etape = 'attend'
-      return [`😠 ${employe.nom} n’est plus payé(e) : il attend son salaire.`]
     }
     partir(employe, ici, 'employes')
     return [`😠 ${employe.nom} n’est plus payé(e) : il va attendre son salaire devant le Personnel.`]
@@ -508,94 +415,99 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
       return []
     }
   }
-  if (ici === 'puits') {
-    employe.etape = 'descend'
-    employe.position = 0
+  if (ici !== 'puits') {
+    partir(employe, ici, 'puits')
     return []
   }
-  partir(employe, ici, 'puits')
+  employe.etape = employe.role === 'pousseur' ? 'quai' : 'descend'
   return []
-}
-
-// Il arrive en haut de la mine avec son sac : il charge le wagonnet si des rails vont au marché,
-// sinon il y va à pied.
-function arriverEnHaut(etat: EtatJeu, employe: Employe): string[] {
-  employe.position = 0
-  if (nbDansSacEmploye(employe) > 0) {
-    if (railsMineMarche(etat.village) !== null) {
-      envoyerAuMarche(etat, employe.sac, employe.nom)
-      employe.sac = {}
-      return suite(etat, employe, 'puits')
-    }
-    partir(employe, 'puits', 'marche')
-    return []
-  }
-  return suite(etat, employe, 'puits')
 }
 
 function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire: Aleatoire): string[] {
   const messages: string[] = []
   let reste = secondes
-  // On avance étape par étape (utile après une longue absence : plusieurs allers-retours).
-  // Le compteur évite de tourner en rond si un trajet dure 0 seconde (bâtiments collés).
   let etapes = 0
   while (reste > 1e-9 && etapes++ < 1000) {
-    // Plus de salaire : il arrête de creuser (ou fait demi-tour) et remonte.
+    // Plus de salaire : il arrête de creuser et remonte (il vide quand même son sac).
     if (employe.tempsPaye <= 0 && (employe.etape === 'creuse' || employe.etape === 'descend')) {
-      if (employe.etape === 'creuse') employe.position = employe.profondeur - 1
       employe.etape = 'monte'
       employe.progression = 0
     }
-    // Il attend devant le Personnel : il repart dès qu'il est payé.
+    if (employe.tempsPaye <= 0 && employe.etape === 'quai') {
+      messages.push(...suite(etat, employe, 'puits'))
+      continue
+    }
     if (employe.etape === 'attend') {
       if (employe.tempsPaye <= 0) break
       messages.push(...suite(etat, employe, 'employes'))
       continue
     }
+    // Au quai ou en train de pousser : c'est le wagonnet qui décide (voir wagonnet.ts).
+    if (employe.etape === 'quai' || employe.etape === 'pousse') {
+      employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+      break
+    }
 
     let temps: number
     if (employe.etape === 'creuse') {
-      // Il ne creuse que le temps qui est payé.
-      const vitesse = vitesseEmploye(etat, employe)
-      const place = tailleSacEmploye(etat, employe) - nbDansSacEmploye(employe)
+      const vitesse = vitesseEmploye(employe)
+      const place = tailleSacEmploye(employe) - nbDansSacEmploye(employe)
       temps = Math.min(reste, employe.tempsPaye, Math.max(0, (place - employe.progression) / vitesse))
       employe.progression += temps * vitesse
-      while (employe.progression >= 1 && nbDansSacEmploye(employe) < tailleSacEmploye(etat, employe)) {
+      while (employe.progression >= 1 && nbDansSacEmploye(employe) < tailleSacEmploye(employe)) {
         employe.progression -= 1
-        const bloc = tirerBlocNormal(employe.profondeur, aleatoire, etat.prestige)
-        employe.sac[bloc] = (employe.sac[bloc] ?? 0) + 1
+        ajouterA(employe.sac, tirerBloc(etat.niveauMine, aleatoire), 1)
         employe.blocsCasses += 1
         etat.stats.blocsMineurs += 1
-        // Il descend d'un mètre tous les 5 blocs (sa galerie est étroite), tant que sa pioche le permet.
-        if (employe.blocsCasses % BLOCS_PAR_METRE_EMPLOYE === 0) {
-          employe.profondeur = Math.min(profondeurMaxEmploye(etat, employe), employe.profondeur + 1)
-        }
       }
-      if (nbDansSacEmploye(employe) >= tailleSacEmploye(etat, employe)) {
-        // Sac plein : il remonte vendre.
+      if (nbDansSacEmploye(employe) >= tailleSacEmploye(employe)) {
         employe.etape = 'monte'
-        employe.position = employe.profondeur - 1
         employe.progression = 0
       }
-    } else if (employe.etape === 'vend' || employe.etape === 'forge') {
-      // Au marché, il vend sa récolte ; à la forge, il récupère sa nouvelle pioche (ça prend
-      // quelques secondes). Ensuite, il retourne à la mine (ou va attendre son salaire).
-      const duree = employe.etape === 'vend' ? SECONDES_VENTE_EMPLOYE : SECONDES_FORGE_EMPLOYE
-      temps = Math.min(reste, duree - employe.progression)
+    } else if (employe.etape === 'monte' || employe.etape === 'descend') {
+      const duree = secondesTrajetMineur(etat)
+      temps = Math.min(reste, Math.max(0, duree - employe.progression))
       employe.progression += temps
       if (employe.progression >= duree - 1e-9) {
         employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
         reste -= temps
-        if (employe.etape === 'vend') {
-          vendreRecolte(etat, employe)
-          messages.push(...suite(etat, employe, 'marche'))
-        } else {
-          employe.forgeEnAttente = false
-          messages.push(...suite(etat, employe, 'forgeron'))
-        }
+        employe.progression = 0
+        if (employe.etape === 'descend') employe.etape = 'creuse'
+        else employe.etape = 'vide'
         continue
       }
-    } else if (employe.etape === 'marche') {
+    } else if (employe.etape === 'vide') {
+      // Il vide son sac dans le coffre (s'il est plein, il attend qu'il y ait de la place).
+      temps = Math.min(reste, Math.max(0, SECONDES_VIDAGE_EMPLOYE - employe.progression))
+      employe.progression += temps
+      if (employe.progression >= SECONDES_VIDAGE_EMPLOYE - 1e-9) {
+        for (const [id, nombre] of Object.entries(employe.sac)) {
+          const bloc = id as IdBloc
+          const range = rangerDansCoffre(etat, bloc, nombre ?? 0)
+          retirerDe(employe.sac, bloc, range)
+        }
+        if (nbDansSacEmploye(employe) > 0) {
+          // Le coffre est plein : il attend, sans rien faire, qu'on le vide.
+          employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+          if (placeCoffre(etat) === 0) break
+          continue
+        }
+        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
+        reste -= temps
+        messages.push(...suite(etat, employe, 'puits'))
+        continue
+      }
+    } else if (employe.etape === 'forge') {
+      temps = Math.min(reste, Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression))
+      employe.progression += temps
+      if (employe.progression >= SECONDES_FORGE_EMPLOYE - 1e-9) {
+        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
+        reste -= temps
+        employe.forgeEnAttente = false
+        messages.push(...suite(etat, employe, 'forgeron'))
+        continue
+      }
+    } else {
       // Une marche dans le village, d'un bâtiment à un autre.
       const duree = secondesMarcheEmploye(etat, employe.depuis, employe.lieu)
       temps = Math.min(reste, Math.max(0, duree - employe.progression))
@@ -603,38 +515,16 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       if (employe.progression >= duree - 1e-9) {
         employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
         reste -= temps
-        if (employe.lieu === 'marche') {
-          employe.etape = 'vend'
-          employe.progression = 0
-        } else {
-          messages.push(...suite(etat, employe, employe.lieu))
-        }
-        continue
-      }
-    } else {
-      // Un trajet en ascenseur : vers le village (monte) ou vers sa galerie (descend).
-      const parMetre = secondesParMetreEmploye(etat, employe)
-      const arrivee = employe.etape === 'monte' ? 0 : employe.profondeur - 1
-      const metres = Math.abs(arrivee - employe.position)
-      temps = Math.min(reste, metres * parMetre)
-      employe.position += Math.sign(arrivee - employe.position) * (temps / parMetre)
-      if (temps >= metres * parMetre) {
-        employe.position = arrivee
-        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
-        reste -= temps
-        if (employe.etape === 'descend') employe.etape = 'creuse'
-        else messages.push(...arriverEnHaut(etat, employe))
+        messages.push(...suite(etat, employe, employe.lieu))
         continue
       }
     }
     reste -= temps
-    // Le temps payé s'écoule pendant qu'il travaille (trajets et vente compris).
     employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
   }
   return messages
 }
 
-// Le temps passe pour le manager : quand il n'est plus payé, il prévient.
 function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   const manager = etat.manager
   if (!manager.embauche || manager.tempsPaye <= 0) return []
@@ -654,42 +544,45 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
     messages.push(...travaillerManager(etat, pas))
     reste -= pas
   }
-  // Chaque message une seule fois (après une longue absence, le même pourrait revenir).
   return [...new Set(messages)]
 }
 
-// Où il marche, en quelques mots.
-const DESTINATIONS: Record<IdBatiment, string> = {
+// ---------------------------------------------------------------------------
+// Pour l'affichage
+// ---------------------------------------------------------------------------
+
+const DESTINATIONS: Partial<Record<IdBatiment, string>> = {
   puits: 'retourne à la mine',
-  marche: 'porte sa récolte au marché',
   forgeron: 'va chercher sa pioche à la forge',
   employes: 'va attendre son salaire au Personnel',
-  bazar: 'se promène',
-  enchanteur: 'se promène',
-  foreuse: 'se promène',
-  prestige: 'se promène',
-  generateur: 'se promène',
 }
 
-// Ce que fait un mineur, en quelques mots (pour l'affichage), avec le temps qu'il lui reste.
 export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
   const secondes = Math.ceil(secondesRestantesEmploye(etat, employe))
-  if (employe.etape === 'attend') return '😠 attend son salaire devant le Personnel'
-  if (employe.etape === 'creuse') return `⛏️ creuse à -${employe.profondeur} m (sac plein dans ${secondes} s)`
-  if (employe.etape === 'monte') return employe.tempsPaye <= 0 ? `😠 plus payé : remonte (${secondes} s)` : `⏫ sac plein : remonte (${secondes} s)`
-  if (employe.etape === 'marche') return `🚶 ${DESTINATIONS[employe.lieu]} (${secondes} s)`
-  if (employe.etape === 'vend') return `💰 vend sa récolte au marché (${secondes} s)`
-  if (employe.etape === 'forge') return `🔨 récupère sa nouvelle pioche (${secondes} s)`
-  return `⏬ redescend dans sa galerie (${secondes} s)`
+  switch (employe.etape) {
+    case 'attend':
+      return '😠 attend son salaire devant le Personnel'
+    case 'creuse':
+      return `⛏️ creuse au fond (sac plein dans ${secondes} s)`
+    case 'monte':
+      return employe.tempsPaye <= 0 ? `😠 plus payé : remonte (${secondes} s)` : `⏫ remonte son sac (${secondes} s)`
+    case 'vide':
+      return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : `📦 vide son sac dans le coffre (${secondes} s)`
+    case 'descend':
+      return `⏬ redescend (${secondes} s)`
+    case 'quai':
+      return '🛤️ attend le wagonnet au quai'
+    case 'pousse':
+      return '🛤️ pousse le wagonnet'
+    case 'forge':
+      return `🔨 récupère sa nouvelle pioche (${secondes} s)`
+    default:
+      return `🚶 ${DESTINATIONS[employe.lieu] ?? 'se promène'} (${secondes} s)`
+  }
 }
 
-// L'icône de ce qu'il fait (pour la bulle au-dessus de sa tête).
 export function iconeActiviteEmploye(employe: Employe): string {
   if (employe.etape === 'attend' || ((employe.etape === 'monte' || employe.etape === 'marche') && employe.tempsPaye <= 0)) return '😠'
-  if (employe.etape === 'creuse') return '⛏️'
-  if (employe.etape === 'monte') return '⏫'
-  if (employe.etape === 'marche') return '🚶'
-  if (employe.etape === 'vend') return '💰'
-  if (employe.etape === 'forge') return '🔨'
-  return '⏬'
+  const icones: Record<string, string> = { creuse: '⛏️', monte: '⏫', vide: '📦', descend: '⏬', quai: '🛤️', pousse: '🛤️', forge: '🔨', marche: '🚶' }
+  return icones[employe.etape] ?? '⛏️'
 }

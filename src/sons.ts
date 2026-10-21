@@ -143,7 +143,7 @@ function varier(valeur: number, ecart = 0.08): number {
 // ---------------------------------------------------------------------------
 
 export const sons = {
-  // Un coup de pioche pendant qu'on casse un bloc : « tac ».
+  // Un coup de pioche sur le bloc (avec une pioche cassée, le premier des deux clics) : « tac ».
   coup() {
     bruit(0, 0.05, { filtre: 'bandpass', frequence: varier(1800, 0.15), volume: 0.25 })
     note(varier(180), 0, 0.06, { type: 'triangle', volume: 0.18, vers: 90 })
@@ -169,14 +169,6 @@ export const sons = {
     if (serieMinerais >= GAMME_SERIE.length - 1) note(frequence * 2, 0.06, 0.15, { type: 'sine', volume: 0.05 })
   },
 
-  // Une couche finie : un « boum » sourd de la roche qui cède. Tous les 10 m, une
-  // petite cloche en plus pour fêter le palier.
-  nouvelleCouche(palier: boolean) {
-    note(70, 0, 0.25, { type: 'sine', volume: 0.25, vers: 40 })
-    bruit(0, 0.2, { filtre: 'lowpass', frequence: 400, volume: 0.2 })
-    if (palier) [659, 988, 1319].forEach((f, i) => note(f, 0.1 + i * 0.08, 0.4, { type: 'triangle', volume: 0.12 }))
-  },
-
   // Une amélioration achetée : trois notes qui montent, « niveau supérieur ! ».
   amelioration() {
     ;[523, 659, 784].forEach((f, i) => note(f, i * 0.06, 0.16, { type: 'square', volume: 0.06 }))
@@ -192,22 +184,6 @@ export const sons = {
     notes.forEach((f, i) => note(f * 2, 0.08 + i * 0.06, 0.2, { type: 'triangle', volume: 0.05 }))
   },
 
-  // Un coffre : le couvercle, puis quelques pièces.
-  coffre() {
-    note(220, 0, 0.12, { type: 'square', volume: 0.08, vers: 330 })
-    sons.pieces(4, 0.1)
-  },
-
-  // Une géode : du cristal qui tinte.
-  geode() {
-    ;[1760, 2217, 2637, 2217].forEach((f, i) => note(f, i * 0.07, 0.4, { type: 'sine', volume: 0.12 }))
-  },
-
-  // La lave qui siffle (éteinte avec le seau... ou pas !).
-  lave() {
-    bruit(0, 0.6, { filtre: 'highpass', frequence: 2500, volume: 0.25 })
-    note(90, 0, 0.3, { type: 'sawtooth', volume: 0.06, vers: 50 })
-  },
 
   // Des pièces qui tintent l'une après l'autre.
   pieces(nombre: number, debut = 0) {
@@ -228,18 +204,6 @@ export const sons = {
     sons.pieces(nombre, 0.18)
   },
 
-  // L'arrivée de l'ascenseur : « ding-dong ».
-  ding() {
-    note(1319, 0, 0.9, { type: 'sine', volume: 0.22 })
-    note(2638, 0, 0.4, { type: 'sine', volume: 0.05 })
-    note(1047, 0.32, 1.1, { type: 'sine', volume: 0.2 })
-    note(2094, 0.32, 0.5, { type: 'sine', volume: 0.04 })
-  },
-
-  // Un barreau d'échelle : un petit « toc » de bois.
-  pas() {
-    note(varier(420, 0.12), 0, 0.05, { type: 'triangle', volume: 0.06, vers: 260 })
-  },
 
   // Un achat : « pop » puis deux notes qui montent.
   achat() {
@@ -251,23 +215,6 @@ export const sons = {
   // Un succès débloqué : petite fanfare.
   succes() {
     ;[784, 988, 1175, 1568].forEach((f, i) => note(f, i * 0.09, i === 3 ? 0.5 : 0.15, { type: 'triangle', volume: 0.14 }))
-  },
-
-  // Un talent de l'arbre de prestige.
-  talent() {
-    ;[523, 659, 784, 1047, 1319].forEach((f, i) => note(f, i * 0.07, 0.5, { type: 'sine', volume: 0.13 }))
-    note(2093, 0.4, 0.8, { type: 'sine', volume: 0.06 })
-  },
-
-  // Le prestige : grande fanfare.
-  prestige() {
-    const accords = [
-      [523, 659, 784],
-      [587, 740, 880],
-      [659, 831, 988],
-      [784, 988, 1175, 1568],
-    ]
-    accords.forEach((accord, i) => accord.forEach((f) => note(f, i * 0.18, i === 3 ? 1.2 : 0.22, { type: 'triangle', volume: 0.09 })))
   },
 
   // Le recruteur cherche un mineur : un roulement de tambour qui accélère et monte (1,6 s).

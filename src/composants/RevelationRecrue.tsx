@@ -1,4 +1,4 @@
-// L'animation d'embauche avec le recruteur (prestige 4) : la carte du nouveau mineur tremble
+// L'animation d'embauche avec le recruteur (niveau 3 de la mine) : la carte du nouveau mineur tremble
 // pendant que les couleurs des raretés défilent (le suspense, 1,6 s), puis elle se retourne :
 // sa rareté apparaît en grand, avec des rayons, des confettis et des étincelles. Plus il est
 // rare, plus c'est la fête ! Un clic pendant le suspense dévoile tout de suite la carte.
@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { LISTE_RARETES, RARETES } from '../jeu/donnees'
 import { rareteDe, salaireEmploye } from '../jeu/employes'
-import type { Employe, EtatJeu } from '../jeu/mineur'
+import type { Employe } from '../jeu/mineur'
 import { sons } from '../sons'
 
 const DUREE_SUSPENSE = 1600 // ms
@@ -30,9 +30,9 @@ function tirerConfettis(nombre: number, couleurs: string[]): Confetti[] {
   })
 }
 
-type Props = { employe: Employe; etat: EtatJeu; onFermer: () => void }
+type Props = { employe: Employe; onFermer: () => void }
 
-export function RevelationRecrue({ employe, etat, onFermer }: Props) {
+export function RevelationRecrue({ employe, onFermer }: Props) {
   const rarete = rareteDe(employe)
   const rang = LISTE_RARETES.indexOf(rarete.id)
   const [devoilee, setDevoilee] = useState(false)
@@ -90,7 +90,7 @@ export function RevelationRecrue({ employe, etat, onFermer }: Props) {
                 <small>Le prochain sera peut-être rare...</small>
               </span>
             )}
-            <span className="revelation-salaire">Salaire : {salaireEmploye(etat, employe).toLocaleString('fr-FR')} $ / 10 min</span>
+            <span className="revelation-salaire">Salaire : {salaireEmploye(employe).toLocaleString('fr-FR')} $ / 10 min</span>
           </div>
         </div>
 

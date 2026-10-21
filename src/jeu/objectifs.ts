@@ -1,119 +1,82 @@
-// Ce qui guide le joueur au village (20/10) :
+// Ce qui guide le joueur au village :
 //   - les bâtiments à construire (le marché d'abord : il est gratuit) ;
 //   - les stands où une amélioration est payable tout de suite (pastille « Achetable ! ») ;
-//   - les stands qui ont de nouveaux niveaux depuis le dernier prestige (badge et flèche
-//     « ⬆ Nouveaux niveaux ! », jusqu'à ce qu'on soit passé devant) ;
 //   - le prochain objectif (la petite barre sous le bandeau : « Pioche en Fer : 180 / 300 $ »).
 
-import {
-  BATIMENTS,
-  COUT_ACTIVATION_FOREUSE,
-  LISTE_BATIMENTS,
-  ENCHANTEMENTS,
-  LISTE_ENCHANTEMENTS,
-  NIVEAUX_EMPLOYE,
-  PIOCHES,
-  PRIX_MANAGER,
-  SACS,
-  niveauMaxAuPrestige,
-  profondeurBedrock,
-  type Cout,
-  type IdBatiment,
-  type IdBloc,
-  type IdPlafond,
-} from './donnees'
+import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment, type IdBloc } from './donnees'
 import { batimentDebloque } from './batiments'
-import { peutPasserPrestige } from './conditionsPrestige'
+import { coutAmeliorationEmploye, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
+import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
+import { generateurPose, prochainNiveauGenerateur, railsAlimentes } from './generateur'
 import {
-  coutAmeliorationEmploye,
-  employeBloqueAuPrestige,
-  employesDebloques,
-  managerDebloque,
-  prixEmbauche,
-  prochainNiveauRecruteur,
-  recruteurBloqueAuPrestige,
-  recruteurDebloque,
-} from './employes'
-import { chariotBloqueAuPrestige, forageBloqueAuPrestige, foreuseDebloquee, prochainNiveauChariot, prochainNiveauForage } from './foreuse'
-import {
-  ascenseurBloqueAuPrestige,
   coutPioche,
-  chiffreRomain,
-  coutEnchantement,
-  enchantementBloqueAuPrestige,
+  disponible,
   peutPayer,
   prixProchainSac,
   prochainNiveauAscenseur,
-  quantite,
-  sacBloqueAuPrestige,
+  prochainNiveauCoffre,
+  prochainNiveauMine,
   type EtatJeu,
 } from './mineur'
 import { batimentPose } from './village'
+import { ligneDuWagonnet, prochainNiveauWagonnet } from './wagonnet'
 
 // Les stands du village : ce sont les bâtiments posés sur la grille (voir village.ts).
 export type IdStand = IdBatiment
 
-// Une amélioration qu'on peut acheter à ce prestige (pas bloquée par un cadenas), ou un bâtiment
-// à construire (« construction » : il s'achète dans le menu Bâtiments).
+// Une amélioration qu'on peut acheter, ou un bâtiment à construire (« construction » : il
+// s'achète dans le menu Bâtiments).
 export type AchatPossible = { stand: IdStand; nom: string; cout: Cout; construction?: boolean }
 
 // Toutes les prochaines améliorations du moment, stand par stand : d'abord les bâtiments à
-// construire (le marché est gratuit), puis le forgeron (la prochaine pioche est le cœur de la
-// progression). On ne propose les améliorations d'un bâtiment qu'une fois qu'il est posé.
+// construire, puis le forgeron et la mine (le cœur de la progression). On ne propose les
+// améliorations d'un bâtiment qu'une fois qu'il est posé.
 export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   const achats: AchatPossible[] = []
   const pose = (id: IdBatiment) => batimentPose(etat.village, id) !== null
 
   for (const id of LISTE_BATIMENTS) {
-    // Le générateur ne sert encore à rien : on ne pousse pas le joueur à le construire.
-    if (id === 'generateur') continue
     if (batimentDebloque(etat, id) && !pose(id)) achats.push({ stand: id, nom: `Construire : ${BATIMENTS[id].nom}`, cout: BATIMENTS[id].cout, construction: true })
   }
 
   const pioche = PIOCHES[etat.meilleure + 1]
   if (pioche && pose('forgeron')) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: coutPioche(pioche.niveau) })
 
+  const niveau = prochainNiveauMine(etat)
+  if (niveau) achats.push({ stand: 'puits', nom: `Mine niveau ${niveau.niveau} : ${niveau.nom}`, cout: niveau.cout })
+  const coffre = prochainNiveauCoffre(etat)
+  if (coffre) achats.push({ stand: 'puits', nom: `Coffre de ${coffre.capacite.toLocaleString('fr-FR')} places`, cout: coffre.cout })
   const ascenseur = prochainNiveauAscenseur(etat)
-  if (ascenseur && ascenseurBloqueAuPrestige(etat) === null) {
+  if (ascenseur && etat.employes.length > 0) {
     achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? 'Construire l’ascenseur' : `Ascenseur niveau ${ascenseur.niveau}`, cout: ascenseur.cout })
   }
+  const wagonnet = prochainNiveauWagonnet(etat)
+  if (wagonnet && ligneDuWagonnet(etat)) achats.push({ stand: 'puits', nom: `Wagonnet de ${wagonnet.capacite.toLocaleString('fr-FR')} places`, cout: wagonnet.cout })
 
   const prixSac = prixProchainSac(etat)
-  if (prixSac !== null && sacBloqueAuPrestige(etat) === null && pose('bazar')) {
-    achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })
+  if (prixSac !== null && pose('bazar')) achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })
+
+  if (pose('foreuse')) {
+    const forage = prochainNiveauForage(etat)
+    if (forage) achats.push({ stand: 'foreuse', nom: `Forage ${forage.vitesse} blocs/s`, cout: forage.cout })
+    const chariot = prochainNiveauChariot(etat)
+    if (chariot) achats.push({ stand: 'foreuse', nom: `Chariot de ${chariot.capacite.toLocaleString('fr-FR')} places`, cout: chariot.cout })
   }
 
-  for (const id of LISTE_ENCHANTEMENTS) {
-    const cout = coutEnchantement(etat, id)
-    if (cout && enchantementBloqueAuPrestige(etat, id) === null && pose('enchanteur')) {
-      achats.push({ stand: 'enchanteur', nom: `${ENCHANTEMENTS[id].nom} ${chiffreRomain(etat.enchantements[id] + 1)}`, cout })
-    }
+  if (generateurPose(etat)) {
+    const prochain = prochainNiveauGenerateur(etat)
+    if (prochain) achats.push({ stand: 'generateur', nom: `Générateur : rayon ${prochain.rayon} cases`, cout: prochain.cout })
   }
 
-  if (foreuseDebloquee(etat) && pose('foreuse')) {
-    if (!etat.foreuse.active) {
-      achats.push({ stand: 'foreuse', nom: 'Activer la foreuse', cout: COUT_ACTIVATION_FOREUSE })
-    } else {
-      const forage = prochainNiveauForage(etat)
-      if (forage && forageBloqueAuPrestige(etat) === null) achats.push({ stand: 'foreuse', nom: `Forage ${forage.vitesse} blocs/s`, cout: forage.cout })
-      const chariot = prochainNiveauChariot(etat)
-      if (chariot && chariotBloqueAuPrestige(etat) === null) {
-        achats.push({ stand: 'foreuse', nom: `Chariot de ${chariot.capacite.toLocaleString('fr-FR')} places`, cout: chariot.cout })
-      }
-    }
-  }
-
-  if (employesDebloques(etat) && pose('employes')) {
+  if (pose('employes')) {
     const prix = prixEmbauche(etat)
     if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(employe)
-      if (cout && employeBloqueAuPrestige(etat, employe) === null) {
-        achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
-      }
+      if (cout) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
     }
     const recruteur = prochainNiveauRecruteur(etat)
-    if (recruteurDebloque(etat) && recruteur && recruteurBloqueAuPrestige(etat) === null) {
+    if (recruteurDebloque(etat) && recruteur) {
       achats.push({ stand: 'employes', nom: etat.recruteur === 0 ? 'Embaucher le recruteur' : `Recruteur niveau ${etat.recruteur + 1}`, cout: recruteur.cout })
     }
     if (managerDebloque(etat) && !etat.manager.embauche) {
@@ -128,56 +91,23 @@ export function standsAchetables(etat: EtatJeu): IdStand[] {
   return [...new Set(achatsPossibles(etat).filter((a) => !a.construction && peutPayer(etat, a.cout)).map((a) => a.stand))]
 }
 
-// --- Les nouveaux niveaux après un prestige ---------------------------------
-
-// Les améliorations de chaque stand qui sont plafonnées par le prestige.
-function plafondsDuStand(etat: EtatJeu, stand: IdStand): IdPlafond[] {
-  if (stand === 'puits') return ['ascenseur']
-  if (stand === 'bazar') return ['sac']
-  if (stand === 'enchanteur') return [...LISTE_ENCHANTEMENTS]
-  if (stand === 'foreuse') return foreuseDebloquee(etat) ? ['forage', 'chariot'] : []
-  if (stand === 'employes') return [...(etat.employes.length > 0 ? (['mineur'] as IdPlafond[]) : []), ...(etat.recruteur > 0 ? (['recruteur'] as IdPlafond[]) : [])]
-  return []
-}
-
-// Les stands où ce prestige a débloqué un niveau de plus, et que le joueur n'a pas encore visités.
-export function standsAvecNouveauxNiveaux(etat: EtatJeu): IdStand[] {
-  if (etat.prestige === 0) return []
-  const stands: IdStand[] = ['puits', 'bazar', 'enchanteur', 'foreuse', 'employes']
-  return stands.filter(
-    (stand) =>
-      batimentPose(etat.village, stand) !== null &&
-      !etat.standsVus.includes(stand) &&
-      plafondsDuStand(etat, stand).some((id) => niveauMaxAuPrestige(id, etat.prestige) > niveauMaxAuPrestige(id, etat.prestige - 1)),
-  )
-}
-
-// Le joueur est passé devant le stand : le badge « Nouveaux niveaux » disparaît.
-export function marquerStandVu(etat: EtatJeu, stand: IdStand): string[] {
-  if (etat.standsVus.includes(stand)) return []
-  etat.standsVus = [...etat.standsVus, stand]
-  return []
-}
-
 // --- Le prochain objectif ---------------------------------------------------
 
 export type Objectif = {
   texte: string // « Pioche en Fer »
   detail: string // « 180 / 300 $ », « il manque 12 Fer », « achetable au Forgeron ! »
-  stand: IdStand | null // où aller (null : dans la mine)
+  stand: IdStand | null // où aller (null : au village, rien de précis)
   valeur: number // pour la petite jauge
   max: number
-  pret: boolean // on peut l'acheter tout de suite (ou passer prestige)
+  pret: boolean // on peut l'acheter (ou le faire) tout de suite
   construction: boolean // c'est un bâtiment à poser (le clic ouvre le menu Bâtiments)
 }
 
 const NOMS_STANDS: Record<IdStand, string> = {
-  prestige: 'à l’arbre de prestige',
-  puits: 'à l’entrée de la mine',
+  puits: 'à la mine',
   marche: 'au marché',
   forgeron: 'au forgeron',
   bazar: 'au bazar',
-  enchanteur: 'à l’enchanteur',
   foreuse: 'à la foreuse',
   employes: 'au Personnel',
   generateur: 'au générateur',
@@ -186,14 +116,27 @@ const NOMS_STANDS: Record<IdStand, string> = {
 // Le premier minerai qui manque pour un achat (null s'il ne manque rien).
 function mineraiManquant(etat: EtatJeu, cout: Cout): { bloc: IdBloc; manque: number } | null {
   for (const [id, nombre] of Object.entries(cout.materiaux)) {
-    const manque = (nombre ?? 0) - quantite(etat, id as IdBloc)
+    const manque = (nombre ?? 0) - disponible(etat, id as IdBloc)
     if (manque > 0) return { bloc: id as IdBloc, manque }
   }
   return null
 }
 
-// L'objectif à montrer : d'abord ce qu'on peut acheter tout de suite (la pioche en premier),
-// sinon l'achat dont on est le plus proche ; quand tout est fait, la bedrock puis le prestige.
+// Les grandes étapes de l'automatisation, quand rien n'est à acheter tout de suite.
+function etapeAutomatisation(etat: EtatJeu): Objectif | null {
+  const objectif = (texte: string, detail: string, stand: IdStand | null): Objectif => ({ texte, detail, stand, valeur: 0, max: 1, pret: false, construction: false })
+  if (!batimentPose(etat.village, 'marche')) return null
+  // Les rails se posent depuis le menu Bâtiments : le clic l'ouvre.
+  if (!ligneDuWagonnet(etat)) return { ...objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null), construction: true }
+  if (generateurPose(etat) && !railsAlimentes(etat)) {
+    if (etat.generateur.carburant <= 0) return objectif('Allumer le générateur', 'mets-lui de la redstone', 'generateur')
+    return objectif('Électrifier les rails', 'toute la ligne doit être dans le rayon du générateur', 'generateur')
+  }
+  return null
+}
+
+// L'objectif à montrer : d'abord ce qu'on peut acheter tout de suite, sinon l'achat dont on est
+// le plus proche (ou la prochaine étape de l'automatisation).
 export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => string): Objectif | null {
   const achats = achatsPossibles(etat)
   const payable = achats.find((a) => peutPayer(etat, a.cout))
@@ -202,6 +145,9 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
     const detail = construction ? (payable.cout.argent ? 'à poser (menu Bâtiments) !' : 'gratuit : pose-le (menu Bâtiments) !') : `achetable ${NOMS_STANDS[payable.stand]} !`
     return { texte: payable.nom, detail, stand: payable.stand, valeur: 1, max: 1, pret: true, construction }
   }
+  // Pas de rails : c'est l'étape la plus importante, avant d'économiser pour le reste.
+  const etape = etapeAutomatisation(etat)
+  if (etape && !ligneDuWagonnet(etat) && disponible(etat, 'fer') > 0) return etape
   if (achats.length > 0) {
     // Le plus proche : celui dont on a la plus grande part de l'argent.
     const part = (a: AchatPossible) => (a.cout.argent ? Math.min(1, etat.argent / a.cout.argent) : 1)
@@ -216,12 +162,5 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
           : ''
     return { texte: proche.nom, detail, stand: proche.stand, valeur: Math.min(etat.argent, prix), max: Math.max(1, prix), pret: false, construction: proche.construction === true }
   }
-  if (!etat.victoire) {
-    const bedrock = profondeurBedrock(etat.prestige)
-    return { texte: 'Atteindre la bedrock', detail: `-${etat.profondeur} / -${bedrock} m`, stand: null, valeur: etat.profondeur, max: bedrock, pret: false, construction: false }
-  }
-  if (peutPasserPrestige(etat)) {
-    return { texte: `Prestige ${etat.prestige + 1}`, detail: 'tout est prêt, à l’arbre de prestige !', stand: 'prestige', valeur: 1, max: 1, pret: true, construction: false }
-  }
-  return null
+  return etape
 }

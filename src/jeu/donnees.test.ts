@@ -1,23 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { NIVEAUX_CHARIOT, NIVEAUX_EMPLOYE, NIVEAUX_FORAGE, PIOCHES, dureeCasse, profondeurBedrock, profondeurMaxPioche } from './donnees'
+import { BLOCS, LISTE_BLOCS, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_MINE, NIVEAU_MINE_MAX, PIOCHES } from './donnees'
 
-describe('pioches', () => {
-  it('sont triées par niveau et de plus en plus rapides', () => {
+describe('les données du jeu', () => {
+  it('7 blocs : plus de lapis ni de netherite', () => {
+    expect(LISTE_BLOCS).toEqual(['pierre', 'charbon', 'fer', 'redstone', 'or', 'emeraude', 'diamant'])
+    for (const id of LISTE_BLOCS) expect(BLOCS[id].prix).toBeGreaterThan(0)
+  })
+
+  it('les pioches doublent de plus en plus souvent, et durent de plus en plus longtemps', () => {
+    expect(PIOCHES.map((p) => p.doublement)).toEqual([0.1, 0.2, 0.3, 0.45])
     PIOCHES.forEach((p, i) => {
       expect(p.niveau).toBe(i)
-      if (i > 0) expect(p.vitesse).toBeGreaterThan(PIOCHES[i - 1].vitesse)
+      if (i > 0) expect(p.durabilite).toBeGreaterThan(PIOCHES[i - 1].durabilite)
     })
   })
-})
 
-describe('dureeCasse', () => {
-  it('les améliorations de la foreuse coûtent du fer et de la redstone (et moins d’argent)', () => {
-    // Les 5 premiers niveaux restent bon marché ; les 3 derniers (prestiges 5 à 7) coûtent plus.
-    for (const niveau of [...NIVEAUX_FORAGE.slice(1, 5), ...NIVEAUX_CHARIOT.slice(2, 5)]) {
-      expect(niveau.cout.materiaux.fer).toBeGreaterThan(0)
-      expect(niveau.cout.materiaux.redstone).toBeGreaterThan(0)
-      expect(niveau.cout.argent).toBeLessThanOrEqual(30000)
-    }
+  it('5 niveaux de mine : chacun ajoute un minerai, plus rare et plus cher', () => {
+    expect(NIVEAU_MINE_MAX).toBe(5)
+    const nouveaux = NIVEAUX_MINE.map((n, i) => Object.keys(n.poids).filter((b) => i === 0 || !(b in NIVEAUX_MINE[i - 1].poids)))
+    expect(nouveaux).toEqual([['pierre', 'charbon', 'fer'], ['redstone'], ['or'], ['emeraude'], ['diamant']])
+    // Les minerais rares sont plus abondants dans les niveaux du bas.
+    expect(NIVEAUX_MINE[4].poids.or ?? 0).toBeGreaterThan(NIVEAUX_MINE[2].poids.or ?? 0)
+    expect(NIVEAUX_MINE[4].poids.pierre ?? 0).toBeLessThan(NIVEAUX_MINE[0].poids.pierre ?? 0)
+  })
+
+  it('le générateur commence avec un rayon de 15 cases, et grandit', () => {
+    expect(NIVEAUX_GENERATEUR[0].rayon).toBe(15)
+    NIVEAUX_GENERATEUR.forEach((n, i) => {
+      if (i > 0) expect(n.rayon).toBeGreaterThan(NIVEAUX_GENERATEUR[i - 1].rayon)
+    })
   })
 
   it('l’équipement des mineurs se paie seulement en argent', () => {
@@ -25,19 +36,5 @@ describe('dureeCasse', () => {
       expect(niveau.cout.materiaux).toEqual({})
       expect(niveau.cout.argent).toBeGreaterThan(0)
     }
-  })
-
-  it('la bedrock descend de 50 m à chaque prestige', () => {
-    expect([0, 1, 2, 3, 4].map(profondeurBedrock)).toEqual([100, 150, 200, 250, 300])
-    expect(profondeurMaxPioche(4, 0)).toBe(100) // la netherite va jusqu'à la bedrock
-    expect(profondeurMaxPioche(4, 3)).toBe(250)
-  })
-
-  it('applique le malus x1.5 dans la roche dure (sous -94 m)', () => {
-    expect(dureeCasse(3, 95, 6, 1)).toBeCloseTo(dureeCasse(3, 94, 6, 1) * 1.5) // mine de 150 m (prestige 1)
-  })
-
-  it('casse la pierre en 0.3375 s avec une pioche en bois', () => {
-    expect(dureeCasse(1.5, 10, 2, 0)).toBeCloseTo(0.3375)
   })
 })

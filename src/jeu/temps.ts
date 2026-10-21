@@ -1,33 +1,31 @@
-// Le temps qui passe : le joueur marche jusqu'au puits, grimpe à l'échelle, les mineurs travaillent, l'ascenseur voyage, la
-// foreuse creuse et les chargements roulent vers le marché. L'interface appelle avancerTemps plusieurs fois par seconde.
+// Le temps qui passe (22/10) : la mine sort ses blocs toute seule, les mineurs travaillent, la
+// foreuse fore, le générateur brûle sa redstone et le wagonnet roule sur les rails.
+// L'interface appelle avancerTemps plusieurs fois par seconde.
 
 import type { Aleatoire } from './aleatoire'
-import { avancerConvois } from './convois'
 import { avancerEmployes } from './employes'
 import { avancerForeuse } from './foreuse'
-import { ascenseurEnMouvement, avancerAscenseur, avancerMarche, avancerSurEchelle, type EtatJeu } from './mineur'
+import { avancerGenerateur } from './generateur'
+import { avancerMine, type EtatJeu } from './mineur'
+import { avancerWagonnet } from './wagonnet'
+
+// Après une longue absence, on avance par morceaux d'une minute au plus : le générateur se
+// recharge dans le coffre, le wagonnet fait plusieurs voyages...
+const PAS_MAX = 60
 
 export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
-  return [
-    ...avancerMarche(etat, secondes),
-    ...avancerSurEchelle(etat, secondes),
-    ...avancerAscenseur(etat, secondes),
-    ...avancerForeuse(etat, secondes, aleatoire),
-    ...avancerEmployes(etat, secondes, aleatoire),
-    ...avancerConvois(etat, secondes),
-  ]
-}
-
-// Y a-t-il quelque chose qui bouge tout seul (et donc besoin de faire avancer le temps) ?
-export function tempsQuiPasse(etat: EtatJeu): boolean {
-  const foreuseTourne = etat.foreuse.active && etat.foreuse.carburant > 0
-  return (
-    etat.position !== etat.cible ||
-    etat.depart !== null ||
-    ascenseurEnMouvement(etat) ||
-    foreuseTourne ||
-    etat.employes.length > 0 ||
-    etat.convois.length > 0 || // des chargements roulent vers le marché
-    etat.manager.embauche // le temps payé du manager s'écoule aussi
-  )
+  const messages: string[] = []
+  let reste = secondes
+  while (reste > 1e-9) {
+    const pas = Math.min(reste, PAS_MAX)
+    messages.push(
+      ...avancerMine(etat, pas, aleatoire),
+      ...avancerGenerateur(etat, pas),
+      ...avancerForeuse(etat, pas, aleatoire),
+      ...avancerEmployes(etat, pas, aleatoire),
+      ...avancerWagonnet(etat, pas),
+    )
+    reste -= pas
+  }
+  return [...new Set(messages)]
 }

@@ -1,17 +1,15 @@
 // L'écran des statistiques (bouton 📊 du bandeau) : les grands chiffres de la partie, d'où
-// vient l'argent (toi, la foreuse, les mineurs) et les blocs cassés, sorte par sorte.
-// On peut regarder cette partie, ou tout depuis le début (les prestiges précédents compris).
+// vient l'argent (toi au marché, le wagonnet, la foreuse) et les blocs cassés, sorte par sorte.
 
-import { useState } from 'react'
 import { BLOCS } from '../jeu/donnees'
 import type { EtatJeu, Statistiques as Stats } from '../jeu/mineur'
-import { argentParSource, blocsLesPlusCasses, statistiquesDepuisLeDebut } from '../jeu/statistiques'
+import { argentParSource, blocsLesPlusCasses } from '../jeu/statistiques'
 
 // Les couleurs des trois sources d'argent (vérifiées pour les daltoniens, sur le fond sombre).
 const SOURCES = [
-  { id: 'joueur', nom: 'Toi', emoji: '⛏️', couleur: '#c4841a' },
+  { id: 'joueur', nom: 'Toi (marché)', emoji: '💰', couleur: '#c4841a' },
+  { id: 'wagonnet', nom: 'Wagonnet', emoji: '🛤️', couleur: '#8a5fd4' },
   { id: 'foreuse', nom: 'Foreuse', emoji: '⚙️', couleur: '#16958a' },
-  { id: 'mineurs', nom: 'Mineurs', emoji: '👷', couleur: '#8a5fd4' },
 ] as const
 
 // Combien de sortes de blocs on montre (les plus cassées d'abord).
@@ -44,7 +42,7 @@ function Tuile({ emoji, titre, valeur }: { emoji: string; titre: string; valeur:
 // D'où vient l'argent : une barre partagée en trois, avec la légende et les montants.
 function ArgentParSource({ stats }: { stats: Stats }) {
   const sources = argentParSource(stats)
-  const total = sources.joueur + sources.foreuse + sources.mineurs
+  const total = sources.joueur + sources.wagonnet + sources.foreuse
   return (
     <section className="stat-bloc">
       <h3>💰 D'où vient ton argent</h3>
@@ -88,7 +86,7 @@ function BlocsCasses({ stats }: { stats: Stats }) {
   return (
     <section className="stat-bloc">
       <h3>
-        🧱 Tes blocs cassés <span className="discret">({sortes} sortes différentes)</span>
+        🧱 Tes blocs cassés en cliquant <span className="discret">({sortes} sortes différentes)</span>
       </h3>
       {blocs.length === 0 ? (
         <p className="discret">Pas encore de bloc cassé.</p>
@@ -111,28 +109,18 @@ function BlocsCasses({ stats }: { stats: Stats }) {
 }
 
 export function FenetreStatistiques({ etat, onFermer }: { etat: EtatJeu; onFermer: () => void }) {
-  const [depuisLeDebut, setDepuisLeDebut] = useState(false)
-  const stats = depuisLeDebut ? statistiquesDepuisLeDebut(etat) : etat.stats
+  const stats = etat.stats
 
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-label="Statistiques" onClick={onFermer}>
       <div className="carte fenetre-stats" onClick={(e) => e.stopPropagation()}>
         <h2>📊 Statistiques</h2>
-        {/* Cette partie, ou toutes les parties depuis le début (prestiges compris). */}
-        <div className="choix-periode" role="tablist">
-          <button role="tab" aria-selected={!depuisLeDebut} className={`onglet ${!depuisLeDebut ? 'actif' : ''}`} onClick={() => setDepuisLeDebut(false)}>
-            Cette partie {etat.prestige > 0 && `(prestige ${etat.prestige})`}
-          </button>
-          <button role="tab" aria-selected={depuisLeDebut} className={`onglet ${depuisLeDebut ? 'actif' : ''}`} onClick={() => setDepuisLeDebut(true)}>
-            Depuis le début
-          </button>
-        </div>
 
         <div className="stat-tuiles">
           <Tuile emoji="💵" titre="Argent gagné" valeur={`${nombre(stats.argentGagne)} $`} />
           <Tuile emoji="⛏️" titre="Blocs cassés" valeur={nombre(stats.blocsCasses)} />
-          <Tuile emoji="📏" titre="Le plus bas" valeur={`-${stats.profondeurMax} m`} />
-          <Tuile emoji="⏱️" titre="Temps à creuser" valeur={duree(stats.tempsMinage)} />
+          <Tuile emoji="🕳️" titre="Mine" valeur={`niveau ${etat.niveauMine}`} />
+          <Tuile emoji="⏱️" titre="Temps de jeu" valeur={duree(stats.tempsDeJeu)} />
         </div>
 
         <div className="stat-colonnes">
@@ -141,13 +129,12 @@ export function FenetreStatistiques({ etat, onFermer }: { etat: EtatJeu; onFerme
         </div>
 
         <ul className="stat-petits">
-          <li>⚙️ {nombre(stats.blocsForeuse)} blocs forés par la foreuse</li>
+          <li>🕳️ {nombre(stats.blocsMine)} blocs sortis tout seuls de la mine</li>
           <li>👷 {nombre(stats.blocsMineurs)} blocs creusés par les mineurs</li>
+          <li>⚙️ {nombre(stats.blocsForeuse)} blocs forés par la foreuse</li>
+          <li>🛤️ {nombre(stats.voyagesWagonnet)} voyages de wagonnet</li>
           <li>💵 {nombre(stats.salairesPayes)} $ de salaires payés</li>
           <li>💎 {nombre(stats.diamantsTrouves)} diamants trouvés</li>
-          <li>📦 {nombre(stats.coffresOuverts)} coffres ouverts</li>
-          <li>🔮 {nombre(stats.geodesCassees)} géodes cassées</li>
-          <li>🪣 {nombre(stats.lavesEteintes)} laves éteintes</li>
         </ul>
 
         <div className="boutons boutons-centre">

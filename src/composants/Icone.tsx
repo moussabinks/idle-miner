@@ -1,4 +1,4 @@
-// Les icônes du jeu (stands du village, arbre de prestige...) : des émojis bien ronds,
+// Les icônes du jeu (stands du village...) : des émojis bien ronds,
 // dans un style cartoon (choix du 19/10 : plus de pixel art, pour ne pas ressembler à Minecraft).
 // Le stand Personnel a son propre dessin (20/10) : deux mineurs avec leur casque.
 
