@@ -126,7 +126,8 @@ function mineraiManquant(etat: EtatJeu, cout: Cout): { bloc: IdBloc; manque: num
 function etapeAutomatisation(etat: EtatJeu): Objectif | null {
   const objectif = (texte: string, detail: string, stand: IdStand | null): Objectif => ({ texte, detail, stand, valeur: 0, max: 1, pret: false, construction: false })
   if (!batimentPose(etat.village, 'marche')) return null
-  if (!ligneDuWagonnet(etat)) return objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null)
+  // Les rails se posent depuis le menu Bâtiments : le clic l'ouvre.
+  if (!ligneDuWagonnet(etat)) return { ...objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null), construction: true }
   if (generateurPose(etat) && !railsAlimentes(etat)) {
     if (etat.generateur.carburant <= 0) return objectif('Allumer le générateur', 'mets-lui de la redstone', 'generateur')
     return objectif('Électrifier les rails', 'toute la ligne doit être dans le rayon du générateur', 'generateur')

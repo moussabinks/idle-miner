@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { LISTE_RARETES, RARETES } from '../jeu/donnees'
 import { rareteDe, salaireEmploye } from '../jeu/employes'
-import type { Employe, EtatJeu } from '../jeu/mineur'
+import type { Employe } from '../jeu/mineur'
 import { sons } from '../sons'
 
 const DUREE_SUSPENSE = 1600 // ms
@@ -30,9 +30,9 @@ function tirerConfettis(nombre: number, couleurs: string[]): Confetti[] {
   })
 }
 
-type Props = { employe: Employe; etat: EtatJeu; onFermer: () => void }
+type Props = { employe: Employe; onFermer: () => void }
 
-export function RevelationRecrue({ employe, etat, onFermer }: Props) {
+export function RevelationRecrue({ employe, onFermer }: Props) {
   const rarete = rareteDe(employe)
   const rang = LISTE_RARETES.indexOf(rarete.id)
   const [devoilee, setDevoilee] = useState(false)
@@ -90,7 +90,7 @@ export function RevelationRecrue({ employe, etat, onFermer }: Props) {
                 <small>Le prochain sera peut-être rare...</small>
               </span>
             )}
-            <span className="revelation-salaire">Salaire : {salaireEmploye(etat, employe).toLocaleString('fr-FR')} $ / 10 min</span>
+            <span className="revelation-salaire">Salaire : {salaireEmploye(employe).toLocaleString('fr-FR')} $ / 10 min</span>
           </div>
         </div>
 

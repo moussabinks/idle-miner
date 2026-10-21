@@ -1,7 +1,8 @@
-// Le stand Personnel (débloqué au prestige 2) : on embauche des mineurs qui creusent tout
-// seuls, remontent vendre leur récolte et te donnent l'argent. On leur paie un salaire toutes
-// les 10 minutes (ou c'est le manager qui s'en charge, au prestige 5). Au prestige 4, le
-// recruteur trouve des mineurs plus ou moins rares : chaque embauche est une surprise.
+// Le stand Personnel : on embauche des mineurs qui creusent tout seuls et remontent leur sac
+// dans le coffre de la mine. Un mineur peut aussi pousser le wagonnet (rôle « pousseur »).
+// On leur paie un salaire toutes les 10 minutes (ou c'est le manager qui s'en charge, au
+// niveau 4 de la mine). Au niveau 3, le recruteur trouve des mineurs plus ou moins rares :
+// chaque embauche est une surprise.
 
 import { useState, type ReactNode } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
@@ -9,13 +10,11 @@ import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
   NIVEAUX_RECRUTEUR,
-  PRESTIGE_EMPLOYES,
-  PRESTIGE_MANAGER,
-  PRESTIGE_RECRUTEUR,
+  NIVEAU_MINE_MANAGER,
+  NIVEAU_MINE_RECRUTEUR,
   PRIX_MANAGER,
   RARETES,
   SECONDES_PAR_PAIE,
-  niveauMaxAuPrestige,
 } from '../jeu/donnees'
 import {
   activiteEmploye,
@@ -28,9 +27,9 @@ import {
   depensesParPaie,
   manquePourUnePaie,
   embaucher,
+  blocsParSecondeEmploye,
+  changerRole,
   embaucherManager,
-  employeBloqueAuPrestige,
-  employesDebloques,
   iconeActiviteEmploye,
   indemnites,
   licencier,
@@ -45,9 +44,7 @@ import {
   peutPayerSalaires,
   prixEmbauche,
   prochainNiveauRecruteur,
-  profondeurMaxEmploye,
   rareteDe,
-  recruteurBloqueAuPrestige,
   recruteurDebloque,
   retirerTresorerie,
   salaireEmploye,
@@ -58,7 +55,7 @@ import {
   tempsPayeMin,
   vitesseEmploye,
 } from '../jeu/employes'
-import { aLaSurface, type Employe, type EtatJeu } from '../jeu/mineur'
+import type { Employe, EtatJeu } from '../jeu/mineur'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -97,7 +94,7 @@ function Chances({ etat, apercu }: { etat: EtatJeu; apercu: boolean }) {
 }
 
 // Les salaires (sans le manager) : on complète jusqu'à 10 minutes payées, pas plus (pour
-// payer d'avance plus longtemps, il faut le manager, au prestige 5).
+// payer d'avance plus longtemps, il faut le manager, au niveau 4 de la mine).
 function Salaires({ etat, jouer }: Props) {
   const sansSalaire = nbSansSalaire(etat)
   const cout10 = coutSalaires(etat, SECONDES_PAR_PAIE)
@@ -112,12 +109,12 @@ function Salaires({ etat, jouer }: Props) {
           ? sansSalaire === 1
             ? '😠 Un mineur attend son salaire : sans salaire, il ne creuse plus !'
             : `😠 ${sansSalaire} mineurs attendent leur salaire : sans salaire, ils ne creusent plus !`
-          : `Tout le monde est payé pour encore ${duree(tempsPayeMin(etat))}. On paie 10 minutes à la fois${etat.prestige < PRESTIGE_MANAGER ? ` (le manager, au prestige ${PRESTIGE_MANAGER}, s'en chargera pour toi)` : ''}.`}
+          : `Tout le monde est payé pour encore ${duree(tempsPayeMin(etat))}. On paie 10 minutes à la fois${etat.niveauMine < NIVEAU_MINE_MANAGER ? ` (le manager, au niveau ${NIVEAU_MINE_MANAGER} de la mine, s'en chargera pour toi)` : ''}.`}
       </span>
       <div className="boutons">
         <button
           className="bouton bouton-petit bouton-payer"
-          disabled={!aLaSurface(etat) || !peutPayerSalaires(etat, SECONDES_PAR_PAIE)}
+          disabled={!peutPayerSalaires(etat, SECONDES_PAR_PAIE)}
           onClick={() => jouer((e) => payerSalaires(e, SECONDES_PAR_PAIE))}
         >
           💵 Payer 10 min · {argent(cout10)}
@@ -139,12 +136,12 @@ function TitreChef({ role, titre, children }: { role: 'manager' | 'recruteur'; t
   )
 }
 
-// Le manager (prestige 5) et sa trésorerie.
+// Le manager (niveau 4 de la mine) et sa trésorerie.
 function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
     return (
       <div className="ligne-achat verrouille">
-        <strong>🔒 Manager · prestige {PRESTIGE_MANAGER}</strong>
+        <strong>🔒 Manager · niveau {NIVEAU_MINE_MANAGER} de la mine</strong>
         <span className="discret">Il paiera tous les salaires tout seul, avec l'argent que tu mets dans une cagnotte (la trésorerie).</span>
       </div>
     )
@@ -161,7 +158,7 @@ function Manager({ etat, jouer }: Props) {
           etat={etat}
           cout={{ argent: PRIX_MANAGER, materiaux: {} }}
           texte="💼 Embaucher le manager"
-          possible={aLaSurface(etat) && etat.argent >= PRIX_MANAGER}
+          possible={etat.argent >= PRIX_MANAGER}
           onAcheter={() => jouer(embaucherManager)}
         />
       </div>
@@ -191,7 +188,7 @@ function Manager({ etat, jouer }: Props) {
           <span className="texte-alerte">Il manque {argent(manque)} pour payer tout le monde (le manager se paie d'abord, puis les mineurs les moins chers).</span>
           <button
             className="bouton bouton-petit bouton-payer"
-            disabled={!aLaSurface(etat) || etat.argent < manque}
+            disabled={etat.argent < manque}
             onClick={() => jouer((e) => deposerTresorerie(e, manquePourUnePaie(e)))}
           >
             +{argent(manque)}
@@ -206,7 +203,7 @@ function Manager({ etat, jouer }: Props) {
       <div className="boutons">
         <button
           className="bouton bouton-petit bouton-payer"
-          disabled={!aLaSurface(etat) || etat.argent < 1}
+          disabled={etat.argent < 1}
           onClick={() => jouer((e) => deposerTresorerie(e, Math.max(0, 6 * depensesParPaie(e) - e.tresorerie)))}
           title="Assez pour payer toute l'équipe pendant 1 h"
         >
@@ -216,34 +213,33 @@ function Manager({ etat, jouer }: Props) {
           <button
             key={montant}
             className="bouton bouton-petit bouton-payer"
-            disabled={!aLaSurface(etat) || etat.argent < 1}
+            disabled={etat.argent < 1}
             onClick={() => jouer((e) => deposerTresorerie(e, montant))}
           >
             +{montant.toLocaleString('fr-FR')} $
           </button>
         ))}
-        <button className="bouton bouton-petit bouton-payer" disabled={!aLaSurface(etat) || etat.argent < 1} onClick={() => jouer((e) => deposerTresorerie(e, e.argent))}>
+        <button className="bouton bouton-petit bouton-payer" disabled={etat.argent < 1} onClick={() => jouer((e) => deposerTresorerie(e, e.argent))}>
           Tout mettre
         </button>
         <button
           className="bouton bouton-petit bouton-neutre"
-          disabled={!aLaSurface(etat) || etat.tresorerie < 1}
+          disabled={etat.tresorerie < 1}
           onClick={() => jouer((e) => retirerTresorerie(e, e.tresorerie))}
         >
           Tout reprendre
         </button>
       </div>
-      <span className="discret">⚠️ Au prestige, la trésorerie repart de 0 (comme ton argent).</span>
     </div>
   )
 }
 
-// Le recruteur (prestige 4) : il trouve des mineurs rares. Il se paie seulement en argent.
+// Le recruteur (niveau 3 de la mine) : il trouve des mineurs rares. Il se paie seulement en argent.
 function Recruteur({ etat, jouer }: Props) {
   if (!recruteurDebloque(etat)) {
     return (
       <div className="ligne-achat verrouille">
-        <strong>🔒 Recruteur débloquable au prestige {PRESTIGE_RECRUTEUR}</strong>
+        <strong>🔒 Recruteur · niveau {NIVEAU_MINE_RECRUTEUR} de la mine</strong>
         <span className="discret">
           Pour l'instant, tous tes mineurs sont communs. Le recruteur trouvera des mineurs rares, épiques, légendaires... et même mythiques,
           qui rapportent jusqu'à 5 fois plus !
@@ -267,10 +263,8 @@ function Recruteur({ etat, jouer }: Props) {
         actuel={etat.recruteur === 0 ? 'Pas encore embauché' : `Niveau ${etat.recruteur}`}
         niveau={etat.recruteur}
         niveauMax={NIVEAUX_RECRUTEUR.length}
-        niveauPermis={niveauMaxAuPrestige('recruteur', etat.prestige)}
         suivant={prochain && { cout: prochain.cout, texte: etat.recruteur === 0 ? '🎩 Embaucher' : `⬆ Niveau ${etat.recruteur + 1}` }}
-        bloqueAuPrestige={recruteurBloqueAuPrestige(etat)}
-        possible={aLaSurface(etat) && peutAmeliorerRecruteur(etat)}
+        possible={peutAmeliorerRecruteur(etat)}
         onAmeliorer={() => jouer(ameliorerRecruteur)}
         genre={etat.recruteur === 0 ? 'acheter' : 'ameliorer'}
       />
@@ -279,7 +273,8 @@ function Recruteur({ etat, jouer }: Props) {
 }
 
 // La carte d'un mineur, compacte pour voir toute l'équipe d'un coup d'œil :
-//   - son nom, sa rareté, ce qu'il fait (icône + profondeur ou temps restant) et « Licencier » ;
+//   - son nom, sa rareté, ce qu'il fait (icône + temps restant) et « Licencier » ;
+//   - son rôle (il creuse, ou il pousse le wagonnet) ;
 //   - ce qu'il rapporte et son salaire, sur une ligne ;
 //   - deux petites jauges côte à côte : le temps payé et le sac ;
 //   - l'amélioration de son équipement (prix et bouton).
@@ -288,11 +283,11 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
-  // Ce qu'il rapporte une fois au fond de sa galerie (là où sont les minerais les plus chers).
-  const fond = profondeurMaxEmploye(etat, employe)
-  const rapporte = revenuBrutEmploye(etat, { ...employe, profondeur: fond }) * SECONDES_PAR_PAIE
-  const etape = employe.etape === 'creuse' ? `-${employe.profondeur} m` : employe.etape === 'attend' ? 'pas payé' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
-  const detail = `${activiteEmploye(etat, employe)} · ${vitesseEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s · t'a rapporté ${argent(employe.gagne)}`
+  // Ce que valent en moyenne les blocs qu'il remonte en 10 minutes.
+  const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
+  const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
+  const detail = `${activiteEmploye(etat, employe)} · ${vitesseEmploye(employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s en creusant · ${employe.blocsCasses.toLocaleString('fr-FR')} blocs cassés`
+  const pousseur = employe.role === 'pousseur'
 
   return (
     <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete}`} title={detail}>
@@ -307,13 +302,24 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
             {iconeActiviteEmploye(employe)} {etape}
           </span>
         </strong>
-        <button className="lien lien-licencier" disabled={!aLaSurface(etat)} onClick={onLicencier} title="Licencier ce mineur">
+        <button className="lien lien-licencier" disabled={employe.etape === 'pousse'} onClick={onLicencier} title="Licencier ce mineur">
           Licencier
         </button>
       </div>
-      <span className="discret">
-        💰 ~{argent(rapporte)} / 10 min au fond (-{fond} m) · salaire {argent(salaireEmploye(etat, employe))}
-      </span>
+      <div className="module-ligne">
+        <span className="discret">
+          {pousseur
+            ? `🛤️ Pousse le wagonnet · salaire ${argent(salaireEmploye(employe))}`
+            : `⛏️ ~${argent(rapporte)} de blocs / 10 min (${(blocsParSecondeEmploye(etat, employe) * 60).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} / min) · salaire ${argent(salaireEmploye(employe))}`}
+        </span>
+        <button
+          className="bouton bouton-petit bouton-neutre"
+          onClick={() => jouer((e) => changerRole(e, index, pousseur ? 'mineur' : 'pousseur'))}
+          title={pousseur ? 'Il retourne creuser' : 'Il attend le wagonnet au quai et le pousse jusqu’au marché'}
+        >
+          {pousseur ? '⛏️ Creuser' : '🛤️ Pousser le wagonnet'}
+        </button>
+      </div>
       <div className="jauges-employe">
         <Barre
           valeur={employe.tempsPaye}
@@ -323,8 +329,8 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         />
         <Barre
           valeur={nbDansSacEmploye(employe)}
-          max={tailleSacEmploye(etat, employe)}
-          texte={`🎒 ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(etat, employe)}`}
+          max={tailleSacEmploye(employe)}
+          texte={`🎒 ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(employe)}`}
           couleur="or"
         />
       </div>
@@ -333,9 +339,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
-        niveauPermis={niveauMaxAuPrestige('mineur', etat.prestige) + 1}
         suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ ${prochaine.nom}` } : null}
-        bloqueAuPrestige={employeBloqueAuPrestige(etat, employe)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
@@ -348,20 +352,6 @@ export function PanneauEmployes({ etat, jouer }: Props) {
   const [recrue, setRecrue] = useState<Employe | null>(null)
   // Le mineur qu'on veut licencier : on demande d'abord confirmation (fenêtre du jeu).
   const [aLicencier, setALicencier] = useState<number | null>(null)
-
-  if (!employesDebloques(etat)) {
-    return (
-      <div className="liste-cartes">
-        <div className="ligne-achat verrouille">
-          <strong>🔒 Personnel débloqué au prestige {PRESTIGE_EMPLOYES}</strong>
-          <span className="discret">
-            Ce bureau d'embauche se construit au prestige {PRESTIGE_EMPLOYES}. Tu pourras y employer des mineurs qui creusent pour toi, même quand
-            le jeu est fermé.
-          </span>
-        </div>
-      </div>
-    )
-  }
 
   const prix = prixEmbauche(etat)
   const max = maxEmployes(etat)
@@ -376,8 +366,8 @@ export function PanneauEmployes({ etat, jouer }: Props) {
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Tes mineurs creusent et vendent pour toi (tout l'argent est pour toi), même jeu fermé. En échange : un salaire toutes les 10 minutes, sinon
-        ils attendent ici, mécontents.
+        Tes mineurs creusent pour toi et remontent leur sac dans le coffre de la mine, même jeu fermé. En échange : un salaire toutes les 10
+        minutes, sinon ils attendent ici, mécontents.
       </p>
 
       {etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
@@ -393,7 +383,7 @@ export function PanneauEmployes({ etat, jouer }: Props) {
         </div>
         {prix === null ? (
           <span className="discret">
-            Ton équipe est complète. Chaque prestige te permet d'en employer un de plus (6 au plus).
+            Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus.
             {avecRecruteur && ' Licencie un mineur pour tenter ta chance avec un autre !'}
           </span>
         ) : (
@@ -406,7 +396,7 @@ export function PanneauEmployes({ etat, jouer }: Props) {
               etat={etat}
               cout={{ argent: prix, materiaux: {} }}
               texte={avecRecruteur ? '🎲 Recruter' : '👷 Embaucher'}
-              possible={etat.argent >= prix && aLaSurface(etat)}
+              possible={etat.argent >= prix}
               onAcheter={recruter}
               genre={avecRecruteur ? 'recruter' : 'acheter'}
             />
@@ -418,7 +408,7 @@ export function PanneauEmployes({ etat, jouer }: Props) {
         <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
       ))}
 
-      {recrue && <RevelationRecrue employe={recrue} etat={etat} onFermer={() => setRecrue(null)} />}
+      {recrue && <RevelationRecrue employe={recrue} onFermer={() => setRecrue(null)} />}
       {aLicencier !== null && etat.employes[aLicencier] && (
         <Confirmation
           titre={`Licencier ${etat.employes[aLicencier].nom} ?`}

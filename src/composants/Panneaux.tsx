@@ -1,97 +1,83 @@
-// Les panneaux des stands du village (Marché, Forgeron, Bazar, Enchanteur,
-// Foreuse) et le panneau des succès.
+// Les panneaux des stands du village (Marché, Forgeron, Bazar, Foreuse, Générateur) et le
+// panneau des succès. Le panneau de la mine est dans PanneauMine.tsx.
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import { useState, type ReactNode } from 'react'
+import { BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
 import {
-  BLOCS,
-  ENCHANTEMENTS,
-  LISTE_ENCHANTEMENTS,
-  COUT_ACTIVATION_FOREUSE,
-  NIVEAUX_CHARIOT,
-  NIVEAUX_FORAGE,
-  PIOCHES,
-  PRESTIGE_FOREUSE,
-  PRIX_SEAU,
-  SECONDES_PAR_CHARBON,
-  SACS,
-  profondeurBedrock,
-  profondeurMaxPioche,
-  niveauMaxAuPrestige,
-  type IdBloc,
-} from '../jeu/donnees'
-import {
-  activerForeuse,
   ameliorerChariot,
   ameliorerForage,
+  basculerChariot,
+  basculerRechargeAuto,
   capaciteChariot,
   chariotPlein,
-  foreuseDebloquee,
+  cocherToutChariot,
   foreuseEnMarche,
   nbDansChariot,
-  peutActiverForeuse,
-  prochainNiveauChariot,
-  prochainNiveauForage,
-  basculerChariot,
-  chariotBloqueAuPrestige,
-  cocherToutChariot,
-  forageBloqueAuPrestige,
-  niveauRechargeAuto,
   peutAmeliorerChariot,
   peutAmeliorerForage,
+  prochainNiveauChariot,
+  prochainNiveauForage,
+  rechargeAutoDisponible,
+  remplirForeuse,
   secondesDeCharbon,
   secondesPourRemplir,
-  basculerRechargeAuto,
-  rechargeAutoDisponible,
-  valeurAuChariot,
-  remplirForeuse,
   selectionChariot,
   vendreChariot,
   viderChariotDansSac,
   vitesseForage,
 } from '../jeu/foreuse'
 import {
-  aLaSurface,
+  ameliorerGenerateur,
+  basculerGenerateur,
+  basculerPuisage,
+  batimentDansLeRayon,
+  foreuseAlimentee,
+  generateurEnMarche,
+  prochainNiveauGenerateur,
+  puissanceGenerateur,
+  puisageDisponible,
+  railsAlimentes,
+  railsDansLeRayon,
+  rayonGenerateur,
+  remplirGenerateur,
+} from '../jeu/generateur'
+import {
   acheterPioche,
   acheterSac,
-  acheterSeau,
-  reglerVente,
-  vendreLot,
-  bonusVente,
-  chiffreRomain,
-  coutEnchantement,
-  coutReparation,
-  enchanter,
-  enchantementBloqueAuPrestige,
-  equiper,
   coutPioche,
+  coutReparation,
+  disponible,
+  equiper,
   peutAcheterPioche,
-  peutEnchanter,
+  peutPayer,
   peutReparer,
   placeLibre,
   prixProchainSac,
-  sacBloqueAuPrestige,
-  quantite,
+  reglerVente,
   reparer,
   valeurDe,
+  vendreLot,
   type EtatJeu,
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
+import { batimentPose } from '../jeu/village'
+import { ligneDuWagonnet } from '../jeu/wagonnet'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import { lotChoisi, type Choix } from '../choix'
 import { Jauges } from './Jauges'
 
-type PropsPanneau = {
+export type PropsPanneau = {
   etat: EtatJeu
   jouer: (action: Action) => void
 }
 
 // Chaque sorte d'action a sa couleur (voir « Les couleurs des boutons » dans index.css).
-export type GenreBouton = 'neutre' | 'acheter' | 'ameliorer' | 'reparer' | 'enchanter' | 'vendre' | 'sac' | 'charbon'
+export type GenreBouton = 'neutre' | 'acheter' | 'ameliorer' | 'reparer' | 'vendre' | 'sac' | 'charbon' | 'voyage' | 'creuser'
 
-function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: () => void; genre: GenreBouton; children: ReactNode }) {
+export function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: () => void; genre: GenreBouton; children: ReactNode }) {
   return (
     <button className={`bouton bouton-petit bouton-${genre}`} disabled={!actif} onClick={onClick}>
       {children}
@@ -99,18 +85,26 @@ function Bouton({ actif, onClick, genre, children }: { actif: boolean; onClick: 
   )
 }
 
+// « 8 min », « 1 h 05 » : un temps assez long.
+function minutes(secondes: number): string {
+  const total = Math.round(secondes / 60)
+  if (total < 60) return `${Math.max(1, total)} min`
+  return `${Math.floor(total / 60)} h ${String(total % 60).padStart(2, '0')}`
+}
+
 // ---------------------------------------------------------------------------
 
-// Le marché : « Vendre tout » vend tout le sac, sauf ce qu'on décoche.
+// Le marché : « Vendre la sélection » vend ce qu'on a choisi dans le sac.
 export function PanneauMarche({ etat, jouer }: PropsPanneau) {
   // Les quantités choisies avec les jauges (par défaut : tout, sauf les objets gardés).
   const [choix, setChoix] = useState<Choix>({})
   // Les objets les plus précieux en premier.
   const piles = (Object.entries(etat.inventaire) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const lot = lotChoisi(choix, etat.nonAVendre, piles)
-  const gain = valeurDe(etat, lot)
+  const gain = valeurDe(lot)
 
-  // Une jauge mise à 0 : l'objet est « gardé » (le jeu s'en souvient pour la prochaine fois).
+  // Une jauge mise à 0 : l'objet est « gardé » (le jeu s'en souvient pour la prochaine fois,
+  // et le wagonnet le laisse aussi dans le coffre de la mine).
   function changer(bloc: IdBloc, valeur: number | 'max') {
     setChoix({ ...choix, [bloc]: valeur })
     const garde = etat.nonAVendre.includes(bloc)
@@ -128,16 +122,16 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
 
   return (
     <div className="liste-cartes">
-      <p className="discret">Choisis combien vendre de chaque objet (garde-en pour une pioche, un enchantement, l'ascenseur…).</p>
+      <p className="discret">Choisis combien vendre de chaque objet (garde-en pour une pioche, des rails, le générateur…).</p>
       {piles.length === 0 ? (
-        <p className="discret">Ton sac est vide. Va creuser !</p>
+        <p className="discret">Ton sac est vide. Va le remplir au coffre de la mine !</p>
       ) : (
         <Jauges
           piles={piles}
           choix={choix}
           gardes={etat.nonAVendre}
           onChanger={changer}
-          prixUnitaire={(bloc) => BLOCS[bloc].prix * bonusVente(etat)}
+          prixUnitaire={(bloc) => BLOCS[bloc].prix}
           onToutSelectionner={toutSelectionner}
         />
       )}
@@ -157,13 +151,11 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-// Le forgeron. Au fond de la mine, on peut seulement changer de pioche.
+// Le forgeron : acheter, réparer et changer de pioche. Une meilleure pioche double plus souvent
+// les minerais qu'on casse en cliquant.
 export function PanneauPioches({ etat, jouer }: PropsPanneau) {
-  const enVille = aLaSurface(etat)
   return (
     <div className="liste-cartes">
-      {!enVille && <p className="discret">⬆️ Pour acheter ou réparer une pioche, remonte voir le forgeron à la surface.</p>}
-
       {PIOCHES.map((pioche) => {
         const possedee = pioche.niveau in etat.pioches
         const equipee = pioche.niveau === etat.niveauPioche
@@ -190,14 +182,14 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
               {equipee && <span className="badge">Équipée</span>}
             </div>
             <span className="discret">
-              Vitesse x{pioche.vitesse} · jusqu'à -{profondeurMaxPioche(pioche.niveau, etat.prestige)} m · durabilité {pioche.durabilite}
+              {Math.round(pioche.doublement * 100)} % de chance de doubler un minerai · durabilité {pioche.durabilite} clics
             </span>
 
             {possedee && (
               <Barre
                 valeur={pioche.durabilite - usure}
                 max={pioche.durabilite}
-                texte={usure >= pioche.durabilite ? 'Cassée' : `${pioche.durabilite - usure} / ${pioche.durabilite}`}
+                texte={usure >= pioche.durabilite ? 'Cassée : 2 clics par bloc' : `${pioche.durabilite - usure} / ${pioche.durabilite}`}
                 couleur={usure >= pioche.durabilite ? 'rouge' : 'vert'}
               />
             )}
@@ -209,8 +201,8 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
                 </Bouton>
               </div>
             )}
-            {/* Réparer : de l'argent (selon l'usure) + 3 minerais de la pioche, le prix à gauche. */}
-            {enVille && possedee && usure > 0 && cout && (
+            {/* Réparer : un peu d'argent et quelques minerais (selon l'usure). */}
+            {possedee && usure > 0 && cout && (
               <Achat
                 etat={etat}
                 cout={cout}
@@ -220,8 +212,8 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
                 genre="reparer"
               />
             )}
-            {/* Débloquer ou racheter neuve (les deux demandent l'argent et les minerais) : le prix à gauche, comme partout. */}
-            {enVille && (
+            {/* Débloquer ou racheter neuve : le prix à gauche, comme partout. */}
+            {(prochaine || pioche.niveau > 0) && (
               <Achat
                 etat={etat}
                 cout={coutPioche(pioche.niveau)}
@@ -239,7 +231,7 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-// Le bazar : sacs à dos et seaux d'eau.
+// Le bazar : les sacs à dos (les tenues sont dans PanneauTenues).
 export function PanneauBazar({ etat, jouer }: PropsPanneau) {
   const prixSac = prixProchainSac(etat)
   const prochainSac = SACS[etat.niveauSac + 1]
@@ -248,92 +240,34 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
     <div className="liste-cartes">
       <div className="ligne-achat">
         <strong>🎒 Sac à dos</strong>
+        <span className="discret">Pour porter plus d'objets du coffre de la mine jusqu'au marché.</span>
         <Amelioration
           etat={etat}
           actuel={`${SACS[etat.niveauSac].taille} places`}
           niveau={etat.niveauSac + 1}
           niveauMax={SACS.length}
-          niveauPermis={niveauMaxAuPrestige('sac', etat.prestige) + 1}
           suivant={prochainSac && prixSac !== null ? { cout: { argent: prixSac, materiaux: {} }, texte: `⬆ ${prochainSac.taille} places` } : null}
-          bloqueAuPrestige={sacBloqueAuPrestige(etat)}
-          possible={prixSac !== null && sacBloqueAuPrestige(etat) === null && etat.argent >= prixSac && aLaSurface(etat)}
+          possible={prixSac !== null && etat.argent >= prixSac}
           onAmeliorer={() => jouer(acheterSac)}
           genre="acheter"
         />
       </div>
-
-      <div className="ligne-achat">
-        <strong>🪣 Seau d'eau</strong>
-        <span className="discret">Transforme une lave en obsidienne (60 $) au lieu de brûler ton sac. Tu en as {etat.seaux}.</span>
-        <Achat
-          etat={etat}
-          cout={{ argent: PRIX_SEAU, materiaux: {} }}
-          texte="🪣 Acheter"
-          possible={etat.argent >= PRIX_SEAU && aLaSurface(etat)}
-          onAcheter={() => jouer(acheterSeau)}
-        />
-      </div>
-
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
 
-// La foreuse : débloquée au prestige 1, activée une fois, puis nourrie au charbon.
-// « 8 min », « 1 h 05 » : le temps de remplissage du chariot.
-function minutes(secondes: number): string {
-  const total = Math.round(secondes / 60)
-  if (total < 60) return `${Math.max(1, total)} min`
-  return `${Math.floor(total / 60)} h ${String(total % 60).padStart(2, '0')}`
-}
-
+// La foreuse : elle fore toute seule tant qu'elle a du charbon, plus vite avec l'électricité.
 export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const foreuse = etat.foreuse
-
-  if (!foreuseDebloquee(etat)) {
-    return (
-      <div className="liste-cartes">
-        <div className="ligne-achat verrouille">
-          <strong>🔒 Foreuse débloquée au prestige {PRESTIGE_FOREUSE}</strong>
-          <span className="discret">
-            Atteins la bedrock (-{profondeurBedrock(etat.prestige)} m) puis passe prestige : tu pourras construire une foreuse qui creuse
-            toute seule.
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  if (!foreuse.active) {
-    return (
-      <div className="liste-cartes">
-        <div className="ligne-achat">
-          <strong>Activer la foreuse</strong>
-          <span className="discret">
-            Une fois activée, elle le reste pour toujours (même après les prochains prestiges). Ensuite, elle creuse toute seule tant qu'elle a du
-            charbon et remonte ce qu'elle trouve dans son chariot.
-          </span>
-          <Achat
-            etat={etat}
-            cout={COUT_ACTIVATION_FOREUSE}
-            texte="⚙️ Activer"
-            possible={peutActiverForeuse(etat) && aLaSurface(etat)}
-            onAcheter={() => jouer(activerForeuse)}
-            genre="ameliorer"
-          />
-        </div>
-      </div>
-    )
-  }
-
   const enMarche = foreuseEnMarche(etat)
   const chariot = prochainNiveauChariot(etat)
-  const charbon = quantite(etat, 'charbon')
+  const charbon = disponible(etat, 'charbon')
   const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const forage = prochainNiveauForage(etat)
   const selection = selectionChariot(etat)
-  const valeurSelection = valeurAuChariot(etat, selection)
+  const valeurSelection = valeurDe(selection)
   const nbSelection = Object.values(selection).reduce((total, n) => total + (n ?? 0), 0)
 
   return (
@@ -341,13 +275,11 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
       <div className="ligne-achat">
         <div className="ligne-titre">
           <strong>État</strong>
-          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>
-            {enMarche ? 'En marche' : chariotPlein(etat) ? 'Chariot plein' : 'Plus de charbon'}
-          </span>
+          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'En marche' : chariotPlein(etat) ? 'Chariot plein' : 'Plus de charbon'}</span>
         </div>
         <span className="discret">
-          Profondeur de forage : -{foreuse.profondeur} m · {vitesseForage(etat).toLocaleString('fr-FR')} bloc(s) par seconde ·{' '}
-          {foreuse.blocsFores.toLocaleString('fr-FR')} blocs forés
+          {vitesseForage(etat).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc(s) par seconde
+          {foreuseAlimentee(etat) ? ' (⚡ boostée par le générateur)' : ''} · {foreuse.blocsFores.toLocaleString('fr-FR')} blocs forés
         </span>
         <Barre
           valeur={secondesDeCharbon(etat)}
@@ -356,7 +288,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           couleur="or"
         />
         <div className="boutons">
-          <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon}</span>
+          <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon} (sac + coffre)</span>
           <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
             +1
           </Bouton>
@@ -373,8 +305,9 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
             Recharge automatique : elle brûle le charbon qu'elle remonte (en gardant une minute d'avance)
           </label>
         ) : (
-          <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {niveauRechargeAuto(etat) + 1} de forage.</span>
+          <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {NIVEAU_RECHARGE_AUTO + 1} de forage.</span>
         )}
+        {!foreuseAlimentee(etat) && <span className="discret">⚡ Dans le rayon du générateur allumé, elle fore plus vite.</span>}
       </div>
 
       <div className="ligne-achat">
@@ -404,7 +337,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
                       <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
                       <span className="inventaire-nom">{BLOCS[id].nom}</span>
                       <span className="inventaire-nombre">×{nombre}</span>
-                      <span className="inventaire-valeur">{valeurAuChariot(etat, { [id]: nombre })} $</span>
+                      <span className="inventaire-valeur">{valeurDe({ [id]: nombre })} $</span>
                     </label>
                   </li>
                 )
@@ -422,17 +355,14 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         </div>
       </div>
 
-      {/* Une seule foreuse (20/10) : on améliore sa vitesse de forage, un niveau de plus à chaque prestige. */}
       <div className="ligne-achat">
         <strong>⚙️ Vitesse de forage</strong>
         <Amelioration
           etat={etat}
-          actuel={`${vitesseForage(etat).toLocaleString('fr-FR')} bloc/s`}
+          actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité`}
           niveau={foreuse.niveauVitesse + 1}
           niveauMax={NIVEAUX_FORAGE.length}
-          niveauPermis={niveauMaxAuPrestige('forage', etat.prestige) + 1}
           suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
-          bloqueAuPrestige={forageBloqueAuPrestige(etat)}
           possible={peutAmeliorerForage(etat)}
           onAmeliorer={() => jouer(ameliorerForage)}
         />
@@ -440,19 +370,12 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
 
       <div className="ligne-achat">
         <strong>🛒 Taille du chariot</strong>
-        <span className="discret">
-          {secondesPourRemplir(etat) < 6 * 60
-            ? '⚠️ Ta foreuse remplit le chariot vite : agrandis-le pour qu’elle tourne plus longtemps sans toi.'
-            : 'Améliore le chariot en même temps que la foreuse : à niveaux égaux, il se remplit en 8 min environ.'}
-        </span>
         <Amelioration
           etat={etat}
           actuel={`${capaciteChariot(etat).toLocaleString('fr-FR')} places · plein en ${minutes(secondesPourRemplir(etat))}`}
           niveau={foreuse.niveauChariot + 1}
           niveauMax={NIVEAUX_CHARIOT.length}
-          niveauPermis={niveauMaxAuPrestige('chariot', etat.prestige) + 1}
           suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite.toLocaleString('fr-FR')} places (${minutes(secondesPourRemplir(etat, foreuse.niveauChariot + 1))})` }}
-          bloqueAuPrestige={chariotBloqueAuPrestige(etat)}
           possible={peutAmeliorerChariot(etat)}
           onAmeliorer={() => jouer(ameliorerChariot)}
         />
@@ -463,13 +386,104 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
+// Le générateur : on le remplit de redstone, il électrifie tout ce qui est dans son rayon.
+export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
+  const g = etat.generateur
+  const redstone = disponible(etat, 'redstone')
+  const enMarche = generateurEnMarche(etat)
+  const prochain = prochainNiveauGenerateur(etat)
+  const ligne = ligneDuWagonnet(etat)
+  return (
+    <div className="liste-cartes">
+      <div className="ligne-achat">
+        <div className="ligne-titre">
+          <strong>⚡ Courant</strong>
+          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'Allumé' : !g.allume ? 'Éteint' : 'Plus de redstone'}</span>
+        </div>
+        <span className="discret">
+          Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte) · puissance ×{puissanceGenerateur(etat)}
+        </span>
+        <Barre
+          valeur={g.carburant}
+          max={Math.max(g.carburant, 10 * SECONDES_PAR_REDSTONE)}
+          texte={`Redstone : ${minutes(g.carburant)}`}
+          couleur="rouge"
+        />
+        <div className="boutons">
+          <span className="discret">1 redstone = {SECONDES_PAR_REDSTONE} s · tu en as {redstone} (sac + coffre)</span>
+          <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 1))}>
+            +1
+          </Bouton>
+          <Bouton actif={redstone >= 10} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 10))}>
+            +10
+          </Bouton>
+          <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, Infinity))}>
+            Tout
+          </Bouton>
+          <Bouton actif genre="neutre" onClick={() => jouer(basculerGenerateur)}>
+            {g.allume ? '⏸ Éteindre' : '▶ Allumer'}
+          </Bouton>
+        </div>
+        {puisageDisponible(etat) ? (
+          <label className="case-option">
+            <input type="checkbox" checked={g.puiseDansLeCoffre} onChange={() => jouer(basculerPuisage)} />
+            Il se sert tout seul dans le coffre de la mine (en gardant 5 minutes d'avance)
+          </label>
+        ) : (
+          <span className="discret">🔒 Au niveau {NIVEAU_GENERATEUR_AUTO + 1}, il se servira tout seul en redstone dans le coffre de la mine.</span>
+        )}
+      </div>
+
+      {/* Ce qui est branché : la ligne de rails et la foreuse. */}
+      <div className="ligne-achat">
+        <strong>🔌 Ce qu'il alimente</strong>
+        <ul className="liste-simple">
+          <li>
+            🛤️ Rails :{' '}
+            {!ligne
+              ? 'pas encore de ligne de la mine au marché.'
+              : railsAlimentes(etat)
+                ? '✔ électriques, le wagonnet roule tout seul !'
+                : railsDansLeRayon(etat)
+                  ? 'dans le rayon, mais le générateur ne donne pas de courant.'
+                  : '✖ une partie de la ligne est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
+          </li>
+          <li>
+            ⚙️ Foreuse :{' '}
+            {!batimentPose(etat.village, 'foreuse')
+              ? 'pas encore construite.'
+              : foreuseAlimentee(etat)
+                ? '✔ boostée !'
+                : batimentDansLeRayon(etat, 'foreuse')
+                  ? 'dans le rayon, mais sans courant.'
+                  : '✖ hors du rayon.'}
+          </li>
+        </ul>
+      </div>
+
+      <div className="ligne-achat">
+        <strong>⬆ Améliorer</strong>
+        <Amelioration
+          etat={etat}
+          actuel={`Rayon ${rayonGenerateur(etat)} cases · puissance ×${puissanceGenerateur(etat)}`}
+          niveau={g.niveau + 1}
+          niveauMax={NIVEAUX_GENERATEUR.length}
+          suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ×${prochain.puissance}` }}
+          possible={prochain !== null && peutPayer(etat, prochain.cout)}
+          onAmeliorer={() => jouer(ameliorerGenerateur)}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 
 export function PanneauSucces({ etat }: { etat: EtatJeu }) {
   return (
     <>
       <p className="discret">
-        {etat.succes.length} / {SUCCES.length} succès débloqués (ils restent après un prestige).
+        {etat.succes.length} / {SUCCES.length} succès débloqués.
       </p>
       <ul className="grille-succes">
         {SUCCES.map((s) => {

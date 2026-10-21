@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import { LISTE_BATIMENTS, PROFONDEUR_EN_PLUS_PAR_PRESTIGE, profondeurBedrock } from '../jeu/donnees'
+import { LISTE_BATIMENTS, NIVEAU_MINE_MAX } from '../jeu/donnees'
 import { creerPartie } from '../jeu/mineur'
 import {
   NB_MONDES_MAX,
@@ -93,13 +93,13 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
 
       {etat ? (
         <ul className="carte-monde-infos">
-          <li>📏 {etat.victoire ? 'Bedrock atteinte' : `-${etat.profondeur} m`}</li>
-          <li>💵 {etat.argent.toLocaleString('fr-FR')} $</li>
-          <li>⭐ Prestige {etat.prestige}</li>
+          <li>🕳️ Mine niveau {etat.niveauMine}</li>
+          <li>💵 {Math.floor(etat.argent).toLocaleString('fr-FR')} $</li>
+          <li>👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''}</li>
           <li>⛏️ {etat.stats.blocsCasses.toLocaleString('fr-FR')} blocs</li>
         </ul>
       ) : partieAncienne(window.localStorage, monde.id) ? (
-        <p className="carte-monde-ancienne">🏡 Partie de l’ancienne version : elle repart de zéro dans le nouveau village vu du ciel.</p>
+        <p className="carte-monde-ancienne">🏡 Partie de l’ancienne version : elle repart de zéro avec la nouvelle mine automatique.</p>
       ) : (
         <p className="discret">Partie illisible : elle recommencera à zéro.</p>
       )}
@@ -137,10 +137,10 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
 
 // Comment jouer, en 4 cartes (avec les dessins du jeu).
 const ETAPES = [
-  { image: '/images/personnages/mineur.webp', portrait: true, titre: 'Creuse', texte: 'Couche par couche : charbon, fer, or, diamants… jusqu’à la bedrock.', couleur: '#f2b33d' },
+  { image: '/images/personnages/mineur.webp', portrait: true, titre: 'Creuse', texte: 'Clique sur le bloc de la mine : charbon, fer, redstone, or, émeraudes, diamants…', couleur: '#f2b33d' },
   { image: '/images/batiments/forgeron.webp', portrait: false, titre: 'Construis', texte: 'Pose le marché, la forge, le bazar… où tu veux dans la clairière, et décore ton village.', couleur: '#5cc95c' },
-  { image: '/images/personnages/recruteur.webp', portrait: true, titre: 'Embauche', texte: 'Des mineurs rares, épiques… mythiques creusent et vont vendre à pied ou en wagonnet.', couleur: '#4f9df0' },
-  { image: '/images/batiments/prestige.webp', portrait: false, titre: 'Prestige', texte: 'Atteins la bedrock et repars plus fort, dans une mine encore plus profonde.', couleur: '#e85aa8' },
+  { image: '/images/personnages/recruteur.webp', portrait: true, titre: 'Embauche', texte: 'Des mineurs rares, épiques… mythiques creusent pour toi et remplissent le coffre de la mine.', couleur: '#4f9df0' },
+  { image: '/images/batiments/generateur.webp', portrait: false, titre: 'Automatise', texte: 'Relie la mine au marché avec des rails, et électrifie-les avec le générateur : l’argent tombe tout seul !', couleur: '#e85aa8' },
 ]
 
 export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: InfoMonde) => void }) {
@@ -186,8 +186,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
             Creuse. Construis. <strong>Deviens riche.</strong>
           </p>
           <p className="heros-description">
-            Descends jusqu’à la <strong>bedrock</strong>, bâtis ton village où tu veux dans la clairière, embauche des mineurs (rares, épiques…
-            mythiques !) et passe prestige pour une mine toujours plus profonde.
+            Creuse ta mine jusqu’au <strong>cœur de diamant</strong>, bâtis ton village où tu veux dans la clairière, embauche des mineurs (rares,
+            épiques… mythiques !) et relie tout avec des rails électriques.
           </p>
 
           <div className="heros-boutons">
@@ -196,7 +196,7 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
                 <span className="bouton-mega-titre">▶ Jouer</span>
                 <span className="bouton-mega-detail">
                   {dernierMonde.nom}
-                  {etatDernier ? ` · ⭐ ${etatDernier.prestige} · -${etatDernier.profondeur} m` : ' · nouveau village'}
+                  {etatDernier ? ` · 🕳️ niveau ${etatDernier.niveauMine} · ${Math.floor(etatDernier.argent).toLocaleString('fr-FR')} $` : ' · nouveau village'}
                 </span>
               </button>
             ) : (
@@ -212,12 +212,12 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
 
           <ul className="heros-chiffres">
             <li>
-              <strong>-{profondeurBedrock(0)} m</strong>
-              <span>jusqu’à la bedrock</span>
+              <strong>{NIVEAU_MINE_MAX}</strong>
+              <span>niveaux de mine</span>
             </li>
             <li>
-              <strong>+{PROFONDEUR_EN_PLUS_PAR_PRESTIGE} m</strong>
-              <span>à chaque prestige</span>
+              <strong>⚡</strong>
+              <span>des rails électriques</span>
             </li>
             <li>
               <strong>{LISTE_BATIMENTS.length}</strong>

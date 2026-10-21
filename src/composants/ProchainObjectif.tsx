@@ -22,7 +22,7 @@ export function ProchainObjectif({ etat, onAllerAuStand, onConstruire }: Props) 
     <button
       className={`objectif ${objectif.pret ? 'objectif-pret' : ''}`}
       onClick={() => (objectif.construction ? onConstruire() : objectif.stand && onAllerAuStand(objectif.stand))}
-      disabled={objectif.stand === null}
+      disabled={objectif.stand === null && !objectif.construction}
       title={objectif.construction ? 'Ouvrir le menu Bâtiments' : objectif.stand ? 'Aller au bon bâtiment' : 'Continue de creuser !'}
     >
       <span className="objectif-texte">

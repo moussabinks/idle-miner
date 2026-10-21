@@ -36,8 +36,6 @@ const BATIMENTS_SCENE: BatimentPose[] = [
   { id: 'marche', x: 28, y: 32, miroir: true },
   { id: 'forgeron', x: 42, y: 24, miroir: true },
   { id: 'employes', x: 21, y: 25, miroir: false },
-  { id: 'enchanteur', x: 23, y: 13, miroir: false },
-  { id: 'prestige', x: 33, y: 10, miroir: false },
   { id: 'bazar', x: 43, y: 14, miroir: false },
   { id: 'foreuse', x: 41, y: 32, miroir: false },
   { id: 'generateur', x: 36, y: 4, miroir: false },
@@ -157,7 +155,7 @@ function objetsFixes(): ReactNode[] {
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
         <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
-          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} profondeur={84} ascenseur hauteurCabine={0.35} />
+          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} niveau={3} ascenseur hauteurCabine={0.35} />
         </BoiteSvg>,
       )
     } else {
@@ -286,7 +284,7 @@ export function SceneAccueil() {
         viewBox={`${e.x - 20} ${e.y - 28} 40 34`}
         aria-hidden="true"
       >
-        <DessinWagonnet c={e} parRails />
+        <DessinWagonnet c={e} />
       </svg>,
     )
   }

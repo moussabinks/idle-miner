@@ -1,15 +1,17 @@
 // Le village vu du ciel (vue isométrique, comme Clash of Clans) : le décor de la clairière, la
 // mine au milieu, et tout ce que le joueur a posé (bâtiments, rails, chemins, décorations).
-// On y voit le joueur, les mineurs employés qui vont au marché ou à la forge, le manager et le
-// recruteur devant le Personnel, les wagonnets, et des bulles de notification au-dessus des
-// bâtiments.
+// On y voit le joueur, les mineurs employés qui vont à la forge ou attendent le wagonnet, le
+// manager et le recruteur devant le Personnel, le wagonnet sur les rails (avec celui qui le
+// pousse), le rayon du générateur, et des bulles de notification au-dessus des bâtiments.
 // La caméra : on fait glisser la carte avec la souris ou le doigt, on zoome avec la molette ou en
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
+import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
-import { positionFront, type EtatJeu, type Employe } from '../jeu/mineur'
+import { secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
+import { distanceDepuisLaMine, joueurPousse, ligneDuWagonnet, longueurTrajet } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
@@ -18,7 +20,6 @@ import {
   longueurChemin,
   occupation,
   raccordsRail,
-  railsMineMarche,
   type Case,
 } from '../jeu/village'
 import type { EtatJoueurVillage } from '../useJoueurVillage'
@@ -63,15 +64,12 @@ type Props = {
   onSurvol: (c: Case) => void // la souris passe sur une case (le fantôme la suit tant qu'il n'est pas fixé)
   onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
-  transition: 'entree' | 'sortie' | null
   panneauOuvert: boolean // un panneau est ouvert à droite (ordinateur) : la caméra se décale à gauche
-  onTransitionFinie: () => void
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
-const ZOOM_ENTREE = 3.2
 
 export function VueVillage({
   etat,
@@ -85,15 +83,11 @@ export function VueVillage({
   onSurvol,
   onGlisser,
   onPeindre,
-  transition,
   panneauOuvert,
-  onTransitionFinie,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
   const village = etat.village
-  const mine = batimentPose(village, 'puits')
-  const centreMine = mine ? versEcran(mine.x + 5, mine.y + 5) : { x: LARGEUR_MONDE / 2, y: HAUTEUR_MONDE / 2 }
 
   // --- La caméra --------------------------------------------------------------
   // Elle suit le joueur, sauf si on a fait glisser la carte à la main (« libre ») : elle le suit
@@ -140,34 +134,21 @@ export function VueVillage({
     [taille, zoomMin],
   )
 
-  // L'entrée dans la mine : on plonge vers le trou et l'écran devient noir. La sortie : l'inverse.
-  // « phase » passe de « début » à « fin » juste après l'affichage, pour que l'animation se joue.
-  const [phase, setPhase] = useState<'debut' | 'fin'>('debut')
-  const [derniereTransition, setDerniereTransition] = useState(transition)
-  if (derniereTransition !== transition) {
-    setDerniereTransition(transition)
-    setPhase('debut')
-  }
-  const quandFini = useRef(onTransitionFinie)
-  useLayoutEffect(() => {
-    quandFini.current = onTransitionFinie
-  }, [onTransitionFinie])
-  useEffect(() => {
-    if (transition === null) return
-    const image = requestAnimationFrame(() => requestAnimationFrame(() => setPhase('fin')))
-    const minuteur = window.setTimeout(() => quandFini.current(), transition === 'entree' ? 750 : 820)
-    return () => {
-      cancelAnimationFrame(image)
-      clearTimeout(minuteur)
-    }
-  }, [transition])
-
-  const ecranJoueur = versEcran(joueur.x, joueur.y)
+  // Le wagonnet sur les rails : où il est, et dans quel sens il roule (pour la caméra et le dessin).
+  const ligne = ligneDuWagonnet(etat)
+  const wagonnet = (() => {
+    if (!ligne) return null
+    const k = distanceDepuisLaMine(etat) / longueurTrajet(ligne)
+    const point = surLeChemin(ligne, k * longueurChemin(ligne))
+    const retour = etat.wagonnet.etape === 'retour'
+    return { ...point, dx: retour ? -point.dx : point.dx, dy: retour ? -point.dy : point.dy }
+  })()
+  // Quand le joueur pousse le wagonnet, c'est lui que la caméra suit.
+  const pousse = joueurPousse(etat) && wagonnet !== null
+  const suivi = pousse && wagonnet ? wagonnet : joueur
+  const ecranJoueur = versEcran(suivi.x, suivi.y)
   const normale = borner({ z: zoom ?? zoomConfort, ...(libre ?? { cx: ecranJoueur.x, cy: ecranJoueur.y - 20 }) })
-  const plongee: Camera = { z: ZOOM_ENTREE, cx: centreMine.x, cy: centreMine.y + 10, douce: true }
-  let camera: Camera = { ...normale, douce: libre === null }
-  if (transition === 'entree' && phase === 'fin') camera = plongee
-  if (transition === 'sortie') camera = phase === 'fin' ? { ...normale, douce: true } : { ...plongee, douce: false }
+  const camera: Camera = { ...normale, douce: libre === null }
   const cameraRef = useRef(camera)
   useLayoutEffect(() => {
     cameraRef.current = camera
@@ -207,7 +188,6 @@ export function VueVillage({
   }
 
   function pointerDown(e: React.PointerEvent) {
-    if (transition !== null) return
     conteneurRef.current?.setPointerCapture(e.pointerId)
     pointeurs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointeurs.current.size === 2) {
@@ -275,7 +255,6 @@ export function VueVillage({
   }
 
   function molette(e: React.WheelEvent) {
-    if (transition !== null) return
     const m = versMonde(e.clientX, e.clientY)
     const c = cameraRef.current
     const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-e.deltaY * 0.0015)))
@@ -294,7 +273,7 @@ export function VueVillage({
     if (fantome?.type === 'batiment' && fantome.id === b.id) continue
     const actif = b.id === batimentActif
     if (b.id === 'puits') {
-      // La mine : son image, et par-dessus ce qui évolue (cages d'ascenseur, profondeur).
+      // La mine : son image, et par-dessus ce qui évolue (cabine d'ascenseur, niveau).
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe={actif ? 'sprite-actif' : ''} />,
         <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
@@ -302,9 +281,9 @@ export function VueVillage({
             x={b.x}
             y={b.y}
             miroir={b.miroir}
-            profondeur={etat.profondeur}
+            niveau={etat.niveauMine}
             ascenseur={etat.ascenseur.niveau > 0}
-            hauteurCabine={etat.ascenseur.position / Math.max(1, positionFront(etat))}
+            hauteurCabine={hauteurCabine(etat)}
           />
         </BoiteSvg>,
       )
@@ -339,14 +318,17 @@ export function VueVillage({
     )
   }
 
-  // Le joueur.
-  objets.push(
-    <Perso key="joueur" qui="joueur" x={joueur.x} y={joueur.y} sens={joueur.sens} vue={joueur.vue} marche={joueur.marche} saut={joueur.saut} classe="perso-joueur" />,
-  )
+  // Le joueur (quand il pousse le wagonnet, il est dessiné avec lui, plus bas).
+  if (!pousse) {
+    objets.push(
+      <Perso key="joueur" qui="joueur" x={joueur.x} y={joueur.y} sens={joueur.sens} vue={joueur.vue} marche={joueur.marche} saut={joueur.saut} classe="perso-joueur" />,
+    )
+  }
 
   // Les mineurs employés quand ils sont au village.
   const personnel = batimentPose(village, 'employes')
   let enAttente = 0
+  let auQuai = 0
   etat.employes.forEach((mineur: Employe, index) => {
     const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>
     let position: { x: number; y: number } | null = null
@@ -362,9 +344,12 @@ export function VueVillage({
         marche = true
       }
       colere = mineur.tempsPaye <= 0
-    } else if (mineur.etape === 'vend' || mineur.etape === 'forge') {
-      const b = batimentPose(village, mineur.etape === 'vend' ? 'marche' : 'forgeron')
+    } else if (mineur.etape === 'forge') {
+      const b = batimentPose(village, 'forgeron')
       if (b) position = devant(b, 1 + (index % 4), 0.9)
+    } else if (mineur.etape === 'quai' && ligne) {
+      // Il attend le wagonnet à côté du début des rails.
+      position = { x: ligne[0].x + 1.2 + 0.7 * auQuai, y: ligne[0].y + 0.3 + 0.5 * auQuai++ }
     } else if (mineur.etape === 'attend' && personnel) {
       position = devant(personnel, 2 + enAttente++, 1.6)
       colere = true
@@ -404,28 +389,47 @@ export function VueVillage({
     )
   }
 
-  // Les chargements qui roulent vers le marché.
-  const rails = railsMineMarche(village)
-  const cheminMarche = cheminEntre(village, 'puits', 'marche')
-  etat.convois.forEach((convoi, i) => {
-    if (convoi.duree <= 0) return
-    const k = Math.min(1, convoi.temps / convoi.duree)
-    const trajet = convoi.parRails ? rails : cheminMarche
-    if (!trajet) return
-    const point = surLeChemin(trajet, k * longueurChemin(trajet))
-    const e = versEcran(point.x, point.y)
+  // Le wagonnet sur les rails, et celui qui le pousse (toi ou un mineur), juste derrière lui.
+  if (wagonnet) {
+    const e = versEcran(wagonnet.x, wagonnet.y)
     objets.push(
       <svg
-        key={`c${i}`}
-        className="wagonnet-village"
-        style={{ left: e.x - 20, top: e.y - 28, zIndex: profondeur(point.x, point.y) + 4 }}
+        key="wagonnet"
+        className={`wagonnet-village ${etat.wagonnet.pousseur === 'electricite' ? 'wagonnet-electrique' : ''}`}
+        style={{ left: e.x - 20, top: e.y - 28, zIndex: profondeur(wagonnet.x, wagonnet.y) + 4 }}
         viewBox={`${e.x - 20} ${e.y - 28} 40 34`}
         aria-hidden="true"
       >
-        <DessinWagonnet c={e} parRails={convoi.parRails} />
+        <DessinWagonnet c={e} plein={etat.wagonnet.etape === 'aller'} />
       </svg>,
     )
-  })
+    const longueur = Math.hypot(wagonnet.dx, wagonnet.dy) || 1
+    const derriere = { x: wagonnet.x - (wagonnet.dx / longueur) * 0.9, y: wagonnet.y - (wagonnet.dy / longueur) * 0.9 }
+    const orientation = orienter(wagonnet.dx, wagonnet.dy)
+    const roule = etat.wagonnet.etape !== 'quai'
+    if (pousse) {
+      objets.push(
+        <Perso key="joueur" qui="joueur" x={derriere.x} y={derriere.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur" />,
+      )
+    } else if (roule) {
+      const mineur = etat.employes.find((m) => m.nom === etat.wagonnet.pousseur && m.etape === 'pousse')
+      if (mineur) {
+        objets.push(
+          <Perso
+            key="pousseur"
+            qui={RARETES[mineur.rarete] ? mineur.rarete : 'commun'}
+            x={derriere.x}
+            y={derriere.y}
+            sens={orientation.sens}
+            vue={orientation.vue}
+            marche
+            classe="perso-mineur"
+            etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>}
+          />,
+        )
+      }
+    }
+  }
 
   // Les bulles de notification au-dessus des bâtiments.
   const bulles: ReactNode[] = []
@@ -480,6 +484,9 @@ export function VueVillage({
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null
       })()}
+      {/* Le rayon du générateur : quand on le regarde (ou qu'on le pose), et en tout petit
+          quand il donne du courant. */}
+      <RayonGenerateur etat={etat} batimentActif={batimentActif} fantome={fantome} />
       {fantome && <LosangeEmprise x={fantome.x} y={fantome.y} taille={tailleFantome(fantome)} libre={fantomeLibre} />}
       {fantome?.type === 'sol' && fantome.sol === 'chemin' && <CaseChemin x={fantome.x} y={fantome.y} />}
     </svg>
@@ -517,7 +524,7 @@ export function VueVillage({
 
   const styleMonde: CSSProperties = {
     transform: `translate(${milieuX - camera.cx * camera.z}px, ${taille.h / 2 - camera.cy * camera.z}px) scale(${camera.z})`,
-    transition: !camera.douce ? 'none' : transition ? 'transform 0.75s cubic-bezier(0.55, 0, 0.6, 1)' : 'transform 0.18s linear',
+    transition: !camera.douce ? 'none' : 'transform 0.18s linear',
   }
 
   return (
@@ -541,7 +548,34 @@ export function VueVillage({
         <ForetDevant vue={vueForet} />
         <div className="bulles-village">{bulles}</div>
       </div>
-      {transition && <div className={`fondu-mine fondu-${transition}`} />}
     </div>
   )
+}
+
+// Où est la cabine de l'ascenseur (0 = en haut, 1 = en bas) : elle suit le premier mineur qui
+// monte ou descend. Sinon, elle attend en haut.
+function hauteurCabine(etat: EtatJeu): number {
+  const mineur = etat.employes.find((m) => m.etape === 'monte' || m.etape === 'descend')
+  if (!mineur) return 0
+  const f = Math.min(1, mineur.progression / secondesTrajetMineur(etat))
+  return mineur.etape === 'descend' ? f : 1 - f
+}
+
+// Le cercle du rayon du générateur, vu du ciel (une ellipse : la grille est en losange).
+function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; batimentActif: IdBatiment | null; fantome: Fantome | null }) {
+  // En plaçant le générateur, on voit le rayon autour du fantôme.
+  const place = fantome?.type === 'batiment' && fantome.id === 'generateur'
+  const t = BATIMENTS.generateur.taille
+  const centre = place ? { x: fantome.x + t / 2, y: fantome.y + t / 2 } : centreGenerateur(etat)
+  if (!centre) return null
+  const enVue = place || batimentActif === 'generateur'
+  const allume = generateurEnMarche(etat)
+  if (!enVue && !allume) return null
+  const r = rayonGenerateur(etat)
+  const points = Array.from({ length: 64 }, (_, i) => {
+    const angle = (i / 64) * 2 * Math.PI
+    const p = versEcran(centre.x + r * Math.cos(angle), centre.y + r * Math.sin(angle))
+    return `${p.x},${p.y}`
+  }).join(' ')
+  return <polygon className={`rayon-generateur ${enVue ? 'rayon-en-vue' : ''} ${allume ? 'rayon-allume' : ''}`} points={points} />
 }
