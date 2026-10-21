@@ -364,7 +364,7 @@
   z-index: -1;
   background:
     linear-gradient(rgb(20 11 4 / 0.8), rgb(14 8 3 / 0.93)),
-    url('/images/village/fond.webp') center / cover;
+    url('/images/village/foret.webp') center / 768px repeat;
 }
 
 /* Les cartes de l'accueil (compte, mondes, classement...) sont en bois sombre, filet doré. */

@@ -4,29 +4,14 @@
    et le passage dans la mine.
    ========================================================================= */
 
-/* --- La mise en page : la carte prend toute la place à gauche ------------------ */
-
-.mode-village .plateau {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-}
-
-.mode-village .colonne-mine {
-  min-width: 0;
-}
-
-.mode-village .actions {
-  width: 100%;
-}
+/* --- La carte : elle remplit tout l'écran (voir plein-ecran.css) ----------------- */
 
 .vue-village {
   position: relative;
   width: 100%;
-  height: min(72vh, 680px);
+  height: 100%;
   overflow: hidden;
-  border-radius: 14px;
-  border: 3px solid #000;
-  background: #24401b;
-  box-shadow: inset 0 0 40px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.35);
+  background: #1f3a17;
   touch-action: none; /* on fait glisser la carte avec le doigt, sans faire défiler la page */
   user-select: none;
   -webkit-user-select: none;
@@ -52,7 +37,7 @@
   will-change: transform;
 }
 
-.fond-village,
+.terrain-village,
 .sol-village,
 .objets-village,
 .bulles-village {
@@ -63,7 +48,7 @@
   height: 1024px;
 }
 
-.fond-village,
+.terrain-village,
 .sol-village {
   pointer-events: none;
 }
@@ -109,14 +94,6 @@
   position: absolute;
   overflow: visible;
   pointer-events: none;
-}
-
-.sprite-mine [data-cible] {
-  pointer-events: auto;
-}
-
-.sprite-mine.sprite-actif {
-  filter: drop-shadow(0 0 10px rgb(255 214 90 / 0.95));
 }
 
 /* Ce qu'on est en train de poser : un peu transparent, rougi s'il ne peut pas aller là. */
@@ -193,11 +170,6 @@
   stroke: #d2d3dc;
   stroke-width: 1.7;
   stroke-linecap: round;
-}
-
-.grille-village line {
-  stroke: rgb(255 255 255 / 0.22);
-  stroke-width: 0.7;
 }
 
 .emprise {
@@ -805,46 +777,9 @@
   animation: bulle-saute 0.8s ease-in-out infinite alternate;
 }
 
-/* --- Ordinateur : la carte prend toute la hauteur --------------------------------- */
-
-@media (min-width: 861px) and (min-height: 560px) {
-  .vue-village {
-    flex: 1;
-    height: auto;
-    min-height: 0;
-  }
-}
-
-/* --- Téléphone : la carte en grand, le panneau du bâtiment par-dessus, en bas ------- */
+/* --- Téléphone : les menus de construction ------------------------------------------ */
 
 @media (max-width: 860px) {
-  .mode-village .plateau {
-    grid-template-columns: 1fr;
-  }
-
-  .vue-village {
-    height: calc(100dvh - 300px);
-    min-height: 320px;
-  }
-
-  /* L'aide du village prend trop de place sur un petit écran. */
-  .mode-village .panneau-aide-village {
-    display: none;
-  }
-
-  /* Le panneau d'un bâtiment glisse depuis le bas, au-dessus de la barre de boutons. */
-  .mode-village .panneau-batiment {
-    position: fixed;
-    left: 8px;
-    right: 8px;
-    bottom: calc(76px + env(safe-area-inset-bottom));
-    z-index: 8;
-    max-height: 50dvh;
-    overflow-y: auto;
-    box-shadow: 0 -8px 30px rgb(0 0 0 / 0.65);
-    animation: monte-menu 0.25s ease-out;
-  }
-
   /* Les messages restent petits, et on n'en montre que deux à la fois. */
   .toast {
     padding: 6px 12px;

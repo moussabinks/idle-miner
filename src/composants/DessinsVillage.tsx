@@ -4,9 +4,9 @@
 // le wagonnet, et le petit losange de la grille.
 // Tout est dessiné dans les coordonnées de l'image du monde (voir iso.ts).
 
-import type { ReactNode } from 'react'
-import type { IdDecoration } from '../jeu/donnees'
-import { versEcran, type Point } from './iso'
+import { memo, type ReactNode } from 'react'
+import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
+import { DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, versEcran, type Point } from './iso'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -46,206 +46,160 @@ export function BoiteSvg({ x, y, taille, hauteur, marge = 12, classe = '', style
 }
 
 // ---------------------------------------------------------------------------
-// La mine
+// Le terrain (21/10) : le sol en damier de la clairière, et la forêt tout autour
 // ---------------------------------------------------------------------------
 
-type PropsMine = {
+// Les deux verts du damier (comme le sol de Clash of Clans). Une case sur deux est plus claire :
+// le quadrillage se devine sans lignes, et il sert à poser les bâtiments.
+const VERT_CLAIR = '#86c13f'
+const VERT_FONCE = '#79b437'
+
+// La forêt : une image qui se répète sans raccord (public/images/village/foret.webp, fabriquée à
+// partir de la forêt du décor fourni, upscalée par IA). Elle fait 768 pixels du monde de côté.
+const TAILLE_FORET = 768
+
+// Le losange de la clairière, un peu agrandi (marge en cases), en points « x,y ».
+function losangeClairiere(marge: number): string {
+  const n = TAILLE_GRILLE
+  return [versEcran(-marge, -marge), versEcran(n + marge, -marge), versEcran(n + marge, n + marge), versEcran(-marge, n + marge)].map((p) => `${p.x},${p.y}`).join(' ')
+}
+
+// Tout le terrain, dessiné une seule fois (il ne change jamais).
+export const TerrainVillage = memo(function TerrainVillage() {
+  const { x0, y0, x1, y1 } = LIMITES_TERRAIN
+  const l = x1 - x0
+  const h = y1 - y0
+  const origine = versEcran(0, 0)
+  // Le motif du damier est dessiné en cases, puis posé en vue isométrique par cette matrice.
+  const enIso = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${origine.x} ${origine.y})`
+  return (
+    <svg className="terrain-village" style={{ left: x0, top: y0, width: l, height: h }} viewBox={`${x0} ${y0} ${l} ${h}`} aria-hidden="true">
+      <defs>
+        <pattern id="motif-damier" patternUnits="userSpaceOnUse" width="2" height="2" patternTransform={enIso}>
+          <rect width="2" height="2" fill={VERT_CLAIR} />
+          <rect x="1" width="1" height="1" fill={VERT_FONCE} />
+          <rect y="1" width="1" height="1" fill={VERT_FONCE} />
+        </pattern>
+        <pattern id="motif-foret" patternUnits="userSpaceOnUse" width={TAILLE_FORET} height={TAILLE_FORET}>
+          <image href="/images/village/foret.webp" width={TAILLE_FORET} height={TAILLE_FORET} />
+        </pattern>
+        <filter id="flou-lisiere" x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="9" />
+        </filter>
+        {/* La forêt partout, sauf sur la clairière (avec un bord adouci). */}
+        <mask id="masque-foret" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
+          <rect x={x0} y={y0} width={l} height={h} fill="#fff" />
+          <polygon points={losangeClairiere(1.2)} fill="#000" filter="url(#flou-lisiere)" />
+        </mask>
+        {/* Une ombre douce de la forêt sur le bord de la clairière. */}
+        <filter id="ombre-lisiere" x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="6" />
+        </filter>
+      </defs>
+      {/* Sous la forêt : une bande d'herbe un peu plus sombre autour de la clairière. */}
+      <rect x={x0} y={y0} width={l} height={h} fill="#4f8a26" />
+      <polygon points={losangeClairiere(0)} fill="url(#motif-damier)" />
+      <polygon points={losangeClairiere(0)} fill="none" stroke="#2f5a14" strokeWidth="14" opacity="0.45" filter="url(#ombre-lisiere)" />
+      <rect x={x0} y={y0} width={l} height={h} fill="url(#motif-foret)" mask="url(#masque-foret)" />
+    </svg>
+  )
+})
+
+// ---------------------------------------------------------------------------
+// La mine (10 × 10) : l'image fournie (mine.webp), et ce qui évolue par-dessus
+// ---------------------------------------------------------------------------
+
+type PropsEvolutionMine = {
   x: number
   y: number
   miroir: boolean
   fraction: number // la profondeur atteinte, de 0 (à peine creusée) à 1 (la bedrock)
-  ascenseur: number // niveau de l'ascenseur (0 = pas construit)
-  cabineEnHaut: boolean // la cabine attend au village
-  enMouvement: boolean // la cabine roule (la poulie tourne)
-  nbMineurs: number // une petite poulie par mineur employé
+  profondeur: number // en mètres, pour le panneau
+  nbCages: number // une cage d'ascenseur par ascenseur : le tien, puis une par mineur employé
+  enMouvement: boolean // une cabine roule (les poulies tournent)
 }
 
-// Un poteau en bois avec son chapeau doré (comme sur les dessins des bâtiments).
-function Poteau({ gx, gy, haut = 16, lanterne = false }: { gx: number; gy: number; haut?: number; lanterne?: boolean }) {
-  const e = versEcran(gx, gy)
+// Un point de l'image de la mine, en cases depuis le coin de son emprise (u vers la droite,
+// v vers la gauche de l'écran). Retournée en miroir, la gauche et la droite s'échangent.
+function pointMine(x: number, y: number, u: number, v: number, miroir: boolean): Point {
+  return miroir ? versEcran(x + v, y + u) : versEcran(x + u, y + v)
+}
+
+// Les places des cages, le long du mur du fond, dans le trou (d'après l'image de la mine).
+const PLACES_CAGES: [number, number][] = [
+  [4.2, 3.8],
+  [5.8, 3.1],
+  [7.4, 2.5],
+  [5.6, 4.1],
+  [7.1, 3.5],
+  [4.0, 4.9],
+  [8.4, 3.4],
+]
+
+// Une cage d'ascenseur : deux montants d'acier, une poutre, une poulie, le câble et la cabine
+// rayée jaune et noir (la tienne a un toit doré).
+function CageAscenseur({ p, numero, enMouvement }: { p: Point; numero: number; enMouvement: boolean }) {
+  const haut = 48
+  const demi = 6
+  const cabine = numero === 0 ? '#f2b33d' : '#9aa3ad'
   return (
-    <g>
-      <rect x={e.x - 3} y={e.y - haut} width="6" height={haut} rx="1.2" fill="#8a5a2b" stroke="#3a2210" strokeWidth="1" />
-      <rect x={e.x - 4} y={e.y - haut - 4} width="8" height="5" rx="1.2" fill="#e2b13a" stroke="#7a5308" strokeWidth="1" />
-      {lanterne && (
-        <g className="lanterne-mine">
-          <circle cx={e.x} cy={e.y - haut - 12} r="9" fill="#ffcf5a" opacity="0.35" />
-          <rect x={e.x - 3.5} y={e.y - haut - 16} width="7" height="9" rx="1.5" fill="#ffd86b" stroke="#6b4a10" strokeWidth="1" />
+    <g className="cage-ascenseur">
+      <ellipse cx={p.x} cy={p.y + 1} rx={demi + 3} ry="3" fill="rgb(0 0 0 / 0.35)" />
+      {/* Les montants et les entretoises */}
+      <rect x={p.x - demi - 1.5} y={p.y - haut} width="3" height={haut} fill="#5b636d" stroke="#22272d" strokeWidth="0.8" />
+      <rect x={p.x + demi - 1.5} y={p.y - haut} width="3" height={haut} fill="#6f7882" stroke="#22272d" strokeWidth="0.8" />
+      <path
+        d={`M${p.x - demi} ${p.y - haut + 6} L${p.x + demi} ${p.y - haut + 20} M${p.x + demi} ${p.y - haut + 6} L${p.x - demi} ${p.y - haut + 20}`}
+        stroke="#4a5058"
+        strokeWidth="1.2"
+      />
+      <rect x={p.x - demi - 3} y={p.y - haut - 3} width={2 * demi + 6} height="4" rx="1.2" fill="#3d434a" stroke="#1a1d21" strokeWidth="0.8" />
+      {/* La poulie */}
+      <g transform={`translate(${p.x} ${p.y - haut - 7})`}>
+        <g className={enMouvement ? 'poulie-tourne' : undefined}>
+          <circle r="5" fill="#c9cfd6" stroke="#2a2f35" strokeWidth="1.3" />
+          <path d="M-4 0 H4 M0 -4 V4" stroke="#2a2f35" strokeWidth="1.1" />
         </g>
-      )}
+      </g>
+      {/* Le câble et la cabine */}
+      <line x1={p.x} y1={p.y - haut - 3} x2={p.x} y2={p.y - 17} stroke="#1a1a1a" strokeWidth="1" />
+      <rect x={p.x - 5} y={p.y - 17} width="10" height="13" rx="1.2" fill="#2b2b2b" stroke="#111" strokeWidth="0.8" />
+      <rect x={p.x - 5} y={p.y - 19} width="10" height="3" rx="1" fill={cabine} stroke="#111" strokeWidth="0.6" />
+      <path d={`M${p.x - 5} ${p.y - 6} h10`} stroke="#f2c230" strokeWidth="2.2" strokeDasharray="2 2" />
+      <rect x={p.x - 3} y={p.y - 14} width="6" height="5" fill="#ffd86b" opacity="0.7" />
     </g>
   )
 }
 
-export function DessinMine({ x, y, miroir, fraction, ascenseur, cabineEnHaut, enMouvement, nbMineurs }: PropsMine) {
-  const t = 10
-  const cx = versEcran(x + t / 2, y + t / 2).x
-  // Plus on descend, plus le trou est profond : de 1 à 6 paliers de plus en plus sombres.
-  // Au tout début, ce n'est qu'un trou de terre à peine creusé.
-  const paliers = 1 + Math.min(5, Math.floor(fraction * 6))
-  const couleursPaliers = ['#9a6a3e', '#7a5232', '#5e4030', '#47322b', '#332427', '#231a22']
-  const rebord = 1.3 // la largeur du rebord en pierre (en cases)
-  const pente = 0.55 // chaque palier est un peu plus petit
-  const descente = 7 // et un peu plus bas (en pixels)
-  const paliersDessin: ReactNode[] = []
-  for (let i = 0; i < paliers; i++) {
-    const m = rebord + i * pente
-    const decal = i * descente
-    const pts: [number, number][] = [
-      [x + m, y + m],
-      [x + t - m, y + m],
-      [x + t - m, y + t - m],
-      [x + m, y + t - m],
-    ]
-    paliersDessin.push(
-      <g key={i} transform={`translate(0 ${decal})`}>
-        <polygon points={poly(pts)} fill={couleursPaliers[i]} stroke="rgb(0 0 0 / 0.35)" strokeWidth="1.2" />
-        {/* Les strates de terre sur le bord du fond (la partie qu'on voit) */}
-        <polyline points={poly([pts[3], pts[0], pts[1]])} fill="none" stroke="rgb(255 220 170 / 0.12)" strokeWidth="2" />
-      </g>,
-    )
-  }
-  const fond = rebord + paliers * pente
-  const milieuFond = versEcran(x + t / 2, y + t / 2)
-  const entree: [number, number] = [x + t / 2, y + t] // sur la face avant gauche
-
-  // Le chevalement de l'ascenseur, au-dessus du coin du haut du trou.
-  const pied1 = versEcran(x + 2.4, y + 3.6)
-  const pied2 = versEcran(x + 3.6, y + 2.4)
-  const sommet = { x: (pied1.x + pied2.x) / 2, y: Math.min(pied1.y, pied2.y) - 74 }
-  const poulies: ReactNode[] = []
-  for (let i = 0; i < Math.min(nbMineurs, 7); i++) {
-    const e = versEcran(x + 5.2 + i * 0.6, y + 1.2)
-    poulies.push(
-      <g key={i}>
-        <rect x={e.x - 1.5} y={e.y - 26} width="3" height="26" fill="#6b4422" />
-        <circle className={enMouvement ? 'poulie-tourne' : ''} cx={e.x} cy={e.y - 28} r="5" fill="#9aa0a8" stroke="#3a3a42" strokeWidth="1.4" style={{ transformOrigin: `${e.x}px ${e.y - 28}px` }} />
-      </g>,
-    )
-  }
-
+export function DessinEvolutionMine({ x, y, miroir, fraction, profondeur, nbCages, enMouvement }: PropsEvolutionMine) {
+  const f = Math.max(0, Math.min(1, fraction))
+  // Le fond du trou (la partie en pierre) devient de plus en plus sombre en descendant, avec une
+  // lueur de minerais au fond quand on est bas.
+  const fond = [
+    pointMine(x, y, 2.6, 5.4, miroir),
+    pointMine(x, y, 6.2, 2.6, miroir),
+    pointMine(x, y, 8.6, 5.0, miroir),
+    pointMine(x, y, 5.2, 8.2, miroir),
+  ]
+  const centre = pointMine(x, y, 5.6, 5.3, miroir)
+  const panneau = pointMine(x, y, 1.2, 8.4, miroir)
   return (
-    <g transform={miroir ? `translate(${2 * cx} 0) scale(-1 1)` : undefined}>
-      {/* Le socle : un rebord de pierres grises, épais sur les deux faces avant */}
-      <polygon points={poly([[x, y + t], [x + t, y + t], [x + t, y]])} fill="none" />
-      <polygon
-        points={`${p(x, y + t)} ${p(x + t, y + t)} ${p(x + t, y)} ${versEcran(x + t, y).x},${versEcran(x + t, y).y + 10} ${versEcran(x + t, y + t).x},${versEcran(x + t, y + t).y + 10} ${versEcran(x, y + t).x},${versEcran(x, y + t).y + 10}`}
-        fill="#6e6a66"
-        stroke="#2e2b28"
-        strokeWidth="1.5"
-      />
-      <polygon points={poly([[x, y], [x + t, y], [x + t, y + t], [x, y + t]])} fill="#9b968e" stroke="#2e2b28" strokeWidth="1.5" />
-      {/* Des pierres sur le rebord */}
-      {Array.from({ length: 18 }, (_, i) => {
-        const cote = i % 4
-        const u = ((i * 37) % 9) + 0.5
-        const pos: [number, number] = cote === 0 ? [x + u, y + 0.55] : cote === 1 ? [x + t - 0.55, y + u] : cote === 2 ? [x + u, y + t - 0.55] : [x + 0.55, y + u]
-        const e = versEcran(pos[0], pos[1])
-        return <ellipse key={i} cx={e.x} cy={e.y} rx={7 + (i % 3)} ry={4 + (i % 2)} fill={i % 2 ? '#b2ada4' : '#857f77'} stroke="#3c3833" strokeWidth="0.8" />
-      })}
-
-      {/* Le trou, palier par palier */}
-      <g className="trou-mine">{paliersDessin}</g>
-      {/* Tout au fond : de l'ombre, et une petite lueur quand on est profond */}
-      <polygon
-        points={poly([
-          [x + fond, y + fond],
-          [x + t - fond, y + fond],
-          [x + t - fond, y + t - fond],
-          [x + fond, y + t - fond],
-        ])}
-        transform={`translate(0 ${paliers * descente})`}
-        fill="#120c10"
-        opacity={0.25 + fraction * 0.65}
-      />
-      {fraction > 0.3 && <ellipse cx={milieuFond.x} cy={milieuFond.y + paliers * descente} rx={18 + fraction * 18} ry={8 + fraction * 8} fill="#ff9d3a" opacity={0.12 + fraction * 0.18} className="lueur-fond" />}
-
-      {/* L'échelle qui descend dans le trou (côté gauche) */}
-      <g>
-        {(() => {
-          const a = versEcran(x + rebord, y + t * 0.62)
-          const b = versEcran(x + fond, y + t * 0.62)
-          const bas = { x: b.x, y: b.y + paliers * descente }
-          return (
-            <g stroke="#8a5a2b" strokeWidth="2.4">
-              <line x1={a.x - 4} y1={a.y - 4} x2={bas.x - 4} y2={bas.y} />
-              <line x1={a.x + 4} y1={a.y - 2} x2={bas.x + 4} y2={bas.y + 2} />
-              {Array.from({ length: 5 }, (_, i) => {
-                const k = (i + 0.5) / 5
-                return <line key={i} x1={a.x - 4 + (bas.x - a.x) * k} y1={a.y - 4 + (bas.y - a.y + 4) * k} x2={a.x + 4 + (bas.x - a.x) * k} y2={a.y - 2 + (bas.y - a.y + 4) * k} strokeWidth="1.6" />
-              })}
-            </g>
-          )
-        })()}
+    <g className="evolution-mine">
+      <polygon points={fond.map((p) => `${p.x},${p.y}`).join(' ')} fill="#0c0a12" opacity={0.08 + 0.42 * f} style={{ mixBlendMode: 'multiply' }} />
+      {f > 0.35 && <ellipse cx={centre.x} cy={centre.y} rx={34 + 20 * f} ry={14 + 8 * f} fill="#7fd6ff" opacity={0.08 + 0.18 * f} className="lueur-fond-mine" />}
+      {PLACES_CAGES.slice(0, nbCages)
+        .map((place, i) => ({ i, p: pointMine(x, y, place[0], place[1], miroir) }))
+        .map(({ i, p }) => (
+          <CageAscenseur key={i} p={p} numero={i} enMouvement={enMouvement} />
+        ))}
+      {/* Le panneau de profondeur, planté devant l'entrée de la galerie. */}
+      <g transform={`translate(${panneau.x} ${panneau.y})`}>
+        <rect x="-2" y="-30" width="4" height="30" fill="#6b4422" stroke="#2a1608" strokeWidth="0.8" />
+        <rect x="-21" y="-42" width="42" height="17" rx="3" fill="#a8743e" stroke="#4a2c12" strokeWidth="1.5" />
+        <text x="0" y="-29.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#2a1606" fontFamily="system-ui, sans-serif">
+          -{profondeur} m
+        </text>
       </g>
-
-      {/* Le chevalement de l'ascenseur (ou une simple grue en bois avant sa construction) */}
-      {ascenseur > 0 ? (
-        <g>
-          <line x1={pied1.x} y1={pied1.y} x2={sommet.x} y2={sommet.y} stroke="#6b4422" strokeWidth="5" strokeLinecap="round" />
-          <line x1={pied2.x} y1={pied2.y} x2={sommet.x} y2={sommet.y} stroke="#6b4422" strokeWidth="5" strokeLinecap="round" />
-          <line x1={(pied1.x + sommet.x) / 2} y1={(pied1.y + sommet.y) / 2} x2={(pied2.x + sommet.x) / 2} y2={(pied2.y + sommet.y) / 2} stroke="#8a5a2b" strokeWidth="3.5" />
-          <circle className={enMouvement ? 'poulie-tourne' : ''} cx={sommet.x} cy={sommet.y} r="11" fill="#5b5e66" stroke="#24252a" strokeWidth="2" style={{ transformOrigin: `${sommet.x}px ${sommet.y}px` }} />
-          <circle cx={sommet.x} cy={sommet.y} r="4" fill="#e2b13a" stroke="#7a5308" strokeWidth="1" />
-          <path d={`M${sommet.x - 11} ${sommet.y} L${sommet.x + 11} ${sommet.y} M${sommet.x} ${sommet.y - 11} L${sommet.x} ${sommet.y + 11}`} stroke="#24252a" strokeWidth="1.5" />
-          {/* Le câble et la cabine */}
-          <line x1={sommet.x + 10} y1={sommet.y} x2={sommet.x + 10} y2={cabineEnHaut ? sommet.y + 46 : sommet.y + 90} stroke="#3a3a42" strokeWidth="1.5" />
-          {cabineEnHaut && (
-            <g>
-              <rect x={sommet.x + 2} y={sommet.y + 46} width="17" height="19" rx="2" fill="#3a3a44" stroke="#1a1a20" strokeWidth="1.5" />
-              <rect x={sommet.x + 1} y={sommet.y + 43} width="19" height="4" rx="1" fill="#e2b13a" stroke="#7a5308" strokeWidth="1" />
-              <path d={`M${sommet.x + 6} ${sommet.y + 49} V${sommet.y + 63} M${sommet.x + 10.5} ${sommet.y + 49} V${sommet.y + 63} M${sommet.x + 15} ${sommet.y + 49} V${sommet.y + 63}`} stroke="#8a8a96" strokeWidth="1.2" />
-            </g>
-          )}
-        </g>
-      ) : (
-        <g>
-          <line x1={pied1.x} y1={pied1.y} x2={pied1.x + 8} y2={pied1.y - 46} stroke="#8a5a2b" strokeWidth="4" strokeLinecap="round" />
-          <line x1={pied1.x + 8} y1={pied1.y - 46} x2={pied1.x + 40} y2={pied1.y - 36} stroke="#8a5a2b" strokeWidth="3.5" strokeLinecap="round" />
-          <line x1={pied1.x + 38} y1={pied1.y - 36} x2={pied1.x + 38} y2={pied1.y - 6} stroke="#6b5a48" strokeWidth="1.2" />
-          <rect x={pied1.x + 32} y={pied1.y - 8} width="12" height="9" rx="1.5" fill="#8a5a2b" stroke="#3a2210" strokeWidth="1" />
-        </g>
-      )}
-      {/* Les poulies des cabines des mineurs employés */}
-      {poulies}
-
-      {/* Les poteaux dorés et les lanternes aux coins */}
-      <Poteau gx={x + 0.3} gy={y + 0.3} haut={20} lanterne />
-      <Poteau gx={x + t - 0.3} gy={y + 0.3} haut={18} />
-      <Poteau gx={x + 0.3} gy={y + t - 0.3} haut={18} />
-      <Poteau gx={x + t - 0.3} gy={y + t - 0.3} haut={22} lanterne />
-
-      {/* L'entrée : des rails qui sortent, un wagonnet et le panneau « MINE » */}
-      {(() => {
-        const a = versEcran(entree[0] - 0.7, entree[1] - 1.4)
-        const b = versEcran(entree[0] + 0.7, entree[1] - 1.4)
-        const c = versEcran(entree[0] - 0.7, entree[1] + 0.3)
-        const d = versEcran(entree[0] + 0.7, entree[1] + 0.3)
-        const panneau = versEcran(entree[0] - 2.2, entree[1] - 0.2)
-        const wagon = versEcran(entree[0], entree[1] - 0.7)
-        return (
-          <g>
-            <polygon points={`${a.x},${a.y} ${b.x},${b.y} ${d.x},${d.y} ${c.x},${c.y}`} fill="#7a5c3a" opacity="0.9" />
-            <line x1={a.x} y1={a.y} x2={c.x} y2={c.y} stroke="#c9c9d2" strokeWidth="2" />
-            <line x1={b.x} y1={b.y} x2={d.x} y2={d.y} stroke="#c9c9d2" strokeWidth="2" />
-            <g transform={`translate(${wagon.x} ${wagon.y})`}>
-              <path d="M-13 -9 L13 -9 L10 3 L-10 3 Z" fill="#6e6e78" stroke="#25252b" strokeWidth="1.4" />
-              <circle cx="-5" cy="-11" r="3.4" fill="#4ee8dc" />
-              <circle cx="2" cy="-12" r="3.2" fill="#ffd84a" />
-              <circle cx="7" cy="-10" r="3" fill="#e04848" />
-              <circle cx="-7" cy="4" r="2.6" fill="#2a2a30" />
-              <circle cx="7" cy="4" r="2.6" fill="#2a2a30" />
-            </g>
-            <g transform={`translate(${panneau.x} ${panneau.y - 26})`}>
-              <rect x="-2" y="8" width="4" height="22" fill="#6b4422" />
-              <rect x="-24" y="-6" width="48" height="17" rx="4" fill="#a8743e" stroke="#4a2c12" strokeWidth="1.6" />
-              <text x="0" y="7" textAnchor="middle" fontSize="11" fontWeight="900" fill="#3a2210" fontFamily="system-ui, sans-serif" transform={miroir ? 'scale(-1 1)' : undefined}>
-                MINE
-              </text>
-            </g>
-          </g>
-        )
-      })()}
     </g>
   )
 }

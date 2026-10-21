@@ -6,7 +6,7 @@
 // La caméra : on fait glisser la carte avec la souris ou le doigt, on zoome avec la molette ou en
 // pinçant. Elle suit le joueur quand il marche.
 
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { BATIMENTS, DECORATIONS, PIOCHES, RARETES, VITESSE_MARCHE, profondeurBedrock, type IdBatiment } from '../jeu/donnees'
 import { foreuseEnMarche } from '../jeu/foreuse'
 import { ascenseurEnMouvement, estCassee, piocheEquipee, type EtatJeu, type Employe } from '../jeu/mineur'
@@ -28,14 +28,16 @@ import {
   CaseChemin,
   CaseRail,
   DessinDecoration,
-  DessinMine,
+  DessinEvolutionMine,
   DessinWagonnet,
   LosangeEmprise,
+  TerrainVillage,
 } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { Hamster } from './Hamster'
 import {
   HAUTEUR_MONDE,
+  LIMITES_CAMERA,
   devant,
   hauteurDecoration,
   LARGEUR_MONDE,
@@ -53,14 +55,15 @@ type Props = {
   joueur: EtatJoueurVillage
   notifications: Partial<Record<IdBatiment, Notification[]>>
   batimentActif: IdBatiment | null
-  edition: boolean // on montre la grille (poser, déplacer, peindre des rails...)
   fantome: Fantome | null
   fantomeLibre: boolean
   pinceau: boolean // on peint des rails ou des chemins : chaque case touchée en reçoit un
   onTap: (c: Case, cible: CibleVillage | null) => void
-  onSurvol: (c: Case) => void // la souris passe sur une case (pour le fantôme)
+  onSurvol: (c: Case) => void // la souris passe sur une case (le fantôme la suit tant qu'il n'est pas fixé)
+  onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
   transition: 'entree' | 'sortie' | null
+  panneauOuvert: boolean // un panneau est ouvert à droite (ordinateur) : la caméra se décale à gauche
   onTransitionFinie: () => void
 }
 
@@ -74,14 +77,15 @@ export function VueVillage({
   joueur,
   notifications,
   batimentActif,
-  edition,
   fantome,
   fantomeLibre,
   pinceau,
   onTap,
   onSurvol,
+  onGlisser,
   onPeindre,
   transition,
+  panneauOuvert,
   onTransitionFinie,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
@@ -104,7 +108,12 @@ export function VueVillage({
     return () => observateur.disconnect()
   }, [])
 
-  const zoomMin = Math.max(taille.l / LARGEUR_MONDE, taille.h / HAUTEUR_MONDE)
+  // On ne peut pas dézoomer au point de voir plus loin que les limites de la caméra.
+  // Sur un grand écran, le panneau de droite cache une partie de la carte : le milieu de la vue
+  // se décale vers la gauche pour que le joueur (et le bâtiment ouvert) restent visibles.
+  const decalage = panneauOuvert && taille.l > 860 ? 210 : 0
+  const milieuX = taille.l / 2 - decalage
+  const zoomMin = Math.max(taille.l / (LIMITES_CAMERA.x1 - LIMITES_CAMERA.x0), taille.h / (LIMITES_CAMERA.y1 - LIMITES_CAMERA.y0))
   const zoomConfort = Math.min(ZOOM_MAX, Math.max(zoomMin, taille.l / 760))
   const [zoom, setZoom] = useState<number | null>(null)
   const [libre, setLibre] = useState<{ cx: number; cy: number } | null>(null)
@@ -116,14 +125,15 @@ export function VueVillage({
     if (joueur.marche && libre !== null) setLibre(null)
   }
 
-  // On garde la carte dans l'écran (pas de vide sur les bords).
+  // On garde la caméra dans ses limites : la clairière et la forêt autour, jamais au-delà.
   const borner = useCallback(
     (c: { z: number; cx: number; cy: number }): Camera => {
+      const { x0, y0, x1, y1 } = LIMITES_CAMERA
       const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z))
       const demiL = taille.l / 2 / z
       const demiH = taille.h / 2 / z
-      const cx = demiL * 2 >= LARGEUR_MONDE ? LARGEUR_MONDE / 2 : Math.min(LARGEUR_MONDE - demiL, Math.max(demiL, c.cx))
-      const cy = demiH * 2 >= HAUTEUR_MONDE ? HAUTEUR_MONDE / 2 : Math.min(HAUTEUR_MONDE - demiH, Math.max(demiH, c.cy))
+      const cx = demiL * 2 >= x1 - x0 ? (x0 + x1) / 2 : Math.min(x1 - demiL, Math.max(x0 + demiL, c.cx))
+      const cy = demiH * 2 >= y1 - y0 ? (y0 + y1) / 2 : Math.min(y1 - demiH, Math.max(y0 + demiH, c.cy))
       return { z, cx, cy, douce: false }
     },
     [taille, zoomMin],
@@ -175,9 +185,9 @@ export function VueVillage({
       const rect = conteneurRef.current?.getBoundingClientRect()
       const ox = rect ? sx - rect.left : sx
       const oy = rect ? sy - rect.top : sy
-      return { x: (ox - taille.l / 2) / c.z + c.cx, y: (oy - taille.h / 2) / c.z + c.cy }
+      return { x: (ox - milieuX) / c.z + c.cx, y: (oy - taille.h / 2) / c.z + c.cy }
     },
-    [taille],
+    [taille, milieuX],
   )
 
   const caseSous = useCallback(
@@ -231,7 +241,7 @@ export function VueVillage({
     const dy = e.clientY - g.depart.y
     if (!g.deplace && Math.hypot(dx, dy) > 7) g.deplace = true
     if (!g.deplace) return
-    if (g.mode === 'fantome') onSurvol(caseSous(e.clientX, e.clientY))
+    if (g.mode === 'fantome') onGlisser(caseSous(e.clientX, e.clientY))
     else if (g.mode === 'pinceau') onPeindre(caseSous(e.clientX, e.clientY))
     else {
       g.mode = 'carte'
@@ -277,27 +287,25 @@ export function VueVillage({
   // --- Ce qu'on dessine ------------------------------------------------------
 
   const objets: ReactNode[] = []
-  const editionOuFantome = edition || fantome !== null
 
   // Les bâtiments (celui qu'on déplace est remplacé par son fantôme).
   for (const b of village.batiments) {
     if (fantome?.type === 'batiment' && fantome.id === b.id) continue
     const actif = b.id === batimentActif
     if (b.id === 'puits') {
+      // La mine : son image, et par-dessus ce qui évolue (cages d'ascenseur, profondeur).
       objets.push(
-        <BoiteSvg key="puits" x={b.x} y={b.y} taille={10} hauteur={140} classe={`sprite-mine ${actif ? 'sprite-actif' : ''}`} style={{ zIndex: profondeur(b.x + 5, b.y + 5) }}>
-          <g data-cible="batiment:puits">
-            <DessinMine
-              x={b.x}
-              y={b.y}
-              miroir={b.miroir}
-              fraction={Math.min(1, etat.profondeur / profondeurBedrock(etat.prestige))}
-              ascenseur={etat.ascenseur.niveau}
-              cabineEnHaut={etat.ascenseur.position === 0}
-              enMouvement={ascenseurEnMouvement(etat) || etat.employes.some((m) => m.etape === 'monte' || m.etape === 'descend')}
-              nbMineurs={etat.employes.length}
-            />
-          </g>
+        <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe={actif ? 'sprite-actif' : ''} />,
+        <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
+          <DessinEvolutionMine
+            x={b.x}
+            y={b.y}
+            miroir={b.miroir}
+            fraction={Math.min(1, etat.profondeur / profondeurBedrock(etat.prestige))}
+            profondeur={etat.profondeur}
+            nbCages={(etat.ascenseur.niveau > 0 ? 1 : 0) + etat.employes.length}
+            enMouvement={ascenseurEnMouvement(etat) || etat.employes.some((m) => m.etape === 'monte' || m.etape === 'descend')}
+          />
         </BoiteSvg>,
       )
       continue
@@ -319,17 +327,9 @@ export function VueVillage({
 
   // Le fantôme de ce qu'on place.
   if (fantome?.type === 'batiment') {
-    if (fantome.id === 'puits') {
-      objets.push(
-        <BoiteSvg key="fantome" x={fantome.x} y={fantome.y} taille={10} hauteur={140} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} style={{ zIndex: 99999 }}>
-          <DessinMine x={fantome.x} y={fantome.y} miroir={fantome.miroir} fraction={etat.profondeur / profondeurBedrock(etat.prestige)} ascenseur={etat.ascenseur.niveau} cabineEnHaut={false} enMouvement={false} nbMineurs={etat.employes.length} />
-        </BoiteSvg>,
-      )
-    } else {
-      objets.push(
-        <ImageBatiment key="fantome" id={fantome.id} x={fantome.x} y={fantome.y} miroir={fantome.miroir} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} />,
-      )
-    }
+    objets.push(
+      <ImageBatiment key="fantome" id={fantome.id} x={fantome.x} y={fantome.y} miroir={fantome.miroir} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} />,
+    )
   } else if (fantome?.type === 'decoration') {
     const t = DECORATIONS[fantome.id].taille
     objets.push(
@@ -478,14 +478,13 @@ export function VueVillage({
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null
       })()}
-      {editionOuFantome && <Grille />}
       {fantome && <LosangeEmprise x={fantome.x} y={fantome.y} taille={tailleFantome(fantome)} libre={fantomeLibre} />}
       {fantome?.type === 'sol' && fantome.sol === 'chemin' && <CaseChemin x={fantome.x} y={fantome.y} />}
     </svg>
   )
 
   const styleMonde: CSSProperties = {
-    transform: `translate(${taille.l / 2 - camera.cx * camera.z}px, ${taille.h / 2 - camera.cy * camera.z}px) scale(${camera.z})`,
+    transform: `translate(${milieuX - camera.cx * camera.z}px, ${taille.h / 2 - camera.cy * camera.z}px) scale(${camera.z})`,
     transition: !camera.douce ? 'none' : transition ? 'transform 0.75s cubic-bezier(0.55, 0, 0.6, 1)' : 'transform 0.18s linear',
   }
 
@@ -501,7 +500,7 @@ export function VueVillage({
       aria-label="Le village vu du ciel"
     >
       <div className="monde-village" style={styleMonde}>
-        <img className="fond-village" src="/images/village/fond.webp" alt="" width={LARGEUR_MONDE} height={HAUTEUR_MONDE} draggable={false} />
+        <TerrainVillage />
         {sol}
         <div className="objets-village">{objets}</div>
         <div className="bulles-village">{bulles}</div>
@@ -510,16 +509,3 @@ export function VueVillage({
     </div>
   )
 }
-
-// La grille de la clairière (pendant qu'on construit ou qu'on modifie le village).
-const Grille = memo(function Grille() {
-  const lignes: ReactNode[] = []
-  for (let i = 0; i <= 40; i++) {
-    const a = versEcran(i, 0)
-    const b = versEcran(i, 40)
-    const c = versEcran(0, i)
-    const d = versEcran(40, i)
-    lignes.push(<line key={`a${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />, <line key={`b${i}`} x1={c.x} y1={c.y} x2={d.x} y2={d.y} />)
-  }
-  return <g className="grille-village">{lignes}</g>
-})

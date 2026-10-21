@@ -43,7 +43,7 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 
 ## 2. L'écran d'accueil (`Accueil.tsx`)
 
-Refait le 20/10 dans le style des images du village (bois, or, lanternes). Derrière toute la page, le **décor de la clairière** (`fond.webp`) très assombri. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**, et les champs de texte en bois foncé. De haut en bas :
+Refait le 20/10 dans le style des images du village (bois, or, lanternes). Derrière toute la page, la **forêt** du village (`foret.webp`, répétée) très assombrie. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**, et les champs de texte en bois foncé. De haut en bas :
 
 ### 2.1 Le grand bandeau (« héros »)
 
@@ -148,40 +148,43 @@ Depuis le 20/10, l'écran de jeu a **deux modes**, selon l'endroit où est le jo
 
 On passe de l'un à l'autre par l'entrée de la mine, avec une animation (voir [§ 13](#13-navigation-village--mine)).
 
+**Plein écran** (21/10, `src/plein-ecran.css`, comme Clash of Clans) : la scène (`main.scene`) prend **tout l'écran**, et l'interface (`.interface`) est posée **par-dessus**. Le calque de l'interface laisse passer les clics vers la carte, sauf sur les boutons et les panneaux eux-mêmes.
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ ⛏️ MEGA DIGGER        Recommencer à zéro  🌍 Monde  📊  🏅  │  en-tête
-│ [Argent][Lieu][Pioche][Sac][🪣 🛗 ⭐ 🔊 🎵]                   │  bandeau (HUD)
-│ 🎯 prochain objectif ································ (jauge)  │
-├──────────────────────────────┬───────────────────────────────┤
-│  VUE DU MONDE                │  PANNEAU DE DROITE            │
-│  village : carte vue du ciel │  (le bâtiment devant lequel   │
-│  mine : coupe du puits       │   on est, l'aide du village,  │
-│                              │   ou le sac dans la mine)     │
-│                              │                               │
-│ [barre de 4 boutons]         │  notifications (toasts)       │
-│  ← ↑ → ↓ pour marcher…       │                               │
-└──────────────────────────────┴───────────────────────────────┘
+│[🌍]        [Argent][Lieu][Pioche][Sac][🪣 🛗 ⭐ 🔊 🎵]        │  bandeau (HUD)
+│[📊]                       🎯 prochain objectif ············  │
+│[🏅]                                        ┌───────────────┐ │
+│[❔]        LA CARTE (village vu du ciel)   │ PANNEAU       │ │
+│[⚙️]        sur tout l'écran                │ (bâtiment, ou │ │
+│                                            │  sac en mine) │ │
+│                 messages (toasts)          └───────────────┘ │
+│ (⛏️)          ← ↑ → ↓ pour marcher       (✏️) (🌸) (🏗️)     │  boutons ronds
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- `main.plateau` : deux colonnes sur ordinateur (`colonne-mine` à gauche, `colonne-panneaux` à droite ; au village, la carte prend toute la place et le panneau fait 300 à 380 px), une seule sur téléphone (voir [§ 14](#14-téléphone-ou-ordinateur--la-mise-en-page)).
-- La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé : la mine 2D s'élargit de 2 cases pour leur galerie ; et `avec-panneau` quand le panneau d'un bâtiment est ouvert.
+- **En haut à gauche** (`boutons-coin`) : une colonne de petits boutons carrés en bois (voir § 4.1).
+- **En haut à droite** : le bandeau (§ 4.2), en petites cases sombres, et dessous le prochain objectif (§ 5).
+- **Le panneau** (`panneau-flottant`) : sur ordinateur, une carte de 400 px (350 px sur un écran moyen) à droite, entre le bandeau et les boutons ; quand il est ouvert au village, la caméra se décale vers la gauche pour que le joueur reste visible. Sur téléphone, il monte du bas, au-dessus des boutons (55 % de la hauteur au plus).
+- **En bas** : les boutons d'action (§ 7). Au village, de **gros boutons ronds** : ⛏️ Mine en bas à gauche, ✏️ Modifier, 🌸 Décos et 🏗️ Bâtiments en bas à droite. Dans la mine, la barre de 4 boutons au milieu (5 sur téléphone, avec 🎒 Sac).
+- **Dans la mine**, la coupe 2D est au milieu, entre le bandeau et les boutons (et à gauche du panneau du sac sur ordinateur).
+- La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé (la mine 2D s'élargit pour leur galerie) et `avec-panneau` quand un panneau est ouvert.
 
 ---
 
 ## 4. L'en-tête et le bandeau (HUD)
 
-### 4.1 L'en-tête (`App.tsx`)
+### 4.1 Les boutons du coin (`App.tsx`)
 
-| Élément | Effet |
+Plus d'en-tête ni de titre pendant la partie (21/10) : une colonne de boutons carrés en bois, en haut à gauche (54 px, 44 px sur téléphone, sans texte).
+
+| Bouton | Effet |
 |---|---|
-| **⛏️ MEGA DIGGER** | le titre (pas cliquable) |
-| lien **Recommencer à zéro** | confirmation du navigateur « Effacer la partie du monde « … » et tout recommencer (village, succès et foreuse compris) ? » ; si OK : nouvelle partie dans ce monde (une clairière avec seulement la mine), le hamster replacé devant la mine |
 | **🌍 *nom du monde*** | retour à l'accueil (bulle : « Changer de monde (ta partie est sauvegardée automatiquement) ») |
 | **📊 Stats** | ouvre la [fenêtre des statistiques](#102-les-statistiques-statistiquestsx) |
-| **🏅 *n*/*total*** | ouvre la [fenêtre des succès](#101-les-succès) (nombre obtenus / nombre total) |
-
-Ces trois derniers sont des pastilles grises arrondies qui passent en or au survol.
+| **🏅 *n*/*total*** | ouvre la [fenêtre des succès](#101-les-succès) |
+| **❔ Aide** (au village) | ouvre ou ferme le panneau « 🏡 Ton village » (comment se déplacer et construire) |
+| **⚙️ Réglages** | ouvre un petit menu : **🌍 Changer de monde** et **🔄 Recommencer à zéro** (confirmation « Effacer la partie du monde « … » et tout recommencer (village, succès et foreuse compris) ? ») |
 
 ### 4.2 Le bandeau (`Hud.tsx`)
 
@@ -293,9 +296,9 @@ Sous la surface, une rangée par mètre. Chaque rangée (`Rangee`) contient, de 
 
 ## 7. La barre de boutons d'action
 
-Toujours **4 boutons à la même place** (sous la vue sur ordinateur, collés en bas de l'écran sur téléphone). Ils changent avec le mode.
+Ils sont posés sur la scène, en bas de l'écran, et changent avec le mode.
 
-**Au village** (`actions-village`) :
+**Au village** (`actions-village`, de gros boutons ronds comme dans Clash of Clans : ⛏️ Mine en bas à gauche, les trois autres en bas à droite) :
 
 | Bouton | Couleur | Effet |
 |---|---|---|
@@ -313,7 +316,7 @@ Toujours **4 boutons à la même place** (sous la vue sur ordinateur, collés en
 | **🗑️ Enlever** | rouge | seulement pour une décoration, un rail ou un pavé déjà posé : l'enlève, **sans remboursement** (un bâtiment ne s'enlève pas) |
 | **✖ Annuler** | rouge | laisse tout comme avant |
 
-Pour placer le fantôme : il apparaît sur une place libre près du joueur ; il suit la souris, on le fait glisser au doigt, ou on touche la case où le mettre (il s'y centre).
+Pour placer le fantôme (21/10, en deux temps) : il apparaît sur une place libre près du joueur et **suit la souris** (consigne « 👆 Clique (ou touche) la carte pour placer, puis valide. ») ; **un clic sur la carte le fixe** là où on a cliqué, sans le construire : il ne suit plus la souris et on peut aller cliquer sur « Construire ici ». Un autre clic le déplace, on peut aussi le faire glisser. Sur téléphone, on touche la case où le mettre (il s'y centre).
 
 **En mode pinceau** (rails ou chemin de pavés) : une consigne « 🛤️ Touche ou glisse sur les cases pour poser des rails (10 🔩 fer la case). » (ou « 🪨 … un chemin (5 $ la case). ») et **✔ Terminé** (vert). Chaque case touchée (ou survolée en glissant) reçoit un rail ou un pavé si elle est libre et qu'on peut payer.
 
@@ -327,10 +330,11 @@ Pour placer le fantôme : il apparaît sur une place libre près du joueur ; il 
 | **♾️ Auto** | or foncé | au front, sans minage, pioche pas cassée | creuse **sans s'arrêter**, couche après couche. Devient **⏹️ Arrêt** (rouge). S'arrête tout seul si la pioche casse (toast « 💥 Pioche cassée : creusage automatique arrêté. ») ou si le sac est plein. Bulle si la pioche est cassée : « Ta pioche est cassée : répare-la (ou creuse à la main avec « Creuser ») » |
 | **🏠 Village** | bois | pas dans la cabine | arrête le minage ; le mineur marche jusqu'au puits puis remonte en ascenseur s'il est là, sinon à l'échelle. En arrivant en haut, on ressort dans le village |
 | **⛏️ Front** | bois | pas au front, pas dans la cabine | redescend au front (ascenseur ou échelle) |
+| **🎒 Sac** (téléphone seulement) | kaki | toujours | ouvre ou ferme le panneau du sac par-dessus la mine (sur ordinateur, il est toujours à droite) |
 
 Le minage s'arrête aussi tout seul quand il n'y a plus de place : sac plein sans ascenseur (toast « 🎒 Sac plein ! Remonte vendre au marché (bouton Village). »), ou, avec l'ascenseur, sac **et** quai pleins (« 🎒 Sac plein ! Envoie tes objets à la surface avec l'ascenseur (panneau Sac). »). Avec l'ascenseur, les blocs en trop attendent d'abord sur son quai ; si l'**envoi automatique** est coché, la cabine vient chercher les objets quand le sac est plein et on continue de creuser. Le minage s'arrête aussi si le mineur quitte le front.
 
-Sous la barre, un rappel : « ← ↑ → ↓ pour marcher · Espace pour sauter » au village, « ← → pour te déplacer · ↑ ↓ sur l'échelle » dans la mine ; caché sur écran tactile.
+Un rappel dans une petite pastille : « ← ↑ → ↓ pour marcher · Espace pour sauter » au village (en bas au milieu), « ← → pour te déplacer · ↑ ↓ sur l'échelle » dans la mine (sous la barre) ; caché sur écran tactile et sur téléphone.
 
 ### 7.1 Les menus Bâtiments et Décorations (`MenuConstruction.tsx`)
 
@@ -348,17 +352,17 @@ La liste, les prix et les règles : [village.md](village.md).
 
 ---
 
-## 8. Le panneau de droite
+## 8. Le panneau
 
 Il change selon l'endroit :
 
 | Où | Contenu |
 |---|---|
-| Village, devant aucun bâtiment | « 🏡 Ton village » : « Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, Espace pour sauter). Fais glisser la carte pour la déplacer, pince ou utilise la molette pour zoomer. » et le rôle des menus Bâtiments, Décos et Modifier (caché sur téléphone) |
+| Village, devant aucun bâtiment | rien (la carte est dégagée) ; le bouton **❔ Aide** ouvre « 🏡 Ton village » : comment se déplacer, zoomer et construire |
 | Village, devant un bâtiment | le **panneau du bâtiment** : son icône et son nom, un bouton rond **✖** pour le fermer, sa description, puis son contenu |
 | Échelle, cabine ou front | deux onglets **🎒 Sac** et **🧰 Pioches** |
 
-**Quand le panneau d'un bâtiment s'ouvre** : quand le joueur **arrive en marchant** devant sa porte (à moins de 1,4 case de l'entrée), au clavier ou après l'avoir touché. Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie, en sortant de la mine), pour ne pas cacher la carte sur téléphone. ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
+**Quand le panneau d'un bâtiment s'ouvre** : quand le joueur **arrive en marchant** à moins de **1,3 case** du bâtiment, **de n'importe quel côté** (21/10 : plus besoin de trouver la porte), au clavier ou après l'avoir touché (il marche alors jusqu'au côté le plus proche ; si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre). Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie, en sortant de la mine), pour ne pas cacher la carte sur téléphone. ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
 
 ### 8.1 Les panneaux des bâtiments
 
@@ -604,8 +608,8 @@ La largeur d'une case de mine s'adapte : `min(46px, (largeur de l'écran − 97 
 
 | Largeur | Ce qui change |
 |---|---|
-| **> 860 px et hauteur ≥ 560 px** (ordinateur) | le jeu prend **exactement la hauteur de la fenêtre** (largeur max 1 180 px) : la vue (carte du village ou mine) s'étire pour remplir, seul le panneau de droite défile s'il est trop long, plus besoin de faire défiler la page. Deux colonnes. Ailleurs, la carte du village fait `min(72vh, 680px)` de haut |
-| **≤ 860 px** (tablette, téléphone) | une seule colonne ; en-tête sur deux lignes (titre et « Recommencer à zéro », puis 🌍 / 📊 / 🏅 à parts égales) ; bandeau sur 2 colonnes (Argent, Lieu / Pioche, Sac / les petits boutons sur toute la largeur) ; **carte du village** en `calc(100dvh - 300px)` (320 px au moins), vue de la mine `min(58dvh, 560px)` ; **barre de boutons collée en bas de l'écran** (fond flouté, boutons de 48 px de haut, marges pour l'encoche) ; le **panneau d'un bâtiment** monte du bas, par-dessus la carte, juste au-dessus de la barre (50 % de la hauteur de l'écran au plus, il défile à l'intérieur) ; l'aide « 🏡 Ton village » est cachée ; le menu Bâtiments / Décos prend 82 % de la hauteur, coins arrondis en haut, cartes plus petites ; toasts en haut au centre (2 au plus) ; place réservée sous le dernier panneau |
+| **> 860 px** (ordinateur) | plein écran (21/10) : la scène remplit la fenêtre, le bandeau en haut à droite, les boutons du coin en haut à gauche, le panneau à droite (400 px, 350 px sous 1 180 px de large), les gros boutons ronds en bas (70 et 86 px), les toasts au milieu sous l'objectif |
+| **≤ 860 px** (tablette, téléphone) | toujours en plein écran ; boutons du coin de 44 px sans texte ; bandeau en petites cases (Pioche et Sac à moitié de largeur, enchantements cachés) ; l'objectif passe en bas, au-dessus des boutons (caché dans la mine) ; boutons ronds de 60 et 72 px ; le **panneau d'un bâtiment** monte du bas au-dessus des boutons (55 % de la hauteur au plus) ; **dans la mine**, la coupe prend toute la largeur et le sac s'ouvre avec le bouton 🎒 ; le menu Bâtiments / Décos prend 82 % de la hauteur ; toasts en bas, au-dessus de l'objectif (2 au plus) ; rappel du clavier caché |
 | **≤ 640 px** | statistiques : tuiles sur 2 colonnes, une seule colonne pour les blocs |
 | **≤ 480 px** (petit téléphone) | colonnes autour de la mine rétrécies (étiquette 26 px, échelle 12 px, ascenseur 22 px, foreuse 16 px) pour agrandir les blocs ; les **emojis des 4 boutons d'action sont cachés** ; le prénom des mineurs est caché dans la mine |
 | sans survol (`hover: none`) | rappel des flèches caché, champs à 16 px |

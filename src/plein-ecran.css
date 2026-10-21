@@ -1,0 +1,564 @@
+/* =========================================================================
+   Le jeu en plein écran (21/10), comme Clash of Clans : la scène (le village vu du ciel, ou
+   la mine en coupe) prend tout l'écran, et l'interface est posée par-dessus :
+   - en haut à gauche, une colonne de petits boutons (monde, stats, succès, aide, réglages) ;
+   - en haut à droite, le bandeau (argent, pioche, sac...) et, dessous, le prochain objectif ;
+   - à droite (ordinateur) ou en bas (téléphone), le panneau du bâtiment ou du sac ;
+   - en bas, les boutons d'action (gros boutons ronds au village).
+   ========================================================================= */
+
+.jeu.plein-ecran {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  background: #0d0c10;
+  /* Les marges de l'interface : sous l'encoche et au-dessus de la barre de l'iPhone. */
+  --marge-haut: max(8px, env(safe-area-inset-top));
+  --marge-bas: max(10px, env(safe-area-inset-bottom));
+  --marge-gauche: max(8px, env(safe-area-inset-left));
+  --marge-droite: max(8px, env(safe-area-inset-right));
+  /* La largeur du panneau de droite (ordinateur). */
+  --largeur-panneau: 400px;
+}
+
+/* --- La scène ---------------------------------------------------------------------- */
+
+.plein-ecran .scene {
+  position: absolute;
+  inset: 0;
+}
+
+.plein-ecran .vue-village {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Dans la mine : la coupe est au milieu, entre le bandeau et les boutons (et à gauche du
+   panneau du sac sur ordinateur). Elle prend toute la hauteur qui reste. */
+.plein-ecran.mode-mine .scene {
+  top: 96px;
+  bottom: 84px;
+  right: calc(var(--largeur-panneau) + 24px);
+  display: flex;
+  justify-content: center;
+}
+
+.plein-ecran .entree-dans-la-mine {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.plein-ecran .entree-dans-la-mine > .monde {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+/* --- Le calque de l'interface : il laisse passer les clics vers la carte, sauf sur les
+       boutons et les panneaux eux-mêmes. ---------------------------------------------- */
+
+.plein-ecran .interface {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.plein-ecran .interface-haut {
+  position: absolute;
+  top: var(--marge-haut);
+  left: var(--marge-gauche);
+  right: var(--marge-droite);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* --- En haut à gauche : les petits boutons carrés en bois -------------------------- */
+
+.boutons-coin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.bouton-coin {
+  width: 54px;
+  height: 54px;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 14px;
+  border: 2px solid #3a2210;
+  background: linear-gradient(#946036, #6e4420);
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.25), 0 3px 0 #2a1608, 0 6px 12px rgb(0 0 0 / 0.35);
+  color: #fff3d6;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bouton-coin:hover,
+.bouton-coin.actif {
+  border-color: var(--accent);
+}
+
+.bouton-coin:active {
+  translate: 0 2px;
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.25), 0 1px 0 #2a1608;
+}
+
+.texte-coin {
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+.menu-reglages {
+  position: absolute;
+  top: 0;
+  left: 62px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 210px;
+  border: 2px solid #4a2c12;
+  background: linear-gradient(#36220f, #22150a);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
+}
+
+/* --- En haut à droite : le bandeau, en petites cases sombres --------------------- */
+
+.plein-ecran .hud {
+  margin: 0 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.plein-ecran .hud-case {
+  height: auto;
+  min-height: 50px;
+  padding: 5px 10px;
+  border: 2px solid #4a2c12;
+  background: rgb(24 15 8 / 0.84);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+}
+
+.plein-ecran .hud-pioche {
+  width: 210px;
+}
+
+.plein-ecran .hud-sac {
+  width: 180px;
+}
+
+/* --- Le prochain objectif : une pastille sous le bandeau, à droite ---------------- */
+
+.plein-ecran .objectif {
+  position: absolute;
+  top: calc(var(--marge-haut) + 62px);
+  right: var(--marge-droite);
+  width: min(560px, calc(100% - 90px));
+  margin: 0;
+  pointer-events: auto;
+  background: rgb(24 15 8 / 0.84);
+  border-color: #4a2c12;
+}
+
+/* --- Le panneau (bâtiment ou sac) ------------------------------------------------- */
+
+.panneau-flottant {
+  position: absolute;
+  top: calc(var(--marge-haut) + 104px);
+  right: var(--marge-droite);
+  bottom: 96px;
+  width: var(--largeur-panneau);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.panneau-flottant > .panneau {
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  pointer-events: auto;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.55);
+  animation: monte-menu 0.22s ease-out;
+}
+
+/* Dans la mine, le sac est toujours là (sur ordinateur) : il prend toute la hauteur. */
+.plein-ecran.mode-mine .panneau-flottant > .panneau {
+  flex: 1;
+  animation: none;
+}
+
+.fermer-sac,
+.bouton-sac-telephone {
+  display: none;
+}
+
+/* --- En bas : les boutons d'action ------------------------------------------------- */
+
+.plein-ecran .interface-bas {
+  position: absolute;
+  left: var(--marge-gauche);
+  right: var(--marge-droite);
+  bottom: var(--marge-bas);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.plein-ecran .actions {
+  pointer-events: none;
+}
+
+.plein-ecran .actions > * {
+  pointer-events: auto;
+}
+
+/* Dans la mine : la barre au milieu, sous la coupe. */
+.plein-ecran.mode-mine .interface-bas {
+  right: calc(var(--largeur-panneau) + 24px);
+}
+
+.plein-ecran.mode-mine .actions {
+  width: min(640px, 100%);
+}
+
+/* Au village : la mine en bas à gauche, la construction en bas à droite. */
+.plein-ecran .actions-village {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.groupe-boutons-ronds {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.bouton.bouton-rond {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 50%;
+  border: 3px solid #2a1608;
+  overflow: visible;
+  box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.3), 0 4px 0 rgb(0 0 0 / 0.45), 0 8px 18px rgb(0 0 0 / 0.4);
+}
+
+.bouton.bouton-rond-gros {
+  width: 86px;
+  height: 86px;
+}
+
+.icone-rond {
+  font-size: 1.7rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.4));
+}
+
+.bouton-rond-gros .icone-rond {
+  font-size: 2.1rem;
+}
+
+.texte-rond {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+/* Pendant une construction : une barre au milieu, en bas. */
+.plein-ecran .actions-edition {
+  width: min(640px, 100%);
+  padding: 10px;
+  border-radius: 16px;
+  border: 2px solid #4a2c12;
+  background: rgb(24 15 8 / 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+/* Le rappel du clavier : une petite pastille. Au village, entre les boutons du bas. */
+.plein-ecran .aide-clavier {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(24 15 8 / 0.7);
+  pointer-events: auto;
+}
+
+.plein-ecran.mode-village .aide-clavier {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.plein-ecran.mode-village .actions-edition ~ .aide-clavier {
+  display: none;
+}
+
+/* --- Les messages : au milieu, sous l'objectif ------------------------------------ */
+
+.plein-ecran .toasts {
+  position: absolute;
+  top: calc(var(--marge-haut) + 108px);
+  left: 50%;
+  bottom: auto;
+  translate: -50% 0;
+  transform: none;
+  width: min(440px, calc(100% - 32px));
+  margin: 0;
+  pointer-events: none;
+}
+
+/* Avec le panneau de droite ouvert, les messages se décalent vers la gauche. */
+.plein-ecran.avec-panneau .toasts {
+  left: calc((100% - var(--largeur-panneau)) / 2);
+}
+
+/* --- Ordinateur moyen : un panneau un peu plus étroit ----------------------------- */
+
+@media (max-width: 1180px) and (min-width: 861px) {
+  .jeu.plein-ecran {
+    --largeur-panneau: 350px;
+  }
+
+  .plein-ecran .hud-pioche {
+    width: 170px;
+  }
+
+  .plein-ecran .hud-sac {
+    width: 150px;
+  }
+}
+
+/* =========================================================================
+   Téléphone
+   ========================================================================= */
+
+@media (max-width: 860px) {
+  .bouton-coin {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+  }
+
+  .texte-coin {
+    display: none;
+  }
+
+  .menu-reglages {
+    left: 52px;
+  }
+
+  /* Le bandeau : de petites cases sur deux lignes. */
+  .plein-ecran .hud {
+    gap: 4px;
+  }
+
+  .plein-ecran .hud-case {
+    min-height: 40px;
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+
+  .plein-ecran .hud-enchants {
+    display: none;
+  }
+
+  .plein-ecran .hud-titre {
+    font-size: 0.66rem;
+  }
+
+  .plein-ecran .hud-argent strong {
+    font-size: 0.95rem;
+  }
+
+  .plein-ecran .hud-pioche,
+  .plein-ecran .hud-sac {
+    width: calc(50% - 2px);
+  }
+
+  .plein-ecran .barre {
+    height: 14px;
+  }
+
+  .plein-ecran .objectif {
+    top: auto;
+    bottom: calc(var(--marge-bas) + 100px);
+    left: var(--marge-gauche);
+    right: var(--marge-droite);
+    width: auto;
+  }
+
+  /* Le panneau monte du bas, au-dessus des boutons, sur la moitié de l'écran au plus. */
+  .panneau-flottant {
+    top: auto;
+    left: var(--marge-gauche);
+    right: var(--marge-droite);
+    bottom: calc(var(--marge-bas) + 92px);
+    width: auto;
+    max-height: 55dvh;
+  }
+
+  .plein-ecran .actions .bouton {
+    min-height: 48px;
+  }
+
+  .bouton.bouton-rond {
+    width: 60px;
+    height: 60px;
+    min-height: 0;
+  }
+
+  .bouton.bouton-rond-gros {
+    width: 72px;
+    height: 72px;
+  }
+
+  .groupe-boutons-ronds {
+    gap: 8px;
+  }
+
+  .plein-ecran .aide-clavier {
+    display: none;
+  }
+
+  /* Les messages en bas, juste au-dessus des boutons (en haut, ils cachaient le bandeau). */
+  .plein-ecran .toasts,
+  .plein-ecran.avec-panneau .toasts {
+    top: auto;
+    bottom: calc(var(--marge-bas) + 136px);
+    left: 50%;
+  }
+
+  /* Les petits compteurs (seaux, ascenseur, prestige, son) : sur une ligne, en petit. */
+  .plein-ecran .hud-petits {
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+
+  .plein-ecran .hud-petits .hud-bouton {
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  /* --- Dans la mine : la coupe sur tout l'écran, le sac s'ouvre avec 🎒 ------------- */
+  .plein-ecran.mode-mine .scene {
+    top: 132px;
+    bottom: calc(var(--marge-bas) + 64px);
+    right: 0;
+  }
+
+  .plein-ecran.mode-mine .interface-bas {
+    right: var(--marge-droite);
+  }
+
+  .plein-ecran.mode-mine .actions {
+    position: static;
+    width: 100%;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 0;
+    background: none;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .plein-ecran.mode-mine .actions .bouton {
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 0.82rem;
+  }
+
+  .bouton-sac-telephone {
+    display: block;
+  }
+
+  .bouton-sac-telephone.actif {
+    border-color: var(--accent);
+  }
+
+  .plein-ecran.mode-mine .panneau-flottant {
+    max-height: 62dvh;
+  }
+
+  .plein-ecran.mode-mine .panneau-sac {
+    display: none;
+  }
+
+  .plein-ecran.mode-mine .panneau-sac.sac-ouvert {
+    display: block;
+    position: relative;
+    padding-top: 42px;
+  }
+
+  .fermer-sac {
+    display: block;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+
+  /* Dans la mine, l'objectif passe en haut (en bas, il cacherait la coupe). */
+  .plein-ecran.mode-mine .objectif {
+    display: none;
+  }
+
+  /* La barre d'édition et la barre du village ne sont plus dans un bandeau sombre. */
+  .plein-ecran .actions-village {
+    position: static;
+    padding: 0;
+    background: none;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .plein-ecran .actions-edition {
+    position: static;
+  }
+}

@@ -33,7 +33,7 @@ export function Perso({ x, y, sens, vue, marche, saut = 0, etiquette, classe = '
 }
 
 // Une image de bâtiment (« memo » : elle ne change que si on la déplace).
-export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, classe }: { id: Exclude<IdBatiment, 'puits'>; x: number; y: number; miroir: boolean; classe: string }) {
+export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, classe }: { id: IdBatiment; x: number; y: number; miroir: boolean; classe: string }) {
   const calage = CALAGES[id]
   const taille = BATIMENTS[id].taille
   return (

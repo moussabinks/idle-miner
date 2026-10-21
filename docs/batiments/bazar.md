@@ -7,7 +7,7 @@
 - **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 15 pierre** (la roche dure compte aussi comme de la pierre). Tant qu'il n'est pas posé, pas de sac plus grand, de seau ni de tenue (la barre d'objectif propose « Construire : Bazar »). Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : ouvert dès le début (prestige 0), sans cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
-- **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté (21/10).
 - **Dessin au village** : une image en vue isométrique (`public/images/batiments/bazar.webp`) : une échoppe en bois et en pierre, avec ses étals de sacs et d'équipement. Elle brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Sacs à dos, seaux d'eau et tenues. »
 - **Bulles au-dessus** (`notifications.ts`) :

@@ -13,7 +13,7 @@ Depuis le 20/10, le village n'est plus un chemin avec des stands à des places f
 - tant qu'il n'est pas débloqué, il a un **cadenas** et le prestige qu'il faut ; une pastille **« Nouveau ! »** montre ceux qui viennent de se débloquer, et le bouton 🏗️ Bâtiments porte un badge avec leur nombre (les nouveautés pas encore vues + ce qu'on peut construire tout de suite) ;
 - on le paie **une seule fois** : il reste posé à chaque prestige ;
 - **✏️ Modifier** permet ensuite de le **déplacer** ou de le **retourner** (miroir), gratuitement. On ne peut pas le détruire ;
-- on l'**ouvre** en le touchant (ou en cliquant dessus) : le hamster du joueur marche jusqu'à sa porte, puis son panneau s'ouvre. On peut aussi y aller avec les flèches du clavier : le panneau s'ouvre quand on arrive en marchant à moins de **1,4 case** de la porte ;
+- on l'**ouvre** en le touchant (ou en cliquant dessus) : le hamster du joueur marche jusqu'au côté du bâtiment le plus proche de lui, puis son panneau s'ouvre. On peut aussi y aller avec les flèches du clavier : le panneau s'ouvre quand on arrive en marchant à moins de **1,3 case** du bâtiment, **de n'importe quel côté** (21/10 : plus besoin de trouver la porte) ;
 - de petites **bulles** sautent au-dessus d'un bâtiment quand il y a quelque chose à y faire (voir chaque fiche et [../jeu/village.md](../jeu/village.md)) ;
 - tant qu'un bâtiment n'est pas posé, ses achats n'existent pas (pas d'objectif, pas de bulle) : la barre « 🎯 prochain objectif » propose alors « Construire : X ».
 

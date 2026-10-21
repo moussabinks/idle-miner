@@ -7,7 +7,7 @@
 - **Où** : là où tu le poses dans la clairière (20/10) : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 10 pierre** (la roche dure compte aussi comme de la pierre). C'est le deuxième bâtiment à poser, dès les premiers mètres creusés : tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (la barre d'objectif propose « Construire : Forgeron »). Il reste posé à chaque prestige ; **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : dès le prestige 0, jamais de cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
-- **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
+- **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté (21/10).
 - **Dessin au village** : une image en vue isométrique (`public/images/batiments/forgeron.webp`) : une forge en pierre et en bois avec son toit, sa cheminée qui fume, son enclume et des pioches exposées. Elle brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Pioches et réparations. »
 - **Bulles au-dessus** (`notifications.ts`) :

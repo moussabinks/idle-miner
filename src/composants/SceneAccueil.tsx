@@ -19,10 +19,10 @@ import {
   type Case,
   type Village,
 } from '../jeu/village'
-import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinMine, DessinWagonnet } from './DessinsVillage'
+import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { Hamster } from './Hamster'
-import { HAUTEUR_MONDE, LARGEUR_MONDE, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
+import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
 // ---------------------------------------------------------------------------
 // Le village de la scène (posé une fois pour toutes)
@@ -153,8 +153,9 @@ function objetsFixes(): ReactNode[] {
   for (const b of VILLAGE.batiments) {
     if (b.id === 'puits') {
       objets.push(
-        <BoiteSvg key="puits" x={b.x} y={b.y} taille={10} hauteur={140} style={{ zIndex: profondeur(b.x + 5, b.y + 5) }}>
-          <DessinMine x={b.x} y={b.y} miroir={b.miroir} fraction={0.55} ascenseur={3} cabineEnHaut={false} enMouvement nbMineurs={MINEURS_SCENE.length} />
+        <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
+        <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
+          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} fraction={0.55} profondeur={84} nbCages={MINEURS_SCENE.length + 1} enMouvement />
         </BoiteSvg>,
       )
     } else {
@@ -233,16 +234,17 @@ export function SceneAccueil() {
   const zoneTexte = large ? 0.5 : 0
   const largeurLibre = taille.l * (1 - zoneTexte)
   const zoomVillage = large ? Math.min(largeurLibre / CADRE.l, taille.h / CADRE.h) : Math.min(taille.l / 560, taille.h / 440)
-  // Le décor doit toujours remplir toute la boîte.
-  const zoomMin = Math.max(taille.l / LARGEUR_MONDE, taille.h / HAUTEUR_MONDE)
+  // Le décor (la forêt) doit toujours remplir toute la boîte.
+  const { x0, y0, x1, y1 } = LIMITES_TERRAIN
+  const zoomMin = Math.max(taille.l / (x1 - x0), taille.h / (y1 - y0))
   const z = Math.max(zoomMin, zoomVillage)
   const centreX = taille.l * zoneTexte + largeurLibre / 2
   const centreY = large ? taille.h / 2 : taille.h * 0.4
   // Le point du monde qu'on met là : le milieu du village, ou le milieu de la mine sur téléphone.
   const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(25, 16)
-  const borner = (v: number, max: number) => Math.max(0, Math.min(max, v))
-  const gauche = borner(vise.x - centreX / z, LARGEUR_MONDE - taille.l / z)
-  const haut = borner(vise.y - centreY / z, HAUTEUR_MONDE - taille.h / z)
+  const borner = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+  const gauche = borner(vise.x - centreX / z, x0, x1 - taille.l / z)
+  const haut = borner(vise.y - centreY / z, y0, y1 - taille.h / z)
 
   // Les bâtiments, les décorations et le joueur ne bougent pas : on les dessine une seule fois
   // (React ne redessine pas un élément qui n'a pas changé).
@@ -295,7 +297,7 @@ export function SceneAccueil() {
   return (
     <div ref={boiteRef} className="scene-accueil" aria-hidden="true">
       <div className="monde-village" style={{ transform: `scale(${z}) translate(${-gauche}px, ${-haut}px)` }}>
-        <img className="fond-village" src="/images/village/fond.webp" alt="" width={LARGEUR_MONDE} height={HAUTEUR_MONDE} draggable={false} />
+        <TerrainVillage />
         {SOL}
         <div className="objets-village">{objets}</div>
       </div>

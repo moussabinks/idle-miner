@@ -204,6 +204,41 @@ export function caseAcces(village: Village, b: BatimentPose): Case {
   return devant
 }
 
+// À quelle distance (en cases) un point est-il d'un bâtiment ? 0 s'il est dessus. On mesure
+// jusqu'au bord le plus proche de son emprise : on peut donc l'approcher de n'importe quel côté.
+export function distanceAuBatiment(b: BatimentPose, x: number, y: number): number {
+  const t = BATIMENTS[b.id].taille
+  const dx = Math.max(b.x - x, 0, x - (b.x + t))
+  const dy = Math.max(b.y - y, 0, y - (b.y + t))
+  return Math.hypot(dx, dy)
+}
+
+// Le joueur ouvre un bâtiment dès qu'il est à moins de ce nombre de cases de son bord.
+export const RAYON_BATIMENT = 1.3
+
+// La case libre collée au bâtiment (tout autour de lui) la plus proche d'un point : c'est là que
+// le joueur va quand on touche un bâtiment, au lieu de faire le tour jusqu'à la porte.
+// Si aucune case autour n'est libre, on prend celle de la porte (caseAcces).
+export function caseAccesProche(village: Village, b: BatimentPose, depuis: { x: number; y: number }): Case {
+  const t = BATIMENTS[b.id].taille
+  const bloquees = casesBloquees(village)
+  const candidates: { c: Case; distance: number }[] = []
+  for (let x = b.x - 1; x <= b.x + t; x++) {
+    for (let y = b.y - 1; y <= b.y + t; y++) {
+      const dedans = x >= b.x && x < b.x + t && y >= b.y && y < b.y + t
+      if (dedans || x < 0 || y < 0 || x >= TAILLE_GRILLE || y >= TAILLE_GRILLE || bloquees.has(cleCase(x, y))) continue
+      candidates.push({ c: { x, y }, distance: Math.hypot(x + 0.5 - depuis.x, y + 0.5 - depuis.y) })
+    }
+  }
+  // La plus proche d'abord, mais seulement si on peut y aller à pied (pas enfermée par des décorations).
+  candidates.sort((a, c) => a.distance - c.distance)
+  const ici = { x: Math.floor(depuis.x), y: Math.floor(depuis.y) }
+  for (const { c } of candidates.slice(0, 12)) {
+    if (trouverChemin(village, ici, c) !== null) return c
+  }
+  return candidates[0]?.c ?? caseAcces(village, b)
+}
+
 // Un petit cache : le village change rarement, mais les mineurs demandent leur chemin souvent.
 const CACHE_MAX = 200
 const cacheChemins = new Map<string, Case[] | null>()

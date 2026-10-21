@@ -19,8 +19,11 @@ import { notificationsBatiments } from './notifications'
 import { acheterTenue, porterTenue } from './tenues'
 import {
   POSITION_MINE,
+  RAYON_BATIMENT,
   batimentPose,
   caseAcces,
+  caseAccesProche,
+  distanceAuBatiment,
   distanceEntre,
   envoyerAuMarche,
   porte,
@@ -115,6 +118,24 @@ describe('marcher dans le village', () => {
     expect(chemin).not.toBeNull()
     // La mine est entre les deux : le chemin ne la traverse jamais.
     for (const c of chemin ?? []) expect(c.x >= 15 && c.x < 25 && c.y >= 15 && c.y < 25).toBe(false)
+  })
+
+  it('on ouvre un bâtiment en s’approchant de n’importe quel côté', () => {
+    const etat = partie()
+    const mine = batimentPose(etat.village, 'puits')!
+    // Juste au-dessus, à gauche, en dessous ou à droite de la mine (10 × 10, cases 15 à 24).
+    for (const [x, y] of [[20, 14.5], [14.5, 20], [20, 25.5], [25.5, 20]]) expect(distanceAuBatiment(mine, x, y)).toBeLessThan(RAYON_BATIMENT)
+    expect(distanceAuBatiment(mine, 20, 20)).toBe(0)
+    expect(distanceAuBatiment(mine, 20, 12)).toBeGreaterThan(RAYON_BATIMENT)
+  })
+
+  it('toucher un bâtiment mène à son côté le plus proche, pas à sa porte', () => {
+    const etat = partie()
+    const mine = batimentPose(etat.village, 'puits')!
+    // Le joueur est en haut de la mine : il n'a pas à faire le tour jusqu'à l'entrée (en bas).
+    const c = caseAccesProche(etat.village, mine, { x: 20.5, y: 10.5 })
+    expect(c).toEqual({ x: 20, y: 14 })
+    expect(distanceAuBatiment(mine, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
   })
 
   it('compte la distance à pied entre deux bâtiments (de porte à porte)', () => {

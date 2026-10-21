@@ -101,7 +101,8 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | `effets.css` | Animations : éclats, minerais rares, ventes et pièces, compteur d'argent, arbre de prestige |
 | `accueil.css` | L'écran d'accueil (bandeau avec le petit village vivant, logo en panneau de bois, cartes « comment jouer », mondes, compte, classement) |
 | `personnel.css` | Le stand Personnel : couleurs des raretés, salaires, manager, recruteur (avec leurs portraits), animation d'embauche |
-| `village.css` | Le village vu du ciel (20/10) : carte, calques, bâtiments, personnages, wagonnets, bulles de notification, menus Bâtiments / Décorations / Modifier, entrée dans la mine, version téléphone |
+| `village.css` | Le village vu du ciel (20/10) : carte, calques, bâtiments, personnages, wagonnets, bulles de notification, menus Bâtiments / Décorations / Modifier, entrée dans la mine |
+| `plein-ecran.css` | Le jeu en plein écran (21/10) : la scène sur toute la fenêtre, l'interface posée par-dessus (boutons du coin, bandeau, panneau, boutons ronds), version téléphone |
 | `evenements.test.ts`, `travail.test.ts` | Tests (section 6) |
 
 ### 3.4 `src/composants/` : les composants React (aucune règle du jeu)
@@ -153,7 +154,7 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | `icones/icone-192.png`, `icones/icone-512.png` | Icônes de l'application |
 | `icones/icone-maskable-512.png` | Icône « maskable » (Android) |
 | `icones/apple-touch-icon.png` | Icône pour l'écran d'accueil iOS |
-| `images/village/fond.webp` | Le décor de la clairière vue du ciel (1 536 × 1 024 pixels) |
+| `images/village/foret.webp` | La forêt autour de la clairière : une tuile qui se répète sans raccord (21/10) |
 | `images/batiments/*.webp` | Les images des bâtiments (bazar, employes, enchanteur, foreuse, forgeron, marche, prestige) et des rails (carte du menu) |
 | `images/personnages/*.webp` | Les portraits du manager, du mineur et du recruteur (accueil, stand Personnel) |
 
