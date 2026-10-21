@@ -175,16 +175,17 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 
 | Ordre | Calque | Contenu |
 |---|---|---|
-| 1 | **Terrain** (`TerrainVillage`, un SVG dessiné une seule fois) | le sous-bois sombre, une auréole d'herbe floue, le **damier** (`#86c13f` / `#79b437`) dont le bord s'efface dans l'herbe, les petits détails de l'herbe |
+| 1 | **Terrain** (`TerrainVillage`, un SVG dessiné une seule fois) | le sous-bois sombre, une auréole d'herbe floue, le **damier** (`#86c13f` / `#79b437`) dont le bord s'efface dans l'herbe, de grandes **taches** d'herbe plus claire ou plus sombre, très floues (23/10, `TachesHerbe`), et les petits détails de l'herbe : touffes, brins, fleurs, trèfles, cailloux et champignons rouges à pois blancs |
 | 1 bis | **Forêt derrière** (tuiles de canvas) et **plage** | les arbres du haut et des côtés ; le sable et la mer |
 | 2 | **Sol** (`sol-village`, un SVG de la taille du monde) | les ombres des bâtiments, les chemins de pavés, les rails, le losange en tirets dorés du bâtiment actif, le **rayon du générateur**, le losange vert ou rouge de ce qu'on pose |
 | 3 | **Objets** | bâtiments, mine (et sa cabine), décorations, personnages, wagonnet, triés par profondeur |
 | 3 bis | **Forêt devant** (`z-index` 90 000) | les arbres du bas de la carte, devant tout le reste |
+| 3 ter | **La vie du village** (`AmbianceVillage.tsx`, `z-index` 99 990, 23/10) | des **papillons** de couleur qui font des boucles en battant des ailes, des **vols d'oiseaux** qui traversent le ciel avec leur ombre sur l'herbe, et l'**ombre des nuages** qui glisse lentement sur la carte. Tout en CSS, aux mêmes places à chaque fois (hasard à graine fixe) |
 | 4 | **Bulles** (`z-index` 100 000) | les bulles de notification, toujours devant tout |
 
 ### 7.3 Les dessins
 
-- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne. Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
+- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne, le **générateur brille** quand il donne du courant (`.sprite-electrique`). Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
 - **La mine** : l'image fournie (`mine.webp`), et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
   - **la cabine de l'ascenseur** (`mine-cabine.webp`, tirée du dessin « mine avec ascenseur »), dès qu'il est construit, pendue à **deux câbles** (gris en pointillés sur un trait sombre) qui partent du treuil. Elle **suit le premier mineur qui monte ou descend** (`hauteurCabine` : 0 = en haut, 1 = en bas, selon l'avancée de son trajet) et attend en haut le reste du temps. En bas, elle passe derrière la barrière et le sol de devant (`mine-devant.webp`, dessiné par-dessus). Sans ascenseur, les câbles pendent au fond du puits ;
   - **un panneau en bois** planté sur le sol de devant, à gauche, avec « Niv. *N* ».
@@ -197,7 +198,7 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 
 ### 7.4 Les bulles de notification
 
-Une pilule à bord blanc avec une petite pointe, au-dessus du bâtiment (1 ou 2 icônes), qui **saute** (0,9 s). Sa couleur dit la sorte : **rouge** (alerte : salaires, chariot plein, plus de charbon, plus de redstone, pioche cassée, sac ou coffre plein), **rose** (prêt : du coffre à porter au marché), **bleu** (nouveauté), **vert** (amélioration achetable). La liste est dans [interface.md § 6](interface.md#6-la-carte-du-village-vuevillagetsx).
+Refaites le 23/10 : une **médaille ronde** à bord blanc (l'icône de la plus urgente), collée à un ruban avec **deux mots** (« Plein ! », « Achetable »…), une petite pointe dessous, et un badge « +*n* » s'il y a d'autres choses à faire. Elle apparaît avec un rebond (`bulle-arrive`), **sautille** (0,9 s), et un **reflet** passe sur la médaille toutes les 2,6 s. Sa couleur dit la sorte : **rouge** (alerte, avec un **anneau** qui s'élargit comme un radar), **rose** (prêt : du coffre à porter au marché), **bleu** (nouveauté), **vert** (amélioration achetable, avec des **étincelles** dorées). Au survol, elle grossit. La liste est dans [interface.md § 6](interface.md#6-la-carte-du-village-vuevillagetsx).
 
 Pour les z-index de tout le jeu : les fenêtres (`.voile`) sont à 10, le panneau d'un bâtiment sur téléphone à 8, les toasts à 20, la révélation d'une recrue à 30.
 
@@ -252,14 +253,14 @@ L'interface appelle `reglerLieu(true, 0)` une fois (`App.tsx`) : on est toujours
 
 ## 9. Les boutons 🔊 et 🎵
 
-Dans la case de droite du bandeau (`Hud.tsx`) :
+Dans le menu ⚙️ des boutons du coin (`App.tsx`, depuis le 23/10 : « 🔊 Son : oui / non » et « 🎵 Musique : oui / non ») :
 
 | Bouton | Coupe | Affichage | Réglage gardé |
 |---|---|---|---|
-| **🔊 / 🔇** | les **bruitages** (`sons.ts`) | 🔊 actif, 🔇 coupé | `localStorage` `idle-miner-son` = `actif` / `coupe` |
-| **🎵** | la **musique et les ambiances** (`ambiance.ts`) | barré et à moitié transparent quand c'est coupé | `localStorage` `idle-miner-musique` = `actif` / `coupe` |
+| **🔊 / 🔇 Son** | les **bruitages** (`sons.ts`) | « 🔊 Son : oui », « 🔇 Son : non » | `localStorage` `idle-miner-son` = `actif` / `coupe` |
+| **🎵 Musique** | la **musique et les ambiances** (`ambiance.ts`) | « 🎵 Musique : oui / non » | `localStorage` `idle-miner-musique` = `actif` / `coupe` |
 
-Les deux sont actifs par défaut et indépendants. Couper la musique la fait baisser en douceur (0,3 s) ; la remettre la relance (et la construit si elle n'existait pas encore). Les bulles : « Couper le son » / « Remettre le son », « Couper la musique et les ambiances » / « Remettre la musique et les ambiances ».
+Les deux sont actifs par défaut et indépendants. Couper la musique la fait baisser en douceur (0,3 s) ; la remettre la relance (et la construit si elle n'existait pas encore).
 
 ---
 

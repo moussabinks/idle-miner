@@ -1,0 +1,443 @@
+/* =========================================================================
+   L'interface du jeu, version compacte (23/10) : le bandeau en pastilles, les petits
+   boutons du coin, les gros boutons ronds du bas (brillants, avec des badges), et les
+   panneaux plus serrés. Ce fichier est chargé en dernier : il remplace les anciens styles.
+   ========================================================================= */
+
+/* --- Le bandeau : une rangée de pastilles sombres en haut à droite ----------------- */
+
+.bandeau {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 5px;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.info-bandeau {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 10px 0 4px;
+  border-radius: 999px;
+  border: 2px solid #5a3818;
+  background: linear-gradient(rgb(40 26 14 / 0.92), rgb(20 13 7 / 0.92));
+  box-shadow: inset 0 1px 0 rgb(255 220 160 / 0.15), 0 3px 8px rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff3d6;
+  white-space: nowrap;
+}
+
+.bandeau-icone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a5230, #3a2412);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.35);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Le niveau de la mine, en petit badge doré sur le coffre. */
+.bandeau-badge {
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  border: 1.5px solid #fff3d6;
+  background: linear-gradient(#ffd36b, #c88a12);
+  color: #2a1606;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 13px;
+  text-align: center;
+}
+
+.bandeau-valeurs {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 52px;
+  line-height: 1;
+}
+
+.bandeau-valeurs small {
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #f3e2c4;
+}
+
+.bandeau-argent .bandeau-valeurs strong {
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: #ffd84a;
+  text-shadow: 0 1px 0 #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.revenu-positif {
+  color: #7be27b !important;
+}
+
+.revenu-nul {
+  opacity: 0.6;
+}
+
+.bandeau-petite {
+  gap: 10px;
+  padding: 0 12px;
+  font-weight: 800;
+}
+
+.bandeau-petite strong {
+  margin-left: 3px;
+}
+
+.eclair-actif {
+  animation: eclair 1.2s ease-in-out infinite;
+}
+
+@keyframes eclair {
+  0%, 100% { filter: drop-shadow(0 0 0 #ffd63c); }
+  50% { filter: drop-shadow(0 0 6px #ffd63c); }
+}
+
+/* Il faut agir : la info-bandeau rougit et palpite. */
+.bandeau-alerte {
+  border-color: #ff6a5a;
+  animation: bandeau-alerte 1s ease-in-out infinite;
+}
+
+@keyframes bandeau-alerte {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(255 90 70 / 0.7), 0 3px 8px rgb(0 0 0 / 0.35); }
+  50% { box-shadow: 0 0 0 5px rgb(255 90 70 / 0), 0 3px 8px rgb(0 0 0 / 0.35); }
+}
+
+.jauge-mini {
+  display: block;
+  width: 56px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  overflow: hidden;
+}
+
+.jauge-mini i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.jauge-mini-or { background: linear-gradient(90deg, #f2a821, #ffe066); }
+.jauge-mini-vert { background: linear-gradient(90deg, #3e9e3e, #8ff09a); }
+.jauge-mini-rouge { background: linear-gradient(90deg, #b8332c, #ff7a73); }
+.jauge-mini-bleu { background: linear-gradient(90deg, #2f6fd6, #8fc6ff); }
+
+/* --- Les petits boutons du coin (en haut à gauche) : icônes seules ----------------- */
+
+.plein-ecran .bouton-coin {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  font-size: 1.15rem;
+}
+
+.compteur-coin {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1.5px solid #fff3d6;
+  background: linear-gradient(#ffd36b, #c88a12);
+  color: #2a1606;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 15px;
+}
+
+.plein-ecran .menu-reglages {
+  left: 50px;
+}
+
+.menu-reglages-titre {
+  font-size: 0.9rem;
+  color: #ffd84a;
+}
+
+/* --- Le prochain objectif et le panneau, plus haut (le bandeau est plus fin) ------- */
+
+.plein-ecran .objectif {
+  top: calc(var(--marge-haut) + 48px);
+  width: min(440px, calc(100% - 70px));
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.plein-ecran .panneau-flottant {
+  top: calc(var(--marge-haut) + 86px);
+}
+
+.plein-ecran .toasts {
+  top: calc(var(--marge-haut) + 88px);
+}
+
+/* --- Les gros boutons ronds du bas : brillants, avec un reflet et une ombre ------- */
+
+.plein-ecran .actions-village .bouton.bouton-rond {
+  border: 3px solid #2a1608;
+  box-shadow:
+    inset 0 -6px 0 rgb(0 0 0 / 0.25),
+    inset 0 3px 0 rgb(255 255 255 / 0.35),
+    0 5px 0 #1d0f05,
+    0 10px 20px rgb(0 0 0 / 0.45);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+/* Le reflet en haut du bouton, comme une bille. */
+.plein-ecran .actions-village .bouton.bouton-rond::before {
+  content: '';
+  position: absolute;
+  top: 7%;
+  left: 20%;
+  width: 60%;
+  height: 32%;
+  border-radius: 50%;
+  background: linear-gradient(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0));
+  pointer-events: none;
+}
+
+.plein-ecran .actions-village .bouton.bouton-rond:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.04);
+  filter: brightness(1.08);
+}
+
+.plein-ecran .actions-village .bouton.bouton-rond:active:not(:disabled) {
+  transform: translateY(3px) scale(0.97);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.25), 0 1px 0 #1d0f05;
+}
+
+/* La mine : doré, avec un anneau qui se remplit comme le coffre. */
+.bouton.bouton-mine {
+  background:
+    radial-gradient(circle, #f6c04c 0 58%, transparent 59%),
+    conic-gradient(#ffe066 var(--remplissage, 0%), #6b4422 0);
+  color: #2a1606;
+}
+
+.bouton.bouton-mine .texte-rond {
+  color: #2a1606;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+/* Le marché : vert, quand on a quelque chose à vendre. */
+.bouton.bouton-marche-rapide {
+  background: linear-gradient(#6fd67a, #2f8d3c);
+  color: #fff;
+  animation: apparait 0.3s ease-out;
+}
+
+.bouton.bouton-petit-rond {
+  width: 56px;
+  height: 56px;
+}
+
+.bouton-petit-rond .icone-rond {
+  font-size: 1.3rem;
+}
+
+.bouton-petit-rond .texte-rond {
+  font-size: 0.56rem;
+}
+
+/* Quelque chose attend : le bouton respire et brille. */
+.bouton-attention {
+  animation: respire 1.4s ease-in-out infinite;
+}
+
+@keyframes respire {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgb(255 230 120 / 0)); }
+  50% { filter: brightness(1.12) drop-shadow(0 0 12px rgb(255 230 120 / 0.9)); }
+}
+
+@keyframes apparait {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.badge-menu.badge-vert {
+  right: auto;
+  left: 50%;
+  top: -10px;
+  translate: -50% 0;
+  white-space: nowrap;
+  background: linear-gradient(#2f8d3c, #1d6a28);
+}
+
+/* --- Les panneaux : plus serrés --------------------------------------------------- */
+
+.plein-ecran .panneau-batiment {
+  padding: 10px 12px;
+}
+
+.plein-ecran .panneau-batiment > .discret {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+}
+
+.plein-ecran .panneau-batiment .entete-panneau {
+  margin-bottom: 2px;
+}
+
+.plein-ecran .panneau-batiment .titre-stand {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.plein-ecran .panneau .liste-cartes {
+  gap: 7px;
+}
+
+.plein-ecran .panneau .ligne-achat {
+  padding: 8px 10px;
+  gap: 5px;
+}
+
+.plein-ecran .panneau .ligne-achat > strong {
+  font-size: 0.9rem;
+}
+
+.plein-ecran .panneau .discret {
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.plein-ecran .panneau .bouton {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+/* --- Téléphone --------------------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .bandeau {
+    gap: 4px;
+  }
+
+  .info-bandeau {
+    height: 34px;
+    padding: 0 7px 0 3px;
+    gap: 4px;
+  }
+
+  .bandeau-icone {
+    width: 26px;
+    height: 26px;
+    font-size: 0.85rem;
+  }
+
+  .bandeau-valeurs {
+    min-width: 40px;
+  }
+
+  .jauge-mini {
+    width: 42px;
+    height: 5px;
+  }
+
+  .bandeau-argent .bandeau-valeurs strong {
+    font-size: 0.9rem;
+  }
+
+  .bandeau-valeurs small {
+    font-size: 0.64rem;
+  }
+
+  .plein-ecran .bouton-coin {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .plein-ecran .menu-reglages {
+    left: 46px;
+  }
+
+  .plein-ecran .objectif {
+    top: auto;
+  }
+
+  .bouton.bouton-petit-rond {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeau-alerte,
+  .bouton-attention,
+  .eclair-actif,
+  .bouton.bouton-marche-rapide {
+    animation: none;
+  }
+}
+
+/* Les jauges (marché, coffre) : des lignes fines. */
+.plein-ecran .panneau .jauges li {
+  padding: 2px 6px;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.plein-ecran .panneau .jauges .bouton {
+  padding: 2px 7px;
+  min-height: 0;
+  font-size: 0.7rem;
+}
+
+.plein-ecran .panneau .tout-selectionner {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  margin-bottom: 0;
+}
+
+.plein-ecran .panneau .tout-selectionner:disabled {
+  display: none;
+}
+
+/* Le bloc à cliquer, un peu plus petit dans le panneau. */
+.plein-ecran .zone-bloc-mine {
+  padding: 8px;
+  gap: 12px;
+}
+
+.plein-ecran .bloc-mine {
+  width: 92px;
+  height: 92px;
+}
+
+.plein-ecran .panneau .barre {
+  height: 15px;
+}
+
+.plein-ecran .panneau .barre-texte {
+  font-size: 0.66rem;
+}

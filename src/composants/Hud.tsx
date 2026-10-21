@@ -1,94 +1,121 @@
-// Le bandeau du haut : argent, mine (niveau et coffre), pioche, sac...
+// Le bandeau du haut, compact (23/10) : une rangée de petites cases arrondies, une par info utile.
+//   💵 l'argent et ce que la mine produit par seconde ;
+//   📦 le coffre de la mine (avec le niveau de la mine en petit badge) ;
+//   ⛏️ la pioche (sa durabilité) ;
+//   🎒 le sac ;
+//   et, s'il y en a, les mineurs et l'éclair des rails électriques.
+// Le détail de chaque case est dans son info-bulle. Une case clignote en rouge quand il faut
+// agir (coffre plein, pioche cassée, sac plein).
 
-import { useState } from 'react'
 import { infoNiveauMine } from '../jeu/mine'
 import { railsAlimentes } from '../jeu/generateur'
+import { nbSansSalaire } from '../jeu/employes'
 import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
 import { revenuParSeconde } from '../jeu/revenu'
 import { useCompteur } from '../useCompteur'
-import { basculerMusique, musiqueActive } from '../ambiance'
-import { basculerSon, sonActif } from '../sons'
-import { Barre } from './Barre'
 
 type Props = {
   etat: EtatJeu
   nbVentes: number // change à chaque vente, pour faire sauter le compteur d'argent
 }
 
-// « 0,8 $/s », « 12 $/s », « 1 250 $/s » (négatif si les salaires coûtent plus que ce qui rentre).
+// « 0,8/s », « 12/s », « 1 250/s ».
 function texteRevenu(parSeconde: number): string {
   const arrondi = Math.abs(parSeconde) < 10 ? Math.round(parSeconde * 10) / 10 : Math.round(parSeconde)
-  return `${arrondi.toLocaleString('fr-FR')} $/s`
+  return `${arrondi > 0 ? '+' : ''}${arrondi.toLocaleString('fr-FR')}/s`
+}
+
+// « 950 », « 12,5 k », « 3,2 M » : les grands nombres en court.
+function nombreCourt(n: number): string {
+  const valeur = Math.floor(n)
+  if (valeur < 10_000) return valeur.toLocaleString('fr-FR')
+  if (valeur < 1_000_000) return `${(valeur / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k`
+  return `${(valeur / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} M`
+}
+
+// Une petite jauge sous une valeur.
+function JaugeMini({ valeur, max, couleur }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' }) {
+  const pourcentage = max > 0 ? Math.min(100, (valeur / max) * 100) : 0
+  return (
+    <span className="jauge-mini" aria-hidden="true">
+      <i className={`jauge-mini-${couleur}`} style={{ width: `${pourcentage}%` }} />
+    </span>
+  )
 }
 
 export function Hud({ etat, nbVentes }: Props) {
-  const [son, setSon] = useState(sonActif)
-  const [musique, setMusique] = useState(musiqueActive)
   const plein = sacPlein(etat)
   const coffreRempli = coffrePlein(etat)
   const pioche = piocheEnMain(etat)
   const cassee = estCassee(etat)
   const niveau = infoNiveauMine(etat.niveauMine)
   const revenu = revenuParSeconde(etat)
+  const sansSalaire = nbSansSalaire(etat)
   // Le compteur d'argent défile jusqu'à la nouvelle somme (plus satisfaisant qu'un saut).
   const argentAffiche = useCompteur(Math.floor(etat.argent))
 
   return (
-    <header className="hud">
-      <div className="hud-case hud-argent">
-        <span
-          className="hud-titre"
-          title={`Ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}
-        >
-          Argent <span className={`hud-revenu ${revenu.total > 0 ? 'hud-revenu-actif' : ''}`}>📈 {texteRevenu(revenu.total)}</span>
+    <header className="bandeau">
+      <div
+        className="info-bandeau bandeau-argent"
+        title={`Ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}
+      >
+        <span className="bandeau-icone">💵</span>
+        <span className="bandeau-valeurs">
+          <strong key={nbVentes} className={nbVentes > 0 ? 'argent-saute' : ''}>
+            {nombreCourt(argentAffiche)} $
+          </strong>
+          <small className={revenu.total > 0 ? 'revenu-positif' : 'revenu-nul'}>{texteRevenu(revenu.total)}</small>
         </span>
-        <strong key={nbVentes} className={nbVentes > 0 ? 'argent-saute' : ''}>
-          💵 {argentAffiche.toLocaleString('fr-FR')} $
-        </strong>
       </div>
 
-      {/* La mine : son niveau, et le coffre (il clignote quand il est plein : la mine s'arrête). */}
-      <div className={`hud-case hud-sac ${coffreRempli ? 'hud-alerte' : ''}`}>
-        <span className="hud-titre">{coffreRempli ? '📦 Coffre plein ! Va vendre' : `🕳️ Mine niv. ${etat.niveauMine} · ${niveau.nom}`}</span>
-        <Barre
-          valeur={nbDansCoffre(etat)}
-          max={capaciteCoffre(etat)}
-          texte={`📦 ${nbDansCoffre(etat)} / ${capaciteCoffre(etat)}`}
-          couleur={coffreRempli ? 'rouge' : 'or'}
-        />
+      <div
+        className={`info-bandeau ${coffreRempli ? 'bandeau-alerte' : ''}`}
+        title={`Mine niveau ${etat.niveauMine} (${niveau.nom}) · coffre ${nbDansCoffre(etat)} / ${capaciteCoffre(etat)}${coffreRempli ? ' : plein, la mine s’arrête !' : ''}`}
+      >
+        <span className="bandeau-icone">
+          📦<b className="bandeau-badge">{etat.niveauMine}</b>
+        </span>
+        <span className="bandeau-valeurs">
+          <small>
+            {nbDansCoffre(etat)}/{capaciteCoffre(etat)}
+          </small>
+          <JaugeMini valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} couleur={coffreRempli ? 'rouge' : 'or'} />
+        </span>
       </div>
 
-      <div className="hud-case hud-pioche">
-        <span className="hud-titre">{cassee ? '💥 Pioche cassée (2 clics par bloc)' : `${pioche.emoji} Pioche en ${pioche.nom}`}</span>
-        <Barre
-          valeur={durabiliteRestante(etat)}
-          max={pioche.durabilite}
-          texte={cassee ? 'Cassée !' : `${durabiliteRestante(etat)} / ${pioche.durabilite}`}
-          couleur={cassee ? 'rouge' : 'vert'}
-        />
+      <div
+        className={`info-bandeau ${cassee ? 'bandeau-alerte' : ''}`}
+        title={cassee ? `Pioche en ${pioche.nom} cassée : 2 clics par bloc, fais-la réparer au forgeron` : `Pioche en ${pioche.nom} : ${Math.round(pioche.doublement * 100)} % de doubler un minerai`}
+      >
+        <span className="bandeau-icone">{cassee ? '💥' : '⛏️'}</span>
+        <span className="bandeau-valeurs">
+          <small>{cassee ? 'Cassée' : `${durabiliteRestante(etat)}/${pioche.durabilite}`}</small>
+          <JaugeMini valeur={durabiliteRestante(etat)} max={pioche.durabilite} couleur={cassee ? 'rouge' : 'vert'} />
+        </span>
       </div>
 
-      {/* Sac plein : la case clignote en rouge. */}
-      <div className={`hud-case hud-sac ${plein ? 'hud-alerte' : ''}`}>
-        <span className="hud-titre">{plein ? '🎒 Sac plein ! Va vendre au marché' : '🎒 Sac'}</span>
-        <Barre valeur={nbDansSac(etat)} max={tailleSac(etat)} texte={`${nbDansSac(etat)} / ${tailleSac(etat)}`} couleur={plein ? 'rouge' : 'or'} />
+      <div className={`info-bandeau ${plein ? 'bandeau-alerte' : ''}`} title={plein ? 'Sac plein : va vendre au marché !' : 'Ton sac à dos'}>
+        <span className="bandeau-icone">🎒</span>
+        <span className="bandeau-valeurs">
+          <small>
+            {nbDansSac(etat)}/{tailleSac(etat)}
+          </small>
+          <JaugeMini valeur={nbDansSac(etat)} max={tailleSac(etat)} couleur={plein ? 'rouge' : 'bleu'} />
+        </span>
       </div>
 
-      <div className="hud-case hud-petits">
-        {etat.employes.length > 0 && <span title="Tes mineurs">👷 {etat.employes.length}</span>}
-        {railsAlimentes(etat) && <span title="Les rails sont électriques : le wagonnet roule tout seul">⚡</span>}
-        <button className="hud-bouton" onClick={() => setSon(basculerSon())} title={son ? 'Couper le son' : 'Remettre le son'} aria-label={son ? 'Couper le son' : 'Remettre le son'}>
-          {son ? '🔊' : '🔇'}
-        </button>
-        <button
-          className={`hud-bouton ${musique ? '' : 'hud-bouton-coupe'}`}
-          onClick={() => setMusique(basculerMusique())}
-          title={musique ? 'Couper la musique et les ambiances' : 'Remettre la musique et les ambiances'}
-          aria-label={musique ? 'Couper la musique et les ambiances' : 'Remettre la musique et les ambiances'}
-        >
-          🎵
-        </button>
-      </div>
+      {(etat.employes.length > 0 || railsAlimentes(etat)) && (
+        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : 'Tes mineurs, et ⚡ si les rails sont électriques'}>
+          {etat.employes.length > 0 && (
+            <span>
+              {sansSalaire > 0 ? '😠' : '👷'}
+              <strong>{etat.employes.length}</strong>
+            </span>
+          )}
+          {railsAlimentes(etat) && <span className="eclair-actif">⚡</span>}
+        </div>
+      )}
     </header>
   )
 }
