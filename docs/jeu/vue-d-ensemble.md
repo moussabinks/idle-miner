@@ -45,7 +45,7 @@ Le jeu a deux vues (20/10) :
 - **La mine, en coupe** (la vue 2D d'avant) : on y entre par le bâtiment Mine (« Entrer dans la mine »).
 
 - La mine fait **10 blocs de large**. Chaque couche est cassée bloc par bloc ; quand elle est vide, on descend d'un mètre.
-- Les blocs cassés vont dans le **sac à dos**. On les vend au **marché** du village contre de l'argent, à prix fixe : on y marche avec son sac, ou on y envoie l'ascenseur (son chargement y va en brouette, ou en wagonnet sur des rails).
+- Les blocs cassés vont dans le **sac à dos**. On les vend au **marché** du village contre de l'argent, à prix fixe : on y marche avec son sac. L'ascenseur remonte les minerais dans le **réservoir** de la mine : on vient les y prendre pour aller les vendre (avec des rails, le wagonnet les emmène tout seul).
 - Avec l'argent (et quelques minerais gardés), on achète de **meilleures pioches** (plus rapides, et qui descendent plus bas), de plus grands sacs, un **ascenseur**, des **enchantements**.
 - Plus on descend, plus les minerais sont précieux (charbon et fer près de la surface, diamants et débris antiques tout au fond).
 - Une fois la bedrock atteinte **et** tout amélioré au maximum permis, on passe **prestige** : on recommence dans une mine **50 m plus profonde**, avec des bonus permanents, un point de talent, et de nouveaux bâtiments à poser (foreuse, Personnel…). Le village, lui, est gardé tel quel.
@@ -65,7 +65,7 @@ construire (marché, forgeron…) → entrer dans la mine → creuser → (sac p
 2. **Descendre** : on touche la mine, puis « ⛏️ Entrer dans la mine » : le hamster y marche, la caméra plonge et on passe à la vue 2D. On descend à l'échelle (0,15 s par mètre), plus tard en ascenseur. Au fond, le mineur est au **front de taille** (juste au-dessus de la couche en cours).
 3. **Creuser** : le bouton « Creuser » finit la couche en cours ; « Auto » creuse sans s'arrêter (et s'arrête si la pioche casse). Chaque bloc prend `dureté × (1,5 en roche dure) ÷ vitesse × 0,45` secondes. La pioche s'use ; cassée, on mine **à mains nues** (vitesse 1).
 4. **Le sac se remplit** : quand il est plein, le minage s'arrête (avec un ascenseur, le trop-plein attend sur le **quai**, jusqu'à la capacité de la cabine).
-5. **Remonter et vendre** : on remonte au village (le mineur marche d'abord jusqu'au puits, 0,12 s par case), on ressort devant la mine, et on **marche jusqu'au marché** pour vendre. Avec l'**ascenseur**, on peut aussi **envoyer** le sac à la surface sans bouger : en haut, le chargement part au marché dans une brouette (ou en wagonnet sur des rails, dès le prestige 2) et il est vendu en arrivant ; la cabine redescend seule.
+5. **Remonter et vendre** : on remonte au village (le mineur marche d'abord jusqu'au puits, 0,12 s par case), on ressort devant la mine, et on **marche jusqu'au marché** pour vendre. Avec l'**ascenseur**, on peut aussi **envoyer** le sac à la surface sans bouger : en haut, le chargement est rangé dans le **réservoir** de la mine (200 places, 22/10) ; on fait ensuite des allers-retours entre le réservoir et le marché. Avec des rails (dès le prestige 2), le wagonnet emporte le chargement au marché tout seul. La cabine redescend seule.
 6. **Construire et améliorer** : poser les bâtiments au fil de la partie (il faut garder un peu de **pierre** et de **fer** pour les payer), puis forgeron (pioche suivante, réparation), bazar (sac, seaux d'eau contre la lave, tenues), enchanteur (Efficacité, Fortune, Solidité), ascenseur (au bâtiment Mine ou depuis le fond). Il faut **garder** certains minerais (décochés au marché) : diamants, or, débris antiques pour les pioches, lapis et émeraudes pour les enchantements, fer et redstone pour l'ascenseur et la foreuse.
 7. **Descendre plus bas** : chaque pioche a une profondeur maximum. Si la couche suivante est trop profonde pour elle, on creuse une **galerie horizontale** (on n'est jamais bloqué) et un message dit quelle pioche acheter. Seule la **netherite** atteint la bedrock.
 8. **Bedrock** : en finissant la couche juste au-dessus de la bedrock (-99 m au prestige 0), on gagne (succès « Bedrock ! », écran de victoire une fois par partie). On peut continuer de creuser des galeries.
@@ -124,7 +124,7 @@ Le détail est dans [../batiments/prestige.md](../batiments/prestige.md).
 | **Bâtiment** | Ce qu'on pose dans la clairière (5 × 5 cases, la mine 10 × 10) : Mine, Marché, Forgeron, Bazar, Enchanteur, Arbre de prestige, Foreuse, Personnel. Chacun se construit une fois, depuis le menu 🏗️ Bâtiments, et reste au prestige. On l'ouvre en le touchant (le hamster y marche). |
 | **Bloc spécial** | Lave, coffre ou géode : ils déclenchent un effet au lieu d'aller dans le sac. La foreuse et les mineurs n'en trouvent jamais. |
 | **Bonus de prestige** | +15 % sur toutes les ventes et +10 % de vitesse des pioches du joueur, par niveau de prestige (cumulés). |
-| **Brouette** | Sans rails, le chargement de l'ascenseur va au marché dans une brouette, à pied (4 cases/s). |
+| **Réservoir** | En haut de la mine (22/10) : ce que l'ascenseur remonte y attend (200 places). On le met dans son sac au bâtiment Mine pour aller le vendre au marché. |
 | **Bonus de vente** | Le multiplicateur de toutes les ventes : `1 + 0,15 × prestige + talents` (Négociant +0,10, Grand négociant +0,15). |
 | **Cabine** | La partie mobile de l'ascenseur. Les mineurs employés ont chacun la leur, dans le puits de la mine commune. |
 | **Capacité** | Nombre d'objets qu'un ascenseur remonte par voyage (32 à 1 024), ou que le chariot de la foreuse contient. |
@@ -146,7 +146,7 @@ Le détail est dans [../batiments/prestige.md](../batiments/prestige.md).
 | **Employé (mineur employé)** | Un mineur embauché au Personnel (prestige 2) : un hamster casqué (casque de la couleur de sa rareté) qui creuse dans la mine commune (avec sa propre profondeur), remonte dans sa cabine et marche jusqu'au marché pour vendre ; tout l'argent est pour le joueur ; on lui paie un salaire toutes les 10 minutes. |
 | **Enchantement** | Efficacité, Fortune ou Solidité, achetés à l'Enchanteur ; valent pour toutes les pioches du joueur ; gardés au prestige. |
 | **Emprise** | Les cases qu'occupe un bâtiment ou une décoration. |
-| **Envoi automatique** | Option du sac : quand il est plein, l'ascenseur part seul au marché avec les objets cochés. Désactivée par défaut. |
+| **Envoi automatique** | Option du sac : quand il est plein, l'ascenseur part seul vers le réservoir de la mine avec les objets cochés. Désactivée par défaut. |
 | **Foreuse** | Machine débloquée au prestige 1 : activée une fois, alimentée au charbon, elle creuse seule son propre puits et remplit son chariot. Une seule foreuse, 8 niveaux de forage et de chariot. |
 | **Forage** | La vitesse de la foreuse (2 à 30 blocs/s). |
 | **Fortune** | Enchantement : 20 % de chance par niveau de **doubler** un minerai (max III, donc 60 %), jamais plus de ×2. |

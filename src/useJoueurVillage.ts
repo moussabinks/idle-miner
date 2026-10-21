@@ -132,15 +132,18 @@ export function useJoueurVillage(village: Village, actif: boolean) {
   const arreterFleches = useCallback(() => touches.current.clear(), [])
 
   // Marcher tout seul jusqu'à une case (en contournant ce qui gêne), puis faire quelque chose.
-  const allerVers = useCallback((cible: Case, quandArrive?: () => void) => {
+  // Une case hors de la clairière (dans la forêt, sur la plage) : il marche vers elle, mais
+  // s'arrête au bord de la clairière, comme contre une barrière invisible (22/10).
+  const allerVers = useCallback((demandee: Case, quandArrive?: () => void) => {
     touches.current.clear()
+    const cible = caseLibreProche(villageRef.current, auBordDeLaClairiere(joueurRef.current, demandee))
     const depart = { x: Math.floor(joueurRef.current.x), y: Math.floor(joueurRef.current.y) }
     if (depart.x === cible.x && depart.y === cible.y) {
       chemin.current = null
       quandArrive?.()
       return
     }
-    const cases = trouverChemin(villageRef.current, depart, cible) ?? [cible]
+    const cases = trouverChemin(villageRef.current, depart, cible) ?? [depart, cible]
     chemin.current = { points: cases.slice(1).map((c) => ({ x: c.x + 0.5, y: c.y + 0.5 })), quandArrive }
     if (chemin.current.points.length === 0) chemin.current.points.push({ x: cible.x + 0.5, y: cible.y + 0.5 })
   }, [])
@@ -171,4 +174,41 @@ export function useJoueurVillage(village: Village, actif: boolean) {
   }, [village, changer])
 
   return { joueur, fleche, arreterFleches, allerVers, sauter, placerALaMine }
+}
+
+// Le point où l'on sort de la clairière en allant de « depuis » vers la case demandée (ou la case
+// elle-même si elle est dans la clairière) : la marche s'arrête là, au bord.
+function auBordDeLaClairiere(depuis: { x: number; y: number }, demandee: Case): Case {
+  const n = TAILLE_GRILLE
+  const dedans = (c: Case) => c.x >= 0 && c.y >= 0 && c.x < n && c.y < n
+  if (dedans(demandee)) return demandee
+  // On avance le long du trait, du joueur vers le clic, tant qu'on reste à l'intérieur.
+  const bx = demandee.x + 0.5
+  const by = demandee.y + 0.5
+  let t = 1
+  const limite = (depart: number, arrivee: number) => {
+    const d = arrivee - depart
+    if (d > 0 && arrivee > n - 0.5) t = Math.min(t, (n - 0.5 - depart) / d)
+    if (d < 0 && arrivee < 0.5) t = Math.min(t, (0.5 - depart) / d)
+  }
+  limite(depuis.x, bx)
+  limite(depuis.y, by)
+  t = Math.max(0, t)
+  const x = Math.floor(depuis.x + (bx - depuis.x) * t)
+  const y = Math.floor(depuis.y + (by - depuis.y) * t)
+  return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) }
+}
+
+// La case libre la plus proche (elle-même si elle est libre) : on ne s'arrête pas dans un bâtiment.
+function caseLibreProche(village: Village, c: Case): Case {
+  if (!caseBloquee(village, c.x, c.y)) return c
+  for (let rayon = 1; rayon < TAILLE_GRILLE; rayon++) {
+    for (let dx = -rayon; dx <= rayon; dx++) {
+      for (let dy = -rayon; dy <= rayon; dy++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== rayon) continue
+        if (!caseBloquee(village, c.x + dx, c.y + dy)) return { x: c.x + dx, y: c.y + dy }
+      }
+    }
+  }
+  return c
 }

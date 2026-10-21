@@ -72,7 +72,7 @@ describe('sauvegarde', () => {
     ancien.village.decorations = [{ n: 1, id: 'fontaine', x: 2, y: 30, miroir: false }]
     stockage.setItem(cleMonde('1'), JSON.stringify(ancien))
     const charge = charger(stockage, '1')
-    expect(charge?.version).toBe(19)
+    expect(charge?.version).toBe(20)
     expect(charge?.village.batiments).toEqual([{ id: 'puits', x: 25, y: 25, miroir: false }, { id: 'marche', x: 27, y: 37, miroir: true }])
     expect(charge?.village.rails).toEqual(['30,35', '31,35'])
     expect(charge?.village.chemins).toEqual(['13,14'])

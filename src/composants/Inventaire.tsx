@@ -1,5 +1,5 @@
 // Le contenu du sac, au fond de la mine. On ne peut pas vendre ici, mais avec
-// l'ascenseur on choisit (avec les jauges) ce qu'on envoie à la surface, vendu en arrivant.
+// l'ascenseur on choisit (avec les jauges) ce qu'on envoie à la surface, dans le réservoir de la mine.
 
 import { useState } from 'react'
 import { lotChoisi, type Choix } from '../choix'
@@ -9,9 +9,11 @@ import {
   ascenseurEnMouvement,
   basculerEnvoiAuto,
   bonusVente,
+  capaciteReservoir,
   demanderEnvoi,
   enMouvement,
   nbAEnvoyer,
+  nbDansReservoir,
   nbSurQuai,
   reglerChargement,
   secondesAvantArretAscenseur,
@@ -64,7 +66,7 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
   }
 
   // Remonter au village avec la cabine (le mineur marche d'abord jusqu'au puits) :
-  // seulement le mineur, avec son sac. Rien n'est vendu : c'est « Envoyer » qui vend.
+  // seulement le mineur, avec son sac. Rien ne part au réservoir.
   function remonter() {
     onRemonter()
     jouer((e) => voyager(e, 0, false, {}))
@@ -77,7 +79,7 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
       {avecAscenseur ? (
         <div className="envoi-ascenseur">
           {surLeQuai > 0 && <p className="discret">📦 {surLeQuai} objet(s) attendent sur le quai de l'ascenseur : ils partent en premier.</p>}
-          {/* Deux boutons : envoyer les objets (vendus en arrivant), ou remonter soi-même (le sac
+          {/* Deux boutons : envoyer les objets (au réservoir de la mine), ou remonter soi-même (le sac
               reste plein). Pendant que la cabine voyage, ils sont grisés et comptent les secondes. */}
           <div className="boutons-ascenseur">
             <button
@@ -110,7 +112,10 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
         <p className="discret">Ton sac est vide. Creuse !</p>
       ) : avecAscenseur ? (
         <>
-          <p className="discret">Choisis combien l'ascenseur emporte de chaque objet au marché.</p>
+          <p className="discret">
+            Choisis combien l'ascenseur remonte de chaque objet : en haut, il les range dans le réservoir de la mine ({nbDansReservoir(etat)} /{' '}
+            {capaciteReservoir(etat)}), d'où tu les portes au marché.
+          </p>
           <Jauges
             piles={piles}
             choix={choix}
@@ -138,7 +143,7 @@ export function Inventaire({ etat, jouer, onRemonter }: Props) {
       {/* L'ascenseur se construit et s'améliore directement d'ici. */}
       <div className="ligne-achat carte-ascenseur">
         <strong>🛗 Ascenseur</strong>
-        {!avecAscenseur && <span className="discret">Il remonte tes minerais (et toi) jusqu'au marché, sans échelle.</span>}
+        {!avecAscenseur && <span className="discret">Il remonte tes minerais (dans le réservoir de la mine) et toi, sans échelle.</span>}
         <AmeliorationAscenseur etat={etat} jouer={jouer} />
       </div>
     </div>

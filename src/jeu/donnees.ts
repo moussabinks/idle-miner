@@ -212,6 +212,13 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
   { niveau: 6, cout: { argent: 18000, materiaux: { fer: 120, redstone: 80 } }, capacite: 1024, secondesParMetre: 0.015 },
 ]
 
+// Le réservoir en haut de la mine (22/10) : ce que l'ascenseur remonte y est rangé, et le joueur
+// vient le chercher pour aller le vendre au marché (dans les premiers prestiges, on fait des
+// allers-retours ; avec des rails jusqu'au marché, le wagonnet s'en charge). Il est limité. Pour
+// l'instant il n'a qu'un niveau : les suivants (pour l'agrandir) viendront plus tard.
+export type NiveauReservoir = { niveau: number; capacite: number }
+export const NIVEAUX_RESERVOIR: NiveauReservoir[] = [{ niveau: 1, capacite: 200 }]
+
 // ---------------------------------------------------------------------------
 // Les plafonds d'amélioration selon le prestige (décidé le 19/10)
 // ---------------------------------------------------------------------------

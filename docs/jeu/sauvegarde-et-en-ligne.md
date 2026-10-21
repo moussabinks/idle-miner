@@ -143,7 +143,9 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 | `tenue` | `{ chapeau, haut }` (`IdTenue` ou `null`) | La tenue que porte le joueur (achetée au Bazar) | gardée |
 | `tenuesAchetees` | liste d'`IdTenue` | Les tenues achetées | gardées |
 
-**`Ascenseur`** : `niveau` (0 = pas construit), `position` et `cible` (en mètres, 0 = village), `chargement` (inventaire transporté ; en haut, il devient un `Convoi` vers le marché), `passager` (le mineur est dans la cabine), `retourAuFront` (redescend seule après la vente), `quai` (blocs qui attendent au pied de l'ascenseur quand le sac est plein), `garder` (objets décochés dans le sac, que la cabine ne prend pas), `envoiDemande`, `lotDemande` (inventaire choisi, ou `null` = tous les objets cochés), `envoiAuto` (part seul quand le sac est plein).
+**`Ascenseur`** : `niveau` (0 = pas construit), `position` et `cible` (en mètres, 0 = village), `chargement` (inventaire transporté ; en haut, il va dans le `reservoir`, ou devient un `Convoi` vers le marché s'il y a des rails ; ce qui ne rentre pas reste dans la cabine), `passager` (le mineur est dans la cabine), `retourAuFront` (redescend seule après avoir vidé son chargement), `quai` (blocs qui attendent au pied de l'ascenseur quand le sac est plein), `garder` (objets décochés dans le sac, que la cabine ne prend pas), `envoiDemande`, `lotDemande` (inventaire choisi, ou `null` = tous les objets cochés), `envoiAuto` (part seul quand le sac est plein).
+
+**`Reservoir`** (22/10, version 20) : `niveau` (index dans `NIVEAUX_RESERVOIR`, gardé au prestige) et `contenu` (ce que l'ascenseur a remonté, vidé au prestige).
 
 **`Foreuse`** : `active`, `carburant` (secondes de forage restantes), `niveauVitesse` (index dans `NIVEAUX_FORAGE`), `profondeur`, `progression` (0 à 1 du prochain bloc), `blocsFores`, `niveauChariot` (index dans `NIVEAUX_CHARIOT`), `chariot` (inventaire remonté), `nonCoches`, `rechargeAuto`.
 

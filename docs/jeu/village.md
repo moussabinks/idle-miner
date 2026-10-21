@@ -24,6 +24,7 @@
   - **le sol de la clairière est un damier** vert clair / vert foncé, une case sur deux, comme le sol de Clash of Clans. Le quadrillage n'est jamais tracé : on devine les cases grâce au damier, et elles ne servent qu'à poser les bâtiments ;
   - **entre le damier et la forêt, une transition douce** : le bord du damier s'efface sur une case dans une herbe un peu plus foncée, puis une large auréole d'herbe se fond dans le sous-bois sombre ;
   - **la forêt** : les **12 arbres dessinés par l'équipe** (feuillus, sapins, palmiers, bambous, saules…), upscalés par IA et détourés (`public/images/village/arbres/`), au même angle que les bâtiments (leur petite dalle d'herbe a le même rapport que les cases). Le jeu en plante environ 1 300 tout autour de la clairière, toujours aux mêmes places (hasard à graine fixe, `ForetVillage.tsx`) : le **premier rang** (la lisière) est planté **bien en ligne** (22/10) : tous les troncs à la même distance du bord (1,3 case, `DISTANCE_LISIERE`), au même écart (environ 2,2 cases, `ECART_LISIERE`, les coins tombent juste) ; derrière ce rang (au moins 1,5 case plus loin), les arbres sont plus libres et de plus en plus serrés, et au fond de plus gros arbres un peu plus sombres (effet de profondeur). Les arbres du bas de la carte passent devant les bâtiments et les personnages. Pour rester fluide, ils sont dessinés dans des tuiles de « toile » (canvas) de 384 pixels du monde, redessinées plus finement après un zoom pour celles qu'on voit ;
+  - **la plage** (22/10, `PlageVillage.tsx`, forme dans `plage.ts`) : en bas à gauche, à la place de la forêt, une bande de **sable** (environ 5 cases) puis la **mer** (turquoise près du bord, bleu profond au loin, récifs sous l'eau, reflets qui scintillent), avec une **écume** qui va et vient le long du rivage. Après les deux coins, la côte continue au pied de la forêt (et s'éloigne vers le bas après le coin du bas). Dessus, dans le style des bâtiments : un **ponton** en planches de 2 cases de large (posé sur la grille, avec ses pieux et deux lanternes), une **barque** au bout du ponton et une sur le sable, des **palmiers**, un **parasol** avec sa serviette, un **feu de camp** avec deux bûches (la flamme danse), des caisses, des tonneaux, une lanterne, des rochers (sur le sable et dans l'eau, avec leur écume), des étoiles de mer et des coquillages. Aucun arbre de la forêt n'y pousse (`surLaPlage`). On ne peut **ni construire ni marcher** sur la plage (elle est hors de la grille) ;
   - **des petits détails sur l'herbe** (22/10, `DetailsHerbe` dans `DessinsVillage.tsx`) : des touffes d'herbe foncée, des brins plus clairs, de temps en temps une petite fleur (blanche, jaune, rose ou mauve) ou un caillou, environ deux pour trois cases, toujours aux mêmes places (hasard à graine fixe). Ils sont au sol : bâtiments, chemins et personnages passent par-dessus ;
   - **la caméra est bornée** (`LIMITES_CAMERA` dans `iso.ts`) : on ne peut ni la faire glisser ni dézoomer au-delà de la clairière et d'une bande de forêt. On ne voit donc jamais de bord de décor.
 - Une case fait 33 pixels du monde de large sur 19 de haut (`DEMI_LARGEUR` = 16,5 et `DEMI_HAUTEUR` = 9,57 dans `iso.ts`, des constantes qui ne dépendent plus de la taille de la grille). Le monde fait donc 2 262 × 1 407 pixels (`LARGEUR_MONDE`, `HAUTEUR_MONDE`).
@@ -117,7 +118,7 @@ On en pose autant qu'on veut (succès « Paysagiste » à 10 décorations). Elle
 
 Un **convoi** (`Convoi` dans `village.ts`, `convois.ts`) est un chargement en route de la mine vers le marché : il est **vendu en arrivant** (au prix du marché, bonus de prestige compris).
 
-- **D'où ils viennent** : le chargement de l'**ascenseur** quand la cabine arrive en haut (il ne se vend plus en arrivant au village : il part au marché), le **wagonnet** chargé par le joueur, et la récolte des **mineurs** quand les rails relient la mine au marché.
+- **D'où ils viennent** : avec des rails de la mine au marché, le chargement de l'**ascenseur** quand la cabine arrive en haut (sans rails, il va dans le **réservoir** de la mine depuis le 22/10 : voir [mine.md](../batiments/mine.md)), le **wagonnet** chargé par le joueur (depuis son sac ou tout le réservoir), et la récolte des **mineurs** quand les rails relient la mine au marché.
 - **Comment ils roulent** (`trajetChargement`) :
   - sur les rails : en **wagonnet**, `max(1, (cases de rails + 1) / 12)` secondes ;
   - sans rails : dans une **brouette**, à pied, `max(1, longueur du chemin / 4)` secondes, par le chemin le plus court entre la porte de la mine et celle du marché.
@@ -158,6 +159,10 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | 💰 | le bâtiment concerné | une amélioration est achetable | achat (vert) |
 
 Les bulles ✨ et ⬆️ disparaissent quand on arrive devant le bâtiment.
+
+## 8 bis. Toucher hors de la clairière
+
+Si on touche la forêt, la plage ou la mer (hors de la grille), le hamster **marche vers l'endroit touché mais s'arrête au bord de la clairière**, comme contre une barrière invisible (22/10) : on prend le point où le trait entre lui et l'endroit touché sort de la grille, et la case libre la plus proche (`auBordDeLaClairiere`, `caseLibreProche` dans `useJoueurVillage.ts`). Il ne sort jamais de la grille (au clavier non plus).
 
 ## 9. Entrer dans la mine et en sortir
 

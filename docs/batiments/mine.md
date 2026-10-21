@@ -8,7 +8,7 @@
 - **Déblocage** : disponible **dès le début** (prestige 0), jamais de cadenas.
 - **La porte** : au milieu de sa face avant **gauche** (à droite si elle est retournée). C'est là que le hamster se tient en sortant de la mine, et que partent les brouettes et les mineurs.
 - **L'ouvrir** : toucher (ou cliquer) la mine : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case de la mine, de n'importe quel côté (21/10). Au chargement d'une partie, le hamster est déjà devant la mine, mais le panneau reste fermé (il ne s'ouvre qu'en arrivant en marchant).
-- **Le dessin au village** (21/10) : l'image de mine fournie par l'équipe (une carrière avec sa galerie à rails, ses murs de pierre, ses minerais et ses lanternes), upscalée par IA, détourée et rendue plus nette (`public/images/batiments/mine.webp`, 2 109 × 1 346 px). Depuis le 21/10 (2e version), elle n'est **plus redressée en perspective** (ça l'écrasait) : elle est posée **sans déformation** comme les autres bâtiments, ses coins gauche et droit sur la largeur de ses **10 × 10 cases** (`CALAGES.puits`, `transformationSprite`). Par-dessus, ce qui **évolue** (`DessinEvolutionMine` dans `DessinsVillage.tsx`) : **une cage d'ascenseur** en acier pour ton ascenseur (toit doré, dès qu'il est construit) **et une par mineur employé** (7 places en quinconce le long du mur du fond, notées en pixels de l'image dans `POINTS_MINE` et posées à l'écran par `pointSurSprite`, miroir compris ; poulies qui tournent quand une cabine roule) ; le **fond du trou s'assombrit** avec la profondeur atteinte (lueur de minerais quand on est bas) ; un **panneau** devant la galerie affiche la profondeur.
+- **Le dessin au village** (22/10) : le dessin de la mine de l'équipe (une fosse en planches et en pierre, avec son treuil, sa cage d'ascenseur, ses minerais et ses lanternes, `public/images/batiments/mine.webp`). Il était vu plus d'en haut que les autres bâtiments (losange 0,77 au lieu de 0,58) : un script l'a **remis à l'angle du jeu** sans l'écraser (le sol est ramené à l'angle des cases ; les poteaux, les murs et le puits gardent leur hauteur, ils glissent seulement). Le pied de son losange tombe **pile sur ses 10 × 10 cases** (`CALAGES.puits`). Par-dessus (`DessinEvolutionMine` dans `DessinsVillage.tsx`) : dès que l'ascenseur est construit, **sa cabine** (prise dans le dessin « mine avec ascenseur », `mine-cabine.webp`) **monte et descend dans le puits** avec la vraie cabine (en haut au village, tout en bas au front de taille, à moitié cachée derrière la barrière de devant, `mine-devant.webp`), pendue aux deux câbles du treuil ; sans ascenseur, les câbles pendent au fond. Un **panneau** sur le sol de devant affiche la profondeur.
 - **Bulles au-dessus** (`notifications.ts`) : **⬆️ « Nouveaux niveaux débloqués ! »** après un prestige qui relève le plafond de l'ascenseur (prestiges 1 à 4), jusqu'à ce qu'on passe devant ; **💰 « Une amélioration est achetable ! »** quand le prochain niveau de l'ascenseur est permis et payable tout de suite (argent + minerais **dans le sac**).
 - **Dans la mine** (`VueMonde.tsx`) : le puits longe la mine à gauche ; l'**échelle** descend jusqu'au front de taille, à côté du **rail de l'ascenseur** (grisé tant qu'il n'est pas construit). Une fois construit : une poulie en haut (qui tourne pendant les trajets), un câble, et une cabine (toit avec lampe, grille, plancher rayé, petite caisse de minerai quand elle est chargée ou que le quai n'est pas vide). Le mineur est dessiné dans la cabine quand il voyage dedans. Le bandeau affiche `🛗 <niveau>` quand l'ascenseur existe. En haut de la vue, une bande de ciel avec le panneau « ☀️ Village » rappelle qu'on est sous le village.
 
@@ -64,6 +64,14 @@ Au village, la barre devient **🏗️ Bâtiments**, **🌸 Décos**, **✏️ M
 - Quand on relâche la flèche sur l'échelle, le mineur s'arrête **au prochain barreau** (un appui très court fait toujours bouger d'un mètre).
 - Dans la cabine, on ne peut pas utiliser l'échelle : c'est la cabine qui porte le mineur.
 
+### Le réservoir (22/10)
+
+- Ce que l'ascenseur remonte n'est **plus vendu** : quand la cabine arrive en haut, son chargement est rangé dans le **réservoir** de la mine (**200 places**, `NIVEAUX_RESERVOIR` ; on pourra l'agrandir plus tard), les objets les plus chers d'abord. Bulle 📦 au-dessus de la mine quand il contient quelque chose (rouge quand il est plein).
+- Au bâtiment Mine, la section **📦 Réservoir · n / 200** montre son contenu avec des jauges, et **🎒 Mettre dans le sac** le met dans ton sac (tant qu'il y a de la place). Il faut ensuite **marcher jusqu'au marché** pour vendre : dans les premiers prestiges, on fait des allers-retours entre le réservoir et le marché.
+- **Réservoir plein** : ce qui ne rentre pas **reste dans la cabine** (rien n'est perdu) ; elle redescend avec et prend moins de place au voyage suivant. Dès qu'on vide le réservoir, la cabine arrêtée en haut s'y vide.
+- **Avec des rails** de la mine au marché (prestige 2) : ce qui remonte part directement au marché en **wagonnet**, et le bouton **🛤️ Tout en wagonnet** y envoie tout le réservoir (l'automatisation complète sera revue plus tard).
+- **Au prestige** : le réservoir repart **vide** (il garde sa taille).
+
 ### Ascenseur
 
 - **Plafond par prestige** (`PLAFONDS.ascenseur`) : niveau **2 au prestige 0**, puis un de plus par prestige : 3 au prestige 1, 4 au 2, 5 au 3, **6 (max) au prestige 4**.
@@ -74,7 +82,7 @@ Au village, la barre devient **🏗️ Bâtiments**, **🌸 Décos**, **✏️ M
 - Remonter avec le bouton **🏠 Village** en prenant la cabine emporte aussi le sac (les objets non gardés), qui part au marché à l'arrivée ; seul **⏫ Remonter** du sac garde tout.
 - **Le chargement arrivé en haut** (20/10, `envoyerAuMarche`) devient un « convoi » qui roule vers le marché : brouette à **4 cases/s** le long du chemin à pied (au moins 1 s), ou wagonnet à **12 cases/s** sur une ligne de rails continue mine → marché (`trajetChargement`). Message : « 🛗 Chargement remonté : il part au marché. » **Sans marché posé, il attend à la mine** et part dès qu'on pose le marché.
 - La cabine **suit le front de taille** quand on descend d'une couche, si elle y attendait.
-- Les **mineurs employés** ont **une cabine chacun**, dans ce même puits (une petite poulie par mineur sur le dessin du village), aussi rapides que ton ascenseur (au moins comme un niveau 1 si tu n'en as pas). Chacun creuse dans sa galerie, avec sa propre profondeur (« un univers parallèle » de la même mine), et remonte par sa cabine.
+- Les **mineurs employés** ont **une cabine chacun**, dans ce même puits, aussi rapides que ton ascenseur (au moins comme un niveau 1 si tu n'en as pas). Chacun creuse dans sa galerie, avec sa propre profondeur (« un univers parallèle » de la même mine), et remonte par sa cabine. Sur le dessin du village, on ne voit que ta cabine (22/10).
 
 ### La mine elle-même
 
@@ -134,7 +142,7 @@ Quand on rouvre un monde, le temps écoulé (au plus **8 heures**) est rattrapé
 - `src/composants/Inventaire.tsx` : sac au fond, envoi, remontée, envoi automatique.
 - `src/composants/VueMonde.tsx` : la vue en coupe (2D) : puits, échelle, cabine, couches, la bande « ☀️ Village » en haut.
 - `src/composants/Amelioration.tsx` : affichage commun d'un niveau (cadenas « au prestige N »).
-- `src/jeu/mineur.ts` : déplacements, échelle, ascenseur, quai, minage, galeries, mains nues, chargement remonté qui part au marché.
+- `src/jeu/mineur.ts` : déplacements, échelle, ascenseur, quai, minage, galeries, mains nues, chargement remonté rangé dans le réservoir (`viderCabine`, `prendreDuReservoir`, `envoyerReservoir`).
 - `src/jeu/mine.ts` : génération des couches et apparition des minerais.
 - `src/jeu/temps.ts` : le temps qui passe (marche, échelle, cabine, chargements en route).
 - `src/usePartie.ts` : boucle de minage, envoi automatique, rattrapage hors ligne (8 h max).

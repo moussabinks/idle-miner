@@ -70,8 +70,10 @@ export const RETRAIT_BATIMENT = 0
 // Les coins mesurés sont ceux du pied de la dalle de pavés (là où elle touche l'herbe), mesurés
 // par un script sur les images détourées (22/10).
 export const CALAGES: Record<IdBatiment, Calage> = {
-  // La mine (10 × 10) : l'image fournie, upscalée et rendue plus nette, sans la redresser (21/10).
-  puits: { largeur: 2109, hauteur: 1346, gauche: { x: 9, y: 722 }, bas: { x: 1259, y: 1336 }, droite: { x: 2099, y: 766 }, retrait: 0 },
+  // La mine (10 × 10, 22/10) : le dessin de l'équipe, vu plus d'en haut que les autres, remis à
+  // l'angle du jeu par un script (le sol est ramené à l'angle des cases, les poteaux et les murs
+  // du puits gardent leur hauteur). Le pied de son losange tombe pile sur ses 10 × 10 cases.
+  puits: { largeur: 1233, hauteur: 774, gauche: { x: 3, y: 403.4 }, bas: { x: 625, y: 765.4 }, droite: { x: 1225, y: 418.6 } },
   bazar: { largeur: 1037, hauteur: 945, gauche: { x: 2, y: 652 }, bas: { x: 520, y: 942 }, droite: { x: 1034, y: 653 } },
   employes: { largeur: 1074, hauteur: 1046, gauche: { x: 2, y: 724 }, bas: { x: 530, y: 1043 }, droite: { x: 1071, y: 726 } },
   enchanteur: { largeur: 1111, hauteur: 1013, gauche: { x: 2, y: 682 }, bas: { x: 548, y: 1010 }, droite: { x: 1108, y: 687 } },

@@ -15,6 +15,7 @@ import { memo, useEffect, useRef, useState } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE } from '../jeu/donnees'
 import { ARBRES } from './arbres'
+import { surLaPlage } from './plage'
 import { DEMI_LARGEUR, LIMITES_CAMERA, profondeur, versEcran, versGrille } from './iso'
 
 type Arbre = {
@@ -55,6 +56,8 @@ function planterForet(): Arbre[] {
   const pas = 1.55
   // Planter un arbre dont le tronc est sur le point (x, y) de la grille, large de « taille » cases.
   const planter = (x: number, y: number, taille: number, dehors: number) => {
+    // Pas d'arbre sur la plage ni dans la mer (en bas à gauche, voir PlageVillage).
+    if (surLaPlage(x, y)) return
     const sorte = tirerSorte()
     const miroir = hasard() < 0.5
     const p = versEcran(x, y)
