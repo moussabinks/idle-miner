@@ -52,8 +52,7 @@ export function profondeur(x: number, y: number): number {
 // ---------------------------------------------------------------------------
 
 // Pour chaque image : sa taille, et les trois coins du sol de son dessin (gauche, bas, droite),
-// en pixels de l'image. On déforme très légèrement l'image pour que ces trois coins tombent
-// pile sur les coins de l'emprise du bâtiment (5 × 5 cases) : le dessin colle à la grille.
+// en pixels de l'image. Les coins gauche et droit donnent sa largeur et le milieu de son pied.
 // « retrait » : de combien de cases on rentre le dessin à l'intérieur de son emprise (pour qu'un
 // bâtiment ne déborde pas de ses 5 × 5 cases, comme dans Clash of Clans).
 type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; droite: Point; retrait?: number }
@@ -73,32 +72,25 @@ export const CALAGES: Record<IdBatiment, Calage> = {
   prestige: { largeur: 1120, hauteur: 1030, gauche: { x: 2, y: 712 }, bas: { x: 452, y: 1026 }, droite: { x: 1114, y: 788 } },
 }
 
-// La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille) : les trois coins du
-// sol de l'image vont sur les coins gauche, bas et droit de l'emprise. Avec « miroir », l'image
-// est retournée (le coin gauche de l'image va à droite).
+// La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer
+// (21/10) : on l'agrandit (ou la rétrécit) d'un seul coup, de façon que ses coins gauche et droit
+// tombent sur la largeur de l'emprise, et que le milieu de son pied tombe au milieu de l'emprise.
+// (Avant, on forçait trois coins du pied sur les coins de l'emprise : comme les dessins n'ont pas
+// tous exactement le même angle, l'image était penchée et tassée.) Avec « miroir », l'image est
+// retournée (la gauche passe à droite).
 export function transformationSprite(calage: Calage, x: number, y: number, taille: number, miroir: boolean): string {
-  const g = miroir ? { x: calage.largeur - calage.droite.x, y: calage.droite.y } : calage.gauche
-  const b = miroir ? { x: calage.largeur - calage.bas.x, y: calage.bas.y } : calage.bas
-  const d = miroir ? { x: calage.largeur - calage.gauche.x, y: calage.gauche.y } : calage.droite
   const r = calage.retrait ?? RETRAIT_BATIMENT
-  const G = versEcran(x + r, y + taille - r)
-  const B = versEcran(x + taille - r, y + taille - r)
-  const D = versEcran(x + taille - r, y + r)
-  // On cherche a, b, c, d, e, f tels que : X = a·u + c·v + e et Y = b·u + d·v + f
-  // pour les trois couples de points (u, v) → (X, Y).
-  const det = g.x * (b.y - d.y) - g.y * (b.x - d.x) + (b.x * d.y - d.x * b.y)
-  const resoudre = (p: number, q: number, r: number) => {
-    // Coefficients (m1, m2, m3) tels que m1·u + m2·v + m3 = valeur, pour les trois points.
-    const m1 = (p * (b.y - d.y) - g.y * (q - r) + (q * d.y - r * b.y)) / det
-    const m2 = (g.x * (q - r) - p * (b.x - d.x) + (b.x * r - d.x * q)) / det
-    const m3 = (g.x * (b.y * r - d.y * q) - g.y * (b.x * r - d.x * q) + p * (b.x * d.y - d.x * b.y)) / det
-    return [m1, m2, m3]
-  }
-  const [a, c, e] = resoudre(G.x, B.x, D.x)
-  const [bb, dd, f] = resoudre(G.y, B.y, D.y)
+  const gauche = versEcran(x + r, y + taille - r)
+  const droite = versEcran(x + taille - r, y + r)
+  const echelle = (droite.x - gauche.x) / (calage.droite.x - calage.gauche.x)
+  // Le milieu du pied de l'image (entre ses coins gauche et droit), retourné si besoin.
+  const milieuImageX = miroir ? calage.largeur - (calage.gauche.x + calage.droite.x) / 2 : (calage.gauche.x + calage.droite.x) / 2
+  const milieuImageY = (calage.gauche.y + calage.droite.y) / 2
+  const milieu = versEcran(x + taille / 2, y + taille / 2)
+  const e = milieu.x - milieuImageX * echelle
+  const f = milieu.y - milieuImageY * echelle
   const retourne = miroir ? `matrix(-1, 0, 0, 1, ${calage.largeur}, 0)` : ''
-  // D'abord le miroir (dans l'image), puis la mise en place (dans le monde).
-  return `matrix(${a}, ${bb}, ${c}, ${dd}, ${e}, ${f}) ${retourne}`.trim()
+  return `matrix(${echelle}, 0, 0, ${echelle}, ${e}, ${f}) ${retourne}`.trim()
 }
 
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {

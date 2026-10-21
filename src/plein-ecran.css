@@ -26,6 +26,17 @@
   --largeur-panneau: 400px;
 }
 
+/* Pas de zoom ni de défilement de la page avec les doigts (seulement la carte, qui gère ses
+   propres gestes) ; les panneaux et les menus, eux, défilent verticalement. */
+.jeu.plein-ecran {
+  touch-action: none;
+}
+
+.plein-ecran .panneau-flottant > .panneau,
+.plein-ecran .menu-reglages {
+  touch-action: pan-y;
+}
+
 /* --- La scène ---------------------------------------------------------------------- */
 
 .plein-ecran .scene {

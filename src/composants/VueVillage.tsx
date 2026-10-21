@@ -34,6 +34,7 @@ import {
   TerrainVillage,
 } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
+import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import { Hamster } from './Hamster'
 import {
   HAUTEUR_MONDE,
@@ -466,6 +467,18 @@ export function VueVillage({
   // Le sol : chemins, rails, grille, emprises.
   const sol = (
     <svg className="sol-village" viewBox={`0 0 ${LARGEUR_MONDE} ${HAUTEUR_MONDE}`} aria-hidden="true">
+      <defs>
+        <filter id="flou-ombre-batiment" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="7" />
+        </filter>
+      </defs>
+      {/* Une ombre douce sous chaque bâtiment (la lumière vient d'en haut à gauche) : il est posé
+          sur le sol, pas collé dessus. */}
+      {village.batiments
+        .filter((b) => b.id !== 'puits')
+        .map((b) => (
+          <polygon key={`ombre-${b.id}`} className="ombre-batiment" points={losange(b.x + 0.6, b.y + 0.2, BATIMENTS[b.id].taille - 0.5)} filter="url(#flou-ombre-batiment)" />
+        ))}
       {village.chemins.map((cle) => {
         const c = lireCle(cle)
         return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
@@ -483,6 +496,36 @@ export function VueVillage({
     </svg>
   )
 
+  // Pendant qu'on fait glisser la carte, le navigateur la garde toute prête (« couche rapide »,
+  // will-change) : c'est fluide même avec des centaines d'arbres. Mais alors il ne la redessine
+  // pas quand on zoome, et elle devient floue : une fois le zoom fini, on enlève la couche une
+  // image pour qu'il la redessine nette, puis on la remet.
+  const zoomArrondi = Math.round(camera.z * 100)
+  const [coucheRapide, setCoucheRapide] = useState(true)
+
+  // La partie du monde qu'on voit (pour redessiner nettes les tuiles de forêt visibles), mise à
+  // jour quand la caméra s'arrête.
+  const [vueForet, setVueForet] = useState<VueForet>({ x0: 0, y0: 0, x1: 0, y1: 0, z: 1 })
+  const visibleX0 = Math.round(camera.cx - milieuX / camera.z)
+  const visibleY0 = Math.round(camera.cy - taille.h / 2 / camera.z)
+  const visibleX1 = Math.round(camera.cx + (taille.l - milieuX) / camera.z)
+  const visibleY1 = Math.round(camera.cy + taille.h / 2 / camera.z)
+  useEffect(() => {
+    const minuteur = window.setTimeout(() => setVueForet({ x0: visibleX0, y0: visibleY0, x1: visibleX1, y1: visibleY1, z: zoomArrondi / 100 }), 250)
+    return () => clearTimeout(minuteur)
+  }, [visibleX0, visibleY0, visibleX1, visibleY1, zoomArrondi])
+  useEffect(() => {
+    let image = 0
+    const minuteur = window.setTimeout(() => {
+      setCoucheRapide(false)
+      image = requestAnimationFrame(() => requestAnimationFrame(() => setCoucheRapide(true)))
+    }, 220)
+    return () => {
+      clearTimeout(minuteur)
+      cancelAnimationFrame(image)
+    }
+  }, [zoomArrondi])
+
   const styleMonde: CSSProperties = {
     transform: `translate(${milieuX - camera.cx * camera.z}px, ${taille.h / 2 - camera.cy * camera.z}px) scale(${camera.z})`,
     transition: !camera.douce ? 'none' : transition ? 'transform 0.75s cubic-bezier(0.55, 0, 0.6, 1)' : 'transform 0.18s linear',
@@ -499,10 +542,12 @@ export function VueVillage({
       onWheel={molette}
       aria-label="Le village vu du ciel"
     >
-      <div className="monde-village" style={styleMonde}>
+      <div className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`} style={styleMonde}>
         <TerrainVillage />
         {sol}
+        <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>
+        <ForetDevant vue={vueForet} />
         <div className="bulles-village">{bulles}</div>
       </div>
       {transition && <div className={`fondu-mine fondu-${transition}`} />}

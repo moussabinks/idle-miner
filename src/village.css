@@ -34,6 +34,11 @@
   width: 1536px;
   height: 1024px;
   transform-origin: 0 0;
+}
+
+/* La carte gardée prête par le navigateur (fluide quand on la fait glisser). VueVillage l'enlève
+   un instant après chaque zoom pour qu'elle soit redessinée nette. */
+.couche-rapide {
   will-change: transform;
 }
 
@@ -51,6 +56,27 @@
 .terrain-village,
 .sol-village {
   pointer-events: none;
+}
+
+.ombre-batiment {
+  fill: rgb(20 40 10 / 0.38);
+}
+
+/* La forêt (ForetVillage) : des tuiles de « toile » posées dans le monde. Les arbres du bas de la
+   carte passent devant les bâtiments (mais sous les bulles). */
+.foret-village {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.foret-devant {
+  z-index: 90000;
+}
+
+.tuile-foret {
+  position: absolute;
 }
 
 .objets-village,

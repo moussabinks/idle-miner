@@ -22,8 +22,8 @@
 
 - **La mine en coupe est dessinée en CSS** (dégradés, ombres, `clip-path`, `@keyframes`) : les blocs, l'échelle, l'ascenseur, la foreuse, les effets. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « plus de pixel art, pour ne pas ressembler à Minecraft »).
 - **Le village vu du ciel utilise de vraies images** (décidé le 20/10, avec le passage à la vue du ciel) :
-  - **la forêt** : `public/images/village/foret.webp` (21/10), une tuile de 1 536 px qui se répète sans raccord, fabriquée avec la forêt du décor fourni (voir § 7). L'ancien décor `fond.webp` (une seule image de 1 536 × 1 024 px, floue une fois agrandie, avec des bords étirés) n'est plus utilisé : le sol de la clairière est maintenant dessiné par le jeu ;
-  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, enchanteur, arbre de prestige, foreuse, Personnel, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, **upscalés par IA le 21/10** (Real-ESRGAN, ×4 puis ramenés à 1 120 px de large, le double d'avant : nets même au zoom maximum), et la **mine** (`mine.webp`, 1 680 px, l'image fournie redressée en perspective sur 10 × 10 cases). Chacun est **calé sur la grille** par une matrice CSS : trois coins du sol du dessin (gauche, bas, droite, mesurés à la main dans `CALAGES`) tombent sur les coins de son emprise de 5 × 5 cases, **en retrait de 0,3 case** pour ne pas déborder sur le damier (`transformationSprite`, `RETRAIT_BATIMENT` dans `iso.ts`) ;
+  - **les arbres de la forêt** : `public/images/village/arbres/` (21/10), les 12 arbres dessinés par l'équipe, upscalés par IA (×4) et détourés (leur ombre transparente gardée). L'ancien décor `fond.webp` et la tuile de forêt floue ne sont plus utilisés : le sol est dessiné par le jeu et la forêt est faite d'arbres posés un par un (voir § 7) ;
+  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, enchanteur, arbre de prestige, foreuse, Personnel, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, **upscalés par IA le 21/10** (Real-ESRGAN, ×4 puis ramenés à 1 120 px de large, le double d'avant : nets même au zoom maximum), et la **mine** (`mine.webp`, 1 680 px, l'image fournie redressée en perspective sur 10 × 10 cases). Chacun est **calé sur la grille** par une matrice CSS : l'image est agrandie **sans déformation** (21/10) pour que les coins gauche et droit de son pied (mesurés à la main dans `CALAGES`) couvrent la largeur de son emprise de 5 × 5 cases, **en retrait de 0,3 case**, le milieu du pied au milieu de l'emprise (`transformationSprite`, `RETRAIT_BATIMENT` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe ;
   - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel).
 - Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins et chapeaux dorés, lanternes) : la mine qui se creuse, les rails, les chemins de pavés, les décorations, le wagonnet et la brouette (`DessinsVillage.tsx`), et les hamsters (`Hamster.tsx`, `Personnage.tsx`). Les autres SVG : l'icône du Personnel (`Icone.tsx`) et le favicon.
 - **Style cartoon** : formes rondes, cailloux irréguliers, auvents bombés, panneaux en bois arrondis, contours sombres.
@@ -189,7 +189,7 @@ Couleurs des trouvailles : charbon `#c9c9c9`, fer `#ecc7a8`, redstone `#ff4d4d`,
 
 Refait le 20/10 dans la même direction artistique que le village (bois, or, lanternes) :
 
-- **Le fond de la page** : la forêt (`foret.webp`, répétée) en plein écran, fixe, très assombrie (voile brun de 80 à 93 %). L'accueil a son propre empilement (`isolation: isolate`) pour que ce fond passe devant celui de la page.
+- **Le fond de la page** : un dégradé brun très sombre avec une lueur verte en haut, fixe. L'accueil a son propre empilement (`isolation: isolate`) pour que ce fond passe devant celui de la page.
 - **Le bandeau « héros »** : un cadre en bois sombre (`#4a2c12`, 5 px) avec un filet doré à l'intérieur, coins de 22 px. Dedans, **un petit village vivant** (`SceneAccueil.tsx`) dessiné exactement comme dans le jeu (mêmes images, mêmes dessins SVG, mêmes hamsters) :
   - la mine (creusée à mi-hauteur, avec son ascenseur), les 7 bâtiments (le marché et le forgeron retournés), 26 décorations (fontaine, statue, cerisiers, sapins, arbres, lanternes, tonneau, caisse, banc, rocher, buissons, fleurs), un bout de rails avec un virage et des chemins de pavés ;
   - 4 mineurs (légendaire, épique, rare, mythique) qui font des **allers-retours** entre la mine et le marché, la forge ou le Personnel (2,2 cases/s, une pause de 1,2 s à chaque bout, un sac de minerais sur le dos vers le marché), un **wagonnet** qui fait la navette sur les rails, le joueur immobile devant la mine (pioche en diamant), le manager et le recruteur devant le Personnel ;
@@ -221,9 +221,11 @@ Refait le 20/10 : le village est une carte **isométrique** (vue du ciel à 45°
 
 | Ordre | Calque | Contenu |
 |---|---|---|
-| 1 | **Terrain** (`terrain-village`, `TerrainVillage`, un SVG dessiné une seule fois) | sous tout, une herbe sombre ; le **damier** de la clairière (deux verts `#86c13f` / `#79b437`, un motif SVG de 2 × 2 cases posé en iso par une matrice) avec une ombre douce sur son bord ; la **forêt** (motif qui répète `foret.webp`), partout sauf sur la clairière, avec un bord adouci (masque flouté) |
+| 1 | **Terrain** (`terrain-village`, `TerrainVillage`, un SVG dessiné une seule fois) | sous tout, le sous-bois sombre ; une large auréole d'herbe floue autour de la clairière ; le **damier** (deux verts `#86c13f` / `#79b437`, un motif SVG de 2 × 2 cases posé en iso par une matrice) dont le bord s'efface dans l'herbe (masque flouté) |
+| 1 bis | **Forêt derrière** (`foret-derriere`, tuiles de canvas) | les arbres du haut et des côtés |
 | 2 | **Sol** (`sol-village`, un SVG de la taille du monde) | les chemins de pavés, les rails, le losange en tirets dorés du bâtiment actif, le losange vert ou rouge de ce qu'on pose (le quadrillage n'est plus jamais tracé : le damier suffit) |
 | 3 | **Objets** (`objets-village`) | bâtiments, mine, décorations, personnages, wagonnets, triés par profondeur |
+| 3 bis | **Forêt devant** (`foret-devant`, `z-index` 90 000) | les arbres du bas de la carte, devant tout le reste |
 | 4 | **Bulles** (`bulles-village`, `z-index` 100 000) | les bulles de notification, toujours devant tout |
 | 5 | **Fondu** | le noir de l'entrée et de la sortie de la mine |
 
@@ -348,7 +350,7 @@ Toutes ont le même dessin : sur un fond carré arrondi gris-bleu très sombre (
 
 Enregistré **seulement en production** (`enregistrerServiceWorker` dans `src/installation.ts`, appelé par `main.tsx` ; en développement le cache gênerait), au chargement de la page, avec `updateViaCache: 'none'`. S'il échoue (navigation privée…), le jeu marche quand même, sans hors ligne.
 
-- Cache **`idle-miner-v3`** (21/10, images en haute définition ; `idle-miner-v2` le 20/10). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : la forêt `foret.webp`, les 9 images de `images/batiments/` (dont la mine), les 3 portraits de `images/personnages/` ; sans elles, le village serait vide hors ligne), et prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
+- Cache **`idle-miner-v4`** (21/10 : images en haute définition puis arbres ; `idle-miner-v2` le 20/10). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, les 9 images de `images/batiments/` (dont la mine), les 3 portraits de `images/personnages/` ; sans elles, le village serait vide hors ligne), et prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
 - Seules les requêtes **GET de notre propre site** passent par lui (Supabase n'est jamais mis en cache).
 
 | Requête | Stratégie |

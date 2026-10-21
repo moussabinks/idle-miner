@@ -43,7 +43,7 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 
 ## 2. L'écran d'accueil (`Accueil.tsx`)
 
-Refait le 20/10 dans le style des images du village (bois, or, lanternes). Derrière toute la page, la **forêt** du village (`foret.webp`, répétée) très assombrie. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**, et les champs de texte en bois foncé. De haut en bas :
+Refait le 20/10 dans le style des images du village (bois, or, lanternes). Derrière toute la page, un dégradé brun très sombre. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**, et les champs de texte en bois foncé. De haut en bas :
 
 ### 2.1 Le grand bandeau (« héros »)
 
@@ -608,6 +608,7 @@ La largeur d'une case de mine s'adapte : `min(46px, (largeur de l'écran − 97 
 
 | Largeur | Ce qui change |
 |---|---|
+| partout | le navigateur ne zoome plus la page pendant la partie (21/10 : avant, un pincement ou Ctrl + molette grossissait aussi les boutons, qui sortaient de l'écran) : seule la carte zoome. Bloqués : Ctrl + molette et le pincement du pavé tactile, Ctrl + / Ctrl −, le pincement de Safari (`gesturestart`), `user-scalable=no` et `touch-action: none` sur le jeu (les panneaux défilent toujours) |
 | **> 860 px** (ordinateur) | plein écran (21/10) : la scène remplit la fenêtre, le bandeau en haut à droite, les boutons du coin en haut à gauche, le panneau à droite (400 px, 350 px sous 1 180 px de large), les gros boutons ronds en bas (70 et 86 px), les toasts au milieu sous l'objectif |
 | **≤ 860 px** (tablette, téléphone) | toujours en plein écran ; boutons du coin de 44 px sans texte ; bandeau en petites cases (Pioche et Sac à moitié de largeur, enchantements cachés) ; l'objectif passe en bas, au-dessus des boutons (caché dans la mine) ; boutons ronds de 60 et 72 px ; le **panneau d'un bâtiment** monte du bas au-dessus des boutons (55 % de la hauteur au plus) ; **dans la mine**, la coupe prend toute la largeur et le sac s'ouvre avec le bouton 🎒 ; le menu Bâtiments / Décos prend 82 % de la hauteur ; toasts en bas, au-dessus de l'objectif (2 au plus) ; rappel du clavier caché |
 | **≤ 640 px** | statistiques : tuiles sur 2 colonnes, une seule colonne pour les blocs |
