@@ -1,10 +1,10 @@
-// Le village vu du ciel (décidé le 20/10) : une grande grille de 40 × 40 cases où le joueur
+// Le village vu du ciel (décidé le 20/10) : une grande grille de 60 × 60 cases où le joueur
 // pose ses bâtiments, ses rails, ses chemins et ses décorations comme il veut.
 //
 // Ce fichier ne contient que la géométrie : qui occupe quelle case, où est la porte d'un
 // bâtiment, le chemin à pied d'un bâtiment à l'autre (on contourne les bâtiments), et la ligne
 // de rails entre la mine et le marché. Les actions (construire, poser des rails...) sont dans
-// batiments.ts, les wagonnets qui vont au marché dans convois.ts.
+// batiments.ts, le wagonnet qui va au marché dans wagonnet.ts.
 //
 // Les coordonnées : x va vers le bas à droite de l'écran, y vers le bas à gauche (vue
 // isométrique). La case (0, 0) est le coin du haut de la clairière.
@@ -14,14 +14,12 @@ import {
   DECORATIONS,
   TAILLE_GRILLE,
   VITESSE_MARCHE,
-  VITESSE_RAILS,
   type IdBatiment,
   type IdDecoration,
 } from './donnees'
-import type { EtatJeu, Inventaire } from './mineur'
 
 // ---------------------------------------------------------------------------
-// Ce qui est posé au village (sauvegardé avec la partie, gardé au prestige)
+// Ce qui est posé au village (sauvegardé avec la partie)
 // ---------------------------------------------------------------------------
 
 export type Case = { x: number; y: number }
@@ -48,16 +46,6 @@ export type Village = {
   decorations: DecorationPosee[]
   prochainNumero: number // pour numéroter les décorations
   batimentsVus: IdBatiment[] // les bâtiments débloqués déjà vus dans le menu (pour la pastille « Nouveau »)
-}
-
-// Un chargement de minerais en route vers le marché : en wagonnet sur les rails, sinon dans une
-// brouette (à la vitesse de la marche). Il est vendu en arrivant.
-export type Convoi = {
-  chargement: Inventaire
-  temps: number // secondes déjà roulées
-  duree: number // secondes pour arriver au marché (-1 = il attend qu'on pose le marché)
-  parRails: boolean
-  mineur: string | null // le mineur employé à qui il appartient (null = à toi)
 }
 
 // La mine est posée d'office au milieu de la clairière.
@@ -354,7 +342,7 @@ export function secondesAPied(village: Village, de: IdBatiment, vers: IdBatiment
 }
 
 // ---------------------------------------------------------------------------
-// Les rails (prestige 2)
+// Les rails : la ligne de la mine au marché
 // ---------------------------------------------------------------------------
 
 const DIRECTIONS_RAILS = [
@@ -441,35 +429,4 @@ export function raccordsRail(village: Village, x: number, y: number): { n: boole
 
 function occupe(emprise: Emprise, x: number, y: number): boolean {
   return x >= emprise.x && y >= emprise.y && x < emprise.x + emprise.taille && y < emprise.y + emprise.taille
-}
-
-// ---------------------------------------------------------------------------
-// Les chargements qui partent de la mine vers le marché
-// ---------------------------------------------------------------------------
-
-// Combien de temps met un chargement pour aller de la mine au marché : en wagonnet si une ligne
-// de rails les relie, sinon dans une brouette à la vitesse de la marche. null : pas de marché.
-export function trajetChargement(village: Village): { duree: number; parRails: boolean } | null {
-  if (!batimentPose(village, 'marche')) return null
-  const rails = railsMineMarche(village)
-  if (rails !== null) return { duree: Math.max(1, (rails.length + 1) / VITESSE_RAILS), parRails: true }
-  return { duree: Math.max(1, secondesAPied(village, 'puits', 'marche')), parRails: false }
-}
-
-// Un chargement part vers le marché (il sera vendu en arrivant, voir convois.ts).
-export function envoyerAuMarche(etat: EtatJeu, chargement: Inventaire, mineur: string | null): void {
-  if (Object.values(chargement).every((n) => (n ?? 0) <= 0)) return
-  const trajet = trajetChargement(etat.village)
-  etat.convois.push({
-    chargement: { ...chargement },
-    temps: 0,
-    duree: trajet ? trajet.duree : -1,
-    parRails: trajet ? trajet.parRails : false,
-    mineur,
-  })
-}
-
-// Les secondes en wagonnet d'un bout à l'autre des rails (pour l'affichage).
-export function secondesEnWagonnet(nbCases: number): number {
-  return Math.max(1, (nbCases + 1) / VITESSE_RAILS)
 }

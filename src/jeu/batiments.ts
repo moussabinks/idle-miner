@@ -1,7 +1,6 @@
 // Les actions du village vu du ciel : poser les bâtiments (le marché est gratuit, les autres
 // coûtent de l'argent, de la pierre et du fer), les déplacer ou les retourner (menu
-// « Modifier »), poser des rails (prestige 2, 10 fer la case) et des chemins, acheter des
-// décorations. Tout ce qui est posé reste au prestige.
+// « Modifier »), poser des rails (en fer) et des chemins, acheter des décorations.
 // La géométrie (cases occupées, portes, chemins à pied) est dans village.ts.
 
 import {
@@ -10,13 +9,11 @@ import {
   COUT_RAIL,
   DECORATIONS,
   LISTE_BATIMENTS,
-  PRESTIGE_RAILS,
   type Cout,
   type IdBatiment,
-  type IdBloc,
-  type IdDecoration,
+    type IdDecoration,
 } from './donnees'
-import { payer, peutPayer, quantite, retirer, type EtatJeu } from './mineur'
+import { payer, peutPayer, type EtatJeu } from './mineur'
 import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre, type Occupant } from './village'
 
 // ---------------------------------------------------------------------------
@@ -24,7 +21,7 @@ import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre
 // ---------------------------------------------------------------------------
 
 export function batimentDebloque(etat: EtatJeu, id: IdBatiment): boolean {
-  return etat.prestige >= BATIMENTS[id].prestige
+  return etat.niveauMine >= BATIMENTS[id].niveauMine
 }
 
 export function estPose(etat: EtatJeu, id: IdBatiment): boolean {
@@ -35,37 +32,9 @@ export function coutBatiment(id: IdBatiment): Cout {
   return BATIMENTS[id].cout
 }
 
-// La pierre d'une construction se paie aussi avec de la roche dure : plus bas dans la mine, il
-// n'y a plus de pierre, et on ne doit jamais être bloqué.
-export function pierreDisponible(etat: EtatJeu): number {
-  return quantite(etat, 'pierre') + quantite(etat, 'deepslate')
-}
-
-export function peutPayerConstruction(etat: EtatJeu, cout: Cout): boolean {
-  if (etat.argent < (cout.argent ?? 0)) return false
-  return Object.entries(cout.materiaux).every(([bloc, nombre]) =>
-    bloc === 'pierre' ? pierreDisponible(etat) >= (nombre ?? 0) : quantite(etat, bloc as IdBloc) >= (nombre ?? 0),
-  )
-}
-
-function payerConstruction(etat: EtatJeu, cout: Cout): void {
-  etat.argent -= cout.argent ?? 0
-  for (const [id, nombre] of Object.entries(cout.materiaux)) {
-    const bloc = id as IdBloc
-    if (bloc !== 'pierre') {
-      retirer(etat, bloc, nombre ?? 0)
-      continue
-    }
-    // La pierre d'abord, puis la roche dure pour le reste.
-    const pierre = Math.min(nombre ?? 0, quantite(etat, 'pierre'))
-    retirer(etat, 'pierre', pierre)
-    retirer(etat, 'deepslate', (nombre ?? 0) - pierre)
-  }
-}
-
 // Peut-on construire ce bâtiment (débloqué, pas encore posé, et payable) ?
 export function peutConstruire(etat: EtatJeu, id: IdBatiment): boolean {
-  return batimentDebloque(etat, id) && !estPose(etat, id) && peutPayerConstruction(etat, coutBatiment(id))
+  return batimentDebloque(etat, id) && !estPose(etat, id) && peutPayer(etat, coutBatiment(id))
 }
 
 // Peut-on mettre ce bâtiment à cet endroit ?
@@ -76,7 +45,7 @@ export function placeLibrePour(etat: EtatJeu, id: IdBatiment, x: number, y: numb
 
 export function construireBatiment(etat: EtatJeu, id: IdBatiment, x: number, y: number, miroir = false): string[] {
   if (!peutConstruire(etat, id) || !placeLibrePour(etat, id, x, y)) return []
-  payerConstruction(etat, coutBatiment(id))
+  payer(etat, coutBatiment(id))
   etat.village.batiments.push({ id, x, y, miroir })
   return [`🏗️ ${BATIMENTS[id].nom} construit !`]
 }
@@ -115,10 +84,6 @@ export function marquerBatimentsVus(etat: EtatJeu): string[] {
 
 export type TypeSol = 'rail' | 'chemin'
 
-export function railsDebloques(etat: EtatJeu): boolean {
-  return etat.prestige >= PRESTIGE_RAILS
-}
-
 export function coutSol(type: TypeSol): Cout {
   return type === 'rail' ? COUT_RAIL : COUT_CHEMIN
 }
@@ -128,7 +93,6 @@ function listeSol(etat: EtatJeu, type: TypeSol): string[] {
 }
 
 export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
-  if (type === 'rail' && !railsDebloques(etat)) return false
   return peutPayer(etat, coutSol(type)) && empriseLibre(etat.village, { x, y, taille: 1 })
 }
 
@@ -163,7 +127,7 @@ export function retirerSol(etat: EtatJeu, type: TypeSol, x: number, y: number): 
 // ---------------------------------------------------------------------------
 
 export function decorationDebloquee(etat: EtatJeu, id: IdDecoration): boolean {
-  return etat.prestige >= DECORATIONS[id].prestige
+  return etat.niveauMine >= DECORATIONS[id].niveauMine
 }
 
 export function peutAcheterDecoration(etat: EtatJeu, id: IdDecoration): boolean {

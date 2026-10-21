@@ -1,397 +1,228 @@
-// Données du jeu : pioches, blocs, sacs, enchantements, zones et constantes.
-// Les valeurs viennent de docs/idle_miner_v1.md (version notebook Python),
-// avec une mine plus profonde (bedrock à -100 m au prestige 0 puis 50 m plus bas à chaque prestige, depuis le 19/10, au lieu de -64 m dans la v1).
+// Données du jeu : blocs, niveaux de la mine, pioches, sacs, mineurs, foreuse, générateur,
+// bâtiments, décorations et tenues.
+// Depuis le 22/10, la mine tourne toute seule (plus de vue en coupe, plus de profondeur ni de
+// bedrock, plus de prestige) : on clique sur un bloc pour creuser plus vite, on embauche des
+// mineurs, puis on relie la mine au marché avec des rails, d'abord poussés à la main, puis
+// électriques grâce au générateur.
 
 // ---------------------------------------------------------------------------
 // Blocs
 // ---------------------------------------------------------------------------
 
-// Identifiants de tous les blocs du jeu (et des objets qu'on peut avoir dans le sac).
-export type IdBloc =
-  | 'terre'
-  | 'gravier'
-  | 'pierre'
-  | 'deepslate'
-  | 'charbon'
-  | 'fer'
-  | 'redstone'
-  | 'lapis'
-  | 'or'
-  | 'emeraude'
-  | 'diamant'
-  | 'debris'
-  | 'amethyste'
-  | 'obsidienne'
-  | 'lave'
-  | 'coffre'
-  | 'geode'
+// Ce qu'on trouve dans la mine (le lapis, la netherite, la lave, les coffres et les géodes sont
+// retirés depuis le 22/10).
+export type IdBloc = 'pierre' | 'charbon' | 'fer' | 'redstone' | 'or' | 'emeraude' | 'diamant'
 
 export type TypeBloc = {
   id: IdBloc
   nom: string
   emoji: string
-  prix: number // prix de vente en $ (0 = ne se vend pas)
-  durete: number // temps de base pour le casser
-  minerai: boolean // true = profite de l'enchantement Fortune
-  special: boolean // true = ne va pas dans le sac (lave, coffre, géode)
+  prix: number // prix de vente au marché, en $
+  minerai: boolean // true = une bonne pioche peut le doubler
+  dur: boolean // un bloc dur fait un bruit plus lourd quand il casse
 }
 
 export const BLOCS: Record<IdBloc, TypeBloc> = {
-  terre: { id: 'terre', nom: 'Terre', emoji: '🟫', prix: 1, durete: 0.5, minerai: false, special: false },
-  gravier: { id: 'gravier', nom: 'Gravier', emoji: '🪨', prix: 1, durete: 0.6, minerai: false, special: false },
-  pierre: { id: 'pierre', nom: 'Pierre', emoji: '🪨', prix: 1, durete: 1.5, minerai: false, special: false },
-  // La « roche dure » des profondeurs (son identifiant reste « deepslate », pour les sauvegardes).
-  deepslate: { id: 'deepslate', nom: 'Roche dure', emoji: '⬛', prix: 2, durete: 3, minerai: false, special: false },
-  charbon: { id: 'charbon', nom: 'Charbon', emoji: '⚫', prix: 5, durete: 3, minerai: true, special: false },
-  fer: { id: 'fer', nom: 'Fer', emoji: '🔩', prix: 12, durete: 3, minerai: true, special: false },
-  redstone: { id: 'redstone', nom: 'Redstone', emoji: '🔴', prix: 15, durete: 3, minerai: true, special: false },
-  lapis: { id: 'lapis', nom: 'Lapis-lazuli', emoji: '🔷', prix: 20, durete: 3, minerai: true, special: false },
-  or: { id: 'or', nom: 'Or', emoji: '🟡', prix: 35, durete: 3, minerai: true, special: false },
-  emeraude: { id: 'emeraude', nom: 'Émeraude', emoji: '💚', prix: 80, durete: 3, minerai: true, special: false },
-  diamant: { id: 'diamant', nom: 'Diamant', emoji: '💎', prix: 100, durete: 3, minerai: true, special: false },
-  // Les débris antiques ne profitent pas de Fortune (comme dans Minecraft).
-  debris: { id: 'debris', nom: 'Débris antiques', emoji: '🟤', prix: 400, durete: 30, minerai: false, special: false },
-  amethyste: { id: 'amethyste', nom: 'Améthyste', emoji: '🔮', prix: 50, durete: 1.5, minerai: false, special: false },
-  obsidienne: { id: 'obsidienne', nom: 'Obsidienne', emoji: '🟪', prix: 60, durete: 3, minerai: false, special: false },
-  // Blocs spéciaux : ils déclenchent un effet au lieu d'aller dans le sac.
-  lave: { id: 'lave', nom: 'Lave', emoji: '🔥', prix: 0, durete: 1, minerai: false, special: true },
-  coffre: { id: 'coffre', nom: 'Coffre', emoji: '🧰', prix: 0, durete: 2.5, minerai: false, special: true },
-  geode: { id: 'geode', nom: 'Géode', emoji: '🔮', prix: 0, durete: 1.5, minerai: false, special: true },
+  pierre: { id: 'pierre', nom: 'Pierre', emoji: '🪨', prix: 1, minerai: false, dur: false },
+  charbon: { id: 'charbon', nom: 'Charbon', emoji: '⚫', prix: 5, minerai: true, dur: true },
+  fer: { id: 'fer', nom: 'Fer', emoji: '🔩', prix: 12, minerai: true, dur: true },
+  redstone: { id: 'redstone', nom: 'Redstone', emoji: '🔴', prix: 15, minerai: true, dur: true },
+  or: { id: 'or', nom: 'Or', emoji: '🟡', prix: 35, minerai: true, dur: true },
+  emeraude: { id: 'emeraude', nom: 'Émeraude', emoji: '💚', prix: 80, minerai: true, dur: true },
+  diamant: { id: 'diamant', nom: 'Diamant', emoji: '💎', prix: 100, minerai: true, dur: true },
 }
 
-// Les minerais qu'un coffre peut contenir (un au hasard).
-export const MINERAIS_COFFRE: IdBloc[] = ['charbon', 'fer', 'redstone', 'lapis', 'or', 'emeraude', 'diamant']
+export const LISTE_BLOCS = Object.keys(BLOCS) as IdBloc[]
 
-// Poids de la roche de base dans le tirage d'un bloc.
-export const POIDS_ROCHE = 100
+// Les minerais « rares » (un son brillant et une petite fête quand on en trouve).
+export const MINERAIS_RARES: IdBloc[] = ['or', 'emeraude', 'diamant']
+
+// Le prix d'un achat : de l'argent, et des minerais (pris dans le sac, puis dans le coffre de la mine).
+export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
 
 // ---------------------------------------------------------------------------
-// Pioches
+// La mine : 5 niveaux (décidé le 22/10)
 // ---------------------------------------------------------------------------
 
+// Chaque niveau ajoute un minerai, et rend les minerais rares plus fréquents. On achète le
+// niveau suivant au bâtiment Mine. « debit » : les blocs que la mine sort toute seule chaque
+// seconde (le vieux treuil), même sans joueur ni mineur.
+export type NiveauMine = {
+  niveau: number
+  nom: string
+  poids: Partial<Record<IdBloc, number>> // un poids 2 sort deux fois plus souvent qu'un poids 1
+  debit: number
+  cout: Cout // le prix pour y descendre (rien pour le premier)
+}
+
+export const NIVEAUX_MINE: NiveauMine[] = [
+  { niveau: 1, nom: 'Galerie de surface', poids: { pierre: 70, charbon: 18, fer: 12 }, debit: 0.2, cout: { materiaux: {} } },
+  { niveau: 2, nom: 'Veine de redstone', poids: { pierre: 60, charbon: 16, fer: 14, redstone: 10 }, debit: 0.25, cout: { argent: 400, materiaux: { fer: 30 } } },
+  { niveau: 3, nom: 'Filon d’or', poids: { pierre: 52, charbon: 14, fer: 14, redstone: 12, or: 8 }, debit: 0.3, cout: { argent: 2500, materiaux: { fer: 60, redstone: 30 } } },
+  {
+    niveau: 4,
+    nom: 'Grotte aux émeraudes',
+    poids: { pierre: 46, charbon: 12, fer: 13, redstone: 12, or: 11, emeraude: 6 },
+    debit: 0.35,
+    cout: { argent: 9000, materiaux: { redstone: 60, or: 30 } },
+  },
+  {
+    niveau: 5,
+    nom: 'Cœur de diamant',
+    poids: { pierre: 40, charbon: 11, fer: 12, redstone: 12, or: 12, emeraude: 8, diamant: 5 },
+    debit: 0.4,
+    cout: { argent: 30000, materiaux: { or: 60, emeraude: 25 } },
+  },
+]
+
+export const NIVEAU_MINE_MAX = NIVEAUX_MINE.length
+
+// Le coffre de la mine : tout ce qui sort de la mine y est rangé (clics, mine toute seule,
+// mineurs). Quand il est plein, la mine s'arrête. On l'agrandit au bâtiment Mine.
+export const NIVEAUX_COFFRE: { capacite: number; cout: Cout }[] = [
+  { capacite: 100, cout: { materiaux: {} } },
+  { capacite: 250, cout: { argent: 150, materiaux: { pierre: 40 } } },
+  { capacite: 600, cout: { argent: 800, materiaux: { fer: 40 } } },
+  { capacite: 1500, cout: { argent: 3000, materiaux: { fer: 80, redstone: 20 } } },
+  { capacite: 4000, cout: { argent: 10000, materiaux: { or: 30 } } },
+]
+
+// ---------------------------------------------------------------------------
+// Les pioches du joueur (au forgeron)
+// ---------------------------------------------------------------------------
+
+// Chaque clic sur le bloc de la mine casse un bloc et use la pioche d'un point. La pioche décide
+// de la chance de doubler un minerai. Pioche cassée : un bloc tous les 2 clics, sans doublement.
+// On commence avec la pioche en pierre (décidé le 22/10), réparée avec de la pierre et un peu d'argent.
 export type Pioche = {
   niveau: number
   nom: string
   emoji: string
-  vitesse: number
-  profMax: number // profondeur max en mètres (valeur positive)
-  durabilite: number
-  prix: number
-  // Matériaux à fournir en plus de l'argent pour l'acheter.
-  materiaux: Partial<Record<IdBloc, number>>
-  // Le minerai qu'il faut pour la réparer (null : la pioche en bois, réparée avec de l'argent seulement).
-  reparation: IdBloc | null
+  doublement: number // chance de doubler un minerai (0,1 = 10 %)
+  durabilite: number // nombre de clics avant qu'elle casse
+  cout: Cout // le prix pour la débloquer (ou la racheter neuve)
+  reparation: Cout // le prix pour la réparer quand elle est cassée (moins si elle est seulement usée)
   couleur: string // couleur du fer de la pioche, pour dessiner le personnage
 }
 
 export const PIOCHES: Pioche[] = [
-  { niveau: 0, nom: 'Bois', emoji: '🪵', vitesse: 2, profMax: 35, durabilite: 60, prix: 5, materiaux: {}, reparation: null, couleur: '#b5834a' },
-  { niveau: 1, nom: 'Pierre', emoji: '🪨', vitesse: 4, profMax: 70, durabilite: 160, prix: 40, materiaux: {}, reparation: 'pierre', couleur: '#8f8f8f' },
-  { niveau: 2, nom: 'Fer', emoji: '⚙️', vitesse: 6, profMax: 112, durabilite: 250, prix: 300, materiaux: {}, reparation: 'fer', couleur: '#e6e6e6' },
-  { niveau: 3, nom: 'Diamant', emoji: '💎', vitesse: 8, profMax: 136, durabilite: 500, prix: 2000, materiaux: { diamant: 3 }, reparation: 'diamant', couleur: '#4ee8dc' },
   {
-    niveau: 4,
-    nom: 'Netherite',
-    emoji: '🔥',
-    vitesse: 9,
-    profMax: 150,
-    durabilite: 800,
-    prix: 3000,
-    materiaux: { debris: 4, or: 4 },
-    reparation: 'debris',
-    couleur: '#6b5568',
+    niveau: 0,
+    nom: 'Pierre',
+    emoji: '🪨',
+    doublement: 0.1,
+    durabilite: 150,
+    cout: { argent: 10, materiaux: { pierre: 20 } },
+    reparation: { argent: 5, materiaux: { pierre: 10 } },
+    couleur: '#8f8f8f',
+  },
+  {
+    niveau: 1,
+    nom: 'Fer',
+    emoji: '⚙️',
+    doublement: 0.2,
+    durabilite: 300,
+    cout: { argent: 200, materiaux: { fer: 25 } },
+    reparation: { argent: 30, materiaux: { fer: 5 } },
+    couleur: '#e6e6e6',
+  },
+  {
+    niveau: 2,
+    nom: 'Or',
+    emoji: '🟡',
+    doublement: 0.3,
+    durabilite: 500,
+    cout: { argent: 1500, materiaux: { or: 20 } },
+    reparation: { argent: 150, materiaux: { or: 5 } },
+    couleur: '#f4c518',
+  },
+  {
+    niveau: 3,
+    nom: 'Diamant',
+    emoji: '💎',
+    doublement: 0.45,
+    durabilite: 1000,
+    cout: { argent: 8000, materiaux: { diamant: 10 } },
+    reparation: { argent: 600, materiaux: { diamant: 3 } },
+    couleur: '#4ee8dc',
   },
 ]
 
-// La réparation d'une pioche (règle du 19/10, la même pour toutes) : de l'argent + 3 minerais
-// de la pioche (3 fer pour la pioche en fer, 3 diamants pour la pioche en diamant...).
-// L'argent dépend de l'usure : une pioche cassée coûte la moitié de son prix neuve.
-// La pioche en bois n'a pas de minerai (il n'y a pas de bois dans la mine) : argent seulement.
-export const MINERAIS_REPARATION = 3
-export const PART_PRIX_REPARATION = 0.5
-
-// Vitesse à mains nues (pioche cassée).
-export const VITESSE_MAINS_NUES = 1
+// Pioche cassée : il faut 2 clics pour casser un bloc.
+export const CLICS_MAINS_NUES = 2
 
 // ---------------------------------------------------------------------------
-// Mine, sac et boutique
+// Le sac à dos (au bazar) : ce que le joueur porte jusqu'au marché
 // ---------------------------------------------------------------------------
 
-export const LARGEUR_MINE = 10 // blocs par couche
-// La mine est plus profonde à chaque prestige (décidé le 19/10) : la bedrock est à -100 m au
-// prestige 0, puis 50 m plus bas à chaque prestige (-150 m, -200 m, -250 m...).
-export const PROFONDEUR_BEDROCK_DEPART = 100
-export const PROFONDEUR_EN_PLUS_PAR_PRESTIGE = 50
-
-export function profondeurBedrock(prestige: number): number {
-  return PROFONDEUR_BEDROCK_DEPART + PROFONDEUR_EN_PLUS_PAR_PRESTIGE * prestige
-}
-
-// Toutes les profondeurs écrites dans les données (minerais, zones, roche dure, blocs
-// spéciaux, profondeur max des pioches) sont données pour une mine de 150 m de référence.
-// On les met à l'échelle de la mine du prestige en cours : × 100/150 au prestige 0, × 1 au
-// prestige 1, × 200/150 au prestige 2... Ainsi, à chaque prestige, le charbon et le fer
-// sont près de la surface, puis les autres minerais arrivent petit à petit jusqu'en bas.
-export const PROFONDEUR_REFERENCE = 150
-
-export function echelleMine(prestige: number): number {
-  return profondeurBedrock(prestige) / PROFONDEUR_REFERENCE
-}
-
-// Une vraie profondeur (dans la mine du prestige) → la profondeur de référence (mine de 150 m).
-export function versReference(profondeur: number, prestige: number): number {
-  return profondeur / echelleMine(prestige)
-}
-
-// Une profondeur de référence → la vraie profondeur dans la mine du prestige (en mètres entiers).
-export function depuisReference(metres: number, prestige: number): number {
-  return Math.round(metres * echelleMine(prestige))
-}
-
-// Sous cette profondeur (de référence), la roche devient de la roche dure et tout est plus long à casser.
-export const PROFONDEUR_DEEPSLATE = 94
-
-export function estRocheDure(profondeur: number, prestige: number): boolean {
-  return versReference(profondeur, prestige) > PROFONDEUR_DEEPSLATE
-}
-
-// Jusqu'où descend une pioche dans la mine de ce prestige (la netherite va jusqu'à la bedrock).
-export function profondeurMaxPioche(niveau: number, prestige: number): number {
-  return depuisReference(PIOCHES[niveau].profMax, prestige)
-}
-
-// Les sacs : la taille et le prix de chaque niveau (le premier est gratuit).
 export const SACS = [
   { taille: 32, prix: 0 },
   { taille: 64, prix: 80 },
   { taille: 128, prix: 400 },
   { taille: 256, prix: 1500 },
-  // Les grands sacs (19/10) : pour les longues sessions et après les prestiges.
   { taille: 512, prix: 5000 },
   { taille: 1024, prix: 15000 },
   { taille: 2048, prix: 40000 },
 ]
 
-export const PRIX_SEAU = 25
-
-// On voit toujours les 4 couches sous la couche en cours (lumière naturelle, sans torches).
-export const COUCHES_VISIBLES_DESSOUS = 4
-
 // ---------------------------------------------------------------------------
-// Surface, échelle et ascenseur
+// L'ascenseur de la mine : il raccourcit les allers-retours des mineurs
 // ---------------------------------------------------------------------------
 
-// Temps pour monter (ou descendre) un mètre à l'échelle, en secondes.
-export const SECONDES_PAR_METRE_ECHELLE = 0.15
+// Sans ascenseur, un mineur met SECONDES_ECHELLE pour remonter (ou redescendre) à l'échelle.
+export const SECONDES_ECHELLE = 10
 
-// Temps pour marcher d'une case au front de taille (jusqu'à l'échelle, par exemple).
-export const SECONDES_PAR_CASE = 0.12
-
-// Le prix d'une amélioration : surtout de l'argent, et un peu de minerais.
-// (Choix du 19/10 : l'économie repose sur l'argent, les minerais servent d'appoint.)
-export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
-
-// L'ascenseur automatique : il se construit puis s'améliore directement dans la mine.
-// Le premier niveau ne demande pas de redstone (on n'en trouve qu'à partir de -21 m dans la mine de référence, et peu au début) :
-// on peut le construire tôt. Chaque niveau remonte plus d'objets par voyage, et plus vite.
 export type NiveauAscenseur = {
   niveau: number
   cout: Cout
-  capacite: number // objets remontés par voyage
-  secondesParMetre: number // temps pour parcourir un mètre
+  secondesTrajet: number // le temps d'un trajet (montée ou descente) d'un mineur
 }
 
-// Choix du 19/10 : peu d'argent mais beaucoup de fer et de redstone (avant, les derniers
-// niveaux coûtaient jusqu'à 80 000 $ : trop cher, même au prestige 3).
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, cout: { argent: 250, materiaux: { fer: 8 } }, capacite: 32, secondesParMetre: 0.1 },
-  { niveau: 2, cout: { argent: 1200, materiaux: { fer: 15, redstone: 5 } }, capacite: 64, secondesParMetre: 0.07 },
-  { niveau: 3, cout: { argent: 2000, materiaux: { fer: 30, redstone: 15 } }, capacite: 128, secondesParMetre: 0.05 },
-  { niveau: 4, cout: { argent: 4500, materiaux: { fer: 50, redstone: 30 } }, capacite: 256, secondesParMetre: 0.03 },
-  { niveau: 5, cout: { argent: 9000, materiaux: { fer: 80, redstone: 50 } }, capacite: 512, secondesParMetre: 0.02 },
-  { niveau: 6, cout: { argent: 18000, materiaux: { fer: 120, redstone: 80 } }, capacite: 1024, secondesParMetre: 0.015 },
+  { niveau: 1, cout: { argent: 150, materiaux: { fer: 10 } }, secondesTrajet: 6 },
+  { niveau: 2, cout: { argent: 600, materiaux: { fer: 30, redstone: 5 } }, secondesTrajet: 4 },
+  { niveau: 3, cout: { argent: 2000, materiaux: { fer: 60, redstone: 20 } }, secondesTrajet: 2.8 },
+  { niveau: 4, cout: { argent: 6000, materiaux: { fer: 100, redstone: 50 } }, secondesTrajet: 2 },
+  { niveau: 5, cout: { argent: 15000, materiaux: { redstone: 100, or: 20 } }, secondesTrajet: 1.4 },
+  { niveau: 6, cout: { argent: 40000, materiaux: { or: 60, emeraude: 10 } }, secondesTrajet: 1 },
 ]
 
-// Le réservoir en haut de la mine (22/10) : ce que l'ascenseur remonte y est rangé, et le joueur
-// vient le chercher pour aller le vendre au marché (dans les premiers prestiges, on fait des
-// allers-retours ; avec des rails jusqu'au marché, le wagonnet s'en charge). Il est limité. Pour
-// l'instant il n'a qu'un niveau : les suivants (pour l'agrandir) viendront plus tard.
-export type NiveauReservoir = { niveau: number; capacite: number }
-export const NIVEAUX_RESERVOIR: NiveauReservoir[] = [{ niveau: 1, capacite: 200 }]
-
 // ---------------------------------------------------------------------------
-// Les plafonds d'amélioration selon le prestige (décidé le 19/10)
+// Les mineurs employés (dès le début, au bâtiment Personnel)
 // ---------------------------------------------------------------------------
 
-// On ne peut pas tout améliorer en un seul prestige (sinon : prestige 1, on farme, et
-// tout est au maximum). Règle commune : au déblocage, on peut monter jusqu'à un certain
-// niveau, puis chaque prestige permet un niveau de plus.
-//   - ascenseur : niveau 2 au prestige 0, 3 au prestige 1... jusqu'à 6 ;
-//   - sac à dos : 128 places aux prestiges 0 et 1, puis un sac de plus par prestige ;
-//   - forage et chariot de la foreuse (débloquée au prestige 1) : le niveau de base au prestige 1,
-//     le 2e au prestige 2... jusqu'au 8e au prestige 8 (les niveaux de la foreuse sont comptés
-//     à partir de 0 dans le code) ;
-//   - pioche des mineurs (débloqués au prestige 2) : Pierre au prestige 2, Fer et Diamant au
-//     prestige 3, Netherite au prestige 4 ;
-//   - recruteur (prestige 4) : niveau 1 à l'embauche, puis un niveau de plus par prestige ;
-//   - enchantements (gardés au prestige) : les trois au même niveau, un de plus tous les
-//     2 prestiges (I au prestige 0, II au prestige 2, III au prestige 4...).
-// Ce sont aussi les conditions du prestige : il faut tout avoir au plafond (conditionsPrestige.ts).
-export type IdPlafond = 'ascenseur' | 'sac' | 'forage' | 'chariot' | 'mineur' | 'recruteur' | IdEnchantement
-
-type Plafond = {
-  prestigeDeblocage: number
-  niveauAuDeblocage: number
-  niveauMax: number
-  prestigesParNiveau?: number // combien de prestiges pour un niveau de plus (1 par défaut)
-  // Ou bien, des paliers choisis à la main : le niveau permis à chaque prestige depuis le
-  // déblocage (le dernier vaut pour tous les prestiges suivants).
-  paliers?: number[]
-}
-
-// Rééquilibré le 20/10 (on ne pouvait presque rien améliorer avant la bedrock du prestige 2) :
-// chaque amélioration commence au niveau de base quand elle se débloque, puis gagne un palier
-// par prestige ; les trois enchantements montent ensemble, d'un niveau tous les 2 prestiges.
-export const PLAFONDS: Record<IdPlafond, Plafond> = {
-  ascenseur: { prestigeDeblocage: 0, niveauAuDeblocage: 2, niveauMax: 6 },
-  // Le sac à dos : 128 places aux prestiges 0 et 1, puis un sac de plus par prestige (256 au
-  // prestige 2... 2 048 au prestige 5). Les niveaux sont comptés à partir de 0 (le sac de 32 places).
-  sac: { prestigeDeblocage: 1, niveauAuDeblocage: 2, niveauMax: 6 },
-  // La foreuse : au prestige 1, l'activer suffit ; un niveau de plus par prestige ensuite (le 8e au prestige 8).
-  forage: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
-  chariot: { prestigeDeblocage: 1, niveauAuDeblocage: 0, niveauMax: 7 },
-  // Les mineurs (choisi le 20/10) : jusqu'à la pierre au prestige 2, fer et diamant au prestige 3,
-  // netherite au prestige 4. (Niveaux : 0 bois, 1 pierre, 2 fer, 3 diamant, 4 netherite.)
-  mineur: { prestigeDeblocage: 2, niveauAuDeblocage: 1, niveauMax: 4, paliers: [1, 3, 4] },
-  recruteur: { prestigeDeblocage: 4, niveauAuDeblocage: 1, niveauMax: 4 },
-  // Les enchantements, tous au même niveau : I aux prestiges 0 et 1, II aux prestiges 2 et 3,
-  // III aux prestiges 4 et 5 (le maximum de Fortune et Solidité), puis Efficacité IV et V.
-  efficacite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 5, prestigesParNiveau: 2 },
-  fortune: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
-  solidite: { prestigeDeblocage: 0, niveauAuDeblocage: 1, niveauMax: 3, prestigesParNiveau: 2 },
-}
-
-// Le plus haut niveau qu'on peut atteindre à ce prestige.
-export function niveauMaxAuPrestige(id: IdPlafond, prestige: number): number {
-  const plafond = PLAFONDS[id]
-  if (plafond.paliers) {
-    const rang = Math.max(0, prestige - plafond.prestigeDeblocage)
-    return plafond.paliers[Math.min(rang, plafond.paliers.length - 1)]
-  }
-  const prestigesEnPlus = Math.max(0, prestige - plafond.prestigeDeblocage)
-  const niveauxEnPlus = Math.floor(prestigesEnPlus / (plafond.prestigesParNiveau ?? 1))
-  return Math.min(plafond.niveauMax, plafond.niveauAuDeblocage + niveauxEnPlus)
-}
-
-// Le prestige qu'il faut pour atteindre ce niveau (pour afficher « 🔒 Prestige 3 »).
-export function prestigePourNiveau(id: IdPlafond, niveau: number): number {
-  const plafond = PLAFONDS[id]
-  if (plafond.paliers) {
-    const rang = plafond.paliers.findIndex((max) => max >= niveau)
-    return plafond.prestigeDeblocage + (rang === -1 ? plafond.paliers.length - 1 : rang)
-  }
-  return plafond.prestigeDeblocage + Math.max(0, niveau - plafond.niveauAuDeblocage) * (plafond.prestigesParNiveau ?? 1)
-}
-
-// ---------------------------------------------------------------------------
-// La foreuse (débloquée au prestige 1)
-// ---------------------------------------------------------------------------
-
-// On l'active une seule fois (elle reste active après les prestiges suivants).
-export const COUT_ACTIVATION_FOREUSE: Cout = { argent: 5000, materiaux: { fer: 10, redstone: 5 } }
-export const PRESTIGE_FOREUSE = 1
-
-// Un charbon fait tourner la foreuse pendant 20 secondes.
-export const SECONDES_PAR_CHARBON = 20
-
-// À partir de ce niveau de forage (le 3e), la foreuse peut se recharger toute seule
-// avec le charbon qu'elle remonte (option à cocher).
-export const NIVEAU_RECHARGE_AUTO = 2
-// Elle ne garde pour elle que de quoi tourner une minute : le reste du charbon va au chariot.
-export const RESERVE_RECHARGE_AUTO = 60
-
-// Vitesse de forage (blocs par seconde) et coût de chaque niveau.
-// La foreuse est gardée d'un prestige à l'autre : c'est là qu'on investit son argent.
-// Il n'y a qu'une seule foreuse (décidé le 20/10) : à la place des foreuses en plus, elle a
-// 8 niveaux (un de plus à chaque prestige, comme la mine qui descend de 50 m à chaque fois).
-export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
-  // Plus rapide dès le départ (19/10) : avant, elle rapportait trop peu, et agrandir le
-  // chariot ne servait à rien parce qu'il ne se remplissait presque jamais.
-  // Prix revus le 19/10 (comme l'ascenseur) : moins d'argent, plus de fer et de redstone, pour
-  // ne pas avoir à rester au fond à farmer avant de passer prestige.
-  { vitesse: 2, cout: { materiaux: {} } },
-  { vitesse: 3, cout: { argent: 2500, materiaux: { fer: 20, redstone: 5 } } },
-  { vitesse: 5, cout: { argent: 6000, materiaux: { fer: 40, redstone: 20 } } },
-  { vitesse: 8, cout: { argent: 12000, materiaux: { fer: 60, redstone: 40 } } },
-  { vitesse: 12, cout: { argent: 25000, materiaux: { fer: 90, redstone: 70 } } },
-  { vitesse: 16, cout: { argent: 40000, materiaux: { fer: 130, redstone: 100 } } },
-  { vitesse: 22, cout: { argent: 65000, materiaux: { fer: 180, redstone: 140 } } },
-  { vitesse: 30, cout: { argent: 100000, materiaux: { fer: 250, redstone: 200 } } },
-]
-
-// Taille du chariot (en objets) et coût de chaque niveau.
-// Revu le 20/10 : à niveaux égaux, la foreuse remplit toujours son chariot en environ 8 minutes
-// (capacité ≈ vitesse de forage du même niveau × 480 s). Améliorer seulement la foreuse remplit
-// le chariot plus vite (elle s'arrête plus tôt) ; améliorer seulement le chariot ne sert à rien
-// si la foreuse ne suit pas : on améliore les deux ensemble.
-export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
-  { capacite: 1000, cout: { materiaux: {} } },
-  { capacite: 1500, cout: { argent: 1500, materiaux: { fer: 10 } } },
-  { capacite: 2500, cout: { argent: 4000, materiaux: { fer: 25, redstone: 10 } } },
-  { capacite: 4000, cout: { argent: 9000, materiaux: { fer: 45, redstone: 25 } } },
-  { capacite: 6000, cout: { argent: 18000, materiaux: { fer: 70, redstone: 45 } } },
-  { capacite: 8000, cout: { argent: 28000, materiaux: { fer: 100, redstone: 70 } } },
-  { capacite: 10500, cout: { argent: 45000, materiaux: { fer: 140, redstone: 100 } } },
-  { capacite: 15000, cout: { argent: 70000, materiaux: { fer: 200, redstone: 150 } } },
-]
-
-// La foreuse descend d'un mètre tous les 10 blocs forés (une couche entière).
-export const BLOCS_FORES_PAR_METRE = 10
-
-// Un mineur employé creuse une galerie plus étroite : il descend d'un mètre tous les 5 blocs
-// (et pas 10), pour atteindre plus vite les minerais riches (19/10).
-export const BLOCS_PAR_METRE_EMPLOYE = 5
-
-// ---------------------------------------------------------------------------
-// Les mineurs employés (débloqués au prestige 2)
-// ---------------------------------------------------------------------------
-
-export const PRESTIGE_EMPLOYES = 2
-// On peut en employer 2 au prestige 2, puis 1 de plus à chaque prestige, jusqu'à 6.
-export const MAX_EMPLOYES = 6
-// Le prix d'embauche du 1er, 2e, 3e... mineur (décidé le 20/10 : il dépend seulement du nombre
-// de mineurs qu'on a en ce moment, pas du prestige ni de ceux qu'on a licenciés : licencier puis
-// réembaucher coûte toujours le même prix, plus les indemnités).
-// Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente : voir prixEmbauche().
-export const PRIX_EMBAUCHE = [5000, 12000, 25000, 50000, 90000, 150000, 250000]
+// Combien de mineurs on peut employer : 4 au niveau 1 de la mine, puis 2 de plus par niveau.
+export const EMPLOYES_NIVEAU_1 = 4
+export const EMPLOYES_PAR_NIVEAU = 2
+// Le prix de la 1re, 2e, 3e... embauche (il dépend seulement du nombre de mineurs qu'on a).
+// Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente.
+export const PRIX_EMBAUCHE = [50, 150, 400, 1000, 2500, 6000, 14000, 30000, 60000, 120000]
 export const HAUSSE_APRES_LISTE = 1.6
-// Licencier un mineur coûte des indemnités : 40 % du prix d'une embauche (décidé le 20/10).
+// Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4
-// Les temps morts d'un mineur entre deux séances de creusage (en secondes) :
-// un trajet (attente de l'ascenseur comprise) dure au moins DUREE_MIN_TRAJET_EMPLOYE,
-// et il passe SECONDES_VENTE_EMPLOYE au marché pour vendre sa récolte.
-export const DUREE_MIN_TRAJET_EMPLOYE = 5
-export const SECONDES_VENTE_EMPLOYE = 4
-// Les prénoms des mineurs (choisis le 20/10), tirés au hasard à l'embauche.
+// Le temps passé à vider son sac dans le coffre (ou à vendre au marché).
+export const SECONDES_VIDAGE_EMPLOYE = 2
 export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
 ]
 
-// --- Les salaires (décidé le 20/10) ---
-// Les mineurs ne prennent plus de commission sur leurs ventes : on leur paie un salaire
-// toutes les 10 minutes. Sans salaire, ils remontent attendre au stand Personnel.
-// Sans manager, on ne paie que 10 minutes à la fois (décidé le 20/10 : sinon le manager ne
-// servirait à rien) ; le manager, lui, paie au fur et à mesure.
+// Le salaire de 10 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, diamant) :
+// environ 15 % de ce qu'il fait sortir de la mine.
 export const SECONDES_PAR_PAIE = 10 * 60
-// Le salaire de 10 minutes selon l'équipement (pioche en bois, pierre, fer, diamant, netherite),
-// au prestige 0 : environ 18 % de ce que le mineur rapporte au fond de sa galerie. Il reste
-// gagnant même juste après un prestige, quand il recommence à creuser depuis la surface
-// (vérifié par simulation jusqu'au prestige 8). Le salaire monte ensuite de 15 % par prestige,
-// comme le prix des ventes (voir salaireEmploye).
-export const SALAIRES = [200, 600, 1300, 2300, 3000]
+export const SALAIRES = [30, 60, 140, 320, 700]
 
-// --- La rareté des mineurs (avec le recruteur, prestige 4) ---
+// L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite, et un plus grand
+// sac lui fait faire moins d'allers-retours. Payé en argent seulement.
+export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout: Cout }[] = [
+  { nom: 'Bois', vitesse: 0.15, sac: 10, cout: { materiaux: {} } },
+  { nom: 'Pierre', vitesse: 0.25, sac: 15, cout: { argent: 150, materiaux: {} } },
+  { nom: 'Fer', vitesse: 0.4, sac: 20, cout: { argent: 600, materiaux: {} } },
+  { nom: 'Or', vitesse: 0.6, sac: 30, cout: { argent: 2500, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 0.9, sac: 45, cout: { argent: 9000, materiaux: {} } },
+]
+
+// --- La rareté des mineurs (avec le recruteur, dès le niveau 3 de la mine) ---
 export type IdRarete = 'commun' | 'rare' | 'epique' | 'legendaire' | 'mythique'
 
 export type Rarete = {
@@ -402,7 +233,6 @@ export type Rarete = {
   couleur: string // pour les étiquettes, l'animation d'embauche...
 }
 
-// Un mineur rare rapporte beaucoup plus qu'il ne coûte en plus : c'est tout l'intérêt de la rareté.
 export const RARETES: Record<IdRarete, Rarete> = {
   commun: { id: 'commun', nom: 'Commun', rendement: 1, salaire: 1, couleur: '#b9b4ab' },
   rare: { id: 'rare', nom: 'Rare', rendement: 1.5, salaire: 1.25, couleur: '#4f9df0' },
@@ -413,138 +243,104 @@ export const RARETES: Record<IdRarete, Rarete> = {
 
 export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendaire', 'mythique']
 
-// --- Le recruteur (prestige 4) ---
-// Il trouve des mineurs plus ou moins rares. Plus il a de niveaux, plus il en trouve de rares.
-// Il se paie seulement en argent (le fer et la redstone servent aux machines).
-export const PRESTIGE_RECRUTEUR = 4
+// --- Le recruteur (niveau 3 de la mine) ---
+export const NIVEAU_MINE_RECRUTEUR = 3
 export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
-  { cout: { argent: 40000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
-  { cout: { argent: 80000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
-  { cout: { argent: 150000, materiaux: {} }, chances: { commun: 55, rare: 23.5, epique: 12.5, legendaire: 7, mythique: 2 } },
-  { cout: { argent: 250000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
+  { cout: { argent: 5000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
+  { cout: { argent: 12000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
+  { cout: { argent: 25000, materiaux: {} }, chances: { commun: 55, rare: 23.5, epique: 12.5, legendaire: 7, mythique: 2 } },
+  { cout: { argent: 50000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
 ]
 
-// --- Le manager (prestige 5) ---
-// Il paie les salaires tout seul avec l'argent de la trésorerie (une cagnotte qu'on remplit),
-// et il se paie lui-même au passage.
-export const PRESTIGE_MANAGER = 5
-export const PRIX_MANAGER = 50000
-export const SALAIRE_MANAGER = 3000 // toutes les 10 minutes
-// Il paie un salaire dès qu'il reste moins d'une minute de payée.
+// --- Le manager (niveau 4 de la mine) : il paie les salaires avec la trésorerie ---
+export const NIVEAU_MINE_MANAGER = 4
+export const PRIX_MANAGER = 15000
+export const SALAIRE_MANAGER = 600 // toutes les 10 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
 
-// L'équipement d'un mineur : il s'en occupe tout seul, on paie seulement pour un meilleur.
-// Chaque amélioration lui donne une meilleure pioche ET un plus grand sac à dos.
-// vitesse = blocs cassés par seconde ; profMax = profondeur qu'il peut atteindre ;
-// sac = places dans son sac à dos.
-// Payé seulement en argent (décidé le 20/10) : le fer et la redstone servent aux machines
-// (ascenseur et foreuse). Les prix d'avant + la valeur au marché des minerais qu'ils demandaient.
-export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; profMax: number; sac: number; cout: Cout }[] = [
-  { nom: 'Bois', vitesse: 0.8, profMax: 35, sac: 32, cout: { materiaux: {} } },
-  { nom: 'Pierre', vitesse: 1.2, profMax: 70, sac: 48, cout: { argent: 3500, materiaux: {} } },
-  { nom: 'Fer', vitesse: 1.8, profMax: 112, sac: 64, cout: { argent: 8000, materiaux: {} } },
-  { nom: 'Diamant', vitesse: 2.5, profMax: 136, sac: 96, cout: { argent: 17000, materiaux: {} } },
-  { nom: 'Netherite', vitesse: 3.2, profMax: 149, sac: 128, cout: { argent: 33000, materiaux: {} } },
+// ---------------------------------------------------------------------------
+// Les rails et le wagonnet
+// ---------------------------------------------------------------------------
+
+// Les rails se paient en fer (dès le début). Il faut une ligne continue de la mine au marché :
+// alors le wagonnet peut porter le coffre au marché. Sans électricité, on le pousse (toi au
+// début, puis un mineur « pousseur ») ; avec le générateur, il roule tout seul.
+export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
+// Les vitesses, en cases par seconde.
+export const VITESSE_POUSSE_JOUEUR = 3
+export const VITESSE_POUSSE_MINEUR = 2.5
+export const VITESSE_RAILS = 8 // le wagonnet électrique, à la puissance 1
+// Le temps pour charger le wagonnet au coffre, et pour le vider au marché.
+export const SECONDES_CHARGEMENT_WAGONNET = 2
+
+// La taille du wagonnet (au bâtiment Mine).
+export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
+  { capacite: 40, cout: { materiaux: {} } },
+  { capacite: 100, cout: { argent: 500, materiaux: { fer: 40 } } },
+  { capacite: 250, cout: { argent: 2500, materiaux: { fer: 80, redstone: 20 } } },
+  { capacite: 600, cout: { argent: 10000, materiaux: { or: 40 } } },
 ]
 
-// Bonus par niveau de prestige (ils s'additionnent à chaque prestige) :
-// +15 % sur les ventes et +10 % de vitesse pour toutes les pioches.
-export const BONUS_PRESTIGE = 0.15
-export const BONUS_VITESSE_PRESTIGE = 0.1
-
 // ---------------------------------------------------------------------------
-// Enchantements (formules de Minecraft)
+// Le générateur (niveau 2 de la mine) : de l'électricité dans un rayon
 // ---------------------------------------------------------------------------
 
-export type IdEnchantement = 'efficacite' | 'fortune' | 'solidite'
-
-export type Enchantement = {
-  id: IdEnchantement
-  nom: string
-  description: string
-  niveauMax: number
-  // Coût du niveau n : (argent × n × n) + (lapis × n) + (émeraudes × n).
-  // L'argent grandit vite (n²) : les derniers niveaux, gardés de prestige en prestige, se méritent.
-  argentParNiveau: number
-  lapisParNiveau: number
-  emeraudesParNiveau: number
-}
-
-export const ENCHANTEMENTS: Record<IdEnchantement, Enchantement> = {
-  efficacite: {
-    id: 'efficacite',
-    nom: 'Efficacité',
-    description: '+25 % de vitesse par niveau',
-    niveauMax: 5,
-    argentParNiveau: 400,
-    lapisParNiveau: 3,
-    emeraudesParNiveau: 1,
-  },
-  fortune: {
-    id: 'fortune',
-    nom: 'Fortune',
-    description: '20 % de chance par niveau de doubler un minerai',
-    niveauMax: 3,
-    argentParNiveau: 600,
-    lapisParNiveau: 4,
-    emeraudesParNiveau: 1,
-  },
-  solidite: {
-    id: 'solidite',
-    nom: 'Solidité',
-    description: "La pioche s'use moins vite",
-    niveauMax: 3,
-    argentParNiveau: 300,
-    lapisParNiveau: 3,
-    emeraudesParNiveau: 1,
-  },
-}
-
-export const LISTE_ENCHANTEMENTS: IdEnchantement[] = ['efficacite', 'fortune', 'solidite']
+// Il brûle de la redstone : 1 redstone = 30 secondes de courant. Tout ce qui est dans son rayon
+// (un cercle autour de lui, en cases) est électrique : les rails (le wagonnet roule tout seul,
+// plus vite avec plus de puissance) et la foreuse (elle fore plus vite).
+export const SECONDES_PAR_REDSTONE = 30
+export const NIVEAUX_GENERATEUR: { rayon: number; puissance: number; cout: Cout }[] = [
+  { rayon: 15, puissance: 1, cout: { materiaux: {} } },
+  { rayon: 20, puissance: 1.3, cout: { argent: 3000, materiaux: { fer: 80, redstone: 40 } } },
+  { rayon: 26, puissance: 1.7, cout: { argent: 8000, materiaux: { fer: 150, redstone: 80 } } },
+  { rayon: 33, puissance: 2.2, cout: { argent: 20000, materiaux: { fer: 250, redstone: 150 } } },
+  { rayon: 40, puissance: 3, cout: { argent: 50000, materiaux: { fer: 400, redstone: 300 } } },
+]
+// À partir de ce niveau (le 2e), le générateur peut puiser la redstone dans le coffre de la mine.
+export const NIVEAU_GENERATEUR_AUTO = 1
+// Il garde au plus 5 minutes de redstone d'avance quand il se sert dans le coffre.
+export const RESERVE_GENERATEUR_AUTO = 300
 
 // ---------------------------------------------------------------------------
-// Zones (ambiance selon la profondeur)
+// La foreuse (niveau 2 de la mine) : au charbon, plus rapide sous électricité
 // ---------------------------------------------------------------------------
 
-export type Zone = { nom: string; profMax: number; classe: string }
+export const SECONDES_PAR_CHARBON = 20
+// À partir de ce niveau de forage (le 3e), elle peut brûler le charbon qu'elle fore.
+export const NIVEAU_RECHARGE_AUTO = 2
+export const RESERVE_RECHARGE_AUTO = 60
+// Sous électricité, elle fore (1 + puissance) fois plus vite... à moitié : × (1 + puissance / 2).
+export const BONUS_ELECTRIQUE_FOREUSE = 0.5
 
-export const ZONES: Zone[] = [
-  { nom: 'Surface', profMax: 7, classe: 'zone-surface' },
-  { nom: 'Cavernes', profMax: 35, classe: 'zone-cavernes' },
-  { nom: 'Mines', profMax: 70, classe: 'zone-mines' },
-  { nom: 'Profondeurs', profMax: 94, classe: 'zone-profondeurs' },
-  { nom: 'Roche dure', profMax: 122, classe: 'zone-deepslate' },
-  { nom: 'Abîmes', profMax: 150, classe: 'zone-abimes' },
+export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
+  { vitesse: 0.5, cout: { materiaux: {} } },
+  { vitesse: 0.8, cout: { argent: 1500, materiaux: { fer: 30, redstone: 10 } } },
+  { vitesse: 1.2, cout: { argent: 4000, materiaux: { fer: 60, redstone: 30 } } },
+  { vitesse: 1.8, cout: { argent: 10000, materiaux: { fer: 100, redstone: 60 } } },
+  { vitesse: 2.6, cout: { argent: 25000, materiaux: { redstone: 100, or: 30 } } },
+  { vitesse: 3.6, cout: { argent: 60000, materiaux: { or: 60, emeraude: 15 } } },
 ]
 
-// La zone (profondeurs de référence, mises à l'échelle de la mine du prestige).
-export function zoneDe(profondeur: number, prestige: number): Zone {
-  const reference = versReference(profondeur, prestige)
-  return ZONES.find((z) => reference <= z.profMax) ?? ZONES[ZONES.length - 1]
-}
+export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
+  { capacite: 200, cout: { materiaux: {} } },
+  { capacite: 400, cout: { argent: 1000, materiaux: { fer: 20 } } },
+  { capacite: 800, cout: { argent: 3000, materiaux: { fer: 50, redstone: 15 } } },
+  { capacite: 1600, cout: { argent: 8000, materiaux: { fer: 90, redstone: 40 } } },
+  { capacite: 3000, cout: { argent: 20000, materiaux: { redstone: 80, or: 20 } } },
+  { capacite: 6000, cout: { argent: 50000, materiaux: { or: 50, emeraude: 10 } } },
+]
 
 // ---------------------------------------------------------------------------
-// Formule de minage
+// Le village en vue du ciel : une grande grille où l'on pose les bâtiments
 // ---------------------------------------------------------------------------
 
-export const VITESSE_JEU = 0.45
-
-// Durée (en secondes) pour casser un bloc (x1,5 dans la roche dure).
-export function dureeCasse(durete: number, profondeur: number, vitesse: number, prestige: number): number {
-  const malusProfondeur = estRocheDure(profondeur, prestige) ? 1.5 : 1
-  return ((durete * malusProfondeur) / vitesse) * VITESSE_JEU
-}
-
-// ---------------------------------------------------------------------------
-// Le village en vue du ciel (décidé le 20/10) : une grande grille où l'on pose les bâtiments
-// ---------------------------------------------------------------------------
-
-// La clairière fait 60 × 60 cases (40 × 40 jusqu'au 21/10). Chaque bâtiment fait 5 × 5 cases,
-// sauf la mine (10 × 10). Les rails, les chemins et les petites décorations font 1 case.
+// La clairière fait 60 × 60 cases. Chaque bâtiment fait 5 × 5 cases, sauf la mine (10 × 10).
+// Les rails, les chemins et les petites décorations font 1 case.
 export const TAILLE_GRILLE = 60
 
-// Les bâtiments du village (les mêmes identifiants que les anciens stands, pour les objectifs).
-export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes' | 'prestige' | 'generateur'
+// Les bâtiments du village. (L'arbre de prestige et l'enchanteur sont retirés pour l'instant :
+// leur code est dans archives/.)
+export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'employes' | 'foreuse' | 'generateur'
 
 export type InfoBatiment = {
   id: IdBatiment
@@ -554,22 +350,19 @@ export type InfoBatiment = {
   taille: number // en cases (carré)
   // Le côté de l'entrée sur le dessin (sans miroir) : la face avant gauche ou la face avant droite.
   porte: 'gauche' | 'droite'
-  prestige: number // à partir de quel prestige on peut le poser
-  cout: Cout // le prix pour le poser (une seule fois : les bâtiments restent au prestige)
+  niveauMine: number // à partir de quel niveau de mine on peut le poser
+  cout: Cout // le prix pour le poser (une seule fois)
 }
 
-// Le marché est gratuit : au début de la partie, on a 0 $. Les autres coûtent un peu d'argent,
-// de la pierre et du fer, juste assez pour qu'on les pose au fil de la première partie
-// (le forgeron dès les premiers mètres, l'enchanteur et l'arbre de prestige plus tard).
 export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
   puits: {
     id: 'puits',
     nom: 'Mine',
     emoji: '⛏️',
-    description: 'L’entrée de la mine : l’échelle et l’ascenseur pour descendre.',
+    description: 'Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre.',
     taille: 10,
     porte: 'gauche',
-    prestige: 0,
+    niveauMine: 1,
     cout: { materiaux: {} },
   },
   marche: {
@@ -579,7 +372,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     description: 'Vends tes blocs et minerais.',
     taille: 5,
     porte: 'gauche',
-    prestige: 0,
+    niveauMine: 1,
     cout: { materiaux: {} },
   },
   forgeron: {
@@ -589,88 +382,59 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     description: 'Pioches et réparations.',
     taille: 5,
     porte: 'droite',
-    prestige: 0,
-    cout: { argent: 20, materiaux: { pierre: 10 } },
+    niveauMine: 1,
+    cout: { argent: 20, materiaux: { pierre: 15 } },
   },
   bazar: {
     id: 'bazar',
     nom: 'Bazar',
     emoji: '🎒',
-    description: 'Sacs à dos, seaux d’eau et tenues.',
+    description: 'Sacs à dos et tenues.',
     taille: 5,
     porte: 'droite',
-    prestige: 0,
-    cout: { argent: 60, materiaux: { pierre: 15 } },
-  },
-  enchanteur: {
-    id: 'enchanteur',
-    nom: 'Enchanteur',
-    emoji: '🔮',
-    description: 'Enchante tes pioches avec lapis et émeraudes.',
-    taille: 5,
-    porte: 'droite',
-    prestige: 0,
-    cout: { argent: 300, materiaux: { pierre: 20, fer: 5 } },
-  },
-  prestige: {
-    id: 'prestige',
-    nom: 'Arbre de prestige',
-    emoji: '🌸',
-    description: 'Passe prestige et choisis tes talents dans l’arbre.',
-    taille: 5,
-    porte: 'droite',
-    prestige: 0,
-    cout: { argent: 800, materiaux: { pierre: 30, fer: 10 } },
-  },
-  foreuse: {
-    id: 'foreuse',
-    nom: 'Foreuse',
-    emoji: '⚙️',
-    description: 'Elle creuse toute seule si tu lui donnes du charbon.',
-    taille: 5,
-    porte: 'gauche',
-    prestige: 1,
-    cout: { argent: 1500, materiaux: { pierre: 50, fer: 20 } },
+    niveauMine: 1,
+    cout: { argent: 60, materiaux: { pierre: 25 } },
   },
   employes: {
     id: 'employes',
     nom: 'Personnel',
     emoji: '👷',
-    description: 'Embauche des mineurs qui creusent et vendent pour toi, et paie leurs salaires.',
+    description: 'Embauche des mineurs qui creusent pour toi (et poussent le wagonnet), et paie leurs salaires.',
     taille: 5,
     porte: 'droite',
-    prestige: 2,
-    cout: { argent: 3000, materiaux: { pierre: 80, fer: 30 } },
+    niveauMine: 1,
+    cout: { argent: 100, materiaux: { pierre: 30 } },
   },
-  // Ajouté le 22/10 avec son dessin : il ne sert encore à rien (son rôle viendra plus tard). On
-  // peut déjà le poser ; il n'est pas proposé dans le « prochain objectif » (voir objectifs.ts).
+  foreuse: {
+    id: 'foreuse',
+    nom: 'Foreuse',
+    emoji: '⚙️',
+    description: 'Elle creuse toute seule avec du charbon, et plus vite avec de l’électricité.',
+    taille: 5,
+    porte: 'gauche',
+    niveauMine: 2,
+    cout: { argent: 800, materiaux: { pierre: 60, fer: 30 } },
+  },
   generateur: {
     id: 'generateur',
     nom: 'Générateur',
     emoji: '⚡',
-    description: 'Une machine à éclairs. À quoi servira-t-elle ? Bientôt…',
+    description: 'Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse.',
     taille: 5,
     porte: 'droite',
-    prestige: 0,
-    cout: { argent: 1000, materiaux: { pierre: 40, fer: 15 } },
+    niveauMine: 2,
+    cout: { argent: 1200, materiaux: { fer: 50, redstone: 20 } },
   },
 }
 
 // L'ordre du menu « Bâtiments » (la mine est déjà posée au début de la partie).
-export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'enchanteur', 'prestige', 'foreuse', 'employes', 'generateur']
-
-// Les rails (prestige 2) : 10 fer par case. Une ligne de rails continue de la mine au marché
-// fait voyager les minerais en wagonnet, 3 fois plus vite qu'à pied.
-export const PRESTIGE_RAILS = 2
-export const COUT_RAIL: Cout = { materiaux: { fer: 10 } }
+export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'employes', 'foreuse', 'generateur']
 
 // Les chemins de pavés : seulement pour faire joli (5 $ la case).
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
 
-// Les vitesses au village, en cases par seconde : à pied (les mineurs, la brouette qui porte
-// le chargement de l'ascenseur) et en wagonnet sur les rails.
+// Les vitesses au village, en cases par seconde (à pied).
 export const VITESSE_MARCHE = 4
-export const VITESSE_RAILS = 12
 // Le joueur marche un peu plus vite que ses mineurs (c'est lui le patron).
 export const VITESSE_JOUEUR = 5
 // Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.
@@ -700,30 +464,30 @@ export type InfoDecoration = {
   taille: 1 | 2
   prix: number
   bloque: boolean // true = on ne peut pas marcher à travers
-  prestige: number
+  niveauMine: number // à partir de quel niveau de mine on peut l'acheter
 }
 
 export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
-  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1, prix: 15, bloque: false, prestige: 0 },
-  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1, prix: 15, bloque: false, prestige: 0 },
-  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1, prix: 20, bloque: false, prestige: 0 },
-  buisson: { id: 'buisson', nom: 'Buisson', taille: 1, prix: 30, bloque: false, prestige: 0 },
-  rocher: { id: 'rocher', nom: 'Rocher', taille: 1, prix: 25, bloque: true, prestige: 0 },
-  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1, prix: 40, bloque: true, prestige: 0 },
-  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1, prix: 120, bloque: true, prestige: 0 },
-  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1, prix: 80, bloque: true, prestige: 0 },
-  banc: { id: 'banc', nom: 'Banc', taille: 1, prix: 60, bloque: true, prestige: 0 },
-  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2, prix: 150, bloque: true, prestige: 0 },
-  sapin: { id: 'sapin', nom: 'Sapin', taille: 2, prix: 150, bloque: true, prestige: 0 },
-  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2, prix: 600, bloque: true, prestige: 1 },
-  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2, prix: 2500, bloque: true, prestige: 2 },
-  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2, prix: 20000, bloque: true, prestige: 4 },
+  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1, prix: 15, bloque: false, niveauMine: 1 },
+  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1, prix: 15, bloque: false, niveauMine: 1 },
+  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1, prix: 20, bloque: false, niveauMine: 1 },
+  buisson: { id: 'buisson', nom: 'Buisson', taille: 1, prix: 30, bloque: false, niveauMine: 1 },
+  rocher: { id: 'rocher', nom: 'Rocher', taille: 1, prix: 25, bloque: true, niveauMine: 1 },
+  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1, prix: 40, bloque: true, niveauMine: 1 },
+  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1, prix: 120, bloque: true, niveauMine: 1 },
+  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1, prix: 80, bloque: true, niveauMine: 1 },
+  banc: { id: 'banc', nom: 'Banc', taille: 1, prix: 60, bloque: true, niveauMine: 1 },
+  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2, prix: 150, bloque: true, niveauMine: 1 },
+  sapin: { id: 'sapin', nom: 'Sapin', taille: 2, prix: 150, bloque: true, niveauMine: 1 },
+  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2, prix: 600, bloque: true, niveauMine: 2 },
+  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2, prix: 2500, bloque: true, niveauMine: 3 },
+  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2, prix: 20000, bloque: true, niveauMine: 5 },
 }
 
 export const LISTE_DECORATIONS = Object.keys(DECORATIONS) as IdDecoration[]
 
 // ---------------------------------------------------------------------------
-// Les tenues du joueur (au Bazar) : seulement pour le style, gardées au prestige
+// Les tenues du joueur (au Bazar) : seulement pour le style
 // ---------------------------------------------------------------------------
 
 export type PartieTenue = 'chapeau' | 'haut'
@@ -738,18 +502,18 @@ export type IdTenue =
   | 'salopette'
   | 'gilet-or'
 
-export type InfoTenue = { id: IdTenue; nom: string; partie: PartieTenue; prix: number; prestige: number }
+export type InfoTenue = { id: IdTenue; nom: string; partie: PartieTenue; prix: number; niveauMine: number }
 
 export const TENUES: Record<IdTenue, InfoTenue> = {
-  bandana: { id: 'bandana', nom: 'Bandana rouge', partie: 'chapeau', prix: 150, prestige: 0 },
-  casquette: { id: 'casquette', nom: 'Casquette bleue', partie: 'chapeau', prix: 300, prestige: 0 },
-  paille: { id: 'paille', nom: 'Chapeau de paille', partie: 'chapeau', prix: 600, prestige: 0 },
-  chantier: { id: 'chantier', nom: 'Casque de chantier', partie: 'chapeau', prix: 1200, prestige: 0 },
-  'haut-de-forme': { id: 'haut-de-forme', nom: 'Haut-de-forme', partie: 'chapeau', prix: 5000, prestige: 1 },
-  couronne: { id: 'couronne', nom: 'Couronne', partie: 'chapeau', prix: 30000, prestige: 3 },
-  'gilet-cuir': { id: 'gilet-cuir', nom: 'Gilet en cuir', partie: 'haut', prix: 400, prestige: 0 },
-  salopette: { id: 'salopette', nom: 'Salopette de mineur', partie: 'haut', prix: 900, prestige: 0 },
-  'gilet-or': { id: 'gilet-or', nom: 'Gilet doré', partie: 'haut', prix: 12000, prestige: 2 },
+  bandana: { id: 'bandana', nom: 'Bandana rouge', partie: 'chapeau', prix: 150, niveauMine: 1 },
+  casquette: { id: 'casquette', nom: 'Casquette bleue', partie: 'chapeau', prix: 300, niveauMine: 1 },
+  paille: { id: 'paille', nom: 'Chapeau de paille', partie: 'chapeau', prix: 600, niveauMine: 1 },
+  chantier: { id: 'chantier', nom: 'Casque de chantier', partie: 'chapeau', prix: 1200, niveauMine: 1 },
+  'haut-de-forme': { id: 'haut-de-forme', nom: 'Haut-de-forme', partie: 'chapeau', prix: 5000, niveauMine: 2 },
+  couronne: { id: 'couronne', nom: 'Couronne', partie: 'chapeau', prix: 30000, niveauMine: 4 },
+  'gilet-cuir': { id: 'gilet-cuir', nom: 'Gilet en cuir', partie: 'haut', prix: 400, niveauMine: 1 },
+  salopette: { id: 'salopette', nom: 'Salopette de mineur', partie: 'haut', prix: 900, niveauMine: 1 },
+  'gilet-or': { id: 'gilet-or', nom: 'Gilet doré', partie: 'haut', prix: 12000, niveauMine: 3 },
 }
 
 export const LISTE_TENUES = Object.keys(TENUES) as IdTenue[]
