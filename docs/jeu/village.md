@@ -78,7 +78,7 @@ Si on pose un bâtiment sur le hamster, il est poussé sur la case libre la plus
 
 - Les rails sont dans le menu Bâtiments, **dès le début**, **3 fer la case** (`COUT_RAIL`).
 - « 🛤️ Poser des rails » ouvre le **pinceau** : chaque case touchée (ou survolée en faisant glisser le doigt) reçoit un rail si elle est libre et qu'on a le fer (sac puis coffre). « ✔ Terminé » pour finir.
-- Les rails **se raccordent tout seuls** à leurs voisins (en ligne droite ou en **virage**), et aussi à la mine et au marché quand ils les touchent (`raccordsRail`).
+- On n'achète qu'une sorte de rail (pas de virage à part). Les rails **se raccordent tout seuls** : posés en ligne, ils font une voie droite ; un rail posé **sur le côté** d'une ligne fait un **virage** tout seul. Ils se raccordent aussi à la mine et au marché quand ils les touchent (`raccordsRail`). Le dessin vient des tuiles de l'équipe (voir [visuel-et-sons.md § 7.3](visuel-et-sons.md#73-les-dessins)).
 - Une ligne **continue** (cases voisines par un côté, pas en diagonale) qui part d'une case collée à la mine et arrive à une case collée au marché **relie la mine au marché** (`railsMineMarche`, la plus courte ; succès « Cheminot »). Alors le **wagonnet** apparaît au quai (le début de la ligne, contre la mine) :
   - il **emporte le coffre de la mine** (les objets les plus chers d'abord, sauf les objets gardés), roule jusqu'au marché, **y vend tout**, puis revient ;
   - il ne part pas tout seul : il faut le **pousser**, toi (bouton « 🛤️ Pousser le wagonnet » au panneau de la mine : ton hamster fait l'aller-retour avec lui, 3 cases/s) ou un **mineur pousseur** (au Personnel, 2,5 cases/s) ;

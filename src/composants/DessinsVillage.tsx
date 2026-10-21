@@ -279,92 +279,70 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
 
 type Raccords = { n: boolean; e: boolean; s: boolean; o: boolean }
 
-// Le milieu de chaque bord d'une case, et les coins (pour les virages).
-function bords(x: number, y: number) {
-  return {
-    n: [x + 0.5, y] as [number, number],
-    e: [x + 1, y + 0.5] as [number, number],
-    s: [x + 0.5, y + 1] as [number, number],
-    o: [x, y + 0.5] as [number, number],
+// Les rails (23/10) : les tuiles du dessin de l'équipe (« Tuiles de voies ferrées isométriques »,
+// sur le Drive), remises à plat en vue de dessus par un script : un morceau tout droit et un
+// virage (fabriqué en courbant le morceau droit, pour avoir exactement le même style). On les
+// pose sur la case avec la même projection que le sol, tournées dans le bon sens.
+// Le joueur n'achète que des rails : chaque case choisit toute seule son dessin selon ses
+// voisines (une ligne droite se raccorde, un rail posé de côté fait un virage).
+const IMAGE_RAIL_DROIT = '/images/rails/rail_droit.webp' // relie le nord (y - 1) et le sud (y + 1)
+const IMAGE_RAIL_VIRAGE = '/images/rails/rail_virage.webp' // relie le sud (y + 1) et l'est (x + 1)
+
+type Cote = 'n' | 'e' | 's' | 'o'
+const COTES: Cote[] = ['n', 'e', 's', 'o']
+// Tourner d'un quart de tour (dans le sens des aiguilles d'une montre, vu de dessus) : n → e → s → o.
+const QUART: Record<Cote, Cote> = { n: 'e', e: 's', s: 'o', o: 'n' }
+const OPPOSE: Record<Cote, Cote> = { n: 's', e: 'o', s: 'n', o: 'e' }
+
+type Morceau = { image: string; quarts: number }
+
+// Combien de quarts de tour pour que le morceau de base (côtés a0, b0) relie les côtés a et b.
+function quartsPour(a0: Cote, b0: Cote, a: Cote, b: Cote): number {
+  for (let k = 0; k < 4; k++) {
+    let x = a0
+    let y = b0
+    for (let i = 0; i < k; i++) {
+      x = QUART[x]
+      y = QUART[y]
+    }
+    if ((x === a && y === b) || (x === b && y === a)) return k
   }
+  return 0
 }
 
-// Les morceaux de voie d'une case : des lignes droites (de bord à bord) ou des virages (quart de
-// cercle autour d'un coin de la case).
-function morceauxDeVoie(r: Raccords): ['droit', 'n' | 'e'] | ['virage', 'ne' | 'es' | 'so' | 'on'] | null {
-  const liste = (['n', 'e', 's', 'o'] as const).filter((c) => r[c])
+const droit = (a: Cote): Morceau => ({ image: IMAGE_RAIL_DROIT, quarts: a === 'n' || a === 's' ? 0 : 1 })
+const virage = (a: Cote, b: Cote): Morceau => ({ image: IMAGE_RAIL_VIRAGE, quarts: quartsPour('s', 'e', a, b) })
+
+// Les morceaux de voie d'une case, selon ses voisines :
+//   - aucune voisine, ou une seule : tout droit (vers la voisine) ;
+//   - deux voisines en face l'une de l'autre : tout droit ; à angle droit : un virage ;
+//   - trois voisines : tout droit entre les deux d'en face, et un virage vers la troisième ;
+//   - quatre : un croisement (les deux lignes droites).
+function morceauxDeVoie(r: Raccords): Morceau[] {
+  const liste = COTES.filter((c) => r[c])
+  if (liste.length === 0) return [droit('n')]
+  if (liste.length === 1) return [droit(liste[0])]
   if (liste.length === 2) {
     const [a, b] = liste
-    if ((a === 'n' && b === 's') || (a === 'e' && b === 'o')) return ['droit', a === 'n' ? 'n' : 'e']
-    const cle = `${a}${b}`
-    if (cle === 'ne') return ['virage', 'ne']
-    if (cle === 'es') return ['virage', 'es']
-    if (cle === 'so') return ['virage', 'so']
-    if (cle === 'no') return ['virage', 'on']
+    return OPPOSE[a] === b ? [droit(a)] : [virage(a, b)]
   }
-  return null
+  if (liste.length === 3) {
+    const seul = COTES.find((c) => r[c] && !r[OPPOSE[c]]) as Cote
+    const enFace = COTES.find((c) => r[c] && r[OPPOSE[c]]) as Cote
+    return [droit(enFace), virage(seul, enFace)]
+  }
+  return [droit('n'), droit('e')]
 }
-
-// Un quart de cercle de rayon r autour du coin K, du côté (ux, uy) au côté (vx, vy).
-function quartDeCercle(K: [number, number], r: number, u: [number, number], v: [number, number]): string {
-  const debut = versEcran(K[0] + u[0] * r, K[1] + u[1] * r)
-  const controle = versEcran(K[0] + (u[0] + v[0]) * r, K[1] + (u[1] + v[1]) * r)
-  const fin = versEcran(K[0] + v[0] * r, K[1] + v[1] * r)
-  return `M${debut.x} ${debut.y} Q${controle.x} ${controle.y} ${fin.x} ${fin.y}`
-}
-
-const VIRAGES = {
-  // coin, direction vers le premier bord, direction vers le second bord
-  ne: { coin: [1, 0], u: [-1, 0], v: [0, 1] },
-  es: { coin: [1, 1], u: [0, -1], v: [-1, 0] },
-  so: { coin: [0, 1], u: [1, 0], v: [0, -1] },
-  on: { coin: [0, 0], u: [0, 1], v: [1, 0] },
-} as const
 
 export function CaseRail({ x, y, raccords }: { x: number; y: number; raccords: Raccords }) {
-  const forme = morceauxDeVoie(raccords)
-  const b = bords(x, y)
-  const traverses: ReactNode[] = []
-  const rails: string[] = []
-  if (forme === null || forme[0] === 'droit') {
-    // Tout droit (ou croisement : on dessine les deux sens).
-    const sens: ('n' | 'e')[] =
-      forme !== null ? [forme[1]] : raccords.n || raccords.s ? (raccords.e || raccords.o ? ['n', 'e'] : ['n']) : ['e']
-    for (const s of sens) {
-      const [a1, a2] = s === 'n' ? [b.n, b.s] : [b.o, b.e]
-      const perp: [number, number] = s === 'n' ? [1, 0] : [0, 1]
-      for (const k of [0.2, 0.5, 0.8]) {
-        const cx = a1[0] + (a2[0] - a1[0]) * k
-        const cy = a1[1] + (a2[1] - a1[1]) * k
-        const g = versEcran(cx - perp[0] * 0.38, cy - perp[1] * 0.38)
-        const d = versEcran(cx + perp[0] * 0.38, cy + perp[1] * 0.38)
-        traverses.push(<line key={`${s}${k}`} x1={g.x} y1={g.y} x2={d.x} y2={d.y} />)
-      }
-      for (const decal of [-0.22, 0.22]) {
-        const debut = versEcran(a1[0] + perp[0] * decal, a1[1] + perp[1] * decal)
-        const fin = versEcran(a2[0] + perp[0] * decal, a2[1] + perp[1] * decal)
-        rails.push(`M${debut.x} ${debut.y} L${fin.x} ${fin.y}`)
-      }
-    }
-  } else {
-    const v = VIRAGES[forme[1]]
-    const K: [number, number] = [x + v.coin[0], y + v.coin[1]]
-    for (const k of [0.18, 0.5, 0.82]) {
-      const angle = (k * Math.PI) / 2
-      const dir: [number, number] = [v.u[0] * Math.cos(angle) + v.v[0] * Math.sin(angle), v.u[1] * Math.cos(angle) + v.v[1] * Math.sin(angle)]
-      const g = versEcran(K[0] + dir[0] * 0.12, K[1] + dir[1] * 0.12)
-      const d = versEcran(K[0] + dir[0] * 0.88, K[1] + dir[1] * 0.88)
-      traverses.push(<line key={k} x1={g.x} y1={g.y} x2={d.x} y2={d.y} />)
-    }
-    rails.push(quartDeCercle(K, 0.28, v.u as unknown as [number, number], v.v as unknown as [number, number]))
-    rails.push(quartDeCercle(K, 0.72, v.u as unknown as [number, number], v.v as unknown as [number, number]))
-  }
+  const coin = versEcran(x, y)
+  // La case vue de dessus (1 × 1) posée sur la grille isométrique : la même projection que le sol.
+  const surLaCase = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${coin.x} ${coin.y})`
   return (
-    <g className="case-rail">
-      <polygon points={poly([[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]])} className="ballast" />
-      <g className="traverses">{traverses}</g>
-      <path d={rails.join(' ')} className="rail-ombre" />
-      <path d={rails.join(' ')} className="rail-acier" />
+    <g className="case-rail" transform={surLaCase}>
+      {morceauxDeVoie(raccords).map((m, i) => (
+        <image key={i} href={m.image} x="0" y="0" width="1" height="1" preserveAspectRatio="none" transform={m.quarts ? `rotate(${m.quarts * 90} 0.5 0.5)` : undefined} />
+      ))}
     </g>
   )
 }
