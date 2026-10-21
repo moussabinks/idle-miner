@@ -14,7 +14,7 @@
 | Lint | oxlint (plugins `react`, `typescript`, `oxc` ; `react/rules-of-hooks` en erreur, `react/only-export-components` en avertissement), voir `.oxlintrc.json` |
 | En ligne | Supabase (`@supabase/supabase-js`) : comptes, sauvegarde en ligne, classement. Seul « backend », pas de serveur à nous. Le jeu marche sans |
 | Hébergement | Vercel (build = `npm run build`, dossier `dist/`) |
-| Visuel | La mine en coupe : tout en CSS (dégradés, keyframes) et quelques SVG en React. Le village vu du ciel (20/10) : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; la mine, les rails, les chemins, les décorations et les hamsters sont dessinés en SVG dans le même style |
+| Visuel | La mine en coupe : tout en CSS (dégradés, keyframes) et quelques SVG en React. Le village vu du ciel (20/10) : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; les personnages sont des images découpées dans les planches de l'équipe (21/10, `sprites.ts`) ; ce qui évolue sur la mine, les rails, les chemins et les décorations sont dessinés en SVG dans le même style |
 | Sons | Web Audio, fabriqués par le code (aucun fichier audio) |
 | PWA | Manifeste + service worker (production uniquement) : installable et jouable hors ligne |
 
@@ -55,10 +55,10 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 |---|---|
 | `donnees.ts` | Toutes les données et constantes : blocs, pioches, sacs, enchantements, niveaux d'ascenseur, de forage, de chariot et d'équipement des mineurs, raretés, salaires, profondeur de la bedrock par prestige (`profondeurBedrock`), plafonds par prestige |
 | `mine.ts` | Génération des couches de la mine (quels blocs à quelle profondeur, mis à l'échelle de la mine du prestige) |
-| `mineur.ts` | Le type `EtatJeu` (et `Ascenseur`, `Foreuse`, `Employe`, `Manager`, `Statistiques`...), `VERSION_ETAT` (18), `creerPartie`, `prestige`, et les règles et actions du joueur : minage, sac, vente, échelle, ascenseur (son chargement part au marché), pioches, réparation, bazar, enchantements |
+| `mineur.ts` | Le type `EtatJeu` (et `Ascenseur`, `Foreuse`, `Employe`, `Manager`, `Statistiques`...), `VERSION_ETAT` (19), `creerPartie`, `prestige`, et les règles et actions du joueur : minage, sac, vente, échelle, ascenseur (son chargement part au marché), pioches, réparation, bazar, enchantements |
 | `foreuse.ts` | La foreuse (prestige 1) : activation, charbon, forage, chariot, améliorations, recharge auto |
 | `employes.ts` | Les mineurs employés (prestige 2) : embauche, équipement, travail (creuser, monter, marcher au village jusqu'au marché, à la forge ou au Personnel, vendre, redescendre), salaires, licenciement, recruteur et rareté (prestige 4), manager et trésorerie (prestige 5) |
-| `village.ts` | Le village vu du ciel (20/10), géométrie seulement : types `Village`, `BatimentPose`, `DecorationPosee`, `Convoi` ; grille de 40 × 40 cases, mine posée d'office, emprises et cases occupées, entrée des bâtiments (avec le miroir), chemin à pied (A étoile, avec cache), distance et temps à pied, ligne de rails mine → marché, raccords des rails, durée d'un chargement (`trajetChargement`, `envoyerAuMarche`) |
+| `village.ts` | Le village vu du ciel (20/10), géométrie seulement : types `Village`, `BatimentPose`, `DecorationPosee`, `Convoi` ; grille de 60 × 60 cases (40 × 40 avant le 21/10), mine posée d'office au milieu (cases 25 à 34), emprises et cases occupées, entrée des bâtiments (avec le miroir), chemin à pied (A étoile, avec cache), distance et temps à pied, ligne de rails mine → marché, raccords des rails, durée d'un chargement (`trajetChargement`, `envoyerAuMarche`) |
 | `batiments.ts` | Les actions du village : construire un bâtiment (prix en argent, pierre ou roche dure, fer), le déplacer ou le retourner, nouveautés du menu Bâtiments, poser / déplacer / enlever des rails (prestige 2) et des chemins, acheter / déplacer / enlever des décorations |
 | `convois.ts` | Les chargements qui vont de la mine au marché (brouette ou wagonnet) et se vendent en arrivant ; charger le wagonnet soi-même |
 | `tenues.ts` | Les tenues du joueur (Bazar) : acheter, porter, enlever |
@@ -72,7 +72,7 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | `statistiques.ts` | Calculs pour l'écran 📊 (addition des statistiques au prestige, argent par source, blocs les plus cassés) |
 | `temps.ts` | `avancerTemps` (le temps qui passe pour tout le monde, chargements vers le marché compris) et `tempsQuiPasse` (y a-t-il quelque chose qui bouge ?) |
 | `aleatoire.ts` | Le type `Aleatoire`, `aleatoireNavigateur` (Math.random), `aleatoireAvecGraine` (mulberry32) et les aides `entierEntre`, `choisir`, `choisirPondere` |
-| `sauvegarde.ts` | Sauvegarde `localStorage`, les 5 mondes, la vérification de version (plus de migrations depuis la v18 : les anciennes parties repartent de zéro, `partieAncienne`), export/import de tous les mondes |
+| `sauvegarde.ts` | Sauvegarde `localStorage`, les 5 mondes, la vérification de version (`migrer` met à jour une partie v18 en v19 le 21/10, en décalant le village de 10 cases ; les parties d'avant la v18 repartent de zéro, `partieAncienne`), export/import de tous les mondes |
 | `compte.ts` | Règles du pseudo et du mot de passe, email fabriqué, choix de synchronisation à la connexion |
 | `classement.ts` | Calcul du meilleur score (prestige et argent gagné) parmi les mondes |
 | `bot.ts` | Bot de simulation qui joue une partie complète (`jouerPartie`), utilisé par les tests d'équilibrage ; il pose ses bâtiments à des places fixes et compte sa marche jusqu'au marché |
@@ -118,12 +118,13 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | `ProchainObjectif.tsx` | Barre « prochain objectif » sous le bandeau (un clic emmène au bon bâtiment, ou ouvre le menu Bâtiments pour une construction) |
 | `VueMonde.tsx` | La mine en coupe (2D) : bande de ciel en haut, puits creusé, échelle, ascenseur, foreuse, galeries des mineurs ; la caméra suit le joueur |
 | `VueVillage.tsx` | Le village vu du ciel (refait le 20/10) : décor, bâtiments, rails, chemins, décorations, fantôme de ce qu'on pose, joueur, mineurs qui marchent, manager et recruteur, wagonnets, bulles de notification ; caméra (glisser, pincer, molette, suit le joueur, plongée dans la mine) et touchers (aller quelque part, choisir, peindre) |
-| `iso.ts` | La projection isométrique (case de la grille ↔ point de l'image du décor), l'ordre d'affichage, le calage de chaque image de bâtiment sur son emprise (`CALAGES`, `transformationSprite`), et où se tient un personnage devant un bâtiment |
-| `DessinsVillage.tsx` | Les dessins SVG du village : la mine (de plus en plus creusée), les rails (droits et virages), les chemins de pavés, les décorations, le wagonnet et la brouette |
-| `ElementsVillage.tsx` | Un personnage posé sur la grille (`Perso`) et l'image d'un bâtiment (`ImageBatiment`), partagés par la carte et l'accueil |
+| `iso.ts` | La projection isométrique (case de la grille ↔ point de l'image du décor), l'ordre d'affichage, le calage de chaque image de bâtiment sur son emprise (`CALAGES`, `transformationSprite`), un point d'une image de bâtiment à l'écran (`pointSurSprite`, 21/10, pour dessiner sur la mine), la taille du monde (`LARGEUR_MONDE`, `HAUTEUR_MONDE`), et où se tient un personnage devant un bâtiment |
+| `DessinsVillage.tsx` | Les dessins SVG du village : ce qui évolue sur l'image de la mine (`DessinEvolutionMine`, placé sur des points de l'image, `POINTS_MINE`), les rails (droits et virages), les chemins de pavés, les décorations, le wagonnet et la brouette |
+| `ElementsVillage.tsx` | Un personnage posé sur la grille (`Perso`, qui prend l'image qui va avec son sens de marche) et l'image d'un bâtiment (`ImageBatiment`), partagés par la carte et l'accueil |
 | `fantome.ts` | Le type de ce qu'on est en train de poser ou de déplacer (bâtiment, décoration, case de rail ou de chemin) |
-| `Hamster.tsx` | Les hamsters vus de face ou de dos (joueur avec sa tenue, mineur avec son casque couleur de rareté, manager, recruteur), avec pioche et sac |
-| `Personnage.tsx` | Le hamster de profil dans la mine en coupe, avec la couleur de sa pioche (casque de rareté pour les mineurs, tenue pour le joueur) |
+| `sprites.ts` | Les images des personnages (21/10) : laquelle prendre (`spritePerso`), selon le sens de la marche (`choisirVue`) ou la couleur du casque (`quiSelonCasque`), le point entre leurs pieds, leur taille (`ECHELLE_SPRITE`) |
+| `Hamster.tsx` | L'ancien hamster en SVG, qui ne sert plus (21/10) qu'à l'aperçu des tenues du Bazar (`PanneauTenues.tsx`) |
+| `Personnage.tsx` | Le personnage dans la mine en coupe, avec les mêmes images (21/10) : de profil quand il creuse ou marche, de dos à l'échelle, de face au repos |
 | `MenuConstruction.tsx` | Les menus « 🏗️ Bâtiments » (prix, cadenas de prestige, pastille Nouveau, rails) et « 🌸 Décorations » (chemins et décorations) |
 | `PanneauTenues.tsx` | Les tenues du joueur au Bazar (aperçu, acheter, porter, enlever) |
 | `Panneaux.tsx` | Panneaux des bâtiments Marché, Forgeron (pioches), Bazar, Enchanteur, Foreuse, et panneau des succès (le panneau de la Mine, avec « Entrer dans la mine » et le wagonnet, est dans `App.tsx`) |
@@ -149,7 +150,7 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 | Fichier | Rôle |
 |---|---|
 | `manifest.webmanifest` | Manifeste PWA : nom « Mega Digger », `standalone`, portrait, couleurs `#15151a`, icônes |
-| `sw.js` | Service worker : cache `idle-miner-v2` (les images du village sont rangées dès l'installation) ; page réseau d'abord (repli sur le cache), `/assets/` cache d'abord, autres fichiers cache puis mise à jour ; nettoie les anciens `/assets/` ; ne touche jamais aux requêtes vers d'autres origines (Supabase) |
+| `sw.js` | Service worker : cache `idle-miner-v5` (les images du village, dont les 26 images des personnages, sont rangées dès l'installation) ; page réseau d'abord (repli sur le cache), `/assets/` cache d'abord, autres fichiers cache puis mise à jour ; nettoie les anciens `/assets/` ; ne touche jamais aux requêtes vers d'autres origines (Supabase) |
 | `favicon.svg` | Icône de l'onglet |
 | `icones/icone-192.png`, `icones/icone-512.png` | Icônes de l'application |
 | `icones/icone-maskable-512.png` | Icône « maskable » (Android) |
@@ -279,7 +280,7 @@ Il n'y a pas de tests des composants React ni de `enLigne.ts` / `useCompte.ts` (
 - **Séparation stricte** : les règles du jeu sont dans `src/jeu/` (aucun import de React ni du DOM, tout testable sans navigateur). Les composants lisent l'état et appellent les actions, sans règle du jeu. Ce qui n'est que de l'affichage (marche du hamster du joueur dans le village, caméra, projection isométrique, jauges, événements sonores) reste côté `src/`. Au village, la logique ne connaît que les cases de la grille (`village.ts`) ; le passage aux pixels de l'image est dans `src/composants/iso.ts`.
 - Aléatoire injectable (section 5), stockage injectable (`Stockage` dans `sauvegarde.ts`).
 - Chaque accès au `localStorage` est protégé par `try/catch`.
-- Visuel : la mine en CSS (dégradés, keyframes) ; au village (décidé le 20/10), les images webp de l'équipe pour le décor et les bâtiments, et du SVG dans le même style pour le reste. Sons en Web Audio.
+- Visuel : la mine en CSS (dégradés, keyframes) ; au village (décidé le 20/10), les images webp de l'équipe pour le décor, les bâtiments et (21/10) les personnages, et du SVG dans le même style pour le reste. Sons en Web Audio.
 - **Couleurs des boutons** (dans `index.css`) : Creuser = or, Arrêter = rouge, Vendre = vert, Acheter = bleu, Améliorer = turquoise, Réparer = orange, Enchanter = violet, Prestige = rose, Ascenseur = cyan, Se déplacer = bois, Mettre dans le sac = kaki, Charbon = anthracite, Salaires et trésorerie = citron vert, Recruter = arc-en-ciel, le reste = gris.
 - **Téléphone** : jouable au pouce, barre de boutons collée en bas sur petit écran, rien qui déborde en largeur.
 - Changer le format de `EtatJeu` → augmenter `VERSION_ETAT` et décider : écrire une migration, ou laisser les anciennes parties repartir de zéro comme le 20/10 (voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#15-la-version-de-létat-et-la-fin-des-migrations)).

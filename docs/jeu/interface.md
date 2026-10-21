@@ -222,7 +222,7 @@ Les achats regardés : les bâtiments débloqués pas encore posés, puis, seule
 
 ### 6.1 Le village vu du ciel (`VueVillage.tsx`)
 
-Une carte **isométrique** (vue du ciel à 45°, comme Clash of Clans) dans un cadre noir à bords arrondis : le décor de la clairière (une grande image de 1 536 × 1 024 px), une **grille de 40 × 40 cases** posée sur l'herbe, la **mine** au milieu au début de la partie, et tout ce que le joueur a posé : bâtiments (5 × 5 cases), rails, chemins de pavés, décorations. Les règles (où poser, prix, rails, convois) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
+Une carte **isométrique** (vue du ciel à 45°, comme Clash of Clans) dans un cadre noir à bords arrondis : un sol en damier entouré de forêt (le monde fait 2 262 × 1 407 px), une **grille de 60 × 60 cases** (40 × 40 avant le 21/10, jamais tracée), la **mine** au milieu au début de la partie, et tout ce que le joueur a posé : bâtiments (5 × 5 cases), rails, chemins de pavés, décorations. Les règles (où poser, prix, rails, convois) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
 
 **La caméra** :
 - elle **suit le joueur** (en douceur) ; le zoom de départ dépend de la largeur de la vue (`largeur / 760`, entre le zoom minimum et ×2,6) ;
@@ -230,8 +230,9 @@ Une carte **isométrique** (vue du ciel à 45°, comme Clash of Clans) dans un c
 - **zoomer** : molette (autour du point sous la souris) ou **pincer** à deux doigts ; du zoom minimum (la carte remplit toujours la vue, jamais de vide sur les bords) à ×2,6.
 
 **Ce qu'on voit** :
-- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. La mine (dessin SVG) **se creuse** au fil de la profondeur atteinte, et son chevalement montre l'ascenseur une fois construit ;
-- le **joueur** : un hamster sans casque, sa pioche à la main (de la couleur de sa pioche, rien si elle est cassée), avec la tenue achetée au Bazar ;
+- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. La mine (l'image fournie, posée sans déformation depuis le 21/10) **s'assombrit** au fil de la profondeur atteinte, avec une cage d'ascenseur par ascenseur (le tien, puis une par mineur) et un panneau de profondeur ;
+- le **joueur** (21/10) : l'image du hamster mineur tirée des planches (casque jaune, en attendant une planche du joueur), vue de 3/4 vers la droite ou la gauche, de dos ou de face selon où il marche ; les tenues du Bazar ne se voient plus que dans l'aperçu du Bazar ;
+- tous les personnages sont ces images (`sprites.ts`) : les mineurs avec un casque de la couleur de leur rareté ;
 - les **mineurs employés** quand ils sont au village : en marche vers le marché (un sac de minerais sur le dos), vers la forge ou vers la mine ; arrêtés devant le marché (ils vendent) ou devant la forge (ils récupèrent leur pioche) ; et devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une petite étiquette à son prénom, bordée de la couleur de sa rareté (comme son casque) ;
 - le **manager** et le **recruteur** (s'ils sont embauchés), à leur poste devant le Personnel, avec une étiquette dorée ;
 - les **chargements** qui partent au marché : un **wagonnet** sur les rails, ou une **brouette** à pied ;

@@ -532,9 +532,9 @@ export function dureeCasse(durete: number, profondeur: number, vitesse: number, 
 // Le village en vue du ciel (décidé le 20/10) : une grande grille où l'on pose les bâtiments
 // ---------------------------------------------------------------------------
 
-// La clairière fait 40 × 40 cases. Chaque bâtiment fait 5 × 5 cases, sauf la mine (10 × 10).
-// Les rails, les chemins et les petites décorations font 1 case.
-export const TAILLE_GRILLE = 40
+// La clairière fait 60 × 60 cases (40 × 40 jusqu'au 21/10). Chaque bâtiment fait 5 × 5 cases,
+// sauf la mine (10 × 10). Les rails, les chemins et les petites décorations font 1 case.
+export const TAILLE_GRILLE = 60
 
 // Les bâtiments du village (les mêmes identifiants que les anciens stands, pour les objectifs).
 export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'bazar' | 'enchanteur' | 'foreuse' | 'employes' | 'prestige'

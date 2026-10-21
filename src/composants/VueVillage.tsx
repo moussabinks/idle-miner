@@ -7,9 +7,9 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { BATIMENTS, DECORATIONS, PIOCHES, RARETES, VITESSE_MARCHE, profondeurBedrock, type IdBatiment } from '../jeu/donnees'
+import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, profondeurBedrock, type IdBatiment } from '../jeu/donnees'
 import { foreuseEnMarche } from '../jeu/foreuse'
-import { ascenseurEnMouvement, estCassee, piocheEquipee, type EtatJeu, type Employe } from '../jeu/mineur'
+import { ascenseurEnMouvement, type EtatJeu, type Employe } from '../jeu/mineur'
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
@@ -35,7 +35,6 @@ import {
 } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
-import { Hamster } from './Hamster'
 import {
   HAUTEUR_MONDE,
   LIMITES_CAMERA,
@@ -341,19 +340,14 @@ export function VueVillage({
   }
 
   // Le joueur.
-  const couleurPioche = estCassee(etat) ? null : piocheEquipee(etat).couleur
   objets.push(
-    <Perso key="joueur" x={joueur.x} y={joueur.y} sens={joueur.sens} vue={joueur.vue} marche={joueur.marche} saut={joueur.saut} classe="perso-joueur">
-      {(vue) => <Hamster role="joueur" vue={vue} couleurPioche={couleurPioche} chapeau={etat.tenue.chapeau} haut={etat.tenue.haut} />}
-    </Perso>,
+    <Perso key="joueur" qui="joueur" x={joueur.x} y={joueur.y} sens={joueur.sens} vue={joueur.vue} marche={joueur.marche} saut={joueur.saut} classe="perso-joueur" />,
   )
 
   // Les mineurs employés quand ils sont au village.
   const personnel = batimentPose(village, 'employes')
   let enAttente = 0
   etat.employes.forEach((mineur: Employe, index) => {
-    const couleur = RARETES[mineur.rarete]?.couleur ?? RARETES.commun.couleur
-    const pioche = PIOCHES[mineur.niveau]?.couleur ?? null
     const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>
     let position: { x: number; y: number } | null = null
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
@@ -379,6 +373,7 @@ export function VueVillage({
     objets.push(
       <Perso
         key={`m${index}`}
+        qui={RARETES[mineur.rarete] ? mineur.rarete : 'commun'}
         x={position.x}
         y={position.y}
         sens={orientation.sens}
@@ -391,9 +386,7 @@ export function VueVillage({
             {etiquette}
           </>
         }
-      >
-        {(vue) => <Hamster role="mineur" vue={vue} casque={couleur} couleurPioche={pioche} charge={mineur.etape === 'marche' && mineur.lieu === 'marche'} />}
-      </Perso>,
+      />,
     )
   })
 
@@ -401,17 +394,13 @@ export function VueVillage({
   if (personnel && etat.manager.embauche) {
     const p = devant(personnel, 1, 0.9)
     objets.push(
-      <Perso key="manager" x={p.x} y={p.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Manager</span>}>
-        {(vue) => <Hamster role="manager" vue={vue} />}
-      </Perso>,
+      <Perso key="manager" qui="manager" x={p.x} y={p.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Manager</span>} />,
     )
   }
   if (personnel && etat.recruteur > 0) {
     const p = devant(personnel, 0, 0.9)
     objets.push(
-      <Perso key="recruteur" x={p.x} y={p.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Recruteur</span>}>
-        {(vue) => <Hamster role="recruteur" vue={vue} />}
-      </Perso>,
+      <Perso key="recruteur" qui="recruteur" x={p.x} y={p.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Recruteur</span>} />,
     )
   }
 

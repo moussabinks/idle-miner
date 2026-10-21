@@ -45,18 +45,18 @@ describe('le village vu du ciel', () => {
   it('commence avec la mine (10 × 10) au milieu de la clairière, et rien d’autre', () => {
     const etat = partie()
     expect(etat.village.batiments).toEqual([{ id: 'puits', x: POSITION_MINE.x, y: POSITION_MINE.y, miroir: false }])
-    expect(POSITION_MINE).toEqual({ x: 15, y: 15 })
+    expect(POSITION_MINE).toEqual({ x: 25, y: 25 })
   })
 
   it('le marché est gratuit ; les autres coûtent de l’argent, de la pierre et du fer', () => {
     const etat = partie()
     expect(batimentsConstructibles(etat)).toEqual(['marche'])
-    expect(construireBatiment(etat, 'marche', 18, 26)).toEqual(['🏗️ Marché construit !'])
+    expect(construireBatiment(etat, 'marche', 28, 36)).toEqual(['🏗️ Marché construit !'])
     expect(peutConstruire(etat, 'marche')).toBe(false) // un seul marché
     expect(peutConstruire(etat, 'forgeron')).toBe(false)
     etat.argent = 20
     etat.inventaire = { pierre: 10 }
-    construireBatiment(etat, 'forgeron', 26, 18)
+    construireBatiment(etat, 'forgeron', 36, 28)
     expect(batimentPose(etat.village, 'forgeron')).not.toBeNull()
     expect(etat.argent).toBe(0)
     expect(etat.inventaire).toEqual({})
@@ -66,15 +66,15 @@ describe('le village vu du ciel', () => {
     const etat = partie()
     etat.argent = 60
     etat.inventaire = { pierre: 5, deepslate: 30 }
-    construireBatiment(etat, 'bazar', 12, 26)
+    construireBatiment(etat, 'bazar', 22, 36)
     expect(batimentPose(etat.village, 'bazar')).not.toBeNull()
     expect(etat.inventaire).toEqual({ deepslate: 20 }) // 5 pierres + 10 roches dures
   })
 
   it('on ne pose rien sur un autre bâtiment ni hors de la clairière', () => {
     const etat = partie()
-    expect(construireBatiment(etat, 'marche', 20, 20)).toEqual([]) // sur la mine
-    expect(construireBatiment(etat, 'marche', 37, 0)).toEqual([]) // dépasse le bord
+    expect(construireBatiment(etat, 'marche', 30, 30)).toEqual([]) // sur la mine
+    expect(construireBatiment(etat, 'marche', 57, 0)).toEqual([]) // dépasse le bord
     expect(construireBatiment(etat, 'marche', 0, 0)).not.toEqual([])
   })
 
@@ -106,7 +106,7 @@ describe('le village vu du ciel', () => {
     expect(porte(marche)).toEqual({ x: 5.5, y: 8.5 }) // devant la face avant gauche
     deplacerBatiment(etat, 'marche', 4, 3, true)
     expect(porte(marche)).toEqual({ x: 9.5, y: 5.5 }) // retourné : devant la face avant droite
-    expect(deplacerBatiment(etat, 'marche', 16, 16, false)).toEqual([]) // pas sur la mine
+    expect(deplacerBatiment(etat, 'marche', 26, 26, false)).toEqual([]) // pas sur la mine
     expect(marche.x).toBe(4)
   })
 })
@@ -114,35 +114,35 @@ describe('le village vu du ciel', () => {
 describe('marcher dans le village', () => {
   it('contourne les bâtiments', () => {
     const etat = partie()
-    const chemin = trouverChemin(etat.village, { x: 14, y: 20 }, { x: 25, y: 20 })
+    const chemin = trouverChemin(etat.village, { x: 24, y: 30 }, { x: 35, y: 30 })
     expect(chemin).not.toBeNull()
     // La mine est entre les deux : le chemin ne la traverse jamais.
-    for (const c of chemin ?? []) expect(c.x >= 15 && c.x < 25 && c.y >= 15 && c.y < 25).toBe(false)
+    for (const c of chemin ?? []) expect(c.x >= 25 && c.x < 35 && c.y >= 25 && c.y < 35).toBe(false)
   })
 
   it('on ouvre un bâtiment en s’approchant de n’importe quel côté', () => {
     const etat = partie()
     const mine = batimentPose(etat.village, 'puits')!
-    // Juste au-dessus, à gauche, en dessous ou à droite de la mine (10 × 10, cases 15 à 24).
-    for (const [x, y] of [[20, 14.5], [14.5, 20], [20, 25.5], [25.5, 20]]) expect(distanceAuBatiment(mine, x, y)).toBeLessThan(RAYON_BATIMENT)
-    expect(distanceAuBatiment(mine, 20, 20)).toBe(0)
-    expect(distanceAuBatiment(mine, 20, 12)).toBeGreaterThan(RAYON_BATIMENT)
+    // Juste au-dessus, à gauche, en dessous ou à droite de la mine (10 × 10, cases 25 à 34).
+    for (const [x, y] of [[30, 24.5], [24.5, 30], [30, 35.5], [35.5, 30]]) expect(distanceAuBatiment(mine, x, y)).toBeLessThan(RAYON_BATIMENT)
+    expect(distanceAuBatiment(mine, 30, 30)).toBe(0)
+    expect(distanceAuBatiment(mine, 30, 22)).toBeGreaterThan(RAYON_BATIMENT)
   })
 
   it('toucher un bâtiment mène à son côté le plus proche, pas à sa porte', () => {
     const etat = partie()
     const mine = batimentPose(etat.village, 'puits')!
     // Le joueur est en haut de la mine : il n'a pas à faire le tour jusqu'à l'entrée (en bas).
-    const c = caseAccesProche(etat.village, mine, { x: 20.5, y: 10.5 })
-    expect(c).toEqual({ x: 20, y: 14 })
+    const c = caseAccesProche(etat.village, mine, { x: 30.5, y: 20.5 })
+    expect(c).toEqual({ x: 30, y: 24 })
     expect(distanceAuBatiment(mine, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
   })
 
   it('compte la distance à pied entre deux bâtiments (de porte à porte)', () => {
     const etat = partie()
-    construireBatiment(etat, 'marche', 18, 27)
+    construireBatiment(etat, 'marche', 28, 37)
     const pres = distanceEntre(etat.village, 'puits', 'marche')
-    deplacerBatiment(etat, 'marche', 34, 34, false)
+    deplacerBatiment(etat, 'marche', 54, 54, false)
     expect(distanceEntre(etat.village, 'puits', 'marche')).toBeGreaterThan(pres)
   })
 
@@ -159,14 +159,14 @@ describe('marcher dans le village', () => {
     retirerDecoration(etat, etat.village.decorations[0].n)
     expect(etat.village.decorations).toHaveLength(1)
     // L'entrée de la mine reste accessible.
-    expect(caseAcces(etat.village, mine)).toEqual({ x: 20, y: 25 })
+    expect(caseAcces(etat.village, mine)).toEqual({ x: 30, y: 35 })
   })
 })
 
 describe('les chargements vers le marché', () => {
   it('ce que remonte l’ascenseur part au marché dans une brouette, et se vend en arrivant', () => {
     const etat = partie()
-    construireBatiment(etat, 'marche', 18, 27)
+    construireBatiment(etat, 'marche', 28, 37)
     envoyerAuMarche(etat, { fer: 10 }, null)
     const trajet = trajetChargement(etat.village)
     expect(trajet?.parRails).toBe(false)
@@ -183,7 +183,7 @@ describe('les chargements vers le marché', () => {
     envoyerAuMarche(etat, { fer: 10 }, null)
     avancerConvois(etat, 100)
     expect(etat.argent).toBe(0)
-    construireBatiment(etat, 'marche', 18, 27)
+    construireBatiment(etat, 'marche', 28, 37)
     avancerConvois(etat, 100)
     expect(etat.argent).toBe(120)
   })
@@ -191,13 +191,13 @@ describe('les chargements vers le marché', () => {
   it('les rails (prestige 2, 10 fer la case) relient la mine au marché : 3 fois plus rapide', () => {
     const p0 = partie(0)
     p0.inventaire = { fer: 100 }
-    expect(poserSol(p0, 'rail', 20, 25)).toEqual([])
+    expect(poserSol(p0, 'rail', 30, 35)).toEqual([])
     expect(p0.village.rails).toEqual([]) // pas avant le prestige 2
 
     const etat = partie(2)
-    construireBatiment(etat, 'marche', 18, 30)
+    construireBatiment(etat, 'marche', 28, 40)
     etat.inventaire = { fer: 50 }
-    ligneDeRails(etat, 20, 25, 29) // 5 cases, de la mine (y = 24) au marché (y = 30)
+    ligneDeRails(etat, 30, 35, 39) // 5 cases, de la mine (y = 34) au marché (y = 40)
     expect(etat.inventaire).toEqual({})
     expect(railsMineMarche(etat.village)).toHaveLength(5)
     expect(trajetChargement(etat.village)).toEqual({ duree: 1, parRails: true })
@@ -205,10 +205,10 @@ describe('les chargements vers le marché', () => {
 
   it('avec des rails, on peut charger le wagonnet depuis la mine', () => {
     const etat = partie(2)
-    construireBatiment(etat, 'marche', 18, 30)
+    construireBatiment(etat, 'marche', 28, 40)
     etat.inventaire = { fer: 50 }
     expect(chargerWagonnet(etat, { fer: 5 })).toEqual([]) // pas encore de rails
-    ligneDeRails(etat, 20, 25, 29)
+    ligneDeRails(etat, 30, 35, 39)
     etat.inventaire = { diamant: 2 }
     chargerWagonnet(etat, { diamant: 2 })
     expect(etat.inventaire).toEqual({})
@@ -220,8 +220,8 @@ describe('les chargements vers le marché', () => {
 describe('les mineurs employés au village', () => {
   function avecPersonnel(): EtatJeu {
     const etat = partie(2)
-    construireBatiment(etat, 'marche', 18, 30)
-    etat.village.batiments.push({ id: 'employes', x: 30, y: 30, miroir: false }, { id: 'forgeron', x: 30, y: 18, miroir: false })
+    construireBatiment(etat, 'marche', 28, 40)
+    etat.village.batiments.push({ id: 'employes', x: 40, y: 40, miroir: false }, { id: 'forgeron', x: 40, y: 28, miroir: false })
     etat.argent = 5000
     embaucher(etat, aleatoireAvecGraine(4))
     return etat
@@ -245,7 +245,7 @@ describe('les mineurs employés au village', () => {
   it('avec des rails jusqu’au marché, il charge le wagonnet au lieu de marcher', () => {
     const etat = avecPersonnel()
     etat.inventaire = { fer: 50 }
-    ligneDeRails(etat, 20, 25, 29)
+    ligneDeRails(etat, 30, 35, 39)
     const mineur = etat.employes[0]
     let aMarche = false
     for (let i = 0; i < 600 && etat.stats.argentMineurs === 0; i++) {

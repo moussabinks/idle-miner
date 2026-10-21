@@ -6,6 +6,7 @@
 // dans les tests c'est un faux stockage en mémoire.
 
 import { VERSION_ETAT, type EtatJeu } from './mineur'
+import type { Village } from './village'
 
 export const NB_MONDES_MAX = 5
 
@@ -203,13 +204,43 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
   try {
     const texte = stockage.getItem(cleMonde(id))
     if (texte === null) return null
-    // Pas de migration depuis le 20/10 : avec le village en vue du ciel (version 18), toutes les
-    // parties d'avant repartent de zéro (décidé avec l'équipe). Une ancienne partie renvoie null.
-    const donnees: unknown = JSON.parse(texte)
+    // Avec le village en vue du ciel (version 18, le 20/10), toutes les parties d'avant repartent
+    // de zéro (décidé avec l'équipe) : une partie plus ancienne renvoie null. Depuis, on sait
+    // mettre à jour une partie de la version 18 (voir migrer).
+    const donnees: unknown = migrer(JSON.parse(texte))
     return estUnEtatValide(donnees) ? donnees : null
   } catch {
     return null
   }
+}
+
+// La première version avec le village en vue du ciel : les parties plus anciennes repartent de zéro.
+const PREMIERE_VERSION_VILLAGE = 18
+
+// Met à jour une partie d'une version précédente (depuis la version 18).
+//   - 18 → 19 (21/10) : la clairière passe de 40 × 40 à 60 × 60 cases, en s'agrandissant de 10
+//     cases de chaque côté. Tout ce qui est posé glisse de 10 cases pour rester au même endroit
+//     (la mine reste au milieu).
+export function migrer(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const etat = donnees as { version?: unknown; village?: Partial<Village> }
+  if (etat.version === 18 && etat.village) {
+    const v = etat.village
+    const decaler = <T extends { x: number; y: number }>(o: T): T => ({ ...o, x: o.x + 10, y: o.y + 10 })
+    const decalerCle = (cle: string) => {
+      const [x, y] = cle.split(',').map(Number)
+      return `${x + 10},${y + 10}`
+    }
+    etat.village = {
+      ...v,
+      batiments: (v.batiments ?? []).map(decaler),
+      decorations: (v.decorations ?? []).map(decaler),
+      rails: (v.rails ?? []).map(decalerCle),
+      chemins: (v.chemins ?? []).map(decalerCle),
+    }
+    etat.version = 19
+  }
+  return etat
 }
 
 // Ce monde a-t-il une partie d'une ancienne version (avant le village en vue du ciel) ?
@@ -219,7 +250,7 @@ export function partieAncienne(stockage: Stockage, id: string): boolean {
     const texte = stockage.getItem(cleMonde(id))
     if (texte === null) return false
     const donnees = JSON.parse(texte) as { version?: unknown }
-    return typeof donnees.version === 'number' && donnees.version < VERSION_ETAT
+    return typeof donnees.version === 'number' && donnees.version < PREMIERE_VERSION_VILLAGE
   } catch {
     return false
   }

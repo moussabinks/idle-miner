@@ -5,7 +5,7 @@
 // recadrée (« cover »).
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { DECORATIONS, RARETES, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
+import { DECORATIONS, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
 import {
   batimentPose,
   cheminEntre,
@@ -22,7 +22,6 @@ import {
 import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
-import { Hamster } from './Hamster'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
 // ---------------------------------------------------------------------------
@@ -32,62 +31,62 @@ import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoratio
 // Le village est posé dans la moitié droite de la clairière : sur un ordinateur, le texte de
 // l'accueil prend la moitié gauche de l'écran.
 const BATIMENTS_SCENE: BatimentPose[] = [
-  { id: 'puits', x: 20, y: 10, miroir: false },
-  { id: 'marche', x: 18, y: 22, miroir: true },
-  { id: 'forgeron', x: 32, y: 14, miroir: true },
-  { id: 'employes', x: 11, y: 15, miroir: false },
-  { id: 'enchanteur', x: 13, y: 3, miroir: false },
-  { id: 'prestige', x: 23, y: 0, miroir: false },
-  { id: 'bazar', x: 33, y: 4, miroir: false },
-  { id: 'foreuse', x: 31, y: 22, miroir: false },
+  { id: 'puits', x: 30, y: 20, miroir: false },
+  { id: 'marche', x: 28, y: 32, miroir: true },
+  { id: 'forgeron', x: 42, y: 24, miroir: true },
+  { id: 'employes', x: 21, y: 25, miroir: false },
+  { id: 'enchanteur', x: 23, y: 13, miroir: false },
+  { id: 'prestige', x: 33, y: 10, miroir: false },
+  { id: 'bazar', x: 43, y: 14, miroir: false },
+  { id: 'foreuse', x: 41, y: 32, miroir: false },
 ]
 
 const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: boolean }[] = [
-  { id: 'fontaine', x: 27, y: 23 },
-  { id: 'statue', x: 16, y: 10 },
-  { id: 'cerisier', x: 8, y: 9 },
-  { id: 'cerisier', x: 37, y: 19 },
-  { id: 'sapin', x: 7, y: 13 },
-  { id: 'sapin', x: 37, y: 9 },
-  { id: 'arbre', x: 8, y: 22 },
-  { id: 'arbre', x: 29, y: 0 },
-  { id: 'arbre', x: 25, y: 29 },
-  { id: 'lanterne', x: 26, y: 21 },
-  { id: 'lanterne', x: 30, y: 21 },
-  { id: 'lanterne', x: 17, y: 20 },
-  { id: 'tonneau', x: 24, y: 25 },
-  { id: 'caisse', x: 25, y: 25 },
-  { id: 'banc', x: 30, y: 25, miroir: true },
-  { id: 'rocher', x: 38, y: 13 },
-  { id: 'buisson', x: 10, y: 21 },
-  { id: 'buisson', x: 36, y: 13 },
-  { id: 'fleurs-rouges', x: 17, y: 14 },
-  { id: 'fleurs-jaunes', x: 18, y: 15 },
-  { id: 'fleurs-violettes', x: 17, y: 19 },
-  { id: 'fleurs-rouges', x: 31, y: 10 },
-  { id: 'fleurs-jaunes', x: 30, y: 9 },
-  { id: 'fleurs-violettes', x: 22, y: 6 },
-  { id: 'fleurs-jaunes', x: 21, y: 7 },
-  { id: 'fleurs-rouges', x: 29, y: 28 },
+  { id: 'fontaine', x: 37, y: 33 },
+  { id: 'statue', x: 26, y: 20 },
+  { id: 'cerisier', x: 18, y: 19 },
+  { id: 'cerisier', x: 47, y: 29 },
+  { id: 'sapin', x: 17, y: 23 },
+  { id: 'sapin', x: 47, y: 19 },
+  { id: 'arbre', x: 18, y: 32 },
+  { id: 'arbre', x: 39, y: 10 },
+  { id: 'arbre', x: 35, y: 39 },
+  { id: 'lanterne', x: 36, y: 31 },
+  { id: 'lanterne', x: 40, y: 31 },
+  { id: 'lanterne', x: 27, y: 30 },
+  { id: 'tonneau', x: 34, y: 35 },
+  { id: 'caisse', x: 35, y: 35 },
+  { id: 'banc', x: 40, y: 35, miroir: true },
+  { id: 'rocher', x: 48, y: 23 },
+  { id: 'buisson', x: 20, y: 31 },
+  { id: 'buisson', x: 46, y: 23 },
+  { id: 'fleurs-rouges', x: 27, y: 24 },
+  { id: 'fleurs-jaunes', x: 28, y: 25 },
+  { id: 'fleurs-violettes', x: 27, y: 29 },
+  { id: 'fleurs-rouges', x: 41, y: 20 },
+  { id: 'fleurs-jaunes', x: 40, y: 19 },
+  { id: 'fleurs-violettes', x: 32, y: 16 },
+  { id: 'fleurs-jaunes', x: 31, y: 17 },
+  { id: 'fleurs-rouges', x: 39, y: 38 },
 ]
 
 // Les rails de la mine au marché (avec un virage), et des chemins de pavés vers le Personnel
 // et vers la forge.
 const RAILS_SCENE: Case[] = [
-  { x: 24, y: 20 },
-  { x: 24, y: 21 },
-  { x: 24, y: 22 },
-  { x: 23, y: 22 },
+  { x: 34, y: 30 },
+  { x: 34, y: 31 },
+  { x: 34, y: 32 },
+  { x: 33, y: 32 },
 ]
 const CHEMINS_SCENE: Case[] = [
-  { x: 17, y: 17 },
-  { x: 18, y: 17 },
-  { x: 19, y: 17 },
-  { x: 30, y: 19 },
-  { x: 31, y: 19 },
-  { x: 32, y: 19 },
-  { x: 33, y: 19 },
-  { x: 34, y: 19 },
+  { x: 27, y: 27 },
+  { x: 28, y: 27 },
+  { x: 29, y: 27 },
+  { x: 40, y: 29 },
+  { x: 41, y: 29 },
+  { x: 42, y: 29 },
+  { x: 43, y: 29 },
+  { x: 44, y: 29 },
 ]
 
 function villageDeLaScene(): Village {
@@ -102,13 +101,13 @@ function villageDeLaScene(): Village {
 
 const VILLAGE = villageDeLaScene()
 
-// Les mineurs qui font des allers-retours : d'où à où, leur rareté (la couleur du casque), leur
-// pioche, et un décalage pour qu'ils ne marchent pas tous ensemble.
-const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: IdRarete; pioche: string; decalage: number }[] = [
-  { nom: 'Noisette', de: 'puits', vers: 'marche', rarete: 'legendaire', pioche: '#4ee8dc', decalage: 0 },
-  { nom: 'Pépite', de: 'puits', vers: 'forgeron', rarete: 'epique', pioche: '#e6e6e6', decalage: 0.35 },
-  { nom: 'Caramel', de: 'puits', vers: 'marche', rarete: 'rare', pioche: '#8f8f8f', decalage: 0.55 },
-  { nom: 'Biscotte', de: 'puits', vers: 'employes', rarete: 'mythique', pioche: '#4ee8dc', decalage: 0.8 },
+// Les mineurs qui font des allers-retours : d'où à où, leur rareté (la couleur du casque), et un
+// décalage pour qu'ils ne marchent pas tous ensemble.
+const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: IdRarete; decalage: number }[] = [
+  { nom: 'Noisette', de: 'puits', vers: 'marche', rarete: 'legendaire', decalage: 0 },
+  { nom: 'Pépite', de: 'puits', vers: 'forgeron', rarete: 'epique', decalage: 0.35 },
+  { nom: 'Caramel', de: 'puits', vers: 'marche', rarete: 'rare', decalage: 0.55 },
+  { nom: 'Biscotte', de: 'puits', vers: 'employes', rarete: 'mythique', decalage: 0.8 },
 ]
 
 // Les mineurs marchent à 4 cases par seconde dans le jeu : ici un peu moins, c'est plus joli.
@@ -116,7 +115,7 @@ const VITESSE_SCENE = 2.2
 const VITESSE_WAGONNET = 2.5
 
 // Le rectangle du monde (en pixels) où tient tout le village de la scène.
-const CADRE = { x: 695, y: 100, l: 700, h: 560 }
+const CADRE = { x: 1025, y: 291, l: 700, h: 560 }
 
 // Une position le long d'un aller-retour : on va, on attend un peu, on revient.
 function allerRetour(longueur: number, vitesse: number, temps: number): { distance: number; retour: boolean; pause: boolean } {
@@ -172,11 +171,9 @@ function objetsFixes(): ReactNode[] {
     )
   }
 
-  // Le joueur, devant la mine, sa pioche en diamant à la main.
+  // Le joueur, devant la mine.
   objets.push(
-    <Perso key="joueur" x={26.6} y={21.4} sens={-1} vue="face" marche={false} classe="perso-joueur">
-      {(vue) => <Hamster role="joueur" vue={vue} couleurPioche="#4ee8dc" />}
-    </Perso>,
+    <Perso key="joueur" qui="joueur" x={36.6} y={31.4} sens={-1} vue="face" marche={false} classe="perso-joueur" />,
   )
 
   // Le manager et le recruteur, à leur poste devant le Personnel.
@@ -185,12 +182,8 @@ function objetsFixes(): ReactNode[] {
     const pm = devant(personnel, 1, 0.9)
     const pr = devant(personnel, 0, 0.9)
     objets.push(
-      <Perso key="manager" x={pm.x} y={pm.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Manager</span>}>
-        {(vue) => <Hamster role="manager" vue={vue} />}
-      </Perso>,
-      <Perso key="recruteur" x={pr.x} y={pr.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Recruteur</span>}>
-        {(vue) => <Hamster role="recruteur" vue={vue} />}
-      </Perso>,
+      <Perso key="manager" qui="manager" x={pm.x} y={pm.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Manager</span>} />,
+      <Perso key="recruteur" qui="recruteur" x={pr.x} y={pr.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Recruteur</span>} />,
     )
   }
 
@@ -242,7 +235,7 @@ export function SceneAccueil() {
   const centreX = taille.l * zoneTexte + largeurLibre / 2
   const centreY = large ? taille.h / 2 : taille.h * 0.4
   // Le point du monde qu'on met là : le milieu du village, ou le milieu de la mine sur téléphone.
-  const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(25, 16)
+  const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(35, 26)
   const borner = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
   const gauche = borner(vise.x - centreX / z, x0, x1 - taille.l / z)
   const haut = borner(vise.y - centreY / z, y0, y1 - taille.h / z)
@@ -262,10 +255,10 @@ export function SceneAccueil() {
     const etape = allerRetour(longueur, VITESSE_SCENE, temps + m.decalage * (2 * longueur) / VITESSE_SCENE)
     const point = surLeChemin(chemin, etape.distance)
     const sens = etape.retour ? orienter(-point.dx, -point.dy) : orienter(point.dx, point.dy)
-    const couleur = RARETES[m.rarete].couleur
     objets.push(
       <Perso
         key={`m${i}`}
+        qui={m.rarete}
         x={point.x}
         y={point.y}
         sens={sens.sens}
@@ -273,9 +266,7 @@ export function SceneAccueil() {
         marche={!etape.pause}
         classe="perso-mineur"
         etiquette={<span className={`etiquette-perso rarete-${m.rarete}`}>{m.nom}</span>}
-      >
-        {(vue) => <Hamster role="mineur" vue={vue} casque={couleur} couleurPioche={m.pioche} charge={!etape.retour && m.vers === 'marche'} />}
-      </Perso>,
+      />,
     )
   })
 

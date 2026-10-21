@@ -459,13 +459,13 @@ Ordre de paie : lui-même d'abord (s'il n'est pas payé, il ne paie personne), p
 
 ## Le village
 
-Le village vu du ciel (20/10) : une grille de **40 × 40 cases** (`TAILLE_GRILLE`) où l'on pose les bâtiments, les rails, les chemins et les décorations. Le fonctionnement (menus, placement, Modifier, notifications) est dans [village.md](village.md) ; ici, seulement les chiffres.
+Le village vu du ciel (20/10) : une grille de **60 × 60 cases** (`TAILLE_GRILLE`, 40 × 40 avant le 21/10) où l'on pose les bâtiments, les rails, les chemins et les décorations. Le fonctionnement (menus, placement, Modifier, notifications) est dans [village.md](village.md) ; ici, seulement les chiffres.
 
 ### Les bâtiments (`BATIMENTS`, `batiments.ts`)
 
 | Bâtiment | Taille | Entrée (sans miroir) | Débloqué au prestige | Prix pour le poser |
 |---|---|---|---:|---|
-| ⛏️ Mine | 10 × 10 | face avant gauche | 0 | déjà posée au milieu de la clairière (case 15, 15) |
+| ⛏️ Mine | 10 × 10 | face avant gauche | 0 | déjà posée au milieu de la clairière (case 25, 25) |
 | 💰 Marché | 5 × 5 | face avant gauche | 0 | **gratuit** (on commence avec 0 $) |
 | ⚒️ Forgeron | 5 × 5 | face avant droite | 0 | 20 $ + 10 pierre |
 | 🎒 Bazar | 5 × 5 | face avant droite | 0 | 60 $ + 15 pierre |

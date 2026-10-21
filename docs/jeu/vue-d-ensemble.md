@@ -1,7 +1,7 @@
 # Mega Digger : vue d'ensemble du jeu
 
 > Le point d'entrée de la documentation : le concept, la boucle de jeu, la progression prestige par prestige, le vocabulaire et les choix de design.
-> Tout est écrit d'après le code au 20/10 (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 18`). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
+> Tout est écrit d'après le code au 20/10 (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 19` depuis le 21/10). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
 
 ## Sommaire de la documentation
 
@@ -40,7 +40,7 @@ Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../
 
 Le jeu a deux vues (20/10) :
 
-- **Le village, vu du ciel** (vue isométrique à 45°, façon Clash of Clans) : une clairière de 40 × 40 cases, avec la mine au milieu. Le joueur y **pose ses bâtiments où il veut** (le marché est gratuit, les autres coûtent de l'argent, de la pierre et du fer), des rails, des chemins et des décorations, et il s'y promène. Voir [village.md](village.md).
+- **Le village, vu du ciel** (vue isométrique à 45°, façon Clash of Clans) : une clairière de 60 × 60 cases (40 × 40 avant le 21/10), avec la mine au milieu. Le joueur y **pose ses bâtiments où il veut** (le marché est gratuit, les autres coûtent de l'argent, de la pierre et du fer), des rails, des chemins et des décorations, et il s'y promène. Voir [village.md](village.md).
 - **La mine, en coupe** (la vue 2D d'avant) : on y entre par le bâtiment Mine (« Entrer dans la mine »).
 
 - La mine fait **10 blocs de large**. Chaque couche est cassée bloc par bloc ; quand elle est vide, on descend d'un mètre.
@@ -131,7 +131,7 @@ Le détail est dans [../batiments/prestige.md](../batiments/prestige.md).
 | **Chargement** | Ce que la cabine transporte vers le village ; en haut, il part au marché (convoi) et y est vendu. |
 | **Chemin (de pavés)** | Une décoration au sol (5 $ la case), seulement pour relier joliment les bâtiments. |
 | **Chariot** | Le réservoir de la foreuse : elle y met ce qu'elle remonte ; on le vide au stand Foreuse (vendre ou mettre dans le sac). 8 niveaux de taille. |
-| **Clairière** | Le village vu du ciel : une grille de 40 × 40 cases, entourée de forêt, avec la mine au milieu. |
+| **Clairière** | Le village vu du ciel : une grille de 60 × 60 cases (depuis le 21/10), entourée de forêt, avec la mine au milieu. |
 | **Coffre** | Bloc spécial : de l'argent (`(20 à 60) + profondeur × (3 à 8)` $) et 1 minerai du coin. |
 | **Conditions de prestige** | Bedrock atteinte + tout amélioré au plafond du prestige actuel (`conditionsPrestige.ts`). |
 | **Convoi** | Un chargement en route de la mine vers le marché (brouette ou wagonnet), vendu en arrivant (`convois.ts`). |
@@ -152,7 +152,7 @@ Le détail est dans [../batiments/prestige.md](../batiments/prestige.md).
 | **Front de taille** | L'endroit où le mineur creuse, juste au-dessus de la couche en cours (position `profondeur − 1`). |
 | **Galerie (horizontale)** | Quand on ne peut pas descendre (pioche trop faible, ou bedrock), on recreuse une couche neuve à la même profondeur : on n'est jamais bloqué. |
 | **Géode** | Bloc spécial : 3 à 6 améthystes. |
-| **Hamster** | Tous les personnages : le joueur (sans casque, sa pioche à la main, une tenue), les mineurs (casqués), le manager (costume), le recruteur (casquette verte). |
+| **Hamster** | Tous les personnages : le joueur, les mineurs (casque de la couleur de leur rareté), le manager, le recruteur. Depuis le 21/10, ce sont des images découpées dans les planches de l'équipe (vues de devant, derrière, gauche, droite) ; le joueur n'a pas encore sa planche et porte celle du mineur, au casque jaune. |
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : trajets, convois, foreuse, mineurs, manager. Le joueur ne creuse pas. |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière embauche de l'équipe. |
 | **Lave** | Bloc spécial : avec un seau d'eau, +1 obsidienne ; sans seau, elle brûle un tiers de chaque pile du sac. |
@@ -185,7 +185,7 @@ Le détail est dans [../batiments/prestige.md](../batiments/prestige.md).
 | **Solidité** | Enchantement : la pioche ne s'use qu'une fois sur (niveau + 1) (max III). |
 | **Stand** | L'ancien nom des bâtiments (le code l'emploie encore, par exemple `IdStand` dans `objectifs.ts`). |
 | **Succès** | 19 accomplissements (`succes.ts`), gardés au prestige. |
-| **Tenue** | Un chapeau ou un haut pour le hamster du joueur, acheté au Bazar, seulement pour le style. |
+| **Tenue** | Un chapeau ou un haut pour le hamster du joueur, acheté au Bazar, seulement pour le style. Depuis le 21/10, elle ne se voit que dans l'aperçu du Bazar (pas encore sur l'image du personnage). |
 | **Talent** | Un bonus permanent de l'arbre de prestige (20 talents en 5 branches). |
 | **Trésorerie** | La cagnotte du manager, qu'on remplit au stand Personnel ; elle repart de 0 au prestige. |
 | **Village** | La surface (position 0), vue du ciel : la clairière où l'on pose ses bâtiments. Vendre, acheter, réparer et enchanter ne se font qu'au village. Voir [village.md](village.md). |
@@ -218,6 +218,6 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 - ✅ **Économie surtout en argent** (19/10) : les minerais servent d'appoint (pioches, réparation, enchantements) ; le fer et la redstone sont réservés aux machines (ascenseur, foreuse), les améliorations du Personnel se paient en argent seulement.
 - ✅ **Sauvegarde** dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web), jusqu'à 5 mondes ; le jeu marche toujours sans réseau.
 - ✅ **Tout en français** (interface, code, commentaires), code lisible pour débutants.
-- ✅ **Visuel et sons maison** : la mine 2D en CSS (style cartoon arrondi, rien de cubique) ; au village (20/10), les images des bâtiments et le décor fournis par l'équipe (webp), le reste dessiné en SVG dans le même style ; sons fabriqués avec Web Audio (aucun fichier à créditer).
+- ✅ **Visuel et sons maison** : la mine 2D en CSS (style cartoon arrondi, rien de cubique) ; au village (20/10), les images des bâtiments, du décor et (21/10) des personnages fournies par l'équipe (webp), le reste dessiné en SVG dans le même style ; sons fabriqués avec Web Audio (aucun fichier à créditer).
 - ✅ **Le village se construit librement** (20/10) : on pose chaque bâtiment où l'on veut, on peut tout déplacer et retourner gratuitement ; les rails ne transportent que les minerais.
 - ✅ **Jouable au téléphone** (barre de boutons collée en bas) et installable (PWA, hors ligne).

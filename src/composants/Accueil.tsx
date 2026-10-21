@@ -22,7 +22,6 @@ import type { Compte } from '../useCompte'
 import { CarteClassement } from './CarteClassement'
 import { CarteCompte } from './CarteCompte'
 import { CarteInstallation } from './CarteInstallation'
-import { Hamster } from './Hamster'
 import { SceneAccueil } from './SceneAccueil'
 
 // Les couleurs des cartes des mondes (une par monde, pour les reconnaître d'un coup d'œil).
@@ -180,10 +179,8 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
                 <span className="logo-digger">DIGGER</span>
               </span>
             </span>
-            {/* Le hamster du joueur, sa pioche en diamant à la main, assis sur le panneau. */}
-            <span className="logo-hamster" aria-hidden="true">
-              <Hamster role="joueur" couleurPioche="#4ee8dc" />
-            </span>
+            {/* Le hamster du joueur, sa pioche à la main, à côté du panneau. */}
+            <img className="logo-hamster" src="/images/personnages/sprites/joueur_droite.webp" alt="" aria-hidden="true" draggable={false} />
           </h1>
           <p className="heros-accroche">
             Creuse. Construis. <strong>Deviens riche.</strong>
