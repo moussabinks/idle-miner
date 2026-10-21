@@ -7,7 +7,7 @@
 // en damier et la forêt autour sont dessinés par le jeu (TerrainVillage, ForetVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
-import { porte, porteAGauche, type BatimentPose, type Case } from '../jeu/village'
+import { batimentPose, empriseBatiment, porte, porteAGauche, type BatimentPose, type Case, type Village } from '../jeu/village'
 
 // La moitié de la largeur et de la hauteur d'une case à l'écran (la taille des images des
 // bâtiments est calée dessus : elle ne change pas si la clairière grandit).
@@ -154,6 +154,65 @@ export function surLeChemin(points: Case[], distance: number): { x: number; y: n
   const dernier = centres[centres.length - 1]
   const avant = centres[centres.length - 2] ?? dernier
   return { x: dernier.x, y: dernier.y, dx: dernier.x - avant.x, dy: dernier.y - avant.y }
+}
+
+// Une position le long d'une trace (des points de la grille, à virgule), à une distance donnée.
+export function surLaTrace(points: { x: number; y: number }[], distance: number): { x: number; y: number; dx: number; dy: number } {
+  return surLeChemin(
+    points.map((p) => ({ x: p.x - 0.5, y: p.y - 0.5 })),
+    distance,
+  )
+}
+
+export function longueurTrace(points: { x: number; y: number }[]): number {
+  let total = 0
+  for (let i = 1; i < points.length; i++) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y)
+  return total
+}
+
+// La trace du wagonnet sur la ligne de rails (23/10) : il part du bord de la mine, suit le milieu
+// de la voie (tout droit au centre des cases, en quart de cercle dans les virages, comme le
+// dessin des rails), et arrive au bord du marché.
+export function traceDeLaVoie(village: Village, ligne: Case[]): { x: number; y: number }[] {
+  const dans = (id: 'puits' | 'marche', c: Case) => {
+    const b = batimentPose(village, id)
+    if (!b) return false
+    const e = empriseBatiment(b)
+    return c.x >= e.x && c.y >= e.y && c.x < e.x + e.taille && c.y < e.y + e.taille
+  }
+  const voisins = [
+    { x: 0, y: -1 },
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+  ]
+  // Le côté de la case qui donne vers la case précédente (ou la mine) et vers la suivante (ou le marché).
+  const cote = (c: Case, vers: Case | 'puits' | 'marche') => {
+    if (typeof vers !== 'string') return { x: Math.sign(vers.x - c.x), y: Math.sign(vers.y - c.y) }
+    return voisins.find((d) => dans(vers, { x: c.x + d.x, y: c.y + d.y })) ?? { x: 0, y: vers === 'puits' ? -1 : 1 }
+  }
+  const trace: { x: number; y: number }[] = []
+  ligne.forEach((c, i) => {
+    const entree = cote(c, i > 0 ? ligne[i - 1] : 'puits')
+    const sortie = cote(c, i < ligne.length - 1 ? ligne[i + 1] : 'marche')
+    const centre = { x: c.x + 0.5, y: c.y + 0.5 }
+    const bordEntree = { x: centre.x + entree.x * 0.5, y: centre.y + entree.y * 0.5 }
+    const bordSortie = { x: centre.x + sortie.x * 0.5, y: centre.y + sortie.y * 0.5 }
+    if (i === 0) trace.push(bordEntree)
+    if (entree.x === -sortie.x && entree.y === -sortie.y) {
+      trace.push(centre, bordSortie)
+      return
+    }
+    // Un virage : un quart de cercle de rayon 0,5 autour du coin commun aux deux côtés.
+    const coin = { x: centre.x + (entree.x + sortie.x) * 0.5, y: centre.y + (entree.y + sortie.y) * 0.5 }
+    for (let k = 1; k <= 6; k++) {
+      const angle = (k / 6) * (Math.PI / 2)
+      const a = { x: bordEntree.x - coin.x, y: bordEntree.y - coin.y }
+      const b = { x: bordSortie.x - coin.x, y: bordSortie.y - coin.y }
+      trace.push({ x: coin.x + a.x * Math.cos(angle) + b.x * Math.sin(angle), y: coin.y + a.y * Math.cos(angle) + b.y * Math.sin(angle) })
+    }
+  })
+  return trace
 }
 
 // Où se tient quelqu'un devant un bâtiment : le long de sa face avant (rang 0 = juste devant la

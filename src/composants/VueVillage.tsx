@@ -48,6 +48,9 @@ import {
   orienter,
   profondeur,
   surLeChemin,
+  surLaTrace,
+  longueurTrace,
+  traceDeLaVoie,
   versEcran,
   versGrille,
   type Point,
@@ -139,8 +142,9 @@ export function VueVillage({
   const ligne = ligneDuWagonnet(etat)
   const wagonnet = (() => {
     if (!ligne) return null
+    const trace = traceDeLaVoie(village, ligne)
     const k = distanceDepuisLaMine(etat) / longueurTrajet(ligne)
-    const point = surLeChemin(ligne, k * longueurChemin(ligne))
+    const point = surLaTrace(trace, k * longueurTrace(trace))
     const retour = etat.wagonnet.etape === 'retour'
     return { ...point, dx: retour ? -point.dx : point.dx, dy: retour ? -point.dy : point.dy }
   })()

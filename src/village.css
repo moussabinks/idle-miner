@@ -172,31 +172,6 @@
 
 /* --- Le sol : rails, chemins, grille, emprises ------------------------------------ */
 
-.case-rail .ballast {
-  fill: #8a7a64;
-  stroke: #5e5244;
-  stroke-width: 0.6;
-}
-
-.case-rail .traverses line {
-  stroke: #7a4a22;
-  stroke-width: 3.4;
-  stroke-linecap: round;
-}
-
-.case-rail .rail-ombre {
-  fill: none;
-  stroke: #26262c;
-  stroke-width: 3.6;
-  stroke-linecap: round;
-}
-
-.case-rail .rail-acier {
-  fill: none;
-  stroke: #d2d3dc;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-}
 
 .emprise {
   stroke-width: 2;
