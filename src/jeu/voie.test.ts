@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { acheterDecoration, placePourUnRail, placeLibrePour, poserSol, retirerSol } from './batiments'
+import { placePourUnRail, placeLibrePour, poserSol, retirerSol } from './batiments'
 import { notificationsBatiments } from './notifications'
 import { creerTrajet } from './wagonnet'
 import { creerPartie, type EtatJeu } from './mineur'
@@ -25,23 +25,21 @@ describe('la voie large de deux cases', () => {
     expect(bords.has('5,8')).toBe(false)
   })
 
-  it('on ne pose ni bâtiment, ni décoration, ni chemin sur les bords', () => {
+  it('on ne pose ni bâtiment ni chemin sur les bords', () => {
     const etat = partie()
     for (let y = 5; y <= 12; y++) poserSol(etat, 'rail', 10, y)
     // Le forgeron (5 × 5) collé à la ligne, à droite : il toucherait la colonne 11.
     expect(placeLibrePour(etat, 'forgeron', 11, 6)).toBe(false)
     expect(placeLibrePour(etat, 'forgeron', 12, 6)).toBe(true)
-    expect(acheterDecoration(etat, 'buisson', 9, 8)).toEqual([])
-    expect(etat.village.decorations).toHaveLength(0)
     poserSol(etat, 'chemin', 9, 8)
     expect(etat.village.chemins).toHaveLength(0)
   })
 
   it('ni un rail dont la voie passerait sur un bâtiment', () => {
     const etat = partie()
-    etat.village.decorations.push({ n: 1, id: 'buisson', x: 21, y: 6, miroir: false })
+    etat.village.batiments.push({ id: 'bazar', x: 21, y: 6, miroir: false })
     poserSol(etat, 'rail', 20, 5)
-    // Un rail en (20, 6) ferait une ligne nord – sud : son bord est (21, 6), où est le buisson.
+    // Un rail en (20, 6) ferait une ligne nord – sud : son bord est (21, 6), où est le bazar.
     expect(placePourUnRail(etat.village, 20, 6)).toBe('bords')
     expect(poserSol(etat, 'rail', 20, 6)[0]).toContain('Pas la place')
     // De l'autre côté, c'est libre.

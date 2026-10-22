@@ -1,5 +1,5 @@
 // Le village vu du ciel (vue isométrique, comme Clash of Clans) : le décor de la clairière, la
-// mine au milieu, et tout ce que le joueur a posé (bâtiments, rails, chemins, décorations).
+// mine au milieu, et tout ce que le joueur a posé (bâtiments, rails, chemins).
 // On y voit le joueur, les mineurs employés qui vont à la forge ou attendent le wagonnet, le
 // manager et le recruteur devant le Personnel, le wagonnet sur les rails (avec celui qui le
 // pousse), le rayon du générateur, et des bulles de notification au-dessus des bâtiments.
@@ -7,10 +7,12 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, DECORATIONS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
-import { secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
+import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
+import { nombreAbrege } from '../nombres'
+import type { Gain } from '../usePartie'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, trajetDuJoueur } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
@@ -28,7 +30,6 @@ import {
   BoiteSvg,
   CaseChemin,
   RailsDuVillage,
-  DessinDecoration,
   DessinEvolutionMine,
   LosangeEmprise,
   GrilleConstruction,
@@ -38,12 +39,12 @@ import { AmbianceVillage } from './AmbianceVillage'
 import { WagonnetVillage } from './WagonnetVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
+import { BOITES_PLAGE } from './plage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
   HAUTEUR_MONDE,
   LIMITES_CAMERA,
   devant,
-  hauteurDecoration,
   LARGEUR_MONDE,
   losange,
   orienter,
@@ -69,9 +70,16 @@ type Props = {
   onSurvol: (c: Case) => void // la souris passe sur une case (le fantôme la suit tant qu'il n'est pas fixé)
   onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
-  panneauOuvert: boolean // un panneau est ouvert à droite (ordinateur) : la caméra se décale à gauche
   trajetEnSurbrillance?: IdLiaison | null // un trajet qui brille sur la carte (quand on embauche un pousseur)
+  ventesMarche?: Gain[] // les ventes des wagonnets, à montrer au-dessus du marché
 }
+
+// La gerbe de pièces d'une vente au marché : 10 pièces qui partent en éventail vers le haut.
+const PIECES_MARCHE = Array.from({ length: 10 }, (_, i) => {
+  const angle = Math.PI * (1.1 + (i / 9) * 0.8)
+  const portee = 46 + (i % 3) * 16
+  return { dx: Math.round(Math.cos(angle) * portee), dy: Math.round(Math.sin(angle) * portee), retard: (i % 4) * 35 }
+})
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
@@ -89,8 +97,8 @@ export function VueVillage({
   onSurvol,
   onGlisser,
   onPeindre,
-  panneauOuvert,
   trajetEnSurbrillance = null,
+  ventesMarche = [],
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -110,11 +118,10 @@ export function VueVillage({
     return () => observateur.disconnect()
   }, [])
 
+  // Le milieu de l'écran. La caméra ne bouge pas quand un panneau s'ouvre à droite (27/10) :
+  // le joueur garde sa vue.
+  const milieuX = taille.l / 2
   // On ne peut pas dézoomer au point de voir plus loin que les limites de la caméra.
-  // Sur un grand écran, le panneau de droite cache une partie de la carte : le milieu de la vue
-  // se décale vers la gauche pour que le joueur (et le bâtiment ouvert) restent visibles.
-  const decalage = panneauOuvert && taille.l > 860 ? 210 : 0
-  const milieuX = taille.l / 2 - decalage
   const zoomMin = Math.max(taille.l / (LIMITES_CAMERA.x1 - LIMITES_CAMERA.x0), taille.h / (LIMITES_CAMERA.y1 - LIMITES_CAMERA.y0))
   const zoomConfort = Math.min(ZOOM_MAX, Math.max(zoomMin, taille.l / 760))
   const [zoom, setZoom] = useState<number | null>(null)
@@ -300,7 +307,6 @@ export function VueVillage({
     if (cible === null) {
       const occupant = occupation(village).get(`${c.x},${c.y}`)
       if (occupant?.type === 'batiment') cible = { type: 'batiment', id: occupant.id }
-      else if (occupant?.type === 'decoration') cible = { type: 'decoration', n: occupant.n }
       else if (occupant?.type === 'rail') cible = { type: 'rail', x: c.x, y: c.y }
       else if (occupant?.type === 'chemin') cible = { type: 'chemin', x: c.x, y: c.y }
     }
@@ -350,28 +356,10 @@ export function VueVillage({
     objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe={classes} />)
   }
 
-  // Les décorations.
-  for (const d of village.decorations) {
-    if (fantome?.type === 'decoration' && fantome.n === d.n) continue
-    const t = DECORATIONS[d.id].taille
-    objets.push(
-      <BoiteSvg key={`d${d.n}`} x={d.x} y={d.y} taille={t} hauteur={hauteurDecoration(d.id)} classe="sprite-deco" style={{ zIndex: profondeur(d.x + t / 2, d.y + t / 2) }}>
-        <DessinDecoration id={d.id} x={d.x} y={d.y} taille={t} miroir={d.miroir} />
-      </BoiteSvg>,
-    )
-  }
-
   // Le fantôme de ce qu'on place.
   if (fantome?.type === 'batiment') {
     objets.push(
       <ImageBatiment key="fantome" id={fantome.id} x={fantome.x} y={fantome.y} miroir={fantome.miroir} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} />,
-    )
-  } else if (fantome?.type === 'decoration') {
-    const t = DECORATIONS[fantome.id].taille
-    objets.push(
-      <BoiteSvg key="fantome" x={fantome.x} y={fantome.y} taille={t} hauteur={hauteurDecoration(fantome.id)} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} style={{ zIndex: 99999 }}>
-        <DessinDecoration id={fantome.id} x={fantome.x} y={fantome.y} taille={t} miroir={fantome.miroir} />
-      </BoiteSvg>,
     )
   }
 
@@ -473,7 +461,8 @@ export function VueVillage({
     if (!liste || liste.length === 0 || (fantome?.type === 'batiment' && fantome.id === b.id)) continue
     const t = BATIMENTS[b.id].taille
     const centre = versEcran(b.x + t / 2, b.y + t / 2)
-    const hauteur = b.id === 'puits' ? 92 : 112
+    // (au-dessus de la mine, la bulle passe au-dessus de la jauge du coffre)
+    const hauteur = b.id === 'puits' ? 128 : 112
     bulles.push(
       <button
         key={b.id}
@@ -498,6 +487,49 @@ export function VueVillage({
         )}
       </button>,
     )
+  }
+
+  // La jauge du coffre de la mine, toujours au-dessus d'elle (27/10) : on voit d'un coup d'œil
+  // s'il faut le vider. Elle passe à l'orange puis au rouge (et clignote) quand il est plein.
+  const puits = batimentPose(village, 'puits')
+  if (puits) {
+    const t = BATIMENTS.puits.taille
+    const centre = versEcran(puits.x + t / 2, puits.y + t / 2)
+    const dans = nbDansCoffre(etat)
+    const capacite = capaciteCoffre(etat)
+    const part = Math.min(1, dans / Math.max(1, capacite))
+    const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
+    bulles.push(
+      <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 78 }} title={`Coffre de la mine : ${dans} / ${capacite}`}>
+        <span className="jauge-coffre-icone" aria-hidden="true">
+          📦
+        </span>
+        <span className="jauge-coffre-barre">
+          <i style={{ width: `${Math.round(part * 100)}%` }} />
+          <span className="jauge-coffre-texte">
+            {nombreAbrege(dans)} / {nombreAbrege(capacite)}
+          </span>
+        </span>
+      </div>,
+    )
+  }
+
+  // Quand un wagonnet vend au marché : un gros « +X $ » doré jaillit au-dessus du marché, avec
+  // une gerbe de pièces (27/10).
+  const marche = batimentPose(village, 'marche')
+  if (marche) {
+    const t = BATIMENTS.marche.taille
+    const centre = versEcran(marche.x + t / 2, marche.y + t / 2)
+    for (const vente of ventesMarche) {
+      bulles.push(
+        <span key={`vente${vente.id}`} className="vente-marche" style={{ left: centre.x, top: centre.y - 120 }} aria-hidden="true">
+          <span className="vente-marche-texte">+{Math.round(vente.montant).toLocaleString('fr-FR')} $</span>
+          {PIECES_MARCHE.map((p, i) => (
+            <i key={i} className="piece-marche" style={{ ['--dx' as string]: `${p.dx}px`, ['--dy' as string]: `${p.dy}px`, animationDelay: `${p.retard}ms` }} />
+          ))}
+        </span>,
+      )
+    }
   }
 
   // Le sol : chemins, rails, grille, emprises.
@@ -553,7 +585,7 @@ export function VueVillage({
             </g>
           )
         })()}
-      {/* Quand on pose un bâtiment, une décoration ou un chemin : les cases au bord des voies (sous
+      {/* Quand on pose un bâtiment ou un chemin : les cases au bord des voies (sous
           la demi-voie qui déborde de chaque côté du rail) sont interdites, en rouge. */}
       {fantome &&
         !(fantome.type === 'sol' && fantome.sol === 'rail') &&
@@ -591,6 +623,8 @@ export function VueVillage({
     const minuteur = window.setTimeout(() => setVueForet({ x0: visibleX0, y0: visibleY0, x1: visibleX1, y1: visibleY1, z: zoomArrondi / 100 }), 250)
     return () => clearTimeout(minuteur)
   }, [visibleX0, visibleY0, visibleX1, visibleY1, zoomArrondi])
+  // La plage est-elle à l'écran ? Sinon, ses animations s'arrêtent (voir BOITES_PLAGE).
+  const plageVisible = BOITES_PLAGE.some((b) => vueForet.x1 > b.x0 && vueForet.x0 < b.x1 && vueForet.y1 > b.y0 && vueForet.y0 < b.y1)
   useEffect(() => {
     let image = 0
     const minuteur = window.setTimeout(() => {
@@ -614,7 +648,7 @@ export function VueVillage({
       onWheel={molette}
       aria-label="Le village vu du ciel"
     >
-      <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`}>
+      <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''} ${plageVisible ? '' : 'plage-cachee'}`}>
         <TerrainVillage />
         <SolPlage />
         <EauPlage />

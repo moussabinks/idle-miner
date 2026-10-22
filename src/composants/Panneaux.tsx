@@ -231,7 +231,7 @@ export function PanneauPioches({ etat, jouer }: PropsPanneau) {
 
 // ---------------------------------------------------------------------------
 
-// Le bazar : les sacs à dos (les tenues sont dans PanneauTenues).
+// Le bazar : les sacs à dos.
 export function PanneauBazar({ etat, jouer }: PropsPanneau) {
   const prixSac = prixProchainSac(etat)
   const prochainSac = SACS[etat.niveauSac + 1]

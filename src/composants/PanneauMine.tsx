@@ -1,6 +1,8 @@
 // Le panneau de la mine (22/10) : la mine ne se visite plus, tout se passe ici.
 //   - le gros bloc à cliquer : chaque clic casse un bloc (avec une pioche cassée, il en faut 2),
-//     et ce qui tombe va dans le coffre ;
+//     et ce qui tombe va dans le coffre ; les clics rapprochés font un combo (27/10) ;
+//   - le tableau de production (27/10) : les blocs par seconde de la mine, de chaque mineur et
+//     de tes clics, et ce que ça rapporte ;
 //   - le coffre de la mine : tout ce qui sort de la mine y attend (clics, mine toute seule,
 //     mineurs). On le met dans son sac pour aller le vendre au marché ;
 //   - les trajets des wagonnets qui partent de la mine (PanneauTrajets) : vers le marché, la
@@ -8,7 +10,7 @@
 //   - les améliorations : descendre d'un niveau, agrandir le coffre, l'ascenseur, les wagonnets.
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
 import { chancesDesBlocs, infoNiveauMine } from '../jeu/mine'
 import {
@@ -16,7 +18,6 @@ import {
   capaciteCoffre,
   chanceDoublement,
   coffrePlein,
-  debitMine,
   descendreNiveauMine,
   estCassee,
   nbDansCoffre,
@@ -29,6 +30,8 @@ import {
   type EtatJeu,
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
+import { iconeActiviteEmploye, rareteDe } from '../jeu/employes'
+import { production } from '../jeu/production'
 import { trajetDe } from '../jeu/wagonnet'
 import { lotChoisi, type Choix } from '../choix'
 import type { Eclat, Trouvaille } from '../usePartie'
@@ -38,6 +41,7 @@ import { Barre } from './Barre'
 import { Jauges } from './Jauges'
 import type { PropsPanneau } from './Panneaux'
 import { PanneauTrajets } from './PanneauTrajets'
+import { sons } from '../sons'
 
 type Props = PropsPanneau & {
   eclats: Eclat[]
@@ -45,20 +49,51 @@ type Props = PropsPanneau & {
   onCliquer: () => void
 }
 
-// Le bloc à casser, en grand, avec ses éclats et les minerais qui en sortent.
+// Un nombre de blocs par seconde, lisible (« 0,42 », « 3,1 », « 12 »).
+function parSeconde(n: number): string {
+  return n.toLocaleString('fr-FR', { maximumFractionDigits: n < 1 ? 2 : n < 10 ? 1 : 0 })
+}
+
+// Le combo : les clics rapprochés (moins de DELAI_COMBO entre deux) s'additionnent. Ce n'est que
+// pour le plaisir (aucune règle du jeu) : le compteur grossit, le bloc brille, et un son
+// marque chaque palier.
+const DELAI_COMBO = 900 // ms
+const PALIERS_COMBO = [10, 25, 50, 100, 200, 500]
+
+// Le bloc à casser, en très grand, avec ses éclats, les minerais qui en sortent et le combo.
 function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu; eclats: Eclat[]; trouvailles: Trouvaille[]; onCliquer: () => void }) {
   const bloc = etat.prochainBloc
   const plein = coffrePlein(etat)
   const cassee = estCassee(etat)
+  const [combo, setCombo] = useState(0)
+  const dernierClic = useRef(0)
+  const finCombo = useRef(0)
+
+  function cliquer() {
+    const maintenant = performance.now()
+    const suite = maintenant - dernierClic.current < DELAI_COMBO ? combo + 1 : 1
+    dernierClic.current = maintenant
+    setCombo(suite)
+    if (PALIERS_COMBO.includes(suite)) sons.combo(PALIERS_COMBO.indexOf(suite))
+    // Sans clic pendant un moment, le combo retombe.
+    window.clearTimeout(finCombo.current)
+    finCombo.current = window.setTimeout(() => setCombo(0), DELAI_COMBO)
+    onCliquer()
+  }
+  useEffect(() => () => window.clearTimeout(finCombo.current), [])
+
+  // Plus le combo est long, plus le bloc brille (de 0 à 1).
+  const ardeur = Math.min(1, combo / 50)
   return (
-    <div className="zone-bloc-mine">
+    <div className={`zone-bloc-mine ${combo >= 10 ? 'zone-en-feu' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
       <button
         className={`bloc-mine ${etat.clics > 0 ? 'bloc-fissure' : ''}`}
         disabled={plein}
-        onClick={onCliquer}
+        onClick={cliquer}
         aria-label={`Casser le bloc (${BLOCS[bloc].nom})`}
         title={plein ? 'Le coffre est plein : vide-le !' : `Clique pour casser : ${BLOCS[bloc].nom}`}
       >
+        <span className="halo-bloc-mine" aria-hidden="true" />
         {/* La clé change à chaque bloc : le nouveau bloc « pousse » à sa place. */}
         <span key={etat.stats.blocsCasses} className={`case bloc bloc-${bloc} roche-pierre bloc-mine-dessin`} aria-hidden="true" />
         {eclats.map((e) => (
@@ -76,15 +111,70 @@ function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu;
             {t.nombre > 1 && ' ×2 !'}
           </span>
         ))}
+        {combo >= 3 && (
+          // La clé change à chaque clic : le compteur « saute ».
+          <span key={combo} className={`combo-mine ${combo >= 25 ? 'combo-gros' : ''}`} aria-live="off">
+            🔥 ×{combo}
+          </span>
+        )}
       </button>
       <div className="bloc-mine-texte">
-        <strong>{plein ? '📦 Coffre plein !' : `👆 Clique : ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
+        <strong>{plein ? '📦 Coffre plein !' : `👆 ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
         <span className="discret">
           {cassee
             ? '💥 Pioche cassée : 2 clics par bloc. Fais-la réparer au forgeron.'
             : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de chance de doubler un minerai`}
         </span>
       </div>
+    </div>
+  )
+}
+
+// Le tableau de bord : ce que la mine produit, et d'où ça vient (la mine toute seule, chaque
+// mineur, et toi quand tu cliques).
+function TableauProduction({ etat, clicsParSeconde }: { etat: EtatJeu; clicsParSeconde: number }) {
+  const prod = production(etat)
+  const total = prod.total + clicsParSeconde
+  const meilleur = Math.max(0.0001, ...prod.mineurs.map((m) => m.blocsParSeconde))
+  return (
+    <div className={`tableau-production ${prod.arretee ? 'production-arretee' : ''}`}>
+      <div className="production-total">
+        <span className="production-chiffre">
+          {parSeconde(total)} <small>blocs/s</small>
+        </span>
+        <span className="production-argent">≈ {Math.round(prod.dollarsParMinute).toLocaleString('fr-FR')} $/min</span>
+      </div>
+      {prod.arretee && <span className="manque">📦 Coffre plein : la mine et les mineurs sont à l'arrêt !</span>}
+      <div className="production-sources">
+        <span className="source-production" title="La mine sort des blocs toute seule">
+          ⚙️ Mine <strong>{parSeconde(prod.mine)}/s</strong>
+        </span>
+        <span className="source-production" title="Tes mineurs, trajets compris">
+          👷 Mineurs <strong>{parSeconde(prod.totalMineurs)}/s</strong>
+        </span>
+        <span className={`source-production ${clicsParSeconde > 0 ? 'source-active' : ''}`} title="Tes clics sur le bloc">
+          👆 Toi <strong>{parSeconde(clicsParSeconde)}/s</strong>
+        </span>
+      </div>
+      {prod.mineurs.length > 0 && (
+        <ul className="liste-rendements">
+          {prod.mineurs.map((m) => {
+            const rarete = rareteDe(m.employe)
+            return (
+              <li key={m.index} className="rendement-mineur" style={{ ['--rarete' as string]: rarete.couleur }}>
+                <span className="rendement-nom">
+                  {iconeActiviteEmploye(m.employe)} {m.employe.nom}
+                  <span className="rendement-rarete">{rarete.nom}</span>
+                </span>
+                <span className="rendement-barre" aria-hidden="true">
+                  <i style={{ width: `${Math.round((m.blocsParSeconde / meilleur) * 100)}%` }} />
+                </span>
+                <strong className="rendement-chiffre">{m.auTravail ? `${parSeconde(m.blocsParSeconde)}/s` : '😠 salaire'}</strong>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }
@@ -103,8 +193,26 @@ function Chances({ niveau }: { niveau: number }) {
   )
 }
 
+// Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
+const FENETRE_CLICS = 3000 // ms
+
 export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
   const [choix, setChoix] = useState<Choix>({})
+  // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
+  const clics = useRef<number[]>([])
+  const [clicsParSeconde, setClicsParSeconde] = useState(0)
+  useEffect(() => {
+    const minuteur = window.setInterval(() => {
+      const maintenant = performance.now()
+      clics.current = clics.current.filter((t) => maintenant - t < FENETRE_CLICS)
+      setClicsParSeconde(clics.current.length / (FENETRE_CLICS / 1000))
+    }, 500)
+    return () => clearInterval(minuteur)
+  }, [])
+  function cliquer() {
+    clics.current.push(performance.now())
+    onCliquer()
+  }
   // Le coffre, les objets les plus précieux en premier.
   const piles = (Object.entries(etat.coffre.contenu) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const lot = lotChoisi(choix, [], piles)
@@ -115,17 +223,20 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
   const coffre = prochainNiveauCoffre(etat)
   return (
     <div className="liste-cartes">
-      <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={onCliquer} />
-      <p className="discret">
-        Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong> · la mine sort toute seule {Math.round(debitMine(etat) * 60)} blocs par minute.
+      <p className="discret titre-niveau-mine">
+        Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong>
       </p>
+      <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
+      <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
 
       {/* Le coffre : tout ce qui sort de la mine. */}
       <div className="ligne-achat">
         <strong>
           📦 Coffre · {nbDansCoffre(etat)} / {capaciteCoffre(etat)}
         </strong>
-        <Barre valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} texte={coffrePlein(etat) ? 'Plein : la mine s’arrête !' : `${nbDansCoffre(etat)} objets`} couleur={coffrePlein(etat) ? 'rouge' : 'or'} />
+        <div className="barre-coffre-mine">
+          <Barre valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} texte={coffrePlein(etat) ? 'Plein : la mine s’arrête !' : `${nbDansCoffre(etat)} objets`} couleur={coffrePlein(etat) ? 'rouge' : 'or'} />
+        </div>
         {piles.length === 0 ? (
           <span className="discret">Vide. Clique sur le bloc pour le remplir !</span>
         ) : (

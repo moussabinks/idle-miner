@@ -66,10 +66,12 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
     if (caseParcourue > 0) sons.wagonnet(electrique ? 0.6 : 1)
   }, [caseParcourue, electrique])
   const etapeAvant = useRef(w.etape)
+  // (au marché, c'est la caisse qui sonne : voir sons.venteMarche)
+  const versLeMarche = info.arrivee === 'marche'
   useEffect(() => {
-    if (etapeAvant.current === 'aller' && w.etape === 'retour') sons.cloche()
+    if (etapeAvant.current === 'aller' && w.etape === 'retour' && !versLeMarche) sons.cloche()
     etapeAvant.current = w.etape
-  }, [w.etape])
+  }, [w.etape, versLeMarche])
 
   if (!ligne || !trace) return null
   // Où on en est sur la trace (du départ à l'arrivée), et dans quel sens on roule.

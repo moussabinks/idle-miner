@@ -124,6 +124,18 @@ export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   generateur: '/images/batiments/generateur.webp',
 }
 
+// Pour un bâtiment retourné (miroir) qui a des écritures : la même image, mais avec ses panneaux
+// déjà retournés, pour qu'ils se lisent à l'endroit une fois toute l'image retournée
+// (fabriquée par outils/batiments/textes_miroir.py).
+export const IMAGES_BATIMENTS_MIROIR: Partial<Record<IdBatiment, string>> = {
+  employes: '/images/batiments/employes-miroir.webp',
+}
+
+// L'image à afficher pour un bâtiment, selon qu'il est retourné ou non.
+export function imageBatiment(id: IdBatiment, miroir: boolean): string {
+  return (miroir && IMAGES_BATIMENTS_MIROIR[id]) || IMAGES_BATIMENTS[id]
+}
+
 // La hauteur (en pixels) de ce qui dépasse au-dessus d'une décoration (pour sa boîte SVG).
 export function hauteurDecoration(id: IdDecoration): number {
   if (id === 'arbre' || id === 'cerisier' || id === 'sapin') return 100

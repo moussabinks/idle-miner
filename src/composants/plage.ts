@@ -2,6 +2,7 @@
 // mesure en « cases au-delà du bord » : d = y - TAILLE_GRILLE.
 
 import { TAILLE_GRILLE } from '../jeu/donnees'
+import { versEcran } from './iso'
 
 const N = TAILLE_GRILLE
 
@@ -26,3 +27,21 @@ export function surLaPlage(x: number, y: number): boolean {
   return y - N > distanceSable(x) - 0.35
 }
 
+// Un point au-delà du bord de la clairière (x, d cases plus bas) → un point du monde.
+const ecranPlage = (x: number, d: number) => versEcran(x, N + d)
+
+// Où il se passe quelque chose sur la plage (l'eau qui bouge, les objets animés), en pixels du
+// monde : des rectangles le long de la côte, morceau par morceau (la plage est en diagonale, un
+// seul rectangle couvrirait presque toute la carte). Quand la caméra n'en voit aucun, le village
+// met ces animations en pause (27/10) : elles faisaient travailler le navigateur pour rien.
+export type Rectangle = { x0: number; y0: number; x1: number; y1: number }
+export const BOITES_PLAGE: Rectangle[] = Array.from({ length: 24 }, (_, i) => {
+  const debut = -16 + i * 3.5
+  const coins = [ecranPlage(debut, 0), ecranPlage(debut + 3.5, 0), ecranPlage(debut, 24), ecranPlage(debut + 3.5, 24)]
+  return {
+    x0: Math.min(...coins.map((c) => c.x)),
+    x1: Math.max(...coins.map((c) => c.x)),
+    y0: Math.min(...coins.map((c) => c.y)) - 60, // (les palmiers dépassent vers le haut)
+    y1: Math.max(...coins.map((c) => c.y)),
+  }
+})

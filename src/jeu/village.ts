@@ -12,11 +12,9 @@
 import {
   BATIMENTS,
   BATIMENTS_DES_RAILS,
-  DECORATIONS,
   TAILLE_GRILLE,
   VITESSE_MARCHE,
   type IdBatiment,
-  type IdDecoration,
 } from './donnees'
 
 // ---------------------------------------------------------------------------
@@ -32,20 +30,10 @@ export type BatimentPose = {
   miroir: boolean // le dessin est retourné (l'entrée passe de l'autre côté)
 }
 
-export type DecorationPosee = {
-  n: number // son numéro (pour la retrouver quand on la déplace)
-  id: IdDecoration
-  x: number
-  y: number
-  miroir: boolean
-}
-
 export type Village = {
   batiments: BatimentPose[]
   rails: string[] // les cases de rails, écrites « x,y »
   chemins: string[] // les cases de chemin de pavés
-  decorations: DecorationPosee[]
-  prochainNumero: number // pour numéroter les décorations
   batimentsVus: IdBatiment[] // les bâtiments débloqués déjà vus dans le menu (pour la pastille « Nouveau »)
 }
 
@@ -58,8 +46,6 @@ export function nouveauVillage(): Village {
     batiments: [{ id: 'puits', x: POSITION_MINE.x, y: POSITION_MINE.y, miroir: false }],
     rails: [],
     chemins: [],
-    decorations: [],
-    prochainNumero: 1,
     batimentsVus: [],
   }
 }
@@ -85,10 +71,6 @@ export function empriseBatiment(b: { id: IdBatiment; x: number; y: number }): Em
   return { x: b.x, y: b.y, taille: BATIMENTS[b.id].taille }
 }
 
-export function empriseDecoration(d: { id: IdDecoration; x: number; y: number }): Emprise {
-  return { x: d.x, y: d.y, taille: DECORATIONS[d.id].taille }
-}
-
 export function casesDe(emprise: Emprise): Case[] {
   const cases: Case[] = []
   for (let dx = 0; dx < emprise.taille; dx++) for (let dy = 0; dy < emprise.taille; dy++) cases.push({ x: emprise.x + dx, y: emprise.y + dy })
@@ -102,7 +84,6 @@ export function dansLaGrille(emprise: Emprise): boolean {
 // Ce qui occupe une case.
 export type Occupant =
   | { type: 'batiment'; id: IdBatiment }
-  | { type: 'decoration'; n: number }
   | { type: 'rail' }
   | { type: 'chemin' }
 
@@ -110,7 +91,6 @@ export type Occupant =
 export function occupation(village: Village): Map<string, Occupant> {
   const cases = new Map<string, Occupant>()
   for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) cases.set(cleCase(c.x, c.y), { type: 'batiment', id: b.id })
-  for (const d of village.decorations) for (const c of casesDe(empriseDecoration(d))) cases.set(cleCase(c.x, c.y), { type: 'decoration', n: d.n })
   for (const cle of village.rails) cases.set(cle, { type: 'rail' })
   for (const cle of village.chemins) cases.set(cle, { type: 'chemin' })
   return cases
@@ -119,7 +99,6 @@ export function occupation(village: Village): Map<string, Occupant> {
 function memeOccupant(a: Occupant, b: Occupant): boolean {
   if (a.type !== b.type) return false
   if (a.type === 'batiment' && b.type === 'batiment') return a.id === b.id
-  if (a.type === 'decoration' && b.type === 'decoration') return a.n === b.n
   return true
 }
 
@@ -159,14 +138,10 @@ export function porte(b: BatimentPose): { x: number; y: number } {
   return porteAGauche(b) ? { x: b.x + t / 2, y: b.y + t + 0.5 } : { x: b.x + t + 0.5, y: b.y + t / 2 }
 }
 
-// Les cases où l'on ne peut pas marcher : les bâtiments, et les grosses décorations.
+// Les cases où l'on ne peut pas marcher : les bâtiments.
 export function casesBloquees(village: Village): Set<string> {
   const bloquees = new Set<string>()
   for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) bloquees.add(cleCase(c.x, c.y))
-  for (const d of village.decorations) {
-    if (!DECORATIONS[d.id].bloque) continue
-    for (const c of casesDe(empriseDecoration(d))) bloquees.add(cleCase(c.x, c.y))
-  }
   return bloquees
 }
 
@@ -239,12 +214,7 @@ const CACHE_MAX = 200
 const cacheChemins = new Map<string, Case[] | null>()
 
 function signatureObstacles(village: Village): string {
-  const batiments = village.batiments.map((b) => `${b.id}${b.x},${b.y}`).join('|')
-  const decos = village.decorations
-    .filter((d) => DECORATIONS[d.id].bloque)
-    .map((d) => `${d.id}${d.x},${d.y}`)
-    .join('|')
-  return `${batiments}#${decos}`
+  return village.batiments.map((b) => `${b.id}${b.x},${b.y}`).join('|')
 }
 
 const VOISINS = [

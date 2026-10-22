@@ -433,15 +433,10 @@
   display: none;
 }
 
-/* Le bloc à cliquer, un peu plus petit dans le panneau. */
-.plein-ecran .zone-bloc-mine {
-  padding: 8px;
-  gap: 12px;
-}
-
+/* Le bloc à cliquer : en grand dans le panneau (27/10). */
 .plein-ecran .bloc-mine {
-  width: 92px;
-  height: 92px;
+  width: 150px;
+  height: 150px;
 }
 
 .plein-ecran .panneau .barre {

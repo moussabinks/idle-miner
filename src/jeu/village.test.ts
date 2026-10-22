@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import {
-  acheterDecoration,
   batimentsConstructibles,
   construireBatiment,
   deplacerBatiment,
@@ -9,18 +8,15 @@ import {
   nouveautesBatiments,
   peutConstruire,
   poserSol,
-  retirerDecoration,
   retirerSol,
 } from './batiments'
 import { ameliorerEmploye, avancerEmployes, embaucher } from './employes'
 import { creerPartie, nbDansCoffre, type EtatJeu } from './mineur'
 import { notificationsBatiments } from './notifications'
-import { acheterTenue, porterTenue } from './tenues'
 import {
   POSITION_MINE,
   RAYON_BATIMENT,
   batimentPose,
-  caseAcces,
   caseAccesProche,
   distanceAuBatiment,
   distanceEntre,
@@ -129,21 +125,6 @@ describe('marcher dans le village', () => {
     expect(distanceEntre(etat.village, 'puits', 'marche')).toBeGreaterThan(pres)
   })
 
-  it('les grosses décorations bloquent le passage, pas les fleurs', () => {
-    const etat = partie()
-    etat.argent = 1000
-    acheterDecoration(etat, 'arbre', 4, 4)
-    const mine = batimentPose(etat.village, 'puits')
-    if (!mine) throw new Error('pas de mine')
-    expect(trouverChemin(etat.village, { x: 3, y: 4 }, { x: 6, y: 4 })?.some((c) => c.x === 4 && c.y === 4)).toBe(false)
-    acheterDecoration(etat, 'fleurs-rouges', 10, 10)
-    expect(etat.village.decorations).toHaveLength(2)
-    expect(etat.argent).toBe(1000 - 150 - 15)
-    retirerDecoration(etat, etat.village.decorations[0].n)
-    expect(etat.village.decorations).toHaveLength(1)
-    // L'entrée de la mine reste accessible.
-    expect(caseAcces(etat.village, mine)).toEqual({ x: 30, y: 35 })
-  })
 })
 
 describe('les rails de la mine au marché', () => {
@@ -238,19 +219,5 @@ describe('les notifications au-dessus des bâtiments', () => {
     expect(notificationsBatiments(etat).puits?.[0]).toMatchObject({ icone: '📦', sorte: 'alerte' })
     etat.village.batiments.push({ id: 'generateur', x: 2, y: 2, miroir: false })
     expect(notificationsBatiments(etat).generateur?.[0]).toMatchObject({ icone: '🔴', sorte: 'alerte' })
-  })
-})
-
-describe('les tenues', () => {
-  it('s’achètent au Bazar et se portent tout de suite', () => {
-    const etat = partie()
-    etat.argent = 1000
-    acheterTenue(etat, 'bandana')
-    expect(etat.tenue.chapeau).toBe('bandana')
-    expect(etat.argent).toBe(850)
-    porterTenue(etat, 'chapeau', null)
-    expect(etat.tenue.chapeau).toBeNull()
-    expect(porterTenue(etat, 'chapeau', 'casquette')).toEqual([]) // pas achetée
-    expect(etat.tenue.chapeau).toBeNull()
   })
 })

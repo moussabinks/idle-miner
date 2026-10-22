@@ -205,6 +205,23 @@ export const sons = {
   },
 
 
+  // Un palier de combo au bloc de la mine (27/10) : un arpège qui monte, plus haut à chaque palier.
+  combo(palier: number) {
+    const base = 784 * Math.pow(2, Math.min(palier, 5) / 6)
+    ;[1, 1.25, 1.5, 2].forEach((k, i) => note(base * k, i * 0.05, 0.18, { type: 'square', volume: 0.05 }))
+    note(base * 4, 0.2, 0.3, { type: 'sine', volume: 0.06 })
+  },
+
+  // Un wagonnet vend son chargement au marché (27/10) : la cloche du marché, « ka-ching ! » et
+  // une cascade de pièces, d'autant plus longue que la vente est grosse.
+  venteMarche(montant: number) {
+    note(1568, 0, 0.5, { type: 'sine', volume: 0.1 })
+    note(2093, 0.08, 0.5, { type: 'sine', volume: 0.08 })
+    sons.vente(montant)
+    // Une petite fanfare qui monte pour les grosses ventes.
+    if (montant >= 1000) [1047, 1319, 1568, 2093].forEach((f, i) => note(f, 0.3 + i * 0.07, 0.25, { type: 'triangle', volume: 0.07 }))
+  },
+
   // Un achat : « pop » puis deux notes qui montent.
   achat() {
     note(523, 0, 0.1, { type: 'triangle', volume: 0.15 })
