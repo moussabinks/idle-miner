@@ -1,7 +1,7 @@
 # Mega Digger : vue d'ensemble du jeu
 
 > Le point d'entrée de la documentation : le concept, la boucle de jeu, la progression niveau de mine par niveau de mine, le vocabulaire et les choix de design.
-> Tout est écrit d'après le code au 22/10, après la refonte de la **mine automatique** (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 22` depuis les trajets des wagonnets du 24/10). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
+> Tout est écrit d'après le code au 22/10, après la refonte de la **mine automatique** (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 23` depuis les pousseurs du 26/10 ; le 27/10, les tenues et les décorations à acheter sont retirées, et le panneau de la mine a un combo et un tableau de production). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
 
 ## Sommaire de la documentation
 
@@ -10,7 +10,7 @@
 | Fichier | Contenu |
 |---|---|
 | [vue-d-ensemble.md](vue-d-ensemble.md) | Ce fichier : concept, boucle, progression par niveau de mine, glossaire, choix de design. |
-| [village.md](village.md) | Le village vu du ciel : la grille, poser et payer les bâtiments, Modifier, rails (sans boucle) et trajets de wagonnets, chemins et décorations, personnages, bulles de notification. |
+| [village.md](village.md) | Le village vu du ciel : la grille, poser et payer les bâtiments, Modifier, rails (sans boucle) et trajets de wagonnets, chemins, personnages, bulles de notification. |
 | [mine-et-minage.md](mine-et-minage.md) | La mine à 5 niveaux : les blocs, le bloc à cliquer, le coffre, les pioches, la mine toute seule, le temps qui passe (et hors ligne), événements, découvertes, succès, statistiques. |
 | [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, sacs, ascenseur, wagonnets, générateur, foreuse, mineurs, raretés, bâtiments, revenus), le bot de simulation et les durées de jeu. |
 | [interface.md](interface.md) | L'écran : accueil, bandeau, carte du village, boutons, menus, panneaux, notifications, objectifs, téléphone. |
@@ -26,7 +26,7 @@
 | [mine.md](../batiments/mine.md) | ⛏️ Mine : bloc à cliquer, coffre, 5 niveaux, ascenseur des mineurs, trajets des wagonnets qui en partent, taille des wagonnets | dès le début (posée au milieu) |
 | [marche.md](../batiments/marche.md) | 💰 Marché : vente des blocs, arrivée des wagonnets de la mine et de la foreuse | dès le début (gratuit) |
 | [forgeron.md](../batiments/forgeron.md) | ⚒️ Forgeron : pioches, doublement, réparation | dès le début |
-| [bazar.md](../batiments/bazar.md) | 🎒 Bazar : sacs à dos et tenues du hamster | dès le début |
+| [bazar.md](../batiments/bazar.md) | 🎒 Bazar : sacs à dos | dès le début |
 | [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, pousseurs, salaires, recruteur, manager | dès le début (recruteur au niveau 3, manager au niveau 4) |
 | [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui fore seule | niveau 2 de la mine |
 | [generateur.md](../batiments/generateur.md) | ⚡ Générateur : redstone, rayon électrique, trajets électriques | niveau 2 de la mine |
@@ -37,9 +37,9 @@ Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../
 
 **Mega Digger** (ex-Idle Miner) est un *idle game* de minage inspiré de Minecraft, jouable dans le navigateur (et installable comme application, hors ligne). On incarne un **hamster mineur** qui fait grandir sa mine et son village.
 
-Depuis le 22/10, tout se passe **au village, vu du ciel** (vue isométrique à 45°, façon Clash of Clans) : une clairière de 60 × 60 cases, avec la mine au milieu. On y **pose ses bâtiments où on veut**, des rails, des chemins et des décorations, et on s'y promène. Il n'y a plus de vue de la mine en coupe : la mine est un bâtiment comme les autres, qu'on ouvre en marchant jusqu'à elle. Voir [village.md](village.md).
+Depuis le 22/10, tout se passe **au village, vu du ciel** (vue isométrique à 45°, façon Clash of Clans) : une clairière de 60 × 60 cases, avec la mine au milieu. On y **pose ses bâtiments où on veut**, des rails et des chemins, et on s'y promène. Il n'y a plus de vue de la mine en coupe : la mine est un bâtiment comme les autres, qu'on ouvre en marchant jusqu'à elle. Voir [village.md](village.md).
 
-- **Creuser** : devant la mine, un gros **bloc à cliquer**. Chaque clic casse un bloc. Ce qui tombe va dans le **coffre de la mine**. La mine sort aussi **quelques blocs par seconde toute seule**.
+- **Creuser** : devant la mine, un gros **bloc à cliquer**. Chaque clic casse un bloc (les clics rapides font un **combo**, juste pour le plaisir). Ce qui tombe va dans le **coffre de la mine**. La mine sort aussi **quelques blocs par seconde toute seule**. Le panneau de la mine montre combien de blocs sortent par seconde et d'où ils viennent.
 - **Vendre** : on met le coffre dans son **sac**, et on **marche jusqu'au marché** pour le vendre, à prix fixe.
 - **Améliorer** : avec l'argent (et des minerais, pris dans le sac puis dans le coffre), on agrandit le coffre, on achète de meilleures pioches (plus de chances de **doubler** un minerai), de plus grands sacs…
 - **Descendre** : la mine a **5 niveaux** (pierre, charbon et fer ; puis redstone ; or ; émeraudes ; diamants). On paie pour descendre au niveau suivant : de nouveaux minerais, plus rares et plus chers, et de nouveaux bâtiments.
@@ -72,11 +72,11 @@ Pendant ce temps, la **mine toute seule**, les **mineurs employés** (tant qu'on
 
 | Niveau | Nom | Nouveau minerai | Prix pour y descendre | La mine sort seule | Mineurs au plus | Ce qui se débloque | Le bot y arrive vers |
 |---|---|---|---|---|---|---|---|
-| **1** | Galerie de surface | pierre, charbon, fer | (départ) | 12 blocs/min | 4 | Marché (gratuit), Forgeron, Bazar, Personnel, rails ; décorations de base ; tenues de base | 0 min |
-| **2** | Veine de redstone | redstone | 400 $ + 30 fer | 15 blocs/min | 6 | **Foreuse**, **Générateur** ; cerisier en fleurs, haut-de-forme | ~12 min |
-| **3** | Filon d'or | or | 2 500 $ + 60 fer + 30 redstone | 18 blocs/min | 8 | **Recruteur** (rareté des mineurs) ; fontaine, gilet doré | ~37 min |
-| **4** | Grotte aux émeraudes | émeraude | 9 000 $ + 60 redstone + 30 or | 21 blocs/min | 10 | **Manager** et trésorerie ; couronne | ~1 h |
-| **5** | Cœur de diamant | diamant | 30 000 $ + 60 or + 25 émeraude | 24 blocs/min | 12 | statue du hamster d'or | ~1 h 40 |
+| **1** | Galerie de surface | pierre, charbon, fer | (départ) | 12 blocs/min | 4 | Marché (gratuit), Forgeron, Bazar, Personnel, rails | 0 min |
+| **2** | Veine de redstone | redstone | 400 $ + 30 fer | 15 blocs/min | 6 | **Foreuse**, **Générateur** | ~12 min |
+| **3** | Filon d'or | or | 2 500 $ + 60 fer + 30 redstone | 18 blocs/min | 8 | **Recruteur** (rareté des mineurs) | ~37 min |
+| **4** | Grotte aux émeraudes | émeraude | 9 000 $ + 60 redstone + 30 or | 21 blocs/min | 10 | **Manager** et trésorerie | ~1 h |
+| **5** | Cœur de diamant | diamant | 30 000 $ + 60 or + 25 émeraude | 24 blocs/min | 12 | le diamant (dernier niveau) | ~1 h 40 |
 
 Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 5 à 20 minutes, niveau 5 en 1 h à 2 h 30.
 
@@ -90,17 +90,18 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Bloc à cliquer** | Le gros bloc du panneau de la mine : chaque clic le casse (2 clics avec une pioche cassée) et en tire un nouveau. |
 | **Carburant** | Le charbon de la foreuse (1 charbon = 20 s) ou la redstone du générateur (1 redstone = 30 s), comptés en secondes. |
 | **Chariot** | Le réservoir de la foreuse : elle y met ce qu'elle fore ; on le vide au stand Foreuse (vendre ou mettre dans le sac). 6 tailles. |
-| **Chemin (de pavés)** | Une décoration au sol (5 $ la case), seulement pour relier joliment les bâtiments. |
+| **Chemin (de pavés)** | Des pavés au sol (5 $ la case, carte du menu 🏗️ Bâtiments), seulement pour relier joliment les bâtiments. |
 | **Clairière** | Le village vu du ciel : une grille de 60 × 60 cases, entourée de forêt et d'une plage, avec la mine au milieu. |
 | **Coffre (de la mine)** | Là où va tout ce qui sort de la mine (clics, mine toute seule, mineurs) : 100 à 4 000 places. Plein, tout s'arrête. Ses minerais servent aussi à payer. |
+| **Combo** | Les clics rapides sur le bloc de la mine (moins de 0,9 s entre deux) : « 🔥 ×*N* », un bloc qui brille et un son aux paliers. Seulement pour le plaisir, sans effet sur le jeu (27/10). |
 | **Débit (de la mine)** | Les blocs que la mine sort toute seule : 0,2 à 0,4 par seconde selon le niveau. |
-| **Décoration** | Fleurs, buissons, rochers, lanternes, arbres, fontaine, statue… achetées au menu 🌸 Décos, seulement pour faire joli. |
+| **Décoration** | Fleurs, buissons, rochers, lanternes, arbres… Elles ne s'achètent plus depuis le 27/10 ; leurs dessins ornent seulement la plage et l'écran d'accueil. |
 | **Découverte** | Le recruteur (niveau 3) et le manager (niveau 4) : une bulle ✨ saute au-dessus du Personnel jusqu'à ce qu'on y passe. |
 | **Doublement** | La chance qu'un clic donne 2 minerais au lieu d'1 : 10 % (pioche en pierre) à 45 % (diamant). Jamais pour la pierre, ni pour la mine toute seule, les mineurs ou la foreuse. |
 | **Durabilité / usure** | Chaque pioche tient un nombre de clics (150 à 1 000) ; chaque bloc cassé lui retire 1 point. À 0, elle est cassée. |
 | **Échelle** | Le chemin des mineurs sans ascenseur : 10 s par montée ou descente. |
 | **Électricité** | Ce que donne le générateur dans son rayon : rails électriques (les wagonnets roulent tout seuls) et foreuse boostée. |
-| **Emprise** | Les cases qu'occupe un bâtiment ou une décoration. |
+| **Emprise** | Les cases qu'occupe un bâtiment. |
 | **Employé** | Un hamster embauché au Personnel, tant qu'on paie son salaire. Deux métiers : le **mineur** creuse, remonte, vide son sac dans le coffre de la mine et redescend ; le **pousseur** (26/10) pousse le wagonnet d'un seul trajet, choisi à l'embauche. |
 | **Foreuse** | Machine du niveau 2 : au charbon, elle fore seule dans son chariot, plus vite dans le rayon du générateur. Une seule foreuse, 6 niveaux de forage et de chariot. |
 | **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et électrifie un cercle autour de lui (15 à 40 cases). 5 niveaux (rayon et puissance). |
@@ -110,7 +111,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
 | **Manager** | Débloqué au niveau 4 de la mine (15 000 $, puis 600 $ / 10 min) : il paie tous les salaires seul avec la trésorerie. |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
-| **Miroir** | Un bâtiment ou une décoration retourné gauche-droite (menu Modifier) : la porte change de côté. |
+| **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
 | **Monde** | Une partie séparée (jusqu'à 5), choisie sur l'écran d'accueil. |
 | **Niveau de la mine** | De 1 à 5 : il décide des blocs qui sortent, du débit, du nombre de mineurs, et débloque des bâtiments. On l'achète au panneau de la mine. Il compte pour le classement. |
@@ -132,7 +133,6 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Sac (à dos)** | Ce que le joueur porte du coffre (ou du chariot) jusqu'au marché : 32 à 2 048 places (7 tailles au Bazar). |
 | **Stand** | L'ancien nom des bâtiments (le code l'emploie encore, par exemple `IdStand` dans `objectifs.ts`). |
 | **Succès** | 21 accomplissements (`succes.ts`). |
-| **Tenue** | Un chapeau ou un haut pour le hamster du joueur, acheté au Bazar, seulement pour le style. Elle ne se voit que dans l'aperçu du Bazar. |
 | **Trajet** | Un wagonnet entre deux bâtiments, créé par le joueur (« Envoyer un wagonnet vers… ») : Mine → Marché, Mine → Foreuse, Mine → Générateur ou Foreuse → Marché. Un wagonnet par trajet. |
 | **Trésorerie** | La cagnotte du manager, qu'on remplit au Personnel. |
 | **Village** | La clairière vue du ciel, où tout se passe. Voir [village.md](village.md). |

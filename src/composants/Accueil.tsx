@@ -138,7 +138,7 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
 // Comment jouer, en 4 cartes (avec les dessins du jeu).
 const ETAPES = [
   { image: '/images/personnages/mineur.webp', portrait: true, titre: 'Creuse', texte: 'Clique sur le bloc de la mine : charbon, fer, redstone, or, émeraudes, diamants…', couleur: '#f2b33d' },
-  { image: '/images/batiments/forgeron.webp', portrait: false, titre: 'Construis', texte: 'Pose le marché, la forge, le bazar… où tu veux dans la clairière, et décore ton village.', couleur: '#5cc95c' },
+  { image: '/images/batiments/forgeron.webp', portrait: false, titre: 'Construis', texte: 'Pose le marché, la forge, le bazar… où tu veux dans la clairière, et relie-les par des rails.', couleur: '#5cc95c' },
   { image: '/images/personnages/recruteur.webp', portrait: true, titre: 'Embauche', texte: 'Des mineurs rares, épiques… mythiques creusent pour toi et remplissent le coffre de la mine.', couleur: '#4f9df0' },
   { image: '/images/batiments/generateur.webp', portrait: false, titre: 'Automatise', texte: 'Relie la mine au marché avec des rails, et électrifie-les avec le générateur : l’argent tombe tout seul !', couleur: '#e85aa8' },
 ]

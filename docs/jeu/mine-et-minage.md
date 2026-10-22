@@ -1,7 +1,7 @@
 # ⛏️ La mine et le minage
 
 > Comment marche la mine depuis le 22/10 (la **mine automatique**) : ses 5 niveaux, le bloc à cliquer, le coffre, les pioches, la mine qui sort des blocs toute seule, et tout ce qui tourne autour : le temps qui passe (et hors ligne), les événements, les découvertes, les succès et les statistiques.
-> Écrit d'après le code au 22/10, mis à jour le 24/10 (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
+> Écrit d'après le code au 22/10, mis à jour le 24/10 et le 27/10 (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
 
 Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur en mètres, les couches de 10 blocs, l'échelle et l'ascenseur du joueur, le quai, le réservoir, les convois et brouettes, les galeries, les blocs spéciaux (lave, coffres, géodes) et les seaux, le lapis, la netherite, la terre, le gravier et la roche dure, la bedrock et la victoire, le prestige et l'enchanteur. Le code du prestige et de l'enchanteur est rangé dans `archives/` ; le reste est dans l'historique git.
 
@@ -79,6 +79,10 @@ Il n'y a **pas de temps de casse** : un clic, un bloc. La vitesse dépend de la 
 
 Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « tac » de la pioche, puis le « crac » du bloc, des éclats volent, et ce qui tombe s'envole au-dessus (« +1 ⚫ », « +2 💎 ×2 ! »).
 
+**Le combo** (27/10, seulement dans l'interface) : les clics à moins de **0,9 s** l'un de l'autre s'additionnent. Dès 3, un compteur « 🔥 ×*N* » saute près du bloc ; plus il monte, plus le cadre et le halo du bloc brillent, et un petit arpège (`sons.combo`) marque les paliers 10, 25, 50, 100, 200 et 500. **Il ne change rien aux règles** : pas de bonus, un clic reste un bloc.
+
+**Le tableau de production** (27/10) : sous le bloc, le panneau de la mine montre combien de blocs sortent par seconde (la mine toute seule, chaque mineur, et tes clics des 3 dernières secondes) et ≈ combien de $ par minute ça vaut. Le calcul est la fonction pure `production(etat)` de `src/jeu/production.ts` (débit de la mine, `blocsParSecondeEmploye` de chaque mineur au travail, 0 si le coffre est plein ou si le mineur attend son salaire, et `valeurMoyenneBloc` pour les dollars). Voir [mine.md](../batiments/mine.md#le-tableau-de-production-2710).
+
 ### Les pioches (`PIOCHES`)
 
 | Pioche | Chance de doubler un minerai | Durabilité | Prix | Réparation (cassée) |
@@ -127,7 +131,7 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 | 4 · Grotte aux émeraudes | 9 000 $ + 60 redstone + 30 or |
 | 5 · Cœur de diamant | 30 000 $ + 60 or + 25 émeraude |
 
-Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), recruteur (3), manager (4), 2 mineurs de plus à chaque niveau, et des décorations et tenues. Le niveau 5 est le dernier : il n'y a plus de fin de partie.
+Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), recruteur (3), manager (4), et 2 mineurs de plus à chaque niveau. Le niveau 5 est le dernier : il n'y a plus de fin de partie.
 
 ---
 
@@ -175,7 +179,7 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, e
 
 ## 8. Les succès (`src/jeu/succes.ts`)
 
-**21 succès**, vérifiés après chaque action et chaque tic d'horloge (`verifierSucces`). Un succès obtenu affiche « *emoji* Succès : *titre* » (toast doré, petite fanfare). On les voit avec le bouton 🏅.
+**20 succès** (« 🌸 Paysagiste », poser 10 décorations, est retiré le 27/10 avec les décorations), vérifiés après chaque action et chaque tic d'horloge (`verifierSucces`). Un succès obtenu affiche « *emoji* Succès : *titre* » (toast doré, petite fanfare). On les voit avec le bouton 🏅.
 
 | Succès | Condition |
 |---|---|
@@ -199,7 +203,6 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, e
 | 💰 Riche | gagner 5 000 $ |
 | 🤑 Magnat | gagner 100 000 $ |
 | 🏗️ Architecte | poser 5 bâtiments au village (la mine ne compte pas) |
-| 🌸 Paysagiste | poser 10 décorations |
 
 ---
 
@@ -236,5 +239,6 @@ La fenêtre montre 4 tuiles (💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ M
 - `src/jeu/decouvertes.ts`, `src/jeu/succes.ts`, `src/jeu/statistiques.ts` : découvertes, succès, statistiques.
 - `src/evenements.ts` : les événements pour les sons et animations.
 - `src/usePartie.ts` : l'horloge, le clic, le rattrapage hors ligne, la sauvegarde.
-- `src/composants/PanneauMine.tsx` : le bloc à cliquer et tout le panneau de la mine ; `src/composants/Statistiques.tsx` : la fenêtre 📊.
+- `src/jeu/production.ts` : `production` (blocs par seconde de la mine et de chaque mineur, $ par minute), pour le tableau du panneau de la mine ; testé dans `production.test.ts`.
+- `src/composants/PanneauMine.tsx` : le bloc à cliquer (et son combo), le tableau de production et tout le panneau de la mine ; `src/composants/Statistiques.tsx` : la fenêtre 📊.
 - `src/jeu/mine.test.ts`, `src/jeu/mineur.test.ts` : les tests de la mine et du joueur.

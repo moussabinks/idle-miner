@@ -55,7 +55,7 @@ Fonctions :
 | `supprimerMonde(stockage, id)` | Retire le monde de la liste et efface ses clés `idle-miner-monde-<id>` et `-horodatage` |
 | `marquerJoue(stockage, id)` | Met `joueLe` à maintenant (le monde remonte en tête de liste) |
 | `sauvegarder(stockage, id, etat)` | Écrit l'`EtatJeu` en JSON et l'horodatage |
-| `charger(stockage, id)` | Lit la partie et convertit une partie de la version 21 (`convertirVersion21`), puis vérifie qu'elle est **à la version actuelle (22)** et valide (1.5). Renvoie `null` si absente, illisible, invalide ou **d'avant la version 21** (les parties d'avant la mine automatique repartent de zéro) |
+| `charger(stockage, id)` | Lit la partie et convertit une partie des versions 21 et 22 (`convertirVersion21`, `convertirVersion22`), puis vérifie qu'elle est **à la version actuelle (23)** et valide (1.5), et enlève les tenues et les décorations retirées le 27/10. Renvoie `null` si absente, illisible, invalide ou **d'avant la version 21** (les parties d'avant la mine automatique repartent de zéro) |
 | `partieAncienne(stockage, id)` | Vrai si le monde contient une partie lisible d'une version plus ancienne que la 21 (avant la mine automatique) : l'accueil prévient qu'elle repart de zéro |
 | `secondesDepuisSauvegarde(stockage, id)` | Secondes écoulées depuis l'horodatage (0 si inconnu) |
 
@@ -76,6 +76,8 @@ Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienn
 **La conversion 22 → 23** (26/10, `convertirVersion22` dans `sauvegarde.ts`) : chaque employé reçoit le champ `trajet`. Un ancien **pousseur** prend le trajet **Mine → Marché** s'il existe, sinon le premier trajet qui part de la mine (ou `null` s'il n'y en a aucun) ; un **mineur** reçoit `null`. Un mineur resté au quai (étape `quai`) redescend creuser tout seul au jeu suivant (`travailler` dans `employes.ts`). Un test de `sauvegarde.test.ts` le vérifie (un pousseur et un mineur : `['mine-marche', null]`).
 
 **Avant la version 21, pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
+
+**Le nettoyage du 27/10** (sans changer de version, toujours 23) : les **tenues** du Bazar et les **décorations** du village sont retirées du jeu. Après les conversions et la vérification, `charger` **enlève** d'une ancienne partie les champs `tenue` et `tenuesAchetees`, `village.decorations` et `village.prochainNumero`, et le succès `'paysagiste'` de la liste `succes`. La partie se charge donc sans souci (rien n'est remboursé). Un test de `sauvegarde.test.ts` le vérifie.
 
 **Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de conversion (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger`, comme `convertirVersion21` et `convertirVersion22` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
 
@@ -112,9 +114,9 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 | `succes` | liste de textes | Identifiants des succès débloqués |
 | `stats` | `Statistiques` | Statistiques de la partie |
 | `decouvertes` | liste (`'recruteur'`, `'manager'`) | Nouveautés déjà vues devant le Personnel |
-| `village` | objet `Village` | Le village vu du ciel : bâtiments posés, rails, chemins, décorations |
-| `tenue` | `{ chapeau, haut }` (`IdTenue` ou `null`) | La tenue que porte le joueur |
-| `tenuesAchetees` | liste d'`IdTenue` | Les tenues achetées |
+| `village` | objet `Village` | Le village vu du ciel : bâtiments posés, rails, chemins |
+
+(Les champs `tenue` et `tenuesAchetees`, les tenues du Bazar, sont retirés le 27/10 : voir plus bas.)
 
 **`Foreuse`** : `carburant` (secondes de forage restantes), `niveauVitesse` (index dans `NIVEAUX_FORAGE`), `progression` (0 à 1 du prochain bloc), `blocsFores`, `niveauChariot` (index dans `NIVEAUX_CHARIOT`), `chariot` (inventaire foré), `nonCoches` (objets décochés), `rechargeAuto`.
 
@@ -124,11 +126,11 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Employe`** : `nom`, `rarete` (`commun`, `rare`, `epique`, `legendaire`, `mythique`), `niveau` (sa pioche, index dans `NIVEAUX_EMPLOYE`), `role` (`mineur` ou `pousseur`), `trajet` (26/10 : le trajet d'un pousseur, `mine-marche`, `mine-foreuse`, `mine-generateur` ou `foreuse-marche` ; `null` pour un mineur), `etape` (`creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend`), `progression` (blocs en creusant, ou secondes), `sac`, `blocsCasses`, `tempsPaye` (secondes de travail déjà payées), `lieu` (le bâtiment où il est, ou vers lequel il marche), `depuis` (celui d'où il part), `forgeEnAttente`.
 
-**`Village`** (`src/jeu/village.ts`) : `batiments` (liste de `{ id, x, y, miroir }` : le coin du haut de l'emprise sur la grille de 60 × 60 cases ; la mine est posée d'office en 25, 25), `rails` et `chemins` (listes de cases écrites `"x,y"`), `decorations` (liste de `{ n, id, x, y, miroir }`, `n` = numéro unique), `prochainNumero`, `batimentsVus` (bâtiments débloqués déjà vus dans le menu : pastille « Nouveau »).
+**`Village`** (`src/jeu/village.ts`) : `batiments` (liste de `{ id, x, y, miroir }` : le coin du haut de l'emprise sur la grille de 60 × 60 cases ; la mine est posée d'office en 25, 25), `rails` et `chemins` (listes de cases écrites `"x,y"`), `batimentsVus` (bâtiments débloqués déjà vus dans le menu : pastille « Nouveau »).
 
 **`Statistiques`** : `blocsCasses`, `blocsMine`, `argentGagne`, `argentForeuse`, `argentWagonnet`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `diamantsTrouves`, `salairesPayes`, `tempsDeJeu`, `voyagesWagonnet` (voir [mine-et-minage.md](mine-et-minage.md#9-les-statistiques-srcjeustatistiquests-fenêtre-)).
 
-`estUnEtatValide()` vérifie : `version === 23`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes`, `village` (avec sa liste `batiments`), `tenue` et `tenuesAchetees`.
+`estUnEtatValide()` vérifie : `version === 23`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes` et `village` (avec sa liste `batiments`). Depuis le 27/10, `tenue` et `tenuesAchetees` ne sont plus demandés.
 
 ### 1.7 Quand le jeu sauvegarde (`src/usePartie.ts`)
 
@@ -151,7 +153,7 @@ Les clics du joueur, eux, ne continuent pas.
 ### 1.9 Hors ligne
 
 - Sans réseau, tout marche : la partie est dans le `localStorage`.
-- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, cache `idle-miner-v12` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
+- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, dont `employes-miroir.webp` depuis le 27/10 : cache `idle-miner-v18` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
 - Connecté mais sans réseau : le compte passe en statut « hors-ligne » et réessaie tout seul (voir 2.5).
 
 ---
