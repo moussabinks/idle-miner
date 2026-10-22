@@ -426,7 +426,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     const peutRetirer = fantome.type === 'sol' && fantome.de !== null
     barre = (
       <div className="actions actions-edition">
-        {!fantomeFixe && <p className="consigne-edition">👆 Clique (ou touche) la carte pour placer, puis valide.</p>}
+        {!fantomeFixe && <p className="consigne-edition">👆 Clique (ou touche) la carte pour placer, puis valide. Glisse pour déplacer la carte.</p>}
         <button className="bouton bouton-vendre" data-tuto="construire-ici" disabled={!libre} onClick={validerFantome}>
           ✔ {nouveau ? 'Construire ici' : 'Poser ici'}
         </button>
@@ -530,6 +530,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           batimentActif={batimentActif}
           fantome={fantome}
           fantomeLibre={libre}
+          fantomeFixe={fantomeFixe}
           pinceau={pinceau !== null}
           onTap={toucherCarte}
           onSurvol={(c) => {

@@ -293,7 +293,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 | **🗑️ Enlever** | rouge | seulement pour un rail ou un pavé déjà posé, **sans remboursement** |
 | **✖ Annuler** | rouge | laisse tout comme avant |
 
-Pour placer le fantôme (en deux temps) : il apparaît sur une place libre près du joueur et **suit la souris** (consigne « 👆 Clique (ou touche) la carte pour placer, puis valide. ») ; **un clic sur la carte le fixe**, sans le construire. Un autre clic le déplace, on peut aussi le faire glisser.
+Pour placer le fantôme (en deux temps) : il apparaît sur une place libre près du joueur et **suit la souris** (consigne « 👆 Clique (ou touche) la carte pour placer, puis valide. Glisse pour déplacer la carte. ») ; **un clic sur la carte le fixe**, sans le construire. Un autre clic le déplace, on peut aussi le faire glisser. Depuis le 27/10, **glisser déplace la carte** tant que le fantôme suit la souris (avant, le fantôme était toujours sous le curseur et on ne pouvait plus bouger la carte) ; une fois fixé, glisser sur lui le déplace, ailleurs la carte.
 
 **En mode pinceau** (rails ou chemin de pavés) : la consigne « 🛤️ Touche ou glisse sur les cases pour poser des rails (3 🔩 fer la case). » (ou « 🪨 … un chemin (5 $ la case). ») et **✔ Terminé** (vert). Un rail qui fermerait une boucle n'est pas posé : toast « 🔁 Pas de boucle : les rails vont d’un bâtiment à un autre. ».
 
