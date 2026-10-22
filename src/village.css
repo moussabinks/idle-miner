@@ -1316,3 +1316,33 @@
     animation: none;
   }
 }
+
+/* La grille de construction (24/10) : elle apparaît doucement quand on construit. */
+.grille-construction {
+  opacity: 0.28;
+  animation: grille-apparait 0.25s ease-out;
+}
+
+@keyframes grille-apparait {
+  from { opacity: 0; }
+  to { opacity: 0.28; }
+}
+
+/* Les crabes de la plage (24/10) : ils marchent de côté, s'arrêtent, repartent. */
+.objets-plage .crabe {
+  animation: crabe 9s ease-in-out infinite;
+}
+
+@keyframes crabe {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(14px); }
+  30% { transform: translateX(14px); }
+  55% { transform: translateX(-10px); }
+  70% { transform: translateX(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .objets-plage .crabe {
+    animation: none;
+  }
+}

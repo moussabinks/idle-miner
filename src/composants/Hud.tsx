@@ -8,7 +8,7 @@
 // agir (coffre plein, pioche cassée, sac plein).
 
 import { infoNiveauMine } from '../jeu/mine'
-import { railsAlimentes } from '../jeu/generateur'
+import { railsAlimentes } from '../jeu/wagonnet'
 import { nbSansSalaire } from '../jeu/employes'
 import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
 import { revenuParSeconde } from '../jeu/revenu'

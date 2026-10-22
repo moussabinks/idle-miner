@@ -1,8 +1,8 @@
 // Les mineurs employés (dès le début, au bâtiment Personnel, 22/10).
 // Un mineur creuse lentement au fond de la mine, remonte quand son sac est plein, le vide dans
 // le coffre de la mine, puis redescend. L'ascenseur raccourcit ses trajets.
-// Un mineur peut aussi être « pousseur » : il attend au quai et pousse le wagonnet jusqu'au
-// marché dès que le coffre n'est pas vide (voir wagonnet.ts). Avec le générateur, plus besoin.
+// Un mineur peut aussi être « pousseur » : il attend au quai et pousse un wagonnet qui a
+// quelque chose à porter, sur son trajet (voir wagonnet.ts). Électrique, plus besoin.
 // On leur paie un salaire toutes les 10 minutes (sans manager, 10 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
 // Au niveau 3 de la mine, le recruteur trouve des mineurs plus ou moins rares (un mineur
@@ -377,7 +377,7 @@ export function changerRole(etat: EtatJeu, index: number, role: RoleEmploye): st
     employe.etape = 'descend'
     employe.progression = 0
   }
-  return [role === 'pousseur' ? `🛤️ ${employe.nom} va pousser le wagonnet.` : `⛏️ ${employe.nom} retourne creuser.`]
+  return [role === 'pousseur' ? `🛤️ ${employe.nom} va pousser les wagonnets.` : `⛏️ ${employe.nom} retourne creuser.`]
 }
 
 // ---------------------------------------------------------------------------
@@ -571,7 +571,7 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
     case 'descend':
       return `⏬ redescend (${secondes} s)`
     case 'quai':
-      return '🛤️ attend le wagonnet au quai'
+      return '🛤️ attend un wagonnet au quai'
     case 'pousse':
       return '🛤️ pousse le wagonnet'
     case 'forge':

@@ -1,7 +1,7 @@
 # L'interface de Mega Digger
 
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
-> Écrit d'après le code au 22/10 (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, décorations) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
+> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, décorations) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
 
 Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affichent au format français (`1 250 $`).
 
@@ -185,7 +185,7 @@ Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 p
 | **📦 Coffre** (badge doré : le niveau de la mine) | « *n*/*capacité* » et une jauge dorée | coffre plein |
 | **⛏️ Pioche** | « *reste*/*max* » et une jauge verte (« 💥 Cassée ») | pioche cassée |
 | **🎒 Sac** | « *n*/*taille* » et une jauge bleue | sac plein |
-| **👷 / ⚡** (si on a des mineurs ou des rails électriques) | « 👷 *n* » (« 😠 » si quelqu'un n'est pas payé), « ⚡ » qui brille si les rails sont électriques | mineurs sans salaire |
+| **👷 / ⚡** (si on a des mineurs ou des rails électriques) | « 👷 *n* » (« 😠 » si quelqu'un n'est pas payé), « ⚡ » qui brille si au moins un trajet est électrique | mineurs sans salaire |
 
 Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 9](visuel-et-sons.md#9-les-boutons--et-).
 
@@ -195,10 +195,10 @@ Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 
 
 Une ligne fine en forme de pilule juste sous le bandeau : « 🎯 **Pioche en Fer** · 180 / 200 $ » avec une jauge dorée dessous. Règles dans `src/jeu/objectifs.ts` :
 
-1. si un achat est payable tout de suite : d'abord les **bâtiments à poser** (« ✨ **Construire : Marché** · gratuit : pose-le (menu Bâtiments) ! », ou « · à poser (menu Bâtiments) ! »), puis les améliorations des bâtiments posés, dans l'ordre : pioche suivante (forgeron), niveau de la mine, coffre, ascenseur (si on a des mineurs), wagonnet (si la ligne existe), sac, foreuse, générateur, Personnel (« ✨ *nom* · achetable à la mine ! ») ; bordure verte qui pulse, jauge pleine ;
-2. sinon, s'il n'y a pas encore de rails mais qu'on a du fer : « **Relier la mine au marché** · pose des rails (menu Bâtiments, 3 fer la case) » (le clic ouvre le menu Bâtiments) ;
+1. si un achat est payable tout de suite : d'abord les **bâtiments à poser** (« ✨ **Construire : Marché** · gratuit : pose-le (menu Bâtiments) ! », ou « · à poser (menu Bâtiments) ! »), puis les améliorations des bâtiments posés, dans l'ordre : pioche suivante (forgeron), niveau de la mine, coffre, ascenseur (si on a des mineurs), taille des wagonnets (s'il y a un trajet), sac, foreuse, générateur, Personnel (« ✨ *nom* · achetable à la mine ! ») ; bordure verte qui pulse, jauge pleine ;
+2. sinon, tant qu'il n'y a pas de trajet Mine → Marché (et qu'on a du fer ou déjà les rails) : « **Relier la mine au marché** · pose des rails (menu Bâtiments, 3 fer la case) » (le clic ouvre le menu Bâtiments), puis, les rails posés, « **Créer un trajet de wagonnet** · à la mine : « envoyer un wagonnet vers le marché » » ;
 3. sinon l'achat dont on a la plus grande part de l'argent : détail « *argent* / *prix* $ » ou « il manque *n* *minerai* » (les minerais comptent le sac et le coffre) ;
-4. quand il n'y a plus rien à acheter : les étapes du générateur, « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · toute la ligne doit être dans le rayon du générateur ».
+4. quand il n'y a plus rien à acheter : les étapes du générateur, « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · tout un trajet doit être dans le rayon du générateur » ; puis, si la foreuse est posée, « Relier la foreuse à la mine · des rails : un wagonnet lui apportera le charbon » (ouvre le menu Bâtiments) et « Envoyer du charbon à la foreuse · à la mine : « envoyer un wagonnet vers la foreuse » ».
 
 **Clic** : pour une construction (ou les rails), ouvre le **menu Bâtiments** ; sinon le hamster marche jusqu'au bon bâtiment (le panneau s'ouvre en arrivant).
 
@@ -206,23 +206,23 @@ Une ligne fine en forme de pilule juste sous le bandeau : « 🎯 **Pioche en Fe
 
 ## 6. La carte du village (`VueVillage.tsx`)
 
-Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage, une **grille de 60 × 60 cases** (jamais tracée), la **mine** au milieu, et tout ce que le joueur a posé. Les règles (où poser, prix, rails) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
+Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage, une **grille de 60 × 60 cases** (tracée seulement quand on construit), la **mine** au milieu, et tout ce que le joueur a posé. Les règles (où poser, prix, rails) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
 
 **La caméra** :
-- elle **suit le joueur** en douceur, ou le **wagonnet** quand le joueur le pousse : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
+- elle **suit le joueur** en douceur, ou le **wagonnet** que pousse le joueur : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
 - **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
 - **zoomer** : molette (autour du point sous la souris) ou **pincer** à deux doigts, entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
 
 **Ce qu'on voit** :
 - les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ;
-- le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse le wagonnet, il est derrière lui sur les rails ;
+- le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
 - les **mineurs employés** quand ils sont dehors : en marche (vers la forge, le Personnel ou la mine), devant la forge, au quai des rails (pousseurs), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
 - le **manager** et le **recruteur** (s'ils sont embauchés), devant le Personnel, avec une étiquette dorée ;
-- le **wagonnet** sur les rails (plein à l'aller, vide au retour, avec une lueur jaune quand il est électrique) ;
+- les **wagonnets** sur les rails, un par trajet (pleins à l'aller, de la couleur de leur chargement, vides au retour, avec une lueur jaune quand ils sont électriques) ;
 - le **rayon du générateur** : un cercle en pointillés jaunes (bien visible quand on est devant le générateur ou qu'on le pose, discret quand il donne du courant) ;
 - les **bulles de notification** au-dessus des bâtiments.
 
-**Toucher la carte** (un appui court, sans glisser) : un **bâtiment** → le hamster y marche (en contournant ce qui gêne), puis son panneau s'ouvre ; une **case** → il y marche. Pendant qu'il pousse le wagonnet, les touchers ne font rien.
+**Toucher la carte** (un appui court, sans glisser) : un **bâtiment** → le hamster y marche (en contournant ce qui gêne), puis son panneau s'ouvre ; une **case** → il y marche. Pendant qu'il pousse un wagonnet, les touchers ne font rien.
 
 **Les bulles de notification** (`src/jeu/notifications.ts`, refaites le 23/10) : au-dessus du bâtiment, une **médaille ronde** avec l'icône de la plus urgente, **deux mots** dans un ruban de couleur (« Plein ! », « Salaires ! », « Achetable »…) et un petit « +*n* » s'il y a d'autres choses à faire là-bas. Elle apparaît avec un petit rebond, sautille, et un reflet passe sur la médaille. Les **alertes** ont en plus un anneau rouge qui s'élargit (comme un radar), les **achats** des étincelles dorées. Survol : toutes les explications ; clic : on y va.
 
@@ -234,13 +234,13 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 | alerte (rouge) | 🔧 · Réparer | Forgeron | ta pioche est cassée |
 | alerte (rouge) | 🎒 · Vendre ! | Marché | ton sac est plein |
 | alerte (rouge) | 📦 · Plein ! | Mine | le coffre est plein |
-| prêt (rose) | 📦 · *nombre* | Mine | au moins 20 objets dans le coffre, sans rails jusqu'au marché |
+| prêt (rose) | 📦 · *nombre* | Mine | au moins 20 objets dans le coffre, sans trajet Mine → Marché |
 | nouveau (bleu) | ✨ · Nouveau | Personnel | le recruteur ou le manager vient de se débloquer, pas encore vu |
 | achat (vert) | ⬆️ · Achetable | tous | une amélioration y est payable tout de suite |
 
 **En construction** (placement, pinceau, Modifier) : la grille s'affiche, et ce qu'on pose est un **fantôme** un peu transparent qui pulse, sur un losange **vert** (libre) ou **rouge** (occupé). Voir [§ 7](#7-les-boutons-du-bas).
 
-**Les petits gains** : quand le wagonnet vend au marché (ou pour tout argent qui n'est pas une vente), un petit « +*X* $ » doré monte en haut au milieu de l'écran (`Gains.tsx`). Une vente au marché ou du chariot fait la grosse animation (§ 11).
+**Les petits gains** : quand un wagonnet vend au marché (ou pour tout argent qui n'est pas une vente), un petit « +*X* $ » doré monte en haut au milieu de l'écran (`Gains.tsx`). Une vente au marché ou du chariot fait la grosse animation (§ 11).
 
 ---
 
@@ -250,7 +250,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 | Bouton | Couleur | Effet |
 |---|---|---|
-| **⛏️ Mine** (en bas à gauche) | doré, avec un **anneau qui se remplit comme le coffre** | le hamster marche jusqu'à la mine et son panneau s'ouvre (le bloc à cliquer). Coffre plein : badge « ! » et le bouton respire. Pendant qu'il pousse le wagonnet : grisé, « Wagonnet… » |
+| **⛏️ Mine** (en bas à gauche) | doré, avec un **anneau qui se remplit comme le coffre** | le hamster marche jusqu'à la mine et son panneau s'ouvre (le bloc à cliquer). Coffre plein : badge « ! » et le bouton respire. Pendant qu'il pousse un wagonnet : grisé, « Wagonnet… » |
 | **💰 Vendre** (à côté de la Mine) | vert, avec un badge : ce que vaut le sac | n'apparaît que si le marché est posé et que le sac n'est pas vide : le hamster va au marché. Sac plein : le bouton respire |
 | **✏️ Modifier** (plus petit) | gris | passe en mode Modifier (déplacer, retourner, enlever ce qui est posé) |
 | **🌸 Décos** | rose fleur | ouvre le menu Décorations |
@@ -267,7 +267,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 Pour placer le fantôme (en deux temps) : il apparaît sur une place libre près du joueur et **suit la souris** (consigne « 👆 Clique (ou touche) la carte pour placer, puis valide. ») ; **un clic sur la carte le fixe**, sans le construire. Un autre clic le déplace, on peut aussi le faire glisser.
 
-**En mode pinceau** (rails ou chemin de pavés) : la consigne « 🛤️ Touche ou glisse sur les cases pour poser des rails (3 🔩 fer la case). » (ou « 🪨 … un chemin (5 $ la case). ») et **✔ Terminé** (vert).
+**En mode pinceau** (rails ou chemin de pavés) : la consigne « 🛤️ Touche ou glisse sur les cases pour poser des rails (3 🔩 fer la case). » (ou « 🪨 … un chemin (5 $ la case). ») et **✔ Terminé** (vert). Un rail qui fermerait une boucle n'est pas posé : toast « 🔁 Pas de boucle : les rails vont d’un bâtiment à un autre. ».
 
 **En mode Modifier** : « ✏️ Touche un bâtiment, une décoration, un rail ou un chemin pour le déplacer. » et **✔ Terminé** (vert).
 
@@ -293,7 +293,7 @@ Une grande fenêtre en bois qui monte du bas de l'écran, avec deux onglets **�
 |---|---|
 | devant aucun bâtiment | rien (la carte est dégagée) ; le bouton **❔ Aide** ouvre « 🏡 Ton village » |
 | devant un bâtiment | le **panneau du bâtiment** : son icône et son nom, un bouton rond **✖** pour le fermer, sa description, puis son contenu |
-| en train de pousser le wagonnet | rien |
+| en train de pousser un wagonnet | rien |
 
 **Quand le panneau s'ouvre** : quand le joueur **arrive en marchant** à moins de **1,3 case** du bâtiment, **de n'importe quel côté**, au clavier ou après l'avoir touché (si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre). Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie). ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
 
@@ -303,19 +303,19 @@ Le détail (chiffres, règles) est dans chaque fiche ; voici ce qu'on voit.
 
 | Bâtiment | Panneau | Contenu à l'écran |
 |---|---|---|
-| ⛏️ Mine | `PanneauMine` | le **gros bloc à cliquer** (« 👆 Clique : ⚫ Charbon », chance de doubler ou « 💥 Pioche cassée : 2 clics par bloc ») ; « Niveau *N* · *nom* · la mine sort toute seule *X* blocs par minute » ; **📦 Coffre** (barre, [jauges](#93-les-jauges-jaugestsx), **🎒 Mettre dans le sac** kaki, et avec des rails les cases « Le wagonnet laisse dans le coffre ») ; **🛤️ Wagonnet** (où il en est, barre du trajet, **🛤️ Pousser le wagonnet** bois, sa taille) ; **⬇ Niveau de la mine** (chances du niveau actuel et du suivant) ; **📦 Taille du coffre** ; **🛗 Ascenseur**. Fiche : [mine.md](../batiments/mine.md) |
+| ⛏️ Mine | `PanneauMine` | le **gros bloc à cliquer** (« 👆 Clique : ⚫ Charbon », chance de doubler ou « 💥 Pioche cassée : 2 clics par bloc ») ; « Niveau *N* · *nom* · la mine sort toute seule *X* blocs par minute » ; **📦 Coffre** (barre, [jauges](#93-les-jauges-jaugestsx), **🎒 Mettre dans le sac** kaki, et avec un trajet vers le marché les cases « Le wagonnet du marché laisse dans le coffre ») ; **🛤️ Wagonnets** (`PanneauTrajets` : un bloc par trajet qui part de la mine, vers le marché, la foreuse, le générateur : sans rails, comment les poser ; rails posés, **🛤️ Envoyer un wagonnet vers…** bleu ; trajet créé, où en est son wagonnet, badge ⚡ Électrique, barre du trajet, **🛤️ Pousser** bois et **✖ Arrêter** rouge ; puis **🛒 Taille des wagonnets**) ; **⬇ Niveau de la mine** (chances du niveau actuel et du suivant) ; **📦 Taille du coffre** ; **🛗 Ascenseur**. Fiche : [mine.md](../batiments/mine.md) |
 | 💰 Marché | `PanneauMarche` | les jauges de tout le sac (le plus cher en haut), puis **💰 Vendre la sélection · +*X* $** (vert). « Ton sac est vide. Va le remplir au coffre de la mine ! » si vide. Une jauge à 0 = objet « gardé ». Fiche : [marche.md](../batiments/marche.md) |
 | ⚒️ Forgeron | `PanneauPioches` | une ligne par pioche : verrouillée, ou nom, badge « Équipée », « *N* % de chance de doubler un minerai · durabilité *D* clics », barre d'usure, **Équiper** (gris), **🔧 Réparer** (orange), **🔓 Débloquer** / **🛒 Racheter neuve** (bleu). Fiche : [forgeron.md](../batiments/forgeron.md) |
 | 🎒 Bazar | `PanneauBazar` + `PanneauTenues` | « 🎒 Sac à dos » (« ⬆ *n* places », bleu) ; puis les **tenues** : un aperçu du hamster habillé, et deux listes **🎩 Chapeaux** et **🦺 Hauts**. Fiche : [bazar.md](../batiments/bazar.md) |
 | 👷 Personnel | `PanneauEmployes` | salaires (boutons citron vert), manager et trésorerie, recruteur (avec leur **portrait**), **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), une carte compacte par mineur (rôle **🛤️ Pousser le wagonnet** / **⛏️ Creuser**, jauges temps payé et sac, pioche, lien Licencier). Fiche : [personnel.md](../batiments/personnel.md) |
-| ⚙️ Foreuse | `PanneauForeuse` | État (badge, vitesse, ⚡ si boostée), barre de charbon, **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **💰 Vendre la sélection**, **🎒 Mettre dans le sac**) ; « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot ». Fiche : [foreuse.md](../batiments/foreuse.md) |
-| ⚡ Générateur | `PanneauGenerateur` | « ⚡ Courant » (badge Allumé / Éteint / Plus de redstone, rayon et puissance, barre de redstone, **+1 / +10 / Tout**, **⏸ Éteindre / ▶ Allumer**, case du puisage) ; « 🔌 Ce qu'il alimente » (rails et foreuse) ; « ⬆ Améliorer ». Fiche : [generateur.md](../batiments/generateur.md) |
+| ⚙️ Foreuse | `PanneauForeuse` | État (badge, vitesse, ⚡ si boostée), barre de charbon, **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **💰 Vendre la sélection**, **🎒 Mettre dans le sac**) ; « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot » ; **🛤️ Wagonnets** (le trajet Foreuse → Marché, comme à la mine). Fiche : [foreuse.md](../batiments/foreuse.md) |
+| ⚡ Générateur | `PanneauGenerateur` | « ⚡ Courant » (badge Allumé / Éteint / Plus de redstone, rayon et puissance, barre de redstone, **+1 / +10 / Tout**, **⏸ Éteindre / ▶ Allumer**, case du puisage) ; « 🔌 Ce qu'il alimente » (chaque trajet : électrique, hors du rayon ou rails coupés ; et la foreuse) ; « ⬆ Améliorer ». Fiche : [generateur.md](../batiments/generateur.md) |
 
 Un bâtiment n'a de panneau qu'une fois **posé**.
 
 ### 8.2 Le panneau d'aide « 🏡 Ton village »
 
-« Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, Espace pour sauter). Fais glisser la carte pour la déplacer, pince ou utilise la molette pour zoomer. » ; « Devant la **mine**, clique sur le bloc pour creuser : tout va dans le coffre de la mine. Mets-le dans ton sac et va le vendre au **marché**. Puis relie la mine au marché avec des **rails** : le wagonnet fera les voyages pour toi. » ; et le rôle des boutons Bâtiments, Décos, Modifier et Mine.
+« Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, Espace pour sauter). Fais glisser la carte pour la déplacer, pince ou utilise la molette pour zoomer. » ; « Devant la **mine**, clique sur le bloc pour creuser : tout va dans le coffre de la mine. Mets-le dans ton sac et va le vendre au **marché**. Puis relie la mine au marché avec des **rails** et, au panneau de la mine, envoie un **wagonnet** : il fera les voyages pour toi. » ; et le rôle des boutons Bâtiments, Décos, Modifier et Mine.
 
 ---
 
@@ -363,7 +363,7 @@ L'écran de victoire, la fête du prestige et l'arbre de prestige n'existent plu
 
 ### 10.1 Les succès
 
-« 🏅 Succès », « *n* / 20 succès débloqués. », une grille de cartes : l'emoji (ou 🔒), le titre, la description. Les succès obtenus sont bordés d'or. La liste est dans [mine-et-minage.md § 8](mine-et-minage.md#8-les-succès-srcjeusuccests).
+« 🏅 Succès », « *n* / 21 succès débloqués. », une grille de cartes : l'emoji (ou 🔒), le titre, la description. Les succès obtenus sont bordés d'or. La liste est dans [mine-et-minage.md § 8](mine-et-minage.md#8-les-succès-srcjeusuccests).
 
 ### 10.2 Les statistiques (`Statistiques.tsx`)
 
@@ -403,7 +403,7 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 |---|---|
 | éclats du bloc, minerai qui s'envole (« +1 ⚫ », « +2 💎 ×2 ! ») | panneau de la mine, à chaque clic |
 | grosse animation « +*X* $ » avec gerbe de pièces | une vente au marché ou du chariot |
-| petit « +*X* $ » en haut | le wagonnet a vendu au marché |
+| petit « +*X* $ » en haut | un wagonnet a vendu au marché |
 | compteur d'argent qui défile et saute | bandeau |
 | case Mine (coffre) ou Sac qui clignote en rouge et tremble | bandeau, coffre ou sac plein |
 | barre « prochain objectif » qui pulse en vert | un achat est possible |
@@ -411,7 +411,7 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 | pastille rouge sur 🏗️ Bâtiments, ruban « Nouveau ! » dans le menu | bâtiments débloqués ou constructibles |
 | lueur dorée et losange en tirets autour du bâtiment actif | carte |
 | mineurs qui tapent du pied devant le Personnel (😠) | carte, salaires impayés |
-| ⚡ dans le bandeau, lueur jaune du wagonnet | rails électriques |
+| ⚡ dans le bandeau, lueur jaune d'un wagonnet | au moins un trajet électrique |
 
 ---
 
@@ -423,7 +423,7 @@ Les touches sont ignorées quand on écrit dans un champ.
 
 | Touche | Effet |
 |---|---|
-| ← ↑ → ↓ (maintenues) | marcher (5 cases/s) tant que la touche est appuyée. ↑ va vers le haut de l'écran, → vers la droite, etc. ; deux flèches ensemble = en diagonale. On glisse le long des bâtiments. Sans effet quand le menu Bâtiments / Décos est ouvert ou pendant qu'on pousse le wagonnet |
+| ← ↑ → ↓ (maintenues) | marcher (5 cases/s) tant que la touche est appuyée. ↑ va vers le haut de l'écran, → vers la droite, etc. ; deux flèches ensemble = en diagonale. On glisse le long des bâtiments. Sans effet quand le menu Bâtiments / Décos est ouvert ou pendant qu'on pousse un wagonnet |
 | Espace | **sauter** (pour le plaisir) |
 | Échap | annuler ce qu'on pose (fantôme, pinceau), quitter le mode Modifier, fermer le menu Bâtiments / Décos ; dans une confirmation, annuler |
 
@@ -474,12 +474,12 @@ Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/ind
 | Classe | Action | Couleur | Exemples |
 |---|---|---|---|
 | `bouton-creuser` (= `bouton-principal`) | jouer, valider l'essentiel | **or** | ▶ Jouer, Créer et jouer, Se connecter |
-| `bouton-stop` | annuler, supprimer | **rouge** | ✖ Annuler, 🗑️, 🗑️ Enlever |
+| `bouton-stop` | annuler, supprimer | **rouge** | ✖ Annuler, 🗑️, 🗑️ Enlever, ✖ Arrêter (un trajet) |
 | `bouton-vendre` | vendre, confirmer | **vert** | 💰 Vendre la sélection, ✔ Confirmer, ✔ Construire ici / Poser, ✔ Terminé |
-| `bouton-acheter` | acheter | **bleu** | Débloquer / Racheter une pioche, sac, tenues, embaucher, 🏗️ / 🌸 Poser, 🛤️ Poser des rails, Dupliquer, Créer un compte, Installer |
-| `bouton-ameliorer` | améliorer (défaut des lignes d'amélioration) | **turquoise** | niveau de la mine, coffre, ascenseur, wagonnet, forage, chariot, générateur, pioche d'un mineur, OK (renommer) |
+| `bouton-acheter` | acheter | **bleu** | Débloquer / Racheter une pioche, sac, tenues, embaucher, 🏗️ / 🌸 Poser, 🛤️ Poser des rails, 🛤️ Envoyer un wagonnet vers…, Dupliquer, Créer un compte, Installer |
+| `bouton-ameliorer` | améliorer (défaut des lignes d'amélioration) | **turquoise** | niveau de la mine, coffre, ascenseur, taille des wagonnets, forage, chariot, générateur, pioche d'un mineur, OK (renommer) |
 | `bouton-reparer` | réparer | **orange** | 🔧 Réparer |
-| `bouton-voyage` | se déplacer, emmener | **bois** | ⛏️ Mine, 🛤️ Pousser le wagonnet |
+| `bouton-voyage` | se déplacer, emmener | **bois** | ⛏️ Mine, 🛤️ Pousser (un wagonnet) |
 | `bouton-construire` | construire | **brique** | 🏗️ Bâtiments |
 | `bouton-decorer` | décorer | **rose fleur** | 🌸 Décos |
 | `bouton-sac` | mettre dans le sac | **kaki** | 🎒 Mettre dans le sac (coffre, chariot) |

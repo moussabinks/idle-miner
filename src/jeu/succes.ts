@@ -1,8 +1,7 @@
 // Les succès du jeu. Ils sont vérifiés après chaque action et chaque moment qui passe.
 
-import { railsAlimentes } from './generateur'
 import type { EtatJeu } from './mineur'
-import { railsMineMarche } from './village'
+import { railsAlimentes } from './wagonnet'
 
 export type Succes = {
   id: string
@@ -26,8 +25,9 @@ export const SUCCES: Succes[] = [
   { id: 'premier_diamant', emoji: '💠', titre: 'Ça brille !', description: 'Trouver un diamant', condition: (e) => e.stats.diamantsTrouves >= 1 },
   { id: 'patron', emoji: '👷', titre: 'Patron', description: 'Embaucher ton premier mineur', condition: (e) => e.employes.length >= 1 },
   { id: 'equipe', emoji: '👥', titre: 'Chef d’équipe', description: 'Avoir 6 mineurs', condition: (e) => e.employes.length >= 6 },
-  { id: 'cheminot', emoji: '🛤️', titre: 'Cheminot', description: 'Relier la mine au marché avec des rails', condition: (e) => railsMineMarche(e.village) !== null },
+  { id: 'cheminot', emoji: '🛤️', titre: 'Cheminot', description: 'Créer un trajet de wagonnet', condition: (e) => e.trajets.length > 0 },
   { id: 'electricien', emoji: '⚡', titre: 'Électricien', description: 'Électrifier les rails avec le générateur', condition: (e) => railsAlimentes(e) },
+  { id: 'tous_trajets', emoji: '🗺️', titre: 'Réseau complet', description: 'Faire rouler un wagonnet sur les 4 trajets', condition: (e) => e.trajets.length >= 4 },
   { id: 'cent_voyages', emoji: '🚃', titre: 'Ligne régulière', description: 'Faire 100 voyages de wagonnet', condition: (e) => e.stats.voyagesWagonnet >= 100 },
   { id: 'riche', emoji: '💰', titre: 'Riche', description: 'Gagner 5 000 $', condition: (e) => e.stats.argentGagne >= 5000 },
   { id: 'millionnaire', emoji: '🤑', titre: 'Magnat', description: 'Gagner 100 000 $', condition: (e) => e.stats.argentGagne >= 100000 },

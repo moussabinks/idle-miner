@@ -27,6 +27,7 @@ import {
   type IdBloc,
   type IdRarete,
   type IdBatiment,
+  type IdLiaison,
   type IdTenue,
   type NiveauAscenseur,
   type Pioche,
@@ -94,12 +95,13 @@ export type Generateur = {
   puiseDansLeCoffre: boolean // il prend tout seul la redstone du coffre de la mine (à partir du niveau 2)
 }
 
-// Le wagonnet : il porte le coffre de la mine au marché sur les rails, puis revient.
+// Un trajet de wagonnet (24/10) : le joueur l'a créé entre deux bâtiments reliés par des rails
+// (voir LIAISONS). Le wagonnet charge au départ, roule jusqu'à l'arrivée, y livre, puis revient.
 export type EtapeWagonnet = 'quai' | 'aller' | 'retour'
-export type Wagonnet = {
-  niveau: number // index dans NIVEAUX_WAGONNET
-  etape: EtapeWagonnet // au quai (à côté du coffre), en route vers le marché, ou sur le retour
-  distance: number // les cases déjà parcourues sur ce trajet
+export type Trajet = {
+  liaison: IdLiaison // d'où à où (un seul wagonnet par liaison)
+  etape: EtapeWagonnet // au quai (au départ), en route vers l'arrivée, ou sur le retour
+  distance: number // les cases déjà parcourues sur cette étape
   chargement: Inventaire
   // Qui le fait avancer : le joueur, un mineur (son nom), ou l'électricité.
   pousseur: 'joueur' | 'electricite' | string | null
@@ -160,7 +162,8 @@ export type EtatJeu = {
   tresorerie: number
   foreuse: Foreuse
   generateur: Generateur
-  wagonnet: Wagonnet
+  niveauWagonnets: number // la taille des wagonnets (index dans NIVEAUX_WAGONNET), pour tous les trajets
+  trajets: Trajet[]
   succes: string[]
   stats: Statistiques
   decouvertes: Decouverte[]
@@ -170,7 +173,9 @@ export type EtatJeu = {
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
-export const VERSION_ETAT = 21
+// Version 22 (24/10) : les trajets des wagonnets (une partie de la version 21 est convertie).
+export const VERSION_ETAT = 22
+export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------
 // Création d'une partie
@@ -184,8 +189,8 @@ export function nouveauGenerateur(): Generateur {
   return { niveau: 0, carburant: 0, allume: true, puiseDansLeCoffre: false }
 }
 
-export function nouveauWagonnet(): Wagonnet {
-  return { niveau: 0, etape: 'quai', distance: 0, chargement: {}, pousseur: null }
+export function nouveauTrajet(liaison: IdLiaison): Trajet {
+  return { liaison, etape: 'quai', distance: 0, chargement: {}, pousseur: null }
 }
 
 export function creerPartie(aleatoire: Aleatoire): EtatJeu {
@@ -210,7 +215,8 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     tresorerie: 0,
     foreuse: nouvelleForeuse(),
     generateur: nouveauGenerateur(),
-    wagonnet: nouveauWagonnet(),
+    niveauWagonnets: 0,
+    trajets: [],
     succes: [],
     stats: nouvellesStatistiques(),
     decouvertes: [],

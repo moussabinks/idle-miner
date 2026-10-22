@@ -1,6 +1,6 @@
 # ⚡ Générateur
 
-> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **électrifie** tout ce qui est dans son **rayon**. Si toute la ligne de rails de la mine au marché est dans ce rayon, le wagonnet **roule tout seul** : c'est le revenu passif du jeu. Elle rend aussi la foreuse plus rapide.
+> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **électrifie** tout ce qui est dans son **rayon**. Si tous les rails d'un trajet de wagonnet sont dans ce rayon, ce wagonnet **roule tout seul** : c'est le revenu passif du jeu. Elle rend aussi la foreuse plus rapide.
 
 ## Où et quand
 
@@ -17,7 +17,7 @@
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔴 « Plus de redstone ! »** (alerte rouge) quand il est **allumé** mais n'a plus de redstone ;
   - **💰 « Une amélioration est achetable ! »** quand le niveau suivant est payable tout de suite.
-- **Le bandeau** affiche un petit **⚡** quand les rails sont électriques.
+- **Le bandeau** affiche un petit **⚡** quand au moins un trajet est électrique.
 
 ## Ce qu'on peut y faire
 
@@ -34,7 +34,7 @@
 
 Une petite liste qui dit où on en est :
 
-- **🛤️ Rails** : « pas encore de ligne de la mine au marché », « ✔ électriques, le wagonnet roule tout seul ! », « dans le rayon, mais le générateur ne donne pas de courant », ou « ✖ une partie de la ligne est hors du rayon : rapproche le générateur (ou agrandis son rayon) ».
+- **🛤️ Rails** : « pas encore de trajet de wagonnet », ou une ligne par trajet (« Mine → Marché : … ») : « ✔ électrique, le wagonnet roule tout seul ! », « dans le rayon, mais le générateur ne donne pas de courant », « ✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon) », ou « rails coupés ».
 - **⚙️ Foreuse** : « pas encore construite », « ✔ boostée ! », « dans le rayon, mais sans courant », ou « ✖ hors du rayon ».
 
 ### ⬆ Améliorer
@@ -59,44 +59,45 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 - Le générateur ne brûle sa redstone que s'il est **posé et allumé**. Il donne du courant tant qu'il en reste (`generateurEnMarche`).
 - Quand il n'en a plus : « ⚡ Le générateur n'a plus de redstone : les rails ne sont plus électriques. »
 - **Le puisage** (niveau 2 et plus, case cochée) : quand sa réserve passe **sous 5 minutes** (`RESERVE_GENERATEUR_AUTO` = 300 s), il prend dans le **coffre de la mine** juste ce qu'il faut pour remonter à 5 minutes (au plus 10 redstone d'un coup), jamais dans le sac. Il ne vide donc jamais le coffre d'un coup. Ça marche aussi jeu fermé.
+- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, le panneau de la mine propose « Envoyer un wagonnet vers le générateur ». Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à une réserve de **30 minutes** (60 redstones, `RESERVE_GENERATEUR_WAGONNET` = 1 800 s). Le wagonnet du marché laisse alors cette redstone dans le coffre. Voir [mine.md](mine.md#les-wagonnets).
 - Astuce : la redstone sort de la mine dès le niveau 2 (10 % des blocs), puis 12 % aux niveaux suivants. Avec le puisage, la mine nourrit toute seule son générateur.
 
 ### Le rayon
 
 - Le rayon est un **cercle** autour du **centre** du générateur (le milieu de ses 5 × 5 cases), mesuré en cases (`caseDansLeRayon`) : une case est dans le rayon si son centre est à une distance d'au plus *R* cases.
-- **Les rails** : la ligne compte comme électrique si **toutes ses cases** sont dans le rayon (`railsDansLeRayon`). La ligne regardée est la **plus courte** ligne continue de rails entre la mine et le marché (`railsMineMarche`) : un bout de rails en trop, hors du rayon, ne gêne pas.
+- **Les rails** : un trajet est électrique si **toutes les cases de sa ligne** sont dans le rayon (`casesDansLeRayon`, `trajetElectrique` dans `wagonnet.ts`). Chaque trajet compte à part : Mine → Marché peut être électrique et Mine → Foreuse non. Un bout de rails qui ne sert à aucun trajet, hors du rayon, ne gêne pas.
 - **Un bâtiment** (la foreuse) est dans le rayon si **son centre** l'est (`batimentDansLeRayon`).
 - Le rayon compte même quand le générateur est éteint (pour le panneau), mais il ne donne du courant que s'il est allumé et a de la redstone.
 
 ### Ce que fait l'électricité
 
-- **Le wagonnet** (rails électriques, `railsAlimentes`) : il part **tout seul** dès qu'il y a quelque chose à emporter dans le coffre de la mine (sauf les objets gardés au marché), sans joueur ni mineur pour le pousser. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un mineur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#le-wagonnet).
+- **Les wagonnets** (trajets électriques, `trajetElectrique`) : un wagonnet part **tout seul** dès qu'il a quelque chose à porter, sans joueur ni mineur pour le pousser. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un mineur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#les-wagonnets).
 - **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore **× (1 + 0,5 × puissance)** plus vite (`BONUS_ELECTRIQUE_FOREUSE`), sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
 - Rien d'autre n'est électrique pour l'instant (ni la mine, ni les mineurs).
-- Avec des rails électriques, plus besoin de **mineur pousseur** : le wagonnet part tout seul (le pousseur reste au quai, payé, à ne rien faire ; on peut le remettre à creuser au Personnel).
+- Quand tous les trajets sont électriques, plus besoin de **mineur pousseur** : les wagonnets partent tout seuls (le pousseur reste au quai, payé, à ne rien faire ; on peut le remettre à creuser au Personnel).
 
 ### Bien le placer
 
-- La mine fait 10 × 10 cases : avec un rayon de 15 cases (niveau 1), il faut que le générateur soit **près du milieu de la ligne** de rails. Le bot de simulation le pose juste à côté du marché, contre la ligne.
-- On peut le **déplacer gratuitement** (✏️ Modifier) : le cercle suit, et on voit tout de suite si la ligne est dedans.
+- La mine fait 10 × 10 cases : avec un rayon de 15 cases (niveau 1), il faut que le générateur soit **près du milieu des rails** à électrifier. Des rails courts et ramassés tiennent plus facilement dans le cercle. Le bot de simulation le pose juste à côté du marché, contre la ligne.
+- On peut le **déplacer gratuitement** (✏️ Modifier) : le cercle suit, et on voit tout de suite si les rails sont dedans.
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : « Construire : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » pour le niveau suivant. Quand rien n'est à acheter, l'objectif peut être « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · toute la ligne doit être dans le rayon du générateur ».
-- **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur ».
-- **Le revenu « $/s »** du bandeau compte la foreuse boostée ; le wagonnet, lui, ne fait que vendre ce que la mine sort déjà.
+- **Objectifs** (`objectifs.ts`) : « Construire : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » pour le niveau suivant. Quand rien n'est à acheter, l'objectif peut être « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · tout un trajet doit être dans le rayon du générateur ».
+- **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
+- **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
 - **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, coche le puisage dès le niveau 2, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 40 minutes** de jeu.
-- **Événements et sons** : un niveau de plus joue la petite fanfare d'amélioration ; chaque voyage du wagonnet électrique fait tinter 3 pièces discrètes.
+- **Événements et sons** : un niveau de plus joue la petite fanfare d'amélioration ; chaque vente d'un wagonnet au marché fait tinter 3 pièces discrètes.
 
 ## Fichiers du code
 
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.generateur`), `SECONDES_PAR_REDSTONE`, `NIVEAUX_GENERATEUR` (rayon, puissance, coût), `NIVEAU_GENERATEUR_AUTO`, `RESERVE_GENERATEUR_AUTO`, `VITESSE_RAILS`, `BONUS_ELECTRIQUE_FOREUSE`.
-- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `railsDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `railsAlimentes`, `foreuseAlimentee`), actions (`remplirGenerateur`, `basculerGenerateur`, `basculerPuisage`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
+- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `casesDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `foreuseAlimentee`), actions (`remplirGenerateur`, `basculerGenerateur`, `basculerPuisage`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
 - `src/jeu/generateur.test.ts` : les tests (rayon, rails électriques, redstone, puisage, foreuse boostée).
-- `src/jeu/wagonnet.ts` : le wagonnet qui part tout seul et sa vitesse électrique.
+- `src/jeu/wagonnet.ts` : les trajets électriques (`trajetElectrique`, `railsAlimentes`), le wagonnet qui part tout seul et sa vitesse électrique ; le trajet Mine → Générateur qui lui apporte la redstone.
 - `src/jeu/foreuse.ts` : la vitesse de forage boostée (`vitesseForage`).
 - `src/jeu/mineur.ts` : le type `Generateur` (`niveau`, `carburant`, `allume`, `puiseDansLeCoffre`) dans `EtatJeu`.
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : la bulle 🔴, les objectifs, le succès Électricien.
 - `src/composants/Panneaux.tsx` : `PanneauGenerateur`.
-- `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), le wagonnet électrique ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.
+- `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), les wagonnets électriques ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.
 - `src/composants/iso.ts` : le calage de l'image ; `public/images/batiments/generateur.webp` : le dessin.

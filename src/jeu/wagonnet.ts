@@ -1,187 +1,329 @@
-// Le wagonnet (22/10) : quand une ligne de rails continue relie la mine au marché, il charge le
-// coffre de la mine, roule jusqu'au marché, y vend tout, puis revient au quai.
-// Il ne roule pas tout seul :
-//   - le joueur peut le pousser (bouton au bâtiment Mine) : il fait l'aller-retour avec lui ;
-//   - un mineur « pousseur » (au Personnel) le pousse dès que le coffre n'est pas vide ;
-//   - avec le générateur, si toute la ligne est dans son rayon, il roule tout seul, plus vite :
-//     c'est le revenu passif.
+// Les wagonnets et leurs trajets (24/10).
+//
+// Au début, il n'y a aucun trajet : le joueur achète des rails, les pose au sol pour relier deux
+// bâtiments, puis il choisit, dans le panneau du bâtiment de départ, « envoyer un wagonnet
+// vers… ». Chaque trajet a son wagonnet, qui ne va que de son départ à son arrivée (il ne
+// choisit jamais sa route au hasard) :
+//   - Mine → Marché : il emporte le coffre de la mine et le vend ;
+//   - Mine → Foreuse : il apporte le charbon du coffre à la foreuse ;
+//   - Mine → Générateur : il apporte la redstone du coffre au générateur ;
+//   - Foreuse → Marché : il vend le chariot de la foreuse.
+// Les rails ne font jamais de boucle (voir batiments.ts) : entre deux bâtiments, il n'y a donc
+// qu'une seule route. Plusieurs wagonnets peuvent rouler sur les mêmes rails : ils se croisent
+// sans se gêner.
+//
+// Un wagonnet ne roule pas tout seul :
+//   - le joueur peut le pousser (bouton dans le panneau du départ) : il fait l'aller-retour avec lui ;
+//   - un mineur « pousseur » (au Personnel) pousse un wagonnet qui a quelque chose à porter ;
+//   - si toutes les cases de son trajet sont dans le rayon du générateur allumé, il roule tout
+//     seul, plus vite : c'est l'automatisation.
 
 import {
+  LIAISONS,
+  LISTE_LIAISONS,
   NIVEAUX_WAGONNET,
+  RESERVE_FOREUSE_WAGONNET,
+  RESERVE_GENERATEUR_WAGONNET,
   SECONDES_CHARGEMENT_WAGONNET,
+  SECONDES_PAR_CHARBON,
+  SECONDES_PAR_REDSTONE,
   VITESSE_POUSSE_JOUEUR,
   VITESSE_POUSSE_MINEUR,
   VITESSE_RAILS,
+  type IdBatiment,
+  type IdBloc,
+  type IdLiaison,
 } from './donnees'
-import { puissanceGenerateur, railsAlimentes } from './generateur'
-import { ajouterA, encaisser, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu } from './mineur'
-import { batimentPose, railsMineMarche, type Case } from './village'
+import { retirerDuChariot, selectionChariot } from './foreuse'
+import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
+import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
+import { batimentPose, railsEntre, type Case } from './village'
 
-// La ligne de rails de la mine au marché (null : pas de ligne complète, ou pas de marché).
-export function ligneDuWagonnet(etat: EtatJeu): Case[] | null {
-  if (!batimentPose(etat.village, 'marche')) return null
-  return railsMineMarche(etat.village)
+// ---------------------------------------------------------------------------
+// Les lignes de rails et les trajets
+// ---------------------------------------------------------------------------
+
+// La ligne de rails d'une liaison (null : un des deux bâtiments n'est pas posé, ou les rails ne
+// les relient pas).
+export function ligneDe(etat: EtatJeu, liaison: IdLiaison): Case[] | null {
+  const { depart, arrivee } = LIAISONS[liaison]
+  if (!batimentPose(etat.village, depart) || !batimentPose(etat.village, arrivee)) return null
+  return railsEntre(etat.village, depart, arrivee)
 }
 
-// La longueur d'un trajet, en cases (on part du bord de la mine et on arrive au bord du marché).
+// Les liaisons qui partent d'un bâtiment et dont l'arrivée est construite.
+export function liaisonsDepuis(etat: EtatJeu, depart: IdBatiment): IdLiaison[] {
+  return LISTE_LIAISONS.filter((id) => LIAISONS[id].depart === depart && batimentPose(etat.village, LIAISONS[id].arrivee) !== null)
+}
+
+export function trajetDe(etat: EtatJeu, liaison: IdLiaison): Trajet | null {
+  return etat.trajets.find((t) => t.liaison === liaison) ?? null
+}
+
+// La longueur d'un trajet, en cases (on part du bord du départ et on arrive au bord de l'arrivée).
 export function longueurTrajet(ligne: Case[]): number {
   return ligne.length + 1
 }
 
+export function peutCreerTrajet(etat: EtatJeu, liaison: IdLiaison): boolean {
+  return trajetDe(etat, liaison) === null && ligneDe(etat, liaison) !== null
+}
+
+// Le joueur envoie un wagonnet sur ce trajet (gratuit : ce sont les rails qui coûtent).
+export function creerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
+  if (!peutCreerTrajet(etat, liaison)) return []
+  etat.trajets.push(nouveauTrajet(liaison))
+  return [`🛤️ Nouveau trajet : un wagonnet ${LIAISONS[liaison].description}.`]
+}
+
+// Le joueur arrête un trajet : son chargement retourne d'où il vient.
+export function supprimerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
+  const trajet = trajetDe(etat, liaison)
+  if (!trajet) return []
+  rentrerAuQuai(etat, trajet)
+  etat.trajets = etat.trajets.filter((t) => t !== trajet)
+  return ['🛤️ Trajet arrêté.']
+}
+
+// ---------------------------------------------------------------------------
+// La taille des wagonnets (pour tous les trajets)
+// ---------------------------------------------------------------------------
+
 export function capaciteWagonnet(etat: EtatJeu): number {
-  return NIVEAUX_WAGONNET[Math.min(etat.wagonnet.niveau, NIVEAUX_WAGONNET.length - 1)].capacite
+  return NIVEAUX_WAGONNET[Math.min(etat.niveauWagonnets, NIVEAUX_WAGONNET.length - 1)].capacite
 }
 
 export function prochainNiveauWagonnet(etat: EtatJeu) {
-  return NIVEAUX_WAGONNET[etat.wagonnet.niveau + 1] ?? null
+  return NIVEAUX_WAGONNET[etat.niveauWagonnets + 1] ?? null
 }
 
-export function wagonnetEnRoute(etat: EtatJeu): boolean {
-  return etat.wagonnet.etape !== 'quai'
+// Les wagonnets déjà chargés gardent leur chargement : la nouvelle taille compte au prochain départ.
+export function ameliorerWagonnet(etat: EtatJeu): string[] {
+  const prochain = prochainNiveauWagonnet(etat)
+  if (prochain === null || !peutPayer(etat, prochain.cout)) return []
+  payer(etat, prochain.cout)
+  etat.niveauWagonnets += 1
+  return [`🛒 Wagonnets plus grands : ${prochain.capacite} places.`]
 }
 
-// Le joueur est en train de le pousser (il fait l'aller-retour avec lui).
+// ---------------------------------------------------------------------------
+// Où en sont les wagonnets
+// ---------------------------------------------------------------------------
+
+export function enRoute(trajet: Trajet): boolean {
+  return trajet.etape !== 'quai'
+}
+
+// Le trajet que le joueur est en train de pousser (il fait l'aller-retour avec lui).
+export function trajetDuJoueur(etat: EtatJeu): Trajet | null {
+  return etat.trajets.find((t) => enRoute(t) && t.pousseur === 'joueur') ?? null
+}
+
 export function joueurPousse(etat: EtatJeu): boolean {
-  return wagonnetEnRoute(etat) && etat.wagonnet.pousseur === 'joueur'
+  return trajetDuJoueur(etat) !== null
 }
 
-// Sa vitesse en ce moment (cases par seconde). Électrique : plus vite avec un générateur
-// puissant ; s'il perd le courant en route, il finit son trajet doucement, sur sa lancée.
-export function vitesseWagonnet(etat: EtatJeu): number {
-  const pousseur = etat.wagonnet.pousseur
+// Toutes les cases de ce trajet sont électriques : son wagonnet roule tout seul.
+export function trajetElectrique(etat: EtatJeu, liaison: IdLiaison): boolean {
+  if (!generateurEnMarche(etat)) return false
+  const ligne = ligneDe(etat, liaison)
+  return ligne !== null && casesDansLeRayon(etat, ligne)
+}
+
+// Au moins un trajet est électrique (l'éclair du bandeau, le succès « Électricien »).
+export function railsAlimentes(etat: EtatJeu): boolean {
+  return etat.trajets.some((t) => trajetElectrique(etat, t.liaison))
+}
+
+// La vitesse d'un wagonnet en ce moment (cases par seconde). Électrique : plus vite avec un
+// générateur puissant ; s'il perd le courant en route, il finit son trajet doucement, sur sa lancée.
+export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.pousseur): number {
   if (pousseur === 'joueur') return VITESSE_POUSSE_JOUEUR
-  if (pousseur === 'electricite') return railsAlimentes(etat) ? VITESSE_RAILS * puissanceGenerateur(etat) : VITESSE_POUSSE_MINEUR / 2
+  if (pousseur === 'electricite') return trajetElectrique(etat, trajet.liaison) ? VITESSE_RAILS * puissanceGenerateur(etat) : VITESSE_POUSSE_MINEUR / 2
   return VITESSE_POUSSE_MINEUR
 }
 
-// Le temps d'un aller-retour (chargement et vidage compris), pour l'affichage et l'estimation du revenu.
-export function secondesAllerRetour(etat: EtatJeu, vitesse = vitesseWagonnet(etat)): number {
-  const ligne = ligneDuWagonnet(etat)
+// Le temps d'un aller-retour (chargement et vidage compris), à cette vitesse.
+export function secondesAllerRetour(etat: EtatJeu, liaison: IdLiaison, vitesse: number): number {
+  const ligne = ligneDe(etat, liaison)
   if (!ligne) return 0
   return (2 * longueurTrajet(ligne)) / vitesse + 2 * SECONDES_CHARGEMENT_WAGONNET
 }
 
-// Ce que le wagonnet peut emporter du coffre : tout, sauf les objets « gardés » au marché
-// (on garde par exemple le fer pour poser des rails).
-export function aCharger(etat: EtatJeu): number {
-  return parPrix(etat.coffre.contenu).reduce((total, [bloc, nombre]) => total + (etat.nonAVendre.includes(bloc) ? 0 : nombre), 0)
+// Où est le wagonnet sur sa ligne : la distance depuis le départ (0) jusqu'à l'arrivée (longueur).
+export function distanceDepuisLeDepart(etat: EtatJeu, trajet: Trajet): number {
+  const ligne = ligneDe(etat, trajet.liaison)
+  if (!ligne) return 0
+  const longueur = longueurTrajet(ligne)
+  const d = Math.max(0, Math.min(longueur, trajet.distance))
+  if (trajet.etape === 'aller') return d
+  if (trajet.etape === 'retour') return longueur - d
+  return 0
 }
 
-// Remplit le wagonnet avec le coffre (les objets les plus chers d'abord, sauf ceux qu'on garde).
-function charger(etat: EtatJeu): void {
-  let place = capaciteWagonnet(etat) - totalObjets(etat.wagonnet.chargement)
-  for (const [bloc, nombre] of parPrix(etat.coffre.contenu)) {
-    if (etat.nonAVendre.includes(bloc)) continue
+// ---------------------------------------------------------------------------
+// Ce que porte chaque wagonnet
+// ---------------------------------------------------------------------------
+
+// Le charbon et la redstone qui manquent à la foreuse et au générateur (pour leurs trajets).
+function besoinCharbon(etat: EtatJeu): number {
+  return Math.max(0, Math.ceil((RESERVE_FOREUSE_WAGONNET - etat.foreuse.carburant) / SECONDES_PAR_CHARBON))
+}
+
+function besoinRedstone(etat: EtatJeu): number {
+  return Math.max(0, Math.ceil((RESERVE_GENERATEUR_WAGONNET - etat.generateur.carburant) / SECONDES_PAR_REDSTONE))
+}
+
+// Ce que le wagonnet du marché laisse dans le coffre : les objets « gardés » au marché (le fer
+// pour les rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la
+// foreuse, la redstone du générateur).
+function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
+  if (etat.nonAVendre.includes(bloc)) return Infinity
+  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
+  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
+  return 0
+}
+
+// Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).
+function aEmporter(etat: EtatJeu, liaison: IdLiaison): [IdBloc, number][] {
+  switch (liaison) {
+    case 'mine-marche':
+      return parPrix(etat.coffre.contenu)
+        .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - gardeDansLeCoffre(etat, bloc))])
+        .filter(([, nombre]) => nombre > 0)
+    case 'mine-foreuse': {
+      const nombre = Math.min(etat.coffre.contenu.charbon ?? 0, besoinCharbon(etat))
+      return nombre > 0 ? [['charbon', nombre]] : []
+    }
+    case 'mine-generateur': {
+      const nombre = Math.min(etat.coffre.contenu.redstone ?? 0, besoinRedstone(etat))
+      return nombre > 0 ? [['redstone', nombre]] : []
+    }
+    case 'foreuse-marche':
+      return parPrix(selectionChariot(etat))
+  }
+}
+
+export function aCharger(etat: EtatJeu, liaison: IdLiaison): number {
+  return aEmporter(etat, liaison).reduce((total, [, nombre]) => total + nombre, 0)
+}
+
+// Remplit le wagonnet au départ (dans le coffre de la mine, ou le chariot de la foreuse).
+function charger(etat: EtatJeu, trajet: Trajet): void {
+  let place = capaciteWagonnet(etat) - totalObjets(trajet.chargement)
+  for (const [bloc, nombre] of aEmporter(etat, trajet.liaison)) {
     const pris = Math.min(nombre, place)
     if (pris <= 0) continue
-    ajouterA(etat.wagonnet.chargement, bloc, pris)
-    retirerDe(etat.coffre.contenu, bloc, pris)
+    ajouterA(trajet.chargement, bloc, pris)
+    if (trajet.liaison === 'foreuse-marche') retirerDuChariot(etat, bloc, pris)
+    else retirerDe(etat.coffre.contenu, bloc, pris)
     place -= pris
   }
 }
 
-function partir(etat: EtatJeu, pousseur: string): void {
-  charger(etat)
-  etat.wagonnet.etape = 'aller'
+// À l'arrivée : il vend (au marché) ou il remplit (la foreuse, le générateur).
+function livrer(etat: EtatJeu, trajet: Trajet): string[] {
+  const chargement = trajet.chargement
+  trajet.chargement = {}
+  etat.stats.voyagesWagonnet += 1
+  if (LIAISONS[trajet.liaison].arrivee === 'marche') {
+    const gain = valeurDe(chargement)
+    encaisser(etat, gain)
+    etat.stats.argentWagonnet += gain
+    return trajet.pousseur === 'joueur' && gain > 0 ? [`🛤️ Le wagonnet a tout vendu au marché : +${gain} $`] : []
+  }
+  if (trajet.liaison === 'mine-foreuse') etat.foreuse.carburant += (chargement.charbon ?? 0) * SECONDES_PAR_CHARBON
+  if (trajet.liaison === 'mine-generateur') etat.generateur.carburant += (chargement.redstone ?? 0) * SECONDES_PAR_REDSTONE
+  return trajet.pousseur === 'joueur' ? [`🛤️ Livré : ${totalObjets(chargement)} ${trajet.liaison === 'mine-foreuse' ? 'charbon' : 'redstone'}.`] : []
+}
+
+// Le chargement retourne d'où il vient (trajet arrêté, ou rails coupés en route).
+function rendreChargement(etat: EtatJeu, trajet: Trajet): void {
+  const retour: Inventaire = trajet.liaison === 'foreuse-marche' ? etat.foreuse.chariot : etat.coffre.contenu
+  for (const [bloc, nombre] of parPrix(trajet.chargement)) ajouterA(retour, bloc, nombre)
+  trajet.chargement = {}
+}
+
+function rentrerAuQuai(etat: EtatJeu, trajet: Trajet): void {
+  rendreChargement(etat, trajet)
+  libererPousseur(etat, trajet)
+  Object.assign(trajet, { etape: 'quai', distance: 0, pousseur: null })
+}
+
+function partir(etat: EtatJeu, trajet: Trajet, pousseur: string): void {
+  charger(etat, trajet)
+  trajet.etape = 'aller'
+  trajet.pousseur = pousseur
   // Le chargement prend un peu de temps : on part « en arrière » de quelques cases.
-  etat.wagonnet.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseDe(etat, pousseur)
-  etat.wagonnet.pousseur = pousseur
+  trajet.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseTrajet(etat, trajet)
 }
 
-function vitesseDe(etat: EtatJeu, pousseur: string): number {
-  const avant = etat.wagonnet.pousseur
-  etat.wagonnet.pousseur = pousseur
-  const vitesse = vitesseWagonnet(etat)
-  etat.wagonnet.pousseur = avant
-  return vitesse
+// Le mineur qui poussait ce wagonnet retourne attendre au quai.
+function libererPousseur(etat: EtatJeu, trajet: Trajet): void {
+  const mineur = etat.employes.find((e) => e.nom === trajet.pousseur)
+  if (mineur && mineur.etape === 'pousse') mineur.etape = 'quai'
 }
 
-// Le joueur peut-il pousser le wagonnet maintenant ?
-export function peutPousserWagonnet(etat: EtatJeu): boolean {
-  return ligneDuWagonnet(etat) !== null && !wagonnetEnRoute(etat) && aCharger(etat) > 0
+// ---------------------------------------------------------------------------
+// Pousser soi-même
+// ---------------------------------------------------------------------------
+
+export function peutPousser(etat: EtatJeu, liaison: IdLiaison): boolean {
+  const trajet = trajetDe(etat, liaison)
+  return trajet !== null && !enRoute(trajet) && !joueurPousse(etat) && ligneDe(etat, liaison) !== null && aCharger(etat, liaison) > 0
 }
 
-// Le joueur pousse le wagonnet jusqu'au marché (et le ramène).
-export function pousserWagonnet(etat: EtatJeu): string[] {
-  if (!peutPousserWagonnet(etat)) return []
-  partir(etat, 'joueur')
-  return ['🛤️ Tu pousses le wagonnet jusqu’au marché !']
-}
-
-export function ameliorerWagonnet(etat: EtatJeu): string[] {
-  const prochain = prochainNiveauWagonnet(etat)
-  if (prochain === null || wagonnetEnRoute(etat) || !peutPayer(etat, prochain.cout)) return []
-  payer(etat, prochain.cout)
-  etat.wagonnet.niveau += 1
-  return [`🛒 Wagonnet plus grand : ${prochain.capacite} places.`]
+export function pousserTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
+  const trajet = trajetDe(etat, liaison)
+  if (!trajet || !peutPousser(etat, liaison)) return []
+  partir(etat, trajet, 'joueur')
+  return ['🛤️ Tu pousses le wagonnet !']
 }
 
 // ---------------------------------------------------------------------------
 // Le temps qui passe
 // ---------------------------------------------------------------------------
 
-export function avancerWagonnet(etat: EtatJeu, secondes: number): string[] {
-  const w = etat.wagonnet
-  const ligne = ligneDuWagonnet(etat)
-  // Plus de ligne (un rail enlevé, le marché déplacé...) : il revient au quai, et son
-  // chargement retourne dans le coffre.
+export function avancerWagonnets(etat: EtatJeu, secondes: number): string[] {
+  const messages: string[] = []
+  for (const trajet of etat.trajets) messages.push(...avancerTrajet(etat, trajet, secondes))
+  return messages
+}
+
+function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[] {
+  const ligne = ligneDe(etat, trajet.liaison)
+  // Plus de ligne (un rail enlevé, un bâtiment déplacé...) : il revient au quai, et son
+  // chargement retourne d'où il vient. Le trajet reste : il repartira quand les rails seront refaits.
   if (!ligne) {
-    if (wagonnetEnRoute(etat) || totalObjets(w.chargement) > 0) {
-      for (const [bloc, nombre] of parPrix(w.chargement)) ajouterA(etat.coffre.contenu, bloc, nombre)
-      libererPousseur(etat)
-      Object.assign(w, { etape: 'quai', distance: 0, chargement: {}, pousseur: null })
-    }
+    if (enRoute(trajet) || totalObjets(trajet.chargement) > 0) rentrerAuQuai(etat, trajet)
     return []
   }
 
-  if (w.etape === 'quai') {
-    if (aCharger(etat) === 0) return []
-    if (railsAlimentes(etat)) {
-      partir(etat, 'electricite')
+  if (trajet.etape === 'quai') {
+    if (aCharger(etat, trajet.liaison) === 0) return []
+    if (trajetElectrique(etat, trajet.liaison)) {
+      partir(etat, trajet, 'electricite')
     } else {
       const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.etape === 'quai' && e.tempsPaye > 0)
       if (!pousseur) return []
-      partir(etat, pousseur.nom)
+      partir(etat, trajet, pousseur.nom)
       pousseur.etape = 'pousse'
     }
   }
 
   const messages: string[] = []
   const longueur = longueurTrajet(ligne)
-  w.distance += secondes * vitesseWagonnet(etat)
-  if (w.etape === 'aller' && w.distance >= longueur) {
-    // Au marché : il vend tout (le vidage prend un peu de temps, compté sur le retour).
-    const gain = valeurDe(w.chargement)
-    encaisser(etat, gain)
-    etat.stats.argentWagonnet += gain
-    etat.stats.voyagesWagonnet += 1
-    if (w.pousseur === 'joueur' && gain > 0) messages.push(`🛤️ Le wagonnet a vendu le coffre au marché : +${gain} $`)
-    w.chargement = {}
-    w.etape = 'retour'
-    w.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseWagonnet(etat)
-  } else if (w.etape === 'retour' && w.distance >= longueur) {
-    libererPousseur(etat)
-    w.etape = 'quai'
-    w.distance = 0
-    w.pousseur = null
+  trajet.distance += secondes * vitesseTrajet(etat, trajet)
+  if (trajet.etape === 'aller' && trajet.distance >= longueur) {
+    // À l'arrivée : il livre (le vidage prend un peu de temps, compté sur le retour).
+    messages.push(...livrer(etat, trajet))
+    trajet.etape = 'retour'
+    trajet.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseTrajet(etat, trajet)
+  } else if (trajet.etape === 'retour' && trajet.distance >= longueur) {
+    libererPousseur(etat, trajet)
+    trajet.etape = 'quai'
+    trajet.distance = 0
+    trajet.pousseur = null
   }
   return messages
-}
-
-// Le mineur qui poussait le wagonnet retourne l'attendre au quai.
-function libererPousseur(etat: EtatJeu): void {
-  const nom = etat.wagonnet.pousseur
-  const mineur = etat.employes.find((e) => e.nom === nom)
-  if (mineur && mineur.etape === 'pousse') mineur.etape = 'quai'
-}
-
-// Où est le wagonnet sur la ligne : la distance depuis la mine (0) jusqu'au marché (longueur).
-export function distanceDepuisLaMine(etat: EtatJeu): number {
-  const ligne = ligneDuWagonnet(etat)
-  if (!ligne) return 0
-  const longueur = longueurTrajet(ligne)
-  const d = Math.max(0, Math.min(longueur, etat.wagonnet.distance))
-  if (etat.wagonnet.etape === 'aller') return d
-  if (etat.wagonnet.etape === 'retour') return longueur - d
-  return 0
 }

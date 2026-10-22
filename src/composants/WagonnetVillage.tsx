@@ -1,4 +1,5 @@
-// Le wagonnet sur les rails (23/10), et celui qui le pousse (toi ou un mineur).
+// Un wagonnet sur les rails (23/10 ; un par trajet depuis le 24/10), et celui qui le pousse
+// (toi ou un mineur).
 //
 // Pour qu'il roule de façon bien fluide, il a sa propre petite animation, à chaque image de
 // l'écran : le jeu ne donne sa position que 20 fois par seconde, alors entre deux nouvelles, on
@@ -7,9 +8,9 @@
 // dans le sens de la voie. On le dessine comme une petite benne en volume (vue de 3/4).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { RARETES } from '../jeu/donnees'
-import type { EtatJeu } from '../jeu/mineur'
-import { ligneDuWagonnet, longueurTrajet, vitesseWagonnet } from '../jeu/wagonnet'
+import { LIAISONS, RARETES, type IdLiaison } from '../jeu/donnees'
+import type { EtatJeu, Trajet } from '../jeu/mineur'
+import { ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
 import { Perso } from './ElementsVillage'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
@@ -17,14 +18,23 @@ import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcr
 type Point = { x: number; y: number }
 
 // La taille de la benne, en cases (vue de dessus), et la hauteur de ses parois, en pixels du monde.
-const LONGUEUR = 0.7
-const LARGEUR = 0.5
-const HAUTEUR = 11
+const LONGUEUR = 1.05
+const LARGEUR = 0.84
+const HAUTEUR = 15
 // Le pousseur marche à cette distance derrière la benne (en cases, le long de la voie).
-const RECUL_POUSSEUR = 0.85
+const RECUL_POUSSEUR = 1.15
+
+// Ce que porte le wagonnet, selon son trajet : des minerais de toutes les couleurs (vers le
+// marché), du charbon (vers la foreuse), de la redstone (vers le générateur).
+const CHARGEMENTS: Record<IdLiaison, [string, string][]> = {
+  'mine-marche': [['#4ee8dc', '#1a7a72'], ['#ffd84a', '#9a7a10'], ['#e04848', '#7a1a1a'], ['#9a9a9a', '#555']],
+  'foreuse-marche': [['#ffd84a', '#9a7a10'], ['#c9c9c9', '#666'], ['#4ee8dc', '#1a7a72'], ['#d89a6a', '#7a4a22']],
+  'mine-foreuse': [['#2e2e34', '#0e0e12'], ['#3a3a40', '#111'], ['#26262c', '#0a0a0e'], ['#45454c', '#151518']],
+  'mine-generateur': [['#ff3b2e', '#7a0a06'], ['#e02218', '#6a0804'], ['#ff5a48', '#8a1008'], ['#c81a12', '#5a0602']],
+}
 
 // La benne vue de 3/4 : le fond, les quatre parois (les plus loin d'abord), le chargement, et les roues.
-function DessinBenne({ x, y, dx, dy, plein, electrique }: { x: number; y: number; dx: number; dy: number; plein: boolean; electrique: boolean }) {
+function DessinBenne({ x, y, dx, dy, plein, chargement, electrique }: { x: number; y: number; dx: number; dy: number; plein: boolean; chargement: [string, string][]; electrique: boolean }) {
   const longueur = Math.hypot(dx, dy) || 1
   const avant = { x: dx / longueur, y: dy / longueur }
   const cote = { x: -avant.y, y: avant.x }
@@ -61,11 +71,11 @@ function DessinBenne({ x, y, dx, dy, plein, electrique }: { x: number; y: number
   ].map(([a, b]) => versEcran(x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2 + 0.02) * b, y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2 + 0.02) * b))
   return (
     <g className={electrique ? 'benne-electrique' : ''}>
-      <ellipse cx={centre.x} cy={centre.y + 1.5} rx={14} ry={6} fill="rgb(0 0 0 / 0.28)" />
+      <ellipse cx={centre.x} cy={centre.y + 1.5} rx={21} ry={9} fill="rgb(0 0 0 / 0.28)" />
       {roues
         .filter((r) => r.y < centre.y)
         .map((r, i) => (
-          <ellipse key={`rf${i}`} cx={r.x} cy={r.y - 1} rx={2.8} ry={2.4} fill="#1e1e24" stroke="#000" strokeWidth={0.5} />
+          <ellipse key={`rf${i}`} cx={r.x} cy={r.y - 1} rx={3.8} ry={3.2} fill="#1e1e24" stroke="#000" strokeWidth={0.5} />
         ))}
       {/* Le fond de la benne (vu par l'ouverture). */}
       <polygon points={pts(hauts)} fill="#3a3a42" />
@@ -79,13 +89,17 @@ function DessinBenne({ x, y, dx, dy, plein, electrique }: { x: number; y: number
           strokeLinejoin="round"
         />
       ))}
-      {/* Le chargement : des minerais qui dépassent, seulement à l'aller. */}
+      {/* Le chargement qui dépasse, seulement à l'aller. */}
       {plein && (
         <g>
-          <circle cx={centreHaut.x - 4} cy={centreHaut.y - 1} r={3.3} fill="#4ee8dc" stroke="#1a7a72" strokeWidth={0.5} />
-          <circle cx={centreHaut.x + 2} cy={centreHaut.y - 2.5} r={3.1} fill="#ffd84a" stroke="#9a7a10" strokeWidth={0.5} />
-          <circle cx={centreHaut.x + 6} cy={centreHaut.y} r={2.8} fill="#e04848" stroke="#7a1a1a" strokeWidth={0.5} />
-          <circle cx={centreHaut.x - 1} cy={centreHaut.y + 1.5} r={2.6} fill="#9a9a9a" stroke="#555" strokeWidth={0.5} />
+          {[
+            [-6, -1, 4.6],
+            [3, -3.5, 4.3],
+            [8, 0, 3.9],
+            [-1, 2, 3.6],
+          ].map(([cx, cy, r], i) => (
+            <circle key={i} cx={centreHaut.x + cx} cy={centreHaut.y + cy} r={r} fill={chargement[i][0]} stroke={chargement[i][1]} strokeWidth={0.5} />
+          ))}
         </g>
       )}
       {/* Le bord doré, tout autour du haut. */}
@@ -93,19 +107,20 @@ function DessinBenne({ x, y, dx, dy, plein, electrique }: { x: number; y: number
       {roues
         .filter((r) => r.y >= centre.y)
         .map((r, i) => (
-          <ellipse key={`rv${i}`} cx={r.x} cy={r.y - 1} rx={2.8} ry={2.4} fill="#2a2a30" stroke="#000" strokeWidth={0.5} />
+          <ellipse key={`rv${i}`} cx={r.x} cy={r.y - 1} rx={3.8} ry={3.2} fill="#2a2a30" stroke="#000" strokeWidth={0.5} />
         ))}
     </g>
   )
 }
 
-export function WagonnetVillage({ etat, joueurPousse }: { etat: EtatJeu; joueurPousse: boolean }) {
-  const ligne = ligneDuWagonnet(etat)
-  const w = etat.wagonnet
+export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Trajet }) {
+  const info = LIAISONS[w.liaison]
+  const ligne = ligneDe(etat, w.liaison)
   // La trace de la voie (quelques dizaines de points : vite calculée, même à chaque image).
-  const trace = ligne ? traceDeLaVoie(etat.village, ligne) : null
+  const trace = ligne ? traceDeLaVoie(etat.village, ligne, info.depart, info.arrivee) : null
   const longueur = ligne ? longueurTrajet(ligne) : 1
-  const vitesse = vitesseWagonnet(etat)
+  const vitesse = vitesseTrajet(etat, w)
+  const joueurPousse = w.pousseur === 'joueur' && w.etape !== 'quai'
 
   // La dernière position donnée par le jeu, et quand on l'a reçue.
   const base = useRef({ distance: w.distance, etape: w.etape, temps: 0 }) // l'heure est notée juste après, dans l'effet
@@ -132,8 +147,7 @@ export function WagonnetVillage({ etat, joueurPousse }: { etat: EtatJeu; joueurP
     return () => cancelAnimationFrame(image)
   }, [longueur])
 
-  // Les bruits : « ta-tac » à chaque joint de rail (une fois par case), et une cloche en arrivant
-  // au marché.
+  // Les bruits : « ta-tac » à chaque joint de rail (une fois par case), et une cloche en arrivant.
   const total = trace ? longueurTrace(trace) : 1
   const dRoule = Math.max(0, Math.min(longueur, distance))
   const caseParcourue = w.etape === 'quai' ? -1 : Math.floor((dRoule / longueur) * total)
@@ -148,10 +162,10 @@ export function WagonnetVillage({ etat, joueurPousse }: { etat: EtatJeu; joueurP
   }, [w.etape])
 
   if (!ligne || !trace) return null
-  // Où on en est sur la trace (de la mine au marché), et dans quel sens on roule.
+  // Où on en est sur la trace (du départ à l'arrivée), et dans quel sens on roule.
   const d = dRoule
-  const depuisLaMine = w.etape === 'retour' ? longueur - d : w.etape === 'aller' ? d : 0
-  const s = (depuisLaMine / longueur) * total
+  const depuisLeDepart = w.etape === 'retour' ? longueur - d : w.etape === 'aller' ? d : 0
+  const s = (depuisLeDepart / longueur) * total
   const ici = surLaTrace(trace, s)
   const retour = w.etape === 'retour'
   const dx = retour ? -ici.dx : ici.dx
@@ -166,14 +180,14 @@ export function WagonnetVillage({ etat, joueurPousse }: { etat: EtatJeu; joueurP
   return (
     <>
       <svg
-        className={`wagonnet-village ${w.pousseur === 'electricite' ? 'wagonnet-electrique' : ''}`}
-        style={{ left: e.x - 24, top: e.y - 34, zIndex: profondeur(ici.x, ici.y) + 4 }}
-        viewBox={`${e.x - 24} ${e.y - 34} 48 44`}
-        width={48}
-        height={44}
+        className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
+        style={{ left: e.x - 36, top: e.y - 48, zIndex: profondeur(ici.x, ici.y) + 4 }}
+        viewBox={`${e.x - 36} ${e.y - 48} 72 64`}
+        width={72}
+        height={64}
         aria-hidden="true"
       >
-        <DessinBenne x={ici.x} y={ici.y} dx={dx} dy={dy} plein={w.etape === 'aller'} electrique={w.pousseur === 'electricite'} />
+        <DessinBenne x={ici.x} y={ici.y} dx={dx} dy={dy} plein={w.etape === 'aller'} chargement={CHARGEMENTS[w.liaison]} electrique={electrique} />
       </svg>
       {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur" />}
       {mineur && (

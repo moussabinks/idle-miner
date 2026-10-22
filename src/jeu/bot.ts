@@ -4,7 +4,7 @@
 //   - devant la mine, il clique sur le bloc (2 clics par seconde) ;
 //   - quand le coffre se remplit, il le vide dans son sac et va vendre au marché (à pied) ;
 //   - il pose ses bâtiments, embauche des mineurs, paie leurs salaires, améliore tout ;
-//   - il relie la mine au marché avec des rails, met un mineur à pousser le wagonnet, puis
+//   - il relie la mine au marché avec des rails, y envoie un wagonnet, met un mineur à le pousser, puis
 //     électrifie la ligne avec le générateur.
 // Les achats se font sans compter la marche (on suppose qu'il passe devant en allant vendre).
 
@@ -30,7 +30,7 @@ import {
   tempsPayeMin,
 } from './employes'
 import { ameliorerChariot, ameliorerForage, nbDansChariot, peutAmeliorerChariot, peutAmeliorerForage, remplirForeuse, vendreChariot, capaciteChariot } from './foreuse'
-import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, railsAlimentes, remplirGenerateur } from './generateur'
+import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, remplirGenerateur } from './generateur'
 import {
   acheterPioche,
   acheterSac,
@@ -59,7 +59,7 @@ import {
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
 import { distanceEntre, railsMineMarche } from './village'
-import { ameliorerWagonnet, prochainNiveauWagonnet, wagonnetEnRoute } from './wagonnet'
+import { ameliorerWagonnet, creerTrajet, peutCreerTrajet, prochainNiveauWagonnet, railsAlimentes, trajetDe } from './wagonnet'
 
 // Où le bot pose ses bâtiments autour de la mine (posée en 25,25 et large de 10 cases).
 const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
@@ -163,6 +163,8 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
     if (estPose(etat, 'marche') && railsMineMarche(etat.village) === null) {
       for (const c of RAILS_DU_BOT) if (peutPoserSol(etat, 'rail', c.x, c.y)) poserSol(etat, 'rail', c.x, c.y)
     }
+    // Puis il envoie un wagonnet de la mine au marché.
+    if (peutCreerTrajet(etat, 'mine-marche')) creerTrajet(etat, 'mine-marche')
 
     if (estCassee(etat) && peutReparer(etat)) reparer(etat)
     const pioche = PIOCHES[etat.meilleure + 1]
@@ -193,7 +195,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
 
     // Un pousseur pour le wagonnet, tant que les rails ne sont pas électriques.
     const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
-    if (railsMineMarche(etat.village) && !railsAlimentes(etat) && pousseurs.length === 0 && etat.employes.length >= 2) changerRole(etat, 0, 'pousseur')
+    if (trajetDe(etat, 'mine-marche') && !railsAlimentes(etat) && pousseurs.length === 0 && etat.employes.length >= 2) changerRole(etat, 0, 'pousseur')
     if (railsAlimentes(etat)) etat.employes.forEach((e, i) => e.role === 'pousseur' && changerRole(etat, i, 'mineur'))
 
     // Le générateur : il le remplit de redstone, puis le laisse se servir dans le coffre.
@@ -218,7 +220,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
     const wagonnet = prochainNiveauWagonnet(etat)
-    if (wagonnet && railsMineMarche(etat.village) && !wagonnetEnRoute(etat) && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout)) ameliorerWagonnet(etat)
+    if (wagonnet && etat.trajets.length > 0 && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout)) ameliorerWagonnet(etat)
     const prixSac = prixProchainSac(etat)
     if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }
@@ -227,11 +229,11 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
     reglerGarde()
     acheterSiPossible()
     // Sans wagonnet, il va vendre à pied quand le coffre est à moitié plein.
-    const wagonnetActif = railsMineMarche(etat.village) !== null && etat.employes.some((e) => e.role === 'pousseur' || railsAlimentes(etat))
+    const wagonnetActif = trajetDe(etat, 'mine-marche') !== null && etat.employes.some((e) => e.role === 'pousseur' || railsAlimentes(etat))
     if (!wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) / 2) allerVendre()
     for (let i = 0; i < CLICS_PAR_SECONDE * PAS; i++) cliquerMine(etat, aleatoire)
     attendre(PAS)
-    if (railsMineMarche(etat.village) && tempsRails === null) tempsRails = temps
+    if (trajetDe(etat, 'mine-marche') && tempsRails === null) tempsRails = temps
     if (railsAlimentes(etat) && tempsElectrique === null) tempsElectrique = temps
     verifierSucces(etat)
   }

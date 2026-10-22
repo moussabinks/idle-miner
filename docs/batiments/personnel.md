@@ -1,6 +1,6 @@
 # 👷 Personnel
 
-> Le bureau d'embauche, ouvert **dès le début** (22/10) : on y embauche des mineurs qui creusent tout seuls et remontent leur sac dans le **coffre de la mine**, on leur paie un salaire toutes les 10 minutes, et on peut en mettre un à **pousser le wagonnet**. Plus tard, on y trouve le **recruteur** (niveau 3 de la mine) et le **manager** (niveau 4), qui restent à leur poste devant le bâtiment.
+> Le bureau d'embauche, ouvert **dès le début** (22/10) : on y embauche des mineurs qui creusent tout seuls et remontent leur sac dans le **coffre de la mine**, on leur paie un salaire toutes les 10 minutes, et on peut en mettre à **pousser les wagonnets**. Plus tard, on y trouve le **recruteur** (niveau 3 de la mine) et le **manager** (niveau 4), qui restent à leur poste devant le bâtiment.
 
 ## Où et quand
 
@@ -63,11 +63,11 @@ Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un 
 
 ### 4. Le rôle « pousseur »
 
-- Le bouton **🛤️ Pousser le wagonnet** fait d'un mineur un **pousseur** : il finit ce qu'il fait (s'il est au fond, il remonte d'abord vider son sac), puis va **attendre au quai**, à côté du début des rails. « 🛤️ *X* va pousser le wagonnet. »
-- Dès que le coffre de la mine a quelque chose à emporter (sauf les objets gardés) et que des rails relient la mine au marché, il **pousse le wagonnet jusqu'au marché** (2,5 cases/s), où tout est vendu, puis le ramène. Voir [mine.md](mine.md#le-wagonnet).
+- Le bouton **🛤️ Pousser le wagonnet** fait d'un mineur un **pousseur** : il finit ce qu'il fait (s'il est au fond, il remonte d'abord vider son sac), puis va **attendre au quai**, à côté du début des rails qui partent de la mine. « 🛤️ *X* va pousser les wagonnets. »
+- Dès qu'un **trajet de wagonnet** (créé par le joueur, voir [mine.md](mine.md#les-wagonnets)) a quelque chose à porter et n'est pas électrique, un pousseur libre et payé le **pousse jusqu'à l'arrivée** (2,5 cases/s), puis le ramène et retourne au quai. Un pousseur sert tous les trajets (un à la fois) : avec plusieurs trajets, il en faut parfois plusieurs.
 - Pendant ce temps, il ne creuse pas, mais il est **payé** comme les autres (son salaire dépend de sa pioche). On ne peut pas le licencier pendant qu'il pousse.
 - **⛏️ Creuser** le remet à creuser (« ⛏️ *X* retourne creuser. »).
-- Avec des **rails électriques** (générateur), le wagonnet part tout seul : le pousseur ne sert plus à rien, il vaut mieux le remettre à creuser.
+- Un **trajet électrique** (générateur) part tout seul : quand tous les trajets le sont, le pousseur ne sert plus à rien, il vaut mieux le remettre à creuser.
 
 ### 5. Payer les salaires (« 💵 Payer 10 min », sans manager)
 
@@ -133,17 +133,17 @@ Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un 
 ## Lien avec le reste du jeu
 
 - **Objectifs** (`objectifs.ts`) : d'abord « Construire : Personnel » ; une fois posé, « Embaucher un mineur », « Pioche en … pour *X* », « Embaucher le recruteur » / « Recruteur niveau *N* » et « Embaucher le manager » font partie des achats possibles (bulle 💰, prochain objectif « …au Personnel ! »).
-- **Autres bâtiments** : ils remplissent le **coffre de la mine** ; l'**ascenseur** (au panneau de la mine) raccourcit leurs trajets ; un **pousseur** fait rouler le wagonnet jusqu'au **Marché** tant que les rails ne sont pas électriques (**Générateur**) ; ils passent au **Forgeron** chercher leur nouvelle pioche. Leurs pioches ne coûtent que de l'argent : le fer, la redstone et l'or restent pour la mine, les rails, la foreuse et le générateur.
+- **Autres bâtiments** : ils remplissent le **coffre de la mine** ; l'**ascenseur** (au panneau de la mine) raccourcit leurs trajets ; un **pousseur** fait rouler les wagonnets (vers le **Marché**, la **Foreuse** ou le **Générateur**) tant que leurs trajets ne sont pas électriques ; ils passent au **Forgeron** chercher leur nouvelle pioche. Leurs pioches ne coûtent que de l'argent : le fer, la redstone et l'or restent pour la mine, les rails, la foreuse et le générateur.
 - **Revenus et statistiques** : l'indicateur « $/s » compte chaque mineur **payé** qui creuse (sac plein ÷ durée d'un tour, trajets compris, × valeur moyenne d'un bloc), moins les salaires de tous les mineurs payés (pousseurs compris) et celui du manager (`revenu.ts`) ; les statistiques comptent `blocsMineurs` et `salairesPayes`.
 - **Succès** : « 👷 Patron » (un premier mineur), « 👥 Chef d'équipe » (6 mineurs).
-- **Bot de simulation** (`bot.ts`) : il embauche dès qu'il a le prix plus une paie d'avance, améliore les pioches, paie les salaires dès qu'il reste moins d'une minute, met un mineur à pousser dès qu'il a des rails et 2 mineurs, puis le remet à creuser quand les rails sont électriques.
+- **Bot de simulation** (`bot.ts`) : il embauche dès qu'il a le prix plus une paie d'avance, améliore les pioches, paie les salaires dès qu'il reste moins d'une minute, met un mineur à pousser dès qu'il a le trajet Mine → Marché et 2 mineurs, puis le remet à creuser quand les rails sont électriques.
 
 ## Fichiers du code
 
 - `src/jeu/employes.ts` : toutes les règles (embauche, prix, licenciement, pioches, rôle pousseur, salaires, travail seconde après seconde, passage à la forge, attente devant le Personnel, recruteur, manager, trésorerie, textes d'activité).
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.employes` : 100 $ + 30 pierre, 5 × 5, porte à droite) et les chiffres (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `PRIX_EMBAUCHE`, `HAUSSE_APRES_LISTE`, `PART_INDEMNITES`, `SALAIRES`, `NIVEAUX_EMPLOYE`, `RARETES`, `NIVEAUX_RECRUTEUR`, `PRIX_MANAGER`, `SALAIRE_MANAGER`, `SECONDES_VIDAGE_EMPLOYE`, `SECONDES_FORGE_EMPLOYE`, `VITESSE_MARCHE`, `VITESSE_POUSSE_MINEUR`…).
 - `src/jeu/mineur.ts` : les types `Employe` (rôle `mineur` ou `pousseur` ; étapes `creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend` ; `lieu`, `depuis`, `forgeEnAttente`) et `Manager`, l'ascenseur (`secondesTrajetMineur`).
-- `src/jeu/wagonnet.ts` : le pousseur qui part avec le wagonnet et revient au quai.
+- `src/jeu/wagonnet.ts` : le pousseur qui part avec un wagonnet et revient au quai.
 - `src/jeu/village.ts` : le chemin à pied entre deux bâtiments (`cheminEntre`, `secondesAPied`).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/temps.ts` : fait avancer les mineurs avec le reste du jeu.
@@ -157,7 +157,7 @@ Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un 
 - `src/composants/RevelationRecrue.tsx` : l'animation qui dévoile la rareté d'une recrue.
 - `src/composants/Confirmation.tsx` : la fenêtre de confirmation du licenciement.
 - `src/composants/MenuConstruction.tsx` : la carte du Personnel dans le menu Bâtiments.
-- `src/composants/VueVillage.tsx` : les mineurs qui marchent, passent à la forge, attendent au quai, poussent le wagonnet ou attendent leur salaire (😠), le manager et le recruteur devant le bâtiment, la cabine de l'ascenseur qui suit les mineurs.
+- `src/composants/VueVillage.tsx` : les mineurs qui marchent, passent à la forge, attendent au quai, poussent un wagonnet ou attendent leur salaire (😠), le manager et le recruteur devant le bâtiment, la cabine de l'ascenseur qui suit les mineurs.
 - `src/composants/sprites.ts` et `public/images/personnages/sprites/` : les images des personnages tirées des planches (mineur vu devant, derrière, gauche et droite, casque recoloré à la couleur de sa rareté ; manager et recruteur vus de face).
 - `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : un personnage posé sur la grille, sa place devant un bâtiment (`devant`), sa marche le long d'un chemin (`surLeChemin`, `orienter`).
 - `public/images/batiments/employes.webp` : le dessin du bâtiment ; `public/images/personnages/manager.webp`, `recruteur.webp` : les portraits du panneau.

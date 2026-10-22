@@ -3,7 +3,7 @@
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import { useState, type ReactNode } from 'react'
-import { BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
@@ -37,8 +37,7 @@ import {
   prochainNiveauGenerateur,
   puissanceGenerateur,
   puisageDisponible,
-  railsAlimentes,
-  railsDansLeRayon,
+  casesDansLeRayon,
   rayonGenerateur,
   remplirGenerateur,
 } from '../jeu/generateur'
@@ -62,7 +61,8 @@ import {
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
 import { batimentPose } from '../jeu/village'
-import { ligneDuWagonnet } from '../jeu/wagonnet'
+import { ligneDe, trajetElectrique } from '../jeu/wagonnet'
+import { PanneauTrajets } from './PanneauTrajets'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
@@ -380,6 +380,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           onAmeliorer={() => jouer(ameliorerChariot)}
         />
       </div>
+      <PanneauTrajets etat={etat} jouer={jouer} depart="foreuse" />
     </div>
   )
 }
@@ -392,7 +393,6 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
   const redstone = disponible(etat, 'redstone')
   const enMarche = generateurEnMarche(etat)
   const prochain = prochainNiveauGenerateur(etat)
-  const ligne = ligneDuWagonnet(etat)
   return (
     <div className="liste-cartes">
       <div className="ligne-achat">
@@ -438,16 +438,23 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
       <div className="ligne-achat">
         <strong>🔌 Ce qu'il alimente</strong>
         <ul className="liste-simple">
-          <li>
-            🛤️ Rails :{' '}
-            {!ligne
-              ? 'pas encore de ligne de la mine au marché.'
-              : railsAlimentes(etat)
-                ? '✔ électriques, le wagonnet roule tout seul !'
-                : railsDansLeRayon(etat)
-                  ? 'dans le rayon, mais le générateur ne donne pas de courant.'
-                  : '✖ une partie de la ligne est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
-          </li>
+          {etat.trajets.length === 0 && <li>🛤️ Rails : pas encore de trajet de wagonnet.</li>}
+          {etat.trajets.map((t) => {
+            const ligne = ligneDe(etat, t.liaison)
+            const info = LIAISONS[t.liaison]
+            return (
+              <li key={t.liaison}>
+                🛤️ {BATIMENTS[info.depart].nom} → {BATIMENTS[info.arrivee].nom} :{' '}
+                {!ligne
+                  ? 'rails coupés.'
+                  : trajetElectrique(etat, t.liaison)
+                    ? '✔ électrique, le wagonnet roule tout seul !'
+                    : casesDansLeRayon(etat, ligne)
+                      ? 'dans le rayon, mais le générateur ne donne pas de courant.'
+                      : '✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
+              </li>
+            )
+          })}
           <li>
             ⚙️ Foreuse :{' '}
             {!batimentPose(etat.village, 'foreuse')

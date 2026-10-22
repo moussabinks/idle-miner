@@ -13,13 +13,12 @@ import {
   lireCle,
   longueurChemin,
   nouveauVillage,
-  raccordsRail,
   railsMineMarche,
   type BatimentPose,
   type Case,
   type Village,
 } from '../jeu/village'
-import { BoiteSvg, CaseChemin, CaseRail, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
+import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
@@ -199,10 +198,7 @@ const SOL = (
       const c = lireCle(cle)
       return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
     })}
-    {VILLAGE.rails.map((cle) => {
-      const c = lireCle(cle)
-      return <CaseRail key={`r${cle}`} x={c.x} y={c.y} raccords={raccordsRail(VILLAGE, c.x, c.y)} />
-    })}
+    <RailsDuVillage village={VILLAGE} />
   </svg>
 )
 

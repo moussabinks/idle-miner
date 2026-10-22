@@ -168,7 +168,7 @@ export function viderChariotDansSac(etat: EtatJeu): string[] {
   return pris > 0 ? [`🎒 ${pris} objets du chariot mis dans ton sac.`] : ['🎒 Ton sac est plein.']
 }
 
-function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
+export function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
   const reste = (etat.foreuse.chariot[bloc] ?? 0) - nombre
   if (reste > 0) etat.foreuse.chariot[bloc] = reste
   else delete etat.foreuse.chariot[bloc]

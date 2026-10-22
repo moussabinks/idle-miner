@@ -26,7 +26,7 @@ function totalNiveaux(etat: EtatJeu): number {
     etat.foreuse.niveauVitesse +
     etat.foreuse.niveauChariot +
     etat.generateur.niveau +
-    etat.wagonnet.niveau +
+    etat.niveauWagonnets +
     etat.niveauSac +
     etat.meilleure +
     etat.recruteur

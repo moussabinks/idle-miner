@@ -273,7 +273,33 @@ export const VITESSE_RAILS = 8 // le wagonnet électrique, à la puissance 1
 // Le temps pour charger le wagonnet au coffre, et pour le vider au marché.
 export const SECONDES_CHARGEMENT_WAGONNET = 2
 
-// La taille du wagonnet (au bâtiment Mine).
+// Les trajets des wagonnets (24/10) : le joueur choisit lui-même où va chaque wagonnet, sur les
+// rails qu'il a posés. Un trajet relie un bâtiment de départ à un bâtiment d'arrivée (un seul
+// wagonnet par trajet) ; plusieurs trajets peuvent partager les mêmes rails (les wagonnets se
+// croisent sans se gêner).
+export type IdLiaison = 'mine-marche' | 'mine-foreuse' | 'mine-generateur' | 'foreuse-marche'
+export type InfoLiaison = {
+  id: IdLiaison
+  depart: IdBatiment
+  arrivee: IdBatiment
+  emoji: string
+  description: string // ce que fait le wagonnet sur ce trajet
+}
+export const LIAISONS: Record<IdLiaison, InfoLiaison> = {
+  'mine-marche': { id: 'mine-marche', depart: 'puits', arrivee: 'marche', emoji: '💰', description: 'emporte le coffre de la mine et le vend au marché' },
+  'mine-foreuse': { id: 'mine-foreuse', depart: 'puits', arrivee: 'foreuse', emoji: '🔥', description: 'apporte le charbon du coffre à la foreuse' },
+  'mine-generateur': { id: 'mine-generateur', depart: 'puits', arrivee: 'generateur', emoji: '🔴', description: 'apporte la redstone du coffre au générateur' },
+  'foreuse-marche': { id: 'foreuse-marche', depart: 'foreuse', arrivee: 'marche', emoji: '🛒', description: 'vend le chariot de la foreuse au marché' },
+}
+export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine-generateur', 'foreuse-marche']
+// Les bâtiments où les rails peuvent arriver (les départs et arrivées des trajets).
+export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
+// Les wagonnets du charbon et de la redstone remplissent la foreuse et le générateur jusqu'à
+// cette réserve (en secondes de marche) : 60 charbons, 60 redstones.
+export const RESERVE_FOREUSE_WAGONNET = 1200
+export const RESERVE_GENERATEUR_WAGONNET = 1800
+
+// La taille des wagonnets (au bâtiment Mine) : elle vaut pour tous les trajets.
 export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
   { capacite: 40, cout: { materiaux: {} } },
   { capacite: 100, cout: { argent: 500, materiaux: { fer: 40 } } },

@@ -57,7 +57,7 @@ Juste pour le style : elles ne donnent aucun bonus. Au début, le hamster du jou
 
 - La taille du sac est le nombre total d'objets qu'il peut contenir, toutes sortes confondues (`tailleSac`, `placeLibre`).
 - **Le sac ne se remplit plus en creusant** (22/10) : ce qu'on casse va dans le **coffre de la mine**. Le sac sert à **porter** : au panneau de la mine, « 🎒 Mettre dans le sac » y met une partie du coffre (tant qu'il y a de la place), puis on marche jusqu'au marché. On peut aussi y mettre le chariot de la foreuse.
-- Un grand sac sert surtout **au début**, avant les rails : moins d'allers-retours à pied. Une fois le wagonnet en route (poussé ou électrique), le sac sert beaucoup moins.
+- Un grand sac sert surtout **au début**, avant les rails : moins d'allers-retours à pied. Une fois le trajet Mine → Marché en route (poussé ou électrique), le sac sert beaucoup moins.
 - **Payer avec le sac** : les minerais d'un achat se prennent d'abord dans le sac, puis dans le coffre.
 
 ## Lien avec le reste du jeu

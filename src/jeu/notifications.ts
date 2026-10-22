@@ -10,7 +10,7 @@ import { generateurPose } from './generateur'
 import { coffrePlein, estCassee, nbDansCoffre, sacPlein, type EtatJeu } from './mineur'
 import { standsAchetables } from './objectifs'
 import { batimentPose } from './village'
-import { ligneDuWagonnet } from './wagonnet'
+import { trajetDe } from './wagonnet'
 
 // La sorte de notification décide de sa couleur et de sa priorité (la plus urgente d'abord).
 export type SorteNotification = 'alerte' | 'pret' | 'nouveau' | 'achat'
@@ -40,7 +40,7 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   if (estCassee(etat)) ajouter('forgeron', { icone: '🔧', texte: 'Ta pioche est cassée : fais-la réparer !', court: 'Réparer', sorte: 'alerte' })
   if (sacPlein(etat)) ajouter('marche', { icone: '🎒', texte: 'Ton sac est plein : viens vendre !', court: 'Vendre !', sorte: 'alerte' })
   if (coffrePlein(etat)) ajouter('puits', { icone: '📦', texte: 'Le coffre de la mine est plein : viens le vider !', court: 'Plein !', sorte: 'alerte' })
-  else if (nbDansCoffre(etat) >= 20 && !ligneDuWagonnet(etat)) {
+  else if (nbDansCoffre(etat) >= 20 && !trajetDe(etat, 'mine-marche')) {
     ajouter('puits', { icone: '📦', texte: `${nbDansCoffre(etat)} objets dans le coffre : porte-les au marché`, court: `${nbDansCoffre(etat)}`, sorte: 'pret' })
   }
 

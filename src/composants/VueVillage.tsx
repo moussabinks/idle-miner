@@ -7,11 +7,11 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, DECORATIONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
+import { BATIMENTS, DECORATIONS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
 import { secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
-import { distanceDepuisLaMine, joueurPousse, ligneDuWagonnet, longueurTrajet } from '../jeu/wagonnet'
+import { distanceDepuisLeDepart, ligneDe, longueurTrajet, trajetDuJoueur } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
@@ -19,7 +19,6 @@ import {
   lireCle,
   longueurChemin,
   occupation,
-  raccordsRail,
   type Case,
 } from '../jeu/village'
 import type { EtatJoueurVillage } from '../useJoueurVillage'
@@ -27,10 +26,11 @@ import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import {
   BoiteSvg,
   CaseChemin,
-  CaseRail,
+  RailsDuVillage,
   DessinDecoration,
   DessinEvolutionMine,
   LosangeEmprise,
+  GrilleConstruction,
   TerrainVillage,
 } from './DessinsVillage'
 import { AmbianceVillage } from './AmbianceVillage'
@@ -138,18 +138,21 @@ export function VueVillage({
     [taille, zoomMin],
   )
 
-  // Le wagonnet sur les rails : où il est, et dans quel sens il roule (pour la caméra et le dessin).
-  const ligne = ligneDuWagonnet(etat)
+  // Le wagonnet que pousse le joueur : où il est (pour la caméra).
+  const trajetPousse = trajetDuJoueur(etat)
   const wagonnet = (() => {
-    if (!ligne) return null
-    const trace = traceDeLaVoie(village, ligne)
-    const k = distanceDepuisLaMine(etat) / longueurTrajet(ligne)
-    const point = surLaTrace(trace, k * longueurTrace(trace))
-    const retour = etat.wagonnet.etape === 'retour'
-    return { ...point, dx: retour ? -point.dx : point.dx, dy: retour ? -point.dy : point.dy }
+    if (!trajetPousse) return null
+    const ligneDuJoueur = ligneDe(etat, trajetPousse.liaison)
+    if (!ligneDuJoueur) return null
+    const info = LIAISONS[trajetPousse.liaison]
+    const trace = traceDeLaVoie(village, ligneDuJoueur, info.depart, info.arrivee)
+    const k = distanceDepuisLeDepart(etat, trajetPousse) / longueurTrajet(ligneDuJoueur)
+    return surLaTrace(trace, k * longueurTrace(trace))
   })()
-  // Quand le joueur pousse le wagonnet, c'est lui que la caméra suit.
-  const pousse = joueurPousse(etat) && wagonnet !== null
+  // Les mineurs pousseurs attendent au quai, à côté du début des rails qui partent de la mine.
+  const ligne = ligneDe(etat, 'mine-marche') ?? etat.trajets.map((t) => (LIAISONS[t.liaison].depart === 'puits' ? ligneDe(etat, t.liaison) : null)).find((l) => l) ?? null
+  // Quand le joueur pousse un wagonnet, c'est lui que la caméra suit.
+  const pousse = wagonnet !== null
   // Le joueur se met à pousser le wagonnet : la caméra le suit de nouveau (même si on avait
   // déplacé la carte à la main).
   const [poussait, setPoussait] = useState(pousse)
@@ -407,7 +410,7 @@ export function VueVillage({
       const b = batimentPose(village, 'forgeron')
       if (b) position = devant(b, 1 + (index % 4), 0.9)
     } else if (mineur.etape === 'quai' && ligne) {
-      // Il attend le wagonnet à côté du début des rails.
+      // Il attend un wagonnet à côté du début des rails.
       position = { x: ligne[0].x + 1.2 + 0.7 * auQuai, y: ligne[0].y + 0.3 + 0.5 * auQuai++ }
     } else if (mineur.etape === 'attend' && personnel) {
       position = devant(personnel, 2 + enAttente++, 1.6)
@@ -448,9 +451,9 @@ export function VueVillage({
     )
   }
 
-  // Le wagonnet sur les rails, et celui qui le pousse (toi ou un mineur), juste derrière lui :
-  // il a sa propre animation, à chaque image (WagonnetVillage).
-  objets.push(<WagonnetVillage key="wagonnet" etat={etat} joueurPousse={pousse} />)
+  // Les wagonnets sur les rails (un par trajet), et celui qui pousse chacun (toi ou un mineur),
+  // juste derrière : chacun a sa propre animation, à chaque image (WagonnetVillage).
+  for (const trajet of etat.trajets) objets.push(<WagonnetVillage key={`w${trajet.liaison}`} etat={etat} trajet={trajet} />)
 
   // Les bulles de notification au-dessus des bâtiments.
   const bulles: ReactNode[] = []
@@ -501,14 +504,12 @@ export function VueVillage({
         .map((b) => (
           <polygon key={`ombre-${b.id}`} className="ombre-batiment" points={losange(b.x + 0.6, b.y + 0.2, BATIMENTS[b.id].taille - 0.5)} filter="url(#flou-ombre-batiment)" />
         ))}
+      {(fantome || pinceau) && <GrilleConstruction />}
       {village.chemins.map((cle) => {
         const c = lireCle(cle)
         return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
       })}
-      {village.rails.map((cle) => {
-        const c = lireCle(cle)
-        return <CaseRail key={`r${cle}`} x={c.x} y={c.y} raccords={raccordsRail(village, c.x, c.y)} />
-      })}
+      <RailsDuVillage village={village} />
       {batimentActif && (() => {
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null

@@ -451,3 +451,24 @@
 .plein-ecran .panneau .barre-texte {
   font-size: 0.66rem;
 }
+
+/* --- Les trajets des wagonnets (24/10), dans les panneaux de la mine et de la foreuse ---- */
+
+.titre-trajets {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #ffd84a;
+}
+
+.ligne-achat.trajet {
+  border-left: 4px solid #8a6a4a;
+}
+
+.ligne-achat.trajet-actif {
+  border-left-color: #e2b13a;
+}
+
+.ligne-achat.trajet-sans-rails {
+  opacity: 0.8;
+  border-left-style: dashed;
+}
