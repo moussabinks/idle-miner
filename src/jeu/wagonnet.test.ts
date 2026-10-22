@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
-import { changerRole, embaucher } from './employes'
+import { embaucher, embaucherPousseur } from './employes'
 import { RESERVE_FOREUSE_WAGONNET, SECONDES_PAR_CHARBON } from './donnees'
 import { creerPartie, type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
@@ -98,12 +98,11 @@ describe('les trajets des wagonnets', () => {
     expect(peutPousser(etat, 'mine-marche')).toBe(false)
   })
 
-  it('un mineur pousseur le pousse tout seul dès que le coffre n’est pas vide', () => {
+  it('le pousseur de ce trajet le pousse tout seul dès que le coffre n’est pas vide', () => {
     const etat = partieAvecTrajet()
     etat.argent = 1000
     embaucher(etat, aleatoireAvecGraine(2))
-    embaucher(etat, aleatoireAvecGraine(3))
-    changerRole(etat, 0, 'pousseur')
+    embaucherPousseur(etat, aleatoireAvecGraine(3), 'mine-marche')
     const argentDepart = etat.argent
     for (let i = 0; i < 400 && etat.stats.voyagesWagonnet === 0; i++) avancerTemps(etat, 0.5, aleatoireAvecGraine(i))
     expect(etat.stats.voyagesWagonnet).toBeGreaterThan(0)

@@ -18,7 +18,8 @@ import {
   type Case,
   type Village,
 } from '../jeu/village'
-import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, DessinWagonnet, TerrainVillage } from './DessinsVillage'
+import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, TerrainVillage } from './DessinsVillage'
+import { DessinWagonnet3D } from './Wagonnet3D'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
@@ -276,11 +277,13 @@ export function SceneAccueil() {
       <svg
         key="wagonnet"
         className="wagonnet-village"
-        style={{ left: e.x - 20, top: e.y - 28, zIndex: profondeur(point.x, point.y) + 4 }}
-        viewBox={`${e.x - 20} ${e.y - 28} 40 34`}
+        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(point.x, point.y) + 4 }}
+        viewBox={`${e.x - 40} ${e.y - 44} 80 64`}
+        width={80}
+        height={64}
         aria-hidden="true"
       >
-        <DessinWagonnet c={e} />
+        <DessinWagonnet3D x={point.x} y={point.y} dx={point.dx} dy={point.dy} remplissage={0.8} contenu={{ or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }} />
       </svg>,
     )
   }

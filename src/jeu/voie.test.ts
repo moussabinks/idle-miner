@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { acheterDecoration, placePourUnRail, placeLibrePour, poserSol } from './batiments'
+import { acheterDecoration, placePourUnRail, placeLibrePour, poserSol, retirerSol } from './batiments'
+import { notificationsBatiments } from './notifications'
+import { creerTrajet } from './wagonnet'
 import { creerPartie, type EtatJeu } from './mineur'
 import { bordsDeVoie, formeDuRail, viragesDoux } from './village'
 
@@ -56,6 +58,15 @@ describe('les virages doux', () => {
     expect(viragesDoux(etat.village)).toEqual([{ coin: { x: 5, y: 8 }, bras: ['n', 'e'] }])
   })
 
+  it('pas de virage doux si un bras est un bout de ligne (il garde son butoir)', () => {
+    const etat = partie()
+    poserSol(etat, 'rail', 5, 7)
+    poserSol(etat, 'rail', 5, 8)
+    poserSol(etat, 'rail', 6, 8)
+    poserSol(etat, 'rail', 7, 8)
+    expect(viragesDoux(etat.village)).toEqual([])
+  })
+
   it('pas de virage doux si un bras n’est pas une ligne droite', () => {
     const etat = partie()
     // Un zigzag : (5,5) → (5,6) → (6,6) → (6,7) : chaque coin a un bras qui tourne aussi.
@@ -67,5 +78,18 @@ describe('les virages doux', () => {
     ])
       poserSol(etat, 'rail', x, y)
     expect(viragesDoux(etat.village)).toEqual([])
+  })
+})
+
+describe('les bulles des rails', () => {
+  it('rails coupés : une bulle sur les deux bâtiments du trajet', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
+    for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+    creerTrajet(etat, 'mine-marche')
+    expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBeFalsy()
+    retirerSol(etat, 'rail', 30, 37)
+    expect(notificationsBatiments(etat).puits?.some((n) => n.court === 'Rails coupés')).toBe(true)
+    expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBe(true)
   })
 })

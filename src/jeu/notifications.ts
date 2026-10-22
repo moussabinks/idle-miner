@@ -1,8 +1,8 @@
 // Les notifications au-dessus des bâtiments du village : de petites icônes qui sautent pour dire
 // qu'il y a quelque chose à faire là-bas (coffre de la mine plein, chariot de la foreuse plein,
-// plus de redstone, salaires à payer, amélioration achetable...).
+// plus de redstone, salaires à payer, rails coupés, amélioration achetable...).
 
-import type { IdBatiment } from './donnees'
+import { BATIMENTS, LIAISONS, type IdBatiment } from './donnees'
 import { DECOUVERTES, decouvertesAMontrer } from './decouvertes'
 import { alerteSalaires } from './employes'
 import { chariotPlein } from './foreuse'
@@ -10,7 +10,7 @@ import { generateurPose } from './generateur'
 import { coffrePlein, estCassee, nbDansCoffre, sacPlein, type EtatJeu } from './mineur'
 import { standsAchetables } from './objectifs'
 import { batimentPose } from './village'
-import { trajetDe } from './wagonnet'
+import { ligneDe, trajetDe } from './wagonnet'
 
 // La sorte de notification décide de sa couleur et de sa priorité (la plus urgente d'abord).
 export type SorteNotification = 'alerte' | 'pret' | 'nouveau' | 'achat'
@@ -30,6 +30,20 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   // Les urgences.
   const salaires = alerteSalaires(etat)
   if (salaires) ajouter('employes', { icone: '😠', texte: salaires, court: 'Salaires !', sorte: 'alerte' })
+  // Un trajet dont les rails sont coupés (un rail enlevé, un bâtiment déplacé) : son wagonnet
+  // attend au quai. La bulle est sur ses deux bâtiments.
+  for (const t of etat.trajets) {
+    if (ligneDe(etat, t.liaison)) continue
+    const { depart, arrivee } = LIAISONS[t.liaison]
+    const texte = `Rails coupés entre ${BATIMENTS[depart].nom.toLowerCase()} et ${BATIMENTS[arrivee].nom.toLowerCase()} : le wagonnet attend. Repose les rails !`
+    ajouter(depart, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
+    ajouter(arrivee, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
+  }
+  // Des pousseurs dont le trajet a été arrêté : ils attendent au quai, pour rien.
+  const sansTrajet = etat.employes.filter((e) => e.role === 'pousseur' && (e.trajet === null || !trajetDe(etat, e.trajet))).length
+  if (sansTrajet > 0) {
+    ajouter('employes', { icone: '🛤️', texte: `${sansTrajet} pousseur${sansTrajet > 1 ? 's' : ''} sans trajet : choisis-leur un trajet au Personnel`, court: 'Sans trajet', sorte: 'alerte' })
+  }
   if (batimentPose(etat.village, 'foreuse')) {
     if (chariotPlein(etat)) ajouter('foreuse', { icone: '🛒', texte: 'Le chariot est plein : viens le vider !', court: 'Plein !', sorte: 'alerte' })
     else if (etat.foreuse.carburant <= 0) ajouter('foreuse', { icone: '🔥', texte: 'Plus de charbon !', court: 'Charbon ?', sorte: 'alerte' })

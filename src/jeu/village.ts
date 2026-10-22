@@ -579,8 +579,9 @@ export function viragesDoux(village: Village): VirageDoux[] {
     const bons = cases.every(({ cote, c }) => {
       const cleBras = cleCase(c.x, c.y)
       if (!rails.has(cleBras) || pris.has(cleBras)) return false
-      const f = formeDuRail(village, c.x, c.y)
-      return f.length === 2 && f.includes(cote) && f.includes(OPPOSE[cote])
+      // (Vraiment reliée des deux côtés : un bout de ligne garde son butoir.)
+      const r = raccordsRail(village, c.x, c.y)
+      return r[cote] && r[OPPOSE[cote]] && COTES.filter((k) => r[k]).length === 2
     })
     if (!bons || pris.has(cleCoin)) continue
     pris.add(cleCoin)

@@ -371,8 +371,7 @@
 
 .wagonnet-village {
   position: absolute;
-  width: 40px;
-  height: 34px;
+  /* Sa taille est celle de son cadre (les attributs width et height du dessin). */
   overflow: visible;
   pointer-events: none;
 }
@@ -1353,4 +1352,38 @@
   fill: rgb(230 70 50 / 0.28);
   stroke: rgb(255 120 100 / 0.6);
   stroke-width: 0.6;
+}
+
+/* Le trajet qu'on regarde en embauchant un pousseur (26/10) : ses rails brillent en vague,
+   ses deux bâtiments sont entourés d'or. */
+.case-trajet {
+  fill: rgb(255 214 90 / 0.8);
+  stroke: #fffbe6;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 6px #ffd84a);
+  animation: trajet-brille 1.4s ease-in-out infinite;
+}
+
+.emprise-trajet {
+  fill: rgb(255 214 90 / 0.25);
+  stroke: #ffd84a;
+  stroke-width: 3;
+  stroke-dasharray: 8 5;
+  animation: trajet-tourne 1.2s linear infinite;
+}
+
+@keyframes trajet-brille {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes trajet-tourne {
+  to { stroke-dashoffset: -26; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-trajet,
+  .emprise-trajet {
+    animation: none;
+  }
 }

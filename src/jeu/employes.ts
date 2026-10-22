@@ -1,8 +1,10 @@
 // Les mineurs employés (dès le début, au bâtiment Personnel, 22/10).
 // Un mineur creuse lentement au fond de la mine, remonte quand son sac est plein, le vide dans
 // le coffre de la mine, puis redescend. L'ascenseur raccourcit ses trajets.
-// Un mineur peut aussi être « pousseur » : il attend au quai et pousse un wagonnet qui a
-// quelque chose à porter, sur son trajet (voir wagonnet.ts). Électrique, plus besoin.
+// Les pousseurs (26/10) sont un autre métier : on les embauche pour UN trajet (par exemple Mine →
+// Marché). Ils attendent leur wagonnet au quai, devant le bâtiment de départ de ce trajet, et le
+// poussent dès qu'il a quelque chose à porter (voir wagonnet.ts). Électrique, plus besoin. Les
+// mineurs, eux, ne font que creuser et remonter leur sac dans le coffre de la mine.
 // On leur paie un salaire toutes les 10 minutes (sans manager, 10 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
 // Au niveau 3 de la mine, le recruteur trouve des mineurs plus ou moins rares (un mineur
@@ -19,6 +21,7 @@ import {
   NIVEAUX_RECRUTEUR,
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
+  LIAISONS,
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PRIX_EMBAUCHE,
@@ -33,12 +36,14 @@ import {
   type Cout,
   type IdBatiment,
   type IdBloc,
+  type IdLiaison,
   type IdRarete,
   type Rarete,
 } from './donnees'
 import { tirerBloc } from './mine'
-import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
+import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe } from './mineur'
 import { batimentPose, secondesAPied } from './village'
+import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
 // a ainsi le temps de payer les salaires entre deux morceaux.
@@ -315,6 +320,13 @@ function prenomAuHasard(etat: EtatJeu, aleatoire: Aleatoire): string {
 // Actions (au Personnel)
 // ---------------------------------------------------------------------------
 
+// Où travaille un employé : la mine pour un mineur, le départ de son trajet pour un pousseur.
+export function maisonDe(etat: EtatJeu, employe: Employe): IdBatiment {
+  if (employe.role !== 'pousseur' || employe.trajet === null) return 'puits'
+  const depart = LIAISONS[employe.trajet].depart
+  return batimentPose(etat.village, depart) ? depart : 'puits'
+}
+
 // Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
@@ -327,6 +339,7 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     rarete,
     niveau: 0,
     role: 'mineur',
+    trajet: null,
     etape: 'descend',
     progression: 0,
     sac: {},
@@ -338,6 +351,49 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   })
   const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
   return [`👷 ${nom}${titre} est embauché(e) ! Il descend creuser.`]
+}
+
+// Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
+export function peutEmbaucherPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
+  const prix = prixEmbauche(etat)
+  return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null
+}
+
+// Embauche un pousseur pour un trajet (26/10). Le trajet est créé s'il n'existe pas encore. Il
+// part du Personnel vers le départ du trajet, et y attend son wagonnet.
+export function embaucherPousseur(etat: EtatJeu, aleatoire: Aleatoire, liaison: IdLiaison): string[] {
+  const prix = prixEmbauche(etat)
+  if (prix === null || !peutEmbaucherPousseur(etat, liaison)) return []
+  etat.argent -= prix
+  if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
+  const nom = prenomAuHasard(etat, aleatoire)
+  const rarete = tirerRarete(etat, aleatoire)
+  const depart = LIAISONS[liaison].depart
+  const personnel = batimentPose(etat.village, 'employes') !== null
+  etat.employes.push({
+    nom,
+    rarete,
+    niveau: 0,
+    role: 'pousseur',
+    trajet: liaison,
+    etape: personnel ? 'marche' : 'quai',
+    progression: 0,
+    sac: {},
+    blocsCasses: 0,
+    tempsPaye: SECONDES_PAR_PAIE,
+    lieu: depart,
+    depuis: personnel ? 'employes' : depart,
+    forgeEnAttente: false,
+  })
+  return [`🛤️ ${nom} est embauché(e) : il va pousser le wagonnet ${NOMS_TRAJETS[liaison]}.`]
+}
+
+// « de la mine au marché »...
+const NOMS_TRAJETS: Record<IdLiaison, string> = {
+  'mine-marche': 'de la mine au marché',
+  'mine-foreuse': 'de la mine à la foreuse',
+  'mine-generateur': 'de la mine au générateur',
+  'foreuse-marche': 'de la foreuse au marché',
 }
 
 export function licencier(etat: EtatJeu, index: number): string[] {
@@ -363,21 +419,14 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
 }
 
-// Changer le rôle d'un mineur : il creuse, ou il pousse le wagonnet. Il finit ce qu'il fait,
-// puis change (un mineur au fond remonte d'abord vider son sac).
-export function changerRole(etat: EtatJeu, index: number, role: RoleEmploye): string[] {
+// Changer le trajet d'un pousseur. S'il est en train de pousser, il finit d'abord son voyage ;
+// puis il va au quai de son nouveau trajet.
+export function changerTrajet(etat: EtatJeu, index: number, liaison: IdLiaison): string[] {
   const employe = etat.employes[index]
-  if (!employe || employe.role === role) return []
-  employe.role = role
-  if (role === 'pousseur' && (employe.etape === 'creuse' || employe.etape === 'descend')) {
-    employe.etape = 'monte'
-    employe.progression = 0
-  }
-  if (role === 'mineur' && employe.etape === 'quai') {
-    employe.etape = 'descend'
-    employe.progression = 0
-  }
-  return [role === 'pousseur' ? `🛤️ ${employe.nom} va pousser les wagonnets.` : `⛏️ ${employe.nom} retourne creuser.`]
+  if (!employe || employe.role !== 'pousseur' || employe.trajet === liaison || ligneDe(etat, liaison) === null) return []
+  if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
+  employe.trajet = liaison
+  return [`🛤️ ${employe.nom} va pousser le wagonnet ${NOMS_TRAJETS[liaison]}.`]
 }
 
 // ---------------------------------------------------------------------------
@@ -393,7 +442,7 @@ function partir(employe: Employe, de: IdBatiment, vers: IdBatiment): void {
 
 // Ce qu'il fait ensuite quand il est au village, devant « ici » : attendre son salaire au
 // Personnel s'il n'est plus payé, passer à la forge si une pioche l'y attend, sinon reprendre
-// son travail à la mine (redescendre, ou attendre le wagonnet au quai).
+// son travail (redescendre dans la mine, ou attendre son wagonnet au quai de son trajet).
 function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
   employe.lieu = ici
   employe.progression = 0
@@ -415,8 +464,9 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
       return []
     }
   }
-  if (ici !== 'puits') {
-    partir(employe, ici, 'puits')
+  const maison = maisonDe(etat, employe)
+  if (ici !== maison) {
+    partir(employe, ici, maison)
     return []
   }
   employe.etape = employe.role === 'pousseur' ? 'quai' : 'descend'
@@ -433,8 +483,15 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       employe.etape = 'monte'
       employe.progression = 0
     }
-    if (employe.tempsPaye <= 0 && employe.etape === 'quai') {
-      messages.push(...suite(etat, employe, 'puits'))
+    // Un mineur n'attend jamais au quai (une vieille partie) : il redescend creuser.
+    if (employe.etape === 'quai' && employe.role !== 'pousseur') {
+      employe.etape = 'descend'
+      employe.progression = 0
+    }
+    // Au quai, mais pas de payé, ou pas au bon quai (son trajet a changé) : il s'en va.
+    if (employe.etape === 'quai' && (employe.tempsPaye <= 0 || employe.lieu !== maisonDe(etat, employe))) {
+      messages.push(...suite(etat, employe, employe.lieu))
+      if (employe.etape === 'quai') break
       continue
     }
     if (employe.etape === 'attend') {
@@ -553,6 +610,7 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
 
 const DESTINATIONS: Partial<Record<IdBatiment, string>> = {
   puits: 'retourne à la mine',
+  foreuse: 'va au quai de la foreuse',
   forgeron: 'va chercher sa pioche à la forge',
   employes: 'va attendre son salaire au Personnel',
 }
@@ -571,7 +629,7 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
     case 'descend':
       return `⏬ redescend (${secondes} s)`
     case 'quai':
-      return '🛤️ attend un wagonnet au quai'
+      return employe.trajet && !trajetDe(etat, employe.trajet) ? '🛤️ attend : son trajet est arrêté' : '🛤️ attend son wagonnet au quai'
     case 'pousse':
       return '🛤️ pousse le wagonnet'
     case 'forge':

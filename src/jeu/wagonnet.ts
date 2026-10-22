@@ -14,7 +14,7 @@
 //
 // Un wagonnet ne roule pas tout seul :
 //   - le joueur peut le pousser (bouton dans le panneau du départ) : il fait l'aller-retour avec lui ;
-//   - un mineur « pousseur » (au Personnel) pousse un wagonnet qui a quelque chose à porter ;
+//   - un pousseur (embauché au Personnel pour ce trajet) le pousse dès qu'il a quelque chose à porter ;
 //   - si toutes les cases de son trajet sont dans le rayon du générateur allumé, il roule tout
 //     seul, plus vite : c'est l'automatisation.
 
@@ -304,7 +304,9 @@ function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[
     if (trajetElectrique(etat, trajet.liaison)) {
       partir(etat, trajet, 'electricite')
     } else {
-      const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.etape === 'quai' && e.tempsPaye > 0)
+      // Le pousseur de ce trajet, s'il attend au quai (devant le bâtiment de départ).
+      const depart = LIAISONS[trajet.liaison].depart
+      const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === trajet.liaison && e.etape === 'quai' && e.lieu === depart && e.tempsPaye > 0)
       if (!pousseur) return []
       partir(etat, trajet, pousseur.nom)
       pousseur.etape = 'pousse'

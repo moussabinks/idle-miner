@@ -5,118 +5,23 @@
 // l'écran : le jeu ne donne sa position que 20 fois par seconde, alors entre deux nouvelles, on
 // le fait avancer tout seul à sa vitesse (on « devine » où il est). Il suit la voie : tout droit
 // au milieu des cases, en quart de cercle dans les virages (traceDeLaVoie), et il se tourne
-// dans le sens de la voie. On le dessine comme une petite benne en volume (vue de 3/4).
+// dans le sens de la voie, d'un essieu à l'autre. On le dessine en 3D (Wagonnet3D.tsx).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { LIAISONS, RARETES, type IdLiaison } from '../jeu/donnees'
-import type { EtatJeu, Trajet } from '../jeu/mineur'
-import { ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
+import { LIAISONS, RARETES } from '../jeu/donnees'
+import { totalObjets, type EtatJeu, type Trajet } from '../jeu/mineur'
+import { capaciteWagonnet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
 import { Perso } from './ElementsVillage'
+import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
 
-type Point = { x: number; y: number }
-
-// La taille de la benne, en cases (vue de dessus), et la hauteur de ses parois, en pixels du monde.
-const LONGUEUR = 1.05
-const LARGEUR = 0.84
-const HAUTEUR = 15
-// Les roues roulent sur les rails : la benne est posée à leur hauteur (en pixels du monde).
-const SUR_LES_RAILS = 3.6
-// Le pousseur marche à cette distance derrière la benne (en cases, le long de la voie).
+// Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
+// wagonnet se place entre eux et regarde de l'un vers l'autre. Dans un virage, il tourne donc
+// petit à petit, comme un vrai wagonnet sur ses rails.
+const ESSIEUX = 0.6
+// Le pousseur marche à cette distance derrière le wagonnet (en cases, le long de la voie).
 const RECUL_POUSSEUR = 1.15
-
-// Ce que porte le wagonnet, selon son trajet : des minerais de toutes les couleurs (vers le
-// marché), du charbon (vers la foreuse), de la redstone (vers le générateur).
-const CHARGEMENTS: Record<IdLiaison, [string, string][]> = {
-  'mine-marche': [['#4ee8dc', '#1a7a72'], ['#ffd84a', '#9a7a10'], ['#e04848', '#7a1a1a'], ['#9a9a9a', '#555']],
-  'foreuse-marche': [['#ffd84a', '#9a7a10'], ['#c9c9c9', '#666'], ['#4ee8dc', '#1a7a72'], ['#d89a6a', '#7a4a22']],
-  'mine-foreuse': [['#2e2e34', '#0e0e12'], ['#3a3a40', '#111'], ['#26262c', '#0a0a0e'], ['#45454c', '#151518']],
-  'mine-generateur': [['#ff3b2e', '#7a0a06'], ['#e02218', '#6a0804'], ['#ff5a48', '#8a1008'], ['#c81a12', '#5a0602']],
-}
-
-// La benne vue de 3/4 : le fond, les quatre parois (les plus loin d'abord), le chargement, et les roues.
-function DessinBenne({ x, y, dx, dy, plein, chargement, electrique }: { x: number; y: number; dx: number; dy: number; plein: boolean; chargement: [string, string][]; electrique: boolean }) {
-  const longueur = Math.hypot(dx, dy) || 1
-  const avant = { x: dx / longueur, y: dy / longueur }
-  const cote = { x: -avant.y, y: avant.x }
-  // Les quatre coins du bas, sur la grille, puis à l'écran ; les coins du haut sont plus haut à l'écran.
-  const coins = [
-    [1, 1],
-    [1, -1],
-    [-1, -1],
-    [-1, 1],
-  ].map(([a, b]) => {
-    const g = { x: x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2) * b, y: y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2) * b }
-    const e = versEcran(g.x, g.y)
-    return { x: e.x, y: e.y - SUR_LES_RAILS }
-  })
-  const hauts = coins.map((c) => ({ x: c.x, y: c.y - HAUTEUR }))
-  const pts = (liste: Point[]) => liste.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-  // Les parois, triées de la plus loin (en haut de l'écran) à la plus proche.
-  const parois = [0, 1, 2, 3]
-    .map((i) => {
-      const j = (i + 1) % 4
-      const milieu = (coins[i].y + coins[j].y) / 2
-      // Une paroi tournée vers la droite de l'écran est plus claire (la lumière vient de la droite).
-      const versDroite = (coins[i].x + coins[j].x) / 2 > (coins[0].x + coins[2].x) / 2
-      return { i, j, milieu, versDroite }
-    })
-    .sort((a, b) => a.milieu - b.milieu)
-  const centre = versEcran(x, y)
-  const centreHaut = { x: centre.x, y: centre.y - HAUTEUR - SUR_LES_RAILS }
-  // Les roues : sous les deux grands côtés, vers l'avant et vers l'arrière.
-  const roues = [
-    [0.6, 1],
-    [-0.6, 1],
-    [0.6, -1],
-    [-0.6, -1],
-  ]
-    .map(([a, b]) => versEcran(x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2 + 0.02) * b, y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2 + 0.02) * b))
-    .map((r) => ({ x: r.x, y: r.y - SUR_LES_RAILS }))
-  return (
-    <g className={electrique ? 'benne-electrique' : ''}>
-      <ellipse cx={centre.x} cy={centre.y + 1.5} rx={21} ry={9} fill="rgb(0 0 0 / 0.28)" />
-      {roues
-        .filter((r) => r.y < centre.y)
-        .map((r, i) => (
-          <ellipse key={`rf${i}`} cx={r.x} cy={r.y - 1} rx={3.8} ry={3.2} fill="#1e1e24" stroke="#000" strokeWidth={0.5} />
-        ))}
-      {/* Le fond de la benne (vu par l'ouverture). */}
-      <polygon points={pts(hauts)} fill="#3a3a42" />
-      {parois.map(({ i, j, versDroite }, k) => (
-        <polygon
-          key={k}
-          points={pts([coins[i], coins[j], hauts[j], hauts[i]])}
-          fill={versDroite ? '#8a8a96' : '#62626e'}
-          stroke="#25252b"
-          strokeWidth={0.7}
-          strokeLinejoin="round"
-        />
-      ))}
-      {/* Le chargement qui dépasse, seulement à l'aller. */}
-      {plein && (
-        <g>
-          {[
-            [-6, -1, 4.6],
-            [3, -3.5, 4.3],
-            [8, 0, 3.9],
-            [-1, 2, 3.6],
-          ].map(([cx, cy, r], i) => (
-            <circle key={i} cx={centreHaut.x + cx} cy={centreHaut.y + cy} r={r} fill={chargement[i][0]} stroke={chargement[i][1]} strokeWidth={0.5} />
-          ))}
-        </g>
-      )}
-      {/* Le bord doré, tout autour du haut. */}
-      <polygon points={pts(hauts)} fill="none" stroke="#e2b13a" strokeWidth={1.4} strokeLinejoin="round" />
-      {roues
-        .filter((r) => r.y >= centre.y)
-        .map((r, i) => (
-          <ellipse key={`rv${i}`} cx={r.x} cy={r.y - 1} rx={3.8} ry={3.2} fill="#2a2a30" stroke="#000" strokeWidth={0.5} />
-        ))}
-    </g>
-  )
-}
 
 export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Trajet }) {
   const info = LIAISONS[w.liaison]
@@ -171,10 +76,17 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const d = dRoule
   const depuisLeDepart = w.etape === 'retour' ? longueur - d : w.etape === 'aller' ? d : 0
   const s = (depuisLeDepart / longueur) * total
-  const ici = surLaTrace(trace, s)
   const retour = w.etape === 'retour'
-  const dx = retour ? -ici.dx : ici.dx
-  const dy = retour ? -ici.dy : ici.dy
+  // Les deux essieux, sur la voie ; le wagonnet est entre les deux, tourné de l'un vers l'autre.
+  const borne = (v: number) => Math.max(0, Math.min(total, v))
+  const essieuA = surLaTrace(trace, borne(s + ESSIEUX / 2))
+  const essieuB = surLaTrace(trace, borne(s - ESSIEUX / 2))
+  const ici = { x: (essieuA.x + essieuB.x) / 2, y: (essieuA.y + essieuB.y) / 2 }
+  const cap = Math.hypot(essieuA.x - essieuB.x, essieuA.y - essieuB.y) > 1e-3 ? { dx: essieuA.x - essieuB.x, dy: essieuA.y - essieuB.y } : surLaTrace(trace, s)
+  const dx = retour ? -cap.dx : cap.dx
+  const dy = retour ? -cap.dy : cap.dy
+  // Plus il porte, plus il est rempli (le chargement est vidé à l'arrivée).
+  const remplissage = Math.min(1, totalObjets(w.chargement) / capaciteWagonnet(etat))
   // Le pousseur, un peu derrière, le long de la voie (dans les virages aussi).
   const sPousseur = Math.max(0, Math.min(total, s + (retour ? RECUL_POUSSEUR : -RECUL_POUSSEUR)))
   const pousseurIci = surLaTrace(trace, sPousseur)
@@ -186,13 +98,13 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
     <>
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
-        style={{ left: e.x - 36, top: e.y - 48, zIndex: profondeur(ici.x, ici.y) + 4 }}
-        viewBox={`${e.x - 36} ${e.y - 48} 72 64`}
-        width={72}
+        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}
+        viewBox={`${e.x - 40} ${e.y - 44} 80 64`}
+        width={80}
         height={64}
         aria-hidden="true"
       >
-        <DessinBenne x={ici.x} y={ici.y} dx={dx} dy={dy} plein={w.etape === 'aller'} chargement={CHARGEMENTS[w.liaison]} electrique={electrique} />
+        <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={remplissage} contenu={w.chargement} />
       </svg>
       {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur" />}
       {mineur && (

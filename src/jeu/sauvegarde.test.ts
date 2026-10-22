@@ -75,6 +75,21 @@ describe('sauvegarde', () => {
     expect(etat?.trajets[0].etape).toBe('quai')
   })
 
+  it('une partie de la version 22 : les anciens pousseurs prennent le trajet Mine → Marché', () => {
+    const stockage = fauxStockage()
+    const partie22 = creerPartie(aleatoireAvecGraine(1)) as unknown as Record<string, unknown>
+    partie22.version = 22
+    partie22.trajets = [{ liaison: 'mine-marche', etape: 'quai', distance: 0, chargement: {}, pousseur: null }]
+    partie22.employes = [
+      { nom: 'Lou', rarete: 'commun', niveau: 0, role: 'pousseur', etape: 'quai', progression: 0, sac: {}, blocsCasses: 0, tempsPaye: 100, lieu: 'puits', depuis: 'puits', forgeEnAttente: false },
+      { nom: 'Max', rarete: 'commun', niveau: 0, role: 'mineur', etape: 'creuse', progression: 0, sac: {}, blocsCasses: 0, tempsPaye: 100, lieu: 'puits', depuis: 'puits', forgeEnAttente: false },
+    ]
+    stockage.setItem(cleMonde('1'), JSON.stringify(partie22))
+    const etat = charger(stockage, '1')
+    expect(etat?.version).toBe(23)
+    expect(etat?.employes.map((e) => e.trajet)).toEqual(['mine-marche', null])
+  })
+
   it('compte le temps passé depuis la dernière sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)

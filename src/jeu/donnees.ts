@@ -264,7 +264,7 @@ export const SECONDES_AVANT_PAIE_MANAGER = 60
 
 // Les rails se paient en fer (dès le début). Il faut une ligne continue de la mine au marché :
 // alors le wagonnet peut porter le coffre au marché. Sans électricité, on le pousse (toi au
-// début, puis un mineur « pousseur ») ; avec le générateur, il roule tout seul.
+// début, puis un pousseur embauché pour ce trajet) ; avec le générateur, il roule tout seul.
 export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 // Les vitesses, en cases par seconde.
 export const VITESSE_POUSSE_JOUEUR = 3
@@ -425,7 +425,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     id: 'employes',
     nom: 'Personnel',
     emoji: '👷',
-    description: 'Embauche des mineurs qui creusent pour toi (et poussent le wagonnet), et paie leurs salaires.',
+    description: 'Embauche des mineurs qui creusent pour toi et des pousseurs pour tes wagonnets, et paie leurs salaires.',
     taille: 5,
     porte: 'droite',
     niveauMine: 1,

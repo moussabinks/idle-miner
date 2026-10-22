@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { LigneClassement, Score, TriClassement } from './jeu/classement'
 import { emailDuPseudo, type SauvegardeEnLigne } from './jeu/compte'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
+import { NIVEAU_MINE_MAX } from './jeu/donnees'
 
 // L'adresse du projet et sa clé « publishable ». Cette clé est faite pour être publique
 // (elle est de toute façon visible dans le navigateur) : ce sont les règles de la base qui
@@ -93,11 +94,19 @@ export async function envoyerScore(joueur: Joueur, score: Score): Promise<void> 
 // Les meilleurs joueurs, au niveau de la mine (colonne « prestige » ; l'argent départage) ou à
 // l'argent (le niveau de la mine départage).
 // Lisible même sans compte.
+// Le jour de la mine automatique : les scores d'avant ne comptent plus.
+const DEBUT_MINE_AUTOMATIQUE = '2026-10-22T00:00:00Z'
+
 export async function lireClassement(tri: TriClassement, nombre: number): Promise<LigneClassement[]> {
   const autre: TriClassement = tri === 'prestige' ? 'argent' : 'prestige'
   const { data, error } = await supabase
     .from('classement')
     .select('pseudo, prestige, argent')
+    // Les anciens scores (le prestige d'avant la mine automatique, le 22/10) ne comptent plus :
+    // seulement les lignes mises à jour depuis, avec un vrai niveau de mine (1 à 5). Pour les
+    // effacer pour de bon : supprimer les lignes (voir supabase/classement-remise-a-zero.sql).
+    .lte('prestige', NIVEAU_MINE_MAX)
+    .gte('modifie_le', DEBUT_MINE_AUTOMATIQUE)
     .order(tri, { ascending: false })
     .order(autre, { ascending: false })
     .limit(nombre)

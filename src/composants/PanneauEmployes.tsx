@@ -1,10 +1,11 @@
 // Le stand Personnel : on embauche des mineurs qui creusent tout seuls et remontent leur sac
-// dans le coffre de la mine. Un mineur peut aussi pousser le wagonnet (rôle « pousseur »).
+// dans le coffre de la mine, et (26/10) des pousseurs, chacun pour un trajet de wagonnet : on
+// choisit son départ et son arrivée, et le trajet brille sur la carte avant qu'on confirme.
 // On leur paie un salaire toutes les 10 minutes (ou c'est le manager qui s'en charge, au
 // niveau 4 de la mine). Au niveau 3, le recruteur trouve des mineurs plus ou moins rares :
 // chaque embauche est une surprise.
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import {
   LISTE_RARETES,
@@ -13,8 +14,13 @@ import {
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   PRIX_MANAGER,
+  BATIMENTS,
+  LIAISONS,
+  LISTE_LIAISONS,
   RARETES,
   SECONDES_PAR_PAIE,
+  type IdBatiment,
+  type IdLiaison,
 } from '../jeu/donnees'
 import {
   activiteEmploye,
@@ -28,7 +34,9 @@ import {
   manquePourUnePaie,
   embaucher,
   blocsParSecondeEmploye,
-  changerRole,
+  changerTrajet,
+  embaucherPousseur,
+  peutEmbaucherPousseur,
   embaucherManager,
   iconeActiviteEmploye,
   indemnites,
@@ -56,6 +64,8 @@ import {
   vitesseEmploye,
 } from '../jeu/employes'
 import type { Employe, EtatJeu } from '../jeu/mineur'
+import { batimentPose } from '../jeu/village'
+import { ligneDe, trajetDe } from '../jeu/wagonnet'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -64,6 +74,12 @@ import { Confirmation } from './Confirmation'
 import { RevelationRecrue } from './RevelationRecrue'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
+type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void }
+
+// « Mine → Marché ».
+function nomTrajet(liaison: IdLiaison): string {
+  return `${BATIMENTS[LIAISONS[liaison].depart].nom} → ${BATIMENTS[LIAISONS[liaison].arrivee].nom}`
+}
 
 function argent(n: number): string {
   return `${Math.round(n).toLocaleString('fr-FR')} $`
@@ -274,7 +290,7 @@ function Recruteur({ etat, jouer }: Props) {
 
 // La carte d'un mineur, compacte pour voir toute l'équipe d'un coup d'œil :
 //   - son nom, sa rareté, ce qu'il fait (icône + temps restant) et « Licencier » ;
-//   - son rôle (il creuse, ou il pousse le wagonnet) ;
+//   - pour un pousseur : son trajet (on peut le changer) ;
 //   - ce qu'il rapporte et son salaire, sur une ligne ;
 //   - deux petites jauges côte à côte : le temps payé et le sac ;
 //   - l'amélioration de son équipement (prix et bouton).
@@ -306,20 +322,32 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
           Licencier
         </button>
       </div>
-      <div className="module-ligne">
-        <span className="discret">
-          {pousseur
-            ? `🛤️ Pousse le wagonnet · salaire ${argent(salaireEmploye(employe))}`
-            : `⛏️ ~${argent(rapporte)} de blocs / 10 min (${(blocsParSecondeEmploye(etat, employe) * 60).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} / min) · salaire ${argent(salaireEmploye(employe))}`}
-        </span>
-        <button
-          className="bouton bouton-petit bouton-neutre"
-          onClick={() => jouer((e) => changerRole(e, index, pousseur ? 'mineur' : 'pousseur'))}
-          title={pousseur ? 'Il retourne creuser' : 'Il attend le wagonnet au quai et le pousse jusqu’au marché'}
-        >
-          {pousseur ? '⛏️ Creuser' : '🛤️ Pousser le wagonnet'}
-        </button>
-      </div>
+      {pousseur ? (
+        <div className="module-ligne">
+          <span className="discret">
+            🛤️ Pousse le wagonnet {employe.trajet ? <strong>{nomTrajet(employe.trajet)}</strong> : 'de… (aucun trajet)'} · salaire {argent(salaireEmploye(employe))}
+          </span>
+          <select
+            className="choix-trajet"
+            value={employe.trajet ?? ''}
+            onChange={(ev) => jouer((e) => changerTrajet(e, index, ev.target.value as IdLiaison))}
+            title="Changer son trajet"
+          >
+            {LISTE_LIAISONS.filter((l) => l === employe.trajet || ligneDe(etat, l) !== null).map((l) => (
+              <option key={l} value={l}>
+                {nomTrajet(l)}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div className="module-ligne">
+          <span className="discret">
+            ⛏️ ~{argent(rapporte)} de blocs / 10 min ({(blocsParSecondeEmploye(etat, employe) * 60).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} / min) · salaire{' '}
+            {argent(salaireEmploye(employe))}
+          </span>
+        </div>
+      )}
       <div className="jauges-employe">
         <Barre
           valeur={employe.tempsPaye}
@@ -327,13 +355,16 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
           texte={employe.tempsPaye > 0 ? `⏳ ${duree(employe.tempsPaye)}` : '😠 Plus payé'}
           couleur={employe.tempsPaye > 0 ? 'vert' : 'rouge'}
         />
-        <Barre
-          valeur={nbDansSacEmploye(employe)}
-          max={tailleSacEmploye(employe)}
-          texte={`🎒 ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(employe)}`}
-          couleur="or"
-        />
+        {!pousseur && (
+          <Barre
+            valeur={nbDansSacEmploye(employe)}
+            max={tailleSacEmploye(employe)}
+            texte={`🎒 ${nbDansSacEmploye(employe)} / ${tailleSacEmploye(employe)}`}
+            couleur="or"
+          />
+        )}
       </div>
+      {!pousseur && (
       <Amelioration
         etat={etat}
         actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
@@ -343,11 +374,76 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
+      )}
     </div>
   )
 }
 
-export function PanneauEmployes({ etat, jouer }: Props) {
+// L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
+// trajet brille sur la carte (s'il y a des rails), puis on confirme.
+function EmbauchePousseur({ etat, jouer, onApercuTrajet }: PropsPanneau) {
+  const departs = [...new Set(LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee)).map((l) => LIAISONS[l].depart))]
+  const [depart, setDepart] = useState<IdBatiment | null>(departs.length === 1 ? departs[0] : null)
+  const arrivees = LISTE_LIAISONS.filter((l) => LIAISONS[l].depart === depart && batimentPose(etat.village, LIAISONS[l].arrivee))
+  const [liaison, setLiaison] = useState<IdLiaison | null>(null)
+  const choisie = liaison && LIAISONS[liaison].depart === depart ? liaison : null
+  const avecRails = choisie !== null && ligneDe(etat, choisie) !== null
+  // Le trajet choisi brille sur la carte (et plus rien quand on ferme le panneau).
+  useEffect(() => {
+    onApercuTrajet?.(avecRails ? choisie : null)
+  }, [choisie, avecRails, onApercuTrajet])
+  useEffect(() => () => onApercuTrajet?.(null), [onApercuTrajet])
+  const prix = prixEmbauche(etat)
+  if (departs.length === 0) return null
+  return (
+    <div className="ligne-achat carte-pousseur">
+      <div className="ligne-titre">
+        <strong>🛤️ Embaucher un pousseur</strong>
+      </div>
+      <span className="discret">Il pousse le wagonnet d'un seul trajet. Choisis son départ, puis son arrivée :</span>
+      <div className="choix-batiments">
+        <span className="etiquette-choix">Départ</span>
+        {departs.map((b) => (
+          <button key={b} className={`bouton bouton-petit bouton-neutre ${depart === b ? 'choisi' : ''}`} onClick={() => setDepart(b)}>
+            {BATIMENTS[b].emoji} {BATIMENTS[b].nom}
+          </button>
+        ))}
+      </div>
+      {depart && (
+        <div className="choix-batiments">
+          <span className="etiquette-choix">Arrivée</span>
+          {arrivees.map((l) => (
+            <button key={l} className={`bouton bouton-petit bouton-neutre ${choisie === l ? 'choisi' : ''}`} onClick={() => setLiaison(l)}>
+              {BATIMENTS[LIAISONS[l].arrivee].emoji} {BATIMENTS[LIAISONS[l].arrivee].nom}
+            </button>
+          ))}
+        </div>
+      )}
+      {choisie &&
+        (avecRails ? (
+          <span className="texte-ok">
+            ✨ Le trajet {nomTrajet(choisie)} brille sur la carte.{!trajetDe(etat, choisie) && ' Son wagonnet sera créé avec l’embauche.'}
+          </span>
+        ) : (
+          <span className="texte-alerte">Pas de rails entre ces deux bâtiments : pose-les d'abord (menu Bâtiments).</span>
+        ))}
+      {prix === null ? (
+        <span className="discret">Ton équipe est complète.</span>
+      ) : (
+        <Achat
+          etat={etat}
+          cout={{ argent: prix, materiaux: {} }}
+          texte="🛤️ Embaucher pour ce trajet"
+          possible={choisie !== null && peutEmbaucherPousseur(etat, choisie)}
+          onAcheter={() => choisie && jouer((e) => embaucherPousseur(e, aleatoireNavigateur, choisie))}
+          genre="recruter"
+        />
+      )}
+    </div>
+  )
+}
+
+export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   // Le mineur qu'on vient de recruter (avec le recruteur) : on dévoile sa rareté en grand.
   const [recrue, setRecrue] = useState<Employe | null>(null)
   // Le mineur qu'on veut licencier : on demande d'abord confirmation (fenêtre du jeu).
@@ -366,8 +462,8 @@ export function PanneauEmployes({ etat, jouer }: Props) {
   return (
     <div className="liste-cartes">
       <p className="discret">
-        Tes mineurs creusent pour toi et remontent leur sac dans le coffre de la mine, même jeu fermé. En échange : un salaire toutes les 10
-        minutes, sinon ils attendent ici, mécontents.
+        Tes mineurs creusent pour toi et remontent leur sac dans le coffre de la mine, même jeu fermé ; tes pousseurs poussent les wagonnets
+        de leur trajet. En échange : un salaire toutes les 10 minutes, sinon ils attendent ici, mécontents.
       </p>
 
       {etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
@@ -404,9 +500,20 @@ export function PanneauEmployes({ etat, jouer }: Props) {
         )}
       </div>
 
-      {etat.employes.map((employe, index) => (
-        <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
-      ))}
+      <EmbauchePousseur etat={etat} jouer={jouer} onApercuTrajet={onApercuTrajet} />
+
+      {(['mineur', 'pousseur'] as const).map((role) => {
+        const equipe = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)
+        if (equipe.length === 0) return null
+        return (
+          <div key={role} className="liste-cartes">
+            <h4 className="titre-equipe">{role === 'mineur' ? `⛏️ Mineurs (${equipe.length})` : `🛤️ Pousseurs (${equipe.length})`}</h4>
+            {equipe.map(({ employe, index }) => (
+              <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
+            ))}
+          </div>
+        )
+      })}
 
       {recrue && <RevelationRecrue employe={recrue} onFermer={() => setRecrue(null)} />}
       {aLicencier !== null && etat.employes[aLicencier] && (

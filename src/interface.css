@@ -472,3 +472,51 @@
   opacity: 0.8;
   border-left-style: dashed;
 }
+
+/* --- Le Personnel (26/10) : l'embauche d'un pousseur, et l'équipe par métier ----------- */
+
+.carte-pousseur {
+  border-left: 4px solid #e2b13a;
+}
+
+.choix-batiments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.etiquette-choix {
+  min-width: 56px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #f3e2c4;
+}
+
+.choix-batiments .bouton.choisi {
+  background: linear-gradient(#ffd36b, #c88a12);
+  color: #2a1606;
+  box-shadow: 0 0 0 2px #fff3d6, 0 0 12px rgb(255 211 107 / 0.7);
+}
+
+.titre-equipe {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: #ffd84a;
+}
+
+.choix-trajet {
+  padding: 3px 6px;
+  border: 1.5px solid #8a6a4a;
+  border-radius: 8px;
+  background: #2a1a0c;
+  color: #fff3d6;
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.texte-ok {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8ff09a;
+}
