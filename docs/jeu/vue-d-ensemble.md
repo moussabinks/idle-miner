@@ -1,7 +1,7 @@
 # Mega Digger : vue d'ensemble du jeu
 
 > Le point d'entrée de la documentation : le concept, la boucle de jeu, la progression niveau de mine par niveau de mine, le vocabulaire et les choix de design.
-> Tout est écrit d'après le code au 22/10, après la refonte de la **mine automatique** (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 23` depuis les pousseurs du 26/10 ; le 27/10, les tenues et les décorations à acheter sont retirées, et le panneau de la mine a un combo et un tableau de production). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
+> Tout est écrit d'après le code au 22/10, après la refonte de la **mine automatique** (`src/jeu/`, version de sauvegarde `VERSION_ETAT = 24` depuis le niveau du joueur du 29/10 ; le 27/10, les tenues et les décorations à acheter sont retirées, et le panneau de la mine a un combo et un tableau de production ; le 29/10, le **niveau du joueur** (XP) arrive et tous les prix sont relevés : le jeu est plus lent). Les chiffres détaillés et les formules sont dans [equilibrage.md](equilibrage.md), et chaque bâtiment a sa fiche dans [../batiments/](../batiments/README.md).
 
 ## Sommaire de la documentation
 
@@ -10,26 +10,27 @@
 | Fichier | Contenu |
 |---|---|
 | [vue-d-ensemble.md](vue-d-ensemble.md) | Ce fichier : concept, boucle, progression par niveau de mine, glossaire, choix de design. |
+| [niveaux.md](niveaux.md) | **Nouveau (29/10)** : le niveau du joueur : gagner de l'XP, la courbe d'XP, ce que débloque chaque niveau (bâtiments, rails, niveaux d'amélioration), où on le voit, les anciennes parties. |
 | [village.md](village.md) | Le village vu du ciel : la grille, poser et payer les bâtiments, Modifier, rails (sans boucle) et trajets de wagonnets, chemins, personnages, bulles de notification. |
 | [mine-et-minage.md](mine-et-minage.md) | La mine à 5 niveaux : les blocs, le bloc à cliquer, le coffre, les pioches, la mine toute seule, le temps qui passe (et hors ligne), événements, découvertes, succès, statistiques. |
-| [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, sacs, ascenseur, wagonnets, générateur, foreuse, mineurs, raretés, bâtiments, revenus), le bot de simulation et les durées de jeu. |
-| [interface.md](interface.md) | L'écran : accueil, bandeau, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. |
+| [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, sacs, ascenseur, wagonnets, générateur, foreuse, mineurs, raretés, bâtiments, revenus, niveau du joueur), le bot de simulation et les durées de jeu. |
+| [interface.md](interface.md) | L'écran : accueil, bandeau (avec le niveau du joueur), tutoriel, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. |
 | [visuel-et-sons.md](visuel-et-sons.md) | Le style graphique (images, SVG, CSS), les animations, les bruitages et la musique (Web Audio), l'application installable. |
 | [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md) | Les 5 mondes dans `localStorage`, le hors-ligne, les comptes Supabase et le classement. |
 | [architecture.md](architecture.md) | L'organisation du code (`src/jeu/` pur, composants React), les tests et le déploiement. |
 
 ### Les bâtiments du village (`docs/batiments/`)
 
-| Fichier | Bâtiment | Déblocage |
+| Fichier | Bâtiment | Déblocage (29/10 : niveau du joueur, et niveau de la mine) |
 |---|---|---|
 | [README.md](../batiments/README.md) | Index des bâtiments (taille, porte, prix de construction) | — |
 | [mine.md](../batiments/mine.md) | ⛏️ Mine : bloc à cliquer, coffre, 5 niveaux, ascenseur des mineurs, trajets des wagonnets qui en partent, taille des wagonnets | dès le début (posée au milieu) |
 | [marche.md](../batiments/marche.md) | 💰 Marché : vente des blocs, arrivée des wagonnets de la mine et de la foreuse | dès le début (gratuit) |
 | [forgeron.md](../batiments/forgeron.md) | ⚒️ Forgeron : pioches, doublement, réparation | dès le début |
-| [bazar.md](../batiments/bazar.md) | 🎒 Bazar : sacs à dos | dès le début |
-| [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, pousseurs, salaires, recruteur, manager | dès le début (recruteur au niveau 3, manager au niveau 4) |
-| [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui fore seule | niveau 2 de la mine |
-| [generateur.md](../batiments/generateur.md) | ⚡ Générateur : redstone, rayon électrique, trajets électriques | niveau 2 de la mine |
+| [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, pousseurs, salaires, recruteur, manager | niveau 2 du joueur (recruteur : niveau 9 et mine niveau 3 ; manager : niveau 11 et mine niveau 4) |
+| [bazar.md](../batiments/bazar.md) | 🎒 Bazar : sacs à dos | niveau 3 du joueur |
+| [generateur.md](../batiments/generateur.md) | ⚡ Générateur : redstone, rayon électrique, trajets électriques | niveau 5 du joueur et mine niveau 2 |
+| [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui fore seule | niveau 6 du joueur et mine niveau 2 |
 
 Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md), référence historique des règles), l'état du projet et le journal ([../../CONTEXTE.md](../../CONTEXTE.md)), les règles de code ([../../CLAUDE.md](../../CLAUDE.md)). Ce qui a été retiré le 22/10 (prestige, talents, enchanteur) est rangé dans `archives/` (voir `archives/README.md`).
 
@@ -43,6 +44,7 @@ Depuis le 22/10, tout se passe **au village, vu du ciel** (vue isométrique à 4
 - **Vendre** : on met le coffre dans son **sac**, et on **marche jusqu'au marché** pour le vendre, à prix fixe.
 - **Améliorer** : avec l'argent (et des minerais, pris dans le sac puis dans le coffre), on agrandit le coffre, on achète de meilleures pioches (plus de chances de **doubler** un minerai), de plus grands sacs…
 - **Descendre** : la mine a **5 niveaux** (pierre, charbon et fer ; puis redstone ; or ; émeraudes ; diamants). On paie pour descendre au niveau suivant : de nouveaux minerais, plus rares et plus chers, et de nouveaux bâtiments.
+- **Monter de niveau** (29/10) : tout ce qu'on fait rapporte de l'**XP** (casser un bloc, construire, poser des rails, embaucher, améliorer, descendre la mine…). Le **niveau du joueur** (⭐ en haut à gauche) débloque petit à petit les bâtiments, les rails et les niveaux de chaque amélioration, qu'il faut ensuite payer. Voir [niveaux.md](niveaux.md).
 - **Automatiser** : on **embauche des mineurs** qui remplissent le coffre, on relie les bâtiments avec des **rails** et on choisit les **trajets des wagonnets** (le coffre vers le marché, le charbon vers la foreuse, la redstone vers le générateur, le chariot de la foreuse vers le marché), poussés par toi ou par un mineur, puis on **électrifie** les rails avec le **générateur** : les wagonnets roulent tout seuls, l'argent tombe même jeu fermé.
 
 Il n'y a plus de fin de partie (plus de bedrock ni de prestige) : au niveau 5, on continue d'agrandir, d'embaucher et d'automatiser.
@@ -58,27 +60,27 @@ cliquer sur le bloc ─► COFFRE de la mine ─► sac ─► marcher au march�
    les mineurs remontent
 ```
 
-1. **Départ** : au village, devant la mine, avec **0 $**, une **pioche en pierre** offerte, un sac de 32 places et un coffre de 100 places. Rien n'est construit : le menu **🏗️ Bâtiments** propose de poser le **marché**, gratuit, où l'on veut. Les autres bâtiments sont à quelques dizaines de dollars et un peu de pierre (forgeron 20 $ + 15 pierre, bazar 60 $ + 25 pierre, Personnel 100 $ + 30 pierre).
+1. **Départ** : au village, devant la mine, avec **0 $**, une **pioche en pierre** offerte, un sac de 32 places et un coffre de 100 places. Rien n'est construit : le menu **🏗️ Bâtiments** propose de poser le **marché**, gratuit, où l'on veut, puis le **forgeron** (30 $ + 15 pierre). Un **tutoriel** (Pépite) fait faire ces premiers pas : creuser, construire le marché, mettre le coffre dans le sac, vendre, et (29/10) construire le forgeron ; ensuite, le joueur avance seul avec la liste des tâches. Les autres bâtiments arrivent avec le niveau du joueur (Personnel au niveau 2, 250 $ + 50 pierre ; bazar au niveau 3, 300 $ + 60 pierre).
 2. **Creuser** : on touche la mine (ou le bouton ⛏️ Mine) : le hamster y marche et le panneau s'ouvre, avec le bloc à cliquer. Au niveau 1 : 70 % de pierre, 18 % de charbon, 12 % de fer. La pioche s'use d'un point par clic ; cassée, il faut 2 clics par bloc.
 3. **Vendre** : quand le coffre se remplit, **🎒 Mettre dans le sac**, puis on marche jusqu'au marché et **💰 Vendre la sélection** (le chariot de la foreuse aussi : il ne se vend plus sur place). On garde un peu de pierre et de fer pour les constructions (une jauge à 0 au marché = objet gardé).
-4. **Construire et améliorer** : forgeron (pioche en fer, 200 $ + 25 fer), bazar (sac), mine (coffre, niveau suivant), Personnel (le premier mineur coûte 50 $).
-5. **Les rails** (3 fer la case, dès le début) : une ligne continue de la mine au marché (jamais en boucle). Dès que les rails relient deux bâtiments (entourés de jaune quand on pose des rails), une bulle **« 🛤️ Automatiser »** apparaît au milieu de la ligne : on y active le trajet et on choisit les objets envoyés (gratuit ; on touche les rails pour le changer ensuite) : le wagonnet (40 places au début) emporte le coffre au marché et revient. Il faut le **pousser** : toi (bouton au panneau de la mine, le hamster fait l'aller-retour avec lui) ou un **pousseur**, embauché au Personnel pour ce trajet (on choisit son départ et son arrivée, le trajet brille sur la carte).
-6. **Niveau 2 de la mine** (400 $ + 30 fer) : la redstone arrive, avec la **foreuse** et le **générateur**. Le générateur brûle la redstone (1 redstone = 30 s) et électrifie un cercle de 15 cases autour de lui : si **tous les rails d'un trajet** sont dedans, son wagonnet roule tout seul et plus vite. C'est le revenu passif. Avec d'autres rails, la mine peut aussi envoyer son charbon à la foreuse et sa redstone au générateur, et la foreuse son chariot au marché (4 trajets en tout).
+4. **Construire et améliorer** : forgeron (pioche en fer, 500 $ + 40 fer, au niveau 4 du joueur), bazar (sac), mine (coffre, niveau suivant), Personnel (le premier mineur coûte 100 $). Chaque chose faite rapporte de l'XP, et chaque niveau gagné débloque la suite (« 🎉 Niveau *N* ! Débloqué : … »).
+5. **Les rails** (3 fer la case, à partir du **niveau 3 du joueur**, 29/10) : une ligne continue de la mine au marché (jamais en boucle). Dès que les rails relient deux bâtiments (entourés de jaune quand on pose des rails), une bulle **« 🛤️ Automatiser »** apparaît au milieu de la ligne : on y active le trajet et on choisit les objets envoyés (gratuit ; on touche les rails pour le changer ensuite) : le wagonnet (40 places au début) emporte le coffre au marché et revient. Il faut le **pousser** : toi (bouton au panneau de la mine, le hamster fait l'aller-retour avec lui) ou un **pousseur**, embauché au Personnel pour ce trajet (on choisit son départ et son arrivée, le trajet brille sur la carte).
+6. **Niveau 2 de la mine** (1 200 $ + 60 fer, au niveau 4 du joueur) : la redstone arrive, avec le **générateur** (niveau 5 du joueur) et la **foreuse** (niveau 6). Le générateur brûle la redstone (1 redstone = 30 s) et électrifie un cercle de 15 cases autour de lui : si **tous les rails d'un trajet** sont dedans, son wagonnet roule tout seul et plus vite. C'est le revenu passif. Avec d'autres rails, la mine peut aussi envoyer son charbon à la foreuse et sa redstone au générateur, et la foreuse son chariot au marché (4 trajets en tout).
 7. **Niveaux 3, 4 et 5** : or (et le recruteur, pour des mineurs rares), émeraudes (et le manager, qui paie les salaires tout seul), diamants. Chaque niveau permet 2 mineurs de plus (4 au niveau 1, 12 au niveau 5).
 
 Pendant ce temps, la **mine toute seule**, les **mineurs employés** (tant qu'on paie leur salaire), la **foreuse** (tant qu'elle a du charbon) et les **wagonnets** (poussés par un mineur, ou électriques) continuent quand le jeu est fermé (rattrapage de **8 h au plus**). Les clics du joueur, eux, non.
 
 ## La progression, niveau de mine par niveau de mine
 
-| Niveau | Nom | Nouveau minerai | Prix pour y descendre | La mine sort seule | Mineurs au plus | Ce qui se débloque | Le bot y arrive vers |
-|---|---|---|---|---|---|---|---|
-| **1** | Galerie de surface | pierre, charbon, fer | (départ) | 12 blocs/min | 4 | Marché (gratuit), Forgeron, Bazar, Personnel, rails | 0 min |
-| **2** | Veine de redstone | redstone | 400 $ + 30 fer | 15 blocs/min | 6 | **Foreuse**, **Générateur** | ~12 min |
-| **3** | Filon d'or | or | 2 500 $ + 60 fer + 30 redstone | 18 blocs/min | 8 | **Recruteur** (rareté des mineurs) | ~37 min |
-| **4** | Grotte aux émeraudes | émeraude | 9 000 $ + 60 redstone + 30 or | 21 blocs/min | 10 | **Manager** et trésorerie | ~1 h |
-| **5** | Cœur de diamant | diamant | 30 000 $ + 60 or + 25 émeraude | 24 blocs/min | 12 | le diamant (dernier niveau) | ~1 h 40 |
+| Niveau | Nom | Nouveau minerai | Prix pour y descendre (29/10) | Niveau du joueur | La mine sort seule | Mineurs au plus | Ce qui se débloque | Le bot y arrive vers |
+|---|---|---|---|---|---|---|---|---|
+| **1** | Galerie de surface | pierre, charbon, fer | (départ) | — | rien (on creuse à la main, 27/10) | 4 | Marché (gratuit), Forgeron, Personnel, Bazar, rails (selon le niveau du joueur) | 0 min |
+| **2** | Veine de redstone | redstone | 1 200 $ + 60 fer | 4 | 15 blocs/min | 6 | **Générateur**, **Foreuse** | ~26 min |
+| **3** | Filon d'or | or | 7 000 $ + 120 fer + 60 redstone | 7 | 18 blocs/min | 8 | **Recruteur** (rareté des mineurs) | ~2 h 05 |
+| **4** | Grotte aux émeraudes | émeraude | 25 000 $ + 120 redstone + 60 or | 10 | 21 blocs/min | 10 | **Manager** et trésorerie | ~4 h |
+| **5** | Cœur de diamant | diamant | 110 000 $ + 130 or + 55 émeraude | 13 | 24 blocs/min | 12 | le diamant (dernier niveau) | ~5 h 45 |
 
-Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 5 à 20 minutes, niveau 5 en 1 h à 2 h 30.
+Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : depuis le 29/10, niveau 2 en 15 à 40 minutes, niveau 5 en 4 h à 7 h (avant : 5 à 20 minutes et 1 h à 2 h 30). Le joueur arrive au niveau 5 vers 15 minutes et au niveau 10 vers 1 h 20 ; tout est débloqué au niveau 15 (vers 4 h). Le détail niveau par niveau est dans [niveaux.md](niveaux.md).
 
 ## Glossaire
 
@@ -109,25 +111,26 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 4 de la mine (15 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
+| **Manager** | Débloqué au niveau 4 de la mine et au niveau 11 du joueur (35 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
 | **Monde** | Une partie séparée (jusqu'à 5), choisie sur l'écran d'accueil. |
+| **Niveau du joueur** | (29/10) De 1 à 30, gagné avec l'**XP** : il débloque les bâtiments, les rails et les niveaux de chaque amélioration (qu'il faut ensuite payer). Affiché en haut à gauche (⭐ et une jauge violette). Voir [niveaux.md](niveaux.md). Ne pas confondre avec le niveau de la mine. |
 | **Niveau de la mine** | De 1 à 5 : il décide des blocs qui sortent, du débit, du nombre de mineurs, et débloque des bâtiments. On l'achète au panneau de la mine. Il compte pour le classement. |
 | **Objets gardés** | Les objets mis à 0 au marché (ou cochés au panneau de la mine) : ils ne sont pas vendus, et le wagonnet du marché les laisse dans le coffre. Le jeu s'en souvient (`nonAVendre`). |
-| **Mission** | Depuis le 27/10, une à trois choses à faire, en haut à droite (à la place de la barre « prochain objectif ») : une urgence (salaires, coffre plein), un premier pas, un bâtiment à poser, une étape de l'automatisation (rails, trajets, pousseur, mineur, générateur, foreuse) ou l'amélioration la plus proche. Chacune a sa progression (« 🪨 12/25 »). |
+| **Mission** | Depuis le 27/10, une à trois choses à faire, en haut à droite (à la place de la barre « prochain objectif ») : une urgence (salaires, coffre plein), un premier pas, un bâtiment à poser, une étape de l'automatisation (rails, trajets, pousseur, mineur, générateur, foreuse), l'amélioration la plus proche, ou (29/10) le prochain niveau du joueur (« ⭐ Niveau *N* : … »). Chacune a sa progression (« 🪨 12/25 »). |
 | **Paie / salaire** | Ce que coûtent 5 minutes de travail d'un mineur (selon sa pioche et sa rareté). Sans manager, on paie au plus 5 minutes d'avance. |
 | **Porte** | L'entrée d'un bâtiment, sur sa face avant gauche ou droite. Le joueur peut ouvrir un bâtiment de n'importe quel côté. |
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
 | **Puissance** | Ce qui fait rouler les wagonnets électriques plus vite (× 1 à × 3) et booste la foreuse : elle monte avec le niveau du générateur. |
 | **Puisage** | Option du générateur (dès son niveau 2) : il prend tout seul la redstone dans le coffre de la mine, en gardant 5 minutes d'avance. |
 | **Quai** | Le départ d'un trajet (la mine ou la foreuse) : le wagonnet y attend. Chaque pousseur attend au début des rails de son trajet, devant le bâtiment de départ. |
-| **Rails** | 3 fer la case, dès le début (menu Bâtiments) : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Jamais de boucle. |
+| **Rails** | 3 fer la case, à partir du niveau 3 du joueur (menu Bâtiments) : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Jamais de boucle. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. Dessiné en pointillés jaunes sur la carte. |
 | **Recharge automatique** | Option de la foreuse (dès le 3e niveau de forage) : elle brûle le charbon qu'elle fore tant que sa réserve est sous 60 s. |
-| **Recruteur** | Débloqué au niveau 3 de la mine (4 niveaux) : donne une rareté aux mineurs embauchés. |
+| **Recruteur** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (4 niveaux, de 10 000 à 100 000 $) : donne une rareté aux mineurs embauchés. |
 | **Rendement** | Le multiplicateur de rareté d'un mineur (vitesse de creusage et taille du sac). |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau en haut à gauche (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |
 | **Sac (à dos)** | Ce que le joueur porte du coffre (ou du chariot) jusqu'au marché : 32 à 2 048 places (7 tailles au Bazar). |
@@ -137,6 +140,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Trésorerie** | La cagnotte du manager, qu'on remplit au Personnel. |
 | **Village** | La clairière vue du ciel, où tout se passe. Voir [village.md](village.md). |
 | **Wagonnet** | Le chariot qui roule sur les rails, un par trajet : il charge au départ (40 à 600 places, la même taille pour tous), livre à l'arrivée (vend, ou apporte charbon ou redstone) et revient. Poussé par toi (3 cases/s) ou par un mineur (2,5 cases/s), ou électrique (8 à 24 cases/s). |
+| **XP** | (29/10) Les points d'expérience du joueur : 1 par bloc cassé en cliquant, 40 par bâtiment, 3 par case de rails, 30 par trajet, 25 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, 3 par voyage de wagonnet. Une chose ne rapporte qu'une fois. |
 
 ## Les choix de design (à respecter)
 
@@ -152,12 +156,13 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 ### Les exceptions décidées
 
 - ✅ **La foreuse** (16/10, au niveau 2 de la mine depuis le 22/10) : elle fore seule tant qu'on lui donne du charbon. **Une seule** foreuse.
-- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **recruteur** leur donne une rareté ; au niveau 4, le **manager** paie les salaires seul avec la trésorerie.
+- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, au niveau 2 du joueur depuis le 29/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **recruteur** leur donne une rareté ; au niveau 4, le **manager** paie les salaires seul avec la trésorerie.
 - ✅ **La mine qui sort des blocs toute seule** et le **wagonnet électrique** (22/10 ; plusieurs trajets choisis par le joueur depuis le 24/10) : c'est le cœur de la mine automatique.
 
 ### Les principes
 
 - ✅ **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics, la pioche en pierre se répare pour presque rien, les autres pioches se rachètent neuves, et les minerais se paient avec le sac **ou** le coffre.
+- ✅ **Le jeu se débloque petit à petit** (29/10) : le niveau du joueur ouvre les bâtiments et les améliorations un à un, pour ne pas tout montrer d'un coup ; on paie toujours ce qu'on débloque.
 - ✅ **De l'action à l'automatisation** : au début on clique et on marche jusqu'au marché ; puis on pousse le wagonnet ; puis des mineurs le poussent ; enfin le générateur fait rouler les wagonnets tout seuls.
 - ✅ **Sauvegarde** dans `localStorage` (nouveau par rapport à la v1, indispensable sur le web), jusqu'à 5 mondes ; le jeu marche toujours sans réseau.
 - ✅ **Tout en français** (interface, code, commentaires), code lisible pour débutants.

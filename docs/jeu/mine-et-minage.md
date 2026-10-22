@@ -1,7 +1,7 @@
 # ⛏️ La mine et le minage
 
 > Comment marche la mine depuis le 22/10 (la **mine automatique**) : ses 5 niveaux, le bloc à cliquer, le coffre, les pioches, la mine qui sort des blocs toute seule, et tout ce qui tourne autour : le temps qui passe (et hors ligne), les événements, les découvertes, les succès et les statistiques.
-> Écrit d'après le code au 22/10, mis à jour le 24/10 et le 27/10 (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
+> Écrit d'après le code au 22/10, mis à jour le 24/10, le 27/10 et le 29/10 (prix plus chers, niveau du joueur) (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
 
 Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur en mètres, les couches de 10 blocs, l'échelle et l'ascenseur du joueur, le quai, le réservoir, les convois et brouettes, les galeries, les blocs spéciaux (lave, coffres, géodes) et les seaux, le lapis, la netherite, la terre, le gravier et la roche dure, la bedrock et la victoire, le prestige et l'enchanteur. Le code du prestige et de l'enchanteur est rangé dans `archives/` ; le reste est dans l'historique git.
 
@@ -75,7 +75,7 @@ Le **prochain bloc** est toujours tiré d'avance (`prochainBloc`) : c'est le gro
 5. Si la pioche n'est pas cassée, elle s'**use d'un point**. Si elle vient de casser : « 💥 Ta pioche en X est cassée ! Il faut 2 clics par bloc : fais-la réparer au forgeron. »
 6. Un **nouveau bloc** est tiré au niveau actuel de la mine.
 
-Il n'y a **pas de temps de casse** : un clic, un bloc. La vitesse dépend de la vitesse à laquelle on clique (le bot de simulation clique 2 fois par seconde). Les clics ne marchent pas jeu fermé.
+Il n'y a **pas de temps de casse** : un clic, un bloc. La vitesse dépend de la vitesse à laquelle on clique (le bot de simulation clique 2 fois par seconde). Les clics ne marchent pas jeu fermé. Depuis le 29/10, chaque bloc cassé en cliquant rapporte **1 XP** au joueur (pas ceux de la mine toute seule, des mineurs ni de la foreuse) : voir [niveaux.md](niveaux.md).
 
 Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « tac » de la pioche, puis le « crac » du bloc, des éclats volent, et ce qui tombe s'envole au-dessus (« +1 ⚫ », « +2 💎 ×2 ! »).
 
@@ -85,12 +85,12 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 
 ### Les pioches (`PIOCHES`)
 
-| Pioche | Chance de doubler un minerai | Durabilité | Prix | Réparation (cassée) |
-|---|---:|---:|---|---|
-| 🪨 Pierre | 10 % | 150 clics | offerte au départ | 5 $ + 10 pierre |
-| ⚙️ Fer | 20 % | 300 | 200 $ + 25 fer | 30 $ + 5 fer |
-| 🟡 Or | 30 % | 500 | 1 500 $ + 20 or | 150 $ + 5 or |
-| 💎 Diamant | 45 % | 1 000 | 8 000 $ + 10 diamants | 600 $ + 3 diamants |
+| Pioche | Chance de doubler un minerai | Durabilité | Prix (29/10) | Niveau du joueur | Réparation (cassée) |
+|---|---:|---:|---|---:|---|
+| 🪨 Pierre | 10 % | 150 clics | offerte au départ | — | 5 $ + 10 pierre |
+| ⚙️ Fer | 20 % | 300 | 500 $ + 40 fer | 4 | 30 $ + 5 fer |
+| 🟡 Or | 30 % | 500 | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| 💎 Diamant | 45 % | 1 000 | 20 000 $ + 20 diamants | 12 | 600 $ + 3 diamants |
 
 - La réparation coûte une part de ce prix, **selon l'usure** (au moins 1 $ et 1 minerai) : voir [forgeron.md](../batiments/forgeron.md).
 - **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics ; la pioche en pierre se répare pour presque rien ; toutes les autres pioches débloquées se rachètent neuves.
@@ -101,13 +101,13 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix |
-|---|---:|---|
-| 1 | 100 | (départ) |
-| 2 | 250 | 150 $ + 40 pierre |
-| 3 | 600 | 800 $ + 40 fer |
-| 4 | 1 500 | 3 000 $ + 80 fer + 20 redstone |
-| 5 | 4 000 | 10 000 $ + 30 or |
+| Niveau | Places | Prix (29/10) | Niveau du joueur |
+|---|---:|---|---:|
+| 1 | 100 | (départ) | — |
+| 2 | 250 | 400 $ + 80 pierre | 2 |
+| 3 | 600 | 2 000 $ + 80 fer | 5 |
+| 4 | 1 500 | 8 000 $ + 150 fer + 40 redstone | 8 |
+| 5 | 4 000 | 25 000 $ + 60 or | 12 |
 
 - `rangerDansCoffre` ne range que ce qui tient : le reste est perdu pour un clic (le clic est refusé avant, coffre plein), et **attend dans le sac du mineur** pour un mineur.
 - **🎒 Mettre dans le sac** (`prendreDuCoffre`) : un minerai (bouton 🎒 de sa ligne) ou tout le coffre, il passe dans le sac, **les objets les plus chers d'abord**, tant qu'il y a de la place. « 🎒 *N* objets pris dans le coffre : va les vendre au marché ! »
@@ -124,12 +124,14 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 
 ### Descendre d'un niveau (`descendreNiveauMine`)
 
-| Pour aller au niveau | Prix |
-|---|---|
-| 2 · Veine de redstone | 400 $ + 30 fer |
-| 3 · Filon d'or | 2 500 $ + 60 fer + 30 redstone |
-| 4 · Grotte aux émeraudes | 9 000 $ + 60 redstone + 30 or |
-| 5 · Cœur de diamant | 30 000 $ + 60 or + 25 émeraude |
+| Pour aller au niveau | Prix (29/10) | Niveau du joueur |
+|---|---|---:|
+| 2 · Veine de redstone | 1 200 $ + 60 fer | 4 |
+| 3 · Filon d'or | 7 000 $ + 120 fer + 60 redstone | 7 |
+| 4 · Grotte aux émeraudes | 25 000 $ + 120 redstone + 60 or | 10 |
+| 5 · Cœur de diamant | 110 000 $ + 130 or + 55 émeraude | 13 |
+
+Depuis le 29/10, les prix sont environ **3 fois plus chers** (avant : 400 $ + 30 fer, 2 500 $ + 60 fer + 30 redstone, 9 000 $ + 60 redstone + 30 or, 30 000 $ + 60 or + 25 émeraude), et chaque niveau demande aussi un **niveau du joueur** (voir [niveaux.md](niveaux.md)). Descendre d'un niveau rapporte **150 XP**.
 
 Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), recruteur (3), manager (4), et 2 mineurs de plus à chaque niveau. Le niveau 5 est le dernier : il n'y a plus de fin de partie.
 
@@ -140,7 +142,7 @@ Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau
 ### L'horloge (`src/usePartie.ts`)
 
 - L'horloge tourne **tout le temps** (la mine sort ses blocs toute seule) : toutes les **50 ms** (`INTERVALLE_HORLOGE`), et à chaque image de l'écran (`requestAnimationFrame`) pendant que le joueur pousse un wagonnet (pour que le mouvement soit fluide). Un tic compte au plus 1 s (onglet en pause, par exemple).
-- À chaque tic, `avancerTemps(etat, secondes, aleatoire)` (`src/jeu/temps.ts`) fait avancer, dans l'ordre : **la mine** (`avancerMine`, qui compte aussi le temps de jeu), **le générateur** (`avancerGenerateur`), **la foreuse** (`avancerForeuse`), **les mineurs** (`avancerEmployes`) et **les wagonnets** (`avancerWagonnets`, chaque trajet à son tour).
+- À chaque tic, `avancerTemps(etat, secondes, aleatoire)` (`src/jeu/temps.ts`) fait avancer, dans l'ordre : **la mine** (`avancerMine`, qui compte aussi le temps de jeu), **le générateur** (`avancerGenerateur`), **la foreuse** (`avancerForeuse`), **les mineurs** (`avancerEmployes`) et **les wagonnets** (`avancerWagonnets`, chaque trajet à son tour) ; puis il compte **l'XP du joueur** (`mettreAJourXp`, 29/10 : tout ce qui a été fait depuis le dernier tic, avec un message « 🎉 Niveau *N* ! » à chaque niveau gagné).
 - Pour une longue durée, il avance par **morceaux d'une minute au plus** (`PAS_MAX`) : le générateur a le temps de se resservir dans le coffre, les wagonnets de faire plusieurs voyages… Les mineurs, eux, avancent par morceaux de 30 s (pour que le manager paie entre deux).
 - La sauvegarde se fait **au plus une fois par seconde** (l'état change sans arrêt), et en quittant la page.
 
@@ -235,6 +237,7 @@ La fenêtre montre 4 tuiles (💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ M
 - `src/jeu/mine.ts` : `infoNiveauMine`, `poidsDesBlocs`, `tirerBloc`, `chancesDesBlocs`, `valeurMoyenneBloc`.
 - `src/jeu/mineur.ts` : le type `EtatJeu`, `creerPartie`, le sac, le coffre, payer (`disponible`, `payer`), le clic (`cliquerMine`), la mine toute seule (`avancerMine`), les niveaux, le coffre, l'ascenseur, la vente, les pioches, le sac.
 - `src/jeu/temps.ts` : `avancerTemps`.
+- `src/jeu/niveaux.ts` : le niveau du joueur, l'XP et les cadenas (29/10, voir [niveaux.md](niveaux.md)).
 - `src/jeu/aleatoire.ts` : l'aléatoire injectable.
 - `src/jeu/decouvertes.ts`, `src/jeu/succes.ts`, `src/jeu/statistiques.ts` : découvertes, succès, statistiques.
 - `src/evenements.ts` : les événements pour les sons et animations.

@@ -1,7 +1,7 @@
 # Sauvegarde, comptes en ligne et classement
 
 > Comment Mega Digger garde la progression du joueur : dans le navigateur (`localStorage`), et en option en ligne sur Supabase (compte, synchronisation, classement).
-> Rédigé d'après le code au 22/10 (la mine automatique, version 21), mis à jour le 24/10 (les trajets des wagonnets, version 22) et le 26/10 (les pousseurs embauchés pour un trajet, version 23 ; le classement remis à zéro). Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (type `Village`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`, `supabase/classement-remise-a-zero.sql`.
+> Rédigé d'après le code au 22/10 (la mine automatique, version 21), mis à jour le 24/10 (les trajets des wagonnets, version 22) et le 26/10 (les pousseurs embauchés pour un trajet, version 23 ; le classement remis à zéro), puis le 29/10 (le niveau du joueur, version 24). Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (type `Village`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`, `supabase/classement-remise-a-zero.sql`.
 
 Principe général : **le `localStorage` est la sauvegarde principale.** Le jeu y écrit au plus une fois par seconde (et en quittant la page) et marche entièrement sans réseau. Le compte en ligne est facultatif : il recopie tous les mondes du navigateur sur Supabase pour les retrouver sur un autre appareil, et envoie le score au classement.
 
@@ -55,7 +55,7 @@ Fonctions :
 | `supprimerMonde(stockage, id)` | Retire le monde de la liste et efface ses clés `idle-miner-monde-<id>` et `-horodatage` |
 | `marquerJoue(stockage, id)` | Met `joueLe` à maintenant (le monde remonte en tête de liste) |
 | `sauvegarder(stockage, id, etat)` | Écrit l'`EtatJeu` en JSON et l'horodatage |
-| `charger(stockage, id)` | Lit la partie et convertit une partie des versions 21 et 22 (`convertirVersion21`, `convertirVersion22`), puis vérifie qu'elle est **à la version actuelle (23)** et valide (1.5), et enlève les tenues et les décorations retirées le 27/10. Renvoie `null` si absente, illisible, invalide ou **d'avant la version 21** (les parties d'avant la mine automatique repartent de zéro) |
+| `charger(stockage, id)` | Lit la partie et convertit une partie des versions 21, 22 et 23 (`convertirVersion21`, `convertirVersion22`, `convertirVersion23`), puis vérifie qu'elle est **à la version actuelle (24)** et valide (1.5), et enlève les tenues et les décorations retirées le 27/10. Renvoie `null` si absente, illisible, invalide ou **d'avant la version 21** (les parties d'avant la mine automatique repartent de zéro) |
 | `partieAncienne(stockage, id)` | Vrai si le monde contient une partie lisible d'une version plus ancienne que la 21 (avant la mine automatique) : l'accueil prévient qu'elle repart de zéro |
 | `secondesDepuisSauvegarde(stockage, id)` | Secondes écoulées depuis l'horodatage (0 si inconnu) |
 
@@ -67,19 +67,21 @@ Dans le jeu, le lien « Recommencer à zéro » (avec confirmation) remplace la 
 
 Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienne clé `idle-miner-sauvegarde` existe : son contenu est copié dans `idle-miner-monde-1` (et `idle-miner-horodatage` dans `idle-miner-monde-1-horodatage`), les anciennes clés sont effacées, et la liste reçoit `{ id: '1', nom: 'Monde 1', couleur: 0 }` datée de l'ancien horodatage.
 
-### 1.5 La version de l'état (la remise à zéro du 22/10, les conversions du 24/10 et du 26/10)
+### 1.5 La version de l'état (la remise à zéro du 22/10, les conversions du 24/10, du 26/10 et du 29/10)
 
-`VERSION_ETAT = 23` (dans `src/jeu/mineur.ts`, depuis le 26/10 : **les pousseurs embauchés pour un trajet** ; 22 le 24/10, les trajets des wagonnets ; 21 le 22/10, **la mine automatique** (`VERSION_MINE_AUTOMATIQUE`) ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 23** avec tous les champs attendus ; sinon il renvoie `null`. Avant, il passe la partie dans les conversions, l'une après l'autre : `convertirVersion22(convertirVersion21(donnees))` (une partie v21 devient v22, puis v23).
+`VERSION_ETAT = 24` (dans `src/jeu/mineur.ts`, depuis le 29/10 : **le niveau du joueur** ; 23 le 26/10, les pousseurs embauchés pour un trajet ; 22 le 24/10, les trajets des wagonnets ; 21 le 22/10, **la mine automatique** (`VERSION_MINE_AUTOMATIQUE`) ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 23** avec tous les champs attendus ; sinon il renvoie `null`. Avant, il passe la partie dans les conversions, l'une après l'autre : `convertirVersion22(convertirVersion21(donnees))` (une partie v21 devient v22, puis v23).
 
 **La conversion 21 → 22** (24/10, `convertirVersion21` dans `sauvegarde.ts`) : l'ancien wagonnet unique (`wagonnet`) est retiré. Sa taille devient `niveauWagonnets` (gardée pour tous les wagonnets). Si les rails reliaient la mine au marché, la partie reçoit le trajet Mine → Marché (`trajets`), sinon aucun trajet. Les mineurs qui poussaient le wagonnet retournent au quai. La partie passe en version 22 (puis la conversion suivante la passe en 23). Un test de `sauvegarde.test.ts` le vérifie.
 
 **La conversion 22 → 23** (26/10, `convertirVersion22` dans `sauvegarde.ts`) : chaque employé reçoit le champ `trajet`. Un ancien **pousseur** prend le trajet **Mine → Marché** s'il existe, sinon le premier trajet qui part de la mine (ou `null` s'il n'y en a aucun) ; un **mineur** reçoit `null`. Un mineur resté au quai (étape `quai`) redescend creuser tout seul au jeu suivant (`travailler` dans `employes.ts`). Un test de `sauvegarde.test.ts` le vérifie (un pousseur et un mineur : `['mine-marche', null]`).
 
+**La conversion 23 → 24** (29/10, `convertirVersion23` dans `sauvegarde.ts`) : la partie reçoit les champs `xp` et `recordsXp` du **niveau du joueur** (voir [niveaux.md](niveaux.md)). Pour que rien de ce qu'elle possède ne soit « trop en avance », elle reçoit **l'XP du niveau qu'il faut pour tout ce qu'elle a déjà** (ses bâtiments, ses rails, son niveau de mine, son coffre, ses pioches, son sac, son ascenseur, la pioche de ses mineurs, ses wagonnets, son générateur, sa foreuse, son recruteur, son manager : `niveauPourCeQuOnA` et `donnerXpAVieillePartie` dans `niveaux.ts`). Ses records d'XP partent de ce qu'elle a : seul ce qu'elle fera ensuite rapporte de l'XP. La conversion 22 → 23 met maintenant `version: 23` (et plus `VERSION_ETAT`), pour que les conversions s'enchaînent. Un test de `sauvegarde.test.ts` le vérifie.
+
 **Avant la version 21, pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
 
-**Le nettoyage du 27/10** (sans changer de version, toujours 23) : les **tenues** du Bazar et les **décorations** du village sont retirées du jeu. Après les conversions et la vérification, `charger` **enlève** d'une ancienne partie les champs `tenue` et `tenuesAchetees`, `village.decorations` et `village.prochainNumero`, et le succès `'paysagiste'` de la liste `succes`. La partie se charge donc sans souci (rien n'est remboursé). Un test de `sauvegarde.test.ts` le vérifie.
+**Le nettoyage du 27/10** (sans changer de version, alors la 23) : les **tenues** du Bazar et les **décorations** du village sont retirées du jeu. Après les conversions et la vérification, `charger` **enlève** d'une ancienne partie les champs `tenue` et `tenuesAchetees`, `village.decorations` et `village.prochainNumero`, et le succès `'paysagiste'` de la liste `succes`. La partie se charge donc sans souci (rien n'est remboursé). Un test de `sauvegarde.test.ts` le vérifie.
 
-**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de conversion (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger`, comme `convertirVersion21` et `convertirVersion22` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
+**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de conversion (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger`, comme `convertirVersion21`, `convertirVersion22` et `convertirVersion23` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
 
 Pour mémoire : les versions 1 à 17 (avant le 20/10) avaient une chaîne de migrations (surface et échelle, foreuses, assistant, donjons, prestige, mineurs, recruteur et manager…), retirée du code le 20/10 ; elle reste dans l'historique git.
 
@@ -89,7 +91,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 | Champ | Type | Sens |
 |---|---|---|
-| `version` | nombre | Version du format (23) |
+| `version` | nombre | Version du format (24) |
 | `argent` | nombre | Argent en poche |
 | `inventaire` | `{ bloc: nombre }` | Contenu du sac à dos |
 | `nonAVendre` | liste d'`IdBloc` | Objets gardés au marché (ni vendus, ni emportés par le wagonnet du marché) |
@@ -115,6 +117,8 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 | `stats` | `Statistiques` | Statistiques de la partie |
 | `decouvertes` | liste (`'recruteur'`, `'manager'`) | Nouveautés déjà vues devant le Personnel |
 | `village` | objet `Village` | Le village vu du ciel : bâtiments posés, rails, chemins |
+| `xp` | nombre | (29/10) L'XP totale gagnée : le niveau du joueur se recalcule à partir d'elle (`niveauDeXp`), il n'est pas rangé |
+| `recordsXp` | `{ compteur: nombre }` | (29/10) Le plus haut chiffre déjà compté de chaque chose qui rapporte de l'XP (`bloc`, `batiment`, `rail`, `trajet`, `embauche`, `amelioration`, `niveauMine`, `voyage`) : on ne regagne pas d'XP en retirant puis en reposant |
 
 (Les champs `tenue` et `tenuesAchetees`, les tenues du Bazar, sont retirés le 27/10 : voir plus bas.)
 
@@ -130,7 +134,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Statistiques`** : `blocsCasses`, `blocsMine`, `argentGagne`, `argentForeuse`, `argentWagonnet`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `diamantsTrouves`, `salairesPayes`, `tempsDeJeu`, `voyagesWagonnet` (voir [mine-et-minage.md](mine-et-minage.md#9-les-statistiques-srcjeustatistiquests-fenêtre-)).
 
-`estUnEtatValide()` vérifie : `version === 23`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes` et `village` (avec sa liste `batiments`). Depuis le 27/10, `tenue` et `tenuesAchetees` ne sont plus demandés.
+`estUnEtatValide()` vérifie : `version === 24` (`VERSION_ETAT`), `xp` (nombre, 29/10), et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes` et `village` (avec sa liste `batiments`). Depuis le 27/10, `tenue` et `tenuesAchetees` ne sont plus demandés.
 
 ### 1.7 Quand le jeu sauvegarde (`src/usePartie.ts`)
 

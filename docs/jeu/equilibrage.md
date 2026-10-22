@@ -1,9 +1,9 @@
 # Équilibrage : toutes les données et les formules
 
-> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique ; trajets des wagonnets le 24/10 : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
+> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique ; trajets des wagonnets le 24/10 ; **le 29/10, tous les prix relevés (environ ×2 à ×3) et le niveau du joueur**, voir [niveaux.md](niveaux.md) : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
 > Pour le fonctionnement de chaque bâtiment (boutons, messages, cas limites), voir les fiches de [../batiments/](../batiments/README.md). Pour le village vu du ciel (grille, placement, menus), voir [village.md](village.md). Pour le concept et la progression en un coup d'œil, voir [vue-d-ensemble.md](vue-d-ensemble.md).
 
-Conventions : « bloc/s » = blocs par seconde ; les distances au village sont en **cases** de la grille. Les niveaux affichés commencent à 1 ; dans le code, la plupart sont des index qui commencent à 0 (coffre, sac, wagonnet, générateur, forage, chariot, pioches des mineurs). Plus de prestige, de bonus de vente, de talents ni d'enchantements depuis le 22/10 (archivés dans `archives/`).
+Conventions : « bloc/s » = blocs par seconde ; les distances au village sont en **cases** de la grille. Les niveaux affichés commencent à 1 ; dans le code, la plupart sont des index qui commencent à 0 (coffre, sac, wagonnet, générateur, forage, chariot, pioches des mineurs). Plus de prestige, de bonus de vente, de talents ni d'enchantements depuis le 22/10 (archivés dans `archives/`). Depuis le 29/10, presque chaque achat demande aussi un **niveau du joueur** (colonne « Niv. joueur » ci-dessous, `NIVEAU_JOUEUR_POUR`) : une fois débloqué, il faut toujours le payer.
 
 ## Sommaire
 
@@ -21,8 +21,9 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 12. [Le village : constructions, rails et chemins, trajets](#le-village)
 13. [Revenus par seconde](#revenus-par-seconde)
 14. [Ce que coûte chaque niveau de la mine](#ce-que-coûte-chaque-niveau-de-la-mine)
-15. [Le bot de simulation](#le-bot-de-simulation)
-16. [Durées de jeu attendues](#durées-de-jeu-attendues)
+15. [Le niveau du joueur](#le-niveau-du-joueur)
+16. [Le bot de simulation](#le-bot-de-simulation)
+17. [Durées de jeu attendues](#durées-de-jeu-attendues)
 
 ---
 
@@ -43,7 +44,8 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 | `PAS_MAX` (`temps.ts`) | 60 s | une longue durée avance par morceaux d'une minute |
 | `PAS_EMPLOYES` (`employes.ts`) | 30 s | les mineurs avancent par morceaux de 30 s (le manager paie entre deux) |
 | Absence max (`ABSENCE_MAX`) | 8 h | temps rattrapé au retour |
-| `VERSION_ETAT` | 21 | version de la sauvegarde (la mine automatique, 22/10 : les parties d'avant repartent de zéro) |
+| `VERSION_ETAT` | 24 | version de la sauvegarde (21 : la mine automatique, 22/10, les parties d'avant repartent de zéro ; 24 : le niveau du joueur, 29/10) |
+| `NIVEAU_JOUEUR_MAX` | 30 | le niveau du joueur le plus haut (29/10) |
 
 ## Les blocs
 
@@ -67,7 +69,7 @@ Les prix ne changent jamais (pas de prix variables, plus de bonus de vente). Une
 
 | Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | Débit (bloc/s) | Valeur moyenne d'un bloc |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0,2 | 3,04 $ |
+| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0 (27/10 : on creuse à la main) | 3,04 $ |
 | 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 | 4,58 $ |
 | 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,3 | 7,50 $ |
 | 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,35 | 13,07 $ |
@@ -76,34 +78,34 @@ Les prix ne changent jamais (pas de prix variables, plus de bonus de vente). Une
 - **Valeur moyenne** (`valeurMoyenneBloc(niveau, doublement = 0)`) = Σ chance × prix × (1 + doublement si c'est un minerai). Avec la pioche en diamant (45 %), un clic au niveau 5 vaut en moyenne 19,79 + 0,45 × (19,79 − 0,40) ≈ **28,5 $**.
 - **Débit** : la mine sort toute seule `debit` blocs par seconde dans le coffre, tant qu'il a de la place (`avancerMine`). Jamais doublés.
 
-| Pour aller au niveau | Prix (`cout`) | Ce qui se débloque |
-|---|---|---|
-| 2 | 400 $ + 30 fer | Foreuse, Générateur (`niveauMine: 2`) |
-| 3 | 2 500 $ + 60 fer + 30 redstone | Recruteur (`NIVEAU_MINE_RECRUTEUR`) |
-| 4 | 9 000 $ + 60 redstone + 30 or | Manager (`NIVEAU_MINE_MANAGER`) |
-| 5 | 30 000 $ + 60 or + 25 émeraude | (le dernier niveau : le diamant) |
+| Pour aller au niveau | Prix (`cout`, 29/10) | Niv. joueur | Ce qui se débloque |
+|---|---|---:|---|
+| 2 | 1 200 $ + 60 fer | 4 | Foreuse, Générateur (`niveauMine: 2`) |
+| 3 | 7 000 $ + 120 fer + 60 redstone | 7 | Recruteur (`NIVEAU_MINE_RECRUTEUR`) |
+| 4 | 25 000 $ + 120 redstone + 60 or | 10 | Manager (`NIVEAU_MINE_MANAGER`) |
+| 5 | 110 000 $ + 130 or + 55 émeraude | 13 | (le dernier niveau : le diamant) |
 
-Total pour aller au niveau 5 : **41 900 $ + 90 fer + 90 redstone + 90 or + 25 émeraude**. Chaque niveau donne aussi **2 mineurs de plus** au maximum.
+Total pour aller au niveau 5 : **143 200 $ + 180 fer + 180 redstone + 190 or + 55 émeraude** (avant le 29/10 : 41 900 $ + 90 fer + 90 redstone + 90 or + 25 émeraude). Chaque niveau donne aussi **2 mineurs de plus** au maximum.
 
 ## Le coffre
 
-`NIVEAUX_COFFRE` : 100 → **250** (150 $ + 40 pierre) → **600** (800 $ + 40 fer) → **1 500** (3 000 $ + 80 fer + 20 redstone) → **4 000** places (10 000 $ + 30 or). Total : 13 950 $ + 40 pierre + 120 fer + 20 redstone + 30 or.
+`NIVEAUX_COFFRE` (29/10) : 100 → **250** (400 $ + 80 pierre, niveau 2 du joueur) → **600** (2 000 $ + 80 fer, niveau 5) → **1 500** (8 000 $ + 150 fer + 40 redstone, niveau 8) → **4 000** places (25 000 $ + 60 or, niveau 12). Total : 35 400 $ + 80 pierre + 230 fer + 40 redstone + 60 or.
 
 - Plein : plus de clic, plus de débit, et les mineurs attendent pour vider leur sac.
 - **Payer** (`disponible`, `payerMateriaux`) : pour chaque minerai d'un prix, on prend d'abord dans le sac, puis le reste dans le coffre.
 
-À débit seul, un coffre de 100 places se remplit en 8 min 20 au niveau 1 (0,2 bloc/s), un coffre de 4 000 places en 2 h 47 au niveau 5 (0,4 bloc/s), sans compter les clics et les mineurs.
+À débit seul, au niveau 1 la mine ne sort rien toute seule (27/10) ; un coffre de 4 000 places en 2 h 47 au niveau 5 (0,4 bloc/s), sans compter les clics et les mineurs.
 
 ## Les pioches et le clic
 
 `PIOCHES`. Un clic casse **un bloc** (deux clics si la pioche est cassée) : pas de temps de casse, pas de vitesse.
 
-| Pioche | Doublement | Durabilité | Prix (débloquer / racheter) | Réparation (pioche cassée) |
-|---|---:|---:|---|---|
-| Pierre | 10 % | 150 | 10 $ + 20 pierre (offerte, pas rachetable dans l'interface) | 5 $ + 10 pierre |
-| Fer | 20 % | 300 | 200 $ + 25 fer | 30 $ + 5 fer |
-| Or | 30 % | 500 | 1 500 $ + 20 or | 150 $ + 5 or |
-| Diamant | 45 % | 1 000 | 8 000 $ + 10 diamant | 600 $ + 3 diamant |
+| Pioche | Doublement | Durabilité | Prix (débloquer / racheter, 29/10) | Niv. joueur | Réparation (pioche cassée) |
+|---|---:|---:|---|---:|---|
+| Pierre | 10 % | 150 | 10 $ + 20 pierre (offerte, pas rachetable dans l'interface) | — | 5 $ + 10 pierre |
+| Fer | 20 % | 300 | 500 $ + 40 fer | 4 | 30 $ + 5 fer |
+| Or | 30 % | 500 | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| Diamant | 45 % | 1 000 | 20 000 $ + 20 diamant | 12 | 600 $ + 3 diamant |
 
 - **Doublement** (`chanceDoublement`) : un minerai cassé en cliquant donne 2 au lieu d'1 si `aleatoire() < doublement`. 0 avec une pioche cassée. Seulement pour les clics.
 - **Usure** : +1 à chaque bloc cassé avec une pioche pas cassée. Cassée quand l'usure atteint la durabilité ; elle ne s'use plus ensuite.
@@ -117,38 +119,39 @@ Total pour aller au niveau 5 : **41 900 $ + 90 fer + 90 redstone + 90 or + 25 é
 | Niveau (code) | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Places | 32 | 64 | 128 | 256 | 512 | 1 024 | 2 048 |
-| Prix | 0 | 80 $ | 400 $ | 1 500 $ | 5 000 $ | 15 000 $ | 40 000 $ |
+| Prix (29/10) | 0 | 200 $ | 1 000 $ | 4 000 $ | 12 000 $ | 35 000 $ | 100 000 $ |
+| Niv. joueur | — | 3 | 5 | 8 | 11 | 14 | 15 |
 
-Total : 61 980 $. Le sac ne sert qu'à porter (coffre ou chariot → marché) et à payer.
+Total : 152 200 $ (avant le 29/10 : 61 980 $). Le sac ne sert qu'à porter (coffre ou chariot → marché) et à payer.
 
 ## L'ascenseur des mineurs
 
 `NIVEAUX_ASCENSEUR` (au panneau de la mine). Un trajet = une montée ou une descente d'un mineur (`secondesTrajetMineur`).
 
-| Niveau | Trajet | Prix |
-|---|---:|---|
-| 0 (échelle) | 10 s | — |
-| 1 | 6 s | 150 $ + 10 fer |
-| 2 | 4 s | 600 $ + 30 fer + 5 redstone |
-| 3 | 2,8 s | 2 000 $ + 60 fer + 20 redstone |
-| 4 | 2 s | 6 000 $ + 100 fer + 50 redstone |
-| 5 | 1,4 s | 15 000 $ + 100 redstone + 20 or |
-| 6 | 1 s | 40 000 $ + 60 or + 10 émeraude |
+| Niveau | Trajet | Prix (29/10) | Niv. joueur |
+|---|---:|---|---:|
+| 0 (échelle) | 10 s | — | — |
+| 1 | 6 s | 400 $ + 20 fer | 4 |
+| 2 | 4 s | 1 500 $ + 50 fer + 10 redstone | 6 |
+| 3 | 2,8 s | 5 000 $ + 100 fer + 40 redstone | 8 |
+| 4 | 2 s | 15 000 $ + 160 fer + 90 redstone | 10 |
+| 5 | 1,4 s | 40 000 $ + 160 redstone + 40 or | 13 |
+| 6 | 1 s | 100 000 $ + 100 or + 20 émeraude | 15 |
 
-Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
+Total : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude.
 
 ## Les rails et les wagonnets
 
 | Constante | Valeur |
 |---|---|
-| `COUT_RAIL` | 3 fer la case (dès le début) |
+| `COUT_RAIL` | 3 fer la case (à partir du niveau 3 du joueur, 29/10) |
 | `VITESSE_POUSSE_JOUEUR` | 3 cases/s |
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s |
 | `VITESSE_RAILS` | 8 cases/s × puissance du générateur |
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
 | `RESERVE_GENERATEUR_WAGONNET` | 1 800 s de redstone (60 redstones) : le wagonnet Mine → Générateur remplit jusque-là |
 
-`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`) : 40 → **100** (500 $ + 40 fer) → **250** (2 500 $ + 80 fer + 20 redstone) → **600** places (10 000 $ + 40 or).
+`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`, 29/10) : 40 → **100** (1 200 $ + 60 fer, niveau 6 du joueur) → **250** (6 000 $ + 150 fer + 40 redstone, niveau 9) → **600** places (25 000 $ + 80 or, niveau 12). Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
 
 - **Trajets** (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, un wagonnet chacun, créés gratuitement par le joueur.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
@@ -163,13 +166,15 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
 ## Le générateur
 
-| Niveau | Rayon (cases) | Puissance | Wagonnet électrique | Foreuse | Prix |
-|---|---:|---:|---:|---:|---|
-| 1 | 15 | ×1 | 8 cases/s | ×1,5 | le bâtiment : 1 200 $ + 50 fer + 20 redstone |
-| 2 | 20 | ×1,3 | 10,4 cases/s | ×1,65 | 3 000 $ + 80 fer + 40 redstone |
-| 3 | 26 | ×1,7 | 13,6 cases/s | ×1,85 | 8 000 $ + 150 fer + 80 redstone |
-| 4 | 33 | ×2,2 | 17,6 cases/s | ×2,1 | 20 000 $ + 250 fer + 150 redstone |
-| 5 | 40 | ×3 | 24 cases/s | ×2,5 | 50 000 $ + 400 fer + 300 redstone |
+| Niveau | Rayon (cases) | Puissance | Wagonnet électrique | Foreuse | Prix (29/10) | Niv. joueur |
+|---|---:|---:|---:|---:|---|---:|
+| 1 | 15 | ×1 | 8 cases/s | ×1,5 | le bâtiment : 4 000 $ + 100 fer + 40 redstone | 5 |
+| 2 | 20 | ×1,3 | 10,4 cases/s | ×1,65 | 7 500 $ + 120 fer + 60 redstone | 7 |
+| 3 | 26 | ×1,7 | 13,6 cases/s | ×1,85 | 20 000 $ + 220 fer + 120 redstone | 10 |
+| 4 | 33 | ×2,2 | 17,6 cases/s | ×2,1 | 50 000 $ + 350 fer + 220 redstone | 13 |
+| 5 | 40 | ×3 | 24 cases/s | ×2,5 | 120 000 $ + 550 fer + 420 redstone | 15 |
+
+Améliorations (niveaux 2 à 5) : 197 500 $ + 1 240 fer + 820 redstone.
 
 - **Consommation** : 1 redstone = 30 s, soit 2 par minute, **120 par heure**, quel que soit le niveau.
 - **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`. Un trajet est électrique quand toutes ses cases sont dedans **et** que le générateur est allumé avec de la redstone (chaque trajet compte à part).
@@ -179,14 +184,16 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
 ## La foreuse
 
-| Niveau | Forage (bloc/s) | Prix | Chariot (places) | Prix |
-|---|---:|---|---:|---|
-| 1 | 0,5 | (le bâtiment : 800 $ + 60 pierre + 30 fer) | 200 | (de base) |
-| 2 | 0,8 | 1 500 $ + 30 fer + 10 redstone | 400 | 1 000 $ + 20 fer |
-| 3 | 1,2 | 4 000 $ + 60 fer + 30 redstone | 800 | 3 000 $ + 50 fer + 15 redstone |
-| 4 | 1,8 | 10 000 $ + 100 fer + 60 redstone | 1 600 | 8 000 $ + 90 fer + 40 redstone |
-| 5 | 2,6 | 25 000 $ + 100 redstone + 30 or | 3 000 | 20 000 $ + 80 redstone + 20 or |
-| 6 | 3,6 | 60 000 $ + 60 or + 15 émeraude | 6 000 | 50 000 $ + 50 or + 10 émeraude |
+| Niveau | Forage (bloc/s) | Prix (29/10) | Chariot (places) | Prix (29/10) | Niv. joueur (les deux) |
+|---|---:|---|---:|---|---:|
+| 1 | 0,5 | (le bâtiment : 3 000 $ + 120 pierre + 60 fer) | 200 | (de base) | 6 (le bâtiment) |
+| 2 | 0,8 | 3 500 $ + 50 fer + 20 redstone | 400 | 2 500 $ + 40 fer | 7 |
+| 3 | 1,2 | 10 000 $ + 100 fer + 50 redstone | 800 | 7 500 $ + 80 fer + 25 redstone | 9 |
+| 4 | 1,8 | 25 000 $ + 160 fer + 100 redstone | 1 600 | 20 000 $ + 150 fer + 70 redstone | 11 |
+| 5 | 2,6 | 60 000 $ + 160 redstone + 50 or | 3 000 | 50 000 $ + 130 redstone + 40 or | 14 |
+| 6 | 3,6 | 150 000 $ + 100 or + 25 émeraude | 6 000 | 120 000 $ + 90 or + 20 émeraude | 15 |
+
+Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. Total du chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude.
 
 - **Charbon** : 1 charbon = 20 s de forage, quelle que soit la vitesse (3 charbons par minute).
 - **Recharge automatique** (dès le forage niveau 3, `NIVEAU_RECHARGE_AUTO` = index 2) : un charbon foré est brûlé (+20 s) au lieu d'aller dans le chariot, tant que la réserve est sous 60 s (`RESERVE_RECHARGE_AUTO`).
@@ -198,20 +205,20 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 ### Équipe, embauche, licenciement
 
 - **Nombre max** (`maxEmployes`) = `EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU × (niveau de la mine − 1)` = 4 + 2 × (N − 1) : **4, 6, 8, 10, 12**.
-- **Prix de la n-ième embauche** (`PRIX_EMBAUCHE`) : 50, 150, 400, 1 000, 2 500, 6 000, 14 000, 30 000, 60 000, 120 000 $, puis × 1,6 à chaque fois (`HAUSSE_APRES_LISTE`) : 192 000 $ (11e), 307 200 $ (12e). Arrondi à la dizaine sous 1 000 $, à la centaine au-dessus. Le prix ne dépend que de la taille actuelle de l'équipe.
-- **Indemnités** (`indemnites`) = 40 % (`PART_INDEMNITES`) du prix de base de la dernière place : 20 $ pour 1 mineur, 400 $ pour 4, 12 000 $ pour 8, 122 900 $ pour 12.
+- **Prix de la n-ième embauche** (`PRIX_EMBAUCHE`, doublés le 29/10) : 100, 300, 800, 2 000, 5 000, 12 000, 28 000, 60 000, 120 000, 240 000 $, puis × 1,6 à chaque fois (`HAUSSE_APRES_LISTE`) : 384 000 $ (11e), 614 400 $ (12e). Arrondi à la dizaine sous 1 000 $, à la centaine au-dessus. Le prix ne dépend que de la taille actuelle de l'équipe.
+- **Indemnités** (`indemnites`) = 40 % (`PART_INDEMNITES`) du prix de base de la dernière place : 40 $ pour 1 mineur, 800 $ pour 4, 24 000 $ pour 8, 245 800 $ pour 12.
 
 ### Travail
 
 `NIVEAUX_EMPLOYE` (payés en argent, au Personnel) × la rareté (`RARETES`).
 
-| Pioche | Vitesse en creusant | Sac | Prix | Salaire / 5 min |
-|---|---:|---:|---:|---:|
-| Bois | 0,15 bloc/s | 10 | (de base) | 35 $ |
-| Pierre | 0,25 | 15 | 150 $ | 70 $ |
-| Fer | 0,4 | 20 | 600 $ | 155 $ |
-| Or | 0,6 | 30 | 2 500 $ | 350 $ |
-| Diamant | 0,9 | 45 | 9 000 $ | 770 $ |
+| Pioche | Vitesse en creusant | Sac | Prix (29/10) | Niv. joueur | Salaire / 5 min |
+|---|---:|---:|---:|---:|---:|
+| Bois | 0,15 bloc/s | 10 | (de base) | — | 35 $ |
+| Pierre | 0,25 | 15 | 400 $ | 4 | 70 $ |
+| Fer | 0,4 | 20 | 1 500 $ | 6 | 155 $ |
+| Or | 0,6 | 30 | 6 000 $ | 9 | 350 $ |
+| Diamant | 0,9 | 45 | 22 000 $ | 12 | 770 $ |
 
 - **Un tour** : creuser un sac (`sac ÷ vitesse`), monter, vider (2 s), redescendre. **Blocs par seconde** (`blocsParSecondeEmploye`) = `sac ÷ (sac ÷ vitesse + 2 × trajet + 2)`.
 - La rareté multiplie **la vitesse et le sac** par le même rendement : le temps de creusage d'un sac ne change pas, mais chaque tour rapporte plus (un mythique sort 5 fois plus de blocs par tour).
@@ -239,18 +246,18 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
 ### Recruteur (`NIVEAUX_RECRUTEUR`, niveau 3 de la mine)
 
-| Niveau | Prix | Commun | Rare | Épique | Légendaire | Mythique |
-|---|---:|---:|---:|---:|---:|---:|
-| 1 | 5 000 $ | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 12 000 $ | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
-| 3 | 25 000 $ | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
-| 4 | 50 000 $ | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
+| Niveau | Prix (29/10) | Niv. joueur | Commun | Rare | Épique | Légendaire | Mythique |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 10 000 $ | 9 | 65 % | 20 % | 10 % | 4 % | 1 % |
+| 2 | 25 000 $ | 11 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
+| 3 | 50 000 $ | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
+| 4 | 100 000 $ | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
 
 Sans recruteur, 100 % de communs. Le tirage part du plus rare (`tirerRarete`).
 
 ### Manager (niveau 4 de la mine)
 
-`PRIX_MANAGER` = 15 000 $, `SALAIRE_MANAGER` = 400 $ / 5 min. Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que la trésorerie suffit.
+`PRIX_MANAGER` = 35 000 $ (29/10 ; avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que la trésorerie suffit.
 
 ## Le village
 
@@ -258,24 +265,26 @@ Une grille de **60 × 60 cases** (`TAILLE_GRILLE`). Le fonctionnement (menus, pl
 
 ### Les bâtiments (`BATIMENTS`, `batiments.ts`)
 
-| Bâtiment | Taille | Entrée (sans miroir) | Niveau de mine | Prix pour le poser |
-|---|---|---|---:|---|
-| ⛏️ Mine | 10 × 10 | face avant gauche | 1 | déjà posée au milieu (case 25, 25) |
-| 💰 Marché | 5 × 5 | face avant gauche | 1 | **gratuit** |
-| ⚒️ Forgeron | 5 × 5 | face avant droite | 1 | 20 $ + 15 pierre |
-| 🎒 Bazar | 5 × 5 | face avant droite | 1 | 60 $ + 25 pierre |
-| 👷 Personnel | 5 × 5 | face avant droite | 1 | 100 $ + 30 pierre |
-| ⚙️ Foreuse | 5 × 5 | face avant gauche | 2 | 800 $ + 60 pierre + 30 fer |
-| ⚡ Générateur | 5 × 5 | face avant droite | 2 | 1 200 $ + 50 fer + 20 redstone |
+Dans l'ordre du menu (`LISTE_BATIMENTS`, celui des déblocages depuis le 29/10) :
 
-- Total au niveau 1 (marché, forgeron, bazar, Personnel) : **180 $ + 70 pierre**. Tous les bâtiments : **2 180 $ + 130 pierre + 80 fer + 20 redstone**.
+| Bâtiment | Taille | Entrée (sans miroir) | Niveau de mine | Niv. joueur | Prix pour le poser (29/10) |
+|---|---|---|---:|---:|---|
+| ⛏️ Mine | 10 × 10 | face avant gauche | 1 | — | déjà posée au milieu (case 25, 25) |
+| 💰 Marché | 5 × 5 | face avant gauche | 1 | 1 | **gratuit** |
+| ⚒️ Forgeron | 5 × 5 | face avant droite | 1 | 1 | 30 $ + 15 pierre |
+| 👷 Personnel | 5 × 5 | face avant droite | 1 | 2 | 250 $ + 50 pierre |
+| 🎒 Bazar | 5 × 5 | face avant droite | 1 | 3 | 300 $ + 60 pierre |
+| ⚡ Générateur | 5 × 5 | face avant droite | 2 | 5 | 4 000 $ + 100 fer + 40 redstone |
+| ⚙️ Foreuse | 5 × 5 | face avant gauche | 2 | 6 | 3 000 $ + 120 pierre + 60 fer |
+
+- Total au niveau 1 de la mine (marché, forgeron, Personnel, bazar) : **580 $ + 125 pierre** (avant le 29/10 : 180 $ + 70 pierre). Tous les bâtiments : **7 580 $ + 245 pierre + 160 fer + 40 redstone** (avant : 2 180 $ + 130 pierre + 80 fer + 20 redstone).
 - On paie une seule fois ; déplacer ou retourner est gratuit ; on ne peut pas enlever un bâtiment.
 
 ### Rails et chemins
 
 | Élément | Prix | Remarques |
 |---|---|---|
-| 🛤️ Rail (1 case) | **3 fer** (`COUT_RAIL`) | dès le début |
+| 🛤️ Rail (1 case) | **3 fer** (`COUT_RAIL`) | à partir du niveau 3 du joueur (29/10) |
 | 🪨 Chemin de pavés (1 case) | 5 $ (`COUT_CHEMIN`) | seulement joli |
 
 Enlever un rail ou un chemin ne rembourse rien ; les déplacer est gratuit.
@@ -311,22 +320,32 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 
 | Étape | Prix |
 |---|---|
-| Bâtiments du niveau 1 + 3 cases de rails | 180 $ + 70 pierre + 9 fer |
-| Niveau 2 | 400 $ + 30 fer |
-| Foreuse + générateur | 2 000 $ + 60 pierre + 80 fer + 20 redstone |
-| Niveau 3 | 2 500 $ + 60 fer + 30 redstone |
-| Niveau 4 | 9 000 $ + 60 redstone + 30 or |
-| Niveau 5 | 30 000 $ + 60 or + 25 émeraude |
-| Tout au maximum (coffre, pioches, sacs, ascenseur, wagonnet, générateur, forage, chariot, recruteur, manager) | plusieurs centaines de milliers de dollars |
+| Bâtiments du niveau 1 + 3 cases de rails | 580 $ + 125 pierre + 9 fer |
+| Niveau 2 | 1 200 $ + 60 fer |
+| Foreuse + générateur | 7 000 $ + 120 pierre + 160 fer + 40 redstone |
+| Niveau 3 | 7 000 $ + 120 fer + 60 redstone |
+| Niveau 4 | 25 000 $ + 120 redstone + 60 or |
+| Niveau 5 | 110 000 $ + 130 or + 55 émeraude |
+| Tout au maximum (coffre, pioches, sacs, ascenseur, wagonnet, générateur, forage, chariot, recruteur, manager) | environ 1,3 million de dollars (plus les pioches des mineurs : 29 900 $ par mineur) |
+
+En plus de l'argent, chaque étape demande un **niveau du joueur** : 4 pour le niveau 2 de la mine, 7 pour le 3, 10 pour le 4, 13 pour le 5 (voir [Le niveau du joueur](#le-niveau-du-joueur)).
+
+## Le niveau du joueur
+
+Tout est expliqué dans [niveaux.md](niveaux.md) (29/10). En bref :
+
+- **XP** (`XP_PAR`) : 1 par bloc cassé en cliquant, 40 par bâtiment, 3 par case de rails, 30 par trajet de wagonnet, 25 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, 3 par aller-retour de wagonnet. Chaque chose ne compte qu'une fois (records des compteurs, `recordsXp`).
+- **Courbe** : `xpPourPasser(n) = 60 × n^1,8`, arrondi à la dizaine : 60 XP pour passer au niveau 2, 210 pour le 3, 430 pour le 4, 730 pour le 5, 3 790 pour le 11, 13 180 pour le 21. Il faut 1 430 XP au total pour le niveau 5, 11 680 pour le 10, 38 230 pour le 15, 279 500 pour le 30 (le maximum).
+- **Déblocages** (`NIVEAU_JOUEUR_POUR`) : bâtiments (Personnel 2, Bazar 3, Générateur 5, Foreuse 6), rails 3, manager 11, et pour chaque amélioration le niveau donné dans les tableaux ci-dessus. Tout est débloqué au niveau 15.
 
 ## Le bot de simulation
 
-`src/jeu/bot.ts` (`jouerPartie(aleatoire, maxSecondes = 4 h)`) joue une partie de la mine automatique avec seulement des actions qu'un joueur peut faire, jusqu'au **niveau 5** de la mine. `bot.test.ts` le fait jouer **10 parties** avec des graines fixes (1 à 10, générateur `mulberry32` : les résultats sont toujours les mêmes).
+`src/jeu/bot.ts` (`jouerPartie(aleatoire, maxSecondes = 9 h)`, 4 h avant le 29/10) joue une partie de la mine automatique avec seulement des actions qu'un joueur peut faire, jusqu'au **niveau 5** de la mine. Depuis le 29/10, il gagne de l'XP comme un joueur et **attend ses niveaux** pour débloquer bâtiments et améliorations ; il note quand il arrive à chaque niveau du joueur (`tempsNiveauxJoueur`). `bot.test.ts` le fait jouer **10 parties** avec des graines fixes (1 à 10, générateur `mulberry32` : les résultats sont toujours les mêmes).
 
 ### Ce qu'il fait
 
 - **Chaque seconde** : il règle ce qu'il garde, achète ce qu'il peut, va vendre à pied si besoin, puis **clique 2 fois** sur le bloc de la mine (`CLICS_PAR_SECONDE`) et laisse passer 1 s de jeu (`avancerTemps`).
-- **Le village** : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (28, 38), juste sous la mine, puis le **forgeron** (36, 24), le **Personnel** (19, 31), le **bazar** (19, 25), le **générateur** (35, 37, contre la ligne) et la **foreuse** (36, 31). Il pose **3 cases de rails** (30, 35 à 37) entre la mine et le marché dès qu'il a le fer (9 fer), puis y envoie aussitôt un wagonnet (trajet Mine → Marché).
+- **Le village** : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (28, 38), juste sous la mine, puis le **forgeron** (36, 24), le **Personnel** (19, 31), le **bazar** (19, 25), le **générateur** (35, 37, contre la ligne) et la **foreuse** (36, 31). Il pose **3 cases de rails** (30, 35 à 37) entre la mine et le marché dès qu'elles sont débloquées (niveau 3 du joueur) et qu'il a le fer (9 fer), puis y envoie aussitôt un wagonnet (trajet Mine → Marché).
 - **Vendre à pied** : tant que le wagonnet ne roule pas (ni pousseur, ni électricité), il va vendre quand le coffre est à moitié plein : il met le coffre dans son sac (sauf sa réserve), marche jusqu'au marché, vend tout et revient (`2 × distance ÷ 5` secondes de jeu en plus).
 - **Ce qu'il garde** (`reserve`, `reglerGarde`) : les minerais du prochain bâtiment, de la prochaine pioche, de la réparation, du prochain niveau de mine, du prochain coffre, des rails et de 20 redstone pour le générateur. Il les met dans `nonAVendre` (le wagonnet les laisse) tant qu'il n'en a pas 1,5 fois assez et que le coffre est à moins de 80 %.
 - **Les achats** : réparer dès que la pioche casse ; pioche suivante ; niveau de mine dès qu'il peut ; payer les salaires dès que quelqu'un a moins d'une minute payée ; embaucher et améliorer les mineurs en gardant une paie d'avance ; recruteur dès qu'il peut ; manager à partir de 20 000 $ (et remplir la trésorerie) ; **un pousseur** embauché pour Mine → Marché dès qu'il a ce trajet et un mineur (licencié une fois les rails électriques). Un pousseur pousse à 2,5 cases/s × `forcePousseur` (1 + (rendement − 1) ÷ 2 selon sa rareté) ; générateur rempli de 10 redstone sous 2 minutes de réserve, puisage coché dès le niveau 2, amélioré à 2 fois son prix ; foreuse remplie de 10 charbons sous 1 minute, chariot vendu à moitié plein, améliorée au-dessus de 3 000 $ ; ascenseur (à partir de 2 mineurs), coffre, taille des wagonnets (à 2 fois son prix) et sac (à 3 fois son prix).
@@ -337,36 +356,44 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 | Test | Attendu |
 |---|---|
 | Fin | les 10 parties arrivent au **niveau 5** |
-| Niveau 2 (médiane) | **5 à 20 minutes** |
-| Niveau 5 (médiane) | **1 h à 2 h 30** |
+| Niveau 2 (médiane) | **15 à 40 minutes** (5 à 20 avant le 29/10) |
+| Niveau 5 (médiane) | **4 h à 7 h** (1 h à 2 h 30 avant le 29/10) |
+| Niveau du joueur (médianes, 29/10) | le niveau 5 **après 8 minutes au moins**, le niveau 10 **après 1 heure au moins** |
 | Progression | chaque niveau prend plus de temps que le précédent (médiane, à 20 % près) |
-| Rails | le trajet Mine → Marché existe en **moins de 5 minutes** (toutes les parties) |
-| Électricité | les rails sont électriques en **moins de 40 minutes** (toutes les parties) |
+| Rails | le trajet Mine → Marché existe en **moins de 10 minutes** (toutes les parties ; 5 avant le 29/10) |
+| Électricité | les rails sont électriques en **moins de 1 h 30** (toutes les parties ; 40 minutes avant le 29/10) |
 | Automatisation | au moins 4 mineurs, plus de 100 voyages de wagonnet, et les mineurs sortent plus de blocs que les clics |
 | Début à pied | plus de 3 allers-retours à pied au marché |
 
-### Résultats mesurés (22/10, 10 parties)
+### Résultats mesurés (29/10, 10 parties)
 
 | Mesure | Minimum | Médiane | Maximum |
 |---|---:|---:|---:|
-| Arrivée au niveau 2 | 9,6 min | **11,6 min** | 14,5 min |
-| Arrivée au niveau 3 | 29,2 min | **36,7 min** | 44,7 min |
-| Arrivée au niveau 4 | 56,2 min | **61,6 min** | 80,6 min |
-| Arrivée au niveau 5 | 89,7 min | **97,8 min** | 107,4 min |
-| Rails posés | — | 0,6 min | 1,3 min |
-| Rails électriques | — | 18,5 min | 23,3 min |
-| Allers-retours à pied | 32 | — | 71 |
+| Arrivée au niveau 2 de la mine | 21,0 min | **26,1 min** | 36,3 min |
+| Arrivée au niveau 3 | 1 h 43 | **2 h 07** | 2 h 23 |
+| Arrivée au niveau 4 | 3 h 13 | **3 h 58** | 4 h 12 |
+| Arrivée au niveau 5 | 5 h 12 | **5 h 45** | 6 h 04 |
+| Rails posés | 2,6 min | 3,5 min | 6,4 min |
+| Rails électriques | 48 min | 57 min | 69 min |
+| Allers-retours à pied | 46 | 109 | 321 |
+| Niveau 3 du joueur (les rails) | 2,4 min | 2,6 min | 4,0 min |
+| Niveau 5 du joueur | 10,5 min | **14,5 min** | 26,8 min |
+| Niveau 10 du joueur | 1 h 16 | **1 h 20** | 1 h 32 |
+| Niveau 15 du joueur | 4 h 06 | 4 h 12 | 4 h 23 |
 
-À la fin (médianes) : 7 à 8 mineurs, environ 890 voyages de wagonnet, 11 300 blocs cliqués, 15 000 blocs creusés par les mineurs, 1 700 blocs sortis seuls de la mine, 336 000 $ gagnés. Le bot finit avec la pioche en or, l'ascenseur au niveau 3, le coffre de 4 000 places et le générateur jamais amélioré.
+À la fin (médianes) : le joueur au **niveau 16**, 8 mineurs, environ 3 200 voyages de wagonnet, 40 600 blocs cliqués, 64 700 blocs creusés par les mineurs, 5 800 blocs sortis seuls de la mine, 1,07 million de dollars gagnés. Le bot finit avec la pioche en or, l'ascenseur au niveau 3, le coffre de 4 000 places et le générateur jamais amélioré.
+
+Pour mémoire, le 22/10 (avant les prix relevés et le niveau du joueur) : niveau 2 en 11,6 min, niveau 5 en 1 h 38, rails électriques en 18,5 min (médianes).
 
 ## Durées de jeu attendues
 
 | Repère | Valeur | Source |
 |---|---|---|
-| Niveau 2 de la mine | **5 à 20 min** (médiane) ; mesuré : 11,6 min | `bot.test.ts` |
-| Niveau 5 de la mine | **1 h à 2 h 30** (médiane) ; mesuré : 1 h 38 | `bot.test.ts` |
-| Rails mine → marché | moins de 5 min | `bot.test.ts` |
-| Rails électriques | moins de 40 min | `bot.test.ts` |
+| Niveau 2 de la mine | **15 à 40 min** (médiane) ; mesuré : 26 min | `bot.test.ts` |
+| Niveau 5 de la mine | **4 h à 7 h** (médiane) ; mesuré : 5 h 45 | `bot.test.ts` |
+| Rails mine → marché | moins de 10 min | `bot.test.ts` |
+| Rails électriques | moins de 1 h 30 | `bot.test.ts` |
+| Niveau 5 / niveau 10 du joueur | après 8 min / après 1 h (médianes) ; 14,5 min / 1 h 20 | `bot.test.ts` |
 | Remplir le coffre de départ (débit seul) | 8 min 20 | `NIVEAUX_COFFRE`, `NIVEAUX_MINE` |
 | Une paie de mineur | 5 min | `SECONDES_PAR_PAIE` |
 | Un charbon dans la foreuse / une redstone dans le générateur | 20 s / 30 s | `SECONDES_PAR_CHARBON`, `SECONDES_PAR_REDSTONE` |

@@ -6,7 +6,7 @@
 ## Où et quand
 
 - **Où** : la mine est **déjà posée** au début de la partie, **au milieu de la clairière** (cases 25 à 34 de la grille de 60 × 60, `POSITION_MINE`). C'est le seul bâtiment de **10 × 10 cases** (identifiant `'puits'`, nom affiché « Mine »). Elle n'est pas dans le menu Bâtiments (rien à payer), mais **✏️ Modifier** permet de la déplacer ou de la retourner gratuitement.
-- **Déblocage** : dès le début, jamais de cadenas.
+- **Déblocage** : dès le début, jamais de cadenas. Mais ses améliorations (niveaux de la mine, coffre, ascenseur, taille des wagonnets) demandent depuis le 29/10 un **niveau du joueur** (« 🔒 … · au niveau N », voir le tableau des chiffres et [../jeu/niveaux.md](../jeu/niveaux.md)).
 - **La porte** : au milieu de sa face avant **gauche** (à droite si elle est retournée). Le hamster du joueur apparaît devant elle au chargement de la partie.
 - **L'ouvrir** : toucher (ou cliquer) la mine, ou le gros bouton rond **⛏️ Mine** en bas à gauche de l'écran : le hamster marche jusqu'au côté de la mine le plus proche de lui, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case de la mine, de n'importe quel côté. Au chargement d'une partie, le panneau reste fermé (il ne s'ouvre qu'en arrivant en marchant).
 - **Description** (en haut du panneau) : « Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre. »
@@ -17,7 +17,7 @@
   - **📦 « Le coffre de la mine est plein : viens le vider ! »** (alerte rouge) ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet qui part de la mine (ou qui y arrive) n'a plus de rails complets : « Rails coupés entre mine et marché : le wagonnet attend. Repose les rails ! ». La même bulle est sur l'autre bâtiment du trajet ;
   - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de trajet Mine → Marché ;
-  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite.
+  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite (et débloqué par le niveau du joueur, 29/10).
 - **La jauge du coffre** (27/10) : au-dessus de la mine, une petite barre est **toujours visible** : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »…). Elle est verte, passe à l'**orange** à 75 % et au **rouge** quand le coffre est plein (elle grossit alors et rétrécit, comme un cœur qui bat). On voit d'un coup d'œil s'il faut vider le coffre. À côté, « 👷 *n* » (depuis le 27/10) dit combien de mineurs **travaillent au fond de la mine** (ils descendent, creusent, remontent ou vident leur sac). Les bulles de la mine sont un peu plus haut, au-dessus de cette jauge.
 - **Le bandeau** (en haut de l'écran) montre toujours le niveau de la mine, son nom et le remplissage du coffre (la case clignote en rouge quand il est plein).
 
@@ -101,13 +101,15 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 
 Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %.
 
-| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0 (on creuse à la main, 27/10) | (départ) |
-| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 bloc/s (15 / min) | 400 $ + 30 fer |
-| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,3 bloc/s (18 / min) | 2 500 $ + 60 fer + 30 redstone |
-| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,35 bloc/s (21 / min) | 9 000 $ + 60 redstone + 30 or |
-| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,4 bloc/s (24 / min) | 30 000 $ + 60 or + 25 émeraude |
+| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre (29/10) | Niveau du joueur |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|
+| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0 (on creuse à la main, 27/10) | (départ) | — |
+| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 bloc/s (15 / min) | 1 200 $ + 60 fer | 4 |
+| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,3 bloc/s (18 / min) | 7 000 $ + 120 fer + 60 redstone | 7 |
+| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,35 bloc/s (21 / min) | 25 000 $ + 120 redstone + 60 or | 10 |
+| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,4 bloc/s (24 / min) | 110 000 $ + 130 or + 55 émeraude | 13 |
+
+Total pour aller au niveau 5 : **143 200 $ + 180 fer + 180 redstone + 190 or + 55 émeraude**. Descendre d'un niveau rapporte **150 XP**.
 
 Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **19,79 $** au niveau 5.
 
@@ -115,44 +117,52 @@ Ce que **débloque** chaque niveau :
 
 | Niveau | Ce qui se débloque |
 |---|---|
-| 1 | Mine, Marché, Forgeron, Bazar, Personnel, rails ; 4 mineurs au plus |
-| 2 | **Foreuse** et **Générateur** (menu Bâtiments) ; la redstone ; cerisier en fleurs, haut-de-forme ; 6 mineurs |
-| 3 | **Recruteur** (au Personnel) ; l'or ; fontaine, gilet doré ; 8 mineurs |
-| 4 | **Manager** et trésorerie (au Personnel) ; les émeraudes ; couronne ; 10 mineurs |
-| 5 | Les diamants ; statue du hamster d'or ; 12 mineurs |
+| 1 | Mine, Marché, Forgeron, Bazar, Personnel, rails (avec le niveau du joueur qu'il faut) ; 4 mineurs au plus |
+| 2 | **Foreuse** et **Générateur** (menu Bâtiments, aux niveaux 6 et 5 du joueur) ; la redstone ; 6 mineurs |
+| 3 | **Recruteur** (au Personnel, au niveau 9 du joueur) ; l'or ; 8 mineurs |
+| 4 | **Manager** et trésorerie (au Personnel, au niveau 11 du joueur) ; les émeraudes ; 10 mineurs |
+| 5 | Les diamants ; 12 mineurs |
+
+(Les tenues et les décorations qui se débloquaient aussi sont retirées depuis le 27/10.)
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix |
-|---|---:|---|
-| 1 | 100 | (départ) |
-| 2 | 250 | 150 $ + 40 pierre |
-| 3 | 600 | 800 $ + 40 fer |
-| 4 | 1 500 | 3 000 $ + 80 fer + 20 redstone |
-| 5 | 4 000 | 10 000 $ + 30 or |
+| Niveau | Places | Prix (29/10) | Niveau du joueur |
+|---|---:|---|---:|
+| 1 | 100 | (départ) | — |
+| 2 | 250 | 400 $ + 80 pierre | 2 |
+| 3 | 600 | 2 000 $ + 80 fer | 5 |
+| 4 | 1 500 | 8 000 $ + 150 fer + 40 redstone | 8 |
+| 5 | 4 000 | 25 000 $ + 60 or | 12 |
+
+Total : 35 400 $ + 80 pierre + 230 fer + 40 redstone + 60 or.
 
 ### L'ascenseur (`NIVEAUX_ASCENSEUR`)
 
 Il ne transporte que les **mineurs employés** (le joueur ne descend plus). Sans ascenseur, ils prennent l'**échelle** : **10 s** par trajet (`SECONDES_ECHELLE`). Un trajet = une montée ou une descente.
 
-| Niveau | Un trajet | Prix |
-|---|---:|---|
-| (échelle) | 10 s | — |
-| 1 | 6 s | 150 $ + 10 fer |
-| 2 | 4 s | 600 $ + 30 fer + 5 redstone |
-| 3 | 2,8 s | 2 000 $ + 60 fer + 20 redstone |
-| 4 | 2 s | 6 000 $ + 100 fer + 50 redstone |
-| 5 | 1,4 s | 15 000 $ + 100 redstone + 20 or |
-| 6 | 1 s | 40 000 $ + 60 or + 10 émeraude |
+| Niveau | Un trajet | Prix (29/10) | Niveau du joueur |
+|---|---:|---|---:|
+| (échelle) | 10 s | — | — |
+| 1 | 6 s | 400 $ + 20 fer | 4 |
+| 2 | 4 s | 1 500 $ + 50 fer + 10 redstone | 6 |
+| 3 | 2,8 s | 5 000 $ + 100 fer + 40 redstone | 8 |
+| 4 | 2 s | 15 000 $ + 160 fer + 90 redstone | 10 |
+| 5 | 1,4 s | 40 000 $ + 160 redstone + 40 or | 13 |
+| 6 | 1 s | 100 000 $ + 100 or + 20 émeraude | 15 |
+
+Total : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude.
 
 ### La taille des wagonnets (`NIVEAUX_WAGONNET`)
 
-| Niveau | Places | Prix |
-|---|---:|---|
-| 1 | 40 | (départ) |
-| 2 | 100 | 500 $ + 40 fer |
-| 3 | 250 | 2 500 $ + 80 fer + 20 redstone |
-| 4 | 600 | 10 000 $ + 40 or |
+| Niveau | Places | Prix (29/10) | Niveau du joueur |
+|---|---:|---|---:|
+| 1 | 40 | (départ) | — |
+| 2 | 100 | 1 200 $ + 60 fer | 6 |
+| 3 | 250 | 6 000 $ + 150 fer + 40 redstone | 9 |
+| 4 | 600 | 25 000 $ + 80 or | 12 |
+
+Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
 
 Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : **3 cases/s** poussé par toi, **2,5 cases/s** par un pousseur, **8 cases/s × la puissance du générateur** avec l'électricité (8 à 24 cases/s). Charger au départ et vider à l'arrivée prennent **2 s** chacun (`SECONDES_CHARGEMENT_WAGONNET`).
 
@@ -172,7 +182,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ### Les wagonnets
 
-- Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet : la bulle « 🛤️ Automatiser » au milieu des rails ouvre la fenêtre du trajet (activer, objets à envoyer), ou « Envoyer un wagonnet vers… » au panneau. Les rails : **3 fer la case**, dès le début (menu 🏗️ Bâtiments), et **jamais en boucle** : entre deux bâtiments, une seule route. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
+- Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet : la bulle « 🛤️ Automatiser » au milieu des rails ouvre la fenêtre du trajet (activer, objets à envoyer), ou « Envoyer un wagonnet vers… » au panneau. Les rails : **3 fer la case**, à partir du **niveau 3 du joueur** (29/10, menu 🏗️ Bâtiments), et **jamais en boucle** : entre deux bâtiments, une seule route. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
 - **4 trajets**, un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur (ils partent d'ici), et Foreuse → Marché (il part de la foreuse, voir [foreuse.md](foreuse.md)). Plusieurs wagonnets peuvent partager les mêmes rails : ils se croisent sans se gêner.
 - **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
 - **Ce qu'il emporte au départ**, jusqu'à sa capacité :
@@ -191,7 +201,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ### L'ascenseur et l'échelle
 
 - Ils ne servent qu'aux **mineurs employés** : chaque mineur remonte son sac plein (une montée), le vide dans le coffre en **2 s**, puis redescend (une descente). Voir [personnel.md](personnel.md).
-- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur.
+- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur, et à partir du niveau 4 du joueur (29/10 ; avant, sa ligne affiche « 🔒 … · au niveau 4 »).
 
 ### Descendre d'un niveau
 
@@ -201,7 +211,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ## Lien avec le reste du jeu
 
 - **Marché** : on y porte le coffre (à pied, dans le sac) ou le wagonnet Mine → Marché y va sur les rails. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Bazar** : un plus grand sac pour porter plus du coffre au marché. **Personnel** : les mineurs remplissent le coffre, et les pousseurs (un par trajet) poussent les wagonnets. **Foreuse** et **Générateur** : débloqués au niveau 2 ; la mine peut leur envoyer leur charbon et leur redstone par wagonnet.
-- **Missions** (`missions.ts`, `objectifs.ts`) : « Casse 10 blocs à la mine » au début, l'urgence « Le coffre est plein : vide-le ! », les améliorations du stand `puits` (« Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnets de *N* places ») ; et les étapes de l'automatisation : « Récupère *N* fer pour les rails », « Pose des rails de la mine au marché », « Envoie un wagonnet vers le marché (à la mine) », et plus tard « Envoie du charbon à la foreuse (à la mine) ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Casse 10 blocs à la mine » au début, l'urgence « Le coffre est plein : vide-le ! », les améliorations du stand `puits` (« Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnets de *N* places ») ; et les étapes de l'automatisation (à partir du niveau 3 du joueur) : « Pose des rails de la mine au marché (3 fer la case) » (29/10 : plus de « Récupère *N* fer pour les rails », le nombre dépendait du chemin choisi), « Envoie un wagonnet vers le marché (à la mine) », et plus tard « Envoie du charbon à la foreuse (à la mine) ».
 - **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Cœur de diamant (niveaux 2 à 5), Ça brille ! (un diamant), Cheminot (un trajet de wagonnet), Réseau complet (les 4 trajets), Ligne régulière (100 voyages de wagonnet).
 - **Classement** : le niveau de la mine (le meilleur de tes mondes) est envoyé dans la colonne « prestige » du serveur. Voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).
 - **Statistiques** : blocs cassés en cliquant (par sorte), blocs sortis tout seuls de la mine, voyages et argent des wagonnets.
