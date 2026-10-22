@@ -191,6 +191,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   // pendant ce temps-là (voir wagonnet.ts). Une mini-jauge montre ce qui se passe.
   const enPause = roule && distance < 0 && vitesse > 0
   const restePause = enPause ? -distance / vitesse : 0
+  // (pendant ce temps, le pousseur attend à l'arrêt, sans marcher : 28/10)
   const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? '⚙️ Chargement du chariot' : '📦 Chargement') : TEXTES_LIVRAISON[info.arrivee] ?? '📦 Déchargement'
   return (
     <>
@@ -206,7 +207,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
       >
         <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={remplissage} contenu={w.chargement} />
       </svg>
-      {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur perso-pousseur" />}
+      {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche={!enPause} classe="perso-joueur perso-pousseur" />}
       {mineur && (
         <Perso
           qui={RARETES[mineur.rarete] ? mineur.rarete : 'commun'}
@@ -214,7 +215,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
           y={pousseurIci.y}
           sens={orientation.sens}
           vue={orientation.vue}
-          marche
+          marche={!enPause}
           classe="perso-mineur perso-pousseur"
           etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>}
         />

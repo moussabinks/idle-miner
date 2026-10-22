@@ -31,6 +31,8 @@ Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **cinq onglets** (
 - **⬇️ Niv. *N*** : la grande carte du niveau suivant (pastille « + » quand on peut le payer) ;
 - **⬆️ Plus** : la taille du coffre et l'ascenseur (pastille « + » quand on peut payer le coffre).
 
+Depuis le 28/10, les onglets **respirent** (classe `panneau-mine-aere`) : plus d'espace entre les cartes et entre les lignes (coffre, production, goulots), un peu moins sur téléphone, et tout tient encore sans défiler.
+
 L'onglet **Creuser** s'ouvre en premier. Le titre du panneau n'a plus de phrase de description (elle est dans la bulle d'aide du titre).
 
 - À droite du bloc : « Niveau *N* · **nom du niveau** », le bloc à casser, la jauge de la pioche, la chance de doubler, et une ligne dorée « ⚙️ *X* blocs/s · ≈ *Y* $/min ».
@@ -91,7 +93,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 ### 📦 Taille du coffre et 🛗 Ascenseur
 
 - **Taille du coffre** : une ligne d'amélioration (« 250 places » → « ⬆ 600 places »).
-- **Ascenseur** : « La caisse de minerais de tes mineurs remonte (et redescend) plus vite. » (27/10 : les mineurs restent au fond, c'est leur sac qui remonte dans une **caisse** ; dans le puits, on voit la caisse pleine de minerais dans la cabine. Seul un mineur pas payé remonte au village.) La ligne « trop lent » ne s'affiche que si l'ascenseur ralentit vraiment les mineurs. Pas construit : « Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ; ensuite « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**.
+- **Ascenseur** : « La caisse de minerais de tes mineurs remonte (et redescend) plus vite. » (27/10 : les mineurs restent au fond, c'est leur sac qui remonte dans une **caisse** ; dans le puits, on voit la caisse pleine de minerais dans la cabine. Le 28/10, la caisse est refaite : planches, cerclages en fer et **coins dorés**, et un tas débordant des **mêmes minerais à facettes que dans les wagonnets** (les couleurs de ce que le mineur a vraiment creusé) ; avec de l'or, des émeraudes ou des diamants, une lueur dorée respire derrière le tas et des étincelles en sautent. La cabine, au repos, remonte aussi plus haut sur ses câbles (`CABINE_EN_HAUT` = −150 pixels de l'image, avant −100). Seul un mineur pas payé remonte au village.) La ligne « trop lent » ne s'affiche que si l'ascenseur ralentit vraiment les mineurs. Pas construit : « Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ; ensuite « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**.
 
 ## Les chiffres
 
@@ -175,7 +177,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
 - **Ce qu'il emporte au départ**, jusqu'à sa capacité :
   - **vers le marché** : le coffre, **les objets les plus chers d'abord**, **sauf les objets gardés** (`nonAVendre`) et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets existent). Au marché, il vend tout (« 🛤️ Le wagonnet a tout vendu au marché : +*X* $ » quand c'est toi qui pousses) ;
-  - **vers la foreuse** : le charbon du coffre, jusqu'à lui faire **60 charbons** de réserve (`RESERVE_FOREUSE_WAGONNET` = 1 200 s) ;
+  - **vers la foreuse** : dès que son réservoir n'est plus plein, tout le charbon du coffre ; le réservoir se remplit (40 à 250 charbons selon son niveau de forage) et le surplus va dans son chariot (28/10) ;
   - **vers le générateur** : la redstone du coffre, jusqu'à lui faire **60 redstones** de réserve (`RESERVE_GENERATEUR_WAGONNET` = 1 800 s).
   - Puis il revient au quai. S'il n'a rien à porter, il reste au quai.
 - **Qui le fait avancer** (il ne part jamais tout seul sans eux) :

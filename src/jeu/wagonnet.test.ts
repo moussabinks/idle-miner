@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
 import { embaucher, embaucherPousseur } from './employes'
-import { RESERVE_FOREUSE_WAGONNET, SECONDES_PAR_CHARBON } from './donnees'
+import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
 import { creerPartie, type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
 import {
+  aCharger,
   avancerWagonnets,
   forcePousseur,
   capaciteWagonnet,
@@ -184,7 +185,7 @@ describe('les trajets des wagonnets', () => {
     expect(etat.coffre.contenu).toEqual({ fer: 10 })
   })
 
-  it('Mine → Foreuse : il apporte le charbon du coffre (sans dépasser la réserve)', () => {
+  it('Mine → Foreuse : il remplit le réservoir, et le surplus va dans le chariot (28/10)', () => {
     const etat = partie()
     etat.niveauMine = 2
     // La foreuse à droite de la mine, reliée par 3 rails.
@@ -194,16 +195,19 @@ describe('les trajets des wagonnets', () => {
     expect(ligneDe(etat, 'mine-foreuse')).toHaveLength(3)
     creerTrajet(etat, 'mine-foreuse')
     creerTrajet(etat, 'mine-marche')
+    // Le réservoir (40 charbons au début) a encore de la place pour 30 : il emporte tout ce qu'il peut.
+    etat.foreuse.carburant = 10 * SECONDES_PAR_CHARBON
     etat.coffre.contenu = { charbon: 200, fer: 5 }
     pousserTrajet(etat, 'mine-foreuse')
     expect(trajetDe(etat, 'mine-foreuse')?.chargement).toEqual({ charbon: 40 })
     allerRetour(etat, 'mine-foreuse')
-    expect(etat.foreuse.carburant).toBe(40 * SECONDES_PAR_CHARBON)
-    // Le wagonnet du marché laisse le charbon dont la foreuse a encore besoin (20 ici).
-    expect((RESERVE_FOREUSE_WAGONNET - etat.foreuse.carburant) / SECONDES_PAR_CHARBON).toBe(20)
+    expect(etat.foreuse.carburant).toBe(NIVEAUX_FORAGE[0].reservoir * SECONDES_PAR_CHARBON)
+    expect(etat.foreuse.chariot).toEqual({ charbon: 10 })
+    // Réservoir plein : il ne repart pas, et le wagonnet du marché peut vendre le charbon.
+    expect(aCharger(etat, 'mine-foreuse')).toBe(0)
     etat.coffre.contenu = { charbon: 30 }
     pousserTrajet(etat, 'mine-marche')
-    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ charbon: 10 })
+    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ charbon: 30 })
   })
 
   it('Foreuse → Marché : il vend le chariot de la foreuse', () => {

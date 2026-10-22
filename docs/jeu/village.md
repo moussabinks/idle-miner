@@ -101,7 +101,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 | Trajet | Ce que fait le wagonnet |
 |---|---|
 | 💰 Mine → Marché | emporte le coffre de la mine (les plus chers d'abord) et le vend. Il laisse les objets « gardés », et le charbon et la redstone dont les deux trajets suivants ont besoin. |
-| 🔥 Mine → Foreuse | apporte le charbon du coffre, jusqu'à une réserve de 60 charbons (`RESERVE_FOREUSE_WAGONNET` = 1 200 s). |
+| 🔥 Mine → Foreuse | dès que le réservoir de la foreuse n'est plus plein, emporte tout le charbon du coffre : il remplit le réservoir (40 à 250 charbons selon le niveau de forage), le surplus va dans le chariot (28/10). |
 | 🔴 Mine → Générateur | apporte la redstone du coffre, jusqu'à une réserve de 60 redstones (`RESERVE_GENERATEUR_WAGONNET` = 1 800 s). |
 | 🛒 Foreuse → Marché | vend ce qui est coché dans le chariot de la foreuse. |
 
@@ -114,7 +114,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 - Plusieurs wagonnets peuvent **partager les mêmes rails** : ils se croisent sans se gêner.
 - Un wagonnet ne part que s'il a quelque chose à porter. Il ne roule pas tout seul :
   - **toi** : bouton « 🛤️ Pousser » dans le panneau du départ. Ton hamster fait l'aller-retour avec lui (3 cases/s). Un seul wagonnet à la fois ;
-  - **son pousseur** (2,5 cases/s, 26/10) : un employé embauché au Personnel **pour ce trajet** (« 🛤️ Embaucher un pousseur » : on choisit le départ, puis l'arrivée, et le trajet brille sur la carte avant qu'on confirme). Il attend au quai, au bord de la voie, devant le bâtiment de départ, et ne pousse que le wagonnet de son trajet. Voir [../batiments/personnel.md](../batiments/personnel.md#4-les-pousseurs) ;
+  - **son pousseur** (2,5 cases/s, 26/10) : un employé embauché au Personnel **pour ce trajet** (« 🛤️ Embaucher un pousseur » : on coche son trajet dans la liste, et le trajet brille sur la carte avant qu'on confirme). Il attend au quai, au bord de la voie, devant le bâtiment de départ, et ne pousse que le wagonnet de son trajet. Voir [../batiments/personnel.md](../batiments/personnel.md#4-les-pousseurs) ;
   - l'**électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), il roule à 8 à 24 cases/s selon la puissance du générateur ; **mais il faut toujours son pousseur** (27/10 : un pousseur par trajet automatique), qui le lance du quai.
 - La **taille des wagonnets** s'achète à la Mine et vaut pour tous les trajets. Le détail (capacités, vitesses, temps) est dans [../batiments/mine.md](../batiments/mine.md#les-wagonnets).
 - **Si une ligne est coupée** (un rail enlevé ou déplacé, un bâtiment déplacé), son wagonnet revient aussitôt au quai et son chargement retourne d'où il vient. Le trajet reste : il repartira quand les rails seront refaits. En attendant, une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
@@ -144,7 +144,7 @@ Tous les personnages sont des **hamsters** : les **images des planches de l'équ
   1. ils **marchent** (`marche`, **2,5 cases/s** depuis le 27/10, avant 4) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
   3. ils **attendent leur wagonnet au quai** (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ) ;
-  4. ils **poussent un wagonnet** (juste derrière lui) ;
+  4. ils **poussent un wagonnet** (juste derrière lui) ; pendant le chargement au départ et le déchargement à l'arrivée, ils **attendent à l'arrêt** sans marcher (28/10 ; le joueur aussi quand c'est lui qui pousse) ;
   5. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied). Une fois payés ensemble, ils **repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) : ceux qui attendent leur tour restent à leur place devant le Personnel.
 - **Le recruteur** et **le manager** restent **devant le bâtiment Personnel**, avec leur étiquette (ils ne bougent pas : on n'utilise que leur image de face).
 

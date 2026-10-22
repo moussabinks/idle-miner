@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
+import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
 import {
   activiteEmploye,
   alerteSalaires,
@@ -144,16 +144,16 @@ describe('les mineurs employés', () => {
 })
 
 describe('les salaires', () => {
-  it('ses 10 premières minutes sont payées, puis il faut payer (10 minutes à la fois)', () => {
+  it('ses 5 premières minutes sont payées, puis il faut payer (5 minutes à la fois)', () => {
     const etat = partie()
     embaucher(etat, hasard())
-    expect(peutPayerSalaires(etat, SECONDES_PAR_PAIE)).toBe(false) // déjà payé pour 10 minutes
+    expect(peutPayerSalaires(etat, SECONDES_PAR_PAIE)).toBe(false) // déjà payé pour 5 minutes
     avancerEmployes(etat, SECONDES_PAR_PAIE + 5, hasard())
     expect(alerteSalaires(etat)).toContain('attend son salaire')
-    expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(50)
+    expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(SALAIRES[0])
     payerSalaires(etat, SECONDES_PAR_PAIE)
     expect(etat.employes[0].tempsPaye).toBe(SECONDES_PAR_PAIE)
-    expect(etat.stats.salairesPayes).toBe(50)
+    expect(etat.stats.salairesPayes).toBe(SALAIRES[0])
   })
 
   it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
@@ -202,7 +202,7 @@ describe('le recruteur (niveau 3 de la mine)', () => {
     const mineur = etat.employes[0]
     mineur.rarete = 'mythique'
     expect(vitesseEmploye(mineur)).toBeCloseTo(NIVEAUX_EMPLOYE[0].vitesse * RARETES.mythique.rendement)
-    expect(salaireEmploye(mineur)).toBe(200)
+    expect(salaireEmploye(mineur)).toBe(SALAIRES[0] * 4)
   })
 })
 

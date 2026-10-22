@@ -726,6 +726,10 @@ kbd {
   color: var(--vert);
 }
 
+.badge-rouge {
+  color: #ff7a6b;
+}
+
 .titre-stand {
   display: flex;
   align-items: center;

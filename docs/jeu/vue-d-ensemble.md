@@ -109,7 +109,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 4 de la mine (15 000 $, puis 600 $ / 10 min) : il paie tous les salaires seul avec la trésorerie. |
+| **Manager** | Débloqué au niveau 4 de la mine (15 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
@@ -117,7 +117,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Niveau de la mine** | De 1 à 5 : il décide des blocs qui sortent, du débit, du nombre de mineurs, et débloque des bâtiments. On l'achète au panneau de la mine. Il compte pour le classement. |
 | **Objets gardés** | Les objets mis à 0 au marché (ou cochés au panneau de la mine) : ils ne sont pas vendus, et le wagonnet du marché les laisse dans le coffre. Le jeu s'en souvient (`nonAVendre`). |
 | **Mission** | Depuis le 27/10, une à trois choses à faire, en haut à droite (à la place de la barre « prochain objectif ») : une urgence (salaires, coffre plein), un premier pas, un bâtiment à poser, une étape de l'automatisation (rails, trajets, pousseur, mineur, générateur, foreuse) ou l'amélioration la plus proche. Chacune a sa progression (« 🪨 12/25 »). |
-| **Paie / salaire** | Ce que coûtent 10 minutes de travail d'un mineur (selon sa pioche et sa rareté). Sans manager, on paie au plus 10 minutes d'avance. |
+| **Paie / salaire** | Ce que coûtent 5 minutes de travail d'un mineur (selon sa pioche et sa rareté). Sans manager, on paie au plus 5 minutes d'avance. |
 | **Porte** | L'entrée d'un bâtiment, sur sa face avant gauche ou droite. Le joueur peut ouvrir un bâtiment de n'importe quel côté. |
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
 | **Puissance** | Ce qui fait rouler les wagonnets électriques plus vite (× 1 à × 3) et booste la foreuse : elle monte avec le niveau du générateur. |
@@ -152,7 +152,7 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 ### Les exceptions décidées
 
 - ✅ **La foreuse** (16/10, au niveau 2 de la mine depuis le 22/10) : elle fore seule tant qu'on lui donne du charbon. **Une seule** foreuse.
-- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 10 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **recruteur** leur donne une rareté ; au niveau 4, le **manager** paie les salaires seul avec la trésorerie.
+- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **recruteur** leur donne une rareté ; au niveau 4, le **manager** paie les salaires seul avec la trésorerie.
 - ✅ **La mine qui sort des blocs toute seule** et le **wagonnet électrique** (22/10 ; plusieurs trajets choisis par le joueur depuis le 24/10) : c'est le cœur de la mine automatique.
 
 ### Les principes

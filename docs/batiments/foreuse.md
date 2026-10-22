@@ -21,14 +21,14 @@
 ### 1. La remplir de charbon (État)
 
 - Un badge donne l'état : **En marche**, **Chariot plein** ou **Plus de charbon**. On voit aussi sa vitesse (« 0,8 bloc(s) par seconde », avec « (⚡ boostée par le générateur) » si elle l'est) et le nombre de blocs forés.
-- Une jauge dorée montre les secondes de charbon restantes (pleine à 200 s, ou plus si on en a mis plus).
-- « 1 charbon = 20 s · tu en as *N* (sac + coffre) » et les boutons **+1**, **+10** et **Tout** (anthracite) : on met du charbon **du sac, puis du coffre de la mine**. « 🔥 +*N* charbon dans la foreuse. »
+- **Le réservoir** (28/10) : la foreuse garde au plus un certain nombre de charbons, plus grand à chaque niveau de forage (`NIVEAUX_FORAGE[...].reservoir` : 40, 60, 90, 130, 180, 250). Une jauge dorée le montre : « Charbon : 12 / 40 (240 s) ».
+- « 1 charbon = 20 s · tu en as *N* (sac + coffre) » (« · réservoir plein » s'il l'est) et les boutons **+1**, **+10** et **Tout** (anthracite) : on met du charbon **du sac, puis du coffre de la mine**, sans dépasser le réservoir (les boutons se grisent quand il n'y a plus de place). « 🔥 +*N* charbon dans la foreuse. » ou « 🔥 Le réservoir de la foreuse est plein. »
 - Si elle n'est pas boostée : « ⚡ Dans le rayon du générateur allumé, elle fore plus vite. »
 
 ### 2. La recharge automatique (case à cocher)
 
 - Disponible à partir du **3e niveau de forage** (`NIVEAU_RECHARGE_AUTO = 2`, compté à partir de 0). Avant, le panneau affiche « 🔒 Recharge automatique au charbon : débloquée au niveau 3 de forage. »
-- Cochée, la foreuse **brûle le charbon qu'elle fore** tant que sa réserve est sous **60 secondes** (`RESERVE_RECHARGE_AUTO`) ; au-delà, le charbon va dans le chariot comme les autres blocs.
+- Cochée, la foreuse **brûle le charbon qu'elle fore** tant que sa réserve est sous **60 secondes** (`RESERVE_RECHARGE_AUTO`, et jamais au-delà du réservoir) ; au-delà, le charbon va dans le chariot comme les autres blocs.
 
 ### 3. Vider le chariot
 
@@ -37,16 +37,16 @@
 
 ### 4. Améliorer la vitesse de forage (6 niveaux, `NIVEAUX_FORAGE`)
 
-| Niveau | Vitesse (blocs/s, sans électricité) | Coût |
-|---|---:|---|
-| 1 | 0,5 | (de base) |
-| 2 | 0,8 | 1 500 $ + 30 fer + 10 redstone |
-| 3 | 1,2 | 4 000 $ + 60 fer + 30 redstone |
-| 4 | 1,8 | 10 000 $ + 100 fer + 60 redstone |
-| 5 | 2,6 | 25 000 $ + 100 redstone + 30 or |
-| 6 | 3,6 | 60 000 $ + 60 or + 15 émeraude |
+| Niveau | Vitesse (blocs/s, sans électricité) | Réservoir (charbons, 28/10) | Coût |
+|---|---:|---:|---|
+| 1 | 0,5 | 40 | (de base) |
+| 2 | 0,8 | 60 | 1 500 $ + 30 fer + 10 redstone |
+| 3 | 1,2 | 90 | 4 000 $ + 60 fer + 30 redstone |
+| 4 | 1,8 | 130 | 10 000 $ + 100 fer + 60 redstone |
+| 5 | 2,6 | 180 | 25 000 $ + 100 redstone + 30 or |
+| 6 | 3,6 | 250 | 60 000 $ + 60 or + 15 émeraude |
 
-Tout le forage : 100 500 $ + 190 fer + 200 redstone + 90 or + 15 émeraude. Message : « ⚙️ Foreuse plus rapide : *N* blocs par seconde. »
+Tout le forage : 100 500 $ + 190 fer + 200 redstone + 90 or + 15 émeraude. Le panneau affiche « 0,5 bloc/s sans électricité · réservoir 40 charbons » et « ⬆ 0,8 bloc/s · 60 charbons ». Message : « ⚙️ Foreuse plus rapide : *N* blocs par seconde, *R* charbons de réservoir. »
 
 ### 5. Agrandir le chariot (6 niveaux, `NIVEAUX_CHARIOT`)
 
@@ -65,7 +65,7 @@ Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le p
 
 Deux trajets de wagonnets touchent la foreuse (voir [mine.md](mine.md#les-wagonnets) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets)) :
 
-- **Mine → Foreuse** (créé au panneau de la mine) : le wagonnet lui apporte le **charbon du coffre de la mine**, jusqu'à une réserve de **20 minutes** (60 charbons, `RESERVE_FOREUSE_WAGONNET` = 1 200 s). Le wagonnet du marché laisse alors ce charbon dans le coffre.
+- **Mine → Foreuse** (créé au panneau de la mine) : dès que le réservoir n'est plus plein, le wagonnet emporte **tout le charbon du coffre de la mine** (28/10). À l'arrivée, il remplit le réservoir, et **le surplus va dans le chariot** de la foreuse (tant qu'il y a de la place ; le reste revient au coffre). Avec un trajet **Foreuse → Marché**, ce surplus part donc tout seul au marché. Le wagonnet du marché laisse dans le coffre le charbon qui manque au réservoir.
 - **Foreuse → Marché** (créé ici, en bas du panneau, bloc « 🛤️ Wagonnets ») : le wagonnet emporte **ce qui est coché dans le chariot** et le vend au marché. Cet argent compte dans `argentWagonnet` (la part « 🛤️ Wagonnet » des statistiques), pas dans `argentForeuse`.
 
 Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« 🛤️ Automatiser »** sur les rails (fenêtre du trajet) ; ensuite **🛤️ Pousser** et **✖ Arrêter**. Pour ne plus le pousser soi-même : un **pousseur** embauché au Personnel pour le trajet Foreuse → Marché attend au quai, devant la foreuse (voir [personnel.md](personnel.md#4-les-pousseurs)), ou l'électricité du générateur.

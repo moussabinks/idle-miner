@@ -1,7 +1,7 @@
 // Le stand Personnel : on embauche des mineurs qui creusent tout seuls et remontent leur sac
 // dans le coffre de la mine, et (26/10) des pousseurs, chacun pour un trajet de wagonnet : on
 // choisit son départ et son arrivée, et le trajet brille sur la carte avant qu'on confirme.
-// On leur paie un salaire toutes les 10 minutes (ou c'est le manager qui s'en charge, au
+// On leur paie un salaire toutes les 5 minutes (ou c'est le manager qui s'en charge, au
 // niveau 4 de la mine). Au niveau 3, le recruteur trouve des mineurs plus ou moins rares :
 // chaque embauche est une surprise.
 
@@ -19,7 +19,6 @@ import {
   LISTE_LIAISONS,
   RARETES,
   SECONDES_PAR_PAIE,
-  type IdBatiment,
   type IdLiaison,
 } from '../jeu/donnees'
 import {
@@ -110,7 +109,7 @@ function Chances({ etat, apercu }: { etat: EtatJeu; apercu: boolean }) {
   )
 }
 
-// Les salaires (sans le manager) : on complète jusqu'à 10 minutes payées, pas plus (pour
+// Les salaires (sans le manager) : on complète jusqu'à 5 minutes payées, pas plus (pour
 // payer d'avance plus longtemps, il faut le manager, au niveau 4 de la mine).
 function Salaires({ etat, jouer }: Props) {
   const sansSalaire = nbSansSalaire(etat)
@@ -119,11 +118,11 @@ function Salaires({ etat, jouer }: Props) {
     // Sur une ligne (27/10) : le total, le temps payé et le bouton ; l'alerte dessous s'il le faut.
     <div className={`ligne-achat carte-salaires ${sansSalaire > 0 ? 'carte-alerte' : ''}`}>
       <div className="ligne-titre">
-        <strong title={`${argent(salairesParPaie(etat))} toutes les 10 minutes${etat.niveauMine < NIVEAU_MINE_MANAGER ? ` (le manager, au niveau ${NIVEAU_MINE_MANAGER} de la mine, les paiera pour toi)` : ''}`}>
+        <strong title={`${argent(salairesParPaie(etat))} toutes les 5 minutes${etat.niveauMine < NIVEAU_MINE_MANAGER ? ` (le manager, au niveau ${NIVEAU_MINE_MANAGER} de la mine, les paiera pour toi)` : ''}`}>
           💵 Salaires
         </strong>
         <span className="discret salaires-resume">
-          {argent(salairesParPaie(etat))}/10 min{sansSalaire === 0 && ` · payés ${duree(tempsPayeMin(etat))}`}
+          {argent(salairesParPaie(etat))}/5 min{sansSalaire === 0 && ` · payés ${duree(tempsPayeMin(etat))}`}
         </span>
         <button
           className="bouton bouton-petit bouton-payer"
@@ -169,7 +168,7 @@ function Manager({ etat, jouer }: Props) {
       <div className="ligne-achat carte-manager">
         <TitreChef role="manager" titre="💼 Manager" />
         <span className="discret">
-          Il paie les salaires tout seul (le sien aussi : {argent(salaireManager())} toutes les 10 minutes), avec l'argent de la trésorerie. Fini
+          Il paie les salaires tout seul (le sien aussi : {argent(salaireManager())} toutes les 5 minutes), avec l'argent de la trésorerie. Fini
           les mineurs qui attendent !
         </span>
         <Achat
@@ -194,7 +193,7 @@ function Manager({ etat, jouer }: Props) {
         <span>Trésorerie</span>
         <strong>{argent(etat.tresorerie)}</strong>
       </div>
-      {/* Combien il faut pour payer tout le monde une fois (10 min) : la jauge se remplit jusque-là. */}
+      {/* Combien il faut pour payer tout le monde une fois (5 min) : la jauge se remplit jusque-là. */}
       <Barre
         valeur={etat.tresorerie}
         max={depenses}
@@ -301,7 +300,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
-  // Ce que valent en moyenne les blocs qu'il remonte en 10 minutes.
+  // Ce que valent en moyenne les blocs qu'il remonte en 5 minutes.
   const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
   const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
   const detail = `${activiteEmploye(etat, employe)} · ${vitesseEmploye(employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s en creusant · ${employe.blocsCasses.toLocaleString('fr-FR')} blocs cassés`
@@ -345,8 +344,8 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
       ) : (
         <div className="module-ligne">
           {/* Court (27/10) : son rendement et son salaire ; le détail est dans l'info-bulle. */}
-          <span className="discret" title={`Ses blocs valent environ ${argent(rapporte)} toutes les 10 minutes`}>
-            ⛏️ {blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc/s · salaire {argent(salaireEmploye(employe))} / 10 min
+          <span className="discret" title={`Ses blocs valent environ ${argent(rapporte)} toutes les 5 minutes`}>
+            ⛏️ {blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc/s · salaire {argent(salaireEmploye(employe))} / 5 min
           </span>
         </div>
       )}
@@ -439,11 +438,12 @@ function LigneEmploye({ etat, jouer, employe, index, onOuvrir }: Props & { emplo
 // L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
 // trajet brille sur la carte (s'il y a des rails), puis on confirme.
 function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPanneau & { onRecrue: (employe: Employe) => void }) {
-  const departs = [...new Set(LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee)).map((l) => LIAISONS[l].depart))]
-  const [depart, setDepart] = useState<IdBatiment | null>(departs.length === 1 ? departs[0] : null)
-  const arrivees = LISTE_LIAISONS.filter((l) => LIAISONS[l].depart === depart && batimentPose(etat.village, LIAISONS[l].arrivee))
-  const [liaison, setLiaison] = useState<IdLiaison | null>(null)
-  const choisie = liaison && LIAISONS[liaison].depart === depart ? liaison : null
+  // Tous les trajets possibles (leurs deux bâtiments sont posés), dans une liste à cocher (28/10) :
+  // on voit d'un coup d'œil lesquels ont des rails et combien de pousseurs ils ont déjà.
+  const trajets = LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee))
+  const avecDesRails = trajets.filter((l) => ligneDe(etat, l) !== null)
+  const [liaison, setLiaison] = useState<IdLiaison | null>(avecDesRails.length === 1 ? avecDesRails[0] : null)
+  const choisie = liaison && trajets.includes(liaison) ? liaison : null
   const avecRails = choisie !== null && ligneDe(etat, choisie) !== null
   // Le trajet choisi brille sur la carte (et plus rien quand on ferme le panneau).
   useEffect(() => {
@@ -451,31 +451,31 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
   }, [choisie, avecRails, onApercuTrajet])
   useEffect(() => () => onApercuTrajet?.(null), [onApercuTrajet])
   const prix = prixEmbauche(etat)
-  if (departs.length === 0) return null
+  if (trajets.length === 0) return null
   return (
     <div className="ligne-achat carte-pousseur">
       <div className="ligne-titre">
         <strong>🛤️ Embaucher un pousseur</strong>
       </div>
-      <span className="discret">Il pousse le wagonnet d'un seul trajet. Choisis son départ, puis son arrivée :</span>
-      <div className="choix-batiments">
-        <span className="etiquette-choix">Départ</span>
-        {departs.map((b) => (
-          <button key={b} className={`bouton bouton-petit bouton-neutre ${depart === b ? 'choisi' : ''}`} onClick={() => setDepart(b)}>
-            {BATIMENTS[b].emoji} {BATIMENTS[b].nom}
-          </button>
-        ))}
+      <span className="discret">Il pousse le wagonnet d'un seul trajet. Coche son trajet :</span>
+      <div className="liste-trajets-pousseur" role="radiogroup">
+        {trajets.map((l) => {
+          const rails = ligneDe(etat, l) !== null
+          const pousseurs = etat.employes.filter((e) => e.role === 'pousseur' && e.trajet === l).length
+          return (
+            <label key={l} className={`trajet-pousseur ${choisie === l ? 'choisi' : ''} ${rails ? '' : 'sans-rails'}`}>
+              <input type="radio" name="trajet-pousseur" checked={choisie === l} onChange={() => setLiaison(l)} />
+              <span className="trajet-pousseur-nom">
+                {BATIMENTS[LIAISONS[l].depart].emoji} {BATIMENTS[LIAISONS[l].depart].nom} → {BATIMENTS[LIAISONS[l].arrivee].emoji}{' '}
+                {BATIMENTS[LIAISONS[l].arrivee].nom}
+              </span>
+              <span className={`badge ${!rails ? 'badge-rouge' : pousseurs > 0 ? '' : 'badge-vert'}`}>
+                {!rails ? 'Pas de rails' : pousseurs > 0 ? `${pousseurs} pousseur${pousseurs > 1 ? 's' : ''}` : 'Libre'}
+              </span>
+            </label>
+          )
+        })}
       </div>
-      {depart && (
-        <div className="choix-batiments">
-          <span className="etiquette-choix">Arrivée</span>
-          {arrivees.map((l) => (
-            <button key={l} className={`bouton bouton-petit bouton-neutre ${choisie === l ? 'choisi' : ''}`} onClick={() => setLiaison(l)}>
-              {BATIMENTS[LIAISONS[l].arrivee].emoji} {BATIMENTS[LIAISONS[l].arrivee].nom}
-            </button>
-          ))}
-        </div>
-      )}
       {choisie &&
         (avecRails ? (
           <span className="texte-ok">
