@@ -17,6 +17,7 @@ import { foreuseAlimentee, puissanceGenerateur } from './generateur'
 import { tirerBloc } from './mine'
 import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
 import { batimentPose } from './village'
+import { debloque } from './niveaux'
 
 // ---------------------------------------------------------------------------
 // Informations
@@ -109,12 +110,12 @@ export function prochainNiveauChariot(etat: EtatJeu) {
 
 export function peutAmeliorerForage(etat: EtatJeu): boolean {
   const prochain = prochainNiveauForage(etat)
-  return foreusePosee(etat) && prochain !== null && peutPayer(etat, prochain.cout)
+  return foreusePosee(etat) && prochain !== null && debloque(etat, 'forage', etat.foreuse.niveauVitesse + 1) && peutPayer(etat, prochain.cout)
 }
 
 export function peutAmeliorerChariot(etat: EtatJeu): boolean {
   const prochain = prochainNiveauChariot(etat)
-  return foreusePosee(etat) && prochain !== null && peutPayer(etat, prochain.cout)
+  return foreusePosee(etat) && prochain !== null && debloque(etat, 'chariot', etat.foreuse.niveauChariot + 1) && peutPayer(etat, prochain.cout)
 }
 
 export function ameliorerForage(etat: EtatJeu): string[] {

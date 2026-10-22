@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
 import {
@@ -14,11 +15,11 @@ import {
   remplirForeuse,
   vitesseForage,
 } from './foreuse'
-import { creerPartie, type EtatJeu } from './mineur'
+import { type EtatJeu } from './mineur'
 
 // Une partie au niveau 2 de la mine, avec la foreuse posée.
 function partie(): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1))
+  const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.niveauMine = 2
   etat.village.batiments.push({ id: 'foreuse', x: 40, y: 28, miroir: false })
   return etat
@@ -73,7 +74,7 @@ describe('la foreuse', () => {
 
   it('s’améliore, et brûle son propre charbon au 3e niveau de forage', () => {
     const etat = partie()
-    etat.argent = 10_000
+    etat.argent = 20_000
     etat.inventaire = { fer: 200, redstone: 100 }
     expect(basculerRechargeAuto(etat)).toEqual([])
     ameliorerForage(etat)

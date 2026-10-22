@@ -32,6 +32,7 @@ import {
   type Pioche,
 } from './donnees'
 import { infoNiveauMine, tirerBloc } from './mine'
+import { debloque, recordsDeDepart } from './niveaux'
 import { nouveauVillage, type Village } from './village'
 
 export type Inventaire = Partial<Record<IdBloc, number>>
@@ -174,13 +175,18 @@ export type EtatJeu = {
   village: Village
   // L'étape du tutoriel (27/10, voir tutoriel.ts). Absent dans les vieilles parties : pas de tutoriel.
   tutoriel?: number
+  // Le niveau du joueur (29/10, voir niveaux.ts) : l'XP gagnée, et le plus haut chiffre déjà
+  // compté de chaque chose qui rapporte de l'XP (blocs cassés, bâtiments, rails...).
+  xp: number
+  recordsXp: Record<string, number>
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
 // Version 22 (24/10) : les trajets des wagonnets (une partie de la version 21 est convertie).
 // Version 23 (26/10) : les pousseurs sont embauchés pour un trajet (une partie de la version 22
 // est convertie : un ancien pousseur prend le trajet Mine → Marché).
-export const VERSION_ETAT = 23
+// Version 24 (29/10) : le niveau du joueur (une partie de la version 23 reçoit l'XP de ce qu'elle a déjà).
+export const VERSION_ETAT = 24
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------
@@ -200,7 +206,7 @@ export function nouveauTrajet(liaison: IdLiaison): Trajet {
 }
 
 export function creerPartie(aleatoire: Aleatoire): EtatJeu {
-  return {
+  const etat: EtatJeu = {
     version: VERSION_ETAT,
     argent: 0,
     inventaire: {},
@@ -228,7 +234,11 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     stats: nouvellesStatistiques(),
     decouvertes: [],
     village: nouveauVillage(),
+    xp: 0,
+    recordsXp: {},
   }
+  etat.recordsXp = recordsDeDepart(etat)
+  return etat
 }
 
 // ---------------------------------------------------------------------------
@@ -428,7 +438,7 @@ export function prochainNiveauMine(etat: EtatJeu) {
 
 export function peutDescendre(etat: EtatJeu): boolean {
   const prochain = prochainNiveauMine(etat)
-  return prochain !== null && peutPayer(etat, prochain.cout)
+  return prochain !== null && debloque(etat, 'mine', etat.niveauMine) && peutPayer(etat, prochain.cout)
 }
 
 export function descendreNiveauMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
@@ -446,7 +456,7 @@ export function prochainNiveauCoffre(etat: EtatJeu) {
 
 export function agrandirCoffre(etat: EtatJeu): string[] {
   const prochain = prochainNiveauCoffre(etat)
-  if (prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (prochain === null || !debloque(etat, 'coffre', etat.coffre.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.coffre.niveau += 1
   return [`📦 Coffre agrandi : ${prochain.capacite.toLocaleString('fr-FR')} places.`]
@@ -467,7 +477,7 @@ export function secondesTrajetMineur(etat: EtatJeu): number {
 
 export function ameliorerAscenseur(etat: EtatJeu): string[] {
   const prochain = prochainNiveauAscenseur(etat)
-  if (prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (prochain === null || !debloque(etat, 'ascenseur', etat.ascenseur.niveau) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.ascenseur.niveau = prochain.niveau
   return [
@@ -590,6 +600,7 @@ export function coutPioche(niveau: number): Cout {
 // On peut racheter neuve toute pioche déjà débloquée, et débloquer la suivante.
 export function peutAcheterPioche(etat: EtatJeu, niveau: number): boolean {
   if (!PIOCHES[niveau] || niveau > etat.meilleure + 1) return false
+  if (niveau > etat.meilleure && !debloque(etat, 'pioches', niveau)) return false
   return peutPayer(etat, coutPioche(niveau))
 }
 
@@ -623,7 +634,7 @@ export function prixProchainSac(etat: EtatJeu): number | null {
 
 export function acheterSac(etat: EtatJeu): string[] {
   const prix = prixProchainSac(etat)
-  if (prix === null || etat.argent < prix) return []
+  if (prix === null || !debloque(etat, 'sacs', etat.niveauSac + 1) || etat.argent < prix) return []
   etat.argent -= prix
   etat.niveauSac += 1
   return [`🎒 Nouveau sac : ${tailleSac(etat)} places !`]

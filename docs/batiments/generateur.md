@@ -5,8 +5,8 @@
 ## Où et quand
 
 - **Où** : là où tu le poses dans la clairière. C'est un bâtiment de **5 × 5 cases**, comme les autres.
-- **Déblocage** : au **niveau 2 de la mine** (« Veine de redstone »). Avant, sa carte du menu 🏗️ Bâtiments a un cadenas « 🔒 Mine niveau 2 ». C'est aussi le niveau où la redstone commence à sortir de la mine.
-- **Prix pour le poser** : **1 200 $ + 50 fer + 20 redstone**, une seule fois. Les minerais se prennent dans le sac, puis dans le coffre de la mine.
+- **Déblocage** : au **niveau 2 de la mine** (« Veine de redstone ») **et** au **niveau 5 du joueur** (29/10, `NIVEAU_JOUEUR_POUR.batiments.generateur` ; il vient maintenant avant la foreuse dans le menu). Avant, sa carte du menu 🏗️ Bâtiments a un cadenas « 🔒 Niveau 5 » (ou « 🔒 Mine niveau 2 »). C'est aussi le niveau où la redstone commence à sortir de la mine.
+- **Prix pour le poser** : **4 000 $ + 100 fer + 40 redstone** (29/10 ; avant 1 200 $ + 50 fer + 20 redstone), une seule fois. Les minerais se prennent dans le sac, puis dans le coffre de la mine.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). On peut l'ouvrir de n'importe quel côté (à moins de 1 case).
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/generateur.webp`) : une grosse bobine dorée et vitrée pleine d'éclairs jaunes, dans un bâti en bois et en métal, avec des tuyaux en cuivre, un cadran, deux petites bobines aux coins et des arcs électriques au-dessus, sur une dalle de 5 × 5 pavés.
 - **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse. »
@@ -42,15 +42,15 @@ Une petite liste qui dit où on en est :
 
 Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon** et augmente la **puissance** (`NIVEAUX_GENERATEUR`) :
 
-| Niveau | Rayon | Puissance | Wagonnet électrique | Foreuse boostée | Coût |
-|---|---:|---:|---:|---:|---|
-| 1 | 15 cases | ×1 | 8 cases/s | ×1,5 | (le prix du bâtiment) |
-| 2 | 20 cases | ×1,3 | 10,4 cases/s | ×1,65 | 3 000 $ + 80 fer + 40 redstone |
-| 3 | 26 cases | ×1,7 | 13,6 cases/s | ×1,85 | 8 000 $ + 150 fer + 80 redstone |
-| 4 | 33 cases | ×2,2 | 17,6 cases/s | ×2,1 | 20 000 $ + 250 fer + 150 redstone |
-| 5 | 40 cases | ×3 | 24 cases/s | ×2,5 | 50 000 $ + 400 fer + 300 redstone |
+| Niveau | Rayon | Puissance | Wagonnet électrique | Foreuse boostée | Coût (29/10) | Niveau du joueur |
+|---|---:|---:|---:|---:|---|---:|
+| 1 | 15 cases | ×1 | 8 cases/s | ×1,5 | (le prix du bâtiment) | 5 |
+| 2 | 20 cases | ×1,3 | 10,4 cases/s | ×1,65 | 7 500 $ + 120 fer + 60 redstone | 7 |
+| 3 | 26 cases | ×1,7 | 13,6 cases/s | ×1,85 | 20 000 $ + 220 fer + 120 redstone | 10 |
+| 4 | 33 cases | ×2,2 | 17,6 cases/s | ×2,1 | 50 000 $ + 350 fer + 220 redstone | 13 |
+| 5 | 40 cases | ×3 | 24 cases/s | ×2,5 | 120 000 $ + 550 fer + 420 redstone | 15 |
 
-Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, puissance ×*P*. »
+Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 : 81 000 $ + 880 fer + 570 redstone). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, puissance ×*P*. »
 
 ## Règles et comportement
 
@@ -84,10 +84,10 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 
 ## Lien avec le reste du jeu
 
-- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » (amélioration) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine et le niveau 5 du joueur, puis « Générateur : rayon *N* cases » (amélioration) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
 - **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
 - **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
-- **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, coche le puisage dès le niveau 2, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 40 minutes** de jeu.
+- **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, coche le puisage dès le niveau 2, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 1 h 30** de jeu (29/10 ; 40 minutes avant les prix relevés ; mesuré : 57 minutes en médiane).
 - **Événements et sons** : un niveau de plus joue la petite fanfare d'amélioration ; chaque vente d'un wagonnet au marché fait tinter 3 pièces discrètes.
 
 ## Fichiers du code

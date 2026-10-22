@@ -1,6 +1,7 @@
 // Bot de simulation : il joue une partie complète tout seul (22/10 : la mine automatique).
 // Il sert dans les tests à vérifier l'équilibrage (combien de temps pour descendre la mine au
-// niveau 5 ?). Il ne fait que des actions qu'un joueur peut faire :
+// niveau 5 ?). Depuis le 29/10, il gagne de l'XP comme un joueur et attend ses niveaux pour
+// débloquer bâtiments et améliorations. Il ne fait que des actions qu'un joueur peut faire :
 //   - devant la mine, il clique sur le bloc (2 clics par seconde) ;
 //   - quand le coffre se remplit, il le vide dans son sac et va vendre au marché (à pied) ;
 //   - il pose ses bâtiments, embauche des mineurs, paie leurs salaires, améliore tout ;
@@ -57,6 +58,7 @@ import {
   type EtatJeu,
   type Inventaire,
 } from './mineur'
+import { niveauJoueur } from './niveaux'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
 import { distanceEntre, railsMineMarche } from './village'
@@ -88,13 +90,15 @@ export type ResultatBot = {
   tempsNiveaux: Record<number, number> // l'heure (en s) où la mine est arrivée à chaque niveau
   tempsRails: number | null // quand la mine a été reliée au marché
   tempsElectrique: number | null // quand les rails ont été électrifiés
+  tempsNiveauxJoueur: Record<number, number> // l'heure (en s) où le joueur est arrivé à chaque niveau
   allersRetours: number // les voyages à pied jusqu'au marché
 }
 
-export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): ResultatBot {
+export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 9 * 3600): ResultatBot {
   const etat = creerPartie(aleatoire)
   const aleatoireTemps = aleatoireAvecGraine(0)
   const tempsNiveaux: Record<number, number> = { 1: 0 }
+  const tempsNiveauxJoueur: Record<number, number> = { 1: 0 }
   let tempsRails: number | null = null
   let tempsElectrique: number | null = null
   let allersRetours = 0
@@ -238,8 +242,9 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
     attendre(PAS)
     if (trajetDe(etat, 'mine-marche') && tempsRails === null) tempsRails = temps
     if (railsAlimentes(etat) && tempsElectrique === null) tempsElectrique = temps
+    if (tempsNiveauxJoueur[niveauJoueur(etat)] === undefined) tempsNiveauxJoueur[niveauJoueur(etat)] = temps
     verifierSucces(etat)
   }
 
-  return { etat, temps, tempsNiveaux, tempsRails, tempsElectrique, allersRetours }
+  return { etat, temps, tempsNiveaux, tempsRails, tempsElectrique, tempsNiveauxJoueur, allersRetours }
 }

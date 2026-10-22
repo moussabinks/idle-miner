@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import {
   batimentsConstructibles,
@@ -11,12 +12,13 @@ import {
   retirerSol,
 } from './batiments'
 import { ameliorerEmploye, avancerEmployes, embaucher } from './employes'
-import { creerPartie, nbDansCoffre, type EtatJeu } from './mineur'
+import { nbDansCoffre, type EtatJeu } from './mineur'
 import { notificationsBatiments } from './notifications'
 import {
   POSITION_MINE,
   RAYON_BATIMENT,
   batimentPose,
+  batimentProcheDe,
   caseAccesProche,
   distanceAuBatiment,
   distanceEntre,
@@ -27,7 +29,7 @@ import {
 } from './village'
 
 function partie(): EtatJeu {
-  return creerPartie(aleatoireAvecGraine(1))
+  return partieDeTest(aleatoireAvecGraine(1))
 }
 
 // Une ligne droite de rails de (x, y1) à (x, y2).
@@ -48,7 +50,7 @@ describe('le village vu du ciel', () => {
     expect(construireBatiment(etat, 'marche', 28, 36)).toEqual(['🏗️ Marché construit !'])
     expect(peutConstruire(etat, 'marche')).toBe(false) // un seul marché
     expect(peutConstruire(etat, 'forgeron')).toBe(false)
-    etat.argent = 20
+    etat.argent = 30
     etat.inventaire = { pierre: 10 }
     etat.coffre.contenu = { pierre: 8 }
     construireBatiment(etat, 'forgeron', 36, 28)
@@ -67,14 +69,14 @@ describe('le village vu du ciel', () => {
 
   it('la foreuse et le générateur se débloquent au niveau 2 de la mine, avec une pastille « Nouveau »', () => {
     const etat = partie()
-    expect(nouveautesBatiments(etat)).toEqual(['marche', 'forgeron', 'bazar', 'employes'])
+    expect(nouveautesBatiments(etat)).toEqual(['marche', 'forgeron', 'employes', 'bazar'])
     marquerBatimentsVus(etat)
     expect(nouveautesBatiments(etat)).toEqual([])
     etat.argent = 100_000
-    etat.inventaire = { pierre: 200, fer: 100, redstone: 50 }
+    etat.inventaire = { pierre: 200, fer: 200, redstone: 50 }
     expect(peutConstruire(etat, 'foreuse')).toBe(false)
     etat.niveauMine = 2
-    expect(nouveautesBatiments(etat)).toEqual(['foreuse', 'generateur'])
+    expect(nouveautesBatiments(etat)).toEqual(['generateur', 'foreuse'])
     expect(peutConstruire(etat, 'foreuse')).toBe(true)
   })
 
@@ -247,5 +249,16 @@ describe('les notifications au-dessus des bâtiments', () => {
     expect(notificationsBatiments(etat).puits?.[0]).toMatchObject({ icone: '📦', sorte: 'alerte' })
     etat.village.batiments.push({ id: 'generateur', x: 2, y: 2, miroir: false })
     expect(notificationsBatiments(etat).generateur?.[0]).toMatchObject({ icone: '🔴', sorte: 'alerte' })
+  })
+})
+
+describe('un clic juste à côté d’un bâtiment (29/10)', () => {
+  it('vise le bâtiment le plus proche, s’il est assez près', () => {
+    const etat = partie()
+    construireBatiment(etat, 'marche', 28, 38)
+    // (le marché occupe les cases 28 à 32 en x, 38 à 42 en y)
+    expect(batimentProcheDe(etat.village, 30.5, 37.5, 1.6)).toBe('marche')
+    expect(batimentProcheDe(etat.village, 33.5, 40.5, 1.6)).toBe('marche')
+    expect(batimentProcheDe(etat.village, 30.5, 46.5, 1.6)).toBeNull()
   })
 })

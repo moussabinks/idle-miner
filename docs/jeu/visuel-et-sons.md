@@ -26,7 +26,7 @@
   - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel) ;
   - **les personnages** : `public/images/personnages/sprites/*.webp`, découpés dans les planches de l'équipe (voir [§ 4](#4-les-personnages--des-hamsters)).
 - Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins dorés, lanternes) : la cabine et le panneau de la mine, le **rayon du générateur**, les chemins de pavés, les dessins de décor (`DessinsVillage.tsx`, `VueVillage.tsx` ; depuis le 27/10 ils ne s'achètent plus et ornent seulement la plage et l'accueil), la plage. Les **rails** et les **wagonnets** sont, eux, en vraie 3D (voir le § 7.3).
-- **En CSS** : les **blocs** (le gros bloc à cliquer, et les petits blocs des jauges, du chariot et des statistiques), les éclats, les minerais qui s'envolent, les ventes, les bulles. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « pas de pixel art, pour ne pas ressembler à Minecraft »).
+- **En CSS** : les **blocs** (le gros bloc à cliquer, et les petits blocs des jauges, du chariot et des statistiques), les éclats, les minerais qui s'envolent, les ventes, les bulles. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « pas de pixel art, pour ne pas ressembler à Minecraft »), affichés avec notre police d'icônes cartoon (`public/fonts/icones-mega.woff2`, dessins dans `outils/icones/dessins.py` ; le 29/10 : ⭐ / 🌟 pour le niveau du joueur, une étoile dorée, et 🎉 pour le passage de niveau, un cornet violet d'où sortent des confettis).
 - **Style cartoon** : formes rondes, cailloux irréguliers, panneaux en bois arrondis, contours sombres.
 - **Thème sombre** (`color-scheme: dark`). Les couleurs de base (`:root` de `index.css`) :
 
@@ -133,8 +133,9 @@ Les **tenues du Bazar** (chapeaux, hauts), qui ne se voyaient que dans un aperç
 | Mission faisable tout de suite | bordure verte, halo vert qui pulse (1,6 s) ; mission accomplie : ✔, texte barré et son de succès |
 | Bulles de notification du village | sautent de 6 px en grossissant un peu (0,9 s), couleur selon la sorte (voir [§ 7.4](#74-les-bulles-de-notification)) |
 | Pastille du bouton 🏗️ Bâtiments, ruban « Nouveau ! » du menu | sautent (0,8 s) |
-| Bâtiment actif | lueur dorée autour du dessin, losange de son emprise en tirets dorés qui défilent (1 s) |
-| La foreuse qui tourne | le bâtiment vibre (0,16 s) |
+| Bâtiment actif | losange de son emprise, doré, en tirets dorés qui défilent (1 s) (`.emprise-active`). Depuis le 29/10, plus de lueur sur l'image : elle devenait floue |
+| Bâtiment survolé à la souris (29/10) | un losange blanc doré au sol, sur son emprise (`.emprise-survol`) ; l'image du bâtiment ne bouge pas |
+| Niveau du joueur gagné (29/10) | le badge violet du ⭐ dans le bandeau grossit à 160 % puis revient, avec un rebond (0,7 s, `niveau-gagne`) ; toast doré « 🎉 Niveau *N* ! » |
 | Mineur pas payé | tape du pied, bulle 😠 qui saute |
 | Carreaux de niveau | le dernier carré acheté fait un « pop » (0,45 s) |
 | Toast | apparaît avec un rebond (0,35 s) |
@@ -192,7 +193,7 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 
 ### 7.3 Les dessins
 
-- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. **Les écritures restent lisibles** (27/10) : pour un bâtiment qui a du texte peint (pour l'instant seulement l'enseigne « HIRING » du Personnel), on utilise une image toute prête, `employes-miroir.webp`, où chaque panneau à texte est **déjà retourné sur place, avec sa pente inversée** ; une fois toute l'image retournée, le panneau revient à l'endroit, penché dans le bon sens. Elle est fabriquée par `outils/batiments/textes_miroir.py` (Pillow ; les panneaux de chaque bâtiment y sont décrits par leurs bords et leur pente) et choisie par `imageBatiment(id, miroir)` (`IMAGES_BATIMENTS_MIROIR` dans `iso.ts`). Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne, le **générateur brille** quand il donne du courant (`.sprite-electrique`). Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
+- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. **Les écritures restent lisibles** (27/10) : pour un bâtiment qui a du texte peint (pour l'instant seulement l'enseigne « HIRING » du Personnel), on utilise une image toute prête, `employes-miroir.webp`, où chaque panneau à texte est **déjà retourné sur place, avec sa pente inversée** ; une fois toute l'image retournée, le panneau revient à l'endroit, penché dans le bon sens. Elle est fabriquée par `outils/batiments/textes_miroir.py` (Pillow ; les panneaux de chaque bâtiment y sont décrits par leurs bords et leur pente) et choisie par `imageBatiment(id, miroir)` (`IMAGES_BATIMENTS_MIROIR` dans `iso.ts`). Depuis le 29/10, l'image d'un bâtiment n'a **plus aucun filtre, déplacement ni animation** (avant : lueur dorée au survol et quand il était ouvert, la foreuse qui vibrait, le générateur qui brillait) : le navigateur la mettait à part, dessinée à une autre échelle que la carte zoomée, et elle devenait **floue**. Le survol et le bâtiment ouvert sont montrés **au sol**, par un losange (`.emprise-survol`, `.emprise-active`) ; le générateur qui donne du courant a toujours ses **petits éclairs** au-dessus de lui. Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
 - **La mine** : l'image fournie (`mine.webp`), et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
   - **la cabine de l'ascenseur** (`mine-cabine.webp`, tirée du dessin « mine avec ascenseur »), dès qu'il est construit, pendue à **deux câbles** (gris en pointillés sur un trait sombre) qui partent du treuil. Elle **suit le premier mineur qui monte ou descend** (`hauteurCabine` : 0 = en haut, 1 = en bas, selon l'avancée de son trajet) et attend en haut le reste du temps. En bas, elle passe derrière la barrière et le sol de devant (`mine-devant.webp`, dessiné par-dessus). Sans ascenseur, les câbles pendent au fond du puits ;
   - **un panneau en bois** planté sur le sol de devant, à gauche, avec « Niv. *N* ».
@@ -226,7 +227,7 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 
 Refaites le 23/10 : une **médaille ronde** à bord blanc (l'icône de la plus urgente), collée à un ruban avec **deux mots** (« Plein ! », « Achetable »…), une petite pointe dessous, et un badge « +*n* » s'il y a d'autres choses à faire. Elle apparaît avec un rebond (`bulle-arrive`), **sautille** (0,9 s), et un **reflet** passe sur la médaille toutes les 2,6 s. Sa couleur dit la sorte : **rouge** (alerte, avec un **anneau** qui s'élargit comme un radar), **rose** (prêt : du coffre à porter au marché), **bleu** (nouveauté), **vert** (amélioration achetable, avec des **étincelles** dorées). Au survol, elle grossit. La liste est dans [interface.md § 6](interface.md#6-la-carte-du-village-vuevillagetsx).
 
-Pour les z-index de tout le jeu : les fenêtres (`.voile`) sont à 10, le panneau d'un bâtiment sur téléphone à 8, les toasts à 20, la révélation d'une recrue à 30.
+Pour les z-index de tout le jeu : les fenêtres (`.voile`) sont à 10, le panneau d'un bâtiment sur téléphone à 8, les toasts à 20, la révélation d'une recrue à 30 ; la fenêtre « Passer le tutoriel ? » à 70 (`.voile-devant`, 29/10), pour passer devant le tutoriel.
 
 ---
 
@@ -252,7 +253,7 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `achat` | un achat sans amélioration (construction, rachat, réparation, embauche…) | « pop » puis deux notes qui montent, et 2 pièces |
 | `amelioration` | un niveau de plus (mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur) : remplace alors `achat` | trois notes qui montent « niveau supérieur ! » |
 | `piocheCassee` | la pioche en main casse | « clang » triste |
-| `succes` | un succès débloqué | petite fanfare de 4 notes |
+| `succes` | un succès débloqué, ou (29/10) un niveau du joueur gagné | petite fanfare de 4 notes |
 | `suspenseRecrue` | début de la révélation d'une recrue (`RevelationRecrue.tsx`) | roulement de tambour qui accélère et monte (~1,6 s) |
 | `revelationRecrue(rang)` | la rareté dévoilée | fanfare **plus grande selon la rareté** : 2 notes (commun) à 6 notes (mythique), pièces, accords, étincelles |
 
@@ -324,7 +325,7 @@ Toutes ont le même dessin : sur un fond carré arrondi gris-bleu très sombre (
 
 Enregistré **seulement en production** (`enregistrerServiceWorker` dans `src/installation.ts`, appelé par `main.tsx` ; en développement le cache gênerait), au chargement de la page, avec `updateViaCache: 'none'`. S'il échoue (navigation privée…), le jeu marche quand même, sans hors ligne.
 
-- Cache **`idle-miner-v18`** (27/10) (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 11 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, employes-miroir, foreuse, forgeron, generateur, marche, rails), les 25 tuiles de `images/rails/` (talus, voie, virages doux, butoirs), les 2 textures de `images/sol/` (herbe, sable), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
+- Cache **`idle-miner-v20`** (29/10) (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 11 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, employes-miroir, foreuse, forgeron, generateur, marche, rails), les 25 tuiles de `images/rails/` (talus, voie, virages doux, butoirs), les 2 textures de `images/sol/` (herbe, sable), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
 - Seules les requêtes **GET de notre propre site** passent par lui (Supabase n'est jamais mis en cache).
 
 | Requête | Stratégie |

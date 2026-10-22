@@ -41,6 +41,7 @@ import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
+import { debloque } from './niveaux'
 
 // ---------------------------------------------------------------------------
 // Les lignes de rails et les trajets
@@ -218,7 +219,7 @@ export function prochainNiveauWagonnet(etat: EtatJeu) {
 // Les wagonnets déjà chargés gardent leur chargement : la nouvelle taille compte au prochain départ.
 export function ameliorerWagonnet(etat: EtatJeu): string[] {
   const prochain = prochainNiveauWagonnet(etat)
-  if (prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (prochain === null || !debloque(etat, 'wagonnet', etat.niveauWagonnets + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.niveauWagonnets += 1
   return [`🛒 Wagonnets plus grands : ${prochain.capacite} places.`]

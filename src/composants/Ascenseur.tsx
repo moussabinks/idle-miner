@@ -5,6 +5,7 @@ import { NIVEAUX_ASCENSEUR, SECONDES_ECHELLE } from '../jeu/donnees'
 import { ameliorerAscenseur, niveauAscenseur, peutPayer, prochainNiveauAscenseur, type EtatJeu } from '../jeu/mineur'
 import type { Action } from '../usePartie'
 import { Amelioration } from './Amelioration'
+import { verrou } from '../jeu/niveaux'
 
 export function AmeliorationAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
   const niveau = niveauAscenseur(etat)
@@ -16,6 +17,7 @@ export function AmeliorationAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (
       niveau={etat.ascenseur.niveau}
       niveauMax={NIVEAUX_ASCENSEUR.length}
       suivant={prochain && { cout: prochain.cout, texte: niveau ? `⬆ Trajet en ${prochain.secondesTrajet} s` : '🔨 Construire' }}
+      verrou={verrou(etat, 'ascenseur', etat.ascenseur.niveau)}
       possible={prochain !== null && peutPayer(etat, prochain.cout)}
       onAmeliorer={() => jouer(ameliorerAscenseur)}
     />

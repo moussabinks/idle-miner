@@ -19,6 +19,7 @@ import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
   NIVEAUX_RECRUTEUR,
+  NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   LIAISONS,
@@ -40,6 +41,7 @@ import {
   type IdRarete,
   type Rarete,
 } from './donnees'
+import { debloque, niveauAtteint } from './niveaux'
 import { tirerBloc } from './mine'
 import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe } from './mineur'
 import { batimentPose, secondesAPied } from './village'
@@ -140,7 +142,7 @@ export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   // (un pousseur ne creuse pas : une pioche ne lui servirait à rien, et monterait son salaire)
   if (employe.role === 'pousseur') return false
   const cout = coutAmeliorationEmploye(employe)
-  return cout !== null && peutPayer(etat, cout)
+  return cout !== null && debloque(etat, 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +210,7 @@ export function alerteSalaires(etat: EtatJeu): string | null {
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
-  return etat.niveauMine >= NIVEAU_MINE_MANAGER
+  return etat.niveauMine >= NIVEAU_MINE_MANAGER && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.manager)
 }
 
 export function managerAuTravail(etat: EtatJeu): boolean {
@@ -285,7 +287,7 @@ export function prochainNiveauRecruteur(etat: EtatJeu) {
 
 export function peutAmeliorerRecruteur(etat: EtatJeu): boolean {
   const prochain = prochainNiveauRecruteur(etat)
-  return recruteurDebloque(etat) && prochain !== null && peutPayer(etat, prochain.cout)
+  return recruteurDebloque(etat) && prochain !== null && debloque(etat, 'recruteur', etat.recruteur) && peutPayer(etat, prochain.cout)
 }
 
 export function ameliorerRecruteur(etat: EtatJeu): string[] {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { poserSol } from './batiments'
 import { SECONDES_PAR_REDSTONE } from './donnees'
@@ -13,13 +14,13 @@ import {
   rayonGenerateur,
   remplirGenerateur,
 } from './generateur'
-import { creerPartie, nouveauTrajet, type EtatJeu } from './mineur'
+import { nouveauTrajet, type EtatJeu } from './mineur'
 import { railsAlimentes } from './wagonnet'
 
 // Une partie avec le marché en (28, 40), une ligne de rails de 5 cases de la mine au marché (et son trajet), et
 // le générateur posé juste à côté (son centre en 37,5 ; 39,5).
 function partie(): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1))
+  const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.niveauMine = 2
   etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'generateur', x: 35, y: 37, miroir: false })
   etat.inventaire = { fer: 15 }
@@ -79,8 +80,8 @@ describe('le générateur', () => {
 
   it('amélioré, il a un plus grand rayon et peut se servir dans le coffre', () => {
     const etat = partie()
-    etat.argent = 3000
-    etat.inventaire = { fer: 80, redstone: 40 }
+    etat.argent = 7500
+    etat.inventaire = { fer: 120, redstone: 60 }
     expect(basculerPuisage(etat)).toEqual([]) // pas au niveau 1
     ameliorerGenerateur(etat)
     expect(rayonGenerateur(etat)).toBe(20)

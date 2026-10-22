@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
 import { embaucher, embaucherPousseur } from './employes'
 import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
-import { creerPartie, type EtatJeu } from './mineur'
+import { type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
 import {
@@ -36,7 +37,7 @@ import {
 
 // Une partie avec le marché en (28, 40) et une ligne de 5 rails de la mine au marché.
 function partie(): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1))
+  const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
   etat.inventaire = { fer: 15 }
   for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
@@ -251,7 +252,7 @@ describe('les trajets des wagonnets', () => {
 
 describe('pas de boucle dans les rails', () => {
   it('on ne peut pas fermer un carré de 2 × 2', () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.inventaire = { fer: 30 }
     poserSol(etat, 'rail', 5, 5)
     poserSol(etat, 'rail', 6, 5)
@@ -263,7 +264,7 @@ describe('pas de boucle dans les rails', () => {
   })
 
   it('ni une grande boucle, même en déplaçant un rail', () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.inventaire = { fer: 60 }
     // Un U : (5,5) → (8,5) → (8,7) → (5,7), il manque (5,6).
     for (const [x, y] of [[5, 5], [6, 5], [7, 5], [8, 5], [8, 6], [8, 7], [7, 7], [6, 7], [5, 7]]) poserSol(etat, 'rail', x, y)

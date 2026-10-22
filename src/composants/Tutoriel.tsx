@@ -13,8 +13,8 @@
 // on suit sa position à chaque image (la carte du village bouge, les panneaux défilent).
 
 import { useEffect, useRef, useState } from 'react'
-import type { IdBatiment } from '../jeu/donnees'
-import { nbDansSac, type EtatJeu } from '../jeu/mineur'
+import { BATIMENTS, type IdBatiment } from '../jeu/donnees'
+import { disponible, nbDansSac, peutPayer, type EtatJeu } from '../jeu/mineur'
 import { BLOCS_TUTORIEL, ETAPES_TUTORIEL, etapeTutoriel, type IdEtapeTutoriel } from '../jeu/tutoriel'
 import { sons } from '../sons'
 import { Confirmation } from './Confirmation'
@@ -130,6 +130,42 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
             geste: 'Touche ici !',
             cible: batiment('marche'),
           }
+    case 'forgeron': {
+      // Il faut un peu d'argent et de pierre : s'il en manque, on retourne creuser et vendre.
+      const cout = BATIMENTS.forgeron.cout
+      const manque = !peutPayer(etat, cout)
+      if (manque && !ui.menuConstruction && ui.posePrevue !== 'forgeron')
+        return {
+          titre: 'Construis le forgeron',
+          texte: `Il coûte ${cout.argent ?? 0} $ et ${cout.materiaux.pierre ?? 0} pierre (tu as ${Math.floor(etat.argent)} $ et ${disponible(etat, 'pierre')} pierre) : creuse encore, vends au marché, puis ouvre le menu Bâtiments.`,
+          pourquoi: 'Le forgeron répare ta pioche et en fabrique de meilleures.',
+          geste: 'Creuse !',
+          cible: ui.batimentOuvert === 'puits' ? '[data-tuto="bloc"]' : batiment('puits'),
+        }
+      if (ui.posePrevue === 'forgeron')
+        return {
+          titre: 'Choisis sa place',
+          texte: 'Touche la carte pour placer le forgeron, puis valide.',
+          pourquoi: 'Tu pourras toujours le déplacer plus tard.',
+          geste: 'Valide !',
+          cible: '[data-tuto="construire-ici"]',
+        }
+      if (ui.menuConstruction)
+        return {
+          titre: 'Pose le forgeron',
+          texte: `Il coûte ${cout.argent ?? 0} $ et ${cout.materiaux.pierre ?? 0} pierre.`,
+          pourquoi: 'Le forgeron répare ta pioche et en fabrique de meilleures.',
+          geste: 'Pose-le !',
+          cible: '[data-tuto="poser-forgeron"]',
+        }
+      return {
+        titre: 'Construis le forgeron',
+        texte: 'Ouvre le menu Bâtiments.',
+        pourquoi: 'Ta pioche s’use : le forgeron la répare, et en fabrique de meilleures.',
+        geste: 'Touche ici !',
+        cible: '[data-tuto="batiments"]',
+      }
+    }
     case 'bravo':
       return { titre: '', texte: '', pourquoi: '', geste: 'Ta liste de tâches', cible: '.missions' }
   }
@@ -247,12 +283,12 @@ function Felicitations({ onSuivant }: { onSuivant: () => void }) {
           Bravo, tu as compris !
         </h2>
         <p className="tuto-grande-texte">
-          Tu sais <strong>creuser</strong> et <strong>vendre</strong>. La suite est dans ta <strong>liste de tâches</strong>, en haut à droite :
+          Tu sais <strong>creuser</strong>, <strong>vendre</strong> et <strong>construire</strong>. Maintenant, c’est à toi ! Tes idées de la suite sont dans ta <strong>liste de tâches</strong>, en haut à droite :
         </p>
         <ul className="tuto-suite">
-          <li>👷 Embauche des mineurs qui creusent pour toi</li>
-          <li>🛤️ Pose des rails : un wagonnet vend le coffre tout seul</li>
-          <li>⬇️ Descends la mine : de nouveaux minerais, plus chers</li>
+          <li>⭐ Tout ce que tu fais rapporte de l’XP : monte de niveau (en haut à gauche)</li>
+          <li>🔓 Chaque niveau débloque des bâtiments et des améliorations</li>
+          <li>👷 Mineurs, 🛤️ rails, ⚡ électricité : automatise ta mine</li>
         </ul>
         <button className="bouton bouton-vendre tuto-gros-bouton" onClick={onSuivant} autoFocus>
           ✔ À moi de jouer !
@@ -289,6 +325,7 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
     <Confirmation
       titre="Passer le tutoriel ?"
       texteConfirmer="Passer"
+      classe="voile-devant"
       onConfirmer={() => {
         setConfirmer(false)
         onPasser()

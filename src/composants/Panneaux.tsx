@@ -67,6 +67,7 @@ import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import { lotChoisi, type Choix } from '../choix'
 import { Jauges } from './Jauges'
+import { verrou } from '../jeu/niveaux'
 
 export type PropsPanneau = {
   etat: EtatJeu
@@ -205,7 +206,12 @@ function CartePioche({ etat, jouer, pioche }: PropsPanneau & { pioche: (typeof P
         />
       )}
       {/* Débloquer ou racheter neuve : le prix à gauche, comme partout. */}
-      {(prochaine || pioche.niveau > 0) && (
+      {/* (29/10) La pioche suivante se débloque avec le niveau du joueur. */}
+      {prochaine && verrou(etat, 'pioches', pioche.niveau) !== null ? (
+        <span className="amelioration-verrou">
+          🔒 Pioche en {pioche.nom} · {verrou(etat, 'pioches', pioche.niveau)}
+        </span>
+      ) : (prochaine || pioche.niveau > 0) && (
         <Achat
           etat={etat}
           cout={coutPioche(pioche.niveau)}
@@ -262,6 +268,7 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
           niveau={etat.niveauSac + 1}
           niveauMax={SACS.length}
           suivant={prochainSac && prixSac !== null ? { cout: { argent: prixSac, materiaux: {} }, texte: `⬆ ${prochainSac.taille} places` } : null}
+          verrou={verrou(etat, 'sacs', etat.niveauSac + 1)}
           possible={prixSac !== null && etat.argent >= prixSac}
           onAmeliorer={() => jouer(acheterSac)}
           genre="acheter"
@@ -365,6 +372,7 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
               niveau={foreuse.niveauVitesse + 1}
               niveauMax={NIVEAUX_FORAGE.length}
               suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s · ${forage.reservoir} charbons` }}
+              verrou={verrou(etat, 'forage', foreuse.niveauVitesse + 1)}
               possible={peutAmeliorerForage(etat)}
               onAmeliorer={() => jouer(ameliorerForage)}
             />
@@ -378,6 +386,7 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
               niveau={foreuse.niveauChariot + 1}
               niveauMax={NIVEAUX_CHARIOT.length}
               suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite.toLocaleString('fr-FR')} places (${minutes(secondesPourRemplir(etat, foreuse.niveauChariot + 1))})` }}
+              verrou={verrou(etat, 'chariot', foreuse.niveauChariot + 1)}
               possible={peutAmeliorerChariot(etat)}
               onAmeliorer={() => jouer(ameliorerChariot)}
             />
@@ -494,6 +503,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
               niveau={g.niveau + 1}
               niveauMax={NIVEAUX_GENERATEUR.length}
               suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ×${prochain.puissance}` }}
+              verrou={verrou(etat, 'generateur', g.niveau + 1)}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer(ameliorerGenerateur)}
             />

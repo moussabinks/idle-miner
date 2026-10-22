@@ -28,6 +28,7 @@ import {
 import { Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import type { PropsPanneau } from './Panneaux'
+import { verrou } from '../jeu/niveaux'
 
 // Les bâtiments des trajets, avec leur article (« la mine », « le marché »...).
 const NOMS: Partial<Record<IdBatiment, { le: string; au: string }>> = {
@@ -136,6 +137,7 @@ export function PanneauTrajets({ etat, jouer, depart, onReglerTrajet }: PropsPan
             niveau={etat.niveauWagonnets + 1}
             niveauMax={NIVEAUX_WAGONNET.length}
             suivant={prochain && { cout: prochain.cout, texte: `⬆ ${prochain.capacite.toLocaleString('fr-FR')} places` }}
+            verrou={verrou(etat, 'wagonnet', etat.niveauWagonnets + 1)}
             possible={prochain !== null && peutPayer(etat, prochain.cout)}
             onAmeliorer={() => jouer(ameliorerWagonnet)}
           />

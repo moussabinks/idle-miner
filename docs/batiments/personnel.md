@@ -1,11 +1,11 @@
 # 👷 Personnel
 
-> Le bureau d'embauche, ouvert **dès le début** (22/10) : on y embauche des mineurs qui creusent tout seuls et remontent leur sac dans le **coffre de la mine**, on embauche aussi des **pousseurs** (26/10), chacun pour **un trajet de wagonnet**, et on paie tout ce monde toutes les **5 minutes** (28/10). Plus tard, on y trouve le **recruteur** (niveau 3 de la mine) et le **manager** (niveau 4), qui restent à leur poste devant le bâtiment.
+> Le bureau d'embauche, ouvert dès le début le 22/10, et depuis le 29/10 au **niveau 2 du joueur** : on y embauche des mineurs qui creusent tout seuls et remontent leur sac dans le **coffre de la mine**, on embauche aussi des **pousseurs** (26/10), chacun pour **un trajet de wagonnet**, et on paie tout ce monde toutes les **5 minutes** (28/10). Plus tard, on y trouve le **recruteur** (niveau 3 de la mine et niveau 9 du joueur) et le **manager** (niveau 4 de la mine et niveau 11 du joueur), qui restent à leur poste devant le bâtiment.
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **100 $ + 30 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Son identifiant dans le code reste `employes`, son nom affiché est **Personnel**. **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
-- **Déblocage** : dès le début (niveau 1 de la mine). Ensuite, dans son panneau : le **recruteur** au **niveau 3** de la mine, le **manager** au **niveau 4**.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **250 $ + 50 pierre** (29/10 ; avant 100 $ + 30 pierre ; la pierre se prend dans le sac, puis dans le coffre de la mine). Son identifiant dans le code reste `employes`, son nom affiché est **Personnel**. **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Déblocage** : au **niveau 2 du joueur** (29/10 ; niveau 1 de la mine ; avant, dès le début). Ensuite, dans son panneau : le **recruteur** au **niveau 3** de la mine **et** au niveau 9 du joueur, le **manager** au **niveau 4** de la mine **et** au niveau 11 du joueur. Les pioches des mineurs demandent aussi un niveau du joueur (voir plus bas, et [../jeu/niveaux.md](../jeu/niveaux.md)).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). Le manager et le recruteur se tiennent devant le bâtiment, et les mineurs qui attendent leur salaire font la queue un peu plus loin devant.
 - **L'ouvrir** : toucher (ou cliquer) le Personnel : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/employes.webp`) : un bureau en bois et en pierre sous un auvent bleu, avec l'enseigne « HIRING », des portraits de mineurs et des bannières. Retourné (miroir), il utilise une autre image, `employes-miroir.webp` (27/10), où l'enseigne est déjà retournée : une fois toute l'image retournée, « HIRING » se lit à l'endroit (voir [visuel-et-sons.md](../jeu/visuel-et-sons.md)).
@@ -36,7 +36,9 @@ Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur 
 
 | Embauche | 1re | 2e | 3e | 4e | 5e | 6e | 7e | 8e | 9e | 10e | 11e | 12e |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Prix | 50 $ | 150 $ | 400 $ | 1 000 $ | 2 500 $ | 6 000 $ | 14 000 $ | 30 000 $ | 60 000 $ | 120 000 $ | 192 000 $ | 307 200 $ |
+| Prix (29/10) | 100 $ | 300 $ | 800 $ | 2 000 $ | 5 000 $ | 12 000 $ | 28 000 $ | 60 000 $ | 120 000 $ | 240 000 $ | 384 000 $ | 614 400 $ |
+
+Les prix ont doublé le 29/10 (avant : 50 $, 150 $, 400 $, 1 000 $…). Chaque embauche rapporte **25 XP**, mais seulement quand l'équipe dépasse sa plus grande taille déjà atteinte : licencier puis réembaucher ne redonne rien.
 
 - Le nouveau mineur reçoit un **prénom au hasard** pas encore pris (Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot ; avec un numéro si tous sont pris).
 - Il commence avec une **pioche en bois**, **ses 10 premières minutes de salaire comprises**, et descend tout de suite creuser. « 👷 *X* est embauché(e) ! Il descend creuser. » (avec « (rare !) », « (épique !) »… s'il n'est pas commun).
@@ -56,13 +58,15 @@ L'infobulle donne son activité en entier, sa vitesse en creusant et le nombre d
 
 Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un plus grand sac (moins d'allers-retours). Payé **en argent seulement** (`NIVEAUX_EMPLOYE`). Ces pioches ne s'usent pas.
 
-| Niveau | Pioche | Vitesse en creusant | Sac | Coût | Salaire / 5 min | Blocs par minute (échelle) | Blocs par minute (ascenseur niveau 6) |
-|---|---|---:|---:|---:|---:|---:|---:|
-| 1 | Bois | 0,15 bloc/s | 10 | (de base) | 35 $ | ~6,8 | ~8,5 |
-| 2 | Pierre | 0,25 bloc/s | 15 | 150 $ | 70 $ | ~11 | ~14 |
-| 3 | Fer | 0,4 bloc/s | 20 | 600 $ | 155 $ | ~16,7 | ~22 |
-| 4 | Or | 0,6 bloc/s | 30 | 2 500 $ | 350 $ | ~25 | ~33 |
-| 5 | Diamant | 0,9 bloc/s | 45 | 9 000 $ | 770 $ | ~37,5 | ~50 |
+| Niveau | Pioche | Vitesse en creusant | Sac | Coût (29/10) | Niveau du joueur | Salaire / 5 min | Blocs par minute (échelle) | Blocs par minute (ascenseur niveau 6) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | Bois | 0,15 bloc/s | 10 | (de base) | — | 35 $ | ~6,8 | ~8,5 |
+| 2 | Pierre | 0,25 bloc/s | 15 | 400 $ | 4 | 70 $ | ~11 | ~14 |
+| 3 | Fer | 0,4 bloc/s | 20 | 1 500 $ | 6 | 155 $ | ~16,7 | ~22 |
+| 4 | Or | 0,6 bloc/s | 30 | 6 000 $ | 9 | 350 $ | ~25 | ~33 |
+| 5 | Diamant | 0,9 bloc/s | 45 | 22 000 $ | 12 | 770 $ | ~37,5 | ~50 |
+
+Un mineur équipé jusqu'au diamant coûte 29 900 $ de pioches (avant le 29/10 : 150, 600, 2 500 et 9 000 $, soit 12 250 $). Sans le niveau du joueur, la fiche du mineur affiche « 🔒 … · au niveau *N* » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
 
 (Pour un mineur commun, trajets compris. Les salaires valent environ 35 % de ce qu'il fait sortir de la mine, payés toutes les 5 minutes depuis le 28/10.)
 
@@ -106,21 +110,23 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 | Employés dans l'équipe | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Indemnités | 20 $ | 60 $ | 160 $ | 400 $ | 1 000 $ | 2 400 $ | 5 600 $ | 12 000 $ | 24 000 $ | 48 000 $ | 76 800 $ | 122 900 $ |
+| Indemnités (29/10) | 40 $ | 120 $ | 320 $ | 800 $ | 2 000 $ | 4 800 $ | 11 200 $ | 24 000 $ | 48 000 $ | 96 000 $ | 153 600 $ | 245 800 $ |
 
 - Le mineur part **avec son équipement** (sa pioche et ce qu'il a dans son sac sont perdus). « 👋 *X* est parti(e). Indemnités : … » Réembaucher coûte ensuite le prix normal de la taille d'équipe : c'est le moyen de « retenter sa chance » avec le recruteur.
 
 ### 7. Le recruteur (niveau 3 de la mine)
 
-- Avant : carte verrouillée « 🔒 Recruteur · niveau 3 de la mine », qui montre déjà les chances qu'il donnera.
+- Avant : carte verrouillée « 🔒 Recruteur · niveau 3 de la mine », qui montre déjà les chances qu'il donnera. Depuis le 29/10, il faut aussi le **niveau 9 du joueur** pour l'embaucher (puis 11, 13 et 15 pour ses niveaux suivants) : sa ligne affiche alors « 🔒 … · au niveau *N* ».
 - On l'embauche (niveau 1) puis on l'améliore, **en argent seulement** (`NIVEAUX_RECRUTEUR`). Les chances de la prochaine embauche s'affichent en pastilles de couleur :
 
-| Niveau | Coût | Commun | Rare | Épique | Légendaire | Mythique |
-|---|---|---|---|---|---|---|
-| 1 (embauche) | 5 000 $ | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 12 000 $ | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
-| 3 | 25 000 $ | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
-| 4 | 50 000 $ | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
+| Niveau | Coût (29/10) | Niveau du joueur | Commun | Rare | Épique | Légendaire | Mythique |
+|---|---|---|---|---|---|---|---|
+| 1 (embauche) | 10 000 $ | 9 | 65 % | 20 % | 10 % | 4 % | 1 % |
+| 2 | 25 000 $ | 11 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
+| 3 | 50 000 $ | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
+| 4 | 100 000 $ | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
+
+Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 000 $).
 
 - **Les raretés** (`RARETES`) :
 
@@ -137,8 +143,8 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 ### 8. Le manager et la trésorerie (niveau 4 de la mine)
 
-- Avant : carte verrouillée « 🔒 Manager · niveau 4 de la mine ».
-- **Embauche : 15 000 $** (`PRIX_MANAGER`), ses 5 premières minutes comprises.
+- Avant : carte verrouillée « 🔒 Manager · niveau 4 de la mine », puis (29/10) « 🔒 Manager · au niveau 11 » tant que le joueur n'a pas le niveau 11.
+- **Embauche : 35 000 $** (`PRIX_MANAGER`, 29/10 ; avant 15 000 $), ses 5 premières minutes comprises.
 - **Son salaire : 400 $ toutes les 5 minutes** (`SALAIRE_MANAGER`), payé par la trésorerie.
 - **La trésorerie** est une cagnotte qu'on remplit. Boutons : « +*manque* » (juste ce qu'il faut pour une paie de toute l'équipe), **« Remplir pour 1 h »** (jusqu'à 6 paies de toute l'équipe), **+10 000 $**, **« Tout mettre »** et **« Tout reprendre »** (depuis le 27/10, il n'y a plus de +1 000 $ ni de +100 000 $). Tout cela est dans l'onglet **Chefs**.
 - Une jauge montre la trésorerie face au prix d'une paie de toute l'équipe (manager compris), et le panneau dit combien de temps elle tient. Badge « Au travail » ou « 😠 Pas payé ».
@@ -165,7 +171,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 ## Fichiers du code
 
 - `src/jeu/employes.ts` : toutes les règles (embauche des mineurs et des pousseurs `embaucherPousseur` / `peutEmbaucherPousseur`, prix, licenciement, pioches, trajet d'un pousseur `changerTrajet` et son quai `maisonDe`, salaires, travail seconde après seconde, passage à la forge, attente devant le Personnel, recruteur, manager, trésorerie, textes d'activité).
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.employes` : 100 $ + 30 pierre, 5 × 5, porte à droite) et les chiffres (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `PRIX_EMBAUCHE`, `HAUSSE_APRES_LISTE`, `PART_INDEMNITES`, `SALAIRES`, `NIVEAUX_EMPLOYE`, `RARETES`, `NIVEAUX_RECRUTEUR`, `PRIX_MANAGER`, `SALAIRE_MANAGER`, `SECONDES_VIDAGE_EMPLOYE`, `SECONDES_FORGE_EMPLOYE`, `VITESSE_MARCHE`, `VITESSE_POUSSE_MINEUR`…).
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.employes` : 250 $ + 50 pierre, 5 × 5, porte à droite) et les chiffres (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `PRIX_EMBAUCHE`, `HAUSSE_APRES_LISTE`, `PART_INDEMNITES`, `SALAIRES`, `NIVEAUX_EMPLOYE`, `RARETES`, `NIVEAUX_RECRUTEUR`, `PRIX_MANAGER`, `SALAIRE_MANAGER`, `SECONDES_VIDAGE_EMPLOYE`, `SECONDES_FORGE_EMPLOYE`, `VITESSE_MARCHE`, `VITESSE_POUSSE_MINEUR`…).
 - `src/jeu/mineur.ts` : les types `Employe` (rôle `mineur` ou `pousseur` ; `trajet`, le trajet d'un pousseur, `null` pour un mineur ; étapes `creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend` ; `lieu`, `depuis`, `forgeEnAttente`) et `Manager`, l'ascenseur (`secondesTrajetMineur`).
 - `src/jeu/wagonnet.ts` : le pousseur de ce trajet (et lui seul, s'il attend au quai du départ) qui part avec le wagonnet et revient au quai ; la création du trajet à l'embauche (`creerTrajet`).
 - `src/jeu/sauvegarde.ts` : `convertirVersion22` (26/10) : dans une partie de la version 22, les anciens pousseurs prennent le trajet Mine → Marché.

@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { poserSol } from './batiments'
 import { NIVEAUX_ASCENSEUR } from './donnees'
 import { embaucher, embaucherPousseur } from './employes'
-import { capaciteCoffre, creerPartie, debitMine } from './mineur'
+import { capaciteCoffre, debitMine } from './mineur'
 import { analyseAscenseur, analyseWagonnet, production } from './production'
 import { creerTrajet } from './wagonnet'
 
 describe('la production de la mine', () => {
   it('compte la mine toute seule, puis chaque mineur', () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.niveauMine = 2 // (au niveau 1, la mine ne sort rien toute seule)
     const seule = production(etat)
     expect(seule.mine).toBeCloseTo(debitMine(etat))
@@ -26,7 +27,7 @@ describe('la production de la mine', () => {
   })
 
   it("un mineur qui attend son salaire ne compte pas, et tout s'arrête quand le coffre est plein", () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.argent = 1_000_000
     embaucher(etat, aleatoireAvecGraine(2))
     etat.employes[0].etape = 'attend'
@@ -41,7 +42,7 @@ describe('la production de la mine', () => {
 
 describe('les goulots : ascenseur et wagonnet', () => {
   it("sans ascenseur, les mineurs perdent beaucoup de temps à l'échelle : l'améliorer rapporte", () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.argent = 1_000_000
     embaucher(etat, aleatoireAvecGraine(2))
     const lent = analyseAscenseur(etat)
@@ -55,7 +56,7 @@ describe('les goulots : ascenseur et wagonnet', () => {
   })
 
   it('le wagonnet : personne pour le pousser, puis un débit qui dépend de sa taille', () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
+    const etat = partieDeTest(aleatoireAvecGraine(1))
     expect(analyseWagonnet(etat)).toBeNull() // pas de trajet
     etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
     etat.inventaire = { fer: 300 }

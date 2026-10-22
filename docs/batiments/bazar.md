@@ -4,11 +4,11 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 25 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, pas de sac plus grand (les missions proposent « Construis : Bazar »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
-- **Déblocage** : dès le début, sans cadenas.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **300 $ + 60 pierre** (29/10 ; avant 60 $ + 25 pierre ; la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, pas de sac plus grand (les missions proposent « Construis : Bazar »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Déblocage** : au **niveau 3 du joueur** (29/10 ; avant, dès le début). Avant, sa carte du menu Bâtiments a un cadenas « 🔒 Niveau 3 ». Voir [../jeu/niveaux.md](../jeu/niveaux.md).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
-- **Dessin au village** : une image en vue isométrique (`public/images/batiments/bazar.webp`) : une échoppe en bois et en pierre, avec ses étals de sacs et d'équipement. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/bazar.webp`) : une échoppe en bois et en pierre, avec ses étals de sacs et d'équipement. Depuis le 29/10, l'image ne change plus (elle devenait floue) : au survol, un losange blanc doré s'allume au sol sous le bâtiment, et quand son panneau est ouvert, un losange doré en tirets.
 - **Description** (en haut du panneau) : « Sacs à dos. »
 - **Bulle au-dessus** (`notifications.ts`) : **💰 « Une amélioration est achetable ! »** quand le prochain sac est payable.
 - Le bandeau du haut (`Hud.tsx`) montre en permanence le remplissage du sac (`n / taille`) ; la case clignote en rouge quand il est plein (« 🎒 Sac plein ! Va vendre au marché »).
@@ -19,19 +19,19 @@ Tous les achats se paient **seulement en argent**.
 
 ### 🎒 Sac à dos (bouton bleu « ⬆ *N* places »)
 
-« Pour porter plus d'objets du coffre de la mine jusqu'au marché. » Une ligne d'amélioration : la taille actuelle, des petits carrés de niveaux (pleins = achetés, vides = à acheter), puis le prix et le bouton du sac suivant. Chaque achat remplace le sac par le suivant (on ne saute pas de taille). Il n'y a plus de plafond : tous les sacs sont achetables dès le début.
+« Pour porter plus d'objets du coffre de la mine jusqu'au marché. » Une ligne d'amélioration : la taille actuelle, des petits carrés de niveaux (pleins = achetés, vides = à acheter), puis le prix et le bouton du sac suivant. Chaque achat remplace le sac par le suivant (on ne saute pas de taille). Il n'y a plus de plafond de niveau de mine, mais depuis le 29/10 chaque sac demande un **niveau du joueur** : avant, sa ligne affiche « 🔒 … · au niveau *N* ».
 
-| Niveau | Places | Prix |
-|---|---:|---:|
-| 1 | 32 | (sac de départ) |
-| 2 | 64 | 80 $ |
-| 3 | 128 | 400 $ |
-| 4 | 256 | 1 500 $ |
-| 5 | 512 | 5 000 $ |
-| 6 | 1 024 | 15 000 $ |
-| 7 | 2 048 | 40 000 $ |
+| Niveau | Places | Prix (29/10) | Niveau du joueur |
+|---|---:|---:|---:|
+| 1 | 32 | (sac de départ) | — |
+| 2 | 64 | 200 $ | 3 |
+| 3 | 128 | 1 000 $ | 5 |
+| 4 | 256 | 4 000 $ | 8 |
+| 5 | 512 | 12 000 $ | 11 |
+| 6 | 1 024 | 35 000 $ | 14 |
+| 7 | 2 048 | 100 000 $ | 15 |
 
-Coût total de 32 à 2 048 places : 61 980 $. Message à l'achat : « 🎒 Nouveau sac : *N* places ! ». Au dernier sac : « ✔ Niveau max ».
+Coût total de 32 à 2 048 places : 152 200 $ (avant le 29/10 : 61 980 $, avec 80, 400, 1 500, 5 000, 15 000 et 40 000 $). Chaque sac acheté rapporte **30 XP**. Message à l'achat : « 🎒 Nouveau sac : *N* places ! ». Au dernier sac : « ✔ Niveau max ».
 
 ### 👕 Les tenues (retirées le 27/10)
 
@@ -52,7 +52,7 @@ Le Bazar vendait aussi des **tenues** pour le hamster (chapeaux et hauts, seulem
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.bazar` : 60 $ + 25 pierre, 5 × 5, porte à droite), `SACS` (tailles et prix).
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.bazar` : 300 $ + 60 pierre, 5 × 5, porte à droite), `SACS` (tailles et prix).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/mineur.ts` : `acheterSac`, `prixProchainSac`, `tailleSac`, `placeLibre`, `prendreDuCoffre`.
 - `src/jeu/notifications.ts` : la bulle 💰 au-dessus du bazar.

@@ -10,7 +10,8 @@ import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
 import { coffrePlein, disponible, nbDansCoffre, nbDansSac, peutPayer, type EtatJeu } from './mineur'
 import { achatsPossibles } from './objectifs'
-import { batimentPose, cheminEntre } from './village'
+import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
+import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
 
 export type Mission = {
@@ -88,13 +89,12 @@ function prochainBatiment(etat: EtatJeu): Mission | null {
 // L'automatisation, étape par étape.
 function automatisation(etat: EtatJeu): Mission | null {
   if (!batimentPose(etat.village, 'marche') || etat.stats.argentGagne === 0) return null
+  // (29/10) Les rails se débloquent au niveau 3 du joueur. On ne dit plus combien de fer
+  // récupérer : ça dépend du chemin que le joueur choisira.
+  if (!railsDebloques(etat)) return null
   if (!ligneDe(etat, 'mine-marche')) {
-    // Combien de rails, à peu près : la longueur du chemin à pied entre les deux.
-    const cases = Math.max(4, cheminEntre(etat.village, 'puits', 'marche')?.length ?? 8)
-    const fer = (COUT_RAIL.materiaux.fer ?? 3) * cases
-    const possede = disponible(etat, 'fer')
-    if (possede < fer) return mission('fer-rails', '🛤️', `Récupère ${fer} fer pour les rails`, { stand: 'puits', progression: { valeur: possede, max: fer, icone: BLOCS.fer.emoji } })
-    return mission('rails', '🛤️', 'Pose des rails de la mine au marché', { construction: true, pret: true })
+    const fer = COUT_RAIL.materiaux.fer ?? 3
+    return mission('rails', '🛤️', `Pose des rails de la mine au marché (${fer} fer la case)`, { construction: true, pret: disponible(etat, 'fer') >= fer })
   }
   const trajet = trajetDe(etat, 'mine-marche')
   if (!trajet) return mission('trajet', '🚃', 'Touche la bulle 🛤️ sur les rails : automatise le trajet', { stand: 'puits', pret: true })
@@ -118,6 +118,17 @@ function automatisation(etat: EtatJeu): Mission | null {
   return null
 }
 
+// Le prochain niveau du joueur, et ce qu'il débloque (29/10).
+function prochainNiveau(etat: EtatJeu): Mission | null {
+  const prochain = prochainDeblocage(etat)
+  if (!prochain) return null
+  const { xp, pourSuivant } = progressionNiveau(etat)
+  const choses = prochain.choses.slice(0, 2).join(', ') + (prochain.choses.length > 2 ? '...' : '')
+  // (si le niveau qui débloque est plus loin que le suivant, la jauge montre quand même le suivant)
+  const texte = prochain.niveau === niveauJoueur(etat) + 1 ? `Niveau ${prochain.niveau} : ${choses}` : `Niveau ${prochain.niveau} (tu es ${niveauJoueur(etat)}) : ${choses}`
+  return mission(`niveau-${prochain.niveau}`, '⭐', texte, { progression: pourSuivant ? { valeur: xp, max: pourSuivant, icone: '⭐' } : null })
+}
+
 // Les améliorations les plus proches (celles dont on a déjà la plus grande part de l'argent).
 function ameliorations(etat: EtatJeu): Mission[] {
   const part = (cout: Cout) => (cout.argent ? Math.min(1, etat.argent / cout.argent) : 1)
@@ -128,7 +139,7 @@ function ameliorations(etat: EtatJeu): Mission[] {
 }
 
 export function missions(etat: EtatJeu): Mission[] {
-  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat)].filter((m): m is Mission => m !== null)
+  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat).slice(0, 1), prochainNiveau(etat), ...ameliorations(etat).slice(1)].filter((m): m is Mission => m !== null)
   // Pas deux fois la même.
   const vues = new Set<string>()
   return toutes.filter((m) => !vues.has(m.id) && vues.add(m.id)).slice(0, NOMBRE_MAX)

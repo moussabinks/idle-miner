@@ -1,7 +1,7 @@
 # L'interface de Mega Digger
 
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
-> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10 ; missions, bandeau à gauche, onglets et zoom le 27/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
+> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10 ; missions, bandeau à gauche, onglets et zoom le 27/10 ; niveau du joueur, tutoriel du forgeron, zoom plus doux et clic à côté des bâtiments le 29/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
 
 Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affichent au format français (`1 250 $`).
 
@@ -143,7 +143,7 @@ Un seul mode (classe `jeu plein-ecran mode-village`) : le **village vu du ciel**
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│[Argent $/s][Mine · coffre][Pioche][Sac][👷 ⚡]   ┌ MISSIONS ───┐ │  bandeau (HUD)
+│[⭐ 7][Argent $/s][Mine · coffre][Pioche][Sac][👷 ⚡] ┌ MISSIONS ─┐ │  bandeau (HUD)
 │[📊]                                              └─────────────┘ │
 │[🏅]                                        ┌───────────────┐     │
 │[❔]        LA CARTE (village vu du ciel)   │ PANNEAU       │     │
@@ -183,6 +183,7 @@ Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 p
 
 | Case | Contenu | Alerte |
 |---|---|---|
+| **⭐ Niveau** (29/10, la première case ; badge violet : le niveau du joueur, qui **saute** quand on gagne un niveau) | « *xp*/*il en faut* » (« Max » au niveau 30) et une jauge violette. Info-bulle : l'XP qu'il manque, ce que débloque le prochain niveau qui apporte quelque chose, et comment gagner de l'XP. Voir [niveaux.md](niveaux.md) | — |
 | **💵 Argent** | le montant en or (en court au-delà de 10 000 : « 12,5 k », « 3,2 M » ; il **défile** jusqu'à la nouvelle valeur et **saute** à chaque vente), dessous « +*x*/s » : ce que la mine produit par seconde (`revenuParSeconde`), en vert s'il est positif. Info-bulle : le détail mine / mineurs / foreuse | — |
 | **📦 Coffre** (badge doré : le niveau de la mine) | « *n*/*capacité* » et une jauge dorée | coffre plein |
 | **⛏️ Pioche** | « *reste*/*max* » et une jauge verte (« 💥 Cassée ») | pioche cassée |
@@ -198,12 +199,12 @@ Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 
 Un **nouveau monde** commence par un tutoriel (règles dans `src/jeu/tutoriel.ts`, testées ; `etat.tutoriel` = l'étape ; une vieille partie n'a pas le champ et n'a pas de tutoriel). **Pépite**, un hamster mineur, accompagne le joueur :
 
 - **Au début, une grande fenêtre** (fond assombri) : Pépite se présente et explique **le but** : devenir le plus riche des mineurs et creuser jusqu'au cœur de diamant, en 4 médailles qui arrivent l'une après l'autre (⛏️ Creuse, 💰 Vends, 🏗️ Construis, ⚡ Automatise). Gros bouton qui pulse « C'est parti ! », et « Je connais déjà : passer le tutoriel ».
-- **À chaque étape**, une carte crème en haut de l'écran (qui brille et rebondit à chaque nouvelle consigne) : « Étape *n* / 4 » et ses points, le titre, la consigne, et **pourquoi** (💡 « Les blocs et les minerais se vendent au marché. »).
+- **À chaque étape**, une carte crème en haut de l'écran (qui brille et rebondit à chaque nouvelle consigne) : « Étape *n* / 5 » (4 avant le 29/10) et ses points, le titre, la consigne, et **pourquoi** (💡 « Les blocs et les minerais se vendent au marché. »).
 - **Ce qu'il faut toucher est mis en scène** : le reste de l'écran s'assombrit nettement, un cercle doré pulse autour, **trois ondes dorées** en partent sans arrêt, une **grosse flèche** rebondit avec une étiquette « Touche ici ! » / « Clique vite ! » / « Pose-le ! » qui se dandine, et **la cible elle-même palpite et brille** (attribut `data-tuto-actif` posé sur l'élément ; un bâtiment s'illumine d'un halo doré, et la flèche montre son milieu). La cible est trouvée par son attribut (`data-tuto="bloc"`, `data-cible="batiment:puits"`...) et suivie à chaque image ; un bouton dans un panneau défile jusqu'à lui. Sur téléphone, la flèche montre les gros boutons ronds (⛏️ Mine, 💰 Vendre) plutôt que les bâtiments, souvent cachés par le panneau.
 - **Chaque étape réussie** fait jaillir au milieu de l'écran une médaille verte ✔ et « Bravo ! », avec des confettis et une fanfare.
-- **À la fin, une grande fenêtre de félicitations** (confettis) : la suite (embaucher, poser des rails, descendre la mine), la flèche sur la liste des tâches, et « À moi de jouer ! ».
+- **À la fin, une grande fenêtre de félicitations** (confettis) : « Tu sais creuser, vendre et construire. Maintenant, c'est à toi ! », la suite en trois lignes (29/10 : ⭐ tout ce que tu fais rapporte de l'XP, 🔓 chaque niveau débloque des bâtiments et des améliorations, 👷 🛤️ ⚡ automatise ta mine), la flèche sur la liste des tâches, et « À moi de jouer ! ». Ensuite, le joueur **avance seul** : la liste des tâches lui propose quoi faire, sans l'obliger à rien.
 
-On ne passe à l'étape suivante **qu'en faisant l'action** : aller à la mine et casser 10 blocs ; construire le marché (menu Bâtiments, « Poser », « Construire ici ») ; mettre le coffre dans le sac ; aller au marché et vendre. « Passer le tutoriel » (avec confirmation) l'arrête. Une étape déjà faite est sautée.
+On ne passe à l'étape suivante **qu'en faisant l'action** : aller à la mine et casser 10 blocs ; construire le marché (menu Bâtiments, « Poser », « Construire ici ») ; mettre le coffre dans le sac ; aller au marché et vendre ; puis (29/10) **construire le forgeron** (30 $ + 15 pierre : s'il en manque, Pépite renvoie creuser et vendre, en disant combien on a ; sinon menu Bâtiments, « Pose-le ! », « Choisis sa place »). « Passer le tutoriel » (avec confirmation) l'arrête : depuis le 29/10, sa fenêtre de confirmation passe **devant** le tutoriel (`voile-devant`, avant elle restait cachée derrière la fenêtre de bienvenue et le bouton semblait ne rien faire). Une étape déjà faite est sautée.
 
 ## 5. Les missions (`Missions.tsx`)
 
@@ -211,9 +212,10 @@ Depuis le 27/10, la barre « prochain objectif » est **remplacée par les missi
 
 1. **les urgences** : « Paie ton mineur au Personnel » (ou « Paie tes *n* mineurs ») et « Le coffre est plein : vide-le ! » ;
 2. **les premiers pas** : « Construis le marché (gratuit) », « Casse 10 blocs à la mine » (« ⛏️ 3/10 »), « Mets les blocs du coffre dans ton sac », « Vends ton sac au marché » ;
-3. **le prochain bâtiment** à construire (dans l'ordre du menu) : « Gagne *X* $ : construis : *bâtiment* », « Récupère *N* pierre : construis : *bâtiment* », puis « Construis : *bâtiment* » quand tout est là ;
-4. **l'automatisation**, étape par étape : « Récupère *N* fer pour les rails », « Pose des rails de la mine au marché », « Envoie un wagonnet vers le marché », « Embauche un pousseur pour le wagonnet » (sans électricité), « Embauche un mineur au Personnel », puis les étapes du générateur (« Mets de la redstone dans le générateur », « Mets tous les rails dans le rayon du générateur ») et de la foreuse (« Relie la foreuse à la mine (rails) », « Envoie du charbon à la foreuse ») ;
-5. **les améliorations les plus proches** : celles dont on a déjà la plus grande part de l'argent (pioche, niveau de la mine, coffre, sac...).
+3. **le prochain bâtiment** à construire (dans l'ordre du menu, qui est depuis le 29/10 celui des déblocages : marché, forgeron, Personnel, bazar, générateur, foreuse) : « Gagne *X* $ : construis : *bâtiment* », « Récupère *N* pierre : construis : *bâtiment* », puis « Construis : *bâtiment* » quand tout est là ;
+4. **l'automatisation**, étape par étape (à partir du niveau 3 du joueur, quand les rails sont débloqués) : « Pose des rails de la mine au marché (3 fer la case) » (29/10 : elle ne dit plus combien de fer récupérer, ça dépend du chemin choisi ; « Go ! » dès qu'on a 3 fer), « Envoie un wagonnet vers le marché », « Embauche un pousseur pour le wagonnet » (sans électricité), « Embauche un mineur au Personnel », puis les étapes du générateur (« Mets de la redstone dans le générateur », « Mets tous les rails dans le rayon du générateur ») et de la foreuse (« Relie la foreuse à la mine (rails) », « Envoie du charbon à la foreuse ») ;
+5. **les améliorations les plus proches** : celles dont on a déjà la plus grande part de l'argent (pioche, niveau de la mine, coffre, sac...), seulement celles qui sont débloquées par le niveau du joueur ;
+6. (29/10) **le prochain niveau du joueur**, glissé après la première amélioration : « ⭐ Niveau *N* : *ce qu'il débloque* » (deux choses au plus, puis « ... » ; « Niveau 9 (tu es 7) : … » si le niveau qui débloque quelque chose est plus loin que le suivant), avec la jauge d'XP vers le niveau suivant (« ⭐ 120/430 »). Voir [niveaux.md](niveaux.md).
 
 On ne garde jamais deux fois la même mission, et au plus **trois** à la fois.
 
@@ -232,10 +234,10 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 **La caméra** :
 - elle **suit le joueur** en douceur, ou le **wagonnet** que pousse le joueur : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
 - **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
-- **zoomer** : molette (autour du point sous la souris ; depuis le 27/10, **un cran zoome presque du double** (`FORCE_MOLETTE` = 0,0085), et le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT` = 2,4, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
+- **zoomer** : molette (autour du point sous la souris ; le 27/10, un cran zoomait presque du double, c'était trop : depuis le 29/10, **un cran change le zoom d'environ 15 %** (`FORCE_MOLETTE` = 0,0016), et un cran compte au plus 120 pixels (`CRAN_MAX`, certaines souris envoient de très grands défilements d'un coup) ; le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT` = 2,4, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
 
 **Ce qu'on voit** :
-- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés, ils **se soulèvent** un peu, s'éclairent et prennent un **liseré blanc et un halo doré** (et le curseur devient une main) pour dire qu'on peut cliquer ; actifs, ils brillent d'une lueur dorée ; et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
+- les **bâtiments** (de vraies images, calées sur leur emprise). Depuis le 29/10, leur image ne change **jamais** (plus de filtre, de déplacement ni d'animation : le navigateur la redessinait à une autre échelle que la carte zoomée, et elle devenait floue ; la foreuse ne vibre plus, le générateur n'a plus de lueur sur l'image, seulement ses petits éclairs). Le bâtiment **survolé** à la souris (ou juste à côté) est montré **au sol** par un losange blanc doré sur son emprise (`.emprise-survol`, et le curseur devient une main) ; le losange du bâtiment **ouvert** est doré, entouré de tirets dorés qui défilent (`.emprise-active`). Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
 - au **Personnel**, quand on embauche un pousseur pour un trajet : une **ligne jaune épaisse** en surbrillance (halo qui pulse) relie les deux bâtiments en suivant les rails, et leurs emprises sont entourées d'or ;
 - le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
 - les **employés** quand ils sont dehors : en marche (vers la forge, le Personnel, la mine ou le quai de leur trajet), devant la forge, au quai (les pousseurs, au bord de la voie, au début des rails de leur trajet), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
@@ -306,12 +308,12 @@ Une grande fenêtre en bois qui monte du bas de l'écran, avec le titre **🏗�
 
 Les cartes sont plus claires depuis le 27/10 (bois plus clair, herbe plus vive derrière l'image) : la règle CSS qui rendait la grille de construction de la carte transparente (`.grille-construction`, opacité 0,28) touchait aussi la grille des cartes du menu, qui a le même nom ; elle ne vise plus que le dessin du sol (`g.grille-construction`).
 
-- une carte par bâtiment (Marché, Forgeron, Bazar, Personnel, Foreuse, Générateur) : son image, son nom, sa description, sa taille, puis :
+- une carte par bâtiment, dans l'ordre où ils se débloquent (29/10 : Marché, Forgeron, Personnel, Bazar, Générateur, Foreuse) : son image, son nom, sa description, sa taille, puis :
   - **✔ Construit** (carte bordée de vert) s'il est déjà posé ;
-  - **🔒 Mine niveau *n*** (image grisée avec un gros cadenas) s'il n'est pas encore débloqué ;
+  - **🔒 Niveau *n*** (le niveau du joueur, 29/10) ou **🔒 Mine niveau *n*** (image grisée avec un gros cadenas) s'il n'est pas encore débloqué ;
   - sinon son **prix** (« Gratuit ! » pour le marché ; en vert ce qu'on a, en rouge ce qui manque) et **🏗️ Poser** (bleu, grisé si on ne peut pas payer) : le menu se ferme et le fantôme apparaît sur la carte ; si on peut le payer tout de suite, la carte a un **bord doré** (`construction-abordable`) ;
   - un ruban rouge « Nouveau ! » qui saute sur les bâtiments tout juste débloqués ;
-- la carte **🛤️ Rails** : le nombre de cases posées, le prix (3 🔩 fer la case) et **🛤️ Poser des rails** (mode pinceau) ;
+- la carte **🛤️ Rails** : le nombre de cases posées, le prix (3 🔩 fer la case) et **🛤️ Poser des rails** (mode pinceau) ; avant le niveau 3 du joueur, un cadenas et « 🔒 Niveau 3 » à la place (29/10) ;
 - la carte **🪨 Chemin de pavés** : « Pour relier tes bâtiments. Juste joli ! », 5 $ la case, **🖌️ Poser** (mode pinceau).
 
 Les **décorations** à acheter (fleurs, arbres, fontaine…) sont retirées depuis le 27/10.
@@ -356,7 +358,7 @@ Un bâtiment n'a de panneau qu'une fois **posé**.
 
 Présentées partout de la même façon (mine, coffre, ascenseur, wagonnet, forage, chariot, générateur, sac, mineurs, recruteur) :
 
-- **`Amelioration`** : en haut, ce qu'on a maintenant (« 250 places », « 0,5 bloc/s sans électricité ») et des **petits carrés de niveaux** : pleins turquoise = achetés (le dernier fait un « pop »), vides = à acheter. En dessous, l'un des trois : « ✔ Niveau max » (vert), « 🔒 *texte* · *ce qu'il faut* » (cadre en pointillés), ou une ligne `Achat`.
+- **`Amelioration`** : en haut, ce qu'on a maintenant (« 250 places », « 0,5 bloc/s sans électricité ») et des **petits carrés de niveaux** : pleins turquoise = achetés (le dernier fait un « pop »), vides = à acheter. En dessous, l'un des trois : « ✔ Niveau max » (vert), « 🔒 *texte* · *ce qu'il faut* » (cadre en pointillés : un niveau de la mine, ou depuis le 29/10 le niveau du joueur, « 🔒 Coffre de 600 places · au niveau 5 », texte donné par `verrou` dans `niveaux.ts`), ou une ligne `Achat`.
 - **`Achat`** : le **prix à gauche**, le **bouton à droite**. Bouton grisé si on ne peut pas payer.
 - **`PrixCout`** : « 1 500 $ » puis « 3/10 🔩 Fer » pour chaque minerai, **en vert ce qu'on a, en rouge ce qui manque** (le sac et le coffre comptent).
 
@@ -426,6 +428,7 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 - Au plus **5** à la fois, chacun **3,5 s** ; un message identique à un toast déjà affiché n'est pas répété.
 - Les messages viennent des actions du jeu (`src/jeu`), plus :
   - **succès** : « *emoji* Succès : *titre* » (bordure et texte dorés, petite fanfare) ;
+  - **niveau gagné** (29/10) : « 🎉 Niveau *N* ! Débloqué : … » (doré comme un succès, avec la même petite fanfare) ;
   - **retour après une absence** (affiché 7 s) : « Pendant ton absence : 📦 *n* blocs de plus dans le coffre de la mine, 🛤️ le wagonnet a rapporté *n* $, ⚙️ la foreuse a remonté *n* blocs, 😠 *n* mineurs attendent leur salaire. » (8 h rattrapées au plus).
 
 ### 11.2 Les autres signaux
@@ -440,7 +443,8 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 | mission avec une bordure verte qui pulse | on peut la faire tout de suite |
 | bulles de notification au-dessus des bâtiments | carte ([§ 6](#6-la-carte-du-village-vuevillagetsx)) |
 | pastille rouge sur 🏗️ Bâtiments, ruban « Nouveau ! » dans le menu | bâtiments débloqués ou constructibles |
-| lueur dorée et losange en tirets autour du bâtiment actif | carte |
+| losange doré en tirets sur l'emprise du bâtiment ouvert, losange blanc doré sous le bâtiment survolé | carte |
+| badge ⭐ violet qui saute, toast doré « 🎉 Niveau *N* ! » | bandeau, un niveau du joueur gagné |
 | mineurs qui tapent du pied devant le Personnel (😠) | carte, salaires impayés |
 | ⚡ dans le bandeau, lueur jaune d'un wagonnet | au moins un trajet électrique |
 
@@ -464,7 +468,7 @@ Pendant la partie, le navigateur ne zoome pas la page (Ctrl + molette, Ctrl + / 
 
 ### 12.2 La souris
 
-- Cliquer un **bâtiment** → le hamster y marche, puis le panneau s'ouvre ; cliquer une **case** → il y marche ; cliquer une **bulle** → il va au bâtiment. **Glisser** déplace la carte, la **molette** zoome autour de la souris. En construction, le fantôme suit la souris.
+- Cliquer un **bâtiment** (son image, son toit qui dépasse de ses cases, ou depuis le 29/10 **juste à côté** : à moins de 1,6 case de son bord, `MARGE_CLIC_BATIMENT`, `batimentProcheDe`) → le hamster y marche, puis le panneau s'ouvre (avant le 29/10, un clic sur le toit ou à côté faisait seulement marcher le joueur : la carte « capture » la souris, et le jeu ne voyait pas l'image du bâtiment ; il cherche maintenant ce qui est vraiment sous le point, `elementsFromPoint`). En mode ✏️ Modifier, toucher un chemin à côté d'un bâtiment choisit le chemin ; cliquer une **case** → il y marche ; cliquer une **bulle** → il va au bâtiment. **Glisser** déplace la carte, la **molette** zoome autour de la souris. En construction, le fantôme suit la souris.
 - Cliquer une **mission** : aller au bon bâtiment, ou ouvrir le menu Bâtiments.
 - Cliquer le **bloc de la mine** : casser un bloc.
 - Bulles (`title`) au survol sur de nombreux éléments ($/s, bulles de notification, cartes des mineurs…).

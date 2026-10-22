@@ -46,6 +46,8 @@ import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import {
   RAYON_BATIMENT,
+  MARGE_CLIC_BATIMENT,
+  batimentProcheDe,
   batimentPose,
   caseAccesProche,
   cleCase,
@@ -260,7 +262,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     }
     // Il pousse le wagonnet : il ne peut pas aller ailleurs avant d'être revenu.
     if (pousse) return
-    if (cible?.type === 'batiment') allerAuBatiment(cible.id)
+    // (29/10) Un chemin juste à côté d'un bâtiment : on va au bâtiment, et son panneau s'ouvre.
+    const proche = cible?.type === 'chemin' ? batimentProcheDe(etat.village, c.x + 0.5, c.y + 0.5, MARGE_CLIC_BATIMENT) : null
+    if (proche) allerAuBatiment(proche)
+    else if (cible?.type === 'batiment') allerAuBatiment(cible.id)
     else {
       setBatimentVise(null)
       village.allerVers(c)

@@ -39,30 +39,32 @@
 
 ## 2. Les bâtiments : les poser, les payer
 
-Le menu **🏗️ Bâtiments** (gros bouton rond en bas à droite) montre tous les bâtiments du jeu :
+Le menu **🏗️ Bâtiments** (gros bouton rond en bas à droite) montre tous les bâtiments du jeu, dans l'ordre où ils se débloquent (29/10 : marché, forgeron, Personnel, bazar, générateur, foreuse, `LISTE_BATIMENTS`) :
 
 - débloqué et pas encore posé : son prix et un bouton **« 🏗️ Poser »** (grisé tant qu'on ne peut pas payer) ; s'il est payable tout de suite, sa carte a un **bord doré** (27/10) ;
-- pas encore débloqué : un **cadenas** et « 🔒 Mine niveau *N* » ;
+- pas encore débloqué : un **cadenas** et « 🔒 Niveau *N* » (le niveau du joueur qu'il faut, 29/10, voir [niveaux.md](niveaux.md)) ou « 🔒 Mine niveau *N* » si c'est le niveau de la mine qui manque ;
 - déjà posé : « ✔ Construit ».
 
 À la fin du menu, deux cartes de plus : **🛤️ Rails** (§ 4) et **🪨 Chemin de pavés** (§ 6). Depuis le 27/10, c'est la seule fenêtre de construction (plus d'onglet ni de bouton 🌸 Décos).
 
 Une pastille **« Nouveau ! »** marque un bâtiment tout juste débloqué, jusqu'à ce qu'on ouvre le menu (`batimentsVus`). Le bouton du menu a un **badge** qui compte les bâtiments nouveaux ou constructibles tout de suite. Les **missions** (en haut à droite) proposent aussi « Construis : X » (avec ce qui manque : « Gagne *X* $ », « Récupère *N* pierre ») et ouvrent le menu d'un clic.
 
-| Bâtiment | Prix pour le poser | Débloqué au | Porte (sans miroir) |
+| Bâtiment | Prix pour le poser (29/10) | Débloqué au | Porte (sans miroir) |
 |---|---|---|---|
 | ⛏️ Mine (10 × 10) | déjà posée | début | face avant gauche |
-| 💰 Marché | **gratuit** (on commence avec 0 $) | début | face avant gauche |
-| ⚒️ Forgeron | 20 $ + 15 pierre | début | face avant droite |
-| 🎒 Bazar | 60 $ + 25 pierre | début | face avant droite |
-| 👷 Personnel | 100 $ + 30 pierre | début | face avant droite |
-| ⚙️ Foreuse | 800 $ + 60 pierre + 30 fer | niveau 2 de la mine | face avant gauche |
-| ⚡ Générateur | 1 200 $ + 50 fer + 20 redstone | niveau 2 de la mine | face avant droite |
+| 💰 Marché | **gratuit** (on commence avec 0 $) | début (niveau 1) | face avant gauche |
+| ⚒️ Forgeron | 30 $ + 15 pierre | début (niveau 1) | face avant droite |
+| 👷 Personnel | 250 $ + 50 pierre | niveau 2 du joueur | face avant droite |
+| 🎒 Bazar | 300 $ + 60 pierre | niveau 3 du joueur | face avant droite |
+| ⚡ Générateur | 4 000 $ + 100 fer + 40 redstone | niveau 5 du joueur et niveau 2 de la mine | face avant droite |
+| ⚙️ Foreuse | 3 000 $ + 120 pierre + 60 fer | niveau 6 du joueur et niveau 2 de la mine | face avant gauche |
+
+Une fois débloqué, il faut quand même le payer. Le niveau 2 de la mine demande lui-même le niveau 4 du joueur. Construire un bâtiment rapporte **40 XP**.
 
 - Les minerais se prennent **dans le sac, puis dans le coffre de la mine** (`payer`) : pas besoin de porter la pierre ou le fer.
 - Chaque bâtiment ne se construit **qu'une fois** et reste pour toujours.
 - **Poser, en deux temps** : après « Poser », un **fantôme** du bâtiment suit la souris sur la carte, avec son losange vert (place libre) ou rouge (place prise). **Un clic sur la carte le fixe à cet endroit** (sans rien construire) : il ne suit plus la souris, et on peut aller jusqu'au bouton. Un autre clic le déplace, et on peut aussi le faire glisser. **Le bâtiment en main, on peut toujours faire glisser la carte** (27/10) : à la souris, tant que le fantôme n'est pas fixé, glisser déplace la carte (un simple clic le fixe) ; une fois fixé, glisser sur lui le déplace, et glisser ailleurs déplace la carte. Barre du bas : **✔ Construire ici** (on paie à ce moment-là), **↔ Retourner** (miroir), **✖ Annuler** (ou Échap). En posant le générateur, on voit son **rayon** autour du fantôme.
-- **Ouvrir un bâtiment** : on le touche (ou on clique dessus) : le hamster marche jusqu'au **point du tour du bâtiment le plus proche à pied** (27/10, `caseAccesProche` : une case collée à son emprise, coins compris, atteinte par le plus court chemin en contournant les autres bâtiments), et le panneau s'ouvre **dès qu'il arrive à un bloc** du bâtiment. On peut aussi y aller avec les flèches : le panneau s'ouvre dès qu'on est à moins de **1 case** du bord du bâtiment, **de n'importe quel côté** (`RAYON_BATIMENT`, `distanceAuBatiment`). Si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre. Il ne s'ouvre pas tout seul quand le hamster *apparaît* devant (au chargement de la partie). La croix ✖ le ferme.
+- **Ouvrir un bâtiment** : on le touche (ou on clique dessus : son image, son toit qui dépasse de ses cases, ou depuis le 29/10 **juste à côté**, à moins de 1,6 case de son bord, `MARGE_CLIC_BATIMENT` et `batimentProcheDe` dans `village.ts` ; avant, un clic sur le toit ou à côté faisait seulement marcher le joueur) : le hamster marche jusqu'au **point du tour du bâtiment le plus proche à pied** (27/10, `caseAccesProche` : une case collée à son emprise, coins compris, atteinte par le plus court chemin en contournant les autres bâtiments), et le panneau s'ouvre **dès qu'il arrive à un bloc** du bâtiment. On peut aussi y aller avec les flèches : le panneau s'ouvre dès qu'on est à moins de **1 case** du bord du bâtiment, **de n'importe quel côté** (`RAYON_BATIMENT`, `distanceAuBatiment`). Si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre. Il ne s'ouvre pas tout seul quand le hamster *apparaît* devant (au chargement de la partie). La croix ✖ le ferme.
 - Sans marché posé, on ne peut pas vendre, et aucun wagonnet ne va au marché.
 
 ## 3. Le menu Modifier : déplacer et retourner
@@ -84,7 +86,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 
 **Les rails**
 
-- Les rails sont dans le menu Bâtiments, **dès le début**, **3 fer la case** (`COUT_RAIL`).
+- Les rails sont dans le menu Bâtiments, **à partir du niveau 3 du joueur** (29/10 ; avant, dès le début : `NIVEAU_JOUEUR_POUR.rails`, `railsDebloques`), **3 fer la case** (`COUT_RAIL`). Avant, leur carte a un cadenas « 🔒 Niveau 3 ». Chaque case posée rapporte 3 XP et chaque trajet créé 30 XP, une seule fois : retirer un rail puis le reposer ne redonne rien.
 - Un rail **occupe une seule case**, mais sa voie est **dessinée sur deux cases de large** (une demi-case de plus à gauche et à droite, talus compris) : voir « Les rails » dans [visuel-et-sons.md](visuel-et-sons.md).
 - **Les bords de la voie** (25/10) : les cases où déborde la demi-voie (les deux côtés d'une ligne droite, l'extérieur d'un virage, le dos d'un T : `bordsDeVoie` dans `village.ts`) sont **interdites aux bâtiments et aux chemins**. Pendant qu'on pose l'un d'eux, ces cases sont montrées en rouge. Devant et derrière une ligne (dans son sens), c'est libre : un bâtiment peut s'y raccorder. À l'inverse, on ne peut pas poser (ni déplacer) un rail si sa voie, ou celle de ses voisins qui change de forme, passerait sur un bâtiment ou un chemin (`placePourUnRail` dans `batiments.ts`, message « 🚧 Pas la place »). Les parties d'avant ne sont pas touchées : ce qui y était déjà posé reste là.
 - **Les virages doux** (25/10) : un virage dont les deux voisines sont des lignes droites est dessiné en **grand quart de cercle sur trois cases** (rayon 1,5 case, `viragesDoux` dans `village.ts`), et le wagonnet le suit. Sinon (un zigzag, un virage collé à un autre, ou un bras qui est un bout de ligne), il reste serré, dans sa case. Ce n'est que du dessin : les règles et les longueurs des trajets ne changent pas.
@@ -139,7 +141,7 @@ Tous les personnages sont des **hamsters** : les **images des planches de l'équ
   - Il marche avec les **flèches du clavier** (dans les 4 directions de la grille, combinables, en glissant le long des obstacles), ou va tout seul là où on touche la carte (case ou bâtiment). Il marche à **7,5 cases par seconde** (`VITESSE_JOUEUR`, 27/10 ; avant 5). Le panneau d'un bâtiment ne s'ouvre que si on **touche** ce bâtiment (27/10) : passer à côté n'ouvre rien.
   - **Pendant qu'il pousse un wagonnet**, il est dessiné juste derrière le wagonnet, sur les rails, et fait l'aller-retour avec lui : il ne peut pas aller ailleurs (les flèches et les touchers ne font rien, le bouton ⛏️ Mine affiche « Wagonnet… »), et la caméra suit le wagonnet.
   - **Espace** : il saute (pour le plaisir).
-  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette (un cran ≈ 50 %) ou en pinçant, plus fort depuis le 27/10 (elle revient sur lui quand il remarche). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
+  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette (un cran ≈ 15 % depuis le 29/10 ; presque le double le 27/10, c'était trop) ou en pinçant (plus fort depuis le 27/10) (elle revient sur lui quand il remarche). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
 - **Les employés** (mineurs et pousseurs) : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Les mineurs travaillent surtout **dans la mine** (on ne les voit pas au fond : seulement la **cabine de l'ascenseur** qui monte et descend sur le dessin de la mine, avec **les mineurs dedans** depuis le 27/10 ; la jauge du coffre dit « 👷 *n* »). On les voit au village quand :
   1. ils **marchent** (`marche`, **2,5 cases/s** depuis le 27/10, avant 4) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
@@ -195,7 +197,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 | `src/jeu/notifications.ts` | Les bulles au-dessus des bâtiments. |
 | `src/jeu/employes.ts` | Le cycle des mineurs et des pousseurs, au village compris (le quai d'un pousseur : `maisonDe`). |
 | `src/jeu/village.test.ts`, `src/jeu/voie.test.ts`, `src/jeu/wagonnet.test.ts`, `src/jeu/generateur.test.ts` | Les tests du village, de la voie (bords, virages doux, bulles des rails), du wagonnet et du générateur. |
-| `src/composants/VueVillage.tsx` | La carte vue du ciel (caméra, toucher, glisser, pincer, fantôme, personnages, wagonnets et leurs pousseurs, pousseurs au quai, trajet en surbrillance `trajetEnSurbrillance`, rayon du générateur, grille de construction, cabine de la mine, bulles, jauge du coffre au-dessus de la mine, « +X $ » des ventes au marché `ventesMarche`, pause des animations de la plage). |
+| `src/composants/VueVillage.tsx` | La carte vue du ciel (caméra, toucher, glisser, pincer, bâtiment visé par un clic `batimentVise` (29/10 : sous le doigt avec `elementsFromPoint`, ou juste à côté), losange au sol du bâtiment survolé `.emprise-survol`, fantôme, personnages, wagonnets et leurs pousseurs, pousseurs au quai, trajet en surbrillance `trajetEnSurbrillance`, rayon du générateur, grille de construction, cabine de la mine, bulles, jauge du coffre au-dessus de la mine, « +X $ » des ventes au marché `ventesMarche`, pause des animations de la plage). |
 | `src/composants/iso.ts` | Case de la grille ↔ point de l'écran, calage des images des bâtiments, l'image d'un bâtiment retourné (`IMAGES_BATIMENTS_MIROIR`, `imageBatiment`), point d'une image à l'écran (`pointSurSprite`), où se tiennent les personnages. |
 | `src/composants/DessinsVillage.tsx` | Les dessins SVG : le terrain, la grille de construction, ce qui évolue sur la mine (cabine, panneau du niveau), rails (l'image de chaque case, butoirs compris : `codeDeVoie`), chemins, et les dessins des décorations (`DessinDecoration`, pour la plage et l'écran d'accueil). |
 | `src/composants/WagonnetVillage.tsx` | Un wagonnet sur ses rails (un par trajet) : sa place entre ses deux essieux, son remplissage, et celui qui le pousse. |
@@ -210,7 +212,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 | `src/composants/fantome.ts` | Ce qu'on est en train de poser ou de déplacer. |
 | `src/useJoueurVillage.ts` | La marche du joueur (flèches, chemin jusqu'à une case, saut). |
 | `src/App.tsx` | Les barres du bas, la construction, Modifier, le panneau du bâtiment où l'on est, le joueur bloqué pendant qu'il pousse un wagonnet, le trajet regardé au Personnel (`apercuTrajet`). |
-| `src/village.css` | Tout le style du village (dont le bloc à cliquer, le rayon du générateur, le wagonnet électrique, le trajet en surbrillance). |
+| `src/village.css` | Tout le style du village (dont le bloc à cliquer, les losanges du bâtiment survolé et du bâtiment ouvert, `.emprise-survol` et `.emprise-active` : depuis le 29/10 l'image d'un bâtiment n'a plus aucun filtre ni animation, elle devenait floue ; le rayon du générateur, le wagonnet électrique, le trajet en surbrillance). |
 | `src/plein-ecran.css` | Le jeu en plein écran : la carte sur toute la fenêtre, les boutons posés dessus. |
 | `outils/batiments/textes_miroir.py` | Fabrique `employes-miroir.webp` : chaque panneau à texte retourné sur place, pente inversée. |
 | `public/images/village/`, `public/images/batiments/`, `public/images/personnages/`, `public/images/sol/` | La forêt, les images des bâtiments et de la mine, les personnages et portraits, les textures d'herbe et de sable. |

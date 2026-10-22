@@ -4,20 +4,20 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 15 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (les missions proposent « Construis : Forgeron »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
-- **Déblocage** : dès le début, jamais de cadenas.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **30 $ + 15 pierre** (29/10 ; avant 20 $ + 15 pierre ; la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (les missions proposent « Construis : Forgeron »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Déblocage** : dès le début (niveau 1 du joueur), jamais de cadenas. C'est la dernière étape du **tutoriel** (29/10) : après la première vente, Pépite fait construire le forgeron (s'il manque de l'argent ou de la pierre, elle renvoie creuser et vendre). Les pioches suivantes, elles, demandent un **niveau du joueur** (voir les chiffres).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
-- **Dessin au village** : une image en vue isométrique (`public/images/batiments/forgeron.webp`) : une forge en pierre et en bois avec son toit, sa cheminée qui fume, son enclume et des pioches exposées. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Dessin au village** : une image en vue isométrique (`public/images/batiments/forgeron.webp`) : une forge en pierre et en bois avec son toit, sa cheminée qui fume, son enclume et des pioches exposées. Depuis le 29/10, l'image ne change plus (elle devenait floue) : au survol, un losange blanc doré s'allume au sol sous le bâtiment, et quand son panneau est ouvert, un losange doré en tirets.
 - **Description** (en haut du panneau) : « Pioches et réparations. »
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔧 « Ta pioche est cassée : fais-la réparer ! »** (bulle rouge d'alerte) quand la pioche équipée est cassée ;
-  - **💰 « Une amélioration est achetable ! »** quand on a de quoi **débloquer la pioche suivante** (argent **et** minerais, du sac ou du coffre). Pas pour une réparation.
+  - **💰 « Une amélioration est achetable ! »** quand on a de quoi **débloquer la pioche suivante** (argent **et** minerais, du sac ou du coffre) et qu'on a le niveau du joueur qu'elle demande (29/10). Pas pour une réparation.
 - **Les mineurs employés y passent** : quand tu améliores la pioche d'un mineur au Personnel, il vient la chercher ici (voir plus bas).
 
 ## Ce qu'on peut y faire
 
-Depuis le 27/10, le panneau est plus court : il montre seulement **la pioche en main** et **la prochaine à débloquer**. Les autres pioches qu'on possède sont rangées dans un menu repliable **« Autres pioches (*n*) »**. S'il en reste plus loin, une ligne dit « 🔒 Encore *n* pioche(s) à débloquer ensuite. » Pour chaque pioche montrée : son nom, le badge **« Équipée »** si c'est celle qu'on tient, la ligne « *N* % de chance de doubler un minerai · durabilité *D* clics », et, si on la possède, une **barre de durabilité** (verte, « restant / total », ou rouge « Cassée : 2 clics par bloc »).
+Depuis le 27/10, le panneau est plus court : il montre seulement **la pioche en main** et **la prochaine à débloquer**. Les autres pioches qu'on possède sont rangées dans un menu repliable **« Autres pioches (*n*) »**. S'il en reste plus loin, une ligne dit « 🔒 Encore *n* pioche(s) à débloquer ensuite. » Depuis le 29/10, si la prochaine pioche demande un niveau du joueur qu'on n'a pas encore, elle est remplacée par une ligne en pointillés « 🔒 Pioche en *X* · au niveau *N* » (sans bouton). Pour chaque pioche montrée : son nom, le badge **« Équipée »** si c'est celle qu'on tient, la ligne « *N* % de chance de doubler un minerai · durabilité *D* clics », et, si on la possède, une **barre de durabilité** (verte, « restant / total », ou rouge « Cassée : 2 clics par bloc »).
 
 | Bouton | Quand il apparaît | Ce qu'il fait |
 |---|---|---|
@@ -32,13 +32,15 @@ Chaque achat affiche son prix à gauche du bouton (en vert ce qu'on a, en rouge 
 
 Valeurs de `PIOCHES` (`src/jeu/donnees.ts`). La pioche en **pierre** est offerte au début de la partie (il n'y a plus de pioche en bois ni en netherite).
 
-| Pioche | Chance de doubler un minerai | Durabilité | Prix pour la débloquer | Réparation (pioche cassée) |
-|---|---:|---:|---|---|
-| 🪨 Pierre | 10 % | 150 clics | (offerte) | 5 $ + 10 pierre |
-| ⚙️ Fer | 20 % | 300 clics | 200 $ + 25 fer | 30 $ + 5 fer |
-| 🟡 Or | 30 % | 500 clics | 1 500 $ + 20 or | 150 $ + 5 or |
-| 💎 Diamant | 45 % | 1 000 clics | 8 000 $ + 10 diamants | 600 $ + 3 diamants |
-| 💥 Cassée | 0 % | — | — | — |
+| Pioche | Chance de doubler un minerai | Durabilité | Prix pour la débloquer (29/10) | Niveau du joueur | Réparation (pioche cassée) |
+|---|---:|---:|---|---:|---|
+| 🪨 Pierre | 10 % | 150 clics | (offerte) | — | 5 $ + 10 pierre |
+| ⚙️ Fer | 20 % | 300 clics | 500 $ + 40 fer | 4 | 30 $ + 5 fer |
+| 🟡 Or | 30 % | 500 clics | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| 💎 Diamant | 45 % | 1 000 clics | 20 000 $ + 20 diamants | 12 | 600 $ + 3 diamants |
+| 💥 Cassée | 0 % | — | — | — | — |
+
+Avant le 29/10 : 200 $ + 25 fer, 1 500 $ + 20 or et 8 000 $ + 10 diamants. Les réparations n'ont pas changé. Débloquer une pioche rapporte **30 XP** (une seule fois : racheter une pioche neuve ne redonne rien).
 
 L'or sort de la mine au niveau 3 et le diamant au niveau 5 : la pioche en or attend donc le niveau 3, et celle en diamant le niveau 5.
 
@@ -71,8 +73,8 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 
 - **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics. Même sans argent, on peut donc toujours remplir le coffre et aller vendre.
 - **La pioche en pierre ne se rachète pas** (pas de bouton) : elle se répare seulement, pour pas cher (5 $ + 10 pierre au plus).
-- **Un seul déblocage à la fois** : on ne peut débloquer que la pioche juste après la meilleure (`niveau ≤ meilleure + 1`).
-- **Racheter neuve demande aussi les minerais** de la pioche (25 fer, 20 or ou 10 diamants), comme pour la débloquer.
+- **Un seul déblocage à la fois** : on ne peut débloquer que la pioche juste après la meilleure (`niveau ≤ meilleure + 1`), et seulement avec le niveau du joueur qu'elle demande (`debloque(etat, 'pioches', niveau)` dans `peutAcheterPioche`, 29/10). Une pioche déjà débloquée se rachète toujours.
+- **Racheter neuve demande aussi les minerais** de la pioche (40 fer, 40 or ou 20 diamants), comme pour la débloquer.
 - **Réparer n'équipe pas** la pioche (racheter et débloquer, si).
 - Les minerais se paient avec le **sac, puis le coffre de la mine** : pas besoin de les porter jusqu'à la forge.
 
@@ -88,7 +90,7 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.forgeron` : 20 $ + 15 pierre, 5 × 5, porte à droite), les pioches (`PIOCHES` : doublement, durabilité, prix, réparation, couleur), `CLICS_MAINS_NUES` et `SECONDES_FORGE_EMPLOYE`.
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.forgeron` : 30 $ + 15 pierre, 5 × 5, porte à droite), les pioches (`PIOCHES` : doublement, durabilité, prix, réparation, couleur), `CLICS_MAINS_NUES` et `SECONDES_FORGE_EMPLOYE`.
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/mineur.ts` : les règles des pioches (`acheterPioche`, `peutAcheterPioche`, `coutPioche`, `equiper`, `coutReparation`, `reparer`, `usure`, `estCassee`, `chanceDoublement`), le clic et l'usure (`cliquerMine`).
 - `src/jeu/employes.ts` : le passage des mineurs à la forge (`ameliorerEmploye`, `forgeEnAttente`, étape `forge`).

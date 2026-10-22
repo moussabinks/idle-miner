@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { cliquerMine, creerPartie } from './mineur'
+import { niveauJoueur } from './niveaux'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
@@ -86,8 +87,22 @@ describe('sauvegarde', () => {
     ]
     stockage.setItem(cleMonde('1'), JSON.stringify(partie22))
     const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(23)
+    expect(etat?.version).toBe(24)
     expect(etat?.employes.map((e) => e.trajet)).toEqual(['mine-marche', null])
+  })
+
+  it('une partie de la version 23 reçoit l’XP du niveau qu’il faut pour ce qu’elle a déjà', () => {
+    const stockage = fauxStockage()
+    const partie23 = creerPartie(aleatoireAvecGraine(1)) as unknown as Record<string, unknown>
+    delete partie23.xp
+    delete partie23.recordsXp
+    partie23.version = 23
+    partie23.niveauMine = 3
+    stockage.setItem(cleMonde('1'), JSON.stringify(partie23))
+    const etat = charger(stockage, '1')
+    expect(etat?.version).toBe(24)
+    // (le niveau 3 de la mine demande le niveau 7 du joueur)
+    expect(etat && niveauJoueur(etat)).toBe(7)
   })
 
   it('une partie avec des tenues et des décorations (retirées le 27/10) se charge sans elles', () => {

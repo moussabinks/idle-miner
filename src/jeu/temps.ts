@@ -1,5 +1,6 @@
 // Le temps qui passe (22/10) : la mine sort ses blocs toute seule, les mineurs travaillent, la
-// foreuse fore, le générateur brûle sa redstone et les wagonnets roulent sur les rails.
+// foreuse fore, le générateur brûle sa redstone et les wagonnets roulent sur les rails. On compte
+// aussi l'XP du joueur (niveaux.ts).
 // L'interface appelle avancerTemps plusieurs fois par seconde.
 
 import type { Aleatoire } from './aleatoire'
@@ -7,6 +8,7 @@ import { avancerEmployes } from './employes'
 import { avancerForeuse } from './foreuse'
 import { avancerGenerateur } from './generateur'
 import { avancerMine, type EtatJeu } from './mineur'
+import { mettreAJourXp } from './niveaux'
 import { avancerWagonnets } from './wagonnet'
 
 // Après une longue absence, on avance par morceaux d'une minute au plus : le générateur se
@@ -27,5 +29,7 @@ export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoi
     )
     reste -= pas
   }
+  // L'XP de tout ce qui a été fait depuis le dernier tic (clics, constructions, achats...).
+  messages.push(...mettreAJourXp(etat))
   return [...new Set(messages)]
 }
