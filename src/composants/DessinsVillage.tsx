@@ -317,32 +317,27 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
 
 type Raccords = { n: boolean; e: boolean; s: boolean; o: boolean }
 
-// Les rails (24/10) : les tuiles dessinées par outils/rails/dessiner.py, dans le style du dessin
-// « propriété-rail-design » de l'équipe (sur le Drive) : un morceau tout droit, un virage, un T
-// (la ligne continue d'un côté, deux rails en L de l'autre, un plancher au centre) et un
-// croisement (quatre rails en L : les rails ne se croisent pas). Le joueur n'achète que des
-// rails : chaque case choisit toute seule son dessin selon ses voisines.
-//
+// Les rails (25/10), dans le style du dessin « propriété-rail-design » de l'équipe (Drive).
 // Un rail se pose sur une case, mais la voie est large de deux cases : elle déborde d'une
-// demi-case de chaque côté. Chaque tuile couvre donc 2 × 2 cases, centrée sur la case du rail.
-// Pour le relief, chaque tuile a quatre calques, et on pose le premier calque de toutes les
-// cases, puis le deuxième, etc. (sinon le talus d'une voie passerait sur les rails d'une autre) :
-//   1. le flanc du talus, un peu plus bas à l'écran (on voit l'épaisseur du talus) ;
-//   2. le dessus du talus (la terre et les cailloux) ;
-//   3. l'ombre des traverses et des rails, un peu décalée ;
-//   4. les traverses et les rails.
+// demi-case de chaque côté. Deux couches :
+//   1. le talus de terre, à plat sur le sol (avec quelques cailloux) : quatre tuiles vues de
+//      dessus (outils/rails/talus.py), de 2 × 2 cases centrées sur la case du rail, posées en
+//      losange sur la grille et tournées dans le bon sens ;
+//   2. la voie, en vrai 3D (outils/rails/modele3d.py) : des traverses en bois, des rails en acier
+//      (patin, âme, champignon), des selles et des tire-fonds, éclairés et rendus en vue
+//      isométrique comme les bâtiments, avec leur ombre sur le talus. Une image par forme de case
+//      (les 11 formes : tout droit, virage, T et croisement, dans tous les sens), posées de la plus
+//      loin à la plus proche.
+// Le joueur n'achète que des rails : chaque case choisit toute seule son dessin selon ses voisines.
 const FORMES_RAILS = {
-  droit: 'rail_droit', // relie le nord (y - 1) et le sud (y + 1)
-  virage: 'rail_virage', // relie le sud (y + 1) et l'est (x + 1)
-  t: 'rail_t', // la ligne nord-sud, et l'embranchement vers l'est
-  croix: 'rail_croix', // les quatre côtés
+  droit: 'talus_droit', // relie le nord (y - 1) et le sud (y + 1)
+  virage: 'talus_virage', // relie le sud (y + 1) et l'est (x + 1)
+  t: 'talus_t', // la ligne nord-sud, et l'embranchement vers l'est
+  croix: 'talus_croix', // les quatre côtés
 }
-const CALQUES_RAILS = [
-  { calque: 'cote', decalage: 'translate(0 5)' },
-  { calque: 'ballast', decalage: '' },
-  { calque: 'ombre', decalage: 'translate(3 4)' },
-  { calque: 'voie', decalage: '' },
-] as const
+// Le cadre des images de la voie (en pixels du monde), autour du coin du haut de la case : le
+// même que dans outils/rails/modele3d.py (CADRE).
+const CADRE_VOIE = { x: -35, y: -15, largeur: 70, hauteur: 46 }
 
 type Cote = 'n' | 'e' | 's' | 'o'
 const COTES: Cote[] = ['n', 'e', 's', 'o']
@@ -392,34 +387,60 @@ function morceauDeVoie(r: Raccords): Morceau {
   return { image: FORMES_RAILS.droit, quarts: axe === 'n' || axe === 's' ? 0 : 1 }
 }
 
-// Tous les rails du village, calque par calque.
+// Le nom de l'image 3D de la voie d'une case : ses côtés reliés, dans l'ordre n, e, s, o (« ns »,
+// « es », « nes »...). Seule ou avec une seule voisine, elle va tout droit.
+function codeDeVoie(r: Raccords): string {
+  const liste = COTES.filter((c) => r[c])
+  if (liste.length >= 2) return liste.join('')
+  const axe = liste[0] ?? 'n'
+  return axe === 'n' || axe === 's' ? 'ns' : 'eo'
+}
+
+// Tous les rails du village : le talus de toutes les cases d'abord, puis la voie en 3D.
 export function RailsDuVillage({ village }: { village: Village }) {
-  const cases = village.rails.map((cle) => {
-    const c = lireCle(cle)
-    // La tuile (2 × 2 cases) commence une demi-case avant la case du rail, dans les deux sens.
-    const coin = versEcran(c.x - 0.5, c.y - 0.5)
-    const surLaCase = `matrix(${2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${-2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${coin.x} ${coin.y})`
-    return { cle, surLaCase, morceau: morceauDeVoie(raccordsRail(village, c.x, c.y)) }
-  })
+  const cases = village.rails
+    .map((cle) => {
+      const c = lireCle(cle)
+      const raccords = raccordsRail(village, c.x, c.y)
+      // La tuile du talus (2 × 2 cases) commence une demi-case avant la case du rail, dans les deux sens.
+      const coinTalus = versEcran(c.x - 0.5, c.y - 0.5)
+      const surLaCase = `matrix(${2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${-2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${coinTalus.x} ${coinTalus.y})`
+      return { cle, x: c.x, y: c.y, surLaCase, talus: morceauDeVoie(raccords), voie: codeDeVoie(raccords) }
+    })
+    // De la plus loin à la plus proche (comme les bâtiments).
+    .sort((a, b) => a.x + a.y - (b.x + b.y))
   return (
     <g className="rails-village">
-      {CALQUES_RAILS.map(({ calque, decalage }) => (
-        <g key={calque} className={`rails-${calque}`} transform={decalage || undefined}>
-          {cases.map(({ cle, surLaCase, morceau }) => (
-            <g key={cle} transform={surLaCase}>
-              <image
-                href={`/images/rails/${morceau.image}_${calque}.webp`}
-                x="0"
-                y="0"
-                width="1"
-                height="1"
-                preserveAspectRatio="none"
-                transform={morceau.quarts ? `rotate(${morceau.quarts * 90} 0.5 0.5)` : undefined}
-              />
-            </g>
-          ))}
-        </g>
-      ))}
+      <g className="rails-talus">
+        {cases.map(({ cle, surLaCase, talus }) => (
+          <g key={cle} transform={surLaCase}>
+            <image
+              href={`/images/rails/${talus.image}.webp`}
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              preserveAspectRatio="none"
+              transform={talus.quarts ? `rotate(${talus.quarts * 90} 0.5 0.5)` : undefined}
+            />
+          </g>
+        ))}
+      </g>
+      <g className="rails-voie">
+        {cases.map(({ cle, x, y, voie }) => {
+          const coin = versEcran(x, y)
+          return (
+            <image
+              key={cle}
+              href={`/images/rails/voie_${voie}.webp`}
+              x={coin.x + CADRE_VOIE.x}
+              y={coin.y + CADRE_VOIE.y}
+              width={CADRE_VOIE.largeur}
+              height={CADRE_VOIE.hauteur}
+            />
+          )
+        })}
+      </g>
     </g>
   )
 }

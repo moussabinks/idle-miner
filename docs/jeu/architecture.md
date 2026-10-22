@@ -14,7 +14,7 @@
 | Lint | oxlint (plugins `react`, `typescript`, `oxc`), voir `.oxlintrc.json` |
 | En ligne | Supabase (`@supabase/supabase-js`) : comptes, sauvegarde en ligne, classement. Seul « backend », pas de serveur à nous. Le jeu marche sans |
 | Hébergement | Vercel (build = `npm run build`, dossier `dist/`) |
-| Visuel | Le village vu du ciel : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; les personnages sont des images découpées dans les planches de l'équipe (`sprites.ts`) ; les rails sont des tuiles dessinées par un script (`outils/rails/`) ; les wagonnets, le rayon du générateur, la cabine de la mine, les chemins, les rochers et les décorations sont dessinés en SVG dans le même style ; le bloc à cliquer et ses effets sont en CSS |
+| Visuel | Le village vu du ciel : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; les personnages sont des images découpées dans les planches de l'équipe (`sprites.ts`) ; les rails sont un talus à plat et une voie en vraie 3D, rendus par des scripts Python (`outils/rails/`) ; les wagonnets, le rayon du générateur, la cabine de la mine, les chemins, les rochers et les décorations sont dessinés en SVG dans le même style ; le bloc à cliquer et ses effets sont en CSS |
 | Sons | Web Audio, fabriqués par le code (aucun fichier audio) |
 | PWA | Manifeste + service worker (production uniquement) : installable et jouable hors ligne |
 
@@ -118,7 +118,7 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `ProchainObjectif.tsx` | Barre « prochain objectif » sous le bandeau |
 | `VueVillage.tsx` | Le village vu du ciel : décor, bâtiments, rails, chemins, décorations, fantôme, joueur, mineurs dehors, manager et recruteur, wagonnets et leurs pousseurs, rayon du générateur, grille de construction, cabine de la mine qui suit les mineurs, bulles ; caméra (glisser, pincer, molette, suit le joueur ou le wagonnet qu'il pousse) et touchers |
 | `iso.ts` | La projection isométrique, l'ordre d'affichage, le calage des images des bâtiments (`CALAGES`, `transformationSprite`), `pointSurSprite`, la taille du monde, où se tient un personnage devant un bâtiment |
-| `DessinsVillage.tsx` | Les dessins SVG : le terrain, ce qui évolue sur la mine (`DessinEvolutionMine` : cabine, câbles, panneau du niveau), la grille de construction (`GrilleConstruction`), les rails, les chemins, les décorations |
+| `DessinsVillage.tsx` | Les dessins SVG : le terrain, ce qui évolue sur la mine (`DessinEvolutionMine` : cabine, câbles, panneau du niveau), la grille de construction (`GrilleConstruction`), les rails (`RailsDuVillage` : talus puis voie 3D), les chemins, les décorations |
 | `ForetVillage.tsx`, `arbres.ts` | La forêt autour de la clairière |
 | `PlageVillage.tsx`, `plage.ts` | La plage et la mer (sable, galets, algues, crabes...) |
 | `Rochers.tsx` | **Nouveau (24/10)** : les rochers en relief (`Rocher`, `TasDeRochers`), pour la décoration, la mer, le feu de camp et la plage |
