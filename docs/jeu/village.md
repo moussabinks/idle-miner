@@ -84,7 +84,8 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 - Les rails sont dans le menu Bâtiments, **dès le début**, **3 fer la case** (`COUT_RAIL`).
 - Un rail **occupe une seule case**, mais sa voie est **dessinée sur deux cases de large** (une demi-case de plus à gauche et à droite, talus compris) : voir « Les rails » dans [visuel-et-sons.md](visuel-et-sons.md).
 - **Les bords de la voie** (25/10) : les cases où déborde la demi-voie (les deux côtés d'une ligne droite, l'extérieur d'un virage, le dos d'un T : `bordsDeVoie` dans `village.ts`) sont **interdites aux bâtiments, aux décorations et aux chemins**. Pendant qu'on pose l'un d'eux, ces cases sont montrées en rouge. Devant et derrière une ligne (dans son sens), c'est libre : un bâtiment peut s'y raccorder. À l'inverse, on ne peut pas poser (ni déplacer) un rail si sa voie, ou celle de ses voisins qui change de forme, passerait sur un bâtiment, une décoration ou un chemin (`placePourUnRail` dans `batiments.ts`, message « 🚧 Pas la place »). Les parties d'avant ne sont pas touchées : ce qui y était déjà posé reste là.
-- **Les virages doux** (25/10) : un virage dont les deux voisines sont des lignes droites est dessiné en **grand quart de cercle sur trois cases** (rayon 1,5 case, `viragesDoux` dans `village.ts`), et le wagonnet le suit. Sinon (un zigzag, un virage collé à un autre), il reste serré, dans sa case. Ce n'est que du dessin : les règles et les longueurs des trajets ne changent pas.
+- **Les virages doux** (25/10) : un virage dont les deux voisines sont des lignes droites est dessiné en **grand quart de cercle sur trois cases** (rayon 1,5 case, `viragesDoux` dans `village.ts`), et le wagonnet le suit. Sinon (un zigzag, un virage collé à un autre, ou un bras qui est un bout de ligne), il reste serré, dans sa case. Ce n'est que du dessin : les règles et les longueurs des trajets ne changent pas.
+- **Les butoirs** (26/10) : au **bout d'une ligne** (un rail avec une seule voisine, qui ne touche pas de bâtiment), la voie finit sur un **butoir** rouge et blanc en 3D ; un rail tout seul en a deux. Un bout de ligne garde toujours son butoir (il n'est jamais le bras d'un virage doux). Ce n'est que du dessin : voir [visuel-et-sons.md § 7.3](visuel-et-sons.md#73-les-dessins).
 - « 🛤️ Poser des rails » ouvre le **pinceau** : chaque case touchée (ou survolée en faisant glisser le doigt) reçoit un rail si elle est libre et qu'on a le fer (sac puis coffre). « ✔ Terminé » pour finir.
 - On n'achète qu'une sorte de rail. Les rails **se raccordent tout seuls** : en ligne droite, en virage, en T ou en croix (`raccordsRail`). Le dessin vient des tuiles de l'équipe (voir [visuel-et-sons.md § 7.3](visuel-et-sons.md#73-les-dessins)).
 - Un rail collé à un bâtiment des trajets (mine, marché, foreuse, générateur : `BATIMENTS_DES_RAILS`) ne se raccorde à lui que **s'il est un bout de ligne**. Un rail qui passe le long d'un bâtiment ne s'y raccorde pas.
@@ -105,10 +106,10 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 - Plusieurs wagonnets peuvent **partager les mêmes rails** : ils se croisent sans se gêner.
 - Un wagonnet ne part que s'il a quelque chose à porter. Il ne roule pas tout seul :
   - **toi** : bouton « 🛤️ Pousser » dans le panneau du départ. Ton hamster fait l'aller-retour avec lui (3 cases/s). Un seul wagonnet à la fois ;
-  - un **mineur pousseur** (au Personnel, 2,5 cases/s) : il pousse le wagonnet qui a quelque chose à porter ;
+  - **son pousseur** (2,5 cases/s, 26/10) : un employé embauché au Personnel **pour ce trajet** (« 🛤️ Embaucher un pousseur » : on choisit le départ, puis l'arrivée, et le trajet brille sur la carte avant qu'on confirme). Il attend au quai, au bord de la voie, devant le bâtiment de départ, et ne pousse que le wagonnet de son trajet. Voir [../batiments/personnel.md](../batiments/personnel.md#4-les-pousseurs) ;
   - l'**électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), il part tout seul et roule à 8 à 24 cases/s selon la puissance du générateur.
 - La **taille des wagonnets** s'achète à la Mine et vaut pour tous les trajets. Le détail (capacités, vitesses, temps) est dans [../batiments/mine.md](../batiments/mine.md#les-wagonnets).
-- **Si une ligne est coupée** (un rail enlevé ou déplacé, un bâtiment déplacé), son wagonnet revient aussitôt au quai et son chargement retourne d'où il vient. Le trajet reste : il repartira quand les rails seront refaits.
+- **Si une ligne est coupée** (un rail enlevé ou déplacé, un bâtiment déplacé), son wagonnet revient aussitôt au quai et son chargement retourne d'où il vient. Le trajet reste : il repartira quand les rails seront refaits. En attendant, une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
 - **Où poser les rails** : courts (moins de fer, voyages plus rapides) et ramassés (plus faciles à mettre entiers dans le rayon du générateur). Le bot de simulation pose le marché juste sous la mine, avec 3 cases de rails.
 
 ## 5. Le rayon du générateur
@@ -152,10 +153,10 @@ Tous les personnages sont des **hamsters** : les **images des planches de l'équ
   - **Pendant qu'il pousse un wagonnet**, il est dessiné juste derrière le wagonnet, sur les rails, et fait l'aller-retour avec lui : il ne peut pas aller ailleurs (les flèches et les touchers ne font rien, le bouton ⛏️ Mine affiche « Wagonnet… »), et la caméra suit le wagonnet.
   - **Espace** : il saute (pour le plaisir).
   - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette ou en pinçant (elle revient sur lui quand il remarche).
-- **Les mineurs employés** : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Ils travaillent surtout **dans la mine** (on ne les voit pas, seulement la **cabine de l'ascenseur** qui monte et descend avec eux sur le dessin de la mine). On les voit au village quand :
-  1. ils **marchent** (`marche`, 4 cases/s) : vers la forge, vers le Personnel quand ils ne sont plus payés, ou de retour vers la mine ;
+- **Les employés** (mineurs et pousseurs) : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Les mineurs travaillent surtout **dans la mine** (on ne les voit pas, seulement la **cabine de l'ascenseur** qui monte et descend avec eux sur le dessin de la mine). On les voit au village quand :
+  1. ils **marchent** (`marche`, 4 cases/s) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
-  3. ils **attendent un wagonnet au quai** (les pousseurs, rangés à côté du début des rails qui partent de la mine) ;
+  3. ils **attendent leur wagonnet au quai** (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ) ;
   4. ils **poussent un wagonnet** (juste derrière lui) ;
   5. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied).
 - **Le recruteur** et **le manager** restent **devant le bâtiment Personnel**, avec leur étiquette (ils ne bougent pas : on n'utilise que leur image de face).
@@ -167,6 +168,8 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | Bulle | Bâtiment | Quand | Sorte (couleur) |
 |---|---|---|---|
 | 😠 | Personnel | des mineurs attendent leur salaire (ou la trésorerie du manager est vide) | alerte (rouge) |
+| 🚧 | les deux bâtiments d'un trajet | les rails de ce trajet sont coupés : son wagonnet attend (« Rails coupés ») | alerte |
+| 🛤️ | Personnel | des pousseurs n'ont plus de trajet en service (« Sans trajet ») | alerte |
 | 🛒 | Foreuse | le chariot est plein | alerte |
 | 🔥 | Foreuse | plus de charbon | alerte |
 | 🔴 | Générateur | allumé, mais plus de redstone | alerte |
@@ -190,6 +193,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel.
 
 - Le village est arrivé avec la sauvegarde v18 (20/10). Le 22/10, la mine automatique passe à la **version 21** : **toutes les parties d'avant repartent de zéro**, village compris. L'écran d'accueil le dit sur la carte du monde.
 - Le 24/10, les trajets passent à la **version 22** : une partie de la version 21 est **convertie** (son wagonnet devient le trajet Mine → Marché si la ligne existe, et sa taille est gardée). Voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md).
+- Le 26/10, les pousseurs embauchés pour un trajet passent à la **version 23** : une partie de la version 22 est **convertie** (un ancien pousseur prend le trajet Mine → Marché).
 
 ## 11. Fichiers du code
 
@@ -202,12 +206,13 @@ La bulle ✨ disparaît quand on arrive devant le Personnel.
 | `src/jeu/generateur.ts` | Le rayon du générateur (`casesDansLeRayon`). |
 | `src/jeu/tenues.ts` | Acheter et porter les tenues. |
 | `src/jeu/notifications.ts` | Les bulles au-dessus des bâtiments. |
-| `src/jeu/employes.ts` | Le cycle des mineurs, au village compris. |
-| `src/jeu/village.test.ts`, `src/jeu/wagonnet.test.ts`, `src/jeu/generateur.test.ts` | Les tests du village, du wagonnet et du générateur. |
-| `src/composants/VueVillage.tsx` | La carte vue du ciel (caméra, toucher, glisser, pincer, fantôme, personnages, wagonnets et leurs pousseurs, rayon du générateur, grille de construction, cabine de la mine, bulles). |
+| `src/jeu/employes.ts` | Le cycle des mineurs et des pousseurs, au village compris (le quai d'un pousseur : `maisonDe`). |
+| `src/jeu/village.test.ts`, `src/jeu/voie.test.ts`, `src/jeu/wagonnet.test.ts`, `src/jeu/generateur.test.ts` | Les tests du village, de la voie (bords, virages doux, bulles des rails), du wagonnet et du générateur. |
+| `src/composants/VueVillage.tsx` | La carte vue du ciel (caméra, toucher, glisser, pincer, fantôme, personnages, wagonnets et leurs pousseurs, pousseurs au quai, trajet en surbrillance `trajetEnSurbrillance`, rayon du générateur, grille de construction, cabine de la mine, bulles). |
 | `src/composants/iso.ts` | Case de la grille ↔ point de l'écran, calage des images des bâtiments, point d'une image à l'écran (`pointSurSprite`), où se tiennent les personnages. |
-| `src/composants/DessinsVillage.tsx` | Les dessins SVG : le terrain, la grille de construction, ce qui évolue sur la mine (cabine, panneau du niveau), rails, chemins, décorations. |
-| `src/composants/WagonnetVillage.tsx` | Un wagonnet sur ses rails (un par trajet), son chargement coloré, et celui qui le pousse. |
+| `src/composants/DessinsVillage.tsx` | Les dessins SVG : le terrain, la grille de construction, ce qui évolue sur la mine (cabine, panneau du niveau), rails (l'image de chaque case, butoirs compris : `codeDeVoie`), chemins, décorations. |
+| `src/composants/WagonnetVillage.tsx` | Un wagonnet sur ses rails (un par trajet) : sa place entre ses deux essieux, son remplissage, et celui qui le pousse. |
+| `src/composants/Wagonnet3D.tsx` | Le dessin du wagonnet en 3D (`DessinWagonnet3D`) : caisse, cadre d'acier, roues, ombres, minerais du chargement. |
 | `src/composants/PanneauTrajets.tsx` | Les trajets qui partent d'un bâtiment, dans son panneau (mine, foreuse) : envoyer, pousser, arrêter, taille des wagonnets. |
 | `src/composants/Rochers.tsx` | Les rochers en relief (`Rocher`, `TasDeRochers`). |
 | `src/composants/ForetVillage.tsx`, `src/composants/arbres.ts` | La forêt. |
@@ -219,7 +224,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel.
 | `src/composants/PanneauTenues.tsx` | Les tenues, au Bazar. |
 | `src/composants/fantome.ts` | Ce qu'on est en train de poser ou de déplacer. |
 | `src/useJoueurVillage.ts` | La marche du joueur (flèches, chemin jusqu'à une case, saut). |
-| `src/App.tsx` | Les barres du bas, la construction, Modifier, le panneau du bâtiment où l'on est, le joueur bloqué pendant qu'il pousse un wagonnet. |
-| `src/village.css` | Tout le style du village (dont le bloc à cliquer, le rayon du générateur, le wagonnet électrique). |
+| `src/App.tsx` | Les barres du bas, la construction, Modifier, le panneau du bâtiment où l'on est, le joueur bloqué pendant qu'il pousse un wagonnet, le trajet regardé au Personnel (`apercuTrajet`). |
+| `src/village.css` | Tout le style du village (dont le bloc à cliquer, le rayon du générateur, le wagonnet électrique, le trajet en surbrillance). |
 | `src/plein-ecran.css` | Le jeu en plein écran : la carte sur toute la fenêtre, les boutons posés dessus. |
 | `public/images/village/`, `public/images/batiments/`, `public/images/personnages/`, `public/images/sol/` | La forêt, les images des bâtiments et de la mine, les personnages et portraits, les textures d'herbe et de sable. |

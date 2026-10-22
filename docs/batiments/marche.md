@@ -11,7 +11,7 @@
 - **L'ouvrir** : toucher (ou cliquer) le marché : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre (à droite sur ordinateur, en bas de l'écran sur téléphone). Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté. Le bouton ✖ le ferme.
 - **Dessin au village** : une image en vue isométrique (`public/images/batiments/marche.webp`) : un étal en bois sous un auvent rayé rouge et crème, avec des caisses de minerais, des sacs et une balance. Il brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Vends tes blocs et minerais. »
-- **Bulle au-dessus** (`notifications.ts`) : **🎒 « Ton sac est plein : viens vendre ! »** (bulle rouge d'alerte) quand le sac est plein. Le marché n'a pas d'amélioration : jamais de bulle 💰 « achetable ».
+- **Bulles au-dessus** (`notifications.ts`) : **🎒 « Ton sac est plein : viens vendre ! »** (bulle rouge d'alerte) quand le sac est plein, et **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet qui arrive ici n'a plus de rails complets (la même bulle est sur son bâtiment de départ). Le marché n'a pas d'amélioration : jamais de bulle 💰 « achetable ».
 - **Animations et sons d'une vente** : un « +X $ » au milieu de l'écran avec une gerbe de pièces (`src/effets.css`), le compteur d'argent du bandeau qui saute et défile jusqu'à la nouvelle somme, et un « ka-ching ! » de caisse (`sons.vente`) : plus la vente est grosse, plus il y a de pièces (de 3 à 12).
 - **Pas de marché, pas de vente** : tant qu'il n'est pas posé, on ne peut rien vendre, et aucun wagonnet ne peut y aller (pas de trajet vers le marché).
 
@@ -74,7 +74,7 @@ Les chances de chaque bloc, niveau par niveau, sont dans [mine.md](mine.md#les-5
 - `src/jeu/mineur.ts` : les règles de vente (`valeurDe`, `vendreLot`, `vendre`, `objetsAVendre`, `reglerVente`, `encaisser`, `nonAVendre`).
 - `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche` et `foreuse-marche`, `avancerWagonnets`).
 - `src/jeu/foreuse.ts` : la vente du chariot de la foreuse (`vendreChariot`).
-- `src/jeu/notifications.ts` : la bulle 🎒 « sac plein ».
+- `src/jeu/notifications.ts` : les bulles 🎒 « sac plein » et 🚧 « rails coupés ».
 - `src/jeu/objectifs.ts` : « Construire : Marché ».
 - `src/composants/Panneaux.tsx` : le panneau du marché (`PanneauMarche`).
 - `src/composants/Jauges.tsx` : les jauges pour choisir les quantités (aussi utilisées pour le coffre de la mine).

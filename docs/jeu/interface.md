@@ -216,9 +216,10 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 **Ce qu'on voit** :
 - les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ;
 - le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
-- les **mineurs employés** quand ils sont dehors : en marche (vers la forge, le Personnel ou la mine), devant la forge, au quai des rails (pousseurs), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
+- les **employés** quand ils sont dehors : en marche (vers la forge, le Personnel, la mine ou le quai de leur trajet), devant la forge, au quai (les pousseurs, au bord de la voie, au début des rails de leur trajet), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
 - le **manager** et le **recruteur** (s'ils sont embauchés), devant le Personnel, avec une étiquette dorée ;
-- les **wagonnets** sur les rails, un par trajet (pleins à l'aller, de la couleur de leur chargement, vides au retour, avec une lueur jaune quand ils sont électriques) ;
+- les **wagonnets** sur les rails, un par trajet, **en 3D** (26/10) : remplis de minerais à facettes selon ce qu'ils portent vraiment (vides, à moitié pleins ou pleins), vides au retour, avec une lueur jaune quand ils sont électriques ; ils tournent en douceur dans les virages. Au bout d'une ligne, un **butoir** rouge et blanc ;
+- le **trajet en surbrillance**, quand on embauche un pousseur au Personnel : ses rails brillent en or, ses deux bâtiments sont entourés d'un pointillé doré qui tourne ;
 - le **rayon du générateur** : un cercle en pointillés jaunes (bien visible quand on est devant le générateur ou qu'on le pose, discret quand il donne du courant) ;
 - les **bulles de notification** au-dessus des bâtiments.
 
@@ -229,6 +230,8 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 | Sorte (couleur) | Icône · mots | Bâtiment | Quand |
 |---|---|---|---|
 | alerte (rouge) | 😠 · Salaires ! | Personnel | des mineurs ne sont pas payés |
+| alerte (rouge) | 🚧 · Rails coupés | les deux bâtiments du trajet | les rails d'un trajet sont coupés : son wagonnet attend |
+| alerte (rouge) | 🛤️ · Sans trajet | Personnel | des pousseurs n'ont plus de trajet en service |
 | alerte (rouge) | 🛒 · Plein ! / 🔥 · Charbon ? | Foreuse | chariot plein / plus de charbon |
 | alerte (rouge) | 🔴 · Redstone ? | Générateur | allumé, plus de redstone |
 | alerte (rouge) | 🔧 · Réparer | Forgeron | ta pioche est cassée |
@@ -307,7 +310,7 @@ Le détail (chiffres, règles) est dans chaque fiche ; voici ce qu'on voit.
 | 💰 Marché | `PanneauMarche` | les jauges de tout le sac (le plus cher en haut), puis **💰 Vendre la sélection · +*X* $** (vert). « Ton sac est vide. Va le remplir au coffre de la mine ! » si vide. Une jauge à 0 = objet « gardé ». Fiche : [marche.md](../batiments/marche.md) |
 | ⚒️ Forgeron | `PanneauPioches` | une ligne par pioche : verrouillée, ou nom, badge « Équipée », « *N* % de chance de doubler un minerai · durabilité *D* clics », barre d'usure, **Équiper** (gris), **🔧 Réparer** (orange), **🔓 Débloquer** / **🛒 Racheter neuve** (bleu). Fiche : [forgeron.md](../batiments/forgeron.md) |
 | 🎒 Bazar | `PanneauBazar` + `PanneauTenues` | « 🎒 Sac à dos » (« ⬆ *n* places », bleu) ; puis les **tenues** : un aperçu du hamster habillé, et deux listes **🎩 Chapeaux** et **🦺 Hauts**. Fiche : [bazar.md](../batiments/bazar.md) |
-| 👷 Personnel | `PanneauEmployes` | salaires (boutons citron vert), manager et trésorerie, recruteur (avec leur **portrait**), **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), une carte compacte par mineur (rôle **🛤️ Pousser le wagonnet** / **⛏️ Creuser**, jauges temps payé et sac, pioche, lien Licencier). Fiche : [personnel.md](../batiments/personnel.md) |
+| 👷 Personnel | `PanneauEmployes` | salaires (boutons citron vert), manager et trésorerie, recruteur (avec leur **portrait**), **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), **🛤️ Embaucher un pousseur** (26/10 : boutons **Départ** puis **Arrivée**, le bouton choisi devient doré, le trajet brille sur la carte, puis **🛤️ Embaucher pour ce trajet** arc-en-ciel) ; l'équipe en deux listes, **⛏️ Mineurs** (une carte compacte chacun : jauges temps payé et sac, pioche, lien Licencier) et **🛤️ Pousseurs** (son trajet, une liste pour le changer, jauge temps payé, lien Licencier). Fiche : [personnel.md](../batiments/personnel.md) |
 | ⚙️ Foreuse | `PanneauForeuse` | État (badge, vitesse, ⚡ si boostée), barre de charbon, **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **💰 Vendre la sélection**, **🎒 Mettre dans le sac**) ; « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot » ; **🛤️ Wagonnets** (le trajet Foreuse → Marché, comme à la mine). Fiche : [foreuse.md](../batiments/foreuse.md) |
 | ⚡ Générateur | `PanneauGenerateur` | « ⚡ Courant » (badge Allumé / Éteint / Plus de redstone, rayon et puissance, barre de redstone, **+1 / +10 / Tout**, **⏸ Éteindre / ▶ Allumer**, case du puisage) ; « 🔌 Ce qu'il alimente » (chaque trajet : électrique, hors du rayon ou rails coupés ; et la foreuse) ; « ⬆ Améliorer ». Fiche : [generateur.md](../batiments/generateur.md) |
 
@@ -485,8 +488,8 @@ Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/ind
 | `bouton-sac` | mettre dans le sac | **kaki** | 🎒 Mettre dans le sac (coffre, chariot) |
 | `bouton-charbon` | carburant | **anthracite** | +1, +10, Tout (foreuse et générateur) |
 | `bouton-payer` | payer les salaires, trésorerie | **citron vert** | panneau du Personnel |
-| `bouton-recruter` | recruter | **arc-en-ciel** | 🎲 Recruter, bouton de la révélation |
-| `bouton-neutre` | le reste | **gris** | Équiper, Max, Tout sélectionner, Fermer, Renommer, ✏️ Modifier, ↔ Retourner, ⏸ Éteindre, rôle d'un mineur |
+| `bouton-recruter` | recruter | **arc-en-ciel** | 🎲 Recruter, 🛤️ Embaucher pour ce trajet (un pousseur), bouton de la révélation |
+| `bouton-neutre` | le reste | **gris** | Équiper, Max, Tout sélectionner, Fermer, Renommer, ✏️ Modifier, ↔ Retourner, ⏸ Éteindre, départ et arrivée d'un pousseur (dorés une fois choisis) |
 
 Les anciennes classes `bouton-creuser-x10`, `bouton-enchanter`, `bouton-prestige` et `bouton-ascenseur` restent dans `index.css` mais ne servent plus.
 

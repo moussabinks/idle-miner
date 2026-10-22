@@ -13,6 +13,7 @@
 - **Bulles au-dessus** (`notifications.ts`), de la plus urgente à la moins urgente :
   - **🛒 « Le chariot est plein : viens le vider ! »** (alerte rouge) ;
   - sinon **🔥 « Plus de charbon ! »** (alerte rouge) ;
+  - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet de wagonnet qui part d'ici ou y arrive n'a plus de rails complets (un rail enlevé, un bâtiment déplacé) : « Rails coupés entre … : le wagonnet attend. Repose les rails ! ». La bulle est sur les deux bâtiments du trajet ;
   - **💰 « Une amélioration est achetable ! »** quand un niveau de forage ou de chariot est payable tout de suite.
 
 ## Ce qu'on peut y faire
@@ -69,7 +70,7 @@ Deux trajets de wagonnets touchent la foreuse (voir [mine.md](mine.md#les-wagonn
 - **Mine → Foreuse** (créé au panneau de la mine) : le wagonnet lui apporte le **charbon du coffre de la mine**, jusqu'à une réserve de **20 minutes** (60 charbons, `RESERVE_FOREUSE_WAGONNET` = 1 200 s). Le wagonnet du marché laisse alors ce charbon dans le coffre.
 - **Foreuse → Marché** (créé ici, en bas du panneau, bloc « 🛤️ Wagonnets ») : le wagonnet emporte **ce qui est coché dans le chariot** et le vend au marché. Cet argent compte dans `argentWagonnet` (la part « 🛤️ Wagonnet » des statistiques), pas dans `argentForeuse`.
 
-Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un wagonnet vers le marché »** ; ensuite **🛤️ Pousser** et **✖ Arrêter**.
+Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un wagonnet vers le marché »** ; ensuite **🛤️ Pousser** et **✖ Arrêter**. Pour ne plus le pousser soi-même : un **pousseur** embauché au Personnel pour le trajet Foreuse → Marché attend au quai, devant la foreuse (voir [personnel.md](personnel.md#4-les-pousseurs)), ou l'électricité du générateur.
 
 ## Règles et comportement
 
@@ -97,7 +98,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un
 - `src/jeu/mineur.ts` : le type `Foreuse` et `nouvelleForeuse()`.
 - `src/jeu/temps.ts` : fait avancer la foreuse avec le reste du jeu (`avancerTemps`).
 - `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) et le message « Pendant ton absence ».
-- `src/jeu/notifications.ts` : les bulles 🛒, 🔥 et 💰 au-dessus de la foreuse.
+- `src/jeu/notifications.ts` : les bulles 🛒, 🔥, 🚧 et 💰 au-dessus de la foreuse.
 - `src/jeu/objectifs.ts` : « Construire : Foreuse », achats, prochain objectif.
 - `src/jeu/revenu.ts` et `src/jeu/statistiques.ts` : ce qu'elle rapporte ($/s et statistiques).
 - `src/jeu/foreuse.test.ts` : les tests.

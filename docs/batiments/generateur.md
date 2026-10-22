@@ -16,6 +16,7 @@
   - gris quand il ne donne pas de courant (éteint ou sans redstone) ; caché s'il ne donne pas de courant et qu'on ne le regarde pas.
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔴 « Plus de redstone ! »** (alerte rouge) quand il est **allumé** mais n'a plus de redstone ;
+  - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet de wagonnet qui part d'ici ou y arrive n'a plus de rails complets (un rail enlevé, un bâtiment déplacé) : « Rails coupés entre … : le wagonnet attend. Repose les rails ! ». La bulle est sur les deux bâtiments du trajet ;
   - **💰 « Une amélioration est achetable ! »** quand le niveau suivant est payable tout de suite.
 - **Le bandeau** affiche un petit **⚡** quand au moins un trajet est électrique.
 
@@ -71,10 +72,10 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 
 ### Ce que fait l'électricité
 
-- **Les wagonnets** (trajets électriques, `trajetElectrique`) : un wagonnet part **tout seul** dès qu'il a quelque chose à porter, sans joueur ni mineur pour le pousser. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un mineur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#les-wagonnets).
+- **Les wagonnets** (trajets électriques, `trajetElectrique`) : un wagonnet part **tout seul** dès qu'il a quelque chose à porter, sans joueur ni pousseur. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un pousseur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#les-wagonnets).
 - **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore **× (1 + 0,5 × puissance)** plus vite (`BONUS_ELECTRIQUE_FOREUSE`), sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
 - Rien d'autre n'est électrique pour l'instant (ni la mine, ni les mineurs).
-- Quand tous les trajets sont électriques, plus besoin de **mineur pousseur** : les wagonnets partent tout seuls (le pousseur reste au quai, payé, à ne rien faire ; on peut le remettre à creuser au Personnel).
+- Quand un trajet est électrique, plus besoin de son **pousseur** : le wagonnet part tout seul (le pousseur reste au quai, payé, à ne rien faire ; au Personnel, on peut le licencier ou lui donner un autre trajet).
 
 ### Bien le placer
 
@@ -97,7 +98,7 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 - `src/jeu/wagonnet.ts` : les trajets électriques (`trajetElectrique`, `railsAlimentes`), le wagonnet qui part tout seul et sa vitesse électrique ; le trajet Mine → Générateur qui lui apporte la redstone.
 - `src/jeu/foreuse.ts` : la vitesse de forage boostée (`vitesseForage`).
 - `src/jeu/mineur.ts` : le type `Generateur` (`niveau`, `carburant`, `allume`, `puiseDansLeCoffre`) dans `EtatJeu`.
-- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : la bulle 🔴, les objectifs, le succès Électricien.
+- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : les bulles 🔴 et 🚧, les objectifs, le succès Électricien.
 - `src/composants/Panneaux.tsx` : `PanneauGenerateur`.
 - `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), les wagonnets électriques ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.
 - `src/composants/iso.ts` : le calage de l'image ; `public/images/batiments/generateur.webp` : le dessin.
