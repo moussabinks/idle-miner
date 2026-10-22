@@ -460,7 +460,8 @@ export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'bazar', 'em
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
 
 // Les vitesses au village, en cases par seconde (à pied).
-export const VITESSE_MARCHE = 4
+// (les mineurs : 2,5 depuis le 27/10, pour qu'on les voie bien marcher ; avant 4)
+export const VITESSE_MARCHE = 2.5
 // Le joueur marche un peu plus vite que ses mineurs (c'est lui le patron).
 export const VITESSE_JOUEUR = 5
 // Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.

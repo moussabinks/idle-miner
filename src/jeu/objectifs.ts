@@ -1,16 +1,15 @@
 // Ce qui guide le joueur au village :
 //   - les bâtiments à construire (le marché d'abord : il est gratuit) ;
 //   - les stands où une amélioration est payable tout de suite (pastille « Achetable ! ») ;
-//   - le prochain objectif (la petite barre sous le bandeau : « Pioche en Fer : 180 / 300 $ »).
+//   - les améliorations à proposer dans les missions (missions.ts).
 
-import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment } from './donnees'
 import { batimentDebloque } from './batiments'
 import { coutAmeliorationEmploye, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
 import { generateurPose, prochainNiveauGenerateur } from './generateur'
 import {
   coutPioche,
-  disponible,
   peutPayer,
   prixProchainSac,
   prochainNiveauAscenseur,
@@ -19,7 +18,7 @@ import {
   type EtatJeu,
 } from './mineur'
 import { batimentPose } from './village'
-import { ligneDe, prochainNiveauWagonnet, railsAlimentes, trajetDe } from './wagonnet'
+import { prochainNiveauWagonnet } from './wagonnet'
 
 // Les stands du village : ce sont les bâtiments posés sur la grille (voir village.ts).
 export type IdStand = IdBatiment
@@ -89,84 +88,4 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
 // Les bâtiments posés où au moins une amélioration est payable tout de suite.
 export function standsAchetables(etat: EtatJeu): IdStand[] {
   return [...new Set(achatsPossibles(etat).filter((a) => !a.construction && peutPayer(etat, a.cout)).map((a) => a.stand))]
-}
-
-// --- Le prochain objectif ---------------------------------------------------
-
-export type Objectif = {
-  texte: string // « Pioche en Fer »
-  detail: string // « 180 / 300 $ », « il manque 12 Fer », « achetable au Forgeron ! »
-  stand: IdStand | null // où aller (null : au village, rien de précis)
-  valeur: number // pour la petite jauge
-  max: number
-  pret: boolean // on peut l'acheter (ou le faire) tout de suite
-  construction: boolean // c'est un bâtiment à poser (le clic ouvre le menu Bâtiments)
-}
-
-const NOMS_STANDS: Record<IdStand, string> = {
-  puits: 'à la mine',
-  marche: 'au marché',
-  forgeron: 'au forgeron',
-  bazar: 'au bazar',
-  foreuse: 'à la foreuse',
-  employes: 'au Personnel',
-  generateur: 'au générateur',
-}
-
-// Le premier minerai qui manque pour un achat (null s'il ne manque rien).
-function mineraiManquant(etat: EtatJeu, cout: Cout): { bloc: IdBloc; manque: number } | null {
-  for (const [id, nombre] of Object.entries(cout.materiaux)) {
-    const manque = (nombre ?? 0) - disponible(etat, id as IdBloc)
-    if (manque > 0) return { bloc: id as IdBloc, manque }
-  }
-  return null
-}
-
-// Les grandes étapes de l'automatisation, quand rien n'est à acheter tout de suite.
-function etapeAutomatisation(etat: EtatJeu): Objectif | null {
-  const objectif = (texte: string, detail: string, stand: IdStand | null): Objectif => ({ texte, detail, stand, valeur: 0, max: 1, pret: false, construction: false })
-  if (!batimentPose(etat.village, 'marche')) return null
-  // Les rails se posent depuis le menu Bâtiments : le clic l'ouvre.
-  if (!ligneDe(etat, 'mine-marche')) return { ...objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null), construction: true }
-  if (!trajetDe(etat, 'mine-marche')) return objectif('Créer un trajet de wagonnet', 'à la mine : « envoyer un wagonnet vers le marché »', 'puits')
-  if (generateurPose(etat) && !railsAlimentes(etat)) {
-    if (etat.generateur.carburant <= 0) return objectif('Allumer le générateur', 'mets-lui de la redstone', 'generateur')
-    return objectif('Électrifier les rails', 'tout un trajet doit être dans le rayon du générateur', 'generateur')
-  }
-  // Relier la foreuse : la mine lui apporte son charbon, et elle envoie son chariot au marché.
-  if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'mine-foreuse')) {
-    if (!ligneDe(etat, 'mine-foreuse')) return { ...objectif('Relier la foreuse à la mine', 'des rails : un wagonnet lui apportera le charbon', null), construction: true }
-    return objectif('Envoyer du charbon à la foreuse', 'à la mine : « envoyer un wagonnet vers la foreuse »', 'puits')
-  }
-  return null
-}
-
-// L'objectif à montrer : d'abord ce qu'on peut acheter tout de suite, sinon l'achat dont on est
-// le plus proche (ou la prochaine étape de l'automatisation).
-export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => string): Objectif | null {
-  const achats = achatsPossibles(etat)
-  const payable = achats.find((a) => peutPayer(etat, a.cout))
-  if (payable) {
-    const construction = payable.construction === true
-    const detail = construction ? (payable.cout.argent ? 'à poser (menu Bâtiments) !' : 'gratuit : pose-le (menu Bâtiments) !') : `achetable ${NOMS_STANDS[payable.stand]} !`
-    return { texte: payable.nom, detail, stand: payable.stand, valeur: 1, max: 1, pret: true, construction }
-  }
-  // Pas de rails : c'est l'étape la plus importante, avant d'économiser pour le reste.
-  const etape = etapeAutomatisation(etat)
-  if (etape && !trajetDe(etat, 'mine-marche') && (ligneDe(etat, 'mine-marche') !== null || disponible(etat, 'fer') > 0)) return etape
-  if (achats.length > 0) {
-    // Le plus proche : celui dont on a la plus grande part de l'argent.
-    const part = (a: AchatPossible) => (a.cout.argent ? Math.min(1, etat.argent / a.cout.argent) : 1)
-    const proche = [...achats].sort((a, b) => part(b) - part(a))[0]
-    const prix = proche.cout.argent ?? 0
-    const minerai = mineraiManquant(etat, proche.cout)
-    const detail =
-      etat.argent < prix
-        ? `${Math.floor(etat.argent).toLocaleString('fr-FR')} / ${prix.toLocaleString('fr-FR')} $`
-        : minerai
-          ? `il manque ${minerai.manque} ${nomBloc(minerai.bloc)}`
-          : ''
-    return { texte: proche.nom, detail, stand: proche.stand, valeur: Math.min(etat.argent, prix), max: Math.max(1, prix), pret: false, construction: proche.construction === true }
-  }
-  return etape
 }

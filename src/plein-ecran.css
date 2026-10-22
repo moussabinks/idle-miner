@@ -1,9 +1,10 @@
 /* =========================================================================
    Le jeu en plein écran (21/10), comme Clash of Clans : la scène (le village vu du ciel, ou
    la mine en coupe) prend tout l'écran, et l'interface est posée par-dessus :
-   - en haut à gauche, une colonne de petits boutons (monde, stats, succès, aide, réglages) ;
-   - en haut à droite, le bandeau (argent, pioche, sac...) et, dessous, le prochain objectif ;
-   - à droite (ordinateur) ou en bas (téléphone), le panneau du bâtiment ou du sac ;
+   - en haut à gauche, le bandeau (argent, coffre, pioche, sac...) et, dessous, une colonne de
+     petits boutons (stats, succès, aide, réglages) ;
+   - en haut à droite, les missions, et dessous (ordinateur) le panneau du bâtiment ;
+   - en bas (téléphone), le panneau du bâtiment ;
    - en bas, les boutons d'action (gros boutons ronds au village).
    ========================================================================= */
 
@@ -124,19 +125,6 @@
   border: 2px solid #4a2c12;
   background: linear-gradient(#36220f, #22150a);
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
-}
-
-/* --- Le prochain objectif : une pastille sous le bandeau, à droite ---------------- */
-
-.plein-ecran .objectif {
-  position: absolute;
-  top: calc(var(--marge-haut) + 62px);
-  right: var(--marge-droite);
-  width: min(560px, calc(100% - 90px));
-  margin: 0;
-  pointer-events: auto;
-  background: rgb(24 15 8 / 0.84);
-  border-color: #4a2c12;
 }
 
 /* --- Le panneau (bâtiment ou sac) ------------------------------------------------- */
@@ -271,7 +259,7 @@
   display: none;
 }
 
-/* --- Les messages : au milieu, sous l'objectif ------------------------------------ */
+/* --- Les messages : au milieu, sous la barre du haut ------------------------------------ */
 
 .plein-ecran .toasts {
   position: absolute;
@@ -316,14 +304,6 @@
 
   .plein-ecran .barre {
     height: 14px;
-  }
-
-  .plein-ecran .objectif {
-    top: auto;
-    bottom: calc(var(--marge-bas) + 100px);
-    left: var(--marge-gauche);
-    right: var(--marge-droite);
-    width: auto;
   }
 
   /* Le panneau monte du bas, au-dessus des boutons, sur la moitié de l'écran au plus. */

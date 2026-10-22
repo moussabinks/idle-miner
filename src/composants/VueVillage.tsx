@@ -31,6 +31,7 @@ import {
   CaseChemin,
   RailsDuVillage,
   DessinEvolutionMine,
+  type PassagerAscenseur,
   LosangeEmprise,
   GrilleConstruction,
   TerrainVillage,
@@ -84,6 +85,9 @@ const PIECES_MARCHE = Array.from({ length: 10 }, (_, i) => {
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
+// La force du zoom à la molette (par pixel de défilement) et au pincement (27/10).
+const FORCE_MOLETTE = 0.004
+const FORCE_PINCEMENT = 1.7
 
 export function VueVillage({
   etat,
@@ -273,7 +277,8 @@ export function VueVillage({
       const [a, b] = [...pointeurs.current.values()]
       const distance = Math.hypot(a.x - b.x, a.y - b.y)
       const depart = pincement.current
-      setZoom(borner({ ...cameraRef.current, z: depart.z * (distance / depart.distance) }).z)
+      // Le zoom suit le pincement en plus fort (puissance FORCE_PINCEMENT) : un petit geste suffit.
+      setZoom(borner({ ...cameraRef.current, z: depart.z * Math.pow(distance / depart.distance, FORCE_PINCEMENT) }).z)
       return
     }
     const g = geste.current
@@ -316,7 +321,10 @@ export function VueVillage({
   function molette(e: React.WheelEvent) {
     const m = versMonde(e.clientX, e.clientY)
     const c = cameraRef.current
-    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-e.deltaY * 0.0015)))
+    // Un cran de molette zoome d'environ 50 % (27/10 : avant, il fallait tourner longtemps).
+    // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
+    const pixels = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
+    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * FORCE_MOLETTE)))
     // On zoome autour du point sous la souris.
     const nouvelle = borner({ z, cx: m.x - (m.x - c.cx) * (c.z / z), cy: m.y - (m.y - c.cy) * (c.z / z) })
     setZoom(nouvelle.z)
@@ -343,6 +351,7 @@ export function VueVillage({
             niveau={etat.niveauMine}
             ascenseur={etat.ascenseur.niveau > 0}
             hauteurCabine={hauteurCabine(etat)}
+            passagers={passagersAscenseur(etat)}
           />
         </BoiteSvg>,
       )
@@ -386,10 +395,13 @@ export function VueVillage({
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
     let marche = false
     let colere = false
-    if (mineur.etape === 'marche') {
+    if (mineur.etape === 'marche' && mineur.progression < 0 && mineur.depuis === 'employes' && personnel) {
+      // Payé, il attend son tour pour partir, à sa place devant le Personnel.
+      position = devant(personnel, 2 + enAttente++, 1.6)
+    } else if (mineur.etape === 'marche') {
       const chemin = cheminEntre(village, mineur.depuis, mineur.lieu)
       if (chemin) {
-        const point = surLeChemin(chemin, Math.min(longueurChemin(chemin), mineur.progression * VITESSE_MARCHE))
+        const point = surLeChemin(chemin, Math.max(0, Math.min(longueurChemin(chemin), mineur.progression * VITESSE_MARCHE)))
         position = point
         orientation = orienter(point.dx, point.dy)
         marche = true
@@ -499,6 +511,7 @@ export function VueVillage({
     const capacite = capaciteCoffre(etat)
     const part = Math.min(1, dans / Math.max(1, capacite))
     const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
+    const mineursAuFond = mineursDansLaMine(etat)
     bulles.push(
       <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 78 }} title={`Coffre de la mine : ${dans} / ${capacite}`}>
         <span className="jauge-coffre-icone" aria-hidden="true">
@@ -510,6 +523,12 @@ export function VueVillage({
             {nombreAbrege(dans)} / {nombreAbrege(capacite)}
           </span>
         </span>
+        {/* Les mineurs au travail dans la mine (on ne les voit pas : ils sont au fond). */}
+        {mineursAuFond > 0 && (
+          <span className="jauge-coffre-mineurs" title={`${mineursAuFond} mineur(s) au travail dans la mine`}>
+            👷 {mineursAuFond}
+          </span>
+        )}
       </div>,
     )
   }
@@ -671,6 +690,21 @@ function hauteurCabine(etat: EtatJeu): number {
   if (!mineur) return 0
   const f = Math.min(1, mineur.progression / secondesTrajetMineur(etat))
   return mineur.etape === 'descend' ? f : 1 - f
+}
+
+// Les mineurs qui descendent dans le puits ou en remontent (dans la cabine, ou sur l'échelle).
+function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
+  return etat.employes
+    .filter((m) => m.etape === 'monte' || m.etape === 'descend')
+    .map((m) => {
+      const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
+      return { qui: RARETES[m.rarete] ? m.rarete : 'commun', f: m.etape === 'descend' ? f : 1 - f, descend: m.etape === 'descend' }
+    })
+}
+
+// Combien de mineurs travaillent dans la mine en ce moment (pour la jauge du coffre).
+function mineursDansLaMine(etat: EtatJeu): number {
+  return etat.employes.filter((m) => m.role === 'mineur' && ['descend', 'creuse', 'monte', 'vide'].includes(m.etape)).length
 }
 
 // Le cercle du rayon du générateur, vu du ciel (une ellipse : la grille est en losange).

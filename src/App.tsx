@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { basculerMusique, musiqueActive } from './ambiance'
 import { basculerSon, sonActif, sons } from './sons'
 import { Accueil } from './composants/Accueil'
-import { ProchainObjectif } from './composants/ProchainObjectif'
+import { Missions } from './composants/Missions'
 import { Gains } from './composants/Gains'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
@@ -538,8 +538,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
 
       {/* Tout le reste est posé par-dessus la scène, comme dans Clash of Clans. */}
       <div className="interface">
+        {/* En haut à gauche (27/10) : la barre (argent, coffre, pioche, sac, mineurs), et dessous
+            les petits boutons (stats, succès, aide, réglages). */}
         <div className="interface-haut">
-          {/* En haut à gauche : le monde, les stats, les succès, l'aide et les réglages. */}
+          <Hud etat={etat} nbVentes={nbVentes} />
           <nav className="boutons-coin" aria-label="Menu du jeu">
             <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Statistiques">
               <span aria-hidden="true">📊</span>
@@ -573,12 +575,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
               </div>
             )}
           </nav>
-          <Hud etat={etat} nbVentes={nbVentes} />
         </div>
-        <ProchainObjectif etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} />
 
-        {/* Le panneau du bâtiment, par-dessus la carte. */}
-        {panneau && <div className="panneau-flottant">{panneau}</div>}
+        {/* En haut à droite : les missions, et dessous le panneau du bâtiment ouvert. */}
+        <div className="colonne-droite">
+          <Missions etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} compact={panneau !== null} />
+          {panneau && <div className="panneau-flottant">{panneau}</div>}
+        </div>
 
         <div className="interface-bas">
           {barre}

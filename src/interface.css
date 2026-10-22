@@ -183,18 +183,7 @@
   color: #ffd84a;
 }
 
-/* --- Le prochain objectif et le panneau, plus haut (le bandeau est plus fin) ------- */
-
-.plein-ecran .objectif {
-  top: calc(var(--marge-haut) + 48px);
-  width: min(440px, calc(100% - 70px));
-  padding: 5px 10px;
-  border-radius: 999px;
-}
-
-.plein-ecran .panneau-flottant {
-  top: calc(var(--marge-haut) + 86px);
-}
+/* --- Les messages, sous la barre du haut -------------------------------------------- */
 
 .plein-ecran .toasts {
   top: calc(var(--marge-haut) + 88px);
@@ -381,10 +370,6 @@
     left: 46px;
   }
 
-  .plein-ecran .objectif {
-    top: auto;
-  }
-
   /* Sur téléphone, le panneau monte du bas, et les messages restent juste au-dessus des boutons. */
   .plein-ecran .panneau-flottant {
     top: auto;
@@ -514,4 +499,324 @@
   font-size: 0.78rem;
   font-weight: 700;
   color: #8ff09a;
+}
+
+/* =========================================================================
+   Le haut de l'écran (27/10) : la barre et les petits boutons à gauche, les missions (et
+   le panneau du bâtiment ouvert) à droite.
+   ========================================================================= */
+
+.plein-ecran .interface-haut {
+  right: auto;
+  max-width: calc(100% - var(--largeur-panneau) - 3 * var(--marge-droite));
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.plein-ecran .bandeau {
+  margin-left: 0;
+  justify-content: flex-start;
+}
+
+.colonne-droite {
+  position: absolute;
+  top: var(--marge-haut);
+  right: var(--marge-droite);
+  bottom: 96px;
+  width: var(--largeur-panneau);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Le panneau prend la place qui reste sous les missions. */
+.colonne-droite .panneau-flottant {
+  position: static;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+/* --- Les missions ----------------------------------------------------------------- */
+
+.missions {
+  display: grid;
+  gap: 5px;
+  width: min(330px, 100%);
+  pointer-events: auto;
+}
+
+.mission {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px 6px 6px;
+  border-radius: 14px;
+  border: 2px solid #5a3818;
+  background: linear-gradient(rgb(40 26 14 / 0.93), rgb(20 13 7 / 0.93));
+  box-shadow: inset 0 1px 0 rgb(255 220 160 / 0.15), 0 3px 8px rgb(0 0 0 / 0.35);
+  color: #fff3d6;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  animation: mission-arrive 0.3s ease-out;
+}
+
+.mission:disabled {
+  cursor: default;
+}
+
+.mission:hover:not(:disabled) {
+  border-color: #ffd84a;
+}
+
+.mission-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #7a5230, #3a2412);
+  font-size: 1rem;
+}
+
+.mission-corps {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mission-texte {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mission-progression {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mission-piste {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.5);
+  overflow: hidden;
+}
+
+.mission-piste i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(#ffe066, #e0a00e);
+  transition: width 0.4s;
+}
+
+.mission-compte {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ffe9a8;
+}
+
+.mission-go {
+  flex-shrink: 0;
+  font-weight: 900;
+  color: #7fe07f;
+}
+
+/* La première mission, en plus grand, avec un liseré doré. */
+.mission-principale {
+  padding: 8px 12px 8px 7px;
+  border-color: #c88a12;
+}
+
+.mission-principale .mission-icone {
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+}
+
+.mission-principale .mission-texte {
+  font-size: 0.92rem;
+}
+
+/* Faisable tout de suite : liseré vert qui pulse doucement. */
+.mission-prete {
+  border-color: #4fb35a;
+  animation: mission-arrive 0.3s ease-out, mission-prete 1.6s ease-in-out 0.3s infinite;
+}
+
+.mission-accomplie {
+  border-color: #4fb35a;
+  background: linear-gradient(#2f6a2a, #1c4219);
+  cursor: default;
+  animation: mission-accomplie 1.6s ease-out forwards;
+}
+
+.mission-accomplie .mission-icone {
+  background: #4fb35a;
+  color: #fff;
+  font-weight: 900;
+}
+
+.mission-accomplie .mission-texte {
+  text-decoration: line-through;
+}
+
+@keyframes mission-arrive {
+  from { opacity: 0; translate: 16px 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes mission-prete {
+  0%, 100% { box-shadow: inset 0 1px 0 rgb(255 220 160 / 0.15), 0 3px 8px rgb(0 0 0 / 0.35); }
+  50% { box-shadow: inset 0 1px 0 rgb(255 220 160 / 0.15), 0 0 0 3px rgb(79 179 90 / 0.45); }
+}
+
+@keyframes mission-accomplie {
+  0% { scale: 0.9; }
+  15% { scale: 1.06; }
+  30%, 80% { scale: 1; opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission,
+  .mission-prete,
+  .mission-accomplie {
+    animation: none;
+  }
+}
+
+/* --- Téléphone : la barre en haut, les boutons à gauche, les missions à droite sous la
+       barre, et le panneau qui monte du bas. ------------------------------------------- */
+
+@media (max-width: 860px) {
+  .plein-ecran .interface-haut {
+    max-width: none;
+    right: var(--marge-droite);
+  }
+
+  .colonne-droite {
+    display: contents;
+  }
+
+  .missions {
+    position: absolute;
+    top: calc(var(--marge-haut) + 84px);
+    right: var(--marge-droite);
+    width: min(270px, calc(100% - 70px));
+  }
+
+  .mission-texte {
+    font-size: 0.74rem;
+  }
+
+  .mission-principale .mission-texte {
+    font-size: 0.8rem;
+  }
+
+  .mission-icone,
+  .mission-principale .mission-icone {
+    width: 28px;
+    height: 28px;
+    font-size: 0.95rem;
+  }
+
+  /* Deux missions au plus sur téléphone (la place est comptée). */
+  .missions .mission:nth-of-type(n + 3) {
+    display: none;
+  }
+
+  /* Un panneau ouvert cache les missions sur téléphone (il prend la moitié de l'écran). */
+  .missions-compactes {
+    display: none;
+  }
+
+  .colonne-droite .panneau-flottant {
+    position: absolute;
+    width: auto;
+  }
+}
+
+/* --- Les onglets des panneaux de bâtiment (27/10) ----------------------------------- */
+
+.onglets-panneau {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.35);
+}
+
+.onglet-panneau {
+  position: relative;
+  flex: 1;
+  padding: 7px 6px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: #d9c9ad;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.onglet-panneau:hover {
+  color: #fff3d6;
+}
+
+.onglet-panneau.actif {
+  color: #2a1606;
+  background: linear-gradient(#ffd96b, #e0a52a);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2);
+}
+
+.pastille-onglet {
+  position: absolute;
+  top: -5px;
+  right: -2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  line-height: 17px;
+  color: #fff;
+  background: #d33a2c;
+  box-shadow: 0 0 0 2px #2a1a0c;
+}
+
+/* Ce qu'on range pour ne pas encombrer un panneau (« Autres pioches », options...). */
+.plus-d-infos {
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.22);
+}
+
+.plus-d-infos > summary {
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #e9dcc6;
+  cursor: pointer;
+}
+
+.plus-d-infos[open] > summary {
+  margin-bottom: 6px;
+}
+
+.plus-d-infos > .liste-cartes,
+.plus-d-infos > :not(summary) {
+  margin: 0 6px 8px;
 }
