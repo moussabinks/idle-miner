@@ -21,7 +21,7 @@ import {
 import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, TerrainVillage } from './DessinsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { ImageBatiment, Perso } from './ElementsVillage'
-import { ObjetsPlage, SolPlage } from './PlageVillage'
+import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
@@ -293,6 +293,7 @@ export function SceneAccueil() {
       <div className="monde-village" style={{ transform: `scale(${z}) translate(${-gauche}px, ${-haut}px)` }}>
         <TerrainVillage />
         <SolPlage />
+        <EauPlage />
         {SOL}
         <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>
