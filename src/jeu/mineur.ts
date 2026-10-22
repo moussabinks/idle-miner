@@ -172,6 +172,8 @@ export type EtatJeu = {
   stats: Statistiques
   decouvertes: Decouverte[]
   village: Village
+  // L'étape du tutoriel (27/10, voir tutoriel.ts). Absent dans les vieilles parties : pas de tutoriel.
+  tutoriel?: number
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
@@ -209,6 +211,7 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     prochainBloc: tirerBloc(1, aleatoire),
     clics: 0,
     progressionMine: 0,
+    tutoriel: 0, // un nouveau monde commence par le tutoriel
     pioches: { 0: 0 }, // la pioche en pierre est offerte
     niveauPioche: 0,
     meilleure: 0,

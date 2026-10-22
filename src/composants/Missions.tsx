@@ -1,5 +1,5 @@
-// Les missions, en haut à droite (27/10) : une à trois choses à faire, avec leur progression
-// (« 🪨 12 / 25 »). La première est en grand. En touchant une mission, on va au bon bâtiment
+// Les missions, en haut à droite (27/10) : une liste de tâches à cocher, une à trois choses à
+// faire, avec leur progression (« 🪨 12 / 25 ») et un bouton d'action. La première est en grand. En touchant une mission, on va au bon bâtiment
 // (ou on ouvre le menu Bâtiments). Quand une mission est accomplie, elle se coche avec un petit
 // son avant de laisser la place à la suivante.
 // Les règles (quelles missions montrer) sont dans src/jeu/missions.ts.
@@ -44,44 +44,57 @@ export function Missions({ etat, onAllerAuStand, onConstruire, compact }: Props)
 
   const affichees = compact ? liste.slice(0, 1) : liste
   return (
-    <aside className={`missions ${compact ? 'missions-compactes' : ''}`} aria-label="Missions">
+    // Une liste de tâches à cocher (27/10) : une case ronde, l'icône, la consigne (un verbe
+    // d'action) et sa barre, et un bouton d'action à droite (« Go ! » quand c'est faisable).
+    <aside className={`missions ${compact ? 'missions-compactes' : ''}`} aria-label="Tâches">
+      <div className="missions-entete">
+        <span aria-hidden="true">☑️</span> Tâches
+      </div>
       {accomplie && (
         <div className="mission mission-accomplie" role="status">
-          <span className="mission-icone">✔</span>
-          <span className="mission-texte">{accomplie.texte}</span>
-        </div>
-      )}
-      {affichees.map((m, i) => (
-        <button
-          key={m.id}
-          className={`mission ${i === 0 ? 'mission-principale' : ''} ${m.pret ? 'mission-prete' : ''}`}
-          onClick={() => (m.construction ? onConstruire() : m.stand && onAllerAuStand(m.stand))}
-          disabled={!m.construction && m.stand === null}
-          title={m.construction ? 'Ouvrir le menu Bâtiments' : m.stand ? 'Y aller' : ''}
-        >
+          <span className="mission-case coche" aria-hidden="true">
+            ✔
+          </span>
           <span className="mission-icone" aria-hidden="true">
-            {m.icone}
+            {accomplie.icone}
           </span>
           <span className="mission-corps">
-            <span className="mission-texte">{m.texte}</span>
-            {m.progression && (
-              <span className="mission-progression">
-                <span className="mission-piste" aria-hidden="true">
-                  <i style={{ width: `${Math.min(100, (m.progression.valeur / Math.max(1, m.progression.max)) * 100)}%` }} />
-                </span>
-                <span className="mission-compte">
-                  {m.progression.icone} {nombreAbrege(m.progression.valeur)}/{nombreAbrege(m.progression.max)}
-                </span>
-              </span>
-            )}
+            <span className="mission-texte">{accomplie.texte}</span>
           </span>
-          {m.pret && (
-            <span className="mission-go" aria-hidden="true">
-              ➜
+          <span className="mission-action action-faite">Fait !</span>
+        </div>
+      )}
+      {affichees.map((m, i) => {
+        const possible = m.construction || m.stand !== null
+        return (
+          <button
+            key={m.id}
+            className={`mission ${i === 0 ? 'mission-principale' : ''} ${m.pret ? 'mission-prete' : ''}`}
+            onClick={() => (m.construction ? onConstruire() : m.stand && onAllerAuStand(m.stand))}
+            disabled={!possible}
+            title={m.construction ? 'Ouvrir le menu Bâtiments' : m.stand ? 'Y aller' : ''}
+          >
+            <span className="mission-case" aria-hidden="true" />
+            <span className="mission-icone" aria-hidden="true">
+              {m.icone}
             </span>
-          )}
-        </button>
-      ))}
+            <span className="mission-corps">
+              <span className="mission-texte">{m.texte}</span>
+              {m.progression && (
+                <span className="mission-progression">
+                  <span className="mission-piste" aria-hidden="true">
+                    <i style={{ width: `${Math.min(100, (m.progression.valeur / Math.max(1, m.progression.max)) * 100)}%` }} />
+                  </span>
+                  <span className="mission-compte">
+                    {m.progression.icone} {nombreAbrege(m.progression.valeur)}/{nombreAbrege(m.progression.max)}
+                  </span>
+                </span>
+              )}
+            </span>
+            {possible && <span className={`mission-action ${m.pret ? 'action-go' : ''}`}>{m.pret ? 'Go !' : m.construction ? 'Construire' : 'Aller'}</span>}
+          </button>
+        )
+      })}
     </aside>
   )
 }

@@ -66,7 +66,7 @@ function CarteBatiment({ etat, id, nouveau, onPoser }: { etat: EtatJeu; id: IdBa
         ) : (
           <>
             <PrixConstruction etat={etat} cout={info.cout} />
-            <button className="bouton bouton-petit bouton-acheter" disabled={!peutConstruire(etat, id)} onClick={onPoser}>
+            <button className="bouton bouton-petit bouton-acheter" data-tuto={`poser-${id}`} disabled={!peutConstruire(etat, id)} onClick={onPoser}>
               🏗️ Poser
             </button>
           </>

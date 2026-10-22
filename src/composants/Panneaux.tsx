@@ -140,6 +140,7 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
       />
       <button
         className="bouton bouton-vendre"
+        data-tuto="vendre"
         disabled={gain === 0}
         onClick={() => {
           jouer((e) => vendreLot(e, lot))

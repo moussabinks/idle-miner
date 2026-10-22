@@ -103,9 +103,20 @@
 }
 
 /* Seul le bâtiment survolé ou ouvert brille (un seul à la fois : ça reste léger). */
-.sprite-batiment:hover,
+.sprite-batiment {
+  cursor: pointer;
+  transition: translate 0.15s cubic-bezier(0.3, 1.6, 0.5, 1), filter 0.15s;
+}
+
 .sprite-actif {
   filter: drop-shadow(0 0 10px rgb(255 214 90 / 0.95));
+}
+
+/* Survolé (27/10) : il se soulève un peu, s'éclaire, et prend un liseré blanc et un halo doré,
+   pour dire « je suis cliquable ». */
+.sprite-batiment:hover {
+  translate: 0 -5px;
+  filter: brightness(1.12) saturate(1.1) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 16px rgb(255 214 90));
 }
 
 /* La foreuse qui tourne vibre un peu. */
