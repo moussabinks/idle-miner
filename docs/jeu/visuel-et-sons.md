@@ -1,7 +1,7 @@
 # Le visuel et les sons de Mega Digger
 
 > Le style graphique, les animations, le décor, les bruitages, la musique et l'application installable (PWA).
-> Écrit d'après le code au 22/10, après la refonte de la **mine automatique** (plus de vue de la mine en coupe) : `src/index.css`, `src/blocs.css`, `src/effets.css`, `src/personnel.css`, `src/accueil.css`, `src/village.css`, `src/composants/*.tsx` (dont `iso.ts`, `DessinsVillage.tsx`, `VueVillage.tsx`, `PanneauMine.tsx`, `sprites.ts`, `SceneAccueil.tsx`), `src/sons.ts`, `src/ambiance.ts`, `src/installation.ts`, `public/` (dont `public/images/`). Les règles du village sont dans [village.md](village.md). Ce que fait chaque bouton est dans [interface.md](interface.md).
+> Écrit d'après le code au 22/10, après la refonte de la **mine automatique** (plus de vue de la mine en coupe), mis à jour le 27/10 : `src/index.css`, `src/blocs.css`, `src/effets.css`, `src/personnel.css`, `src/accueil.css`, `src/village.css`, `src/composants/*.tsx` (dont `iso.ts`, `DessinsVillage.tsx`, `VueVillage.tsx`, `PanneauMine.tsx`, `sprites.ts`, `SceneAccueil.tsx`), `src/sons.ts`, `src/ambiance.ts`, `src/installation.ts`, `public/` (dont `public/images/`). Les règles du village sont dans [village.md](village.md). Ce que fait chaque bouton est dans [interface.md](interface.md).
 
 ## Sommaire
 
@@ -22,10 +22,10 @@
 
 - **Tout se passe au village vu du ciel**, qui utilise de vraies images (décidé le 20/10) :
   - **les arbres de la forêt** : `public/images/village/arbres/`, les 12 arbres dessinés par l'équipe, upscalés par IA et détourés ;
-  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, Personnel, foreuse, générateur, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, chacun posé sur une dalle de 5 × 5 pavés, et la **mine** (`mine.webp`, avec ses calques `mine-cabine.webp` et `mine-devant.webp`), calée sur 10 × 10 cases. Chacun est **calé sur la grille** par une matrice CSS, sans déformation (`CALAGES`, `transformationSprite` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe. Les dessins de l'enchanteur et de l'arbre de prestige restent dans le dossier, mais ne servent plus ;
+  - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, Personnel, foreuse, générateur, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, chacun posé sur une dalle de 5 × 5 pavés, et la **mine** (`mine.webp`, avec ses calques `mine-cabine.webp` et `mine-devant.webp`), calée sur 10 × 10 cases. Le Personnel a une seconde image, `employes-miroir.webp`, pour quand il est retourné (§ 7.3). Chacun est **calé sur la grille** par une matrice CSS, sans déformation (`CALAGES`, `transformationSprite` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe. Les dessins de l'enchanteur et de l'arbre de prestige restent dans le dossier, mais ne servent plus ;
   - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel) ;
   - **les personnages** : `public/images/personnages/sprites/*.webp`, découpés dans les planches de l'équipe (voir [§ 4](#4-les-personnages--des-hamsters)).
-- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins dorés, lanternes) : la cabine et le panneau de la mine, le **rayon du générateur**, les chemins de pavés, les décorations (`DessinsVillage.tsx`, `VueVillage.tsx`), la plage. Les **rails** et les **wagonnets** sont, eux, en vraie 3D (voir le § 7.3).
+- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins dorés, lanternes) : la cabine et le panneau de la mine, le **rayon du générateur**, les chemins de pavés, les dessins de décor (`DessinsVillage.tsx`, `VueVillage.tsx` ; depuis le 27/10 ils ne s'achètent plus et ornent seulement la plage et l'accueil), la plage. Les **rails** et les **wagonnets** sont, eux, en vraie 3D (voir le § 7.3).
 - **En CSS** : les **blocs** (le gros bloc à cliquer, et les petits blocs des jauges, du chariot et des statistiques), les éclats, les minerais qui s'envolent, les ventes, les bulles. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « pas de pixel art, pour ne pas ressembler à Minecraft »).
 - **Style cartoon** : formes rondes, cailloux irréguliers, panneaux en bois arrondis, contours sombres.
 - **Thème sombre** (`color-scheme: dark`). Les couleurs de base (`:root` de `index.css`) :
@@ -41,7 +41,7 @@
 | `--vert` / `--rouge` / `--violet` | `#5cc95c` / `#e5534b` / `#a77be8` | ce qu'on a (`.ok`) / ce qui manque (`.manque`) / divers |
 
 - **Polices** : `system-ui` pour le jeu ; **Luckiest Guy** (Google Fonts, toujours en MAJUSCULES) pour le logo, les titres de l'accueil et le gros bouton Jouer. Hors ligne : Arial Black.
-- **Le bois et l'or** : les menus Bâtiments et Décorations, les panneaux des bâtiments et tout l'accueil reprennent les couleurs des images (bois `#8a5a2b`, `#4a2c12`, `#3a2210`, filets et clous dorés `#c8962e`, texte doré `#ffe19a`).
+- **Le bois et l'or** : le menu Bâtiments, les panneaux des bâtiments et tout l'accueil reprennent les couleurs des images (bois `#8a5a2b`, `#4a2c12`, `#3a2210`, filets et clous dorés `#c8962e`, texte doré `#ffe19a`).
 - Les chiffres qui changent (argent, compteurs, étiquettes) utilisent `tabular-nums` pour ne pas trembler.
 - **Mouvements réduits** : quand le système demande `prefers-reduced-motion: reduce`, presque toutes les animations sont coupées ; le compteur d'argent saute directement à sa valeur.
 - Les couleurs des boutons par sorte d'action : voir [interface.md § 14](interface.md#14-les-couleurs-des-boutons).
@@ -69,14 +69,17 @@ Chaque bloc est un **galet arrondi** (`border-radius` irrégulier), avec du reli
 
 ## 3. Le bloc à cliquer de la mine (`village.css`)
 
-Le haut du panneau de la mine (`BlocACliquer` dans `PanneauMine.tsx`) :
+Le haut du panneau de la mine (`BlocACliquer` dans `PanneauMine.tsx`, refait le 27/10), sous le titre « Niveau *N* · *nom* » :
 
-- **Le cadre** : une zone sombre comme une galerie (dégradé radial brun `#3d2c1c → #1d140c`, ombre intérieure), avec le bloc à gauche et le texte à droite (« 👆 Clique : ⚫ Charbon », la chance de doubler).
-- **Le bloc** : un gros galet de **108 px** (le dessin des blocs ci-dessus). Chaque nouveau bloc « **pousse** » à sa place (il grandit de 60 % à 100 %, 0,18 s, `bloc-pousse`). Au clic, il **s'enfonce** un peu (92 %).
+- **Le cadre** : une zone sombre comme une galerie (dégradé radial brun `#4a3522 → #1d140c`, ombre intérieure, bord doré très léger), avec le bloc **au milieu** et le texte **dessous**, en colonne (« 👆 ⚫ Charbon », la chance de doubler). Le bord doré et une lueur orange s'allument avec le **combo** (variable CSS `--ardeur`, de 0 à 1).
+- **Le bloc** : un très gros galet de **150 px** (le dessin des blocs ci-dessus), posé sur un **halo doré** (`.halo-bloc-mine`) qui grandit avec le combo. Chaque nouveau bloc « **pousse** » à sa place (il grandit de 60 % à 100 %, 0,18 s, `bloc-pousse`). Au clic, il **s'enfonce** un peu (92 %).
 - **Pioche cassée** : après le premier clic, le bloc est **fissuré** (deux traits noirs en travers, `.bloc-fissure`).
 - **Coffre plein** : le bloc est **grisé** et assombri, et le curseur dit qu'on ne peut pas cliquer.
 - **Les éclats** (`.eclats-bloc-mine`) : 5 petits cailloux de la couleur du bloc qui volent de tous les côtés en tournant puis retombent (0,55 s, `eclat-saute`). Au plus 5 séries à la fois.
 - **Ce qui tombe** (`.trouvaille-bloc-mine`) : une pastille « +1 ⚫ » qui monte au-dessus du bloc et s'efface (1,5 s, `trouvaille`). Doublé : « +2 💎 ×2 ! », **en doré**, plus grande, bordée et éclairée d'or (`.trouvaille-double`). Au plus 4 à la fois.
+- **Le combo** (27/10) : les clics à moins de 0,9 s d'écart s'additionnent ; dès 3, une pastille orange « 🔥 ×*N* » en bas à droite du bloc saute à chaque clic (`.combo-mine`, `combo-saute`), plus grosse et dorée dès 25 (`.combo-gros`) ; dès 10, le bloc a un liseré doré (`.zone-en-feu`). Un son à chaque palier (`sons.combo`, § 8.1). Seulement pour le plaisir : aucun effet sur le jeu.
+- **Le tableau de production** (27/10, `.tableau-production`) : juste dessous, une carte en bois sombre : le total en gros chiffres dorés (« 1,2 blocs/s ») et « ≈ *X* $/min », trois cases (⚙️ Mine, 👷 Mineurs, 👆 Toi, qui s'allume quand tu cliques), puis une ligne par mineur (`.rendement-mineur`) avec une barre de la couleur de sa rareté. Coffre plein : le total passe au gris (`.production-arretee`).
+- **La barre du coffre**, plus bas, est plus grosse (`.barre-coffre-mine`).
 
 ---
 
@@ -91,7 +94,7 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 | **Le manager** | seulement sa vue de face (`manager_devant`) : il reste à son poste |
 | **Le recruteur** | seulement sa vue de face (`recruteur_devant`) |
 
-**Les tenues du Bazar** (chapeaux, hauts) **ne se voient pas sur le personnage** : seul l'aperçu du panneau des tenues (`PanneauTenues.tsx`) les montre, avec l'ancien hamster en SVG (`Hamster.tsx`). Il faudra une planche du joueur de l'équipe.
+Les **tenues du Bazar** (chapeaux, hauts), qui ne se voyaient que dans un aperçu avec l'ancien hamster en SVG, sont **retirées le 27/10** (avec `PanneauTenues.tsx` et `Hamster.tsx`). Il faudra une planche du joueur de l'équipe.
 
 ### 4.1 Au village : `Perso` (`ElementsVillage.tsx`)
 
@@ -115,7 +118,8 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 | Effet | Quand | Description |
 |---|---|---|
 | **Grosse vente** | chaque vente du joueur (marché, chariot de la foreuse) | « +*X* $ » en grosses lettres jaunes contournées de brun, au milieu en haut : apparaît en grossissant, se pose, monte et s'efface (1,8 s), avec une **gerbe de 12 pièces** dorées |
-| **Petit gain** | argent qui n'est pas une vente du joueur (un wagonnet qui vend au marché) | « +*X* $ » doré qui monte et s'efface (1,2 s), en haut au milieu de l'écran (`.gains-village`) |
+| **Petit gain** | argent qui n'est ni une vente du joueur ni une vente de wagonnet | « +*X* $ » doré qui monte et s'efface (1,2 s), en haut au milieu de l'écran (`.gains-village`) |
+| **Vente au marché** (27/10) | un wagonnet vend au marché (événement `'wagonnet'`, `ventesMarche` dans `usePartie.ts`) | **au-dessus du bâtiment Marché**, sur la carte : un gros « +*X* $ » doré qui jaillit en grossissant, se pose avec un petit rebond, monte et s'efface (2,2 s, `.vente-marche`) ; derrière, un **éclair de lumière** qui s'élargit, et une **gerbe de 10 pièces** en éventail vers le haut (`.piece-marche`). Au plus 3 à la fois |
 | **Compteur qui défile** | toute variation d'au moins 5 $ | l'argent du bandeau défile jusqu'à la nouvelle somme en 0,6 s |
 | **Compteur qui saute** | chaque vente | grossit à 130 % en virant au jaune lumineux (0,5 s) |
 
@@ -124,6 +128,8 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 | Effet | Description |
 |---|---|
 | Coffre ou sac plein | la case Mine ou Sac du bandeau a une bordure rouge, tremble et s'entoure d'un halo rouge (en boucle) |
+| Jauge du coffre au-dessus de la mine (27/10) | toujours là : « 📦 *n* / *capacité* » sur une barre **verte**, **orange** dès 75 % (`jauge-haute`), **rouge** et qui grossit puis rétrécit en boucle quand le coffre est plein (`jauge-pleine`) ; figée si le système demande moins de mouvement |
+| Combo du bloc de la mine (27/10) | dès 3 clics rapides, une pastille orange « 🔥 ×*N* » saute à chaque clic (`combo-saute`), plus grosse et plus dorée à partir de 25 ; le cadre du bloc et un **halo doré** (un dégradé, sans flou) brillent de plus en plus jusqu'à un combo de 50 (`--ardeur`) ; à partir de 10, le bloc a un liseré doré (`zone-en-feu`) |
 | Prochain objectif prêt | bordure verte, halo vert qui pulse (1,6 s) |
 | Bulles de notification du village | sautent de 6 px en grossissant un peu (0,9 s), couleur selon la sorte (voir [§ 7.4](#74-les-bulles-de-notification)) |
 | Pastille du bouton 🏗️ Bâtiments, ruban « Nouveau ! » du menu | sautent (0,8 s) |
@@ -146,7 +152,7 @@ Dans la même direction artistique que le village (bois, or, lanternes) :
 
 - **Le fond de la page** : un dégradé brun très sombre avec une lueur verte en haut, fixe. L'accueil a son propre empilement (`isolation: isolate`) pour que ce fond passe devant celui de la page.
 - **Le bandeau « héros »** : un cadre en bois sombre (`#4a2c12`, 5 px) avec un filet doré à l'intérieur, coins de 22 px. Dedans, **un petit village vivant** (`SceneAccueil.tsx`) dessiné exactement comme dans le jeu (mêmes images, mêmes dessins SVG, mêmes personnages) :
-  - la mine, les bâtiments (générateur compris ; le marché et le forgeron retournés), 26 décorations (fontaine, statue, cerisiers, sapins, arbres, lanternes, tonneau, caisse, banc, rocher, buissons, fleurs), un bout de rails avec un virage et des chemins de pavés ;
+  - la mine, les bâtiments (générateur compris ; le marché et le forgeron retournés), 27 décorations (ses propres dessins de décor, `DECORATIONS_SCENE` : fontaine, statue, cerisiers, sapins, arbres, lanternes, tonneau, caisse, banc, rocher, buissons, fleurs), un bout de rails avec un virage et des chemins de pavés ;
   - 4 mineurs (légendaire, épique, rare, mythique) qui font des **allers-retours** entre la mine et le marché, la forge ou le Personnel (2,2 cases/s, une pause de 1,2 s à chaque bout, un sac de minerais sur le dos vers le marché), un **wagonnet** (en 3D, plein de minerais, 26/10) qui fait la navette sur les rails, le joueur immobile devant la mine, le manager et le recruteur devant le Personnel ;
   - tout est posé dans la moitié droite de la clairière ; le cadrage remplit la boîte comme une photo recadrée : sur un écran large, le village entier tient dans la moitié droite ; sur une boîte étroite (téléphone), on voit le milieu de la mine, un peu plus gros, dans le haut ;
   - animé à chaque image (`requestAnimationFrame`) ; ce qui ne bouge pas n'est dessiné qu'une fois ; avec « mouvements réduits », la scène reste figée ;
@@ -179,14 +185,14 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 | 1 | **Terrain** (`TerrainVillage`, un SVG dessiné une seule fois) | le sous-bois sombre, une auréole d'herbe floue, le **damier**, à peine visible depuis le 24/10 (`#83bf3e` / `#7eb83a`), dont le bord s'efface dans l'herbe ; par-dessus, une **texture d'herbe** qui se répète sans couture (`public/images/sol/herbe.webp`, 256 px), une soixantaine de grandes **taches** très floues (soleil, herbe haute, herbe sèche, `TachesHerbe`), et les petits détails de l'herbe : touffes, brins, fleurs, trèfles, petits cailloux ombrés et champignons rouges à pois blancs |
 | 1 bis | **Forêt derrière** (tuiles de canvas) et **plage** | les arbres du haut et des côtés ; le sable (texture `sable.webp`) et la mer |
 | 2 | **Sol** (`sol-village`, un SVG de la taille du monde) | les ombres des bâtiments, les chemins de pavés, les rails, le losange en tirets dorés du bâtiment actif, le **rayon du générateur**, le losange vert ou rouge de ce qu'on pose, et la **grille de construction** (`GrilleConstruction`, 24/10) : de fines lignes blanches sur les cases, seulement quand on pose ou déplace quelque chose, ou qu'on peint des rails ou des chemins |
-| 3 | **Objets** | bâtiments, mine (et sa cabine), décorations, personnages, wagonnets, triés par profondeur |
+| 3 | **Objets** | bâtiments, mine (et sa cabine), personnages, wagonnets, triés par profondeur |
 | 3 bis | **Forêt devant** (`z-index` 90 000) | les arbres du bas de la carte, devant tout le reste |
 | 3 ter | **La vie du village** (`AmbianceVillage.tsx`, `z-index` 99 990, 23/10) | des **papillons** de couleur qui font des boucles en battant des ailes, des **vols d'oiseaux** qui traversent le ciel avec leur ombre sur l'herbe, et l'**ombre des nuages** qui glisse lentement sur la carte. Tout en CSS, aux mêmes places à chaque fois (hasard à graine fixe) |
-| 4 | **Bulles** (`z-index` 100 000) | les bulles de notification, toujours devant tout |
+| 4 | **Bulles** (`z-index` 100 000) | les bulles de notification, la jauge du coffre au-dessus de la mine et les « +*X* $ » des ventes au marché (27/10), toujours devant tout |
 
 ### 7.3 Les dessins
 
-- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne, le **générateur brille** quand il donne du courant (`.sprite-electrique`). Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
+- **Les bâtiments** : les images calées sur la grille, avec une ombre portée douce. **Retournés** (bouton ↔), l'image est d'abord mise en miroir puis calée de la même façon. **Les écritures restent lisibles** (27/10) : pour un bâtiment qui a du texte peint (pour l'instant seulement l'enseigne « HIRING » du Personnel), on utilise une image toute prête, `employes-miroir.webp`, où chaque panneau à texte est **déjà retourné sur place, avec sa pente inversée** ; une fois toute l'image retournée, le panneau revient à l'endroit, penché dans le bon sens. Elle est fabriquée par `outils/batiments/textes_miroir.py` (Pillow ; les panneaux de chaque bâtiment y sont décrits par leurs bords et leur pente) et choisie par `imageBatiment(id, miroir)` (`IMAGES_BATIMENTS_MIROIR` dans `iso.ts`). Survolés ou actifs : une **lueur dorée**. La **foreuse vibre** quand elle tourne, le **générateur brille** quand il donne du courant (`.sprite-electrique`). Ce qu'on pose (le fantôme) est un peu transparent et pulse ; il **rougit** quand la place est prise.
 - **La mine** : l'image fournie (`mine.webp`), et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
   - **la cabine de l'ascenseur** (`mine-cabine.webp`, tirée du dessin « mine avec ascenseur »), dès qu'il est construit, pendue à **deux câbles** (gris en pointillés sur un trait sombre) qui partent du treuil. Elle **suit le premier mineur qui monte ou descend** (`hauteurCabine` : 0 = en haut, 1 = en bas, selon l'avancée de son trajet) et attend en haut le reste du temps. En bas, elle passe derrière la barrière et le sol de devant (`mine-devant.webp`, dessiné par-dessus). Sans ascenseur, les câbles pendent au fond du puits ;
   - **un panneau en bois** planté sur le sol de devant, à gauche, avec « Niv. *N* ».
@@ -210,10 +216,10 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 - **Le rayon du générateur** (`RayonGenerateur`) : un cercle de *R* cases autour du centre du générateur, dessiné comme un polygone de 64 points projeté sur la grille (une ellipse à l'écran). **Pointillés jaunes** (`rgb(255 214 60)`) avec un fond jaune très léger. Quand on est devant le générateur ou qu'on le pose : plus épais, plus visible, et les **pointillés tournent** (`rayon-tourne`, 1,6 s). Sans courant : **gris**. Caché s'il ne donne pas de courant et qu'on ne le regarde pas.
 - **Le trajet en surbrillance** (26/10, quand on embauche un pousseur au Personnel) : les cases de ses rails s'allument en **or** l'une après l'autre, comme une vague (`.case-trajet`, `trajet-brille`, 1,4 s), et ses deux bâtiments sont entourés d'un **pointillé doré qui tourne** (`.emprise-trajet`, `trajet-tourne`, 1,2 s). Sans animation si le système demande moins de mouvement (`prefers-reduced-motion`).
 - **Les chemins** (`CaseChemin`) : des pavés gris clair sur de la terre beige.
-- **Les rochers** (`Rochers.tsx`, 24/10 : `Rocher`, `TasDeRochers`) : un petit **volume à facettes** (low-poly), éclairé d'en haut à gauche comme les bâtiments, avec un contour foncé, des fissures, un reflet sur l'arête éclairée, parfois de la mousse ; dans l'eau, le pied est plus foncé et mouillé. Toujours le même à la même place (une « graine »). Ils servent pour la décoration « rocher », les rochers de la mer, les pierres du feu de camp et les galets de la plage.
-- **La plage** (`PlageVillage.tsx`) : le sable a sa texture (`sable.webp`), des rides du vent et une bande mouillée qui brille près de l'eau ; des galets en relief, des algues, du bois flotté, des traces de pas qui partent du ponton et **deux crabes** qui se promènent de côté.
+- **Les rochers** (`Rochers.tsx`, 24/10 : `Rocher`, `TasDeRochers`) : un petit **volume à facettes** (low-poly), éclairé d'en haut à gauche comme les bâtiments, avec un contour foncé, des fissures, un reflet sur l'arête éclairée, parfois de la mousse ; dans l'eau, le pied est plus foncé et mouillé. Toujours le même à la même place (une « graine »). Ils servent pour le dessin du rocher, les rochers de la mer, les pierres du feu de camp et les galets de la plage.
+- **La plage** (`PlageVillage.tsx`) : le sable a sa texture (`sable.webp`), des rides du vent et une bande mouillée qui brille près de l'eau ; des galets en relief, des algues, du bois flotté, des traces de pas qui partent du ponton et **deux crabes** qui se promènent de côté. **Quand la caméra ne la voit pas** (27/10), ses animations (l'eau `EauPlage`, les objets `ObjetsPlage`) sont mises en pause : le monde reçoit la classe `plage-cachee` (`animation-play-state: paused`) quand aucun des rectangles `BOITES_PLAGE` (`plage.ts`, 24 morceaux le long de la côte en diagonale) n'est à l'écran.
 - **Les textures du sol** (`public/images/sol/herbe.webp` et `sable.webp`) sont fabriquées par `outils/sol/textures.py`.
-- **Les décorations** (`DessinDecoration`) : fleurs, buisson, rocher (en relief), tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs, fontaine (son jet pulse), statue du hamster d'or.
+- **Les dessins de décor** (`DessinDecoration`) : fleurs, buisson, rocher (en relief), tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs, fontaine (son jet pulse), statue du hamster d'or. Depuis le 27/10, on ne les achète plus pour le village : ils servent à la **plage** (caisses, tonneaux, lanterne, rochers, buissons) et au village de l'**écran d'accueil**.
 - **Les personnages** : voir [§ 4.1](#41-au-village--perso-elementsvillagetsx).
 
 ### 7.4 Les bulles de notification
@@ -242,7 +248,7 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `rare` | or, émeraude ou diamant cassé | une pluie d'étincelles qui monte |
 | `pieces(2)` | un minerai **doublé** | 2 pièces |
 | `vente` | une vente (marché, chariot de la foreuse) | « ka-ching ! » de caisse, puis des pièces : **plus la vente est grosse, plus il y a de pièces** (3 à 12) |
-| `pieces(3)` | un wagonnet a vendu au marché | 3 pièces discrètes |
+| `venteMarche(montant)` | un wagonnet a vendu au marché (27/10, remplace `pieces(3)`) | la **cloche du marché** (deux notes claires), puis le « ka-ching ! » et la cascade de pièces de `vente` (plus la vente est grosse, plus il y a de pièces) ; à partir de **1 000 $**, une petite **fanfare** de 4 notes qui monte |
 | `achat` | un achat sans amélioration (construction, rachat, réparation, embauche…) | « pop » puis deux notes qui montent, et 2 pièces |
 | `amelioration` | un niveau de plus (mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur) : remplace alors `achat` | trois notes qui montent « niveau supérieur ! » |
 | `piocheCassee` | la pioche en main casse | « clang » triste |
@@ -254,7 +260,8 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `construction` | un nouveau bâtiment est posé (`App.tsx`) | trois coups de marteau sur du bois, puis trois notes |
 | `rail` | une case de rails posée au pinceau (`App.tsx`) | un « clang » de métal et la traverse en bois |
 | `wagonnet` | un wagonnet passe sur un joint de rail (une fois par case, `WagonnetVillage.tsx`) | « ta-tac », plus doux quand il est électrique |
-| `cloche` | un wagonnet arrive au bout de son trajet | une petite cloche |
+| `cloche` | un wagonnet arrive au bout de son trajet (`WagonnetVillage.tsx`), **sauf au marché** depuis le 27/10 (là, c'est `venteMarche` qui sonne) | une petite cloche |
+| `combo(palier)` | un palier de combo au bloc de la mine : 10, 25, 50, 100, 200, 500 clics rapides (`PanneauMine.tsx`, 27/10) | un petit arpège qui monte, plus haut à chaque palier |
 | `electricite` | on met de la redstone dans le générateur | un grésillement électrique qui monte |
 
 Retirés le 22/10 (avec la mine en coupe, ses blocs spéciaux et le prestige) : `lave`, `coffre`, `geode`, `nouvelleCouche`, `ding` (l'ascenseur), l'ancien `pas` (l'échelle), `talent` et `prestige`.
@@ -317,7 +324,7 @@ Toutes ont le même dessin : sur un fond carré arrondi gris-bleu très sombre (
 
 Enregistré **seulement en production** (`enregistrerServiceWorker` dans `src/installation.ts`, appelé par `main.tsx` ; en développement le cache gênerait), au chargement de la page, avec `updateViaCache: 'none'`. S'il échoue (navigation privée…), le jeu marche quand même, sans hors ligne.
 
-- Cache **`idle-miner-v12`** (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 10 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, foreuse, forgeron, generateur, marche, rails), les 4 tuiles de `images/rails/`, les 2 textures de `images/sol/` (herbe, sable), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
+- Cache **`idle-miner-v18`** (27/10) (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 11 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, employes-miroir, foreuse, forgeron, generateur, marche, rails), les 25 tuiles de `images/rails/` (talus, voie, virages doux, butoirs), les 2 textures de `images/sol/` (herbe, sable), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
 - Seules les requêtes **GET de notre propre site** passent par lui (Supabase n'est jamais mis en cache).
 
 | Requête | Stratégie |

@@ -32,7 +32,6 @@ export const SUCCES: Succes[] = [
   { id: 'riche', emoji: '💰', titre: 'Riche', description: 'Gagner 5 000 $', condition: (e) => e.stats.argentGagne >= 5000 },
   { id: 'millionnaire', emoji: '🤑', titre: 'Magnat', description: 'Gagner 100 000 $', condition: (e) => e.stats.argentGagne >= 100000 },
   { id: 'architecte', emoji: '🏗️', titre: 'Architecte', description: 'Poser 5 bâtiments au village', condition: (e) => e.village.batiments.length >= 6 },
-  { id: 'paysagiste', emoji: '🌸', titre: 'Paysagiste', description: 'Poser 10 décorations au village', condition: (e) => e.village.decorations.length >= 10 },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

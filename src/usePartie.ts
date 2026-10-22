@@ -28,6 +28,7 @@ const DUREE_TOAST = 3500 // ms
 const DUREE_GAIN = 1200 // ms
 const DUREE_VENTE = 1800 // ms, la grosse animation d'une vente
 const DUREE_ECLATS = 600 // ms
+const DUREE_VENTE_MARCHE = 2200 // ms : le « +X $ » au-dessus du marché quand un wagonnet y vend
 const DUREE_TROUVAILLE = 1500 // ms
 const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
 const ABSENCE_MAX = 8 * 60 * 60 // la mine travaille au plus 8 h pendant que le jeu est fermé
@@ -59,7 +60,7 @@ function jouerSons(evenements: Evenement[]): void {
         sons.piocheCassee()
         break
       case 'wagonnet':
-        sons.pieces(3)
+        sons.venteMarche(evenement.montant)
         break
       case 'electricite':
         sons.electricite()
@@ -101,6 +102,8 @@ export function usePartie(idMonde: string) {
     depart.messageAbsence ? [{ id: ID_MESSAGE_ABSENCE, texte: depart.messageAbsence, succes: false }] : [],
   )
   const [gains, setGains] = useState<Gain[]>([])
+  // Les ventes des wagonnets, montrées au-dessus du marché (dans le village).
+  const [ventesMarche, setVentesMarche] = useState<Gain[]>([])
   const [eclats, setEclats] = useState<Eclat[]>([])
   const [trouvailles, setTrouvailles] = useState<Trouvaille[]>([])
   // Augmente à chaque vente : le compteur d'argent du bandeau « saute ».
@@ -125,6 +128,12 @@ export function usePartie(idMonde: string) {
     const gain = { id: prochainId++, montant, vente }
     setGains((liste) => [...liste, gain])
     setTimeout(() => setGains((liste) => liste.filter((g) => g.id !== gain.id)), vente ? DUREE_VENTE : DUREE_GAIN)
+  }, [])
+
+  const afficherVenteMarche = useCallback((montant: number) => {
+    const vente = { id: prochainId++, montant, vente: true }
+    setVentesMarche((liste) => [...liste.slice(-2), vente])
+    setTimeout(() => setVentesMarche((liste) => liste.filter((v) => v.id !== vente.id)), DUREE_VENTE_MARCHE)
   }, [])
 
   // Les animations qui vont avec les événements (éclats, minerais trouvés, ventes).
@@ -162,9 +171,12 @@ export function usePartie(idMonde: string) {
       ])
       const evenements = evenementsEntre(ancien, copie)
       // La grande animation seulement pour tes ventes ; un petit « +X $ » pour le reste (wagonnet...).
+      // Un wagonnet qui vend au marché : son « +X $ » s'affiche au-dessus du marché.
       const vente = evenements.find((e) => e.type === 'vente')
+      const venteWagonnet = evenements.find((e) => e.type === 'wagonnet')
+      if (venteWagonnet) afficherVenteMarche(venteWagonnet.montant)
       if (vente) afficherGain(vente.montant, true)
-      else if (copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, false)
+      else if (!venteWagonnet && copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, false)
       jouerSons(evenements)
       if (succes.length > 0) sons.succes()
       animer(evenements)
@@ -172,7 +184,7 @@ export function usePartie(idMonde: string) {
       changerEtat(copie)
       return copie
     },
-    [afficherToasts, afficherGain, animer, changerEtat],
+    [afficherToasts, afficherGain, afficherVenteMarche, animer, changerEtat],
   )
 
   // ... et on retire le message d'absence au bout de quelques secondes.
@@ -233,5 +245,5 @@ export function usePartie(idMonde: string) {
     setToasts([])
   }, [changerEtat])
 
-  return { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer }
+  return { etat, toasts, gains, ventesMarche, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer }
 }

@@ -1,6 +1,6 @@
 # Équilibrage : toutes les données et les formules
 
-> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique ; trajets des wagonnets le 24/10 : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `tenues.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
+> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique ; trajets des wagonnets le 24/10 : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
 > Pour le fonctionnement de chaque bâtiment (boutons, messages, cas limites), voir les fiches de [../batiments/](../batiments/README.md). Pour le village vu du ciel (grille, placement, menus), voir [village.md](village.md). Pour le concept et la progression en un coup d'œil, voir [vue-d-ensemble.md](vue-d-ensemble.md).
 
 Conventions : « bloc/s » = blocs par seconde ; les distances au village sont en **cases** de la grille. Les niveaux affichés commencent à 1 ; dans le code, la plupart sont des index qui commencent à 0 (coffre, sac, wagonnet, générateur, forage, chariot, pioches des mineurs). Plus de prestige, de bonus de vente, de talents ni d'enchantements depuis le 22/10 (archivés dans `archives/`).
@@ -18,7 +18,7 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 9. [Le générateur](#le-générateur)
 10. [La foreuse](#la-foreuse)
 11. [Les mineurs employés](#les-mineurs-employés)
-12. [Le village : constructions, décorations, tenues, trajets](#le-village)
+12. [Le village : constructions, rails et chemins, trajets](#le-village)
 13. [Revenus par seconde](#revenus-par-seconde)
 14. [Ce que coûte chaque niveau de la mine](#ce-que-coûte-chaque-niveau-de-la-mine)
 15. [Le bot de simulation](#le-bot-de-simulation)
@@ -78,10 +78,10 @@ Les prix ne changent jamais (pas de prix variables, plus de bonus de vente). Une
 
 | Pour aller au niveau | Prix (`cout`) | Ce qui se débloque |
 |---|---|---|
-| 2 | 400 $ + 30 fer | Foreuse, Générateur (`niveauMine: 2`) ; cerisier, haut-de-forme |
-| 3 | 2 500 $ + 60 fer + 30 redstone | Recruteur (`NIVEAU_MINE_RECRUTEUR`) ; fontaine, gilet doré |
-| 4 | 9 000 $ + 60 redstone + 30 or | Manager (`NIVEAU_MINE_MANAGER`) ; couronne |
-| 5 | 30 000 $ + 60 or + 25 émeraude | statue du hamster d'or |
+| 2 | 400 $ + 30 fer | Foreuse, Générateur (`niveauMine: 2`) |
+| 3 | 2 500 $ + 60 fer + 30 redstone | Recruteur (`NIVEAU_MINE_RECRUTEUR`) |
+| 4 | 9 000 $ + 60 redstone + 30 or | Manager (`NIVEAU_MINE_MANAGER`) |
+| 5 | 30 000 $ + 60 or + 25 émeraude | (le dernier niveau : le diamant) |
 
 Total pour aller au niveau 5 : **41 900 $ + 90 fer + 90 redstone + 90 or + 25 émeraude**. Chaque niveau donne aussi **2 mineurs de plus** au maximum.
 
@@ -272,46 +272,16 @@ Une grille de **60 × 60 cases** (`TAILLE_GRILLE`). Le fonctionnement (menus, pl
 - Total au niveau 1 (marché, forgeron, bazar, Personnel) : **180 $ + 70 pierre**. Tous les bâtiments : **2 180 $ + 130 pierre + 80 fer + 20 redstone**.
 - On paie une seule fois ; déplacer ou retourner est gratuit ; on ne peut pas enlever un bâtiment.
 
-### Rails, chemins, décorations
+### Rails et chemins
 
 | Élément | Prix | Remarques |
 |---|---|---|
 | 🛤️ Rail (1 case) | **3 fer** (`COUT_RAIL`) | dès le début |
 | 🪨 Chemin de pavés (1 case) | 5 $ (`COUT_CHEMIN`) | seulement joli |
 
-Enlever un rail, un chemin ou une décoration ne rembourse rien ; les déplacer est gratuit.
+Enlever un rail ou un chemin ne rembourse rien ; les déplacer est gratuit.
 
-Décorations (`DECORATIONS`, payées en argent). « Bloque » = on ne marche pas à travers.
-
-| Décoration | Taille | Prix | Bloque | Niveau de mine |
-|---|---|---:|:---:|---:|
-| Fleurs rouges | 1 × 1 | 15 $ | non | 1 |
-| Fleurs jaunes | 1 × 1 | 15 $ | non | 1 |
-| Fleurs violettes | 1 × 1 | 20 $ | non | 1 |
-| Buisson | 1 × 1 | 30 $ | non | 1 |
-| Rocher | 1 × 1 | 25 $ | oui | 1 |
-| Tonneau | 1 × 1 | 40 $ | oui | 1 |
-| Banc | 1 × 1 | 60 $ | oui | 1 |
-| Lanterne | 1 × 1 | 80 $ | oui | 1 |
-| Caisse de minerais | 1 × 1 | 120 $ | oui | 1 |
-| Grand arbre | 2 × 2 | 150 $ | oui | 1 |
-| Sapin | 2 × 2 | 150 $ | oui | 1 |
-| Cerisier en fleurs | 2 × 2 | 600 $ | oui | 2 |
-| Fontaine | 2 × 2 | 2 500 $ | oui | 3 |
-| Statue du hamster d'or | 2 × 2 | 20 000 $ | oui | 5 |
-
-### Les tenues du joueur (`TENUES`, au Bazar)
-
-Seulement pour le style, payées en argent ; on change de tenue gratuitement (`tenues.ts`). Un chapeau et un haut à la fois.
-
-| Chapeau | Prix | Niveau de mine | | Haut | Prix | Niveau de mine |
-|---|---:|---:|---|---|---:|---:|
-| Bandana rouge | 150 $ | 1 | | Gilet en cuir | 400 $ | 1 |
-| Casquette bleue | 300 $ | 1 | | Salopette de mineur | 900 $ | 1 |
-| Chapeau de paille | 600 $ | 1 | | Gilet doré | 12 000 $ | 3 |
-| Casque de chantier | 1 200 $ | 1 | | | | |
-| Haut-de-forme | 5 000 $ | 2 | | | | |
-| Couronne | 30 000 $ | 4 | | | | |
+Les **décorations** à acheter (fleurs, arbres, fontaine, statue…) et les **tenues** du joueur (Bazar) sont **retirées depuis le 27/10** : elles ne coûtaient que de l'argent et ne changeaient rien au jeu. Les dessins des décorations restent pour la plage et l'écran d'accueil.
 
 ### Vitesses et trajets
 
@@ -322,7 +292,7 @@ Seulement pour le style, payées en argent ; on change de tenue gratuitement (`t
 | `SECONDES_FORGE_EMPLOYE` | 3 s | un mineur récupère sa nouvelle pioche à la forge |
 | `RAYON_BATIMENT` | 1,3 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
 
-- **Distance à pied** (`distanceEntre`) : de la case devant l'entrée d'un bâtiment à celle de l'autre, par le plus court chemin en 8 directions (une diagonale compte √2, on ne coupe pas le coin d'un bâtiment), en contournant ce qui bloque (`trouverChemin`, A étoile).
+- **Distance à pied** (`distanceEntre`) : de la case devant l'entrée d'un bâtiment à celle de l'autre, par le plus court chemin en 8 directions (une diagonale compte √2, on ne coupe pas le coin d'un bâtiment), en contournant les bâtiments, seuls obstacles depuis le 27/10 (`trouverChemin`, A étoile).
 - **Le joueur ne marche pas** pendant qu'il pousse un wagonnet : il fait l'aller-retour avec lui (3 cases/s).
 
 ## Revenus par seconde

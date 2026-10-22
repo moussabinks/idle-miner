@@ -90,6 +90,20 @@ describe('sauvegarde', () => {
     expect(etat?.employes.map((e) => e.trajet)).toEqual(['mine-marche', null])
   })
 
+  it('une partie avec des tenues et des décorations (retirées le 27/10) se charge sans elles', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    const ancienne = {
+      ...etat,
+      tenue: { chapeau: 'bandana', haut: null },
+      tenuesAchetees: ['bandana'],
+      succes: [...etat.succes, 'paysagiste'],
+      village: { ...etat.village, decorations: [{ n: 1, id: 'buisson', x: 3, y: 3, miroir: false }], prochainNumero: 2 },
+    }
+    const stockage = fauxStockage()
+    stockage.setItem(cleMonde('1'), JSON.stringify(ancienne))
+    expect(charger(stockage, '1')).toEqual(etat)
+  })
+
   it('compte le temps passé depuis la dernière sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)

@@ -209,7 +209,12 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
     const convertie = convertirVersion22(convertirVersion21(donnees))
-    return estUnEtatValide(convertie) ? convertie : null
+    if (!estUnEtatValide(convertie)) return null
+    // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
+    // celles des anciennes parties (et le succès « Paysagiste »).
+    const { tenue: _tenue, tenuesAchetees: _tenuesAchetees, ...etat } = convertie as EtatJeu & { tenue?: unknown; tenuesAchetees?: unknown }
+    const { decorations: _decorations, prochainNumero: _prochainNumero, ...village } = etat.village as typeof etat.village & { decorations?: unknown; prochainNumero?: unknown }
+    return { ...etat, village, succes: etat.succes.filter((id) => id !== 'paysagiste') }
   } catch {
     return null
   }
@@ -298,8 +303,6 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
     typeof etat.village === 'object' &&
-    Array.isArray(etat.village?.batiments) &&
-    typeof etat.tenue === 'object' &&
-    Array.isArray(etat.tenuesAchetees)
+    Array.isArray(etat.village?.batiments)
   )
 }

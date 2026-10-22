@@ -92,8 +92,6 @@ const CHEMINS_SCENE: Case[] = [
 function villageDeLaScene(): Village {
   const village = nouveauVillage()
   village.batiments = BATIMENTS_SCENE.map((b) => ({ ...b }))
-  village.decorations = DECORATIONS_SCENE.map((d, n) => ({ n, id: d.id, x: d.x, y: d.y, miroir: d.miroir ?? false }))
-  village.prochainNumero = DECORATIONS_SCENE.length
   village.rails = RAILS_SCENE.map((c) => cleCase(c.x, c.y))
   village.chemins = CHEMINS_SCENE.map((c) => cleCase(c.x, c.y))
   return village
@@ -162,14 +160,15 @@ function objetsFixes(): ReactNode[] {
       objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe={b.id === 'foreuse' ? 'sprite-vibre' : ''} />)
     }
   }
-  for (const d of VILLAGE.decorations) {
+  // Les décorations du décor (on ne les achète plus dans le jeu, mais elles ornent l'accueil).
+  DECORATIONS_SCENE.forEach((d, n) => {
     const t = DECORATIONS[d.id].taille
     objets.push(
-      <BoiteSvg key={`d${d.n}`} x={d.x} y={d.y} taille={t} hauteur={hauteurDecoration(d.id)} style={{ zIndex: profondeur(d.x + t / 2, d.y + t / 2) }}>
-        <DessinDecoration id={d.id} x={d.x} y={d.y} taille={t} miroir={d.miroir} />
+      <BoiteSvg key={`d${n}`} x={d.x} y={d.y} taille={t} hauteur={hauteurDecoration(d.id)} style={{ zIndex: profondeur(d.x + t / 2, d.y + t / 2) }}>
+        <DessinDecoration id={d.id} x={d.x} y={d.y} taille={t} miroir={d.miroir ?? false} />
       </BoiteSvg>,
     )
-  }
+  })
 
   // Le joueur, devant la mine.
   objets.push(

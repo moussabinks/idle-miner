@@ -1,5 +1,5 @@
 // Données du jeu : blocs, niveaux de la mine, pioches, sacs, mineurs, foreuse, générateur,
-// bâtiments, décorations et tenues.
+// bâtiments et décorations.
 // Depuis le 22/10, la mine tourne toute seule (plus de vue en coupe, plus de profondeur ni de
 // bedrock, plus de prestige) : on clique sur un bloc pour creuser plus vite, on embauche des
 // mineurs, puis on relie la mine au marché avec des rails, d'abord poussés à la main, puis
@@ -415,7 +415,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     id: 'bazar',
     nom: 'Bazar',
     emoji: '🎒',
-    description: 'Sacs à dos et tenues.',
+    description: 'Sacs à dos.',
     taille: 5,
     porte: 'droite',
     niveauMine: 1,
@@ -466,8 +466,8 @@ export const VITESSE_JOUEUR = 5
 // Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.
 export const SECONDES_FORGE_EMPLOYE = 3
 
-// Les décorations : seulement pour faire joli. Les fleurs, buissons et chemins se traversent ;
-// les arbres, rochers, lanternes, fontaines... bloquent le passage.
+// Les dessins du décor (fleurs, rochers, tonneaux, arbres...) : on ne les achète plus (27/10),
+// mais ils ornent la plage et le village de l'écran d'accueil.
 export type IdDecoration =
   | 'fleurs-rouges'
   | 'fleurs-jaunes'
@@ -487,59 +487,22 @@ export type IdDecoration =
 export type InfoDecoration = {
   id: IdDecoration
   nom: string
-  taille: 1 | 2
-  prix: number
-  bloque: boolean // true = on ne peut pas marcher à travers
-  niveauMine: number // à partir de quel niveau de mine on peut l'acheter
+  taille: 1 | 2 // en cases
 }
 
 export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
-  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1, prix: 15, bloque: false, niveauMine: 1 },
-  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1, prix: 15, bloque: false, niveauMine: 1 },
-  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1, prix: 20, bloque: false, niveauMine: 1 },
-  buisson: { id: 'buisson', nom: 'Buisson', taille: 1, prix: 30, bloque: false, niveauMine: 1 },
-  rocher: { id: 'rocher', nom: 'Rocher', taille: 1, prix: 25, bloque: true, niveauMine: 1 },
-  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1, prix: 40, bloque: true, niveauMine: 1 },
-  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1, prix: 120, bloque: true, niveauMine: 1 },
-  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1, prix: 80, bloque: true, niveauMine: 1 },
-  banc: { id: 'banc', nom: 'Banc', taille: 1, prix: 60, bloque: true, niveauMine: 1 },
-  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2, prix: 150, bloque: true, niveauMine: 1 },
-  sapin: { id: 'sapin', nom: 'Sapin', taille: 2, prix: 150, bloque: true, niveauMine: 1 },
-  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2, prix: 600, bloque: true, niveauMine: 2 },
-  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2, prix: 2500, bloque: true, niveauMine: 3 },
-  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2, prix: 20000, bloque: true, niveauMine: 5 },
+  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1 },
+  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1 },
+  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1 },
+  buisson: { id: 'buisson', nom: 'Buisson', taille: 1 },
+  rocher: { id: 'rocher', nom: 'Rocher', taille: 1 },
+  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1 },
+  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1 },
+  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1 },
+  banc: { id: 'banc', nom: 'Banc', taille: 1 },
+  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2 },
+  sapin: { id: 'sapin', nom: 'Sapin', taille: 2 },
+  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2 },
+  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2 },
+  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2 },
 }
-
-export const LISTE_DECORATIONS = Object.keys(DECORATIONS) as IdDecoration[]
-
-// ---------------------------------------------------------------------------
-// Les tenues du joueur (au Bazar) : seulement pour le style
-// ---------------------------------------------------------------------------
-
-export type PartieTenue = 'chapeau' | 'haut'
-export type IdTenue =
-  | 'bandana'
-  | 'casquette'
-  | 'paille'
-  | 'chantier'
-  | 'haut-de-forme'
-  | 'couronne'
-  | 'gilet-cuir'
-  | 'salopette'
-  | 'gilet-or'
-
-export type InfoTenue = { id: IdTenue; nom: string; partie: PartieTenue; prix: number; niveauMine: number }
-
-export const TENUES: Record<IdTenue, InfoTenue> = {
-  bandana: { id: 'bandana', nom: 'Bandana rouge', partie: 'chapeau', prix: 150, niveauMine: 1 },
-  casquette: { id: 'casquette', nom: 'Casquette bleue', partie: 'chapeau', prix: 300, niveauMine: 1 },
-  paille: { id: 'paille', nom: 'Chapeau de paille', partie: 'chapeau', prix: 600, niveauMine: 1 },
-  chantier: { id: 'chantier', nom: 'Casque de chantier', partie: 'chapeau', prix: 1200, niveauMine: 1 },
-  'haut-de-forme': { id: 'haut-de-forme', nom: 'Haut-de-forme', partie: 'chapeau', prix: 5000, niveauMine: 2 },
-  couronne: { id: 'couronne', nom: 'Couronne', partie: 'chapeau', prix: 30000, niveauMine: 4 },
-  'gilet-cuir': { id: 'gilet-cuir', nom: 'Gilet en cuir', partie: 'haut', prix: 400, niveauMine: 1 },
-  salopette: { id: 'salopette', nom: 'Salopette de mineur', partie: 'haut', prix: 900, niveauMine: 1 },
-  'gilet-or': { id: 'gilet-or', nom: 'Gilet doré', partie: 'haut', prix: 12000, niveauMine: 3 },
-}
-
-export const LISTE_TENUES = Object.keys(TENUES) as IdTenue[]

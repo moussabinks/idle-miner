@@ -4,7 +4,7 @@
 
 import { memo, type ReactNode } from 'react'
 import { BATIMENTS, type IdBatiment } from '../jeu/donnees'
-import { CALAGES, IMAGES_BATIMENTS, profondeur, transformationSprite, versEcran } from './iso'
+import { CALAGES, imageBatiment, profondeur, transformationSprite, versEcran } from './iso'
 import { ECHELLE_SPRITE, choisirVue, spritePerso, type QuiSprite, type VueSprite } from './sprites'
 
 // Un personnage posé dans le monde (ses pieds sur le point de la grille). On le dessine avec
@@ -82,7 +82,7 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
   return (
     <img
       className={`sprite-batiment ${classe}`}
-      src={IMAGES_BATIMENTS[id]}
+      src={imageBatiment(id, miroir)}
       alt={BATIMENTS[id].nom}
       width={calage.largeur}
       height={calage.hauteur}

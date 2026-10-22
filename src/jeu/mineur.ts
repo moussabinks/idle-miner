@@ -28,7 +28,6 @@ import {
   type IdRarete,
   type IdBatiment,
   type IdLiaison,
-  type IdTenue,
   type NiveauAscenseur,
   type Pioche,
 } from './donnees'
@@ -170,8 +169,6 @@ export type EtatJeu = {
   stats: Statistiques
   decouvertes: Decouverte[]
   village: Village
-  tenue: { chapeau: IdTenue | null; haut: IdTenue | null }
-  tenuesAchetees: IdTenue[]
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
@@ -225,8 +222,6 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     stats: nouvellesStatistiques(),
     decouvertes: [],
     village: nouveauVillage(),
-    tenue: { chapeau: null, haut: null },
-    tenuesAchetees: [],
   }
 }
 

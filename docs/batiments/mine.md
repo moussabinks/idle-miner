@@ -18,23 +18,37 @@
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet qui part de la mine (ou qui y arrive) n'a plus de rails complets : « Rails coupés entre mine et marché : le wagonnet attend. Repose les rails ! ». La même bulle est sur l'autre bâtiment du trajet ;
   - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de trajet Mine → Marché ;
   - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite.
+- **La jauge du coffre** (27/10) : au-dessus de la mine, une petite barre est **toujours visible** : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »…). Elle est verte, passe à l'**orange** à 75 % et au **rouge** quand le coffre est plein (elle grossit alors et rétrécit, comme un cœur qui bat). On voit d'un coup d'œil s'il faut vider le coffre. Les bulles de la mine sont un peu plus haut, au-dessus de cette jauge.
 - **Le bandeau** (en haut de l'écran) montre toujours le niveau de la mine, son nom et le remplissage du coffre (la case clignote en rouge quand il est plein).
 
 ## Ce qu'on peut y faire
 
-Le panneau (`PanneauMine.tsx`), de haut en bas :
+Le panneau (`PanneauMine.tsx`, refait le 27/10), de haut en bas :
+
+- En titre : « Niveau *N* · **nom du niveau** ».
 
 ### Le bloc à cliquer
 
-- Un **gros bloc** (le prochain bloc de la mine, dessiné en CSS : pierre, charbon, fer…) et à côté « 👆 Clique : ⚫ Charbon » et « ⛏️ *N* % de chance de doubler un minerai ».
+- Un **très gros bloc** (150 px, le prochain bloc de la mine, dessiné en CSS : pierre, charbon, fer…) dans un cadre sombre, et dessous « 👆 ⚫ Charbon » et « ⛏️ *N* % de chance de doubler un minerai ».
 - **Chaque clic casse le bloc** : des éclats volent, ce qui tombe s'envole au-dessus (« +1 ⚫ », ou « +2 💎 ×2 ! » en doré quand il est doublé), et un nouveau bloc « pousse » à sa place. Le bloc tombé va dans le **coffre**.
 - **Pioche cassée** : « 💥 Pioche cassée : 2 clics par bloc. Fais-la réparer au forgeron. » Après le premier clic, le bloc est fissuré ; le second le casse.
 - **Coffre plein** : le bloc est grisé (« 📦 Coffre plein ! ») : il faut vider le coffre.
-- Dessous : « Niveau *N* · **nom du niveau** · la mine sort toute seule *X* blocs par minute. »
+- **Le combo** (27/10) : les clics rapprochés (moins de **0,9 s** entre deux) s'additionnent. Dès **3 clics**, un compteur orange « 🔥 ×*N* » saute à côté du bloc à chaque clic (plus gros et plus doré à partir de 25). Plus le combo est long, plus le cadre et le halo doré sous le bloc brillent (au maximum à 50) ; à partir de 10, le bloc a un liseré doré. Un petit arpège (`sons.combo`) marque les paliers **10, 25, 50, 100, 200 et 500**. Sans clic pendant 0,9 s, le combo retombe à zéro. **C'est seulement pour le plaisir** : le combo ne change rien au jeu (pas de bonus).
+
+### Le tableau de production (27/10)
+
+Juste sous le bloc, un tableau de bord (`TableauProduction`) dit **ce que la mine produit et d'où ça vient** :
+
+- en gros, le **total en blocs par seconde** (la mine toute seule + les mineurs + tes clics), et à côté **≈ *X* $/min**, ce que vaut à peu près cette production au marché (mine + mineurs, d'après la valeur moyenne d'un bloc du niveau) ;
+- trois cases : **⚙️ Mine** (la mine toute seule), **👷 Mineurs** (tous les mineurs au travail, trajets compris) et **👆 Toi** (tes clics des **3 dernières secondes**, la case s'allume quand tu cliques) ;
+- puis **une ligne par mineur** (pas les pousseurs) : l'icône de ce qu'il fait, son nom, sa rareté (en couleur), une barre comparée au meilleur mineur, et ses blocs par seconde, ou « 😠 salaire » s'il attend sa paie ;
+- coffre plein : « 📦 Coffre plein : la mine et les mineurs sont à l'arrêt ! », et tout tombe à 0.
+
+Ce sont des **moyennes** (les vrais blocs sont tirés au hasard), calculées par la fonction pure `production(etat)` (`src/jeu/production.ts`) : le débit de la mine (`debitMine`, 0 si le coffre est plein), celui de chaque mineur (`blocsParSecondeEmploye`, 0 s'il attend son salaire ou si le coffre est plein) et les dollars par minute (`valeurMoyenneBloc`).
 
 ### 📦 Le coffre · *n* / *capacité*
 
-- Une barre : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
+- Une barre (plus grosse depuis le 27/10) : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
 - Vide : « Vide. Clique sur le bloc pour le remplir ! »
 - Sinon, les **jauges** de son contenu (les objets les plus chers en haut) et **🎒 Mettre dans le sac (*n*)** (kaki) : on choisit combien prendre de chaque objet, et ils passent dans le sac à dos (tant qu'il y a de la place). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. »
 - Avec le trajet Mine → Marché : « Le wagonnet du marché laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet du marché ne l'emporte pas (c'est la même liste que les objets gardés du marché).
@@ -180,8 +194,9 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails entre deux bâtiments (`railsEntre`), sans boucle (`feraitUneBoucle`).
 - `src/jeu/batiments.ts` : déplacer ou retourner la mine, poser les rails.
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts` : les bulles 📦, 🚧 et 💰, les achats du stand `puits`.
-- `src/composants/PanneauMine.tsx` : le panneau (bloc à cliquer, coffre, trajets, niveau, coffre, ascenseur) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
+- `src/jeu/production.ts` : la production pour le tableau de bord (`production` : mine, chaque mineur, total, dollars par minute), testée dans `production.test.ts`.
+- `src/composants/PanneauMine.tsx` : le panneau (titre du niveau, bloc à cliquer et combo, tableau de production, coffre, trajets, niveau, coffre, ascenseur) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.
-- `src/composants/DessinsVillage.tsx` : la cabine qui monte et descend et le panneau du niveau (`DessinEvolutionMine`) ; `src/composants/VueVillage.tsx` : la hauteur de la cabine (`hauteurCabine`), les wagonnets et leurs pousseurs sur les rails (`WagonnetVillage.tsx`, dessin en 3D dans `Wagonnet3D.tsx`).
-- `src/village.css` : le bloc à cliquer (`.bloc-mine`, `.eclats-bloc-mine`, `.trouvaille-bloc-mine`) ; `src/blocs.css` : le dessin des blocs.
+- `src/composants/DessinsVillage.tsx` : la cabine qui monte et descend et le panneau du niveau (`DessinEvolutionMine`) ; `src/composants/VueVillage.tsx` : la hauteur de la cabine (`hauteurCabine`), la jauge du coffre au-dessus de la mine (`nombreAbrege` de `src/nombres.ts`), les wagonnets et leurs pousseurs sur les rails (`WagonnetVillage.tsx`, dessin en 3D dans `Wagonnet3D.tsx`).
+- `src/village.css` : le bloc à cliquer (`.bloc-mine`, `.eclats-bloc-mine`, `.trouvaille-bloc-mine`), le combo (`.combo-mine`, `.halo-bloc-mine`), le tableau de production (`.tableau-production`, `.rendement-mineur`), la jauge du coffre (`.jauge-coffre-mine`) ; `src/sons.ts` : `combo` ; `src/blocs.css` : le dessin des blocs.
 - `public/images/batiments/mine.webp`, `mine-cabine.webp`, `mine-devant.webp` : le dessin de la mine, sa cabine et son devant.

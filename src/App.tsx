@@ -1,7 +1,7 @@
 // La page du jeu : elle assemble les composants, relie les boutons et le clavier aux actions.
 //
 // Tout se passe au village vu du ciel (22/10 : la mine ne se visite plus) : on s'y promène, on
-// pose et on déplace ses bâtiments (menus Bâtiments, Décorations et Modifier), et devant la mine
+// pose et on déplace ses bâtiments (menus Bâtiments et Modifier), et devant la mine
 // on clique sur le bloc pour creuser (panneau de la mine).
 //
 // Clavier : les flèches pour marcher (on peut les combiner), Espace pour sauter, Échap pour
@@ -15,19 +15,16 @@ import { ProchainObjectif } from './composants/ProchainObjectif'
 import { Gains } from './composants/Gains'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
-import { MenuConstruction, type OngletConstruction } from './composants/MenuConstruction'
+import { MenuConstruction } from './composants/MenuConstruction'
 import { PanneauEmployes } from './composants/PanneauEmployes'
 import { PanneauMine } from './composants/PanneauMine'
-import { PanneauTenues } from './composants/PanneauTenues'
 import { PanneauBazar, PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
 import {
-  acheterDecoration,
   construireBatiment,
   deplacerBatiment,
-  deplacerDecoration,
   deplacerSol,
   estPose,
   marquerBatimentsVus,
@@ -36,12 +33,11 @@ import {
   peutPoserSol,
   placePourUnRail,
   poserSol,
-  retirerDecoration,
   retirerSol,
   type TypeSol,
 } from './jeu/batiments'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
-import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration, type IdLiaison } from './jeu/donnees'
+import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, TAILLE_GRILLE, type IdBatiment, type IdLiaison } from './jeu/donnees'
 import { notificationsBatiments } from './jeu/notifications'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
@@ -52,7 +48,6 @@ import {
   cleCase,
   distanceAuBatiment,
   empriseBatiment,
-  empriseDecoration,
   empriseLibre,
   type Case,
   type Occupant,
@@ -62,19 +57,13 @@ import { joueurPousse } from './jeu/wagonnet'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
-
-// « 950 », « 12 k », « 3,2 M » : un montant en court, pour les petits badges.
-function nombreAbrege(n: number): string {
-  if (n < 1000) return String(Math.floor(n))
-  if (n < 1_000_000) return `${Math.floor(n / 1000)} k`
-  return `${(n / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M`
-}
+import { nombreAbrege } from './nombres'
 
 const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: 'bas', ArrowLeft: 'gauche', ArrowRight: 'droite' }
 
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
-  const { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer } = usePartie(monde.id)
+  const { etat, toasts, gains, ventesMarche, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer } = usePartie(monde.id)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
@@ -98,8 +87,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     return () => clearInterval(minuteur)
   }, [marche])
 
-  // --- Construire, décorer, modifier -----------------------------------------
-  const [menuConstruction, setMenuConstruction] = useState<OngletConstruction | null>(null)
+  // --- Construire, modifier -------------------------------------------------
+  const [menuConstruction, setMenuConstruction] = useState(false)
   const [fantome, setFantome] = useState<Fantome | null>(null)
   // Le placement se fait en deux temps : le fantôme suit la souris, un clic sur la carte le
   // « fixe » (sans rien construire), puis le bouton « Construire ici » le pose. Sinon, en allant
@@ -118,7 +107,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       const ignorer: Occupant | null = estPose(etat, f.id) ? { type: 'batiment', id: f.id } : null
       return empriseLibre(etat.village, empriseBatiment(f), ignorer)
     }
-    if (f.type === 'decoration') return empriseLibre(etat.village, empriseDecoration(f), f.n !== null ? { type: 'decoration', n: f.n } : null)
     if (f.sol === 'rail') return placePourUnRail(etat.village, f.x, f.y, f.de ?? null) === 'ok'
     const ignorer = f.de ? ({ type: f.sol, cle: cleCase(f.de.x, f.de.y) } as Occupant & { cle: string }) : null
     return empriseLibre(etat.village, { x: f.x, y: f.y, taille: 1 }, ignorer)
@@ -140,19 +128,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   function poserBatiment(id: IdBatiment) {
-    setMenuConstruction(null)
+    setMenuConstruction(false)
     setFantomeFixe(false)
     setFantome({ type: 'batiment', id, ...placeProche(BATIMENTS[id].taille), miroir: false })
   }
 
-  function poserDecoration(id: IdDecoration) {
-    setMenuConstruction(null)
-    setFantomeFixe(false)
-    setFantome({ type: 'decoration', id, n: null, ...placeProche(DECORATIONS[id].taille), miroir: false })
-  }
-
   function commencerPinceau(sol: TypeSol) {
-    setMenuConstruction(null)
+    setMenuConstruction(false)
     setPinceau(sol)
   }
 
@@ -175,7 +157,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       const apres = jouer((e) => (estPose(e, f.id) ? deplacerBatiment(e, f.id, f.x, f.y, f.miroir) : construireBatiment(e, f.id, f.x, f.y, f.miroir)))
       if (nouveau && estPose(apres, f.id)) sons.construction()
     }
-    else if (f.type === 'decoration') jouer((e) => (f.n !== null ? deplacerDecoration(e, f.n, f.x, f.y, f.miroir) : acheterDecoration(e, f.id, f.x, f.y, f.miroir)))
     else if (f.de) jouer((e) => deplacerSol(e, f.sol, f.de as Case, { x: f.x, y: f.y }))
     setFantome(null)
   }
@@ -183,7 +164,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   function retirerFantome() {
     const f = fantome
     if (!f) return
-    if (f.type === 'decoration' && f.n !== null) jouer((e) => retirerDecoration(e, f.n as number))
     if (f.type === 'sol' && f.de) jouer((e) => retirerSol(e, f.sol, (f.de as Case).x, (f.de as Case).y))
     setFantome(null)
   }
@@ -276,9 +256,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       if (cible?.type === 'batiment') {
         const b = batimentPose(etat.village, cible.id)
         if (b) setFantome({ type: 'batiment', id: b.id, x: b.x, y: b.y, miroir: b.miroir })
-      } else if (cible?.type === 'decoration') {
-        const d = etat.village.decorations.find((x) => x.n === cible.n)
-        if (d) setFantome({ type: 'decoration', id: d.id, n: d.n, x: d.x, y: d.y, miroir: d.miroir })
       } else if (cible?.type === 'rail' || cible?.type === 'chemin') {
         setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
       }
@@ -324,11 +301,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     }
   }, [])
 
-  function ouvrirConstruction(onglet: OngletConstruction) {
+  function ouvrirConstruction() {
     setModifier(false)
     annulerEdition()
-    setMenuConstruction(onglet)
-    if (onglet === 'batiments') jouer(marquerBatimentsVus)
+    setMenuConstruction(true)
+    jouer(marquerBatimentsVus)
   }
 
   // Le clavier. On le rebranche à chaque rendu : c'est simple et largement assez rapide.
@@ -339,7 +316,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       if (touche === 'Escape') {
         annulerEdition()
         setModifier(false)
-        setMenuConstruction(null)
+        setMenuConstruction(false)
         return
       }
       if (pousse) return
@@ -349,7 +326,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         return
       }
       const direction = FLECHES[touche]
-      if (!direction || menuConstruction !== null) return
+      if (!direction || menuConstruction) return
       evenement.preventDefault()
       if (!evenement.repeat) {
         setBatimentVise(null)
@@ -399,12 +376,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />}
         {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
-        {batimentActif === 'bazar' && (
-          <>
-            <PanneauBazar etat={etat} jouer={jouer} />
-            <PanneauTenues etat={etat} jouer={jouer} />
-          </>
-        )}
+        {batimentActif === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
         {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
         {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
@@ -428,14 +400,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           vendre au <strong>marché</strong>. Puis relie la mine au marché avec des <strong>rails</strong> et, au panneau de la mine, envoie un <strong>wagonnet</strong> : il fera les voyages pour toi.
         </p>
         <p className="discret">
-          Les boutons <strong>Bâtiments</strong> et <strong>Décos</strong> en bas à droite servent à construire, <strong>Modifier</strong> à
+          Le bouton <strong>Bâtiments</strong> en bas à droite sert à construire, <strong>Modifier</strong> à
           déplacer ou retourner ce qui est posé, et <strong>Mine</strong> (en bas à gauche) à aller creuser.
         </p>
       </section>
     )
   }
 
-  // La barre de boutons du bas : au village (construire, décorer, modifier, la mine), ou pendant
+  // La barre de boutons du bas : au village (construire, modifier, la mine), ou pendant
   // qu'on pose quelque chose (valider, retourner, annuler).
   // La pastille du menu Bâtiments : les nouveautés pas encore vues, et ce qu'on peut construire tout de suite.
   const coffreRempli = coffrePlein(etat)
@@ -444,13 +416,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const libre = fantomeLibre(fantome)
   let barre
   if (fantome !== null) {
-    const nouveau = (fantome.type === 'batiment' && !estPose(etat, fantome.id)) || (fantome.type === 'decoration' && fantome.n === null)
-    const peutRetirer = (fantome.type === 'decoration' && fantome.n !== null) || (fantome.type === 'sol' && fantome.de !== null)
+    const nouveau = fantome.type === 'batiment' && !estPose(etat, fantome.id)
+    const peutRetirer = fantome.type === 'sol' && fantome.de !== null
     barre = (
       <div className="actions actions-edition">
         {!fantomeFixe && <p className="consigne-edition">👆 Clique (ou touche) la carte pour placer, puis valide.</p>}
         <button className="bouton bouton-vendre" disabled={!libre} onClick={validerFantome}>
-          ✔ {nouveau ? (fantome.type === 'decoration' ? `Poser (${DECORATIONS[fantome.id].prix} $)` : 'Construire ici') : 'Poser ici'}
+          ✔ {nouveau ? 'Construire ici' : 'Poser ici'}
         </button>
         {fantome.type !== 'sol' && (
           <button className="bouton bouton-neutre" onClick={() => setFantome({ ...fantome, miroir: !fantome.miroir })}>
@@ -483,7 +455,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   } else if (modifier) {
     barre = (
       <div className="actions actions-edition">
-        <p className="consigne-edition">✏️ Touche un bâtiment, une décoration, un rail ou un chemin pour le déplacer.</p>
+        <p className="consigne-edition">✏️ Touche un bâtiment, un rail ou un chemin pour le déplacer.</p>
         <button className="bouton bouton-vendre" onClick={() => setModifier(false)}>
           ✔ Terminé
         </button>
@@ -526,13 +498,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             <span className="icone-rond" aria-hidden="true">✏️</span>
             <span className="texte-rond">Modifier</span>
           </button>
-          <button className="bouton bouton-rond bouton-decorer" onClick={() => ouvrirConstruction('decorations')} title="Fleurs, arbres, chemins...">
-            <span className="icone-rond" aria-hidden="true">🌸</span>
-            <span className="texte-rond">Décos</span>
-          </button>
           <button
             className={`bouton bouton-rond bouton-construire bouton-rond-gros ${nbNouveautes > 0 ? 'bouton-attention' : ''}`}
-            onClick={() => ouvrirConstruction('batiments')}
+            onClick={() => ouvrirConstruction()}
             title="Construire des bâtiments et poser des rails"
           >
             <span className="icone-rond" aria-hidden="true">🏗️</span>
@@ -562,8 +530,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           }}
           onGlisser={deplacerFantome}
           onPeindre={peindre}
-          panneauOuvert={panneau !== null}
           trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
+          ventesMarche={ventesMarche}
         />
         <Gains gains={gains} />
       </main>
@@ -607,7 +575,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </nav>
           <Hud etat={etat} nbVentes={nbVentes} />
         </div>
-        <ProchainObjectif etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction('batiments')} />
+        <ProchainObjectif etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} />
 
         {/* Le panneau du bâtiment, par-dessus la carte. */}
         {panneau && <div className="panneau-flottant">{panneau}</div>}
@@ -623,14 +591,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         <Toasts toasts={toasts} />
       </div>
 
-      {menuConstruction !== null && (
+      {menuConstruction && (
         <MenuConstruction
           etat={etat}
-          onglet={menuConstruction}
-          onOnglet={(onglet) => ouvrirConstruction(onglet)}
-          onFermer={() => setMenuConstruction(null)}
+          onFermer={() => setMenuConstruction(false)}
           onPoserBatiment={poserBatiment}
-          onPoserDecoration={poserDecoration}
           onPinceau={commencerPinceau}
         />
       )}
