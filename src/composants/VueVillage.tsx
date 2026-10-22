@@ -67,6 +67,7 @@ type Props = {
   batimentActif: IdBatiment | null
   fantome: Fantome | null
   fantomeLibre: boolean
+  fantomeFixe: boolean // le fantôme a été posé d'un clic (sinon, à la souris, il suit le curseur)
   pinceau: boolean // on peint des rails ou des chemins : chaque case touchée en reçoit un
   onTap: (c: Case, cible: CibleVillage | null) => void
   onSurvol: (c: Case) => void // la souris passe sur une case (le fantôme la suit tant qu'il n'est pas fixé)
@@ -92,6 +93,7 @@ export function VueVillage({
   batimentActif,
   fantome,
   fantomeLibre,
+  fantomeFixe,
   pinceau,
   onTap,
   onSurvol,
@@ -258,7 +260,11 @@ export function VueVillage({
       return
     }
     const c = caseSous(e.clientX, e.clientY)
-    const mode = pinceau ? 'pinceau' : fantome && dansLeFantome(c) ? 'fantome' : 'tap'
+    // Glisser sur le fantôme le déplace ; partout ailleurs, on fait glisser la carte (27/10). À la
+    // souris, un fantôme pas encore fixé suit le curseur : il est donc toujours dessous. Tant
+    // qu'il n'est pas fixé (par un clic), glisser déplace la carte, pas le bâtiment.
+    const surLeFantome = fantome !== null && dansLeFantome(c) && (fantomeFixe || e.pointerType !== 'mouse')
+    const mode = pinceau ? 'pinceau' : surLeFantome ? 'fantome' : 'tap'
     geste.current = { mode, depart: { x: e.clientX, y: e.clientY }, temps: performance.now(), camera: cameraRef.current, deplace: false }
     if (mode === 'pinceau') onPeindre(c)
   }
