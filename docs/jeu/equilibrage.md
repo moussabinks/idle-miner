@@ -94,7 +94,7 @@ Total pour aller au niveau 5 : **143 200 $ + 180 fer + 180 redstone + 190 or + 5
 - Plein : plus de clic, plus de débit, et les mineurs attendent pour vider leur sac.
 - **Payer** (`disponible`, `payerMateriaux`) : pour chaque minerai d'un prix, on prend d'abord dans le sac, puis le reste dans le coffre.
 
-À débit seul, au niveau 1 la mine ne sort rien toute seule (27/10) ; un coffre de 4 000 places en 2 h 47 au niveau 5 (0,4 bloc/s), sans compter les clics et les mineurs.
+À débit seul, au niveau 1 la mine ne sort rien toute seule (27/10) ; un coffre de 4 000 places se remplit en 2 h 47 au niveau 5 (0,4 bloc/s), sans compter les clics et les mineurs.
 
 ## Les pioches et le clic
 
