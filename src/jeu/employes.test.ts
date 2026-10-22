@@ -62,8 +62,8 @@ describe('les mineurs employés', () => {
     const mineur = etat.employes[0]
     expect(vitesseEmploye(mineur)).toBe(NIVEAUX_EMPLOYE[0].vitesse)
     expect(tailleSacEmploye(mineur)).toBe(NIVEAUX_EMPLOYE[0].sac)
-    // Descente (10 s), creusage (10 blocs à 0,15 par seconde), montée (10 s), vidage (2 s).
-    avancerEmployes(etat, 10 + 10 / 0.15 + 10 + 2 + 0.5, hasard())
+    // Descente (6 s, l'ascenseur du départ), creusage (10 blocs à 0,22 par seconde), montée (6 s), vidage (2 s).
+    avancerEmployes(etat, 6 + 10 / 0.22 + 6 + 2 + 0.5, hasard())
     expect(nbDansCoffre(etat)).toBe(10)
     expect(activiteEmploye(etat, mineur)).toContain('redescend')
   })
@@ -72,7 +72,7 @@ describe('les mineurs employés', () => {
     const etat = partie()
     embaucher(etat, hasard())
     const avant = blocsParSecondeEmploye(etat, etat.employes[0])
-    etat.inventaire = { fer: 20 }
+    etat.inventaire = { fer: 50, redstone: 10 }
     ameliorerAscenseur(etat)
     expect(blocsParSecondeEmploye(etat, etat.employes[0])).toBeGreaterThan(avant)
   })
@@ -137,10 +137,10 @@ describe('les mineurs employés', () => {
     const etat = partie(1000)
     embaucher(etat, hasard())
     const prix = indemnites(etat)
-    expect(prix).toBe(40) // 40 % de 100 $
+    expect(prix).toBe(30) // 40 % de 80 $ (à la dizaine)
     licencier(etat, 0)
     expect(etat.employes).toEqual([])
-    expect(etat.argent).toBe(1000 - 100 - 40)
+    expect(etat.argent).toBe(1000 - 80 - 30)
   })
 })
 
@@ -214,7 +214,7 @@ describe('le manager (niveau 4 de la mine)', () => {
     expect(embaucherManager(etat)).toEqual([])
     etat.niveauMine = 4
     embaucherManager(etat)
-    expect(etat.argent).toBe(1_000_000 - 100 - PRIX_MANAGER)
+    expect(etat.argent).toBe(1_000_000 - 80 - PRIX_MANAGER)
     deposerTresorerie(etat, 10_000)
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)

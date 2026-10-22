@@ -87,7 +87,7 @@ describe('sauvegarde', () => {
     ]
     stockage.setItem(cleMonde('1'), JSON.stringify(partie22))
     const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(24)
+    expect(etat?.version).toBe(25)
     expect(etat?.employes.map((e) => e.trajet)).toEqual(['mine-marche', null])
   })
 
@@ -100,7 +100,7 @@ describe('sauvegarde', () => {
     partie23.niveauMine = 3
     stockage.setItem(cleMonde('1'), JSON.stringify(partie23))
     const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(24)
+    expect(etat?.version).toBe(25)
     // (le niveau 3 de la mine demande le niveau 7 du joueur)
     expect(etat && niveauJoueur(etat)).toBe(7)
   })

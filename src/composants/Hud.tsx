@@ -36,11 +36,13 @@ function nombreCourt(n: number): string {
 }
 
 // Une petite jauge sous une valeur.
-function JaugeMini({ valeur, max, couleur }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' | 'violet' }) {
+// « teinte » (30/10, la pioche) : la couleur va du rouge (0) au vert (120) selon ce qu'il reste.
+function JaugeMini({ valeur, max, couleur, teinte }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' | 'violet'; teinte?: number }) {
   const pourcentage = max > 0 ? Math.min(100, (valeur / max) * 100) : 0
+  const style = teinte === undefined ? { width: `${pourcentage}%` } : { width: `${pourcentage}%`, background: `hsl(${teinte} 78% 50%)` }
   return (
     <span className="jauge-mini" aria-hidden="true">
-      <i className={`jauge-mini-${couleur}`} style={{ width: `${pourcentage}%` }} />
+      <i className={`jauge-mini-${couleur}`} style={style} />
     </span>
   )
 }
@@ -103,13 +105,13 @@ export function Hud({ etat, nbVentes }: Props) {
       </div>
 
       <div
-        className={`info-bandeau ${cassee ? 'bandeau-alerte' : ''}`}
+        className={`info-bandeau ${cassee || durabiliteRestante(etat) < pioche.durabilite * 0.15 ? 'bandeau-alerte' : ''}`}
         title={cassee ? `Pioche en ${pioche.nom} cassée : 2 clics par bloc, fais-la réparer au forgeron` : `Pioche en ${pioche.nom} : ${Math.round(pioche.doublement * 100)} % de doubler un minerai`}
       >
         <span className="bandeau-icone">{cassee ? '💥' : '⛏️'}</span>
         <span className="bandeau-valeurs">
           <small>{cassee ? 'Cassée' : `${durabiliteRestante(etat)}/${pioche.durabilite}`}</small>
-          <JaugeMini valeur={durabiliteRestante(etat)} max={pioche.durabilite} couleur={cassee ? 'rouge' : 'vert'} />
+          <JaugeMini valeur={durabiliteRestante(etat)} max={pioche.durabilite} couleur={cassee ? 'rouge' : 'vert'} teinte={Math.round((durabiliteRestante(etat) / pioche.durabilite) * 120)} />
         </span>
       </div>
 

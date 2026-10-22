@@ -9,6 +9,7 @@ import { chariotPlein } from './foreuse'
 import { generateurPose } from './generateur'
 import { coffrePlein, estCassee, sacPlein, type EtatJeu } from './mineur'
 import { standsAchetables } from './objectifs'
+import { etapeTutoriel } from './tutoriel'
 import { batimentPose } from './village'
 import { ligneDe, trajetDe } from './wagonnet'
 
@@ -71,7 +72,12 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
 
   // Ce qui vient de se débloquer (recruteur, manager) et ce qui est achetable.
   for (const id of decouvertesAMontrer(etat)) ajouter(DECOUVERTES[id].stand, { icone: '✨', texte: `Nouveau : ${DECOUVERTES[id].nom} !`, court: 'Nouveau', sorte: 'nouveau' })
-  for (const id of standsAchetables(etat)) ajouter(id, { icone: '⬆️', texte: 'Une amélioration est achetable !', court: 'Achetable', sorte: 'achat' })
+  // (30/10) « Achetable » seulement pendant le tutoriel : ensuite, il y aurait presque toujours une
+  // bulle (on peut presque toujours embaucher...), et trop de bulles noient le joueur. La liste
+  // des tâches propose déjà les achats.
+  if (etapeTutoriel(etat) !== null) {
+    for (const id of standsAchetables(etat)) ajouter(id, { icone: '⬆️', texte: 'Une amélioration est achetable !', court: 'Achetable', sorte: 'achat' })
+  }
 
   for (const id of Object.keys(liste) as IdBatiment[]) liste[id] = (liste[id] ?? []).sort((a, b) => PRIORITE[a.sorte] - PRIORITE[b.sorte])
   return liste

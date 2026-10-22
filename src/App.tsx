@@ -21,6 +21,8 @@ import { PanneauMine } from './composants/PanneauMine'
 import { PanneauBazar, PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
+import { FenetreAbsence } from './composants/FenetreAbsence'
+import { FenetreRail } from './composants/FenetreRail'
 import { FenetreTrajet } from './composants/FenetreTrajet'
 import { Tutoriel } from './composants/Tutoriel'
 import { avancerTutoriel, avecBouton, etapeFaite, etapeSuivante, etapeTutoriel, passerTutoriel } from './jeu/tutoriel'
@@ -36,6 +38,7 @@ import {
   peutPoserSol,
   placePourUnRail,
   poserSol,
+  raisonSolImpossible,
   retirerSol,
   type TypeSol,
 } from './jeu/batiments'
@@ -57,8 +60,8 @@ import {
   type Case,
   type Occupant,
 } from './jeu/village'
-import { capaciteCoffre, coffrePlein, nbDansCoffre, nbDansSac, sacPlein, valeurDe } from './jeu/mineur'
-import { joueurPousse, liaisonsSurLaCase, reglerTrajet, type ReglageTrajet } from './jeu/wagonnet'
+import { capaciteCoffre, coffrePlein, nbDansCoffre, nbDansSac, peutPayer, sacPlein, valeurDe } from './jeu/mineur'
+import { joueurPousse, liaisonsSurLaCase, reglerTrajet, trajetsAProposer, type ReglageTrajet } from './jeu/wagonnet'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
@@ -68,7 +71,7 @@ const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: '
 
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
-  const { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer } = usePartie(monde.id)
+  const { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer, resumeAbsence, recupererAbsence } = usePartie(monde.id)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
@@ -105,12 +108,37 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
   const edition = fantome !== null || pinceau !== null || modifier
   // La fenêtre des trajets ouverte (27/10) : les trajets des rails qu'on a touchés.
-  const [trajetsOuverts, setTrajetsOuverts] = useState<IdLiaison[] | null>(null)
-  const fermerTrajets = useCallback(() => setTrajetsOuverts(null), [])
+  const [trajetsOuverts, setTrajetsOuvertsBrut] = useState<IdLiaison[] | null>(null)
+  // Le rail touché (30/10) : sa fenêtre propose aussi de le déplacer ou de le retirer.
+  const [railTouche, setRailTouche] = useState<Case | null>(null)
+  // Ouvrir la fenêtre des trajets termine toujours la pose des rails (30/10 : sinon, en
+  // revenant sur la carte, on avait encore un rail « dans la main » et un clic en posait un).
+  const setTrajetsOuverts = useCallback((liaisons: IdLiaison[] | null) => {
+    setTrajetsOuvertsBrut(liaisons)
+    if (liaisons !== null) setPinceau(null)
+  }, [])
+  const fermerTrajets = useCallback(() => {
+    setTrajetsOuvertsBrut(null)
+    setRailTouche(null)
+  }, [])
 
   function validerTrajets(reglages: Partial<Record<IdLiaison, ReglageTrajet>>) {
     jouer((e) => Object.entries(reglages).flatMap(([liaison, reglage]) => reglerTrajet(e, liaison as IdLiaison, reglage as ReglageTrajet)))
-    setTrajetsOuverts(null)
+    fermerTrajets()
+  }
+
+  // Les boutons du rail touché : le déplacer (comme un bâtiment), ou le retirer (remboursé).
+  function deplacerRailTouche() {
+    if (!railTouche) return
+    fermerTrajets()
+    setFantomeFixe(true)
+    setFantome({ type: 'sol', sol: 'rail', x: railTouche.x, y: railTouche.y, de: railTouche })
+  }
+  function retirerRailTouche() {
+    if (!railTouche) return
+    const { x, y } = railTouche
+    fermerTrajets()
+    jouer((e) => retirerSol(e, 'rail', x, y))
   }
 
   // Le fantôme peut-il être posé là où il est ?
@@ -194,9 +222,22 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // En mode pinceau, chaque case touchée reçoit un rail (ou un pavé) si elle est libre.
   function peindre(c: Case) {
     if (pinceau === null) return
-    if (!peutPoserSol(etat, pinceau, c.x, c.y)) return
-    jouer((e) => poserSol(e, pinceau, c.x, c.y))
+    if (!peutPoserSol(etat, pinceau, c.x, c.y)) {
+      // (30/10) On dit pourquoi : plus de fer, une boucle... (et pas sur une case déjà prise)
+      const raison = raisonSolImpossible(etat, pinceau, c.x, c.y)
+      if (raison) jouer(() => [raison])
+      return
+    }
+    const avant = trajetsAProposer(etat)
+    const apres = jouer((e) => poserSol(e, pinceau, c.x, c.y))
     if (pinceau === 'rail') sons.rail()
+    // (30/10) Les rails relient deux bâtiments : on range les rails (plus de rail « dans la
+    // main ») et on ouvre tout de suite la fenêtre pour automatiser ce trajet.
+    const nouveaux = trajetsAProposer(apres).filter((l) => !avant.includes(l))
+    if (pinceau === 'rail' && nouveaux.length > 0) {
+      setPinceau(null)
+      setTrajetsOuverts(nouveaux)
+    }
   }
 
 
@@ -252,13 +293,12 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       }
       return
     }
-    // Des rails qui relient des bâtiments : on ouvre la fenêtre de leurs trajets (27/10).
+    // Un rail touché (30/10) : sa fenêtre s'ouvre, avec les trajets qui y passent (s'il y en a)
+    // et de quoi le déplacer ou le retirer (remboursé).
     if (cible?.type === 'rail') {
-      const liaisons = liaisonsSurLaCase(etat, cible.x, cible.y)
-      if (liaisons.length > 0) {
-        setTrajetsOuverts(liaisons)
-        return
-      }
+      setRailTouche({ x: cible.x, y: cible.y })
+      setTrajetsOuverts(liaisonsSurLaCase(etat, cible.x, cible.y))
+      return
     }
     // Il pousse le wagonnet : il ne peut pas aller ailleurs avant d'être revenu.
     if (pousse) return
@@ -270,6 +310,15 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       setBatimentVise(null)
       village.allerVers(c)
     }
+  }
+
+  // (30/10) Au tutoriel, à l'étape du forgeron : dès qu'on a de quoi le payer, le panneau de la
+  // mine se ferme tout seul (une fois), pour que la flèche montre le menu Bâtiments.
+  const pretPourForgeron = etapeTutoriel(etat) === 'forgeron' && peutPayer(etat, BATIMENTS.forgeron.cout)
+  const [pretAvant, setPretAvant] = useState(false)
+  if (pretPourForgeron !== pretAvant) {
+    setPretAvant(pretPourForgeron)
+    if (pretPourForgeron) setPanneauFerme(true)
   }
 
   // Le tutoriel (27/10) : dès que l'action de l'étape est faite, on passe à la suivante.
@@ -441,7 +490,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </button>
         )}
         {peutRetirer && (
-          <button className="bouton bouton-stop" onClick={retirerFantome} title="Enlever (sans remboursement)">
+          <button className="bouton bouton-stop" onClick={retirerFantome} title="Enlever (remboursé)">
             🗑️ Enlever
           </button>
         )}
@@ -455,7 +504,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     barre = (
       <div className="actions actions-edition">
         <p className="consigne-edition">
-          {pinceau === 'rail' ? '🛤️ Touche ou glisse sur les cases pour poser des rails' : '🪨 Touche ou glisse sur les cases pour poser un chemin'} (
+          {pinceau === 'rail'
+            ? '🛤️ Le rail suit ta souris : clique (ou glisse) sur le sol pour le poser, d’un bâtiment à un autre'
+            : '🪨 Clique (ou glisse) sur le sol pour poser un chemin'}{' '}
+          (
           {cout.argent ? `${cout.argent} $` : `${cout.materiaux.fer} 🔩 fer`} la case).
         </p>
         <button className="bouton bouton-vendre" onClick={() => setPinceau(null)}>
@@ -525,7 +577,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   return (
-    <div className={`jeu plein-ecran mode-village ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${panneau ? 'avec-panneau' : ''}`}>
+    <div className={`jeu plein-ecran mode-village ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${panneau ? 'avec-panneau' : ''} ${batimentActif && PANNEAUX_LARGES.includes(batimentActif) ? 'panneau-large' : ''}`}>
       {/* La scène prend tout l'écran : le village vu du ciel. */}
       <main className="scene">
         <VueVillage
@@ -537,6 +589,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           fantomeLibre={libre}
           fantomeFixe={fantomeFixe}
           pinceau={pinceau !== null}
+          typePinceau={pinceau}
+          peutPeindre={(c) => pinceau !== null && peutPoserSol(etat, pinceau, c.x, c.y)}
           onTap={toucherCarte}
           onSurvol={(c) => {
             if (!fantomeFixe) deplacerFantome(c)
@@ -640,11 +694,24 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           onPasser={() => jouer(passerTutoriel)}
         />
       )}
-      {trajetsOuverts && <FenetreTrajet etat={etat} liaisons={trajetsOuverts} onValider={validerTrajets} onFermer={fermerTrajets} />}
+      {trajetsOuverts && trajetsOuverts.length > 0 && (
+        <FenetreTrajet
+          etat={etat}
+          liaisons={trajetsOuverts}
+          onValider={validerTrajets}
+          onFermer={fermerTrajets}
+          actionsRail={railTouche ? { onDeplacer: deplacerRailTouche, onRetirer: retirerRailTouche } : null}
+        />
+      )}
+      {trajetsOuverts && trajetsOuverts.length === 0 && railTouche && <FenetreRail onDeplacer={deplacerRailTouche} onRetirer={retirerRailTouche} onFermer={fermerTrajets} />}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
+      {resumeAbsence && <FenetreAbsence resume={resumeAbsence} onRecuperer={recupererAbsence} />}
     </div>
   )
 }
+
+// Les bâtiments aux nombreuses options : leur panneau est plus large sur grand écran (30/10).
+const PANNEAUX_LARGES: IdBatiment[] = ['puits', 'employes', 'foreuse', 'generateur']
 
 // L'application : l'écran d'accueil (choix du monde et compte), puis le jeu.
 function App() {

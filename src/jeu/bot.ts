@@ -94,7 +94,7 @@ export type ResultatBot = {
   allersRetours: number // les voyages à pied jusqu'au marché
 }
 
-export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 9 * 3600): ResultatBot {
+export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): ResultatBot {
   const etat = creerPartie(aleatoire)
   const aleatoireTemps = aleatoireAvecGraine(0)
   const tempsNiveaux: Record<number, number> = { 1: 0 }

@@ -57,6 +57,10 @@ export type AnalyseAscenseur = {
 // Au-delà de cette part du temps dans le puits, on prévient que l'ascenseur est trop lent.
 export const PART_PUITS_TROP_LENTE = 0.2
 
+// Le niveau suivant de l'ascenseur doit rapporter au moins cette part de ce que sortent les
+// mineurs (10 %) pour qu'on le conseille.
+const GAIN_ASCENSEUR_UTILE = 0.1
+
 export function analyseAscenseur(etat: EtatJeu): AnalyseAscenseur {
   const mineurs = etat.employes.filter((e) => e.role === 'mineur')
   if (mineurs.length === 0) return { partDansLePuits: 0, gainProchainNiveau: null, tropLent: false }
@@ -73,7 +77,10 @@ export function analyseAscenseur(etat: EtatJeu): AnalyseAscenseur {
     const avecProchain = { ...etat, ascenseur: { ...etat.ascenseur, niveau: prochain.niveau } }
     gain = mineurs.reduce((total, m) => total + blocsParSecondeEmploye(avecProchain, m) - blocsParSecondeEmploye(etat, m), 0)
   }
-  return { partDansLePuits: part, gainProchainNiveau: gain, tropLent: prochain !== null && part > PART_PUITS_TROP_LENTE }
+  // (30/10) Pas d'alerte pour un gain minuscule (« +0,01 bloc/s ») : il faut que ça vaille le coup.
+  const totalMineurs = mineurs.reduce((total, m) => total + blocsParSecondeEmploye(etat, m), 0)
+  const gainUtile = gain !== null && gain >= GAIN_ASCENSEUR_UTILE * totalMineurs
+  return { partDansLePuits: part, gainProchainNiveau: gain, tropLent: prochain !== null && part > PART_PUITS_TROP_LENTE && gainUtile }
 }
 
 // Le wagonnet Mine → Marché : combien de blocs par seconde il peut emporter au plus (sa

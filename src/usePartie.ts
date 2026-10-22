@@ -5,10 +5,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from './jeu/aleatoire'
 import { BLOCS, type IdBloc } from './jeu/donnees'
-import { nbSansSalaire } from './jeu/employes'
-import { nbDansChariot } from './jeu/foreuse'
-import { cliquerMine, creerPartie, nbDansCoffre, type EtatJeu } from './jeu/mineur'
+import { cliquerMine, creerPartie, type EtatJeu } from './jeu/mineur'
 import { niveauJoueur } from './jeu/niveaux'
+import { photoPartie, resumerAbsence, type ResumeAbsence } from './jeu/absence'
 import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps } from './jeu/temps'
@@ -34,7 +33,6 @@ const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
 const ABSENCE_MAX = 8 * 60 * 60 // la mine travaille au plus 8 h pendant que le jeu est fermé
 
 let prochainId = 1
-const ID_MESSAGE_ABSENCE = 0
 
 // Joue le son qui va avec chaque événement.
 function jouerSons(evenements: Evenement[]): void {
@@ -71,26 +69,17 @@ function jouerSons(evenements: Evenement[]): void {
 
 // Charge la partie du monde choisi. Si le monde n'a pas été ouvert depuis un moment, on
 // rattrape le temps passé (la mine, les mineurs et le wagonnet ont continué) et on prépare un message.
-function chargerOuCreer(idMonde: string): { etat: EtatJeu; messageAbsence: string | null } {
+// (30/10) Le résumé s'affiche dans une grande fenêtre, avec un bouton « Tout récupérer ».
+function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: ResumeAbsence | null } {
   marquerJoue(window.localStorage, idMonde)
   const etat = charger(window.localStorage, idMonde)
-  if (etat === null) return { etat: creerPartie(aleatoireNavigateur), messageAbsence: null }
+  if (etat === null) return { etat: creerPartie(aleatoireNavigateur), resumeAbsence: null }
 
   const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
-  if (absence < 30) return { etat, messageAbsence: null }
-  const avant = { fores: nbDansChariot(etat), coffre: nbDansCoffre(etat), argent: etat.argent }
+  if (absence < 30) return { etat, resumeAbsence: null }
+  const avant = photoPartie(etat)
   avancerTemps(etat, absence, aleatoireNavigateur)
-  const fores = nbDansChariot(etat) - avant.fores
-  const coffre = nbDansCoffre(etat) - avant.coffre
-  const gagne = etat.argent - avant.argent
-  const morceaux: string[] = []
-  if (coffre > 0) morceaux.push(`📦 ${coffre} blocs de plus dans le coffre de la mine`)
-  if (gagne > 0) morceaux.push(`🛤️ les wagonnets ont rapporté ${Math.round(gagne).toLocaleString('fr-FR')} $`)
-  if (fores > 0) morceaux.push(`⚙️ la foreuse a remonté ${fores} blocs`)
-  const sansSalaire = nbSansSalaire(etat)
-  if (sansSalaire > 0) morceaux.push(sansSalaire === 1 ? '😠 un mineur attend son salaire' : `😠 ${sansSalaire} mineurs attendent leur salaire`)
-  const messageAbsence = morceaux.length > 0 ? `Pendant ton absence : ${morceaux.join(', ')}.` : null
-  return { etat, messageAbsence }
+  return { etat, resumeAbsence: resumerAbsence(avant, etat, absence) }
 }
 
 // idMonde : le monde (la sauvegarde) choisi sur l'écran d'accueil.
@@ -98,9 +87,9 @@ export function usePartie(idMonde: string) {
   const [depart] = useState(() => chargerOuCreer(idMonde))
   const [etat, setEtat] = useState<EtatJeu>(depart.etat)
   // Au démarrage, on affiche ce qui s'est passé pendant l'absence du joueur.
-  const [toasts, setToasts] = useState<Toast[]>(() =>
-    depart.messageAbsence ? [{ id: ID_MESSAGE_ABSENCE, texte: depart.messageAbsence, succes: false }] : [],
-  )
+  const [toasts, setToasts] = useState<Toast[]>([])
+  // Ce qui s'est passé pendant l'absence (la fenêtre du retour), jusqu'à « Tout récupérer ».
+  const [resumeAbsence, setResumeAbsence] = useState<ResumeAbsence | null>(depart.resumeAbsence)
   const [gains, setGains] = useState<Gain[]>([])
   const [eclats, setEclats] = useState<Eclat[]>([])
   const [trouvailles, setTrouvailles] = useState<Trouvaille[]>([])
@@ -181,11 +170,15 @@ export function usePartie(idMonde: string) {
     [afficherToasts, afficherGain, animer, changerEtat],
   )
 
-  // ... et on retire le message d'absence au bout de quelques secondes.
-  useEffect(() => {
-    const minuteur = setTimeout(() => setToasts((liste) => liste.filter((t) => t.id !== ID_MESSAGE_ABSENCE)), 2 * DUREE_TOAST)
-    return () => clearTimeout(minuteur)
-  }, [])
+  // « Tout récupérer » : la fenêtre du retour se ferme avec une belle animation de gain.
+  const recupererAbsence = useCallback(() => {
+    if (resumeAbsence && resumeAbsence.argent > 0) {
+      afficherGain(resumeAbsence.argent, true)
+      sons.vente(resumeAbsence.argent)
+      setNbVentes((n) => n + 1)
+    } else sons.succes()
+    setResumeAbsence(null)
+  }, [resumeAbsence, afficherGain])
 
   // L'horloge tourne tout le temps : la mine sort ses blocs toute seule. Quand le joueur pousse
   // le wagonnet, elle bat à chaque image de l'écran pour que le mouvement soit fluide.
@@ -239,5 +232,5 @@ export function usePartie(idMonde: string) {
     setToasts([])
   }, [changerEtat])
 
-  return { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer }
+  return { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer, resumeAbsence, recupererAbsence }
 }

@@ -264,7 +264,9 @@
 .plein-ecran .toasts {
   position: absolute;
   top: calc(var(--marge-haut) + 108px);
-  left: 50%;
+  /* (30/10) Toujours au même endroit, panneau ouvert ou non : avant, ouvrir ou fermer un panneau
+     (en touchant la carte) faisait « sauter » les notifications. */
+  left: calc((100% - 400px) / 2);
   bottom: auto;
   translate: -50% 0;
   transform: none;
@@ -274,9 +276,7 @@
 }
 
 /* Avec le panneau de droite ouvert, les messages se décalent vers la gauche. */
-.plein-ecran.avec-panneau .toasts {
-  left: calc((100% - var(--largeur-panneau)) / 2);
-}
+
 
 /* --- Ordinateur moyen : un panneau un peu plus étroit ----------------------------- */
 

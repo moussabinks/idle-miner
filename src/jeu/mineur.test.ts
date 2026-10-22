@@ -165,7 +165,7 @@ describe('le coffre, le sac et le marché', () => {
 
   it('un plus grand sac au bazar', () => {
     const etat = partie()
-    etat.argent = 200
+    etat.argent = 150
     acheterSac(etat)
     expect(tailleSac(etat)).toBe(64)
     expect(etat.argent).toBe(0)
@@ -173,10 +173,10 @@ describe('le coffre, le sac et le marché', () => {
 })
 
 describe('les améliorations de la mine', () => {
-  it('descendre au niveau 2 : 1 200 $ et 60 fer, et la redstone arrive', () => {
+  it('descendre au niveau 2 : 900 $ et 45 fer, et la redstone arrive', () => {
     const etat = partie()
-    etat.argent = 1200
-    etat.coffre.contenu = { fer: 60 }
+    etat.argent = 900
+    etat.coffre.contenu = { fer: 45 }
     expect(descendreNiveauMine(etat, aleatoireAvecGraine(3))[0]).toContain('niveau 2')
     expect(etat.niveauMine).toBe(2)
     expect(etat.argent).toBe(0)
@@ -194,12 +194,14 @@ describe('les améliorations de la mine', () => {
 
   it('l’ascenseur raccourcit les trajets des mineurs', () => {
     const etat = partie()
-    expect(secondesTrajetMineur(etat)).toBe(10)
-    etat.argent = 400
-    etat.inventaire = { fer: 20 }
-    ameliorerAscenseur(etat)
+    // (30/10) la mine a son ascenseur dès le début
     expect(etat.ascenseur.niveau).toBe(1)
     expect(secondesTrajetMineur(etat)).toBe(6)
+    etat.argent = 1500
+    etat.inventaire = { fer: 50, redstone: 10 }
+    ameliorerAscenseur(etat)
+    expect(etat.ascenseur.niveau).toBe(2)
+    expect(secondesTrajetMineur(etat)).toBe(4)
   })
 })
 

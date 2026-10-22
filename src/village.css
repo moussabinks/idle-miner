@@ -1924,16 +1924,29 @@ g.grille-construction {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(#9be86a, #4fae2c);
+  /* (30/10) La couleur suit l'état de la pioche, en dégradé : vert quand elle est neuve, jaune,
+     orange, puis rouge quand elle va casser (--teinte : de 120 à 0, posée par PanneauMine). */
+  background: linear-gradient(hsl(var(--teinte, 110) 80% 62%), hsl(var(--teinte, 110) 75% 40%));
   transition: width 0.15s;
-}
-
-.pioche-usee .jauge-pioche-barre i {
-  background: linear-gradient(#ffb35a, #e0620e);
 }
 
 .pioche-cassee .jauge-pioche-barre i {
   background: linear-gradient(#ff7a5a, #d12c0e);
+}
+
+/* Elle va bientôt casser : la jauge clignote, grossit et s'entoure de rouge. */
+.pioche-usee {
+  animation: pioche-alerte 0.7s ease-in-out infinite;
+}
+.pioche-usee .jauge-pioche-barre {
+  box-shadow: 0 0 0 2px #ff5a3a, 0 0 14px rgb(255 70 40 / 0.85);
+}
+@keyframes pioche-alerte {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.07); filter: brightness(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pioche-usee { animation: none; }
 }
 
 .jauge-pioche-texte {
@@ -2687,4 +2700,173 @@ g.grille-construction {
 @keyframes etincelle-caisse {
   0%, 100% { opacity: 0; scale: 0.3; rotate: 0deg; }
   50% { opacity: 1; scale: 1.2; rotate: 45deg; }
+}
+
+/* Les bonus de combo (30/10) : une étiquette dorée au-dessus du bloc, avec le temps qui reste. */
+.zone-bloc-mine { position: relative; }
+.bonus-combo {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  z-index: 3;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(#ffe27a, #f0a01c);
+  color: #3b2412;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 0 0 2px #fff6d2, 0 0 22px rgb(255 200 60 / 0.9);
+  animation: bonus-arrive 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+  pointer-events: none;
+}
+.bonus-combo small { font-size: 0.7rem; font-weight: 800; }
+.bonus-prochain {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.zone-bonus .bloc-mine {
+  box-shadow: 0 0 0 3px #ffd84a, 0 0 30px rgb(255 210 70 / 0.85);
+}
+@keyframes bonus-arrive {
+  from { transform: scale(0.3); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bonus-combo { animation: none; } }
+
+/* Le curseur « combien prendre » de chaque minerai du coffre (30/10), comme au marché. */
+.prendre-coffre {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.prendre-coffre input[type='range'] {
+  width: 74px;
+  accent-color: #f0a01c;
+}
+.prendre-compteur {
+  min-width: 26px;
+  text-align: right;
+  font-weight: 800;
+}
+
+/* L'aperçu du rail (ou du chemin) qu'on va poser, sous la souris (30/10). */
+.apercu-pinceau {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* --- L'embauche d'un mineur (30/10) -----------------------------------------------------
+   Une gerbe d'étincelles et de rayons dorés jaillit du Personnel, avec « 👷 Tom arrive ! » ;
+   le nouveau mineur part vers la mine avec un halo doré qui pulse sous ses pieds, une traînée
+   d'étincelles et une bulle « ✨ Nouveau ! ». */
+.eclat-embauche {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.eclat-embauche-rayons {
+  position: absolute;
+  left: -70px;
+  top: -70px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgb(255 225 110 / 0.85) 0 8deg, transparent 8deg 30deg);
+  mask: radial-gradient(circle, transparent 18%, #000 20%, #000 60%, transparent 70%);
+  animation: embauche-rayons 1.6s ease-out forwards;
+}
+.eclat-embauche i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4px;
+  border-radius: 2px;
+  background: #ffd84a;
+  box-shadow: 0 0 8px #fff3a0;
+  animation: embauche-etincelle 1.3s ease-out forwards;
+}
+.eclat-embauche i:nth-child(3n) { background: #7ee36a; }
+.eclat-embauche i:nth-child(3n + 1) { background: #6ec3ff; }
+.eclat-embauche-texte {
+  position: absolute;
+  left: 0;
+  top: -60px;
+  translate: -50% 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: linear-gradient(#ffe27a, #f0a01c);
+  color: #3b2412;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px #fff6d2, 0 4px 14px rgb(0 0 0 / 0.4);
+  animation: embauche-texte 2.6s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+}
+@keyframes embauche-rayons {
+  0% { transform: scale(0.2) rotate(0deg); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: scale(1.4) rotate(90deg); opacity: 0; }
+}
+@keyframes embauche-etincelle {
+  0% { transform: rotate(var(--angle)) translateX(0) scale(1.4); opacity: 1; }
+  100% { transform: rotate(var(--angle)) translateX(80px) scale(0.3); opacity: 0; }
+}
+@keyframes embauche-texte {
+  0% { transform: scale(0.3) translateY(20px); opacity: 0; }
+  15% { transform: scale(1.15); opacity: 1; }
+  25%, 80% { transform: scale(1); opacity: 1; }
+  100% { transform: translateY(-24px); opacity: 0; }
+}
+.perso-nouveau::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: -10px;
+  width: 44px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid #ffd84a;
+  box-shadow: 0 0 14px #ffd84a, inset 0 0 10px #ffd84a;
+  animation: nouveau-halo 0.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.perso-nouveau::after {
+  content: '✦ ✧ ✦';
+  position: absolute;
+  left: -20px;
+  top: -40px;
+  color: #ffe066;
+  font-size: 0.8rem;
+  text-shadow: 0 0 6px #fff3a0;
+  animation: nouveau-etincelles 0.9s linear infinite;
+  pointer-events: none;
+}
+.bulle-nouveau-mineur {
+  display: block;
+  margin-bottom: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffd84a;
+  color: #3b2412;
+  font-size: 0.7rem;
+  font-weight: 900;
+  white-space: nowrap;
+  animation: nouveau-bulle 0.6s ease-in-out infinite alternate;
+}
+@keyframes nouveau-halo { 50% { transform: scale(1.25); opacity: 0.6; } }
+@keyframes nouveau-etincelles {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-14px); opacity: 0; }
+}
+@keyframes nouveau-bulle { to { transform: translateY(-3px) scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+  .eclat-embauche-rayons, .eclat-embauche i, .eclat-embauche-texte, .perso-nouveau::before, .perso-nouveau::after, .bulle-nouveau-mineur { animation: none; }
 }

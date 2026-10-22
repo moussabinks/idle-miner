@@ -15,6 +15,7 @@
 import type { Aleatoire } from './aleatoire'
 import {
   BLOCS,
+  BONUS_COMBO,
   CLICS_MAINS_NUES,
   NIVEAUX_ASCENSEUR,
   NIVEAUX_COFFRE,
@@ -23,6 +24,7 @@ import {
   PIOCHES,
   SACS,
   SECONDES_ECHELLE,
+  type BonusCombo,
   type Cout,
   type IdBloc,
   type IdRarete,
@@ -179,6 +181,9 @@ export type EtatJeu = {
   // compté de chaque chose qui rapporte de l'XP (blocs cassés, bâtiments, rails...).
   xp: number
   recordsXp: Record<string, number>
+  // Le bonus de combo en cours (30/10) : son palier, et l'heure de jeu (stats.tempsDeJeu) où il
+  // s'arrête. Absent : pas de bonus.
+  bonus?: { palier: number; fin: number } | null
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
@@ -186,7 +191,9 @@ export type EtatJeu = {
 // Version 23 (26/10) : les pousseurs sont embauchés pour un trajet (une partie de la version 22
 // est convertie : un ancien pousseur prend le trajet Mine → Marché).
 // Version 24 (29/10) : le niveau du joueur (une partie de la version 23 reçoit l'XP de ce qu'elle a déjà).
-export const VERSION_ETAT = 24
+// Version 25 (30/10) : l'ascenseur est dans la mine dès le début, les bonus de combo, le résumé
+// de l'absence (une partie de la version 24 reçoit l'ascenseur de niveau 1).
+export const VERSION_ETAT = 25
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------
@@ -221,7 +228,7 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     pioches: { 0: 0 }, // la pioche en pierre est offerte
     niveauPioche: 0,
     meilleure: 0,
-    ascenseur: { niveau: 0 },
+    ascenseur: { niveau: 1 }, // (30/10) la mine a son ascenseur dès le début
     employes: [],
     recruteur: 0,
     manager: { embauche: false, tempsPaye: 0 },
@@ -379,9 +386,31 @@ export function estCassee(etat: EtatJeu): boolean {
   return durabiliteRestante(etat) === 0
 }
 
-// La chance de doubler un minerai en cliquant (0 avec une pioche cassée).
+// Le bonus de combo en cours (null s'il n'y en a pas, ou s'il est fini).
+export function bonusActif(etat: EtatJeu): BonusCombo | null {
+  if (!etat.bonus || etat.stats.tempsDeJeu >= etat.bonus.fin) return null
+  return BONUS_COMBO.find((b) => b.palier === etat.bonus?.palier) ?? null
+}
+
+// Les secondes qu'il reste au bonus en cours.
+export function secondesBonus(etat: EtatJeu): number {
+  return bonusActif(etat) && etat.bonus ? Math.max(0, etat.bonus.fin - etat.stats.tempsDeJeu) : 0
+}
+
+// Le joueur atteint un palier de combo (10, 25, 50... clics d'affilée) : il gagne le bonus de ce
+// palier (il remplace celui en cours).
+export function activerBonusCombo(etat: EtatJeu, palier: number): string[] {
+  const bonus = BONUS_COMBO.find((b) => b.palier === palier)
+  if (!bonus) return []
+  etat.bonus = { palier, fin: etat.stats.tempsDeJeu + bonus.secondes }
+  const effets = [bonus.fortune > 0 ? `+${Math.round(bonus.fortune * 100)} % de fortune` : '', bonus.blocs > 1 ? `${bonus.blocs} blocs par clic` : ''].filter(Boolean).join(', ')
+  return [`${bonus.emoji} Combo ×${palier} : ${bonus.nom} ! ${effets} pendant ${bonus.secondes} s`]
+}
+
+// La chance de doubler un minerai en cliquant (0 avec une pioche cassée, sauf bonus de combo).
 export function chanceDoublement(etat: EtatJeu): number {
-  return estCassee(etat) ? 0 : piocheEnMain(etat).doublement
+  const base = estCassee(etat) ? 0 : piocheEnMain(etat).doublement
+  return Math.min(1, base + (bonusActif(etat)?.fortune ?? 0))
 }
 
 // Un clic sur le bloc de la mine : il casse le bloc (avec une pioche cassée, un clic sur deux),
@@ -395,7 +424,8 @@ export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   etat.clics = 0
   const bloc = etat.prochainBloc
   const double = BLOCS[bloc].minerai && aleatoire() < chanceDoublement(etat)
-  const nombre = double ? 2 : 1
+  // (un bonus de combo peut casser plusieurs blocs d'un coup : 30/10)
+  const nombre = (double ? 2 : 1) * (bonusActif(etat)?.blocs ?? 1)
   rangerDansCoffre(etat, bloc, nombre)
   ajouterA(etat.stats.blocsParType, bloc, 1)
   etat.stats.blocsCasses += 1

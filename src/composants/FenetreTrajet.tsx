@@ -17,12 +17,15 @@ import type { EtatJeu, Inventaire } from '../jeu/mineur'
 import { charbonMaxForeuse } from '../jeu/foreuse'
 import { apercuTrajet, exclusAffiches, objetFixe, objetsAuChoix, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
 import { IMAGES_BATIMENTS } from './iso'
+import { BoutonsRail } from './FenetreRail'
 
 type Props = {
   etat: EtatJeu
   liaisons: IdLiaison[] // les trajets qui passent par les rails touchés
   onValider: (reglages: Partial<Record<IdLiaison, ReglageTrajet>>) => void
   onFermer: () => void
+  // (30/10) On a touché un rail : de quoi le déplacer ou le retirer, en bas de la fenêtre.
+  actionsRail?: { onDeplacer: () => void; onRetirer: () => void } | null
 }
 
 // Ce qu'il y a au départ du trajet (le coffre de la mine, ou le chariot de la foreuse).
@@ -80,7 +83,7 @@ function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
   )
 }
 
-export function FenetreTrajet({ etat, liaisons, onValider, onFermer }: Props) {
+export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail = null }: Props) {
   // Les réglages en cours (pas encore validés), un par trajet. Un trajet pas encore créé est
   // proposé activé : c'est pour ça qu'on a posé les rails.
   const [reglages, setReglages] = useState<Partial<Record<IdLiaison, ReglageTrajet>>>(() =>
@@ -244,6 +247,12 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer }: Props) {
             ✖ Annuler
           </button>
         </div>
+        {actionsRail && (
+          <div className="actions-rail">
+            <span className="discret">Ce rail :</span>
+            <BoutonsRail onDeplacer={actionsRail.onDeplacer} onRetirer={actionsRail.onRetirer} />
+          </div>
+        )}
       </div>
     </div>
   )

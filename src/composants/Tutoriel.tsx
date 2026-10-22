@@ -134,13 +134,26 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
       // Il faut un peu d'argent et de pierre : s'il en manque, on retourne creuser et vendre.
       const cout = BATIMENTS.forgeron.cout
       const manque = !peutPayer(etat, cout)
-      if (manque && !ui.menuConstruction && ui.posePrevue !== 'forgeron')
+      // (30/10) Il manque de la pierre : on creuse. Il manque de l'argent : on va vendre (en
+      // gardant la pierre). Dès qu'on a tout, le panneau de la mine se ferme (App) et la flèche
+      // montre le menu Bâtiments.
+      const pierreVoulue = cout.materiaux.pierre ?? 0
+      const manquePierre = disponible(etat, 'pierre') < pierreVoulue
+      if (manque && manquePierre && !ui.menuConstruction && ui.posePrevue !== 'forgeron')
         return {
-          titre: 'Construis le forgeron',
-          texte: `Il coûte ${cout.argent ?? 0} $ et ${cout.materiaux.pierre ?? 0} pierre (tu as ${Math.floor(etat.argent)} $ et ${disponible(etat, 'pierre')} pierre) : creuse encore, vends au marché, puis ouvre le menu Bâtiments.`,
+          titre: `Récupère ${pierreVoulue} pierre : ${Math.min(disponible(etat, 'pierre'), pierreVoulue)} / ${pierreVoulue}`,
+          texte: `Le forgeron coûte ${cout.argent ?? 0} $ et ${pierreVoulue} pierre. Creuse encore un peu : la pierre va dans le coffre.`,
           pourquoi: 'Le forgeron répare ta pioche et en fabrique de meilleures.',
           geste: 'Creuse !',
           cible: ui.batimentOuvert === 'puits' ? '[data-tuto="bloc"]' : batiment('puits'),
+        }
+      if (manque && !ui.menuConstruction && ui.posePrevue !== 'forgeron')
+        return {
+          titre: `Gagne ${cout.argent ?? 0} $ : ${Math.floor(etat.argent)} / ${cout.argent ?? 0}`,
+          texte: nbDansSac(etat) > 0 ? 'Va vendre ton sac au marché (garde ta pierre !).' : 'Mets du charbon et du fer dans ton sac (garde la pierre), puis vends-les au marché.',
+          pourquoi: 'Il te manque un peu d’argent pour le forgeron.',
+          geste: 'Touche ici !',
+          cible: nbDansSac(etat) > 0 ? batiment('marche') : batiment('puits'),
         }
       if (ui.posePrevue === 'forgeron')
         return {

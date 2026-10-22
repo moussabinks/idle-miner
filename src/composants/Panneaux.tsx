@@ -5,7 +5,7 @@
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
 import { StockMinerais } from './StockMinerais'
-import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
@@ -121,11 +121,32 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
     })
   }
 
-  // Sac vide : une seule phrase, rien d'autre (27/10).
+  // Sac vide (30/10) : le marché s'ouvre quand même, avec un message bien visible et les prix
+  // de chaque minerai (on voit ce que vaudra son prochain sac).
   if (piles.length === 0) {
     return (
       <div className="liste-cartes">
-        <p className="discret">🎒 Ton sac est vide. Remplis-le au coffre de la mine, puis reviens vendre ici !</p>
+        <div className="sac-vide-marche" role="status">
+          <span className="sac-vide-icone" aria-hidden="true">
+            🎒
+          </span>
+          <span>
+            <strong>Ton sac est vide !</strong>
+            <span className="discret">Remplis-le au coffre de la mine (bouton 🎒), puis reviens vendre ici.</span>
+          </span>
+        </div>
+        <div className="ligne-achat">
+          <strong>💰 Les prix du marché</strong>
+          <ul className="prix-marche">
+            {LISTE_BLOCS.map((bloc) => (
+              <li key={bloc}>
+                <span className={`mini-bloc bloc-${bloc} roche-pierre`} aria-hidden="true" />
+                <span>{BLOCS[bloc].nom}</span>
+                <strong>{BLOCS[bloc].prix} $</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }

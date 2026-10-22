@@ -13,10 +13,14 @@
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
 import { useEffect, useRef, useState } from 'react'
-import { BATIMENTS, BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, BONUS_COMBO, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
 import { chancesDesBlocs, gainsNiveauSuivant, infoNiveauMine } from '../jeu/mine'
 import {
+  prochainNiveauAscenseur,
+  activerBonusCombo,
   agrandirCoffre,
+  bonusActif,
+  secondesBonus,
   capaciteCoffre,
   chanceDoublement,
   coffrePlein,
@@ -56,11 +60,16 @@ function parSeconde(n: number): string {
   return n.toLocaleString('fr-FR', { maximumFractionDigits: n < 1 ? 2 : n < 10 ? 1 : 0 })
 }
 
-// Le combo : les clics rapprochés (moins de DELAI_COMBO entre deux) s'additionnent. Ce n'est que
-// pour le plaisir (aucune règle du jeu) : le compteur grossit, le bloc brille, et un son
-// marque chaque palier.
+// Le combo : les clics rapprochés (moins de DELAI_COMBO entre deux) s'additionnent : le compteur
+// grossit, le bloc brille, et un son marque chaque palier. (30/10) Chaque palier donne aussi un
+// bonus de quelques secondes (BONUS_COMBO dans donnees.ts : fortune, plusieurs blocs par clic).
 const DELAI_COMBO = 900 // ms
-const PALIERS_COMBO = [10, 25, 50, 100, 200, 500]
+const PALIERS_COMBO = BONUS_COMBO.map((b) => b.palier)
+
+// Le prochain palier de combo (et son bonus), au-delà de ce combo.
+function prochainPalier(combo: number) {
+  return BONUS_COMBO.find((b) => b.palier > combo) ?? null
+}
 
 // Le bloc à casser, en très grand, avec ses éclats, les minerais qui en sortent et le combo.
 function BlocACliquer({
@@ -68,14 +77,17 @@ function BlocACliquer({
   eclats,
   trouvailles,
   onCliquer,
+  onPalier,
   clicsParSeconde,
 }: {
   etat: EtatJeu
   eclats: Eclat[]
   trouvailles: Trouvaille[]
   onCliquer: () => void
+  onPalier: (palier: number) => void
   clicsParSeconde: number
 }) {
+  const bonus = bonusActif(etat)
   const prod = production(etat)
   const bloc = etat.prochainBloc
   const plein = coffrePlein(etat)
@@ -89,7 +101,10 @@ function BlocACliquer({
     const suite = maintenant - dernierClic.current < DELAI_COMBO ? combo + 1 : 1
     dernierClic.current = maintenant
     setCombo(suite)
-    if (PALIERS_COMBO.includes(suite)) sons.combo(PALIERS_COMBO.indexOf(suite))
+    if (PALIERS_COMBO.includes(suite)) {
+      sons.combo(PALIERS_COMBO.indexOf(suite))
+      onPalier(suite)
+    }
     // Sans clic pendant un moment, le combo retombe.
     window.clearTimeout(finCombo.current)
     finCombo.current = window.setTimeout(() => setCombo(0), DELAI_COMBO)
@@ -100,7 +115,22 @@ function BlocACliquer({
   // Plus le combo est long, plus le bloc brille (de 0 à 1).
   const ardeur = Math.min(1, combo / 50)
   return (
-    <div className={`zone-bloc-mine ${combo >= 10 ? 'zone-en-feu' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
+    <div className={`zone-bloc-mine ${combo >= 10 ? 'zone-en-feu' : ''} ${bonus ? 'zone-bonus' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
+      {/* Le bonus de combo en cours (30/10), avec le temps qui reste. */}
+      {bonus && (
+        <span key={etat.bonus?.palier} className="bonus-combo" aria-live="polite">
+          {bonus.emoji} {bonus.nom}
+          <small>
+            {bonus.fortune > 0 && ` +${Math.round(bonus.fortune * 100)} % fortune`}
+            {bonus.blocs > 1 && ` · ×${bonus.blocs} blocs`} · {Math.ceil(secondesBonus(etat))} s
+          </small>
+        </span>
+      )}
+      {!bonus && combo >= 3 && prochainPalier(combo) && (
+        <span className="bonus-prochain discret">
+          Prochain bonus à ×{prochainPalier(combo)?.palier} : {prochainPalier(combo)?.emoji} {prochainPalier(combo)?.nom}
+        </span>
+      )}
       <button
         className={`bloc-mine ${etat.clics > 0 ? 'bloc-fissure' : ''}`}
         data-tuto="bloc"
@@ -152,14 +182,15 @@ function BlocACliquer({
   )
 }
 
-// La pioche en main : son nom et sa durabilité (rouge quand elle s'use, « cassée » à zéro).
+// La pioche en main : son nom et sa durabilité (du vert au rouge quand elle s'use, « cassée » à zéro).
 function JaugePioche({ etat }: { etat: EtatJeu }) {
   const pioche = piocheEnMain(etat)
   const reste = durabiliteRestante(etat)
   const part = reste / Math.max(1, pioche.durabilite)
-  const niveau = reste <= 0 ? 'pioche-cassee' : part < 0.2 ? 'pioche-usee' : ''
+  // (30/10) Sous 15 %, elle clignote ; sa couleur va du vert (neuve) au rouge (presque cassée).
+  const niveau = reste <= 0 ? 'pioche-cassee' : part < 0.15 ? 'pioche-usee' : ''
   return (
-    <div className={`jauge-pioche ${niveau}`} title={`Pioche en ${pioche.nom} : ${reste} / ${pioche.durabilite} clics`}>
+    <div className={`jauge-pioche ${niveau}`} style={{ ['--teinte' as string]: Math.round(part * 120) }} title={`Pioche en ${pioche.nom} : ${reste} / ${pioche.durabilite} clics`}>
       <span className="jauge-pioche-icone" aria-hidden="true">
         {reste <= 0 ? '💥' : pioche.emoji}
       </span>
@@ -372,8 +403,9 @@ function ProchainNiveau({ etat, onVoir }: { etat: EtatJeu; onVoir: () => void })
   )
 }
 
-// Les onglets du panneau (27/10 : cinq, pour que rien ne défile).
-type OngletMine = 'creuser' | 'production' | 'wagonnets' | 'niveau' | 'ameliorer'
+// Les onglets du panneau. (30/10 : quatre ; « Améliorer » réunit le niveau de la mine, le coffre
+// et l'ascenseur, qui étaient cachés dans « Plus ».)
+type OngletMine = 'creuser' | 'production' | 'wagonnets' | 'ameliorer'
 
 // Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
 const FENETRE_CLICS = 3000 // ms
@@ -401,7 +433,11 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
   const puits = analyseAscenseur(etat)
   // Ce qu'on peut acheter tout de suite (pour les pastilles des onglets).
   const niveauAchetable = prochain !== null && peutPayer(etat, prochain.cout)
-  const ameliorable = coffre !== null && peutPayer(etat, coffre.cout)
+  const ascenseurSuivant = prochainNiveauAscenseur(etat)
+  const ameliorable =
+    niveauAchetable ||
+    (coffre !== null && verrou(etat, 'coffre', etat.coffre.niveau + 1) === null && peutPayer(etat, coffre.cout)) ||
+    (ascenseurSuivant !== null && verrou(etat, 'ascenseur', etat.ascenseur.niveau) === null && peutPayer(etat, ascenseurSuivant.cout))
   // Un goulot (ascenseur trop lent, wagonnet saturé) : une pastille « ! » sur l'onglet Production.
   const wagonnetMarche = analyseWagonnet(etat)
   const goulot = (etat.employes.some((e) => e.role === 'mineur') && puits.tropLent) || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
@@ -412,19 +448,29 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
       <OngletsPanneau
         onglets={[
           { id: 'creuser', titre: '⛏️ Creuser', pastille: coffrePlein(etat) ? '!' : null },
-          { id: 'production', titre: '📊 Prod.', pastille: goulot ? '!' : null },
+          { id: 'ameliorer', titre: '⬆️ Améliorer', pastille: ameliorable ? '+' : null },
           { id: 'wagonnets', titre: etat.trajets.length > 0 ? `🚃 Wagons (${etat.trajets.length})` : '🚃 Wagons' },
-          { id: 'niveau', titre: `⬇️ Niv. ${etat.niveauMine}`, pastille: niveauAchetable ? '+' : null },
-          { id: 'ameliorer', titre: '⬆️ Plus', pastille: ameliorable ? '+' : null },
+          { id: 'production', titre: '📊 Prod.', pastille: goulot ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
       />
       {onglet === 'creuser' && (
         <>
-          <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} clicsParSeconde={clicsParSeconde} />
+          <BlocACliquer
+            etat={etat}
+            eclats={eclats}
+            trouvailles={trouvailles}
+            onCliquer={cliquer}
+            onPalier={(palier) => jouer((e) => activerBonusCombo(e, palier))}
+            clicsParSeconde={clicsParSeconde}
+          />
           <CoffreMine etat={etat} jouer={jouer} />
-          <ProchainNiveau etat={etat} onVoir={() => setOnglet('niveau')} />
+          {/* (30/10) Un raccourci bien visible vers les améliorations de la mine. */}
+          <button className={`raccourci-ameliorer ${ameliorable ? 'raccourci-possible' : ''}`} onClick={() => setOnglet('ameliorer')}>
+            ⬆️ Agrandir le coffre, l’ascenseur, descendre la mine {ameliorable ? '· 💰 Achetable !' : '›'}
+          </button>
+          <ProchainNiveau etat={etat} onVoir={() => setOnglet('ameliorer')} />
         </>
       )}
 
@@ -437,7 +483,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
 
       {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" onReglerTrajet={onReglerTrajet} />}
 
-      {onglet === 'niveau' && (
+      {onglet === 'ameliorer' && (
         <>
           {/* Descendre d'un niveau (27/10) : la grande carte, avec tout ce qu'on y gagne. */}
           <div className={`ligne-achat carte-niveau-mine ${prochain && peutPayer(etat, prochain.cout) ? 'niveau-achetable' : ''}`}>
@@ -479,11 +525,6 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
             />
           </div>
 
-        </>
-      )}
-
-      {onglet === 'ameliorer' && (
-        <>
           <div className="ligne-achat">
             <strong>📦 Taille du coffre</strong>
             <Amelioration
