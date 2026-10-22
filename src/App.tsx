@@ -379,11 +379,11 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             ✖
           </button>
         </div>
-        {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />}
+        {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} onReglerTrajet={setTrajetsOuverts} />}
         {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {batimentActif === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
-        {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
+        {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} />}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
         {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
       </section>

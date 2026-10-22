@@ -5,7 +5,7 @@
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
 import { StockMinerais } from './StockMinerais'
-import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
@@ -69,6 +69,7 @@ import { Jauges } from './Jauges'
 export type PropsPanneau = {
   etat: EtatJeu
   jouer: (action: Action) => void
+  onReglerTrajet?: (liaisons: IdLiaison[]) => void // ouvre la fenêtre des trajets (27/10)
 }
 
 // Chaque sorte d'action a sa couleur (voir « Les couleurs des boutons » dans index.css).
@@ -271,7 +272,7 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
 // ---------------------------------------------------------------------------
 
 // La foreuse : elle fore toute seule tant qu'elle a du charbon, plus vite avec l'électricité.
-export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
+export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
   const foreuse = etat.foreuse
   const enMarche = foreuseEnMarche(etat)
   const chariot = prochainNiveauChariot(etat)
@@ -379,7 +380,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
           </div>
         </>
       )}
-      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="foreuse" />}
+      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="foreuse" onReglerTrajet={onReglerTrajet} />}
     </div>
   )
 }

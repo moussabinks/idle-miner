@@ -377,7 +377,7 @@ type OngletMine = 'creuser' | 'production' | 'wagonnets' | 'niveau' | 'ameliorer
 // Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
 const FENETRE_CLICS = 3000 // ms
 
-export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
+export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReglerTrajet }: Props) {
   const [onglet, setOnglet] = useState<OngletMine>('creuser')
   // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
   const clics = useRef<number[]>([])
@@ -434,7 +434,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
         </>
       )}
 
-      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" />}
+      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" onReglerTrajet={onReglerTrajet} />}
 
       {onglet === 'niveau' && (
         <>

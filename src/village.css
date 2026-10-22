@@ -2020,51 +2020,6 @@ g.grille-construction {
   --couleur-bulle-foncee: #a87406;
 }
 
-/* La fenêtre d'un trajet : un réglage par trajet qui passe par les rails touchés. */
-.fenetre-trajet {
-  width: min(440px, 100%);
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  border-color: #ffd21f;
-  animation: eclat 0.25s ease-out;
-}
-
-.fenetre-trajet h2 {
-  color: #ffd21f;
-  text-align: center;
-}
-
-.reglage-trajet {
-  margin: 10px 0;
-  padding: 10px 12px;
-  border: 2px solid rgb(255 255 255 / 0.15);
-  border-radius: 12px;
-  background: rgb(0 0 0 / 0.2);
-}
-
-.reglage-trajet.reglage-actif {
-  border-color: rgb(255 210 31 / 0.6);
-}
-
-.reglage-titre {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.reglage-trajet p {
-  margin: 6px 0;
-}
-
-.reglage-sous-titre {
-  font-weight: 700;
-}
-
-.reglage-trajet .petit {
-  font-size: 0.8em;
-}
-
 /* L'interrupteur : rouge (arrêté) ou vert (activé). */
 .interrupteur-trajet {
   display: flex;
@@ -2116,37 +2071,7 @@ g.grille-construction {
   translate: 18px 0;
 }
 
-/* Les objets à envoyer : des pastilles à toucher (vert = envoyé, gris = gardé). */
-.objets-trajet {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
 
-.objet-trajet {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 9px;
-  border: 2px solid rgb(255 255 255 / 0.2);
-  border-radius: 999px;
-  background: rgb(0 0 0 / 0.25);
-  color: inherit;
-  font: inherit;
-  font-size: 0.9em;
-  opacity: 0.6;
-  cursor: pointer;
-}
-
-.objet-trajet.envoye {
-  border-color: #3fa34d;
-  background: rgb(63 163 77 / 0.3);
-  opacity: 1;
-}
-
-.objet-trajet-coche {
-  font-size: 0.8em;
-}
 
 /* --- Le panneau de la mine (27/10) : le coffre en tableau, et le niveau suivant en avant --- */
 
@@ -2321,6 +2246,434 @@ g.grille-construction {
 @media (prefers-reduced-motion: reduce) {
   .rappel-niveau.rappel-possible,
   .carte-niveau-mine.niveau-achetable {
+    animation: none;
+  }
+}
+
+/* --- La fenêtre des trajets (27/10) : le poste d'aiguillage ------------------------------
+   Un papier crème au gros contour (comme le tutoriel), le dessin du trajet où roule le
+   wagonnet, l'interrupteur, les objets en grosses tuiles à toucher (vertes = emportées,
+   grises = gardées), et l'aperçu du prochain voyage qui change à chaque toucher. */
+
+.fenetre-trajet {
+  display: grid;
+  gap: 10px;
+  width: min(500px, 100%);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  border: 4px solid #fff;
+  border-radius: 24px;
+  background: linear-gradient(#fff8e6, #ffe7b0);
+  box-shadow: 0 0 0 3px #3b2412, 0 8px 0 rgb(0 0 0 / 0.35);
+  color: #3b2412;
+  animation: eclat 0.25s ease-out;
+}
+
+.fenetre-trajet .discret {
+  color: #7a5a32;
+}
+
+.entete-trajet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entete-trajet h2 {
+  margin: 0;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  color: #e07a0e;
+  text-shadow: 0 2px 0 #fff;
+}
+
+.description-trajet {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+/* Les onglets des trajets, avec leur voyant. */
+.onglets-trajets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.onglet-trajet {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 2px solid #c9a36a;
+  border-radius: 999px;
+  background: #fff;
+  color: #3b2412;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.onglet-trajet.actif {
+  border-color: #3b2412;
+  background: linear-gradient(#fff0a0, #ffc21f);
+  box-shadow: 0 2px 0 #3b2412;
+}
+
+.voyant {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b8402f;
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.25);
+}
+
+.voyant.allume {
+  background: #3fcf4f;
+  box-shadow: 0 0 8px #3fcf4f;
+}
+
+/* Le dessin du trajet : départ, rails, arrivée. */
+.dessin-trajet {
+  display: grid;
+  grid-template-columns: 96px 1fr 96px;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 50% 120%, #8fcf6a, #5e9e3e);
+  box-shadow: inset 0 0 0 2px rgb(59 36 18 / 0.35);
+}
+
+.dessin-batiment {
+  display: grid;
+  justify-items: center;
+}
+
+.dessin-batiment img {
+  width: 90px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 2px rgb(0 0 0 / 0.35));
+}
+
+.dessin-batiment small {
+  margin-top: -4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(59 36 18 / 0.85);
+  color: #fff3d6;
+  font-weight: 800;
+  font-size: 0.68rem;
+}
+
+.dessin-rails {
+  position: relative;
+  height: 40px;
+}
+
+/* Deux rails et leurs traverses. */
+.dessin-voie {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 16px;
+  translate: 0 -50%;
+  border-top: 3px solid #8d99a6;
+  border-bottom: 3px solid #8d99a6;
+  background: repeating-linear-gradient(90deg, #8a5a2b 0 5px, transparent 5px 12px);
+}
+
+.dessin-wagonnet {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  font-size: 1.7rem;
+  translate: 0 -62%;
+  filter: grayscale(1) opacity(0.6);
+}
+
+.dessin-actif .dessin-wagonnet {
+  filter: none;
+  animation: wagonnet-va 2.6s ease-in-out infinite;
+}
+
+@keyframes wagonnet-va {
+  0% { left: 0; }
+  45%, 55% { left: calc(100% - 2rem); }
+  100% { left: 0; }
+}
+
+/* Les tuiles des objets. */
+.choix-objets {
+  display: grid;
+  gap: 6px;
+}
+
+.choix-objets-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.choix-rapides {
+  display: flex;
+  gap: 4px;
+}
+
+.choix-rapides button {
+  padding: 3px 10px;
+  border: 2px solid #3b2412;
+  border-radius: 999px;
+  background: #fff;
+  color: #3b2412;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  box-shadow: 0 2px 0 #3b2412;
+  cursor: pointer;
+}
+
+.choix-rapides button:active {
+  translate: 0 2px;
+  box-shadow: none;
+}
+
+.tuiles-objets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 7px;
+}
+
+.tuile-objet {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 8px 4px 6px;
+  border: 3px solid #3b2412;
+  border-radius: 14px;
+  color: #3b2412;
+  font: inherit;
+  cursor: pointer;
+  transition: translate 0.1s, box-shadow 0.1s;
+}
+
+.tuile-objet.envoye {
+  background: linear-gradient(#d8f8c8, #8fdd7a);
+  box-shadow: 0 4px 0 #2a8237, 0 0 12px rgb(80 220 100 / 0.5);
+}
+
+.tuile-objet.garde {
+  background: linear-gradient(#ece6da, #c9c0ae);
+  box-shadow: 0 4px 0 #8a7e68;
+  opacity: 0.75;
+}
+
+.tuile-objet.garde .tuile-icone {
+  filter: grayscale(0.9);
+}
+
+.tuile-objet:hover {
+  translate: 0 -2px;
+}
+
+.tuile-objet:active {
+  translate: 0 3px;
+  box-shadow: 0 1px 0 #3b2412;
+}
+
+.tuile-objet.touchee {
+  animation: tuile-saute 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.tuile-icone {
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+
+.tuile-nom {
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.tuile-infos {
+  font-size: 0.66rem;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.tuile-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-size: 0.7rem;
+  color: #fff;
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.3);
+}
+
+.envoye .tuile-badge {
+  background: #3fa34d;
+}
+
+.garde .tuile-badge {
+  background: #8a7e68;
+}
+
+@keyframes tuile-saute {
+  0% { scale: 0.85; }
+  60% { scale: 1.1; }
+  100% { scale: 1; }
+}
+
+/* Le charbon ou la redstone, toujours, et sa réserve. */
+.tuile-fixe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 3px solid #3b2412;
+  border-radius: 14px;
+  background: linear-gradient(#d8f8c8, #8fdd7a);
+  box-shadow: 0 4px 0 #2a8237;
+}
+
+.tuile-fixe-texte {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  font-size: 0.82rem;
+}
+
+.tuile-reserve {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+
+.tuile-reserve i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(#ffd84a, #e0960e);
+}
+
+.tuile-reserve span {
+  position: relative;
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 900;
+  line-height: 14px;
+  text-align: center;
+}
+
+/* L'aperçu du prochain voyage. */
+.apercu-voyage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 3px solid #3b2412;
+  background: linear-gradient(#7a5230, #5a3a1e);
+  color: #fff3d6;
+}
+
+.apercu-chargement {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.apercu-titre {
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffd84a;
+}
+
+.apercu-voyage .discret {
+  color: #e8d4b0;
+  font-size: 0.78rem;
+}
+
+.apercu-objets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.apercu-chiffres {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.apercu-valeur {
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
+  font-size: 1.4rem;
+  color: #ffe066;
+  text-shadow: 0 2px 0 #3b2412;
+  animation: apercu-saute 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.apercu-detail {
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+@keyframes apercu-saute {
+  0% { scale: 0.7; }
+  60% { scale: 1.15; }
+  100% { scale: 1; }
+}
+
+/* Qui fait rouler le wagonnet. */
+.moteur-trajet {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.moteur-electricite {
+  background: rgb(255 210 31 / 0.35);
+}
+
+.moteur-pousseur {
+  background: rgb(63 163 77 / 0.2);
+}
+
+.moteur-toi {
+  background: rgb(232 69 47 / 0.18);
+  color: #8e1a12;
+}
+
+.bouton-valider-trajet {
+  min-width: 160px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dessin-actif .dessin-wagonnet,
+  .tuile-objet.touchee,
+  .apercu-valeur {
     animation: none;
   }
 }

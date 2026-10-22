@@ -14,7 +14,9 @@ import {
   joueurPousse,
   ligneDe,
   liaisonsDepuis,
+  apercuTrajet,
   envoyerObjet,
+  exclusAffiches,
   liaisonsSurLaCase,
   objetEnvoye,
   milieuDeLigne,
@@ -318,5 +320,28 @@ describe('les minerais du wagonnet, au panneau de la mine (27/10)', () => {
     envoyerObjet(etat, 'mine-marche', 'fer', true)
     expect(etat.nonAVendre).toEqual([])
     expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(true)
+  })
+})
+
+describe('l’aperçu d’un trajet, dans la fenêtre des rails (27/10)', () => {
+  it('ce qu’emporterait le wagonnet, selon les objets décochés', () => {
+    const etat = partie()
+    etat.coffre.contenu = { pierre: 30, fer: 5, charbon: 10 }
+    const tout = apercuTrajet(etat, 'mine-marche', [])
+    expect(tout.objets).toEqual([['fer', 5], ['charbon', 10], ['pierre', 25]]) // 40 places, les plus chers d'abord
+    expect(tout.valeur).toBe(5 * 12 + 10 * 5 + 25)
+    expect(tout.moteur).toBe('toi') // pas de pousseur : c'est toi qui pousses
+    expect(tout.parMinute).toBeGreaterThan(0)
+    const sansPierre = apercuTrajet(etat, 'mine-marche', ['pierre'])
+    expect(sansPierre.objets).toEqual([['fer', 5], ['charbon', 10]])
+  })
+
+  it('valider envoie aussi les objets « gardés » au marché', () => {
+    const etat = partieAvecTrajet()
+    etat.nonAVendre = ['fer', 'or']
+    expect(exclusAffiches(etat, 'mine-marche')).toEqual(['fer'])
+    reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
+    // (l'or n'est pas un minerai du niveau 1 : il reste gardé)
+    expect(etat.nonAVendre).toEqual(['or'])
   })
 })

@@ -1,15 +1,21 @@
-// La fenêtre d'un trajet de wagonnet (27/10). Elle s'ouvre quand on touche la bulle « 🛤️ » au
+// La fenêtre des trajets de wagonnets (27/10). Elle s'ouvre quand on touche la bulle « 🛤️ » au
 // milieu d'une ligne de rails (des rails viennent de relier deux bâtiments), ou quand on touche
-// des rails déjà posés. On y règle chaque trajet qui passe par là :
-//   - l'automatisation est-elle activée (du bâtiment A vers le bâtiment B) ?
-//   - quels objets le wagonnet emporte (vers le marché) ?
+// des rails déjà posés. C'est le poste d'aiguillage :
+//   - en haut, un onglet par trajet qui passe par ces rails (s'il y en a plusieurs) ;
+//   - le dessin du trajet : le bâtiment de départ, les rails où roule le wagonnet, l'arrivée ;
+//   - l'interrupteur : automatisation activée ou arrêtée ;
+//   - les objets, en grosses tuiles à toucher : vert = le wagonnet l'emporte, gris = il le laisse
+//     (avec combien il y en a au départ) ; « Tout » et « Rien » ;
+//   - l'aperçu du prochain voyage, qui change à chaque toucher : ce qu'il emporte, ce que ça
+//     vaut, le temps d'un aller-retour, et ce que ça rapporte par minute.
 // Rien ne change tant qu'on n'a pas validé. Aucune règle du jeu ici : on lit l'état et on
-// appelle reglerTrajet (src/jeu/wagonnet.ts).
+// appelle reglerTrajet / apercuTrajet (src/jeu/wagonnet.ts).
 
 import { useEffect, useState } from 'react'
-import { BATIMENTS, BLOCS, LIAISONS, type IdBloc, type IdLiaison } from '../jeu/donnees'
-import type { EtatJeu } from '../jeu/mineur'
-import { aUnPousseur, exclusDe, objetFixe, objetsAuChoix, trajetDe, trajetElectrique, type ReglageTrajet } from '../jeu/wagonnet'
+import { BATIMENTS, BLOCS, LIAISONS, RESERVE_FOREUSE_WAGONNET, RESERVE_GENERATEUR_WAGONNET, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import type { EtatJeu, Inventaire } from '../jeu/mineur'
+import { apercuTrajet, exclusAffiches, objetFixe, objetsAuChoix, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
+import { IMAGES_BATIMENTS } from './iso'
 
 type Props = {
   etat: EtatJeu
@@ -18,113 +24,217 @@ type Props = {
   onFermer: () => void
 }
 
-export function FenetreTrajet({ etat, liaisons, onValider, onFermer }: Props) {
-  // Les réglages en cours (pas encore validés). Un trajet pas encore créé est proposé activé :
-  // c'est pour ça qu'on a posé les rails.
-  const [reglages, setReglages] = useState<Partial<Record<IdLiaison, ReglageTrajet>>>(() =>
-    Object.fromEntries(liaisons.map((l) => [l, { actif: true, exclus: exclusDe(etat, l) }])),
+// Ce qu'il y a au départ du trajet (le coffre de la mine, ou le chariot de la foreuse).
+function stockDuDepart(etat: EtatJeu, liaison: IdLiaison): Inventaire {
+  return LIAISONS[liaison].depart === 'foreuse' ? etat.foreuse.chariot : etat.coffre.contenu
+}
+
+const duree = (s: number) => (s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, '0')}`)
+
+// Le dessin du trajet : le départ, les rails (le wagonnet y roule quand le trajet est activé), l'arrivée.
+function DessinTrajet({ liaison, actif }: { liaison: IdLiaison; actif: boolean }) {
+  const info = LIAISONS[liaison]
+  return (
+    <div className={`dessin-trajet ${actif ? 'dessin-actif' : ''}`} aria-hidden="true">
+      <span className="dessin-batiment">
+        <img src={IMAGES_BATIMENTS[info.depart]} alt="" draggable={false} />
+        <small>{BATIMENTS[info.depart].nom}</small>
+      </span>
+      <span className="dessin-rails">
+        <span className="dessin-voie" />
+        <span className="dessin-wagonnet">🛒</span>
+      </span>
+      <span className="dessin-batiment">
+        <img src={IMAGES_BATIMENTS[info.arrivee]} alt="" draggable={false} />
+        <small>{BATIMENTS[info.arrivee].nom}</small>
+      </span>
+    </div>
   )
+}
+
+// La réserve que le wagonnet remplit (charbon de la foreuse, redstone du générateur).
+function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
+  const foreuse = liaison === 'mine-foreuse'
+  const bloc = foreuse ? 'charbon' : 'redstone'
+  const max = foreuse ? RESERVE_FOREUSE_WAGONNET / SECONDES_PAR_CHARBON : RESERVE_GENERATEUR_WAGONNET / SECONDES_PAR_REDSTONE
+  const actuel = Math.min(max, Math.floor(foreuse ? etat.foreuse.carburant / SECONDES_PAR_CHARBON : etat.generateur.carburant / SECONDES_PAR_REDSTONE))
+  return (
+    <div className="tuile-fixe">
+      <span className="tuile-icone">{BLOCS[bloc].emoji}</span>
+      <span className="tuile-fixe-texte">
+        <strong>{BLOCS[bloc].nom}, toujours</strong>
+        <span className="discret">
+          Il en apporte quand il en manque, jusqu’à {max} {foreuse ? 'dans la foreuse' : 'dans le générateur'}.
+        </span>
+        <span className="tuile-reserve">
+          <i style={{ width: `${Math.round((actuel / max) * 100)}%` }} />
+          <span>
+            {actuel} / {max}
+          </span>
+        </span>
+      </span>
+    </div>
+  )
+}
+
+export function FenetreTrajet({ etat, liaisons, onValider, onFermer }: Props) {
+  // Les réglages en cours (pas encore validés), un par trajet. Un trajet pas encore créé est
+  // proposé activé : c'est pour ça qu'on a posé les rails.
+  const [reglages, setReglages] = useState<Partial<Record<IdLiaison, ReglageTrajet>>>(() =>
+    Object.fromEntries(liaisons.map((l) => [l, { actif: true, exclus: exclusAffiches(etat, l) }])),
+  )
+  const [ouvert, setOuvert] = useState<IdLiaison>(liaisons[0])
+  // Le dernier objet touché (il rebondit).
+  const [touche, setTouche] = useState<{ bloc: IdBloc; n: number } | null>(null)
 
   // Échap ferme la fenêtre sans rien changer.
   useEffect(() => {
-    function touche(evenement: KeyboardEvent) {
+    function clavier(evenement: KeyboardEvent) {
       if (evenement.key === 'Escape') onFermer()
     }
-    window.addEventListener('keydown', touche)
-    return () => window.removeEventListener('keydown', touche)
+    window.addEventListener('keydown', clavier)
+    return () => window.removeEventListener('keydown', clavier)
   }, [onFermer])
 
   function changer(liaison: IdLiaison, modif: Partial<ReglageTrajet>) {
     setReglages((r) => ({ ...r, [liaison]: { ...(r[liaison] as ReglageTrajet), ...modif } }))
   }
 
-  function basculerObjet(liaison: IdLiaison, bloc: IdBloc) {
-    const exclus = reglages[liaison]?.exclus ?? []
-    changer(liaison, { exclus: exclus.includes(bloc) ? exclus.filter((b) => b !== bloc) : [...exclus, bloc] })
-  }
-
+  const liaison = ouvert
+  const info = LIAISONS[liaison]
+  const reglage = reglages[liaison] as ReglageTrajet
+  const choix = objetsAuChoix(etat, liaison)
+  const fixe = objetFixe(liaison)
+  const stock = stockDuDepart(etat, liaison)
+  const apercu = apercuTrajet(etat, liaison, reglage.exclus)
+  const versLeMarche = info.arrivee === 'marche'
   const nouveau = liaisons.some((l) => trajetDe(etat, l) === null)
+  const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
+
+  function basculer(bloc: IdBloc) {
+    const exclus = reglage.exclus
+    changer(liaison, { exclus: exclus.includes(bloc) ? exclus.filter((b) => b !== bloc) : [...exclus, bloc] })
+    setTouche((t) => ({ bloc, n: (t?.n ?? 0) + 1 }))
+  }
 
   return (
     <div className="voile" role="dialog" aria-modal="true" aria-labelledby="titre-fenetre-trajet" onClick={onFermer}>
       <div className="carte fenetre-trajet" onClick={(e) => e.stopPropagation()}>
-        <h2 id="titre-fenetre-trajet">🛤️ {nouveau ? 'Automatiser le trajet' : 'Régler le trajet'}</h2>
-        {liaisons.map((liaison) => {
-          const info = LIAISONS[liaison]
-          const reglage = reglages[liaison] as ReglageTrajet
-          const existe = trajetDe(etat, liaison) !== null
-          const choix = objetsAuChoix(etat, liaison)
-          const fixe = objetFixe(liaison)
-          const electrique = trajetElectrique(etat, liaison)
-          return (
-            <section key={liaison} className={`reglage-trajet ${reglage.actif ? 'reglage-actif' : ''}`}>
-              <div className="reglage-titre">
-                <strong>
-                  {info.emoji} {BATIMENTS[info.depart].nom} → {BATIMENTS[info.arrivee].nom}
-                </strong>
-                {existe && electrique && <span className="badge badge-vert">⚡ Électrique</span>}
-              </div>
-              <p className="discret">Un wagonnet {info.description}.</p>
+        <div className="entete-trajet">
+          <h2 id="titre-fenetre-trajet">🛤️ {nouveau ? 'Automatiser' : 'Tes trajets'}</h2>
+          <button className="bouton-fermer" onClick={onFermer} aria-label="Fermer">
+            ✖
+          </button>
+        </div>
 
-              {/* L'interrupteur : un gros bouton qui passe du rouge au vert. */}
-              <button
-                className={`interrupteur-trajet ${reglage.actif ? 'allume' : ''}`}
-                role="switch"
-                aria-checked={reglage.actif}
-                onClick={() => changer(liaison, { actif: !reglage.actif })}
-              >
-                <span className="interrupteur-curseur" aria-hidden="true" />
-                {reglage.actif ? 'Automatisation activée' : 'Automatisation arrêtée'}
+        {/* Un onglet par trajet qui passe par ces rails, avec un voyant (allumé ou éteint). */}
+        {liaisons.length > 1 && (
+          <div className="onglets-trajets" role="tablist">
+            {liaisons.map((l) => (
+              <button key={l} role="tab" aria-selected={l === ouvert} className={`onglet-trajet ${l === ouvert ? 'actif' : ''}`} onClick={() => setOuvert(l)}>
+                <span className={`voyant ${reglages[l]?.actif ? 'allume' : ''}`} aria-hidden="true" />
+                {LIAISONS[l].emoji} {BATIMENTS[LIAISONS[l].arrivee].nom}
               </button>
+            ))}
+          </div>
+        )}
 
-              {reglage.actif && choix.length > 0 && (
-                <>
-                  <p className="reglage-sous-titre">Objets à envoyer :</p>
-                  <div className="objets-trajet">
-                    {choix.map((bloc) => {
-                      const envoye = !reglage.exclus.includes(bloc)
-                      return (
-                        <button
-                          key={bloc}
-                          className={`objet-trajet ${envoye ? 'envoye' : ''}`}
-                          aria-pressed={envoye}
-                          title={envoye ? `${BLOCS[bloc].nom} : envoyé` : `${BLOCS[bloc].nom} : gardé`}
-                          onClick={() => basculerObjet(liaison, bloc)}
-                        >
-                          <span aria-hidden="true">{BLOCS[bloc].emoji}</span> {BLOCS[bloc].nom}
-                          <span className="objet-trajet-coche" aria-hidden="true">
-                            {envoye ? '✔' : '✖'}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {info.depart === 'puits' && (
-                    <p className="discret petit">
-                      Ce qui n’est pas envoyé reste dans le coffre de la mine (attention, plein, la mine s’arrête). Le charbon et la redstone des trajets vers la foreuse et le
-                      générateur passent en premier.
-                    </p>
-                  )}
-                </>
-              )}
-              {reglage.actif && fixe && (
-                <p className="discret">
-                  Emporte : {BLOCS[fixe].emoji} {BLOCS[fixe].nom}, quand il en manque.
-                </p>
-              )}
-              {/* Un trajet automatique a toujours son pousseur (27/10). */}
-              {reglage.actif && (
+        <DessinTrajet liaison={liaison} actif={reglage.actif} />
+        <p className="discret description-trajet">Un wagonnet {info.description}.</p>
+
+        {/* L'interrupteur : un gros bouton qui passe du rouge au vert. */}
+        <button className={`interrupteur-trajet ${reglage.actif ? 'allume' : ''}`} role="switch" aria-checked={reglage.actif} onClick={() => changer(liaison, { actif: !reglage.actif })}>
+          <span className="interrupteur-curseur" aria-hidden="true" />
+          {reglage.actif ? 'Automatisation activée' : 'Automatisation arrêtée'}
+        </button>
+
+        {reglage.actif && (
+          <>
+            {choix.length > 0 && (
+              <section className="choix-objets">
+                <div className="choix-objets-titre">
+                  <strong>Que transporte le wagonnet ?</strong>
+                  <span className="choix-rapides">
+                    <button onClick={() => changer(liaison, { exclus: [] })}>Tout</button>
+                    <button onClick={() => changer(liaison, { exclus: [...choix] })}>Rien</button>
+                  </span>
+                </div>
+                <div className="tuiles-objets">
+                  {choix.map((bloc) => {
+                    const envoye = !reglage.exclus.includes(bloc)
+                    const nombre = stock[bloc] ?? 0
+                    return (
+                      <button
+                        key={touche?.bloc === bloc ? `${bloc}-${touche.n}` : bloc}
+                        className={`tuile-objet ${envoye ? 'envoye' : 'garde'} ${touche?.bloc === bloc ? 'touchee' : ''}`}
+                        aria-pressed={envoye}
+                        title={envoye ? `${BLOCS[bloc].nom} : le wagonnet l’emporte` : `${BLOCS[bloc].nom} : il reste au départ`}
+                        onClick={() => basculer(bloc)}
+                      >
+                        <span className="tuile-badge" aria-hidden="true">
+                          {envoye ? '✔' : '✖'}
+                        </span>
+                        <span className="tuile-icone" aria-hidden="true">
+                          {BLOCS[bloc].emoji}
+                        </span>
+                        <span className="tuile-nom">{BLOCS[bloc].nom}</span>
+                        <span className="tuile-infos">
+                          {BLOCS[bloc].prix} $ · ×{nombre.toLocaleString('fr-FR')}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
                 <p className="discret petit">
-                  {aUnPousseur(etat, liaison)
-                    ? `👷 Son pousseur est embauché.${electrique ? ' ⚡ Électrique : il roule tout seul, bien plus vite.' : ' 💡 Dans le rayon du générateur, il roulera bien plus vite.'}`
-                    : '👷 Il faut un pousseur pour ce trajet : embauche-le au Personnel (sinon, pousse-le toi-même).'}
+                  Vert : il l’emporte et le vend. Gris : il le laisse au départ.
+                  {liaison === 'mine-marche' && ' Le charbon et la redstone des trajets vers la foreuse et le générateur passent avant.'}
                 </p>
-              )}
+              </section>
+            )}
+            {fixe && <Reserve etat={etat} liaison={liaison} />}
+
+            {/* L'aperçu du prochain voyage : il change à chaque toucher. */}
+            <section className="apercu-voyage">
+              <div className="apercu-chargement">
+                <span className="apercu-titre">Prochain voyage</span>
+                {apercu.objets.length === 0 ? (
+                  <span className="discret">rien à porter pour l’instant</span>
+                ) : (
+                  <span className="apercu-objets">
+                    {apercu.objets.map(([bloc, n]) => (
+                      <span key={bloc} className="apercu-objet">
+                        {BLOCS[bloc].emoji} {n}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+              <div className="apercu-chiffres">
+                {versLeMarche && (
+                  <span key={apercu.valeur} className="apercu-valeur">
+                    +{apercu.valeur.toLocaleString('fr-FR')} $
+                  </span>
+                )}
+                <span className="apercu-detail">
+                  ⏱️ {duree(apercu.secondes)} l’aller-retour
+                  {versLeMarche && apercu.parMinute > 0 && <> · ≈ {Math.round(apercu.parMinute).toLocaleString('fr-FR')} $/min</>}
+                </span>
+              </div>
             </section>
-          )
-        })}
+
+            {/* Qui le fait rouler (27/10 : un pousseur par trajet automatique). */}
+            <p className={`moteur-trajet moteur-${apercu.moteur}`}>
+              {apercu.moteur === 'electricite'
+                ? `⚡ Électrique : ${pousseur?.nom} le lance, il roule tout seul, bien plus vite.`
+                : apercu.moteur === 'pousseur'
+                  ? `👷 ${pousseur?.nom} le pousse. Dans le rayon du générateur, il irait bien plus vite.`
+                  : '👷 Pas de pousseur : embauche-le au Personnel pour que ce trajet roule tout seul (sinon, pousse-le toi-même).'}
+            </p>
+          </>
+        )}
+
         <div className="boutons boutons-centre">
-          <button className="bouton bouton-vendre" onClick={() => onValider(reglages)} autoFocus>
+          <button className="bouton bouton-vendre bouton-valider-trajet" onClick={() => onValider(reglages)} autoFocus>
             ✔ Valider
           </button>
           <button className="bouton bouton-stop" onClick={onFermer}>
