@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react'
 import { BATIMENTS, BLOCS, LIAISONS, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import type { EtatJeu } from '../jeu/mineur'
-import { exclusDe, objetFixe, objetsAuChoix, trajetDe, trajetElectrique, type ReglageTrajet } from '../jeu/wagonnet'
+import { aUnPousseur, exclusDe, objetFixe, objetsAuChoix, trajetDe, trajetElectrique, type ReglageTrajet } from '../jeu/wagonnet'
 
 type Props = {
   etat: EtatJeu
@@ -112,8 +112,13 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer }: Props) {
                   Emporte : {BLOCS[fixe].emoji} {BLOCS[fixe].nom}, quand il en manque.
                 </p>
               )}
-              {reglage.actif && !electrique && (
-                <p className="discret petit">💡 Sans électricité, il faut le pousser (toi, ou un pousseur embauché au Personnel). Dans le rayon du générateur, il roule tout seul.</p>
+              {/* Un trajet automatique a toujours son pousseur (27/10). */}
+              {reglage.actif && (
+                <p className="discret petit">
+                  {aUnPousseur(etat, liaison)
+                    ? `👷 Son pousseur est embauché.${electrique ? ' ⚡ Électrique : il roule tout seul, bien plus vite.' : ' 💡 Dans le rayon du générateur, il roulera bien plus vite.'}`
+                    : '👷 Il faut un pousseur pour ce trajet : embauche-le au Personnel (sinon, pousse-le toi-même).'}
+                </p>
               )}
             </section>
           )

@@ -103,14 +103,21 @@ describe('cliquer sur le bloc de la mine', () => {
 })
 
 describe('la mine toute seule', () => {
+  it('au niveau 1, ne sort rien toute seule (27/10) : on creuse à la main', () => {
+    const etat = partie()
+    avancerMine(etat, 50, aleatoireAvecGraine(2))
+    expect(nbDansCoffre(etat)).toBe(0)
+  })
+
   it('sort quelques blocs par seconde dans le coffre, et s’arrête quand il est plein', () => {
     const etat = partie()
-    avancerMine(etat, 50, aleatoireAvecGraine(2)) // 0,2 bloc par seconde au niveau 1
+    etat.niveauMine = 2
+    avancerMine(etat, 40, aleatoireAvecGraine(2)) // 0,25 bloc par seconde au niveau 2
     expect(nbDansCoffre(etat)).toBe(10)
     expect(etat.stats.blocsMine).toBe(10)
     avancerMine(etat, 10_000, aleatoireAvecGraine(2))
     expect(nbDansCoffre(etat)).toBe(100)
-    expect(etat.stats.tempsDeJeu).toBe(10_050)
+    expect(etat.stats.tempsDeJeu).toBe(10_040)
   })
 })
 

@@ -150,10 +150,10 @@ describe('les salaires', () => {
     expect(peutPayerSalaires(etat, SECONDES_PAR_PAIE)).toBe(false) // déjà payé pour 10 minutes
     avancerEmployes(etat, SECONDES_PAR_PAIE + 5, hasard())
     expect(alerteSalaires(etat)).toContain('attend son salaire')
-    expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(30)
+    expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(50)
     payerSalaires(etat, SECONDES_PAR_PAIE)
     expect(etat.employes[0].tempsPaye).toBe(SECONDES_PAR_PAIE)
-    expect(etat.stats.salairesPayes).toBe(30)
+    expect(etat.stats.salairesPayes).toBe(50)
   })
 
   it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
@@ -196,13 +196,13 @@ describe('le recruteur (niveau 3 de la mine)', () => {
     expect(new Set(tirages).size).toBeGreaterThan(3)
   })
 
-  it('un mineur mythique creuse 5 fois plus vite, et coûte 3 fois plus', () => {
+  it('un mineur mythique creuse 5 fois plus vite, et coûte 4 fois plus', () => {
     const etat = partie()
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
     mineur.rarete = 'mythique'
     expect(vitesseEmploye(mineur)).toBeCloseTo(NIVEAUX_EMPLOYE[0].vitesse * RARETES.mythique.rendement)
-    expect(salaireEmploye(mineur)).toBe(90)
+    expect(salaireEmploye(mineur)).toBe(200)
   })
 })
 

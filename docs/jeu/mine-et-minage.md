@@ -118,7 +118,7 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 
 ### La mine toute seule (`avancerMine`, `debitMine`)
 
-- Chaque niveau a un **débit** : **0,2 / 0,25 / 0,3 / 0,35 / 0,4 bloc par seconde** (12 à 24 blocs par minute). C'est « le vieux treuil » : il tourne toujours, même sans joueur ni mineur, et même jeu fermé.
+- Chaque niveau a un **débit** : **0 / 0,25 / 0,3 / 0,35 / 0,4 bloc par seconde** (0 puis 15 à 24 blocs par minute ; 27/10 : au niveau 1, la mine ne sort rien toute seule, on creuse à la main). C'est « le vieux treuil » : il tourne toujours, même sans joueur ni mineur, et même jeu fermé.
 - Ces blocs vont dans le coffre, tant qu'il a de la place. Ils ne sont jamais doublés.
 - Le panneau le dit : « la mine sort toute seule *N* blocs par minute ».
 

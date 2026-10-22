@@ -7,8 +7,7 @@
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
-import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, echelleSprite, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
-import { ECHELLE_SPRITE, spritePerso, type QuiSprite } from './sprites'
+import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
 import { ImageFigee } from './ImageFigee'
@@ -265,12 +264,34 @@ type PropsEvolutionMine = {
   niveau: number // le niveau de la mine (1 à 5), pour le panneau
   ascenseur: boolean // l'ascenseur est construit (on voit sa cabine)
   hauteurCabine: number // où est la cabine : 0 = en haut (au village), 1 = tout en bas
-  passagers?: PassagerAscenseur[] // les mineurs qui descendent ou remontent
+  passagers?: PassagerAscenseur[] // les caisses de minerais qui remontent (ou redescendent vides)
 }
 
-// Un mineur dans le puits (27/10) : qui il est, où il en est (0 = en haut, 1 = tout en bas), et
-// s'il descend (on le voit de dos) ou s'il remonte (de face).
-export type PassagerAscenseur = { qui: QuiSprite; f: number; descend: boolean }
+// Une caisse dans le puits (27/10) : les mineurs restent au fond, c'est leur sac qui remonte,
+// dans une caisse en bois pleine de minerais, puis la caisse vide redescend. Où elle en est
+// (0 = en haut, 1 = tout en bas), et si elle est pleine (elle monte) ou vide (elle redescend).
+export type PassagerAscenseur = { f: number; pleine: boolean }
+
+// La caisse de minerais, dessinée dans les pixels de l'image de la mine, posée sur (x, y) : du bois,
+// des cerclages, et des minerais qui dépassent quand elle est pleine.
+function CaisseMinerais({ x, y, pleine }: { x: number; y: number; pleine: boolean }) {
+  return (
+    <g className="caisse-minerais" transform={`translate(${x} ${y}) scale(1.5)`}>
+      {pleine && (
+        <g>
+          <circle cx="-22" cy="-62" r="15" fill="#8d8d8a" stroke="#3b2412" strokeWidth="4" />
+          <circle cx="4" cy="-68" r="17" fill="#f5b82e" stroke="#3b2412" strokeWidth="4" />
+          <circle cx="28" cy="-60" r="13" fill="#4fd3f0" stroke="#3b2412" strokeWidth="4" />
+          <circle cx="-4" cy="-58" r="11" fill="#e8452f" stroke="#3b2412" strokeWidth="4" />
+        </g>
+      )}
+      <rect x="-48" y="-58" width="96" height="58" rx="6" fill="#a86a33" stroke="#3b2412" strokeWidth="5" />
+      <rect x="-48" y="-58" width="96" height="12" rx="4" fill="#d39250" stroke="#3b2412" strokeWidth="4" />
+      <rect x="-30" y="-58" width="10" height="58" fill="#c98512" stroke="#3b2412" strokeWidth="3" />
+      <rect x="20" y="-58" width="10" height="58" fill="#c98512" stroke="#3b2412" strokeWidth="3" />
+    </g>
+  )
+}
 
 // Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) :
 // la cabine (posée en haut du puits), et le devant (la barrière et le sol de devant), dessiné
@@ -309,8 +330,8 @@ function bordCabine(decalage: number): string {
 // La zone où la cabine se voit : tout ce qui est au-dessus du bord du puits.
 const ZONE_CABINE = [[440, 0], [840, 0], ...POINTS_MINE.bordDuPuits.slice().reverse()].map(([x, y]) => `${x},${y}`).join(' ')
 
-// Au plus 3 passagers dessinés à la fois (les autres sont déjà au fond).
-const PASSAGERS_MAX = 3
+// Au plus 2 caisses dessinées à la fois.
+const PASSAGERS_MAX = 2
 
 export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCabine, passagers = [] }: PropsEvolutionMine) {
   const calage = CALAGES.puits
@@ -319,11 +340,10 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
   const panneau = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.panneau)
   // Un identifiant à part pour chaque mine dessinée (l'écran d'accueil en dessine une aussi).
   const idZone = `zone-cabine-${x}-${y}`
-  // Les passagers : avec l'ascenseur, ceux qui sont dans la cabine (à peu près à sa hauteur) ;
-  // sans lui, chacun descend l'échelle à son rythme. Ils disparaissent sous le bord du puits.
-  const dansLaCabine = (ascenseur ? passagers.filter((p) => Math.abs(p.f - f) < 0.2) : passagers).slice(0, PASSAGERS_MAX)
-  // Un pixel d'image de personnage → des pixels de l'image de la mine.
-  const taillePerso = ECHELLE_SPRITE / echelleSprite(calage, 10)
+  // Les caisses : avec l'ascenseur, une caisse pleine dans la cabine quand elle remonte un sac (à
+  // peu près à sa hauteur) ; sans ascenseur, les caisses pleines pendent au bout du câble du
+  // treuil. Elles disparaissent sous le bord du puits.
+  const dansLaCabine = (ascenseur ? passagers.filter((p) => p.pleine && Math.abs(p.f - f) < 0.2).slice(0, 1) : passagers.filter((p) => p.pleine)).slice(0, PASSAGERS_MAX)
   return (
     <g className="evolution-mine">
       {/* Les câbles, la cabine et le devant, posés comme l'image de la mine (miroir compris). */}
@@ -345,27 +365,17 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
             )
           })}
           {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
-          {/* Les passagers, par-dessus la cabine mais coupés sous son bord de devant : on ne voit que
-              le haut de leur corps, comme s'ils se tenaient dedans. */}
+          {/* Les caisses, par-dessus la cabine mais coupées sous son bord de devant : on ne voit que
+              leur haut, comme si elles étaient posées dedans. */}
           <clipPath id={`${idZone}-dans`}>
             <polygon points={ascenseur ? bordCabine(decalage) : ZONE_CABINE} />
           </clipPath>
           <g clipPath={`url(#${idZone}-dans)`}>
             {dansLaCabine.map((p, i) => {
-              const { fichier, calage: c } = spritePerso(p.qui, p.descend ? 'derriere' : 'devant')
               const hauteur = ascenseur ? decalage : CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * p.f
-              const piedX = POINTS_MINE.plancher[0] + (i - (dansLaCabine.length - 1) / 2) * 46
-              const piedY = POINTS_MINE.plancher[1] + hauteur
-              return (
-                <image
-                  key={i}
-                  href={fichier}
-                  x={piedX - c.pied.x * taillePerso}
-                  y={piedY - c.pied.y * taillePerso}
-                  width={c.largeur * taillePerso}
-                  height={c.hauteur * taillePerso}
-                />
-              )
+              const x = POINTS_MINE.plancher[0] + (i - (dansLaCabine.length - 1) / 2) * 160
+              // (posée un peu haut : on la voit bien dépasser des parois de la cabine)
+              return <CaisseMinerais key={i} x={x} y={POINTS_MINE.plancher[1] - 40 + hauteur} pleine={p.pleine} />
             })}
           </g>
         </g>

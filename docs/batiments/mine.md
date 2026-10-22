@@ -91,7 +91,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 ### 📦 Taille du coffre et 🛗 Ascenseur
 
 - **Taille du coffre** : une ligne d'amélioration (« 250 places » → « ⬆ 600 places »).
-- **Ascenseur** : « Tes mineurs remontent leur sac (et redescendent) plus vite. » Pas construit : « Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ; ensuite « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**.
+- **Ascenseur** : « La caisse de minerais de tes mineurs remonte (et redescend) plus vite. » (27/10 : les mineurs restent au fond, c'est leur sac qui remonte dans une **caisse** ; dans le puits, on voit la caisse pleine de minerais dans la cabine. Seul un mineur pas payé remonte au village.) La ligne « trop lent » ne s'affiche que si l'ascenseur ralentit vraiment les mineurs. Pas construit : « Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ; ensuite « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**.
 
 ## Les chiffres
 
@@ -101,7 +101,7 @@ Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %
 
 | Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0,2 bloc/s (12 / min) | (départ) |
+| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0 (on creuse à la main, 27/10) | (départ) |
 | 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 bloc/s (15 / min) | 400 $ + 30 fer |
 | 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,3 bloc/s (18 / min) | 2 500 $ + 60 fer + 30 redstone |
 | 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,35 bloc/s (21 / min) | 9 000 $ + 60 redstone + 30 or |
@@ -181,7 +181,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **Qui le fait avancer** (il ne part jamais tout seul sans eux) :
   - **toi**, avec « Pousser » (un wagonnet à la fois) ;
   - **son pousseur** (26/10) : un employé embauché au Personnel **pour ce trajet-là**. Il attend au quai, à côté du début des rails, devant le bâtiment de départ, et pousse le wagonnet dès qu'il a quelque chose à porter. Le pousseur d'un autre trajet ne le pousse jamais. Voir [personnel.md](personnel.md#4-les-pousseurs) ;
-  - **l'électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), il part tout seul dès qu'il a quelque chose à porter, et roule plus vite. Voir [generateur.md](generateur.md). S'il perd le courant en route, il finit son trajet doucement (1,25 case/s).
+  - **l'électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), son pousseur le lance du quai dès qu'il a quelque chose à porter, et il roule tout seul, bien plus vite (27/10 : sans pousseur payé, rien ne part). Voir [generateur.md](generateur.md). S'il perd le courant en route, il finit son trajet doucement (1,25 case/s).
 - **Ligne coupée** (un rail enlevé, un bâtiment déplacé) : le wagonnet revient aussitôt au quai, son chargement retourne d'où il vient, et le pousseur retourne au quai. Le trajet reste : il repartira quand les rails seront refaits. En attendant, une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
 - **Au village**, chaque wagonnet (en 3D depuis le 26/10 : caisse en planches, cadre d'acier, quatre roues en fer) roule sur sa ligne. On voit **ce qu'il porte vraiment** : des minerais à facettes de la couleur de chaque bloc, plus ou moins haut selon son chargement (vide, à moitié plein, plein avec un petit tas qui dépasse). Voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md).
 - Ils roulent aussi jeu fermé (avec un pousseur ou l'électricité).

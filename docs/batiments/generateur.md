@@ -75,7 +75,7 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 - **Les wagonnets** (trajets électriques, `trajetElectrique`) : un wagonnet part **tout seul** dès qu'il a quelque chose à porter, sans joueur ni pousseur. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un pousseur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#les-wagonnets).
 - **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore **× (1 + 0,5 × puissance)** plus vite (`BONUS_ELECTRIQUE_FOREUSE`), sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
 - Rien d'autre n'est électrique pour l'instant (ni la mine, ni les mineurs).
-- Quand un trajet est électrique, plus besoin de son **pousseur** : le wagonnet part tout seul (le pousseur reste au quai, payé, à ne rien faire ; au Personnel, on peut le licencier ou lui donner un autre trajet).
+- Quand un trajet est électrique, le wagonnet **roule tout seul, bien plus vite**, mais il faut **toujours son pousseur** (27/10 : un pousseur par trajet automatique) : il reste au quai et lance le wagonnet. Sans pousseur payé, rien ne part.
 
 ### Bien le placer
 

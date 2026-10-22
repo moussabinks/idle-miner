@@ -109,8 +109,8 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
           }
         : {
             titre: 'Retourne à la mine',
-            texte: 'Ton coffre s’est rempli : va le chercher !',
-            pourquoi: 'La mine creuse aussi toute seule, même sans toi.',
+            texte: 'Ton coffre t’attend : va le chercher !',
+            pourquoi: 'Tout ce que tu casses attend dans le coffre de la mine.',
             geste: 'Touche ici !',
             cible: batiment('puits'),
           }

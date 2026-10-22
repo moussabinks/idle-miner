@@ -10,6 +10,7 @@ import { creerTrajet } from './wagonnet'
 describe('la production de la mine', () => {
   it('compte la mine toute seule, puis chaque mineur', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
+    etat.niveauMine = 2 // (au niveau 1, la mine ne sort rien toute seule)
     const seule = production(etat)
     expect(seule.mine).toBeCloseTo(debitMine(etat))
     expect(seule.mineurs).toHaveLength(0)

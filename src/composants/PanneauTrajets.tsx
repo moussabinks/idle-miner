@@ -10,6 +10,7 @@ import { BATIMENTS, LIAISONS, NIVEAUX_WAGONNET, type IdBatiment, type IdLiaison 
 import { peutPayer } from '../jeu/mineur'
 import {
   aCharger,
+  aUnPousseur,
   ameliorerWagonnet,
   capaciteWagonnet,
   distanceDepuisLeDepart,
@@ -87,13 +88,13 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
       <span className="discret">
         {enRoute(trajet)
           ? `${trajet.etape === 'aller' ? `En route vers ${le(info.arrivee)}` : `Revient ${au(info.depart)}`}, poussé par ${pousseur}.`
-          : aPorter === 0
-            ? 'Au quai : rien à porter pour l’instant.'
-            : electrique
-              ? 'Il part tout seul.'
-              : etat.employes.some((e) => e.role === 'pousseur' && e.trajet === liaison)
-                ? 'Son pousseur va le pousser.'
-                : 'Au quai. Pousse-le, ou embauche un pousseur pour ce trajet au Personnel.'}
+          : !aUnPousseur(etat, liaison)
+            ? 'Pas de pousseur : embauche-en un pour ce trajet au Personnel (ou pousse-le toi-même).'
+            : aPorter === 0
+              ? 'Au quai : rien à porter pour l’instant.'
+              : electrique
+                ? 'Son pousseur le lance : il roule tout seul ⚡.'
+                : 'Son pousseur va le pousser.'}
       </span>
       {enRoute(trajet) && (
         <Barre valeur={distanceDepuisLeDepart(etat, trajet)} max={longueurTrajet(ligne)} texte={trajet.etape === 'aller' ? `→ ${arrivee.nom}` : `← ${depart.nom}`} couleur="or" />

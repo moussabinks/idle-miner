@@ -47,6 +47,11 @@ function partieAvecTrajet(): EtatJeu {
   return etat
 }
 
+// Un pousseur payé qui attend au quai de ce trajet (27/10 : sans lui, rien ne part, même électrique).
+function ajouterPousseur(etat: EtatJeu, liaison: Parameters<typeof trajetDe>[1], nom = `Pousseur ${liaison}`): void {
+  etat.employes.push({ nom, rarete: 'commun', niveau: 0, role: 'pousseur', trajet: liaison, etape: 'quai', progression: 0, sac: {}, blocsCasses: 0, tempsPaye: 600, lieu: 'puits', depuis: 'puits', forgeEnAttente: false })
+}
+
 // Fait rouler les wagonnets jusqu'à ce que ce trajet soit revenu au quai.
 function allerRetour(etat: EtatJeu, liaison: Parameters<typeof trajetDe>[1]): string[] {
   const messages: string[] = []
@@ -147,8 +152,14 @@ describe('les trajets des wagonnets', () => {
     etat.generateur.carburant = 1000
     etat.coffre.contenu = { fer: 5 }
     expect(trajetElectrique(etat, 'mine-marche')).toBe(true)
+    // Sans pousseur, même électrique, il ne part pas (27/10).
+    avancerWagonnets(etat, 0.1)
+    expect(trajet.etape).toBe('quai')
+    ajouterPousseur(etat, 'mine-marche')
     avancerWagonnets(etat, 0.1)
     expect(trajet.pousseur).toBe('electricite')
+    // (le pousseur reste au quai : c'est l'électricité qui le fait rouler)
+    expect(etat.employes[0].etape).toBe('quai')
     expect(secondesAllerRetour(etat, 'mine-marche', vitesseTrajet(etat, trajet))).toBeLessThan(aLaMain)
   })
 
@@ -221,6 +232,8 @@ describe('les trajets des wagonnets', () => {
     expect(ligneDe(etat, 'mine-generateur')).not.toBeNull()
     creerTrajet(etat, 'mine-marche')
     creerTrajet(etat, 'mine-generateur')
+    ajouterPousseur(etat, 'mine-marche')
+    ajouterPousseur(etat, 'mine-generateur')
     etat.generateur.carburant = 100
     etat.coffre.contenu = { redstone: 10, pierre: 10 }
     avancerWagonnets(etat, 0.1)

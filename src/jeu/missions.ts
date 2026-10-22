@@ -100,7 +100,7 @@ function automatisation(etat: EtatJeu): Mission | null {
   if (!trajet) return mission('trajet', '🚃', 'Envoie un wagonnet vers le marché (à la mine)', { stand: 'puits', pret: true })
   const electrique = railsAlimentes(etat)
   const pousseur = etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
-  if (!electrique && !pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', 'Embauche un pousseur pour le wagonnet', { stand: 'employes', pret: true })
+  if (!pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', 'Embauche un pousseur pour le wagonnet', { stand: 'employes', pret: true })
   if (!etat.employes.some((e) => e.role === 'mineur') && batimentPose(etat.village, 'employes')) return mission('mineur', '⛏️', 'Embauche un mineur au Personnel', { stand: 'employes', pret: true })
   if (generateurPose(etat) && !electrique) {
     if (etat.generateur.carburant <= 0) return mission('allumer', '⚡', 'Mets de la redstone dans le générateur', { stand: 'generateur', pret: disponible(etat, 'redstone') > 0 })

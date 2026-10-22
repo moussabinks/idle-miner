@@ -32,10 +32,8 @@
 
 ### 3. Vider le chariot
 
-- Une barre violette « *n* / *capacité* », puis la liste du chariot, triée du bloc le plus cher au moins cher, avec la quantité et la valeur de chaque bloc.
-- On **coche / décoche** chaque objet, ou tout d'un coup (« ☑️ Tout sélectionner » / « ☐ Tout désélectionner »). Les objets décochés restent dans le chariot.
-- **💰 Vendre la sélection** (vert) : vend les objets cochés, au prix du marché, **sans aller au marché**. « 💰 Chariot vendu : +*X* $ »
-- **🎒 Mettre dans le sac** (kaki) : met les objets cochés dans son sac, tant qu'il reste de la place.
+- **On ne vend plus le chariot sur place** (27/10) : on le met dans son sac et on va le vendre au marché, ou un wagonnet **Foreuse → Marché** l'emporte (rails, puis bulle 🛤️ Automatiser, et un pousseur au Personnel).
+- La **même interface que le coffre de la mine** (`StockMinerais.tsx`) : « 🛒 Chariot » et sa barre sur une ligne, puis une ligne par minerai que sort la mine à son niveau (même à 0), avec sa quantité, **🚃 Vendre / Garder** pour le wagonnet du marché (s'il y a ce trajet) et **🎒** pour le mettre dans son sac ; puis **🎒 Tout mettre dans le sac** (`prendreDuChariot`, les plus chers d'abord, tant qu'il y a de la place).
 
 ### 4. Améliorer la vitesse de forage (6 niveaux, `NIVEAUX_FORAGE`)
 

@@ -4,28 +4,25 @@
 
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
+import { StockMinerais } from './StockMinerais'
 import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
-  basculerChariot,
   basculerRechargeAuto,
   capaciteChariot,
   chariotPlein,
-  cocherToutChariot,
   foreuseEnMarche,
   nbDansChariot,
   peutAmeliorerChariot,
   peutAmeliorerForage,
+  prendreDuChariot,
   prochainNiveauChariot,
   prochainNiveauForage,
   rechargeAutoDisponible,
   remplirForeuse,
   secondesDeCharbon,
   secondesPourRemplir,
-  selectionChariot,
-  vendreChariot,
-  viderChariotDansSac,
   vitesseForage,
 } from '../jeu/foreuse'
 import {
@@ -52,7 +49,6 @@ import {
   peutAcheterPioche,
   peutPayer,
   peutReparer,
-  placeLibre,
   prixProchainSac,
   reglerVente,
   reparer,
@@ -280,11 +276,7 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const enMarche = foreuseEnMarche(etat)
   const chariot = prochainNiveauChariot(etat)
   const charbon = disponible(etat, 'charbon')
-  const contenu = (Object.entries(foreuse.chariot) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
   const forage = prochainNiveauForage(etat)
-  const selection = selectionChariot(etat)
-  const valeurSelection = valeurDe(selection)
-  const nbSelection = Object.values(selection).reduce((total, n) => total + (n ?? 0), 0)
   // Des onglets (27/10), pour que tout tienne sans défiler.
   const [onglet, setOnglet] = useState<'forage' | 'chariot' | 'ameliorer' | 'wagonnets'>('forage')
   const avecTrajets = liaisonsDepuis(etat, 'foreuse').length > 0
@@ -342,51 +334,20 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
         </div>
       )}
 
+      {/* Le chariot (27/10) : la même interface que le coffre de la mine. Il ne se vend plus sur
+          place : on le met dans son sac, ou un wagonnet Foreuse → Marché l'emporte. */}
       {onglet === 'chariot' && (
-        <div className="ligne-achat">
-          <strong>Chariot</strong>
-          <Barre valeur={nbDansChariot(etat)} max={capaciteChariot(etat)} texte={`${nbDansChariot(etat)} / ${capaciteChariot(etat)}`} couleur="violet" />
-          {contenu.length === 0 ? (
-            <span className="discret">Le chariot est vide.</span>
-          ) : (
-            <>
-              <div className="ligne-titre">
-                <span className="discret">Coche ce que tu vends (ou mets dans ton sac) :</span>
-                {/* Tout cocher d'un coup (ou tout décocher, si tout est déjà coché). */}
-                <button
-                  className="bouton bouton-petit bouton-neutre"
-                  onClick={() => jouer((e) => cocherToutChariot(e, contenu.some(([id]) => foreuse.nonCoches.includes(id))))}
-                >
-                  {contenu.some(([id]) => foreuse.nonCoches.includes(id)) ? '☑️ Tout' : '☐ Aucun'}
-                </button>
-              </div>
-              <ul className="liste-vente liste-chariot">
-                {contenu.map(([id, nombre]) => {
-                  const coche = !foreuse.nonCoches.includes(id)
-                  return (
-                    <li key={id} className={coche ? '' : 'garde'}>
-                      <label>
-                        <input type="checkbox" checked={coche} onChange={() => jouer((e) => basculerChariot(e, id))} />
-                        <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-                        <span className="inventaire-nom">{BLOCS[id].nom}</span>
-                        <span className="inventaire-nombre">×{nombre}</span>
-                        <span className="inventaire-valeur">{valeurDe({ [id]: nombre })} $</span>
-                      </label>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          )}
-          <div className="boutons">
-            <Bouton actif={valeurSelection > 0} genre="vendre" onClick={() => jouer(vendreChariot)}>
-              💰 Vendre la sélection{valeurSelection > 0 && ` · +${valeurSelection.toLocaleString('fr-FR')} $`}
-            </Bouton>
-            <Bouton actif={nbSelection > 0 && placeLibre(etat) > 0} genre="sac" onClick={() => jouer(viderChariotDansSac)}>
-              🎒 Mettre dans le sac ({Math.min(nbSelection, placeLibre(etat))})
-            </Bouton>
-          </div>
-        </div>
+        <StockMinerais
+          etat={etat}
+          jouer={jouer}
+          titre="🛒 Chariot"
+          nomStock="chariot"
+          contenu={foreuse.chariot}
+          capacite={capaciteChariot(etat)}
+          textePlein={`Plein (${nbDansChariot(etat)}) : la foreuse s’arrête !`}
+          liaison="foreuse-marche"
+          prendre={prendreDuChariot}
+        />
       )}
 
       {onglet === 'ameliorer' && (

@@ -137,6 +137,8 @@ export function coutAmeliorationEmploye(employe: Employe): Cout | null {
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
+  // (un pousseur ne creuse pas : une pioche ne lui servirait à rien, et monterait son salaire)
+  if (employe.role === 'pousseur') return false
   const cout = coutAmeliorationEmploye(employe)
   return cout !== null && peutPayer(etat, cout)
 }
@@ -417,7 +419,7 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   employe.niveau += 1
   if (batimentPose(etat.village, 'forgeron')) {
     employe.forgeEnAttente = true
-    return [`⛏️ ${employe.nom} va chercher sa pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} à la forge.`]
+    return [`⛏️ Le forgeron fait une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} pour ${employe.nom} : elle lui descendra par l'ascenseur.`]
   }
   return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
 }
@@ -457,13 +459,13 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
     partir(employe, ici, 'employes')
     return [`😠 ${employe.nom} n’est plus payé(e) : il va attendre son salaire devant le Personnel.`]
   }
+  // Sa nouvelle pioche (27/10) : il ne va plus la chercher, il reste où il est (au fond de la
+  // mine) le temps que le forgeron la fasse ; elle lui descend par l'ascenseur. Un mineur ne
+  // remonte au village que s'il n'est plus payé.
   if (employe.forgeEnAttente) {
     if (!batimentPose(etat.village, 'forgeron')) employe.forgeEnAttente = false
-    else if (ici === 'forgeron') {
+    else {
       employe.etape = 'forge'
-      return []
-    } else {
-      partir(employe, ici, 'forgeron')
       return []
     }
   }
@@ -570,7 +572,7 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
         reste -= temps
         employe.forgeEnAttente = false
-        messages.push(...suite(etat, employe, 'forgeron'))
+        messages.push(...suite(etat, employe, employe.lieu))
         continue
       }
     } else {
@@ -632,17 +634,17 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
     case 'creuse':
       return `⛏️ creuse au fond (sac plein dans ${secondes} s)`
     case 'monte':
-      return employe.tempsPaye <= 0 ? `😠 plus payé : remonte (${secondes} s)` : `⏫ remonte son sac (${secondes} s)`
+      return employe.tempsPaye <= 0 ? `😠 plus payé : remonte au village (${secondes} s)` : `⏫ son sac remonte dans la caisse (${secondes} s)`
     case 'vide':
-      return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : `📦 vide son sac dans le coffre (${secondes} s)`
+      return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : `📦 la caisse se vide dans le coffre (${secondes} s)`
     case 'descend':
-      return `⏬ redescend (${secondes} s)`
+      return `⏬ la caisse lui redescend (${secondes} s)`
     case 'quai':
       return employe.trajet && !trajetDe(etat, employe.trajet) ? '🛤️ attend : son trajet est arrêté' : '🛤️ attend son wagonnet au quai'
     case 'pousse':
       return '🛤️ pousse le wagonnet'
     case 'forge':
-      return `🔨 récupère sa nouvelle pioche (${secondes} s)`
+      return `🔨 attend sa nouvelle pioche du forgeron (${secondes} s)`
     default:
       return `🚶 ${DESTINATIONS[employe.lieu] ?? 'se promène'} (${secondes} s)`
   }
