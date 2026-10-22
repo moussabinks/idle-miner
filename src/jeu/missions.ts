@@ -97,7 +97,7 @@ function automatisation(etat: EtatJeu): Mission | null {
     return mission('rails', '🛤️', 'Pose des rails de la mine au marché', { construction: true, pret: true })
   }
   const trajet = trajetDe(etat, 'mine-marche')
-  if (!trajet) return mission('trajet', '🚃', 'Envoie un wagonnet vers le marché (à la mine)', { stand: 'puits', pret: true })
+  if (!trajet) return mission('trajet', '🚃', 'Touche la bulle 🛤️ sur les rails : automatise le trajet', { stand: 'puits', pret: true })
   const electrique = railsAlimentes(etat)
   const pousseur = etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
   if (!pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', 'Embauche un pousseur pour le wagonnet', { stand: 'employes', pret: true })
@@ -108,7 +108,12 @@ function automatisation(etat: EtatJeu): Mission | null {
   }
   if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'mine-foreuse')) {
     if (!ligneDe(etat, 'mine-foreuse')) return mission('rails-foreuse', '🛤️', 'Relie la foreuse à la mine (rails)', { construction: true })
-    return mission('trajet-foreuse', '🚃', 'Envoie du charbon à la foreuse (à la mine)', { stand: 'puits', pret: true })
+    return mission('trajet-foreuse', '🚃', 'Touche la bulle 🛤️ sur les rails de la foreuse', { stand: 'puits', pret: true })
+  }
+  // (27/10) La foreuse vend toute seule son chariot : des rails jusqu'au marché.
+  if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'foreuse-marche')) {
+    if (!ligneDe(etat, 'foreuse-marche')) return mission('rails-foreuse-marche', '🛤️', 'Relie la foreuse au marché (rails) : elle vendra toute seule', { construction: true })
+    return mission('trajet-foreuse-marche', '🚃', 'Touche la bulle 🛤️ sur les rails foreuse → marché', { stand: 'foreuse', pret: true })
   }
   return null
 }

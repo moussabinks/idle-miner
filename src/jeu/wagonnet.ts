@@ -117,7 +117,49 @@ export function reglerTrajet(etat: EtatJeu, liaison: IdLiaison, reglage: Reglage
   const trajet = trajetDe(etat, liaison)
   if (!trajet) return messages
   trajet.exclus = exclus
+  // Un objet envoyé depuis la mine n'est plus « gardé » au marché non plus (sinon le wagonnet le
+  // laisserait quand même dans le coffre).
+  if (LIAISONS[liaison].depart === 'puits') {
+    const auChoix = objetsAuChoix(etat, liaison)
+    etat.nonAVendre = etat.nonAVendre.filter((b) => !auChoix.includes(b) || exclus.includes(b))
+  }
   return messages.length > 0 ? messages : ['🛤️ Trajet réglé.']
+}
+
+// Les objets décochés de ce trajet, tels que la fenêtre du trajet les montre au départ.
+export function exclusAffiches(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
+  return objetsAuChoix(etat, liaison).filter((bloc) => trajetDe(etat, liaison) !== null && !objetEnvoye(etat, liaison, bloc))
+}
+
+// L'aperçu d'un trajet (27/10), pour la fenêtre du trajet : ce que le wagonnet emporterait au
+// prochain voyage avec ces objets décochés, ce que ça vaut, qui le fait rouler, le temps d'un
+// aller-retour, et ce que ça rapporterait par minute.
+export type ApercuTrajet = {
+  objets: [IdBloc, number][] // le prochain chargement (les plus chers d'abord, dans la limite des places)
+  places: number
+  valeur: number // ce qu'il vendrait (0 si l'arrivée n'est pas le marché)
+  moteur: 'electricite' | 'pousseur' | 'toi'
+  secondes: number // un aller-retour, chargement compris
+  parMinute: number // $ par minute, à ce rythme et avec ce stock
+}
+
+export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]): ApercuTrajet {
+  const places = capaciteWagonnet(etat)
+  let reste = places
+  const objets: [IdBloc, number][] = []
+  for (const [bloc, nombre] of aEmporter(etat, liaison, exclus)) {
+    const pris = Math.min(nombre, reste)
+    if (pris <= 0) continue
+    objets.push([bloc, pris])
+    reste -= pris
+  }
+  const versLeMarche = LIAISONS[liaison].arrivee === 'marche'
+  const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
+  const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
+  const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
+  const vitesse = moteur === 'electricite' ? VITESSE_RAILS * puissanceGenerateur(etat) : moteur === 'pousseur' && pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) : VITESSE_POUSSE_JOUEUR
+  const secondes = secondesAllerRetour(etat, liaison, vitesse)
+  return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
 
 // Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet, ou
@@ -263,19 +305,22 @@ function besoinRedstone(etat: EtatJeu): number {
 // Ce que le wagonnet du marché laisse dans le coffre : les objets « gardés » au marché (le fer
 // pour les rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la
 // foreuse, la redstone du générateur).
-function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
-  if (etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)) return Infinity
+// « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet et les objets
+// gardés au marché ; la fenêtre du trajet en donne d'autres pour son aperçu).
+function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
+  const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
+  if (garde) return Infinity
   if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
   if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
   return 0
 }
 
 // Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).
-function aEmporter(etat: EtatJeu, liaison: IdLiaison): [IdBloc, number][] {
+function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): [IdBloc, number][] {
   switch (liaison) {
     case 'mine-marche':
       return parPrix(etat.coffre.contenu)
-        .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - gardeDansLeCoffre(etat, bloc))])
+        .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - gardeDansLeCoffre(etat, bloc, exclusAutres))])
         .filter(([, nombre]) => nombre > 0)
     case 'mine-foreuse': {
       const nombre = Math.min(etat.coffre.contenu.charbon ?? 0, besoinCharbon(etat))
@@ -286,7 +331,7 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison): [IdBloc, number][] {
       return nombre > 0 ? [['redstone', nombre]] : []
     }
     case 'foreuse-marche': {
-      const exclus = exclusDe(etat, liaison)
+      const exclus = exclusAutres ?? exclusDe(etat, liaison)
       return parPrix(etat.foreuse.chariot).filter(([bloc]) => !exclus.includes(bloc))
     }
   }

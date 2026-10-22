@@ -39,7 +39,7 @@ const NOMS: Partial<Record<IdBatiment, { le: string; au: string }>> = {
 const le = (id: IdBatiment) => NOMS[id]?.le ?? BATIMENTS[id].nom
 const au = (id: IdBatiment) => NOMS[id]?.au ?? BATIMENTS[id].nom
 
-function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison }) {
+function Trajet({ etat, jouer, liaison, onReglerTrajet }: PropsPanneau & { liaison: IdLiaison }) {
   const info = LIAISONS[liaison]
   const depart = BATIMENTS[info.depart]
   const arrivee = BATIMENTS[info.arrivee]
@@ -103,6 +103,12 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
         <button className="bouton bouton-petit bouton-voyage" disabled={!peutPousser(etat, liaison)} onClick={() => jouer((e) => pousserTrajet(e, liaison))}>
           🛤️ Pousser ({Math.min(capaciteWagonnet(etat), aPorter)} objets)
         </button>
+        {/* La fenêtre des trajets : les objets à envoyer, l'aperçu des voyages (27/10). */}
+        {onReglerTrajet && (
+          <button className="bouton bouton-petit bouton-neutre" title="Choisir les objets à envoyer" onClick={() => onReglerTrajet([liaison])}>
+            ⚙️ Régler
+          </button>
+        )}
         <button className="bouton bouton-petit bouton-stop" title="Arrêter ce trajet (les rails restent)" onClick={() => jouer((e) => supprimerTrajet(e, liaison))}>
           ✖ Arrêter
         </button>
@@ -111,7 +117,7 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
   )
 }
 
-export function PanneauTrajets({ etat, jouer, depart }: PropsPanneau & { depart: IdBatiment }) {
+export function PanneauTrajets({ etat, jouer, depart, onReglerTrajet }: PropsPanneau & { depart: IdBatiment }) {
   const liaisons = liaisonsDepuis(etat, depart)
   const prochain = prochainNiveauWagonnet(etat)
   if (liaisons.length === 0) return null
@@ -119,7 +125,7 @@ export function PanneauTrajets({ etat, jouer, depart }: PropsPanneau & { depart:
     <>
       <h4 className="titre-trajets">🛤️ Wagonnets</h4>
       {liaisons.map((liaison) => (
-        <Trajet key={liaison} etat={etat} jouer={jouer} liaison={liaison} />
+        <Trajet key={liaison} etat={etat} jouer={jouer} liaison={liaison} onReglerTrajet={onReglerTrajet} />
       ))}
       {depart === 'puits' && etat.trajets.length > 0 && (
         <div className="ligne-achat">
