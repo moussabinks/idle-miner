@@ -7,7 +7,7 @@
 - **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 25 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, pas de sac plus grand (les missions proposent « Construis : Bazar »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : dès le début, sans cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
-- **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
+- **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
 - **Dessin au village** : une image en vue isométrique (`public/images/batiments/bazar.webp`) : une échoppe en bois et en pierre, avec ses étals de sacs et d'équipement. Elle brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Sacs à dos. »
 - **Bulle au-dessus** (`notifications.ts`) : **💰 « Une amélioration est achetable ! »** quand le prochain sac est payable.

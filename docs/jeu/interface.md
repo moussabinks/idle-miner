@@ -263,7 +263,6 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 | alerte (rouge) | 🔧 · Réparer | Forgeron | ta pioche est cassée |
 | alerte (rouge) | 🎒 · Vendre ! | Marché | ton sac est plein |
 | alerte (rouge) | 📦 · Plein ! | Mine | le coffre est plein |
-| prêt (rose) | 📦 · *nombre* | Mine | au moins 20 objets dans le coffre, sans trajet Mine → Marché |
 | nouveau (bleu) | ✨ · Nouveau | Personnel | le recruteur ou le manager vient de se débloquer, pas encore vu |
 | achat (vert) | ⬆️ · Achetable | tous | une amélioration y est payable tout de suite |
 
@@ -327,7 +326,7 @@ Les **décorations** à acheter (fleurs, arbres, fontaine…) sont retirées dep
 | devant un bâtiment | le **panneau du bâtiment** : son icône et son nom, un bouton rond **✖** pour le fermer, sa description, puis son contenu |
 | en train de pousser un wagonnet | rien |
 
-**Quand le panneau s'ouvre** : quand le joueur **arrive en marchant** à moins de **1,3 case** du bâtiment, **de n'importe quel côté**, au clavier ou après l'avoir touché (si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre). Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie). ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
+**Quand le panneau s'ouvre** : quand le joueur **arrive en marchant** à moins de **1 case** du bâtiment (après l'avoir touché, il y va par le plus court chemin, jusqu'au point de son tour le plus proche à pied), **de n'importe quel côté**, au clavier ou après l'avoir touché (si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre). Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie). ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
 
 ### 8.1 Le contenu, bâtiment par bâtiment
 

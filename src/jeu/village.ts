@@ -183,30 +183,57 @@ export function distanceAuBatiment(b: BatimentPose, x: number, y: number): numbe
   return Math.hypot(dx, dy)
 }
 
-// Le joueur ouvre un bâtiment dès qu'il est à moins de ce nombre de cases de son bord.
-export const RAYON_BATIMENT = 1.3
+// Le joueur ouvre un bâtiment dès qu'il est à un bloc de son bord (27/10 : avant, 1,3).
+export const RAYON_BATIMENT = 1
 
-// La case libre collée au bâtiment (tout autour de lui) la plus proche d'un point : c'est là que
-// le joueur va quand on touche un bâtiment, au lieu de faire le tour jusqu'à la porte.
-// Si aucune case autour n'est libre, on prend celle de la porte (caseAcces).
+// Où va le joueur quand on touche un bâtiment (27/10) : la case libre collée au bâtiment (le
+// tour extérieur de son emprise, coins compris) qu'il atteint par **le plus court chemin à pied**,
+// en contournant les autres bâtiments. On cherche en cercles qui s'élargissent depuis le joueur
+// (en comptant la vraie longueur des pas, 1 tout droit et 1,41 en diagonale) : la première case
+// du tour du bâtiment qu'on atteint est la plus proche à pied. Si aucune n'est atteignable, on
+// prend celle de la porte (caseAcces).
 export function caseAccesProche(village: Village, b: BatimentPose, depuis: { x: number; y: number }): Case {
   const t = BATIMENTS[b.id].taille
   const bloquees = casesBloquees(village)
-  const candidates: { c: Case; distance: number }[] = []
-  for (let x = b.x - 1; x <= b.x + t; x++) {
-    for (let y = b.y - 1; y <= b.y + t; y++) {
-      const dedans = x >= b.x && x < b.x + t && y >= b.y && y < b.y + t
-      if (dedans || x < 0 || y < 0 || x >= TAILLE_GRILLE || y >= TAILLE_GRILLE || bloquees.has(cleCase(x, y))) continue
-      candidates.push({ c: { x, y }, distance: Math.hypot(x + 0.5 - depuis.x, y + 0.5 - depuis.y) })
+  const dans = (c: Case) => c.x >= 0 && c.y >= 0 && c.x < TAILLE_GRILLE && c.y < TAILLE_GRILLE
+  const libre = (c: Case) => dans(c) && !bloquees.has(cleCase(c.x, c.y))
+  // Une case du tour extérieur du bâtiment (à un bloc de son bord, coins compris).
+  const autour = (c: Case) => c.x >= b.x - 1 && c.x <= b.x + t && c.y >= b.y - 1 && c.y <= b.y + t && !(c.x >= b.x && c.x < b.x + t && c.y >= b.y && c.y < b.y + t)
+  const depart = { x: Math.floor(depuis.x), y: Math.floor(depuis.y) }
+  if (autour(depart) && libre(depart)) return depart
+
+  // Les cases à visiter, avec la longueur du chemin pour y arriver (la plus courte d'abord).
+  const cout = new Map<string, number>([[cleCase(depart.x, depart.y), 0]])
+  const ouverts = new Map<string, Case>([[cleCase(depart.x, depart.y), depart]])
+  const fermes = new Set<string>()
+  while (ouverts.size > 0) {
+    let cleCourante = ''
+    let meilleur = Infinity
+    for (const cle of ouverts.keys()) {
+      const d = cout.get(cle) ?? Infinity
+      if (d < meilleur) {
+        meilleur = d
+        cleCourante = cle
+      }
+    }
+    const courante = ouverts.get(cleCourante) as Case
+    ouverts.delete(cleCourante)
+    fermes.add(cleCourante)
+    if (autour(courante)) return courante
+    for (const v of VOISINS) {
+      const suivante = { x: courante.x + v.x, y: courante.y + v.y }
+      const cle = cleCase(suivante.x, suivante.y)
+      if (fermes.has(cle) || !libre(suivante)) continue
+      // En diagonale, on ne coupe pas le coin d'un bâtiment (comme pour marcher).
+      if (v.x !== 0 && v.y !== 0 && (!libre({ x: courante.x + v.x, y: courante.y }) || !libre({ x: courante.x, y: courante.y + v.y }))) continue
+      const nouveauCout = meilleur + (v.x !== 0 && v.y !== 0 ? Math.SQRT2 : 1)
+      if (nouveauCout < (cout.get(cle) ?? Infinity)) {
+        cout.set(cle, nouveauCout)
+        ouverts.set(cle, suivante)
+      }
     }
   }
-  // La plus proche d'abord, mais seulement si on peut y aller à pied (pas enfermée par des décorations).
-  candidates.sort((a, c) => a.distance - c.distance)
-  const ici = { x: Math.floor(depuis.x), y: Math.floor(depuis.y) }
-  for (const { c } of candidates.slice(0, 12)) {
-    if (trouverChemin(village, ici, c) !== null) return c
-  }
-  return candidates[0]?.c ?? caseAcces(village, b)
+  return caseAcces(village, b)
 }
 
 // Un petit cache : le village change rarement, mais les mineurs demandent leur chemin souvent.

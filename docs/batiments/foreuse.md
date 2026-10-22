@@ -7,7 +7,7 @@
 - **Où** : là où tu la poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **800 $ + 60 pierre + 30 fer** (les minerais se prennent dans le sac, puis dans le coffre de la mine). Une fois posée, elle est prête : il n'y a plus d'activation à payer. **✏️ Modifier** la déplace ou la retourne (miroir) gratuitement.
 - **Déblocage** : au **niveau 2 de la mine** (`BATIMENTS.foreuse.niveauMine = 2`). Avant, sa carte du menu Bâtiments a un **cadenas** « 🔒 Mine niveau 2 ». Au déblocage, la carte prend la pastille **« Nouveau ! »** (jusqu'à ce qu'on ouvre le menu) et le bouton 🏗️ Bâtiments la compte dans son badge.
 - **La porte** : sur la face avant **gauche** du dessin (à droite si elle est retournée).
-- **L'ouvrir** : toucher (ou cliquer) la foreuse : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
+- **L'ouvrir** : toucher (ou cliquer) la foreuse : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/foreuse.webp`) : une grande foreuse jaune et noire en spirale sur un bâti en bois, avec des wagonnets d'or. Quand elle tourne (`foreuseEnMarche`), le bâtiment **vibre** un peu (classe `sprite-vibre`).
 - **Description** (en haut du panneau) : « Elle creuse toute seule avec du charbon, et plus vite avec de l'électricité. »
 - **Bulles au-dessus** (`notifications.ts`), de la plus urgente à la moins urgente :

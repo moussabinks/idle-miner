@@ -62,7 +62,7 @@ Une pastille **« Nouveau ! »** marque un bâtiment tout juste débloqué, jusq
 - Les minerais se prennent **dans le sac, puis dans le coffre de la mine** (`payer`) : pas besoin de porter la pierre ou le fer.
 - Chaque bâtiment ne se construit **qu'une fois** et reste pour toujours.
 - **Poser, en deux temps** : après « Poser », un **fantôme** du bâtiment suit la souris sur la carte, avec son losange vert (place libre) ou rouge (place prise). **Un clic sur la carte le fixe à cet endroit** (sans rien construire) : il ne suit plus la souris, et on peut aller jusqu'au bouton. Un autre clic le déplace, et on peut aussi le faire glisser. **Le bâtiment en main, on peut toujours faire glisser la carte** (27/10) : à la souris, tant que le fantôme n'est pas fixé, glisser déplace la carte (un simple clic le fixe) ; une fois fixé, glisser sur lui le déplace, et glisser ailleurs déplace la carte. Barre du bas : **✔ Construire ici** (on paie à ce moment-là), **↔ Retourner** (miroir), **✖ Annuler** (ou Échap). En posant le générateur, on voit son **rayon** autour du fantôme.
-- **Ouvrir un bâtiment** : on le touche (ou on clique dessus) : le hamster marche jusqu'au **côté du bâtiment le plus proche de lui** (`caseAccesProche`), puis le panneau s'ouvre. On peut aussi y aller avec les flèches : le panneau s'ouvre dès qu'on est à moins de **1,3 case** du bord du bâtiment, **de n'importe quel côté** (`RAYON_BATIMENT`, `distanceAuBatiment`). Si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre. Il ne s'ouvre pas tout seul quand le hamster *apparaît* devant (au chargement de la partie). La croix ✖ le ferme.
+- **Ouvrir un bâtiment** : on le touche (ou on clique dessus) : le hamster marche jusqu'au **point du tour du bâtiment le plus proche à pied** (27/10, `caseAccesProche` : une case collée à son emprise, coins compris, atteinte par le plus court chemin en contournant les autres bâtiments), et le panneau s'ouvre **dès qu'il arrive à un bloc** du bâtiment. On peut aussi y aller avec les flèches : le panneau s'ouvre dès qu'on est à moins de **1 case** du bord du bâtiment, **de n'importe quel côté** (`RAYON_BATIMENT`, `distanceAuBatiment`). Si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre. Il ne s'ouvre pas tout seul quand le hamster *apparaît* devant (au chargement de la partie). La croix ✖ le ferme.
 - Sans marché posé, on ne peut pas vendre, et aucun wagonnet ne va au marché.
 
 ## 3. Le menu Modifier : déplacer et retourner
@@ -163,7 +163,6 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | 🔧 | Forgeron | la pioche est cassée | alerte |
 | 🎒 | Marché | le sac est plein | alerte |
 | 📦 | Mine | le coffre est plein | alerte |
-| 📦 | Mine | au moins 20 objets dans le coffre, et pas encore de trajet Mine → Marché | prêt (rose) |
 | ✨ | Personnel | le recruteur (niveau 3) ou le manager (niveau 4) vient de se débloquer, pas encore vu | nouveau (bleu) |
 | 💰 | le bâtiment concerné | une amélioration est achetable | achat (vert) |
 
