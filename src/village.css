@@ -2029,3 +2029,180 @@ g.grille-construction {
 .objet-trajet-coche {
   font-size: 0.8em;
 }
+
+/* --- Le panneau de la mine (27/10) : le coffre en tableau, et le niveau suivant en avant --- */
+
+/* Une ligne par minerai : nom, nombre dans le coffre, ce que fait le wagonnet, 🎒. */
+.table-coffre {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.table-coffre.sans-wagonnet {
+  grid-template-columns: 1fr auto auto;
+}
+
+.ligne-coffre {
+  display: contents;
+}
+
+.entete-coffre {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.table-coffre .nombre {
+  text-align: right;
+  min-width: 34px;
+}
+
+.ligne-vide .nom-coffre,
+.ligne-vide .nombre {
+  opacity: 0.5;
+}
+
+.nom-coffre small {
+  white-space: nowrap;
+}
+
+.reserve-coffre {
+  display: block;
+  font-size: 0.7rem;
+  color: #ffcf7a;
+}
+
+/* Vendre / Garder : deux boutons collés, celui qui est choisi est coloré. */
+.choix-wagonnet {
+  display: inline-flex;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1.5px solid rgb(255 255 255 / 0.25);
+}
+
+.choix-wagonnet button {
+  padding: 3px 8px;
+  border: none;
+  background: rgb(0 0 0 / 0.25);
+  color: rgb(255 255 255 / 0.55);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choix-wagonnet button.actif.vendre {
+  background: #3fa34d;
+  color: #fff;
+}
+
+.choix-wagonnet button.actif.garder {
+  background: #8a6a3a;
+  color: #fff;
+}
+
+.bouton-sac-ligne {
+  padding: 3px 8px;
+  min-width: 0;
+}
+
+/* Le rappel du niveau suivant, sous le coffre : il brille quand on peut le payer. */
+.rappel-niveau {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid rgb(242 179 61 / 0.45);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgb(242 179 61 / 0.16), rgb(0 0 0 / 0.2));
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rappel-niveau-titre {
+  font-size: 0.9rem;
+}
+
+.rappel-niveau-gains {
+  grid-column: 1;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.rappel-niveau-action {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.rappel-niveau.rappel-possible {
+  border-color: #3fa34d;
+  background: linear-gradient(135deg, rgb(63 163 77 / 0.3), rgb(0 0 0 / 0.2));
+  animation: rappel-brille 1.6s ease-in-out infinite;
+}
+
+.rappel-possible .rappel-niveau-action {
+  color: #a8e89a;
+}
+
+@keyframes rappel-brille {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(63 163 77 / 0); }
+  50% { box-shadow: 0 0 12px 2px rgb(63 163 77 / 0.6); }
+}
+
+/* La grande carte du niveau suivant, dans l'onglet Améliorer. */
+.carte-niveau-mine {
+  border: 2px solid rgb(242 179 61 / 0.6);
+  background: linear-gradient(160deg, rgb(242 179 61 / 0.14), rgb(0 0 0 / 0.15));
+}
+
+.carte-niveau-mine.niveau-achetable {
+  border-color: #3fa34d;
+  animation: rappel-brille 1.6s ease-in-out infinite;
+}
+
+.nom-niveau-suivant {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.gains-niveau {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.gains-niveau li.gain-fort {
+  color: #ffe9a8;
+}
+
+.gain-pourcent {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgb(63 163 77 / 0.35);
+  color: #c8f5c0;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rappel-niveau.rappel-possible,
+  .carte-niveau-mine.niveau-achetable {
+    animation: none;
+  }
+}

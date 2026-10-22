@@ -70,7 +70,7 @@ Deux trajets de wagonnets touchent la foreuse (voir [mine.md](mine.md#les-wagonn
 - **Mine → Foreuse** (créé au panneau de la mine) : le wagonnet lui apporte le **charbon du coffre de la mine**, jusqu'à une réserve de **20 minutes** (60 charbons, `RESERVE_FOREUSE_WAGONNET` = 1 200 s). Le wagonnet du marché laisse alors ce charbon dans le coffre.
 - **Foreuse → Marché** (créé ici, en bas du panneau, bloc « 🛤️ Wagonnets ») : le wagonnet emporte **ce qui est coché dans le chariot** et le vend au marché. Cet argent compte dans `argentWagonnet` (la part « 🛤️ Wagonnet » des statistiques), pas dans `argentForeuse`.
 
-Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un wagonnet vers le marché »** ; ensuite **🛤️ Pousser** et **✖ Arrêter**. Pour ne plus le pousser soi-même : un **pousseur** embauché au Personnel pour le trajet Foreuse → Marché attend au quai, devant la foreuse (voir [personnel.md](personnel.md#4-les-pousseurs)), ou l'électricité du générateur.
+Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« 🛤️ Automatiser »** sur les rails (fenêtre du trajet) ; ensuite **🛤️ Pousser** et **✖ Arrêter**. Pour ne plus le pousser soi-même : un **pousseur** embauché au Personnel pour le trajet Foreuse → Marché attend au quai, devant la foreuse (voir [personnel.md](personnel.md#4-les-pousseurs)), ou l'électricité du générateur.
 
 ## Règles et comportement
 

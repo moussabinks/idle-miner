@@ -110,7 +110,7 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 | 5 | 4 000 | 10 000 $ + 30 or |
 
 - `rangerDansCoffre` ne range que ce qui tient : le reste est perdu pour un clic (le clic est refusé avant, coffre plein), et **attend dans le sac du mineur** pour un mineur.
-- **🎒 Mettre dans le sac** (`prendreDuCoffre`) : on choisit un lot avec les jauges (ou tout), il passe dans le sac, **les objets les plus chers d'abord**, tant qu'il y a de la place. « 🎒 *N* objets pris dans le coffre : va les vendre au marché ! »
+- **🎒 Mettre dans le sac** (`prendreDuCoffre`) : un minerai (bouton 🎒 de sa ligne) ou tout le coffre, il passe dans le sac, **les objets les plus chers d'abord**, tant qu'il y a de la place. « 🎒 *N* objets pris dans le coffre : va les vendre au marché ! »
 
 ### Payer avec le sac et le coffre (`disponible`, `payer`)
 

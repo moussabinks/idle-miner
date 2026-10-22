@@ -4,15 +4,17 @@
 //   - le tableau de production (27/10) : les blocs par seconde de la mine, de chaque mineur et
 //     de tes clics, et ce que ça rapporte ;
 //   - le coffre de la mine : tout ce qui sort de la mine y attend (clics, mine toute seule,
-//     mineurs). On le met dans son sac pour aller le vendre au marché ;
+//     mineurs). Une ligne par minerai du niveau (même à 0, 27/10) : le wagonnet du marché
+//     l'emporte ou le laisse, et un bouton le met dans le sac ;
+//   - le niveau suivant de la mine, et tout ce qu'il apporte, bien en avant (27/10) ;
 //   - les trajets des wagonnets qui partent de la mine (PanneauTrajets) : vers le marché, la
 //     foreuse, le générateur ;
 //   - les améliorations : descendre d'un niveau, agrandir le coffre, l'ascenseur, les wagonnets.
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
 import { useEffect, useRef, useState } from 'react'
-import { BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
-import { chancesDesBlocs, infoNiveauMine } from '../jeu/mine'
+import { BATIMENTS, BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
+import { blocsDuNiveau, chancesDesBlocs, gainsNiveauSuivant, infoNiveauMine } from '../jeu/mine'
 import {
   agrandirCoffre,
   capaciteCoffre,
@@ -28,19 +30,16 @@ import {
   prendreDuCoffre,
   prochainNiveauCoffre,
   prochainNiveauMine,
-  reglerVente,
   type EtatJeu,
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, rareteDe } from '../jeu/employes'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
-import { trajetDe } from '../jeu/wagonnet'
-import { lotChoisi, type Choix } from '../choix'
+import { envoyerObjet, objetEnvoye, trajetDe } from '../jeu/wagonnet'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { Amelioration } from './Amelioration'
 import { AmeliorationAscenseur } from './Ascenseur'
 import { Barre } from './Barre'
-import { Jauges } from './Jauges'
 import type { PropsPanneau } from './Panneaux'
 import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
@@ -269,11 +268,146 @@ function Chances({ niveau }: { niveau: number }) {
   )
 }
 
+// Le coffre de la mine (27/10) : une ligne par minerai que sort la mine à son niveau, même s'il
+// n'y en a pas encore (on règle le wagonnet à l'avance). Pour chacun : combien il y en a, ce que
+// fait le wagonnet du marché (🚃 Vendre / 📦 Garder), et 🎒 pour le mettre dans son sac.
+function CoffreMine({ etat, jouer }: PropsPanneau) {
+  const plein = coffrePlein(etat)
+  const placeSac = placeLibre(etat)
+  const wagonnet = trajetDe(etat, 'mine-marche') !== null
+  // Les minerais du niveau, et ceux d'avant qui resteraient dans le coffre (les plus chers en haut).
+  const blocs = [...new Set([...blocsDuNiveau(etat.niveauMine), ...(Object.keys(etat.coffre.contenu) as IdBloc[])])].sort((a, b) => BLOCS[b].prix - BLOCS[a].prix)
+  const total = nbDansCoffre(etat)
+  // Ce que les autres wagonnets prennent d'abord dans le coffre.
+  const reserve: Partial<Record<IdBloc, string>> = {
+    ...(trajetDe(etat, 'mine-foreuse') ? { charbon: '🔥 foreuse d’abord' } : {}),
+    ...(trajetDe(etat, 'mine-generateur') ? { redstone: '⚡ générateur d’abord' } : {}),
+  }
+  return (
+    <div className="ligne-achat coffre-mine">
+      <div className="ligne-titre">
+        <strong>📦 Coffre</strong>
+        <span className={plein ? 'texte-alerte' : 'discret'}>
+          {total} / {capaciteCoffre(etat)}
+        </span>
+      </div>
+      <Barre valeur={total} max={capaciteCoffre(etat)} texte={plein ? 'Plein : la mine s’arrête !' : `${total} objets`} couleur={plein ? 'rouge' : 'or'} />
+      <div className={`table-coffre ${wagonnet ? '' : 'sans-wagonnet'}`}>
+        <span className="entete-coffre">Minerai</span>
+        <span className="entete-coffre nombre">Coffre</span>
+        {wagonnet && <span className="entete-coffre">🚃 Wagonnet</span>}
+        <span className="entete-coffre" />
+        {blocs.map((bloc) => {
+          const nombre = etat.coffre.contenu[bloc] ?? 0
+          const envoye = wagonnet && objetEnvoye(etat, 'mine-marche', bloc)
+          return (
+            <div key={bloc} className={`ligne-coffre ${nombre === 0 ? 'ligne-vide' : ''}`}>
+              <span className="nom-coffre" title={`${BLOCS[bloc].prix} $ pièce`}>
+                <span aria-hidden="true">{BLOCS[bloc].emoji}</span> {BLOCS[bloc].nom}
+                <small className="discret"> {BLOCS[bloc].prix} $</small>
+                {reserve[bloc] && <small className="reserve-coffre">{reserve[bloc]}</small>}
+              </span>
+              <strong className="nombre">{nombre.toLocaleString('fr-FR')}</strong>
+              {wagonnet && (
+                <span className="choix-wagonnet" role="group" aria-label={`Wagonnet : ${BLOCS[bloc].nom}`}>
+                  <button className={envoye ? 'actif vendre' : ''} aria-pressed={envoye} title="Le wagonnet l’emporte et le vend au marché" onClick={() => jouer((e) => envoyerObjet(e, 'mine-marche', bloc, true))}>
+                    Vendre
+                  </button>
+                  <button className={envoye ? '' : 'actif garder'} aria-pressed={!envoye} title="Le wagonnet le laisse dans le coffre" onClick={() => jouer((e) => envoyerObjet(e, 'mine-marche', bloc, false))}>
+                    Garder
+                  </button>
+                </span>
+              )}
+              <button
+                className="bouton bouton-petit bouton-sac bouton-sac-ligne"
+                disabled={nombre === 0 || placeSac === 0}
+                title={`Mettre ${Math.min(nombre, placeSac)} ${BLOCS[bloc].nom.toLowerCase()} dans ton sac`}
+                onClick={() => jouer((e) => prendreDuCoffre(e, { [bloc]: nombre }))}
+              >
+                🎒
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      <div className="boutons">
+        <button className="bouton bouton-sac" disabled={total === 0 || placeSac === 0} onClick={() => jouer((e) => prendreDuCoffre(e))}>
+          🎒 Tout mettre dans le sac ({Math.min(total, placeSac)})
+        </button>
+      </div>
+      {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
+      {!wagonnet && <span className="discret">🛤️ Relie la mine au marché avec des rails : un wagonnet vendra le coffre tout seul.</span>}
+    </div>
+  )
+}
+
+// Un nombre avec une décimale si besoin (« 3,4 »).
+const court = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: n < 10 ? 1 : 0 })
+const enPlus = (avant: number, apres: number) => `+${Math.round((apres / Math.max(0.0001, avant) - 1) * 100)} %`
+
+// Ce que rapporte le niveau suivant de la mine (27/10), en liste bien lisible.
+function GainsNiveau({ niveauActuel }: { niveauActuel: number }) {
+  const g = gainsNiveauSuivant(niveauActuel)
+  if (!g) return null
+  return (
+    <ul className="gains-niveau">
+      {g.nouveaux.map((bloc) => (
+        <li key={bloc} className="gain-fort">
+          ✨ Nouveau minerai : {BLOCS[bloc].emoji} <strong>{BLOCS[bloc].nom}</strong> ({BLOCS[bloc].prix} $ pièce)
+        </li>
+      ))}
+      <li>
+        💰 Un bloc vaut en moyenne {court(g.valeurAvant)} → <strong>{court(g.valeurApres)} $</strong> <span className="gain-pourcent">{enPlus(g.valeurAvant, g.valeurApres)}</span>
+      </li>
+      <li>
+        ⚙️ La mine sort {court(g.debitAvant * 60)} → <strong>{court(g.debitApres * 60)} blocs/min</strong> toute seule <span className="gain-pourcent">{enPlus(g.debitAvant, g.debitApres)}</span>
+      </li>
+      <li>
+        👷 <strong>+{g.mineursEnPlus} mineurs</strong> à embaucher au Personnel
+      </li>
+      {g.batiments.length > 0 && (
+        <li className="gain-fort">
+          🏗️ Débloque : <strong>{g.batiments.map((id) => BATIMENTS[id].nom).join(', ')}</strong>
+        </li>
+      )}
+      {g.recruteur && (
+        <li className="gain-fort">
+          🎲 Débloque le <strong>recruteur</strong> (mineurs rares)
+        </li>
+      )}
+      {g.manager && (
+        <li className="gain-fort">
+          💼 Débloque le <strong>manager</strong> (il paie les salaires)
+        </li>
+      )}
+    </ul>
+  )
+}
+
+// Au premier onglet, un rappel du niveau suivant (27/10) : il brille quand on peut le payer.
+function ProchainNiveau({ etat, onVoir }: { etat: EtatJeu; onVoir: () => void }) {
+  const g = gainsNiveauSuivant(etat.niveauMine)
+  const prochain = prochainNiveauMine(etat)
+  if (!g || !prochain) return null
+  const possible = peutPayer(etat, prochain.cout)
+  return (
+    <button className={`rappel-niveau ${possible ? 'rappel-possible' : ''}`} onClick={onVoir}>
+      <span className="rappel-niveau-titre">
+        ⬇ Niveau {g.niveau.niveau} : <strong>{g.niveau.nom}</strong>
+      </span>
+      <span className="rappel-niveau-gains">
+        {g.nouveaux.map((bloc) => `+${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`).join(' ')} · valeur {enPlus(g.valeurAvant, g.valeurApres)}
+        {g.batiments.length > 0 && ` · 🏗️ ${g.batiments.map((id) => BATIMENTS[id].nom).join(', ')}`}
+      </span>
+      <span className="rappel-niveau-action">{possible ? '💰 Achetable !' : 'Voir ›'}</span>
+    </button>
+  )
+}
+
 // Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
 const FENETRE_CLICS = 3000 // ms
 
 export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
-  const [choix, setChoix] = useState<Choix>({})
   const [onglet, setOnglet] = useState<'creuser' | 'wagonnets' | 'ameliorer'>('creuser')
   // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
   const clics = useRef<number[]>([])
@@ -290,11 +424,6 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
     clics.current.push(performance.now())
     onCliquer()
   }
-  // Le coffre, les objets les plus précieux en premier.
-  const piles = (Object.entries(etat.coffre.contenu) as [IdBloc, number][]).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
-  const lot = lotChoisi(choix, [], piles)
-  const nbLot = Object.values(lot).reduce((t, n) => t + (n ?? 0), 0)
-  const placeSac = placeLibre(etat)
   const niveau = infoNiveauMine(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
@@ -320,60 +449,11 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
             Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong>
           </p>
           <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
+          {/* Le plus utile d'abord : le coffre, puis le niveau suivant, puis les chiffres. */}
+          <CoffreMine etat={etat} jouer={jouer} />
+          <ProchainNiveau etat={etat} onVoir={() => setOnglet('ameliorer')} />
           <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
           <Goulots etat={etat} onVoir={setOnglet} />
-
-          {/* Le coffre : tout ce qui sort de la mine. */}
-          <div className="ligne-achat">
-            <strong>
-              📦 Coffre · {nbDansCoffre(etat)} / {capaciteCoffre(etat)}
-            </strong>
-            <div className="barre-coffre-mine">
-              <Barre valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} texte={coffrePlein(etat) ? 'Plein : la mine s’arrête !' : `${nbDansCoffre(etat)} objets`} couleur={coffrePlein(etat) ? 'rouge' : 'or'} />
-            </div>
-            {piles.length === 0 ? (
-              <span className="discret">Vide. Clique sur le bloc pour le remplir !</span>
-            ) : (
-              <>
-                <Jauges
-                  piles={piles}
-                  choix={choix}
-                  gardes={[]}
-                  onChanger={(bloc, valeur) => setChoix({ ...choix, [bloc]: valeur })}
-                  prixUnitaire={(bloc) => BLOCS[bloc].prix}
-                  onToutSelectionner={() => setChoix(Object.fromEntries(piles.map(([bloc]) => [bloc, 'max'])))}
-                />
-                <div className="boutons">
-                  <button
-                    className="bouton bouton-sac"
-                    disabled={nbLot === 0 || placeSac === 0}
-                    onClick={() => {
-                      jouer((e) => prendreDuCoffre(e, lot))
-                      setChoix({})
-                    }}
-                  >
-                    🎒 Mettre dans le sac ({Math.min(nbLot, placeSac)})
-                  </button>
-                </div>
-                {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
-                {/* Une option rarement utile : rangée dans « plus d'infos ». */}
-                {trajetDe(etat, 'mine-marche') && (
-                  <details className="plus-d-infos">
-                    <summary>Ce que le wagonnet ne vend pas</summary>
-                    <div className="garder-coffre">
-                      <span className="discret">Le wagonnet du marché laisse dans le coffre :</span>
-                      {piles.map(([bloc]) => (
-                        <label key={bloc} className="case-option">
-                          <input type="checkbox" checked={etat.nonAVendre.includes(bloc)} onChange={(e) => jouer((x) => reglerVente(x, bloc, !e.target.checked))} />
-                          {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
-                        </label>
-                      ))}
-                    </div>
-                  </details>
-                )}
-              </>
-            )}
-          </div>
         </>
       )}
 
@@ -382,21 +462,40 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
       {onglet === 'ameliorer' && (
         <>
 
-          {/* Descendre d'un niveau : de nouveaux minerais, plus rares et plus chers. */}
-          <div className="ligne-achat">
-            <strong>⬇ Niveau de la mine</strong>
-            <Chances niveau={etat.niveauMine} />
-            {prochain && (
+          {/* Descendre d'un niveau (27/10) : la grande carte, avec tout ce qu'on y gagne. */}
+          <div className={`ligne-achat carte-niveau-mine ${prochain && peutPayer(etat, prochain.cout) ? 'niveau-achetable' : ''}`}>
+            <div className="ligne-titre">
+              <strong>{prochain ? `⬇ Descendre au niveau ${prochain.niveau}` : '🏆 Mine au plus profond'}</strong>
               <span className="discret">
-                Au niveau {prochain.niveau} : <Chances niveau={prochain.niveau} />
+                Niveau {etat.niveauMine} / {NIVEAU_MINE_MAX}
               </span>
+            </div>
+            {prochain ? (
+              <>
+                <span className="nom-niveau-suivant">{prochain.nom}</span>
+                <GainsNiveau niveauActuel={etat.niveauMine} />
+                <details className="plus-d-infos">
+                  <summary>Les chances de chaque minerai</summary>
+                  <span className="discret">
+                    Maintenant : <Chances niveau={etat.niveauMine} />
+                  </span>
+                  <span className="discret">
+                    Au niveau {prochain.niveau} : <Chances niveau={prochain.niveau} />
+                  </span>
+                </details>
+              </>
+            ) : (
+              <>
+                <span className="discret">{niveau.nom} : tous les minerais, jusqu’au diamant.</span>
+                <Chances niveau={etat.niveauMine} />
+              </>
             )}
             <Amelioration
               etat={etat}
-              actuel={`Niveau ${etat.niveauMine} / ${NIVEAU_MINE_MAX}`}
+              actuel={`Niveau ${etat.niveauMine} · ${niveau.nom}`}
               niveau={etat.niveauMine}
               niveauMax={NIVEAUX_MINE.length}
-              suivant={prochain && { cout: prochain.cout, texte: `⬇ ${prochain.nom}` }}
+              suivant={prochain && { cout: prochain.cout, texte: `⬇ Descendre au niveau ${prochain.niveau}` }}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer((e) => descendreNiveauMine(e, aleatoireNavigateur))}
             />

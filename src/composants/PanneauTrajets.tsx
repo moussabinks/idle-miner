@@ -1,7 +1,7 @@
 // Les trajets des wagonnets qui partent d'un bâtiment (24/10), dans son panneau (la mine, la
 // foreuse). Pour chaque arrivée possible :
 //   - pas encore de rails jusque-là : on explique comment faire ;
-//   - des rails, mais pas de trajet : « Envoyer un wagonnet vers… » (c'est le joueur qui choisit) ;
+//   - des rails, mais pas de trajet : on le crée avec la bulle « 🛤️ Automatiser » sur les rails ;
 //   - un trajet : où en est son wagonnet, le pousser soi-même, ou arrêter le trajet.
 // À la mine, on peut aussi agrandir les wagonnets (pour tous les trajets).
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
@@ -12,7 +12,6 @@ import {
   aCharger,
   ameliorerWagonnet,
   capaciteWagonnet,
-  creerTrajet,
   distanceDepuisLeDepart,
   enRoute,
   ligneDe,
@@ -63,15 +62,11 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
   }
 
   if (!trajet) {
+    // Le trajet se crée sur la carte (27/10) : la bulle « 🛤️ Automatiser » au milieu des rails.
     return (
       <div className="ligne-achat trajet">
         {titre}
-        <span className="discret">Les rails sont posés ! Un wagonnet {info.description}.</span>
-        <div className="boutons">
-          <button className="bouton bouton-petit bouton-acheter" onClick={() => jouer((e) => creerTrajet(e, liaison))}>
-            🛤️ Envoyer un wagonnet vers {le(info.arrivee)}
-          </button>
-        </div>
+        <span className="discret">Les rails sont posés ! Touche la bulle 🛤️ Automatiser sur les rails pour lancer le wagonnet ({info.description}).</span>
       </div>
     )
   }

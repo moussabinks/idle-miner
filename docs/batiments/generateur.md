@@ -60,7 +60,7 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 - Le générateur ne brûle sa redstone que s'il est **posé et allumé**. Il donne du courant tant qu'il en reste (`generateurEnMarche`).
 - Quand il n'en a plus : « ⚡ Le générateur n'a plus de redstone : les rails ne sont plus électriques. »
 - **Le puisage** (niveau 2 et plus, case cochée) : quand sa réserve passe **sous 5 minutes** (`RESERVE_GENERATEUR_AUTO` = 300 s), il prend dans le **coffre de la mine** juste ce qu'il faut pour remonter à 5 minutes (au plus 10 redstone d'un coup), jamais dans le sac. Il ne vide donc jamais le coffre d'un coup. Ça marche aussi jeu fermé.
-- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, le panneau de la mine propose « Envoyer un wagonnet vers le générateur ». Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à une réserve de **30 minutes** (60 redstones, `RESERVE_GENERATEUR_WAGONNET` = 1 800 s). Le wagonnet du marché laisse alors cette redstone dans le coffre. Voir [mine.md](mine.md#les-wagonnets).
+- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, la bulle « 🛤️ Automatiser » sur les rails crée le trajet. Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à une réserve de **30 minutes** (60 redstones, `RESERVE_GENERATEUR_WAGONNET` = 1 800 s). Le wagonnet du marché laisse alors cette redstone dans le coffre. Voir [mine.md](mine.md#les-wagonnets).
 - Astuce : la redstone sort de la mine dès le niveau 2 (10 % des blocs), puis 12 % aux niveaux suivants. Avec le puisage, la mine nourrit toute seule son générateur.
 
 ### Le rayon

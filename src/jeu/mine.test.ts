@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { chancesDesBlocs, infoNiveauMine, tirerBloc, valeurMoyenneBloc } from './mine'
+import { blocsDuNiveau, chancesDesBlocs, gainsNiveauSuivant, infoNiveauMine, tirerBloc, valeurMoyenneBloc } from './mine'
 
 describe('la mine à 5 niveaux', () => {
   it('ne sort que les blocs de son niveau', () => {
@@ -26,5 +26,20 @@ describe('la mine à 5 niveaux', () => {
   it('la mine sort plus de blocs toute seule plus bas', () => {
     for (let n = 2; n <= 5; n++) expect(infoNiveauMine(n).debit).toBeGreaterThan(infoNiveauMine(n - 1).debit)
     expect(infoNiveauMine(9).niveau).toBe(5) // on ne sort pas de la liste
+  })
+})
+
+describe('ce qu’on gagne au niveau suivant (27/10)', () => {
+  it('nouveau minerai, débit, valeur, bâtiments', () => {
+    expect(blocsDuNiveau(1)).toEqual(['pierre', 'charbon', 'fer'])
+    const g = gainsNiveauSuivant(1)!
+    expect(g.niveau.niveau).toBe(2)
+    expect(g.nouveaux).toEqual(['redstone'])
+    expect(g.debitApres).toBeGreaterThan(g.debitAvant)
+    expect(g.valeurApres).toBeGreaterThan(g.valeurAvant)
+    expect(g.batiments).toEqual(expect.arrayContaining(['foreuse', 'generateur']))
+    expect(gainsNiveauSuivant(2)!.recruteur).toBe(true)
+    expect(gainsNiveauSuivant(3)!.manager).toBe(true)
+    expect(gainsNiveauSuivant(5)).toBeNull()
   })
 })
