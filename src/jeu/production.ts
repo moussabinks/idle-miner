@@ -91,7 +91,8 @@ export function analyseWagonnet(etat: EtatJeu): AnalyseWagonnet | null {
   const trajet = trajetDe(etat, 'mine-marche')
   if (!trajet || !ligneDe(etat, 'mine-marche')) return null
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === 'mine-marche' && e.tempsPaye > 0)
-  const moteur = trajetElectrique(etat, 'mine-marche') ? 'electricite' : pousseur ? 'pousseur' : 'personne'
+  // (27/10 : sans pousseur, rien ne part, même sur des rails électriques)
+  const moteur = !pousseur ? 'personne' : trajetElectrique(etat, 'mine-marche') ? 'electricite' : 'pousseur'
   const vitesse = moteur === 'electricite' ? vitesseTrajet(etat, trajet, 'electricite') : pousseur ? vitesseTrajet(etat, trajet, pousseur.nom) : 0
   const duree = vitesse > 0 ? secondesAllerRetour(etat, 'mine-marche', vitesse) : 0
   const debitMax = duree > 0 ? capaciteWagonnet(etat) / duree : 0

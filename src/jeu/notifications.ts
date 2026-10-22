@@ -39,6 +39,19 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
     ajouter(depart, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
     ajouter(arrivee, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
   }
+  // Un trajet sans pousseur (27/10) : son wagonnet ne part pas tout seul, même électrique.
+  if (batimentPose(etat.village, 'employes')) {
+    // (un pousseur pas payé a déjà son alerte « Salaires ! »)
+    const sansPousseur = etat.trajets.filter((t) => ligneDe(etat, t.liaison) && !etat.employes.some((e) => e.role === 'pousseur' && e.trajet === t.liaison)).length
+    if (sansPousseur > 0) {
+      ajouter('employes', {
+        icone: '🛤️',
+        texte: sansPousseur === 1 ? 'Un trajet de wagonnet n’a pas de pousseur : embauches-en un' : `${sansPousseur} trajets de wagonnet n’ont pas de pousseur : embauches-en`,
+        court: 'Pousseur ?',
+        sorte: 'alerte',
+      })
+    }
+  }
   // Des pousseurs dont le trajet a été arrêté : ils attendent au quai, pour rien.
   const sansTrajet = etat.employes.filter((e) => e.role === 'pousseur' && (e.trajet === null || !trajetDe(etat, e.trajet))).length
   if (sansTrajet > 0) {

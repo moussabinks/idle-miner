@@ -15,7 +15,7 @@ import {
 } from './donnees'
 import { foreuseAlimentee, puissanceGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, encaisser, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
 import { batimentPose } from './village'
 
 // ---------------------------------------------------------------------------
@@ -112,27 +112,6 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   return [`🛒 Chariot plus grand : ${prochain.capacite} places.`]
 }
 
-// Les objets cochés du chariot (ceux qu'on vend ou qu'on met dans le sac).
-export function selectionChariot(etat: EtatJeu): Inventaire {
-  const selection: Inventaire = {}
-  for (const [id, nombre] of Object.entries(etat.foreuse.chariot)) {
-    const bloc = id as IdBloc
-    if (!etat.foreuse.nonCoches.includes(bloc) && (nombre ?? 0) > 0) selection[bloc] = nombre
-  }
-  return selection
-}
-
-export function basculerChariot(etat: EtatJeu, bloc: IdBloc): string[] {
-  const nonCoches = etat.foreuse.nonCoches
-  etat.foreuse.nonCoches = nonCoches.includes(bloc) ? nonCoches.filter((b) => b !== bloc) : [...nonCoches, bloc]
-  return []
-}
-
-export function cocherToutChariot(etat: EtatJeu, coche: boolean): string[] {
-  etat.foreuse.nonCoches = coche ? [] : (Object.keys(etat.foreuse.chariot) as IdBloc[])
-  return []
-}
-
 export function rechargeAutoDisponible(etat: EtatJeu): boolean {
   return etat.foreuse.niveauVitesse >= NIVEAU_RECHARGE_AUTO
 }
@@ -143,29 +122,21 @@ export function basculerRechargeAuto(etat: EtatJeu): string[] {
   return []
 }
 
-// Vend les objets cochés du chariot (les autres restent dedans).
-export function vendreChariot(etat: EtatJeu): string[] {
-  const aVendre = selectionChariot(etat)
-  const gain = valeurDe(aVendre)
-  if (gain === 0) return []
-  for (const [bloc, nombre] of Object.entries(aVendre)) retirerDuChariot(etat, bloc as IdBloc, nombre ?? 0)
-  encaisser(etat, gain)
-  etat.stats.argentForeuse += gain
-  return [`💰 Chariot vendu : +${gain} $`]
-}
-
-// Met les objets cochés du chariot dans le sac (tant qu'il y a de la place).
-export function viderChariotDansSac(etat: EtatJeu): string[] {
+// Le chariot ne se vend plus sur place (27/10) : on met ce qu'on veut dans son sac (comme le
+// coffre de la mine), ou un wagonnet Foreuse → Marché l'emporte. « lot » : combien de chaque
+// objet (sans lot, tout), les plus chers d'abord, tant qu'il y a de la place dans le sac.
+export function prendreDuChariot(etat: EtatJeu, lot?: Inventaire): string[] {
   let pris = 0
-  for (const [id, nombre] of Object.entries(selectionChariot(etat))) {
-    const bloc = id as IdBloc
-    const aPrendre = Math.min(nombre ?? 0, placeLibre(etat))
+  for (const [bloc, nombre] of parPrix(etat.foreuse.chariot)) {
+    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
+    const aPrendre = Math.min(voulu, placeLibre(etat))
     if (aPrendre <= 0) continue
     ramasser(etat, bloc, aPrendre)
     retirerDuChariot(etat, bloc, aPrendre)
     pris += aPrendre
   }
-  return pris > 0 ? [`🎒 ${pris} objets du chariot mis dans ton sac.`] : ['🎒 Ton sac est plein.']
+  if (pris === 0) return placeLibre(etat) === 0 ? ['🎒 Ton sac est plein : va d’abord vendre au marché.'] : []
+  return [`🎒 ${pris} objet${pris > 1 ? 's' : ''} du chariot dans ton sac : va les vendre au marché !`]
 }
 
 export function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): void {

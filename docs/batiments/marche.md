@@ -74,7 +74,7 @@ Les chances de chaque bloc, niveau par niveau, sont dans [mine.md](mine.md#les-5
 - `src/jeu/village.ts` : la porte, le chemin à pied, les rails entre deux bâtiments (`railsEntre`, `railsMineMarche`).
 - `src/jeu/mineur.ts` : les règles de vente (`valeurDe`, `vendreLot`, `vendre`, `objetsAVendre`, `reglerVente`, `encaisser`, `nonAVendre`).
 - `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche` et `foreuse-marche`, `avancerWagonnets`).
-- `src/jeu/foreuse.ts` : la vente du chariot de la foreuse (`vendreChariot`).
+- `src/jeu/foreuse.ts` : le chariot de la foreuse ne se vend plus sur place (27/10) : on le met dans son sac (`prendreDuChariot`), ou un wagonnet l'emporte.
 - `src/jeu/notifications.ts` : les bulles 🎒 « sac plein » et 🚧 « rails coupés ».
 - `src/jeu/missions.ts` : la mission « Construis le marché (gratuit) » et les premiers pas.
 - `src/composants/Panneaux.tsx` : le panneau du marché (`PanneauMarche`).

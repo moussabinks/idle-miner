@@ -14,9 +14,10 @@
 //
 // Un wagonnet ne roule pas tout seul :
 //   - le joueur peut le pousser (bouton dans le panneau du départ) : il fait l'aller-retour avec lui ;
-//   - un pousseur (embauché au Personnel pour ce trajet) le pousse dès qu'il a quelque chose à porter ;
-//   - si toutes les cases de son trajet sont dans le rayon du générateur allumé, il roule tout
-//     seul, plus vite : c'est l'automatisation.
+//   - un trajet automatique a toujours son pousseur (27/10 : un employé embauché au Personnel
+//     pour ce trajet, un par trajet). Il le pousse dès qu'il a quelque chose à porter ;
+//   - si toutes les cases du trajet sont dans le rayon du générateur allumé, le wagonnet roule
+//     tout seul, bien plus vite, mais il faut toujours son pousseur (il le lance du quai).
 
 import {
   BLOCS,
@@ -37,7 +38,7 @@ import {
   type IdLiaison,
   type IdRarete,
 } from './donnees'
-import { retirerDuChariot, selectionChariot } from './foreuse'
+import { retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
@@ -286,7 +287,7 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison): [IdBloc, number][] {
     }
     case 'foreuse-marche': {
       const exclus = exclusDe(etat, liaison)
-      return parPrix(selectionChariot(etat)).filter(([bloc]) => !exclus.includes(bloc))
+      return parPrix(etat.foreuse.chariot).filter(([bloc]) => !exclus.includes(bloc))
     }
   }
 }
@@ -371,6 +372,17 @@ export function pousserTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
 // Le temps qui passe
 // ---------------------------------------------------------------------------
 
+// Le pousseur payé de ce trajet qui attend au quai (null : personne).
+export function pousseurAuQuai(etat: EtatJeu, liaison: IdLiaison) {
+  const depart = LIAISONS[liaison].depart
+  return etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.etape === 'quai' && e.lieu === depart && e.tempsPaye > 0) ?? null
+}
+
+// Ce trajet a-t-il un pousseur payé (au quai ou en train de pousser) ?
+export function aUnPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
+  return etat.employes.some((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
+}
+
 export function avancerWagonnets(etat: EtatJeu, secondes: number): string[] {
   const messages: string[] = []
   for (const trajet of etat.trajets) messages.push(...avancerTrajet(etat, trajet, secondes))
@@ -388,13 +400,14 @@ function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[
 
   if (trajet.etape === 'quai') {
     if (aCharger(etat, trajet.liaison) === 0) return []
+    // Le pousseur de ce trajet, s'il attend au quai (devant le bâtiment de départ) : sans lui,
+    // pas de départ, même sur des rails électriques (27/10).
+    const pousseur = pousseurAuQuai(etat, trajet.liaison)
+    if (!pousseur) return []
     if (trajetElectrique(etat, trajet.liaison)) {
+      // Électrique : il lance le wagonnet et reste au quai.
       partir(etat, trajet, 'electricite')
     } else {
-      // Le pousseur de ce trajet, s'il attend au quai (devant le bâtiment de départ).
-      const depart = LIAISONS[trajet.liaison].depart
-      const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === trajet.liaison && e.etape === 'quai' && e.lieu === depart && e.tempsPaye > 0)
-      if (!pousseur) return []
       partir(etat, trajet, pousseur.nom)
       pousseur.etape = 'pousse'
     }

@@ -2,18 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
 import {
+  prendreDuChariot,
   ameliorerChariot,
   ameliorerForage,
   avancerForeuse,
-  basculerChariot,
   basculerRechargeAuto,
   capaciteChariot,
   chariotPlein,
   foreuseEnMarche,
   nbDansChariot,
   remplirForeuse,
-  vendreChariot,
-  viderChariotDansSac,
   vitesseForage,
 } from './foreuse'
 import { creerPartie, type EtatJeu } from './mineur'
@@ -53,17 +51,16 @@ describe('la foreuse', () => {
     expect(messages[0]).toContain('plein')
   })
 
-  it('on vend le chariot (ce qui est coché), ou on le met dans son sac', () => {
+  it('le chariot ne se vend pas sur place : on le met dans son sac (27/10)', () => {
     const etat = partie()
     etat.foreuse.chariot = { fer: 2, pierre: 40 }
-    basculerChariot(etat, 'pierre')
-    vendreChariot(etat)
-    expect(etat.argent).toBe(24)
-    expect(etat.stats.argentForeuse).toBe(24)
-    basculerChariot(etat, 'pierre')
-    viderChariotDansSac(etat)
-    expect(etat.inventaire).toEqual({ pierre: 32 })
-    expect(etat.foreuse.chariot).toEqual({ pierre: 8 })
+    // Un seul minerai, ou tout (les plus chers d'abord, tant qu'il y a de la place).
+    prendreDuChariot(etat, { fer: 2 })
+    expect(etat.inventaire).toEqual({ fer: 2 })
+    prendreDuChariot(etat)
+    expect(etat.inventaire).toEqual({ fer: 2, pierre: 30 })
+    expect(etat.foreuse.chariot).toEqual({ pierre: 10 })
+    expect(etat.argent).toBe(0)
   })
 
   it('fore plus vite sous électricité', () => {

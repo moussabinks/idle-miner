@@ -58,7 +58,7 @@ Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un 
 
 | Niveau | Pioche | Vitesse en creusant | Sac | Coût | Salaire / 10 min | Blocs par minute (échelle) | Blocs par minute (ascenseur niveau 6) |
 |---|---|---:|---:|---:|---:|---:|---:|
-| 1 | Bois | 0,15 bloc/s | 10 | (de base) | 30 $ | ~6,8 | ~8,5 |
+| 1 | Bois | 0,15 bloc/s | 10 | (de base) | 50 $ | ~6,8 | ~8,5 |
 | 2 | Pierre | 0,25 bloc/s | 15 | 150 $ | 60 $ | ~11 | ~14 |
 | 3 | Fer | 0,4 bloc/s | 20 | 600 $ | 140 $ | ~16,7 | ~22 |
 | 4 | Or | 0,6 bloc/s | 30 | 2 500 $ | 320 $ | ~25 | ~33 |
@@ -66,7 +66,7 @@ Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un 
 
 (Pour un mineur commun, trajets compris. Les salaires valent environ 15 % de ce qu'il fait sortir de la mine.)
 
-- **Il va chercher sa pioche à la forge** : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite, mais le mineur passe à la forge à la fin de son tour (« ⛏️ *X* va chercher sa pioche en … à la forge. ») : il y marche, y reste **3 secondes** (`SECONDES_FORGE_EMPLOYE`), puis retourne à la mine. Sans forgeron, il l'a directement.
+- **Sa pioche lui descend par l'ascenseur** (27/10) : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite ; à la fin de son tour, le mineur attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse (« ⛏️ Le forgeron fait une pioche en … pour *X* : elle lui descendra par l'ascenseur. »). Il ne remonte plus au village pour ça : **un mineur ne remonte que s'il n'est plus payé** (il va alors attendre devant le Personnel). Sans forgeron, il l'a directement. Une pioche ne s'achète pas pour un pousseur (il ne creuse pas).
 
 ### 4. Les pousseurs
 
@@ -88,10 +88,10 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 - Il **marche du Personnel jusqu'au bâtiment de départ** de son trajet (`maisonDe`), puis **attend au quai**, au bord de la voie, à côté du début de ses rails. Sans Personnel posé, il est tout de suite au quai.
 - Dès que **son** wagonnet a quelque chose à porter et que son trajet n'est pas électrique, il le **pousse jusqu'à l'arrivée** (2,5 cases/s × sa rareté), puis le ramène et retourne au quai. Le pousseur d'un autre trajet ne bouge pas : avec plusieurs trajets à pousser, il faut **un pousseur par trajet**.
-- Il est **payé** comme les autres : **30 $ toutes les 10 minutes** (le salaire d'une pioche en bois) × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
+- Il est **payé** comme les autres : **50 $ toutes les 10 minutes** (le salaire d'une pioche en bois) × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
 - **Changer son trajet** (la liste sur sa carte, `changerTrajet`) : « 🛤️ *X* va pousser le wagonnet de la mine à la foreuse. » S'il est en train de pousser, il finit d'abord son voyage, puis marche jusqu'au quai de son nouveau trajet (« va au quai de la foreuse »). Le nouveau trajet est créé s'il n'existe pas encore.
 - **Trajet arrêté** (✖ Arrêter au panneau du départ) : il attend au quai pour rien (« 🛤️ attend : son trajet est arrêté »), et la bulle **🛤️ Sans trajet** apparaît sur le Personnel : choisis-lui un autre trajet, ou licencie-le.
-- Un **trajet électrique** (générateur) part tout seul : son pousseur ne sert plus à rien, il vaut mieux le licencier (ou lui donner un trajet qui n'est pas encore électrique).
+- **Un pousseur par trajet automatique** (27/10) : sans pousseur payé, un wagonnet ne part pas tout seul, même sur des rails électriques (le joueur peut toujours le pousser lui-même). Sur un trajet électrique, le pousseur reste au quai et lance le wagonnet, qui roule seul et bien plus vite. Une bulle « Pousseur ? » sur le Personnel signale un trajet sans pousseur.
 
 ### 5. Payer les salaires (« 💵 Payer 10 min », sans manager)
 

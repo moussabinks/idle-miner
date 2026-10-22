@@ -56,7 +56,8 @@ export type NiveauMine = {
 }
 
 export const NIVEAUX_MINE: NiveauMine[] = [
-  { niveau: 1, nom: 'Galerie de surface', poids: { pierre: 70, charbon: 18, fer: 12 }, debit: 0.2, cout: { materiaux: {} } },
+  // (27/10 : au niveau 1, la mine ne sort rien toute seule : on creuse à la main, ou avec des mineurs)
+  { niveau: 1, nom: 'Galerie de surface', poids: { pierre: 70, charbon: 18, fer: 12 }, debit: 0, cout: { materiaux: {} } },
   { niveau: 2, nom: 'Veine de redstone', poids: { pierre: 60, charbon: 16, fer: 14, redstone: 10 }, debit: 0.25, cout: { argent: 400, materiaux: { fer: 30 } } },
   { niveau: 3, nom: 'Filon d’or', poids: { pierre: 52, charbon: 14, fer: 14, redstone: 12, or: 8 }, debit: 0.3, cout: { argent: 2500, materiaux: { fer: 60, redstone: 30 } } },
   {
@@ -208,9 +209,9 @@ export const NOMS_EMPLOYES = [
 ]
 
 // Le salaire de 10 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, diamant) :
-// environ 15 % de ce qu'il fait sortir de la mine.
+// environ 25 % de ce qu'il fait sortir de la mine (27/10 : avant, 15 %, c'était trop peu).
 export const SECONDES_PAR_PAIE = 10 * 60
-export const SALAIRES = [30, 60, 140, 320, 700]
+export const SALAIRES = [50, 100, 220, 500, 1100]
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite, et un plus grand
 // sac lui fait faire moins d'allers-retours. Payé en argent seulement.
@@ -235,10 +236,10 @@ export type Rarete = {
 
 export const RARETES: Record<IdRarete, Rarete> = {
   commun: { id: 'commun', nom: 'Commun', rendement: 1, salaire: 1, couleur: '#b9b4ab' },
-  rare: { id: 'rare', nom: 'Rare', rendement: 1.5, salaire: 1.25, couleur: '#4f9df0' },
-  epique: { id: 'epique', nom: 'Épique', rendement: 2, salaire: 1.5, couleur: '#b06cf0' },
-  legendaire: { id: 'legendaire', nom: 'Légendaire', rendement: 3, salaire: 2, couleur: '#f5a524' },
-  mythique: { id: 'mythique', nom: 'Mythique', rendement: 5, salaire: 3, couleur: '#ff4d8d' },
+  rare: { id: 'rare', nom: 'Rare', rendement: 1.5, salaire: 1.4, couleur: '#4f9df0' },
+  epique: { id: 'epique', nom: 'Épique', rendement: 2, salaire: 1.8, couleur: '#b06cf0' },
+  legendaire: { id: 'legendaire', nom: 'Légendaire', rendement: 3, salaire: 2.5, couleur: '#f5a524' },
+  mythique: { id: 'mythique', nom: 'Mythique', rendement: 5, salaire: 4, couleur: '#ff4d8d' },
 }
 
 export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendaire', 'mythique']

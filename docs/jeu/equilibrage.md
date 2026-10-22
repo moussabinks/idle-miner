@@ -208,7 +208,7 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
 | Pioche | Vitesse en creusant | Sac | Prix | Salaire / 10 min |
 |---|---:|---:|---:|---:|
-| Bois | 0,15 bloc/s | 10 | (de base) | 30 $ |
+| Bois | 0,15 bloc/s | 10 | (de base) | 50 $ |
 | Pierre | 0,25 | 15 | 150 $ | 60 $ |
 | Fer | 0,4 | 20 | 600 $ | 140 $ |
 | Or | 0,6 | 30 | 2 500 $ | 320 $ |
@@ -225,7 +225,7 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 | Or | 0,417 | 0,521 | 0,556 |
 | Diamant | 0,625 | 0,781 | 0,833 |
 
-- **Salaire** (`salaireEmploye`) = `arrondi(SALAIRES[pioche] × rareté.salaire)`, pour 10 minutes. Sans manager, on paie au plus 10 minutes d'avance (au prorata du temps manquant, arrondi au dollar supérieur).
+- **Salaire** (`salaireEmploye`) = `arrondi(SALAIRES[pioche] × rareté.salaire)`, pour 10 minutes. Depuis le 27/10 : `SALAIRES` = 50, 100, 220, 500, 1 100 $ (bois → diamant, environ 25 % de ce que le mineur fait sortir ; avant 30 à 700 $), et la rareté : ×1, ×1,4, ×1,8, ×2,5, ×4 (commun → mythique). Sans manager, on paie au plus 10 minutes d'avance (au prorata du temps manquant, arrondi au dollar supérieur).
 - **Rentabilité** : un mineur commun en bois au niveau 1, à l'échelle, sort 0,113 × 3,04 ≈ 0,34 $/s de blocs pour un salaire de 0,05 $/s (environ 15 %). Un mineur en diamant au niveau 5 avec l'ascenseur au max : 0,833 × 19,79 ≈ 16,5 $/s pour 1,17 $/s de salaire.
 
 ### Raretés (`RARETES`)

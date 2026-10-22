@@ -400,7 +400,8 @@ export function VueVillage({
         marche = true
       }
       colere = mineur.tempsPaye <= 0
-    } else if (mineur.etape === 'forge') {
+    } else if (mineur.etape === 'forge' && mineur.lieu === 'forgeron') {
+      // (une vieille partie : il était allé chercher sa pioche lui-même)
       const b = batimentPose(village, 'forgeron')
       if (b) position = devant(b, 1 + (index % 4), 0.9)
     } else if (mineur.etape === 'quai') {
@@ -803,7 +804,8 @@ function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
     .filter((m) => m.etape === 'monte' || m.etape === 'descend')
     .map((m) => {
       const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
-      return { qui: RARETES[m.rarete] ? m.rarete : 'commun', f: m.etape === 'descend' ? f : 1 - f, descend: m.etape === 'descend' }
+      // (le sac remonte dans une caisse pleine ; la caisse redescend vide)
+      return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte' }
     })
 }
 
