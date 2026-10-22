@@ -1,6 +1,6 @@
 # ⛏️ Mine
 
-> Le cœur du jeu, au milieu de la clairière (22/10 : la mine automatique). On ne descend plus dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**. La mine sort aussi des blocs toute seule. C'est ici qu'on **descend d'un niveau** (5 niveaux, de nouveaux minerais à chaque fois), qu'on agrandit le coffre, qu’on construit l’ascenseur des mineurs et qu’on **envoie des wagonnets** vers le marché, la foreuse et le générateur.
+> Le cœur du jeu, au milieu de la clairière (22/10 : la mine automatique). On ne descend plus dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**. La mine sort aussi des blocs toute seule. C'est ici qu'on **descend d'un niveau** (5 niveaux, de nouveaux minerais à chaque fois), qu'on agrandit le coffre, qu’on améliore l’ascenseur des mineurs (là dès le début depuis le 30/10) et qu’on **envoie des wagonnets** vers le marché, la foreuse et le générateur.
 > Les règles détaillées du minage (le bloc, les pioches, les niveaux) sont aussi dans [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md).
 
 ## Où et quand
@@ -11,25 +11,24 @@
 - **L'ouvrir** : toucher (ou cliquer) la mine, ou le gros bouton rond **⛏️ Mine** en bas à gauche de l'écran : le hamster marche jusqu'au côté de la mine le plus proche de lui, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case de la mine, de n'importe quel côté. Au chargement d'une partie, le panneau reste fermé (il ne s'ouvre qu'en arrivant en marchant).
 - **Description** (en haut du panneau) : « Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre. »
 - **Le dessin au village** : le dessin de la mine de l'équipe (une fosse en planches et en pierre, avec son treuil, ses minerais et ses lanternes, `public/images/batiments/mine.webp`), calé pile sur ses 10 × 10 cases (`CALAGES.puits`). Par-dessus (`DessinEvolutionMine` dans `DessinsVillage.tsx`) :
-  - dès que l'**ascenseur** est construit, **sa cabine** (`mine-cabine.webp`) pend aux deux câbles du treuil et **suit le premier mineur qui monte ou descend** : elle descend avec lui, remonte avec lui, et attend en haut le reste du temps. Tout en bas, elle est à moitié cachée derrière la barrière de devant (`mine-devant.webp`). Sans ascenseur, les câbles pendent au fond. Depuis le 27/10, **les mineurs sont dessinés dans la cabine** quand ils descendent (de dos) ou remontent (de face), **trois au plus** à la fois : on ne voit que le haut de leur corps, coupés sous le bord avant de la cabine (`PassagerAscenseur`, `passagers` de `DessinEvolutionMine`). Sans ascenseur, ils descendent l'échelle et disparaissent sous le bord du puits ;
+  - l'**ascenseur** (dès le début depuis le 30/10 ; avant, il fallait le construire) : **sa cabine** (`mine-cabine.webp`) pend aux deux câbles du treuil et **suit le premier mineur qui monte ou descend** : elle descend avec lui, remonte avec lui, et attend en haut le reste du temps. Tout en bas, elle est à moitié cachée derrière la barrière de devant (`mine-devant.webp`). Depuis le 30/10, pendant qu'un mineur vide sa caisse dans le coffre, **la caisse pleine reste en haut, dans la cabine** (avant, l'ascenseur semblait disparaître pendant le déchargement). Sans ascenseur (une vieille partie, avant sa conversion), les câbles pendent au fond. Depuis le 27/10, **les mineurs sont dessinés dans la cabine** quand ils descendent (de dos) ou remontent (de face), **trois au plus** à la fois : on ne voit que le haut de leur corps, coupés sous le bord avant de la cabine (`PassagerAscenseur`, `passagers` de `DessinEvolutionMine`). Sans ascenseur, ils descendent l'échelle et disparaissent sous le bord du puits ;
   - un **panneau en bois** planté sur le sol de devant affiche le niveau de la mine (« Niv. 3 »).
 - **Bulles au-dessus** (`notifications.ts`) :
   - **📦 « Le coffre de la mine est plein : viens le vider ! »** (alerte rouge) ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet qui part de la mine (ou qui y arrive) n'a plus de rails complets : « Rails coupés entre mine et marché : le wagonnet attend. Repose les rails ! ». La même bulle est sur l'autre bâtiment du trajet ;
   - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de trajet Mine → Marché ;
-  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite (et débloqué par le niveau du joueur, 29/10).
+  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite (et débloqué par le niveau du joueur, 29/10). Depuis le 30/10, **seulement pendant le tutoriel** (ensuite, la liste des tâches propose les achats).
 - **La jauge du coffre** (27/10) : au-dessus de la mine, une petite barre est **toujours visible** : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »…). Elle est verte, passe à l'**orange** à 75 % et au **rouge** quand le coffre est plein (elle grossit alors et rétrécit, comme un cœur qui bat). On voit d'un coup d'œil s'il faut vider le coffre. À côté, « 👷 *n* » (depuis le 27/10) dit combien de mineurs **travaillent au fond de la mine** (ils descendent, creusent, remontent ou vident leur sac). Les bulles de la mine sont un peu plus haut, au-dessus de cette jauge.
 - **Le bandeau** (en haut de l'écran) montre toujours le niveau de la mine, son nom et le remplissage du coffre (la case clignote en rouge quand il est plein).
 
 ## Ce qu'on peut y faire
 
-Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **cinq onglets** (`OngletsPanneau`), pour que **rien ne défile**, même au niveau 5 avec un coffre plein de minerais (sur ordinateur comme sur téléphone) :
+Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **quatre onglets** depuis le 30/10 (`OngletsPanneau` ; cinq le 27/10), pour que **rien ne défile**, même au niveau 5 avec un coffre plein de minerais (sur ordinateur comme sur téléphone). Sur un grand écran (1 100 px et plus), le panneau de la mine est plus large depuis le 30/10 (**480 px** au lieu de 400) :
 
-- **⛏️ Creuser** : le bloc à cliquer (à gauche) avec ses infos à droite, puis le coffre, puis le rappel du niveau suivant (caché sur téléphone). Pastille « ! » quand le coffre est plein ;
-- **📊 Prod.** : le tableau de production et les goulots (pastille « ! » quand l'ascenseur ou le wagonnet ne suit pas) ;
+- **⛏️ Creuser** : le bloc à cliquer (à gauche) avec ses infos à droite, puis le coffre, le raccourci vers l'onglet Améliorer, puis le rappel du niveau suivant (caché sur téléphone). Pastille « ! » quand le coffre est plein ;
+- **⬆️ Améliorer** (30/10) : la grande carte du niveau suivant, la taille du coffre et l'ascenseur, réunis (avant, deux onglets « ⬇️ Niv. *N* » et « ⬆️ Plus », où le coffre et l'ascenseur passaient inaperçus). Pastille « + » quand l'une de ces trois choses est débloquée et payable tout de suite ;
 - **🚃 Wagons** : les trajets qui partent de la mine (avec leur nombre dans le titre) ;
-- **⬇️ Niv. *N*** : la grande carte du niveau suivant (pastille « + » quand on peut le payer) ;
-- **⬆️ Plus** : la taille du coffre et l'ascenseur (pastille « + » quand on peut payer le coffre).
+- **📊 Prod.** : le tableau de production et les goulots (pastille « ! » quand l'ascenseur ou le wagonnet ne suit pas).
 
 Depuis le 28/10, les onglets **respirent** (classe `panneau-mine-aere`) : plus d'espace entre les cartes et entre les lignes (coffre, production, goulots), un peu moins sur téléphone, et tout tient encore sans défiler.
 
@@ -41,10 +40,11 @@ L'onglet **Creuser** s'ouvre en premier. Le titre du panneau n'a plus de phrase 
 
 - Un **très gros bloc** (150 px, le prochain bloc de la mine, dessiné en CSS : pierre, charbon, fer…) dans un cadre sombre, et dessous « 👆 ⚫ Charbon » et « ⛏️ *N* % de chance de doubler un minerai ».
 - **Chaque clic casse le bloc** : des éclats volent, ce qui tombe s'envole au-dessus (« +1 ⚫ », ou « +2 💎 ×2 ! » en doré quand il est doublé), et un nouveau bloc « pousse » à sa place. Le bloc tombé va dans le **coffre**.
-- **La jauge de la pioche** (27/10), juste sous le bloc : l'icône de la pioche en main, « Pioche en *X* · *reste* / *durabilité* » dans une barre verte, orange sous 20 %, rouge et « Cassée : répare-la au forgeron » à zéro (`JaugePioche`).
+- **La jauge de la pioche** (27/10), juste sous le bloc : l'icône de la pioche en main, « Pioche en *X* · *reste* / *durabilité* » dans une barre dont la couleur passe **peu à peu du vert au rouge** à mesure qu'elle s'use (30/10 ; avant : verte, puis orange sous 20 %) ; sous **15 %**, elle **clignote** et s'entoure de rouge ; à zéro, « Cassée : répare-la au forgeron » (`JaugePioche`).
 - **Pioche cassée** : « 💥 Pioche cassée : 2 clics par bloc. Fais-la réparer au forgeron. » Après le premier clic, le bloc est fissuré ; le second le casse.
 - **Coffre plein** : le bloc est grisé (« 📦 Coffre plein ! ») : il faut vider le coffre.
-- **Le combo** (27/10) : les clics rapprochés (moins de **0,9 s** entre deux) s'additionnent. Dès **3 clics**, un compteur orange « 🔥 ×*N* » saute à côté du bloc à chaque clic (plus gros et plus doré à partir de 25). Plus le combo est long, plus le cadre et le halo doré sous le bloc brillent (au maximum à 50) ; à partir de 10, le bloc a un liseré doré. Un petit arpège (`sons.combo`) marque les paliers **10, 25, 50, 100, 200 et 500**. Sans clic pendant 0,9 s, le combo retombe à zéro. **C'est seulement pour le plaisir** : le combo ne change rien au jeu (pas de bonus).
+- **Le combo** (27/10) : les clics rapprochés (moins de **0,9 s** entre deux) s'additionnent. Dès **3 clics**, un compteur orange « 🔥 ×*N* » saute à côté du bloc à chaque clic (plus gros et plus doré à partir de 25). Plus le combo est long, plus le cadre et le halo doré sous le bloc brillent (au maximum à 50) ; à partir de 10, le bloc a un liseré doré. Un petit arpège (`sons.combo`) marque les paliers **10, 25, 50, 100, 200 et 500**. Sans clic pendant 0,9 s, le combo retombe à zéro. Jusqu'au 29/10, le combo ne changeait rien au jeu.
+- **Les bonus de combo** (30/10, `BONUS_COMBO`) : chaque palier donne un bonus de quelques secondes (toast « 🍀 Combo ×10 : Fortune ! +25 % de fortune pendant 3 s ») : **10** 🍀 Fortune (+25 % de chance de doubler, 3 s), **25** 🍀 Grande fortune (+50 %, 4 s), **50** 💥 Double coup (+25 %, 2 blocs par clic, 5 s), **100** 🔥 Frénésie (+100 %, 2 blocs par clic, 8 s), **200** ✨ Ruée vers l'or (+100 %, 3 blocs par clic, 10 s), **500** 🏆 Légende de la mine (+100 %, 5 blocs par clic, 15 s). Le nouveau bonus remplace celui en cours. Au-dessus du bloc, une étiquette dorée montre le bonus en cours et les secondes qui restent ; sans bonus, dès 3 clics : « Prochain bonus à ×*N* : … ». Détail dans [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md).
 
 ### Le tableau de production (27/10)
 
@@ -61,7 +61,7 @@ Ce sont des **moyennes** (les vrais blocs sont tirés au hasard), calculées par
 
 Sous le tableau de production (`Goulots`, calculs dans `src/jeu/production.ts`, testés) :
 
-- **L'ascenseur** (`analyseAscenseur`) : chaque mineur fait des allers-retours (creuser, remonter, vider son sac, redescendre). Le temps passé dans le puits (2 trajets d'ascenseur ou d'échelle par cycle) est du temps où il ne creuse pas. On calcule la **part de leur temps perdue dans le puits** (moyenne des mineurs : 2 × trajet ÷ (sac ÷ vitesse + 2 × trajet + vidage)) et ce que rapporterait **le niveau suivant** (blocs/s en plus, en refaisant le calcul avec ce niveau). Au-delà de **20 %** (`PART_PUITS_TROP_LENTE`) et s'il reste un niveau : alerte orange « ⚠️ **Ascenseur trop lent** : tes mineurs passent *X* % de leur temps dans le puits. Niveau suivant : +*Y* bloc/s. » avec un bouton **⬆️ Voir** (onglet Améliorer, où la carte de l'ascenseur redit la même chose). Sinon une ligne verte « ✔ Ascenseur : *X* % du temps des mineurs dans le puits ».
+- **L'ascenseur** (`analyseAscenseur`) : chaque mineur fait des allers-retours (creuser, remonter, vider son sac, redescendre). Le temps passé dans le puits (2 trajets d'ascenseur ou d'échelle par cycle) est du temps où il ne creuse pas. On calcule la **part de leur temps perdue dans le puits** (moyenne des mineurs : 2 × trajet ÷ (sac ÷ vitesse + 2 × trajet + vidage)) et ce que rapporterait **le niveau suivant** (blocs/s en plus, en refaisant le calcul avec ce niveau). Au-delà de **20 %** (`PART_PUITS_TROP_LENTE`), s'il reste un niveau et (30/10) si ce niveau rapporterait au moins **10 %** de blocs en plus (sinon, pas d'alerte pour « +0,01 bloc/s ») : alerte orange « ⚠️ **Ascenseur trop lent** : tes mineurs passent *X* % de leur temps dans le puits. Niveau suivant : +*Y* bloc/s. » avec un bouton **⬆️ Voir** (onglet Améliorer, où la carte de l'ascenseur redit la même chose). Sinon une ligne verte « ✔ Ascenseur : *X* % du temps des mineurs dans le puits ».
 - **Le wagonnet Mine → Marché** (`analyseWagonnet`) : ce qu'il peut emporter au plus, en blocs par seconde = sa **capacité** ÷ la durée d'un **aller-retour** (aller + retour à sa vitesse, plus les 2 s de chargement et les 2 s de vente : `secondesAllerRetour`), comparé à ce qui arrive dans le coffre (la mine toute seule + les mineurs payés). Trois cas : « ⚠️ **Personne ne pousse le wagonnet du marché** » (ni pousseur payé, ni rails électriques) ; « ⚠️ **Wagonnet saturé** : il emporte au plus *X* bloc/s (aller-retour de *N* s), la mine en sort *Y*. Le coffre se remplit de *Z* bloc/s : agrandis les wagonnets (ou électrifie les rails) » avec **⬆️ Voir** (onglet Wagonnets) ; sinon « ✔ Wagonnet : jusqu'à *X* bloc/s, la mine en sort *Y* ».
 
 ### 📦 Le coffre · *n* / *capacité*
@@ -69,9 +69,10 @@ Sous le tableau de production (`Goulots`, calculs dans `src/jeu/production.ts`, 
 - Une barre (plus grosse depuis le 27/10) : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
 - **Un tableau, une ligne par minerai** (27/10, `CoffreMine`) : **tous les minerais que sort la mine à son niveau**, même à 0 (plus ceux d'un ancien niveau qui resteraient), les plus chers en haut. Pour chacun : son nom et son prix, **combien il y en a** (grisé à 0), et :
   - avec le trajet Mine → Marché, **🚃 Wagonnet : Vendre / Garder** (deux boutons collés, vert = le wagonnet l'emporte et le vend, brun = il le laisse dans le coffre ; `envoyerObjet`, la même liste que les objets de la fenêtre du trajet). « Vendre » enlève aussi le minerai des objets gardés du marché. On le règle à l'avance, avant même d'en avoir. Avec un trajet vers la foreuse (ou le générateur), le charbon (la redstone) porte la mention « 🔥 foreuse d'abord » (« ⚡ générateur d'abord ») ;
-  - **🎒** (kaki) : met tout ce minerai dans le sac (tant qu'il y a de la place).
+  - **🎒 Prendre** (30/10) : un **curseur** choisit combien en prendre (tout, par défaut), avec le nombre à côté ; puis **🎒** (kaki) met ce nombre dans le sac (tant qu'il y a de la place). Le curseur revient à « tout » après.
 - Dessous, **🎒 Tout mettre dans le sac (*n*)** (les plus chers d'abord). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. » Sans trajet vers le marché : « 🛤️ Relie la mine au marché avec des rails : un wagonnet vendra le coffre tout seul. »
-- Sous le coffre, **le rappel du niveau suivant** (`ProchainNiveau`) : « ⬇ Niveau *N* : *nom* », le nouveau minerai, la valeur d'un bloc en plus (« +51 % ») et les bâtiments débloqués ; « 💰 Achetable ! » et une lueur verte quand on peut le payer. Un clic ouvre l'onglet Améliorer.
+- Sous le coffre (30/10), un **raccourci bien visible** : « ⬆️ Agrandir le coffre, l’ascenseur, descendre la mine › », qui devient « · 💰 Achetable ! » quand on peut payer l'une de ces améliorations ; il ouvre l'onglet Améliorer.
+- Dessous, **le rappel du niveau suivant** (`ProchainNiveau`) : « ⬇ Niveau *N* : *nom* », le nouveau minerai, la valeur d'un bloc en plus (« +51 % ») et les bâtiments débloqués ; « 💰 Achetable ! » et une lueur verte quand on peut le payer. Un clic ouvre l'onglet Améliorer.
 
 ### Les trajets de wagonnets (24/10)
 
@@ -93,7 +94,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 ### 📦 Taille du coffre et 🛗 Ascenseur
 
 - **Taille du coffre** : une ligne d'amélioration (« 250 places » → « ⬆ 600 places »).
-- **Ascenseur** : « La caisse de minerais de tes mineurs remonte (et redescend) plus vite. » (27/10 : les mineurs restent au fond, c'est leur sac qui remonte dans une **caisse** ; dans le puits, on voit la caisse pleine de minerais dans la cabine. Le 28/10, la caisse est refaite : planches, cerclages en fer et **coins dorés**, et un tas débordant des **mêmes minerais à facettes que dans les wagonnets** (les couleurs de ce que le mineur a vraiment creusé) ; avec de l'or, des émeraudes ou des diamants, une lueur dorée respire derrière le tas et des étincelles en sautent. La cabine, au repos, remonte aussi plus haut sur ses câbles (`CABINE_EN_HAUT` = −150 pixels de l'image, avant −100). Seul un mineur pas payé remonte au village.) La ligne « trop lent » ne s'affiche que si l'ascenseur ralentit vraiment les mineurs. Pas construit : « Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ; ensuite « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**.
+- **Ascenseur** : « La caisse de minerais de tes mineurs remonte (et redescend) plus vite. » (27/10 : les mineurs restent au fond, c'est leur sac qui remonte dans une **caisse** ; dans le puits, on voit la caisse pleine de minerais dans la cabine. Le 28/10, la caisse est refaite : planches, cerclages en fer et **coins dorés**, et un tas débordant des **mêmes minerais à facettes que dans les wagonnets** (les couleurs de ce que le mineur a vraiment creusé) ; avec de l'or, des émeraudes ou des diamants, une lueur dorée respire derrière le tas et des étincelles en sautent. La cabine, au repos, remonte aussi plus haut sur ses câbles (`CABINE_EN_HAUT` = −150 pixels de l'image, avant −100). Seul un mineur pas payé remonte au village.) La ligne « trop lent » ne s'affiche que si l'ascenseur ralentit vraiment les mineurs. Depuis le 30/10, l'ascenseur de niveau 1 est **là dès le début** : « Un trajet de mineur en *N* s » et **⬆ Trajet en *N* s**. (« Pas encore construit : à l'échelle, un trajet prend 10 s » et **🔨 Construire** ne se voyaient que dans une vieille partie, que la sauvegarde v25 convertit.)
 
 ## Les chiffres
 
@@ -101,15 +102,15 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 
 Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %.
 
-| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre (29/10) | Niveau du joueur |
+| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre (30/10) | Niveau du joueur |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|
 | 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0 (on creuse à la main, 27/10) | (départ) | — |
-| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 bloc/s (15 / min) | 1 200 $ + 60 fer | 4 |
+| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,25 bloc/s (15 / min) | 900 $ + 45 fer | 4 |
 | 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,3 bloc/s (18 / min) | 7 000 $ + 120 fer + 60 redstone | 7 |
 | 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,35 bloc/s (21 / min) | 25 000 $ + 120 redstone + 60 or | 10 |
-| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,4 bloc/s (24 / min) | 110 000 $ + 130 or + 55 émeraude | 13 |
+| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,4 bloc/s (24 / min) | 90 000 $ + 110 or + 40 émeraude | 13 |
 
-Total pour aller au niveau 5 : **143 200 $ + 180 fer + 180 redstone + 190 or + 55 émeraude**. Descendre d'un niveau rapporte **150 XP**.
+Total pour aller au niveau 5 : **122 900 $ + 165 fer + 180 redstone + 170 or + 40 émeraude** (29/10 : 143 200 $ + 180 fer + 180 redstone + 190 or + 55 émeraude). Descendre d'un niveau rapporte **150 XP**.
 
 Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **19,79 $** au niveau 5.
 
@@ -118,7 +119,7 @@ Ce que **débloque** chaque niveau :
 | Niveau | Ce qui se débloque |
 |---|---|
 | 1 | Mine, Marché, Forgeron, Bazar, Personnel, rails (avec le niveau du joueur qu'il faut) ; 4 mineurs au plus |
-| 2 | **Foreuse** et **Générateur** (menu Bâtiments, aux niveaux 6 et 5 du joueur) ; la redstone ; 6 mineurs |
+| 2 | **Foreuse** et **Générateur** (menu Bâtiments, aux niveaux 5 et 6 du joueur depuis le 30/10) ; la redstone ; 6 mineurs |
 | 3 | **Recruteur** (au Personnel, au niveau 9 du joueur) ; l'or ; 8 mineurs |
 | 4 | **Manager** et trésorerie (au Personnel, au niveau 11 du joueur) ; les émeraudes ; 10 mineurs |
 | 5 | Les diamants ; 12 mineurs |
@@ -127,31 +128,30 @@ Ce que **débloque** chaque niveau :
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix (29/10) | Niveau du joueur |
+| Niveau | Places | Prix (30/10) | Niveau du joueur |
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
-| 2 | 250 | 400 $ + 80 pierre | 2 |
-| 3 | 600 | 2 000 $ + 80 fer | 5 |
-| 4 | 1 500 | 8 000 $ + 150 fer + 40 redstone | 8 |
-| 5 | 4 000 | 25 000 $ + 60 or | 12 |
+| 2 | 250 | 250 $ + 50 pierre | 2 |
+| 3 | 600 | 2 500 $ + 100 fer | 5 |
+| 4 | 1 500 | 12 000 $ + 200 fer + 60 redstone | 8 |
+| 5 | 4 000 | 50 000 $ + 120 or | 12 |
 
-Total : 35 400 $ + 80 pierre + 230 fer + 40 redstone + 60 or.
+Total : 64 750 $ + 50 pierre + 300 fer + 60 redstone + 120 or (29/10 : 35 400 $ + 80 pierre + 230 fer + 40 redstone + 60 or).
 
 ### L'ascenseur (`NIVEAUX_ASCENSEUR`)
 
-Il ne transporte que les **mineurs employés** (le joueur ne descend plus). Sans ascenseur, ils prennent l'**échelle** : **10 s** par trajet (`SECONDES_ECHELLE`). Un trajet = une montée ou une descente.
+Il ne transporte que les **mineurs employés** (le joueur ne descend plus) : en fait, la caisse de leur sac. Un trajet = une montée ou une descente. Depuis le 30/10, **la mine a son ascenseur de niveau 1 dès le début** (`creerPartie` ; une vieille partie le reçoit à la conversion v25). L'**échelle** (**10 s** par trajet, `SECONDES_ECHELLE`) ne servait qu'avant.
 
-| Niveau | Un trajet | Prix (29/10) | Niveau du joueur |
+| Niveau | Un trajet | Prix (30/10) | Niveau du joueur |
 |---|---:|---|---:|
-| (échelle) | 10 s | — | — |
-| 1 | 6 s | 400 $ + 20 fer | 4 |
-| 2 | 4 s | 1 500 $ + 50 fer + 10 redstone | 6 |
-| 3 | 2,8 s | 5 000 $ + 100 fer + 40 redstone | 8 |
-| 4 | 2 s | 15 000 $ + 160 fer + 90 redstone | 10 |
-| 5 | 1,4 s | 40 000 $ + 160 redstone + 40 or | 13 |
-| 6 | 1 s | 100 000 $ + 100 or + 20 émeraude | 15 |
+| 1 | 6 s | (dès le début ; avant : 400 $ + 20 fer, niveau 4) | — |
+| 2 | 4 s | 1 500 $ + 50 fer + 10 redstone | 5 |
+| 3 | 2,8 s | 7 000 $ + 120 fer + 40 redstone | 8 |
+| 4 | 2 s | 25 000 $ + 200 fer + 100 redstone | 10 |
+| 5 | 1,4 s | 80 000 $ + 200 redstone + 60 or | 13 |
+| 6 | 1 s | 250 000 $ + 150 or + 30 émeraude | 15 |
 
-Total : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude.
+Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, niveau 1 compris : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude).
 
 ### La taille des wagonnets (`NIVEAUX_WAGONNET`)
 
@@ -182,7 +182,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ### Les wagonnets
 
-- Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet : la bulle « 🛤️ Automatiser » au milieu des rails ouvre la fenêtre du trajet (activer, objets à envoyer), ou « Envoyer un wagonnet vers… » au panneau. Les rails : **3 fer la case**, à partir du **niveau 3 du joueur** (29/10, menu 🏗️ Bâtiments), et **jamais en boucle** : entre deux bâtiments, une seule route. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
+- Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet : depuis le 30/10, la fenêtre du trajet (activer, objets à envoyer) **s'ouvre toute seule** dès que les rails relient les deux bâtiments ; sinon, la bulle « 🛤️ Automatiser » au milieu des rails la rouvre. Les rails : **3 fer la case**, à partir du **niveau 3 du joueur** (29/10, menu 🏗️ Bâtiments), et **jamais en boucle** : entre deux bâtiments, une seule route. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
 - **4 trajets**, un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur (ils partent d'ici), et Foreuse → Marché (il part de la foreuse, voir [foreuse.md](foreuse.md)). Plusieurs wagonnets peuvent partager les mêmes rails : ils se croisent sans se gêner.
 - **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
 - **Ce qu'il emporte au départ**, jusqu'à sa capacité :
@@ -194,6 +194,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
   - **toi**, avec « Pousser » (un wagonnet à la fois) ;
   - **son pousseur** (26/10) : un employé embauché au Personnel **pour ce trajet-là**. Il attend au quai, à côté du début des rails, devant le bâtiment de départ, et pousse le wagonnet dès qu'il a quelque chose à porter. Le pousseur d'un autre trajet ne le pousse jamais. Voir [personnel.md](personnel.md#4-les-pousseurs) ;
   - **l'électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), son pousseur le lance du quai dès qu'il a quelque chose à porter, et il roule tout seul, bien plus vite (27/10 : sans pousseur payé, rien ne part). Voir [generateur.md](generateur.md). S'il perd le courant en route, il finit son trajet doucement (1,25 case/s).
+- **Toucher un rail** (30/10) : en bas de la fenêtre de ses trajets, « ✏️ Déplacer ce rail » et « 🗑️ Retirer (+3 🔩 fer) » (le fer revient dans le sac, ou dans le coffre de la mine). Voir [../jeu/village.md](../jeu/village.md).
 - **Ligne coupée** (un rail enlevé, un bâtiment déplacé) : le wagonnet revient aussitôt au quai, son chargement retourne d'où il vient, et le pousseur retourne au quai. Le trajet reste : il repartira quand les rails seront refaits. En attendant, une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
 - **Au village**, chaque wagonnet (en 3D depuis le 26/10 : caisse en planches, cadre d'acier, quatre roues en fer) roule sur sa ligne. On voit **ce qu'il porte vraiment** : des minerais à facettes de la couleur de chaque bloc, plus ou moins haut selon son chargement (vide, à moitié plein, plein avec un petit tas qui dépasse). Voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md).
 - Ils roulent aussi jeu fermé (avec un pousseur ou l'électricité).
@@ -201,7 +202,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ### L'ascenseur et l'échelle
 
 - Ils ne servent qu'aux **mineurs employés** : chaque mineur remonte son sac plein (une montée), le vide dans le coffre en **2 s**, puis redescend (une descente). Voir [personnel.md](personnel.md).
-- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur, et à partir du niveau 4 du joueur (29/10 ; avant, sa ligne affiche « 🔒 … · au niveau 4 »).
+- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur. Son niveau 2 demande le niveau 5 du joueur (30/10 ; avant, sa ligne affiche « 🔒 … · au niveau 5 »).
 
 ### Descendre d'un niveau
 
@@ -218,16 +219,16 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `NIVEAUX_WAGONNET`, `COUT_RAIL`, les trajets (`LIAISONS`, `RESERVE_FOREUSE_WAGONNET`, `RESERVE_GENERATEUR_WAGONNET`), les vitesses des wagonnets et `SECONDES_CHARGEMENT_WAGONNET`.
+- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `BONUS_COMBO` (30/10), `NIVEAUX_WAGONNET`, `COUT_RAIL`, les trajets (`LIAISONS`, `RESERVE_FOREUSE_WAGONNET`, `RESERVE_GENERATEUR_WAGONNET`), les vitesses des wagonnets et `SECONDES_CHARGEMENT_WAGONNET`.
 - `src/jeu/mine.ts` : tirer un bloc selon le niveau (`tirerBloc`), les chances (`chancesDesBlocs`), la valeur moyenne d'un bloc (`valeurMoyenneBloc`).
-- `src/jeu/mineur.ts` : le coffre (`capaciteCoffre`, `rangerDansCoffre`, `prendreDuCoffre`, `agrandirCoffre`), payer avec le sac puis le coffre (`disponible`, `payer`), le clic (`cliquerMine`), la mine toute seule (`avancerMine`, `debitMine`), les niveaux (`descendreNiveauMine`) et l'ascenseur (`ameliorerAscenseur`, `secondesTrajetMineur`).
+- `src/jeu/mineur.ts` : le coffre (`capaciteCoffre`, `rangerDansCoffre`, `prendreDuCoffre`, `agrandirCoffre`), payer avec le sac puis le coffre (`disponible`, `payer`), le clic (`cliquerMine`), les bonus de combo (`activerBonusCombo`, `bonusActif`, `secondesBonus`, 30/10), la mine toute seule (`avancerMine`, `debitMine`), les niveaux (`descendreNiveauMine`) et l'ascenseur (`ameliorerAscenseur`, `secondesTrajetMineur`).
 - `src/jeu/wagonnet.ts` : les trajets (`ligneDe`, `creerTrajet`, `supprimerTrajet`), le chargement, la vitesse (`trajetElectrique`), pousser (`pousserTrajet`), agrandir (`ameliorerWagonnet`), le temps qui passe (`avancerWagonnets`).
 - `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails entre deux bâtiments (`railsEntre`), sans boucle (`feraitUneBoucle`).
 - `src/jeu/batiments.ts` : déplacer ou retourner la mine, poser les rails.
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/missions.ts` : les bulles 📦, 🚧 et 💰, les achats du stand `puits`, les missions.
 - `src/jeu/production.ts` : la production pour le tableau de bord (`production` : mine, chaque mineur, total, dollars par minute), testée dans `production.test.ts`.
-- `src/composants/PanneauMine.tsx` : le panneau (titre du niveau, bloc à cliquer et combo, tableau de production, coffre, trajets, niveau, coffre, ascenseur) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
+- `src/composants/PanneauMine.tsx` : le panneau (titre du niveau, bloc à cliquer, combo et bonus de combo, tableau de production, coffre, raccourci, trajets, onglet Améliorer : niveau, coffre, ascenseur) ; `src/composants/StockMinerais.tsx` : les lignes du coffre (curseur « Prendre », 30/10) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.
 - `src/composants/DessinsVillage.tsx` : la cabine qui monte et descend et le panneau du niveau (`DessinEvolutionMine`) ; `src/composants/VueVillage.tsx` : la hauteur de la cabine (`hauteurCabine`), la jauge du coffre au-dessus de la mine (`nombreAbrege` de `src/nombres.ts`), les wagonnets et leurs pousseurs sur les rails (`WagonnetVillage.tsx`, dessin en 3D dans `Wagonnet3D.tsx`).
-- `src/village.css` : le bloc à cliquer (`.bloc-mine`, `.eclats-bloc-mine`, `.trouvaille-bloc-mine`), le combo (`.combo-mine`, `.halo-bloc-mine`), le tableau de production (`.tableau-production`, `.rendement-mineur`), la jauge du coffre (`.jauge-coffre-mine`) ; `src/sons.ts` : `combo` ; `src/blocs.css` : le dessin des blocs.
+- `src/village.css` : le bloc à cliquer (`.bloc-mine`, `.eclats-bloc-mine`, `.trouvaille-bloc-mine`), le combo (`.combo-mine`, `.halo-bloc-mine`) et ses bonus (`.bonus-combo`, `.zone-bonus`, 30/10), la jauge de la pioche (`.jauge-pioche`, `.pioche-usee`), le tableau de production (`.tableau-production`, `.rendement-mineur`), la jauge du coffre (`.jauge-coffre-mine`) ; `src/sons.ts` : `combo` ; `src/blocs.css` : le dessin des blocs.
 - `public/images/batiments/mine.webp`, `mine-cabine.webp`, `mine-devant.webp` : le dessin de la mine, sa cabine et son devant.

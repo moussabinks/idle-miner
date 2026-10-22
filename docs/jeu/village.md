@@ -39,7 +39,7 @@
 
 ## 2. Les bâtiments : les poser, les payer
 
-Le menu **🏗️ Bâtiments** (gros bouton rond en bas à droite) montre tous les bâtiments du jeu, dans l'ordre où ils se débloquent (29/10 : marché, forgeron, Personnel, bazar, générateur, foreuse, `LISTE_BATIMENTS`) :
+Le menu **🏗️ Bâtiments** (gros bouton rond en bas à droite) montre tous les bâtiments du jeu, dans l'ordre où ils se débloquent (`LISTE_BATIMENTS` ; depuis le 30/10 : marché, forgeron, Personnel, bazar, foreuse, générateur ; le 29/10, le générateur venait avant la foreuse) :
 
 - débloqué et pas encore posé : son prix et un bouton **« 🏗️ Poser »** (grisé tant qu'on ne peut pas payer) ; s'il est payable tout de suite, sa carte a un **bord doré** (27/10) ;
 - pas encore débloqué : un **cadenas** et « 🔒 Niveau *N* » (le niveau du joueur qu'il faut, 29/10, voir [niveaux.md](niveaux.md)) ou « 🔒 Mine niveau *N* » si c'est le niveau de la mine qui manque ;
@@ -53,11 +53,11 @@ Une pastille **« Nouveau ! »** marque un bâtiment tout juste débloqué, jusq
 |---|---|---|---|
 | ⛏️ Mine (10 × 10) | déjà posée | début | face avant gauche |
 | 💰 Marché | **gratuit** (on commence avec 0 $) | début (niveau 1) | face avant gauche |
-| ⚒️ Forgeron | 30 $ + 15 pierre | début (niveau 1) | face avant droite |
-| 👷 Personnel | 250 $ + 50 pierre | niveau 2 du joueur | face avant droite |
-| 🎒 Bazar | 300 $ + 60 pierre | niveau 3 du joueur | face avant droite |
-| ⚡ Générateur | 4 000 $ + 100 fer + 40 redstone | niveau 5 du joueur et niveau 2 de la mine | face avant droite |
-| ⚙️ Foreuse | 3 000 $ + 120 pierre + 60 fer | niveau 6 du joueur et niveau 2 de la mine | face avant gauche |
+| ⚒️ Forgeron | 20 $ + 10 pierre (30/10) | début (niveau 1) | face avant droite |
+| 👷 Personnel | 150 $ + 30 pierre (30/10) | niveau 2 du joueur | face avant droite |
+| 🎒 Bazar | 200 $ + 40 pierre (30/10) | niveau 3 du joueur | face avant droite |
+| ⚙️ Foreuse | 3 000 $ + 120 pierre + 60 fer | niveau 5 du joueur (30/10 ; avant 6) et niveau 2 de la mine | face avant gauche |
+| ⚡ Générateur | 4 000 $ + 100 fer + 40 redstone | niveau 6 du joueur (30/10 ; avant 5) et niveau 2 de la mine | face avant droite |
 
 Une fois débloqué, il faut quand même le payer. Le niveau 2 de la mine demande lui-même le niveau 4 du joueur. Construire un bâtiment rapporte **40 XP**.
 
@@ -73,7 +73,7 @@ Le bouton **✏️ Modifier** permet de toucher l'élément à changer (bâtimen
 
 - **✔ Poser ici** : déplacer est **gratuit**.
 - **↔ Retourner** : le **miroir** gauche-droite (la porte change de côté). Pas de rotation à 90° (décidé le 20/10). Un bâtiment avec des écritures garde un texte lisible (27/10) : le Personnel retourné prend l'image `employes-miroir.webp`, où l'enseigne « HIRING » est déjà retournée (`imageBatiment` dans `iso.ts`, voir [visuel-et-sons.md](visuel-et-sons.md)).
-- **🗑️ Enlever** : seulement pour les rails et les chemins, **sans remboursement**. Un bâtiment ne s'enlève pas.
+- **🗑️ Enlever** : seulement pour les rails et les chemins, **remboursés** depuis le 30/10 (`retirerSol` : les 3 fer d'un rail reviennent dans le sac s'il y a de la place, sinon dans le coffre de la mine ; un chemin rend ses 5 $ ; avant, sans remboursement). Un bâtiment ne s'enlève pas.
 - **✔ Terminé** (ou Échap) : on sort du mode.
 
 Si on pose un bâtiment sur le hamster, il est poussé sur la case libre la plus proche.
@@ -91,7 +91,10 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 - **Les bords de la voie** (25/10) : les cases où déborde la demi-voie (les deux côtés d'une ligne droite, l'extérieur d'un virage, le dos d'un T : `bordsDeVoie` dans `village.ts`) sont **interdites aux bâtiments et aux chemins**. Pendant qu'on pose l'un d'eux, ces cases sont montrées en rouge. Devant et derrière une ligne (dans son sens), c'est libre : un bâtiment peut s'y raccorder. À l'inverse, on ne peut pas poser (ni déplacer) un rail si sa voie, ou celle de ses voisins qui change de forme, passerait sur un bâtiment ou un chemin (`placePourUnRail` dans `batiments.ts`, message « 🚧 Pas la place »). Les parties d'avant ne sont pas touchées : ce qui y était déjà posé reste là.
 - **Les virages doux** (25/10) : un virage dont les deux voisines sont des lignes droites est dessiné en **grand quart de cercle sur trois cases** (rayon 1,5 case, `viragesDoux` dans `village.ts`), et le wagonnet le suit. Sinon (un zigzag, un virage collé à un autre, ou un bras qui est un bout de ligne), il reste serré, dans sa case. Ce n'est que du dessin : les règles et les longueurs des trajets ne changent pas.
 - **Les butoirs** (26/10) : au **bout d'une ligne** (un rail avec une seule voisine, qui ne touche pas de bâtiment), la voie finit sur un **butoir** rouge et blanc en 3D ; un rail tout seul en a deux. Un bout de ligne garde toujours son butoir (il n'est jamais le bras d'un virage doux). Ce n'est que du dessin : voir [visuel-et-sons.md § 7.3](visuel-et-sons.md#73-les-dessins).
-- « 🛤️ Poser des rails » ouvre le **pinceau** : chaque case touchée (ou survolée en faisant glisser le doigt) reçoit un rail si elle est libre et qu'on a le fer (sac puis coffre). « ✔ Terminé » pour finir.
+- « 🛤️ Poser des rails » ouvre le **pinceau** : chaque case touchée (ou survolée en faisant glisser le doigt) reçoit un rail si elle est libre et qu'on a le fer (sac puis coffre). « ✔ Terminé » pour finir. Depuis le 30/10 :
+  - à la souris, un **aperçu du rail** suit le pointeur, sur un losange vert (on peut le poser) ou rouge (`typePinceau`, `peutPeindre` dans `VueVillage.tsx`) ;
+  - quand on ne peut pas poser, le jeu **dit pourquoi** (`raisonSolImpossible` dans `batiments.ts`) : « 🔩 Plus de fer : un rail coûte 3 fer (sac + coffre de la mine). Va creuser ! », une boucle, ou trop près du bord (avant, rien ne se passait) ;
+  - **dès que les rails relient deux bâtiments** (un nouveau trajet possible), la pose s'arrête (plus de rail « dans la main » : un clic de plus n'en pose pas un par erreur) et la **fenêtre du trajet** s'ouvre tout de suite, pour l'automatiser.
 - On n'achète qu'une sorte de rail. Les rails **se raccordent tout seuls** : en ligne droite, en virage, en T ou en croix (`raccordsRail`). Le dessin vient des tuiles de l'équipe (voir [visuel-et-sons.md § 7.3](visuel-et-sons.md#73-les-dessins)).
 - Un rail collé à un bâtiment des trajets (mine, marché, foreuse, générateur : `BATIMENTS_DES_RAILS`) ne se raccorde à lui que **s'il est un bout de ligne**. Un rail qui passe le long d'un bâtiment ne s'y raccorde pas.
 - **Pas de boucle** : les rails ne peuvent jamais tourner en rond (`feraitUneBoucle` dans `village.ts`, vérifié en posant et en déplaçant un rail). Un rail qui fermerait une boucle n'est pas posé, et le jeu dit « 🔁 Pas de boucle : les rails vont d’un bâtiment à un autre. ». Entre deux bâtiments, il n'y a donc **qu'une seule route**.
@@ -111,6 +114,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 - **La bulle « 🛤️ Automatiser »** (27/10) : dès qu'une ligne de rails relie deux zones jaunes et que le trajet n'existe pas encore (`trajetsAProposer`), une bulle jaune apparaît **au milieu de la ligne** (`milieuDeLigne`). On la touche : la **fenêtre du trajet** s'ouvre (`FenetreTrajet.tsx`).
 - **La fenêtre du trajet** (`FenetreTrajet.tsx`, refaite le 27/10 : le « poste d'aiguillage ») : un papier crème avec, s'il y a plusieurs trajets sur ces rails, **un onglet par trajet** avec son voyant (vert = activé) ; **le dessin du trajet** (l'image du départ, des rails où roule un wagonnet quand il est activé, l'image de l'arrivée) ; l'interrupteur **Automatisation activée / arrêtée** ; vers le marché, **les objets en grosses tuiles à toucher** (un minerai du niveau de la mine chacune, avec son prix et combien il y en a au départ ; verte avec ✔ = le wagonnet l'emporte, grise avec ✖ = il la laisse ; elle rebondit quand on la touche), et **Tout** / **Rien** ; vers la foreuse ou le générateur, la tuile fixe du charbon ou de la redstone avec la jauge de la réserve ; **l'aperçu du prochain voyage**, qui change à chaque toucher (`apercuTrajet` : ce qu'il emporterait, « +*X* $ », le temps d'un aller-retour et « ≈ *Y* $/min ») ; et qui le fait rouler (⚡ électrique, 👷 son pousseur, ou « pas de pousseur »). Rien ne change avant **✔ Valider** (`reglerTrajet`) : le trajet est créé et le circuit commence. Un objet envoyé depuis la mine n'est plus « gardé » au marché non plus. On rouvre la fenêtre en touchant les rails, ou avec **⚙️ Régler** sur la carte du trajet (onglet Wagons de la mine ou de la foreuse).
 - **Changer un trajet** : on **touche ses rails** (hors construction) : la même fenêtre s'ouvre avec les réglages du trajet (`liaisonsSurLaCase` ; s'il y a plusieurs trajets sur ces rails, un bloc chacun). Arrêter l'automatisation supprime le trajet (son chargement retourne d'où il vient, les rails restent).
+- **Toucher un rail** (30/10) : en bas de cette fenêtre, « Ce rail : **✏️ Déplacer ce rail** / **🗑️ Retirer (+3 🔩 fer)** ». Un rail qui ne relie encore rien ouvre sa propre petite fenêtre « 🛤️ Rail » (`FenetreRail.tsx`) : « Ce rail ne relie encore rien. Continue la voie jusqu’à un autre bâtiment… », avec les deux mêmes boutons. Déplacer en fait un fantôme à reposer (comme avec ✏️ Modifier) ; retirer le rembourse.
 - Le **panneau du bâtiment de départ** (la mine ou la foreuse) garde **« 🛤️ Pousser »** et **« ✖ Arrêter »** (le bouton « Envoyer un wagonnet vers… » est retiré le 27/10 : le trajet se crée sur la carte). Au panneau de la mine, le coffre règle aussi, minerai par minerai, ce que le wagonnet du marché vend ou garde.
 - **Une vente au marché se voit** (27/10) : quand un wagonnet vend au marché, une fois le déchargement fini, un « +X $ » doré jaillit juste au-dessus du wagonnet (par-dessus le marché) avec une fontaine de pièces, et la caisse sonne (`sons.venteMarche`). Voir [../batiments/marche.md](../batiments/marche.md).
 - Plusieurs wagonnets peuvent **partager les mêmes rails** : ils se croisent sans se gêner.
@@ -141,13 +145,14 @@ Tous les personnages sont des **hamsters** : les **images des planches de l'équ
   - Il marche avec les **flèches du clavier** (dans les 4 directions de la grille, combinables, en glissant le long des obstacles), ou va tout seul là où on touche la carte (case ou bâtiment). Il marche à **7,5 cases par seconde** (`VITESSE_JOUEUR`, 27/10 ; avant 5). Le panneau d'un bâtiment ne s'ouvre que si on **touche** ce bâtiment (27/10) : passer à côté n'ouvre rien.
   - **Pendant qu'il pousse un wagonnet**, il est dessiné juste derrière le wagonnet, sur les rails, et fait l'aller-retour avec lui : il ne peut pas aller ailleurs (les flèches et les touchers ne font rien, le bouton ⛏️ Mine affiche « Wagonnet… »), et la caméra suit le wagonnet.
   - **Espace** : il saute (pour le plaisir).
-  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette (un cran ≈ 15 % depuis le 29/10 ; presque le double le 27/10, c'était trop) ou en pinçant (plus fort depuis le 27/10) (elle revient sur lui quand il remarche). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
+  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette (un cran ≈ 15 % depuis le 29/10 ; presque le double le 27/10, c'était trop) ou en pinçant (plus fort depuis le 27/10 ; le pincement du pavé tactile, 5 fois plus fort depuis le 30/10) (elle revient sur lui quand il remarche). Depuis le 30/10, le **zoom est fluide** : pendant le geste, la caméra visée est gardée hors de React et n'est recopiée dans l'état qu'à la fin (avant, chaque cran redessinait tout le village et ça saccadait). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
 - **Les employés** (mineurs et pousseurs) : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Les mineurs travaillent surtout **dans la mine** (on ne les voit pas au fond : seulement la **cabine de l'ascenseur** qui monte et descend sur le dessin de la mine, avec **les mineurs dedans** depuis le 27/10 ; la jauge du coffre dit « 👷 *n* »). On les voit au village quand :
   1. ils **marchent** (`marche`, **2,5 cases/s** depuis le 27/10, avant 4) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
   3. ils **attendent leur wagonnet au quai** (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ) ;
   4. ils **poussent un wagonnet** (juste derrière lui) ; pendant le chargement au départ et le déchargement à l'arrivée, ils **attendent à l'arrêt** sans marcher (28/10 ; le joueur aussi quand c'est lui qui pousse) ;
   5. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied). Une fois payés ensemble, ils **repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) : ceux qui attendent leur tour restent à leur place devant le Personnel.
+- **Une embauche se voit** (30/10) : une **gerbe d'étincelles** jaillit du Personnel avec « 👷 *Nom* arrive ! », puis le nouveau mineur part vers la mine entouré d'un **halo doré**, avec des étincelles et une bulle « ✨ Nouveau ! » au-dessus de la tête (pendant 6 s).
 - **Le recruteur** et **le manager** restent **devant le bâtiment Personnel**, avec leur étiquette (ils ne bougent pas : on n'utilise que leur image de face).
 
 ## 8. Les bulles de notification
@@ -166,15 +171,15 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | 🎒 | Marché | le sac est plein | alerte |
 | 📦 | Mine | le coffre est plein | alerte |
 | ✨ | Personnel | le recruteur (niveau 3) ou le manager (niveau 4) vient de se débloquer, pas encore vu | nouveau (bleu) |
-| 💰 | le bâtiment concerné | une amélioration est achetable | achat (vert) |
+| 💰 | le bâtiment concerné | une amélioration est achetable (**seulement pendant le tutoriel** depuis le 30/10 : sinon il y aurait presque toujours une bulle, et la liste des tâches propose déjà les achats) | achat (vert) |
 
 La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la mine, les bulles sont un peu plus haut (128 px), pour passer au-dessus de la jauge du coffre (§ 9).
 
 ## 9. La mine sur la carte
 
-- On touche la mine (ou le gros bouton rond **⛏️ Mine**, en bas à gauche de l'écran) : le hamster y marche, et le **panneau de la mine** s'ouvre : le bloc à cliquer, le coffre, les trajets de wagonnets qui partent de la mine, les niveaux, le coffre et l'ascenseur. Voir [../batiments/mine.md](../batiments/mine.md). On n'entre plus dans la mine (plus de plongée de la caméra ni de vue en coupe).
+- On touche la mine (ou le gros bouton rond **⛏️ Mine**, en bas à gauche de l'écran) : le hamster y marche, et le **panneau de la mine** s'ouvre : le bloc à cliquer, le coffre, les trajets de wagonnets qui partent de la mine, et (onglet « ⬆️ Améliorer » depuis le 30/10) le niveau de la mine, la taille du coffre et l'ascenseur. Voir [../batiments/mine.md](../batiments/mine.md). On n'entre plus dans la mine (plus de plongée de la caméra ni de vue en coupe).
 - **Le dessin de la mine** est l'image fournie par l'équipe (`public/images/batiments/mine.webp`), posée comme les autres bâtiments sur ses 10 × 10 cases (`CALAGES.puits`). Par-dessus, le jeu dessine ce qui **évolue** (`DessinEvolutionMine`, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
-  - **la cabine de l'ascenseur** (`mine-cabine.webp`), dès qu'il est construit, pendue aux deux câbles du treuil : elle **suit le premier mineur qui monte ou descend** (`hauteurCabine`) et attend en haut le reste du temps, **le plancher au ras du sol** (au bord du puits). Elle descend dans le puits et disparaît sous son bord de devant (`bordDuPuits` : elle ne se voit qu'au-dessus, puis la barrière `mine-devant.webp` passe devant). Les câbles tombent du treuil sur ses chaînes, et leurs torons défilent quand elle bouge (26/10). Sans ascenseur, les câbles pendent au fond ;
+  - **la cabine de l'ascenseur** (`mine-cabine.webp`), dès qu'il est construit (depuis le 30/10, il est là **dès le début** de la partie), pendue aux deux câbles du treuil : elle **suit le premier mineur qui monte ou descend** (`hauteurCabine`) et attend en haut le reste du temps, **le plancher au ras du sol** (au bord du puits). Elle descend dans le puits et disparaît sous son bord de devant (`bordDuPuits` : elle ne se voit qu'au-dessus, puis la barrière `mine-devant.webp` passe devant). Les câbles tombent du treuil sur ses chaînes, et leurs torons défilent quand elle bouge (26/10). Depuis le 30/10, pendant qu'un mineur vide sa caisse dans le coffre, **la caisse pleine reste dans la cabine, en haut** (avant, l'ascenseur semblait disparaître pendant le déchargement). Sans ascenseur (seulement une vieille partie, avant sa conversion), les câbles pendent au fond ;
   - **un panneau en bois** devant la galerie affiche le niveau de la mine (« Niv. 3 »).
 - **La jauge du coffre** (27/10) : au-dessus de la mine, toujours visible, une petite barre « 📦 *n* / *capacité* » (nombres en court : « 1,2 k », « 12 k », `nombreAbrege` dans `src/nombres.ts`). Verte, puis **orange** dès 75 %, **rouge** quand le coffre est plein (elle pulse alors). On voit tout de suite s'il faut le vider.
 
@@ -191,7 +196,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 |---|---|
 | `src/jeu/donnees.ts` (section « Le village en vue du ciel ») | Grille, `BATIMENTS` (taille, porte, niveau de mine, prix), `COUT_RAIL`, `COUT_CHEMIN`, vitesses, `DECORATIONS` (seulement nom et taille : les dessins de la plage et de l'écran d'accueil). |
 | `src/jeu/village.ts` | La géométrie : cases occupées, portes, cases d'accès, chemins à pied (A\*), rails entre deux bâtiments (`railsEntre`, `railsMineMarche`), raccords des rails, pas de boucle (`feraitUneBoucle`). |
-| `src/jeu/batiments.ts` | Les actions : construire, déplacer, retourner, poser et enlever rails (sans boucle) et chemins. |
+| `src/jeu/batiments.ts` | Les actions : construire, déplacer, retourner, poser et enlever rails (sans boucle) et chemins (remboursés depuis le 30/10, `retirerSol` ; `raisonSolImpossible` dit pourquoi on ne peut pas poser). |
 | `src/jeu/wagonnet.ts` | Les trajets des wagonnets : créer, arrêter, chargement, pousseur, électricité, vitesse, livraison, retour. |
 | `src/jeu/generateur.ts` | Le rayon du générateur (`casesDansLeRayon`). |
 | `src/jeu/notifications.ts` | Les bulles au-dessus des bâtiments. |
@@ -209,6 +214,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 | `src/composants/ElementsVillage.tsx` | Un personnage posé sur la grille (`Perso`), l'image d'un bâtiment. |
 | `src/composants/sprites.ts` | Les images des personnages : laquelle prendre (`spritePerso`, `choisirVue`), leur pied, leur taille. |
 | `src/composants/MenuConstruction.tsx` | Le menu Bâtiments (bâtiments, rails, chemin de pavés). |
+| `src/composants/FenetreRail.tsx` | (30/10) La fenêtre d'un rail touché qui ne relie encore rien : « ✏️ Déplacer ce rail », « 🗑️ Retirer (+3 🔩 fer) » (`BoutonsRail`, aussi en bas de `FenetreTrajet`). |
 | `src/composants/fantome.ts` | Ce qu'on est en train de poser ou de déplacer. |
 | `src/useJoueurVillage.ts` | La marche du joueur (flèches, chemin jusqu'à une case, saut). |
 | `src/App.tsx` | Les barres du bas, la construction, Modifier, le panneau du bâtiment où l'on est, le joueur bloqué pendant qu'il pousse un wagonnet, le trajet regardé au Personnel (`apercuTrajet`). |

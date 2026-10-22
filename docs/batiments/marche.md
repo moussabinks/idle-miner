@@ -18,7 +18,7 @@
 
 ## Ce qu'on peut y faire
 
-Le panneau montre directement les jauges du sac (plus de phrase d'explication au-dessus, 27/10). **Si le sac est vide**, il n'affiche plus qu'**une seule phrase** (« 🎒 Ton sac est vide. Remplis-le au coffre de la mine, puis reviens vendre ici ! »), sans bouton inutile.
+Le panneau montre directement les jauges du sac (plus de phrase d'explication au-dessus, 27/10). **Si le sac est vide** (30/10), le marché s'ouvre quand même : un **message bien visible** (un 🎒 qui se balance, « **Ton sac est vide !** Remplis-le au coffre de la mine (bouton 🎒), puis reviens vendre ici. »), puis **💰 Les prix du marché** : une ligne par bloc (un mini-bloc, son nom, son prix en or), pour voir ce que vaudra le prochain sac. (Le 27/10, il n'y avait qu'une seule phrase.) Sans bouton inutile.
 
 | Élément | Ce qu'il fait |
 |---|---|
