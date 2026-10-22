@@ -1458,3 +1458,207 @@ img[data-tuto-actif] {
     animation: none !important;
   }
 }
+
+/* --- Les panneaux de bâtiment tiennent sans défiler (27/10) ---------------------------
+   Moins de marges partout, des onglets plus serrés, et le panneau de la mine en deux
+   colonnes : le bloc à gauche, ses infos à droite. Les longs panneaux sont coupés en onglets
+   (mine, foreuse, générateur). */
+
+.plein-ecran .panneau-batiment {
+  padding: 10px 12px 12px;
+}
+
+.plein-ecran .panneau-batiment .entete-panneau {
+  margin-bottom: 6px;
+}
+
+.plein-ecran .panneau-batiment .titre-stand {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.plein-ecran .panneau-batiment .liste-cartes {
+  gap: 6px;
+}
+
+.plein-ecran .panneau-batiment .ligne-achat {
+  padding: 7px 10px;
+  gap: 4px;
+}
+
+.plein-ecran .panneau-batiment .amelioration {
+  gap: 4px;
+}
+
+.onglet-panneau {
+  padding: 6px 4px;
+  font-size: 0.76rem;
+}
+
+/* Le bloc à cliquer, à gauche, et ses infos à droite. */
+.plein-ecran .zone-bloc-mine {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.plein-ecran .bloc-mine {
+  width: 112px;
+  height: 112px;
+}
+
+.plein-ecran .zone-bloc-mine .bloc-mine-texte {
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.plein-ecran .zone-bloc-mine .jauge-pioche {
+  width: 100%;
+}
+
+.titre-niveau-mine {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.production-mini {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ffe066;
+}
+
+/* Le coffre en lignes serrées. */
+.plein-ecran .table-coffre {
+  gap: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.plein-ecran .choix-wagonnet button {
+  padding: 2px 7px;
+}
+
+.plein-ecran .bouton-sac-ligne {
+  padding: 1px 7px;
+  min-height: 0;
+}
+
+.plein-ecran .coffre-mine .boutons .bouton {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.plein-ecran .rappel-niveau {
+  padding: 6px 10px;
+}
+
+/* Sur téléphone : le panneau monte un peu plus haut, et le bloc est plus petit. */
+@media (max-width: 860px) {
+  .panneau-flottant {
+    max-height: 62dvh;
+  }
+
+  .plein-ecran .bloc-mine {
+    width: 92px;
+    height: 92px;
+  }
+
+  .onglet-panneau {
+    font-size: 0.7rem;
+    padding: 6px 2px;
+  }
+}
+
+/* Le coffre : le titre et sa barre sur une ligne, des lignes de minerais serrées. */
+.coffre-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coffre-barre {
+  flex: 1;
+  min-width: 0;
+}
+
+.plein-ecran .coffre-mine .barre {
+  height: 18px;
+}
+
+.plein-ecran .table-coffre {
+  margin-top: 0;
+}
+
+.plein-ecran .table-coffre .bouton,
+.plein-ecran .table-coffre .choix-wagonnet button {
+  min-height: 0;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  line-height: 1.35;
+}
+
+.plein-ecran .table-coffre .entete-coffre {
+  font-size: 0.62rem;
+}
+
+/* Les trajets pas encore reliés : une seule ligne, en discret. */
+.plein-ecran .trajet-sans-rails {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  opacity: 0.85;
+}
+
+/* Sur téléphone, le rappel du niveau suivant laisse sa place (l'onglet « Niv. » a sa pastille). */
+@media (max-width: 860px) {
+  .plein-ecran .rappel-niveau {
+    display: none;
+  }
+
+  .plein-ecran .bloc-mine {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+/* L'onglet Production : des lignes de mineurs serrées. */
+.plein-ecran .tableau-production {
+  gap: 5px;
+  padding: 8px 10px;
+}
+
+.plein-ecran .liste-rendements {
+  gap: 1px;
+}
+
+.plein-ecran .rendement-mineur {
+  font-size: 0.76rem;
+}
+
+.plein-ecran .goulot {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.plein-ecran .goulot .bouton {
+  min-height: 0;
+  padding: 3px 8px;
+}
+
+/* Le chariot de la foreuse : des lignes plus fines. */
+.plein-ecran .liste-vente label {
+  padding: 3px 8px;
+}
+
+/* (le chariot ne défile plus à l'intérieur : ses lignes fines tiennent dans le panneau) */
+.plein-ecran .liste-chariot {
+  max-height: none;
+  overflow: visible;
+}
+
+.plein-ecran .liste-vente .mini-bloc {
+  width: 18px;
+  height: 18px;
+}

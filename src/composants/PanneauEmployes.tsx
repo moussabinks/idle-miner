@@ -116,27 +116,28 @@ function Salaires({ etat, jouer }: Props) {
   const sansSalaire = nbSansSalaire(etat)
   const cout10 = coutSalaires(etat, SECONDES_PAR_PAIE)
   return (
+    // Sur une ligne (27/10) : le total, le temps payé et le bouton ; l'alerte dessous s'il le faut.
     <div className={`ligne-achat carte-salaires ${sansSalaire > 0 ? 'carte-alerte' : ''}`}>
       <div className="ligne-titre">
-        <strong>💵 Salaires</strong>
-        <span className="badge">{argent(salairesParPaie(etat))} / 10 min</span>
-      </div>
-      <span className={sansSalaire > 0 ? 'texte-alerte' : 'discret'}>
-        {sansSalaire > 0
-          ? sansSalaire === 1
-            ? '😠 Un mineur attend son salaire : sans salaire, il ne creuse plus !'
-            : `😠 ${sansSalaire} mineurs attendent leur salaire : sans salaire, ils ne creusent plus !`
-          : `Tout le monde est payé pour encore ${duree(tempsPayeMin(etat))}. On paie 10 minutes à la fois${etat.niveauMine < NIVEAU_MINE_MANAGER ? ` (le manager, au niveau ${NIVEAU_MINE_MANAGER} de la mine, s'en chargera pour toi)` : ''}.`}
-      </span>
-      <div className="boutons">
+        <strong title={`${argent(salairesParPaie(etat))} toutes les 10 minutes${etat.niveauMine < NIVEAU_MINE_MANAGER ? ` (le manager, au niveau ${NIVEAU_MINE_MANAGER} de la mine, les paiera pour toi)` : ''}`}>
+          💵 Salaires
+        </strong>
+        <span className="discret salaires-resume">
+          {argent(salairesParPaie(etat))}/10 min{sansSalaire === 0 && ` · payés ${duree(tempsPayeMin(etat))}`}
+        </span>
         <button
           className="bouton bouton-petit bouton-payer"
           disabled={!peutPayerSalaires(etat, SECONDES_PAR_PAIE)}
           onClick={() => jouer((e) => payerSalaires(e, SECONDES_PAR_PAIE))}
         >
-          💵 Payer 10 min · {argent(cout10)}
+          Payer · {argent(cout10)}
         </button>
       </div>
+      {sansSalaire > 0 && (
+        <span className="texte-alerte">
+          {sansSalaire === 1 ? '😠 Un mineur attend son salaire : il ne creuse plus !' : `😠 ${sansSalaire} mineurs attendent leur salaire : ils ne creusent plus !`}
+        </span>
+      )}
     </div>
   )
 }
@@ -381,6 +382,60 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
   )
 }
 
+// Un employé en une seule ligne (27/10), pour que toute l'équipe tienne sans défiler : sa
+// rareté (la couleur du bord), ce qu'il fait, son nom, son rendement (ou son trajet), son
+// salaire payé (une petite barre) et le bouton de sa prochaine pioche. Le toucher ouvre sa fiche.
+function LigneEmploye({ etat, jouer, employe, index, onOuvrir }: Props & { employe: Employe; index: number; onOuvrir: () => void }) {
+  const rarete = rareteDe(employe)
+  const pousseur = employe.role === 'pousseur'
+  const coutPioche = pousseur ? null : coutAmeliorationEmploye(employe)
+  const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
+  const paye = employe.tempsPaye > 0
+  return (
+    <div
+      className={`ligne-employe rarete-${employe.rarete} ${paye ? '' : 'ligne-employe-alerte'}`}
+      role="button"
+      tabIndex={0}
+      title={`${employe.nom} · ${rarete.nom} · ${activiteEmploye(etat, employe)} · toucher pour sa fiche`}
+      onClick={onOuvrir}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOuvrir()}
+    >
+      <span className="ligne-employe-icone" aria-hidden="true">
+        {iconeActiviteEmploye(employe)}
+      </span>
+      <span className="ligne-employe-nom">{employe.nom}</span>
+      <span className="ligne-employe-stat">
+        {pousseur
+          ? employe.trajet
+            ? `🛤️ ${BATIMENTS[LIAISONS[employe.trajet].arrivee].nom}`
+            : '🛤️ —'
+          : `${blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}/s`}
+      </span>
+      <span className="ligne-employe-paye" title={paye ? `Payé encore ${duree(employe.tempsPaye)}` : 'Plus payé : il ne travaille plus'}>
+        <i style={{ width: `${Math.round(Math.min(1, employe.tempsPaye / SECONDES_PAR_PAIE) * 100)}%` }} />
+        <span>{paye ? duree(employe.tempsPaye) : '😠'}</span>
+      </span>
+      {coutPioche && prochaine ? (
+        <button
+          className="bouton bouton-petit bouton-ameliorer ligne-employe-pioche"
+          disabled={!peutAmeliorerEmploye(etat, employe)}
+          title={`Pioche en ${prochaine.nom} : ${argent(coutPioche.argent ?? 0)}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            jouer((x) => ameliorerEmploye(x, index))
+          }}
+        >
+          ⬆ {argent(coutPioche.argent ?? 0)}
+        </button>
+      ) : (
+        <span className="ligne-employe-suite" aria-hidden="true">
+          ›
+        </span>
+      )}
+    </div>
+  )
+}
+
 // L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
 // trajet brille sur la carte (s'il y a des rails), puis on confirme.
 function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPanneau & { onRecrue: (employe: Employe) => void }) {
@@ -458,6 +513,9 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   const [aLicencier, setALicencier] = useState<number | null>(null)
 
   const [onglet, setOnglet] = useState<'equipe' | 'recruter' | 'chefs'>(etat.employes.length === 0 ? 'recruter' : 'equipe')
+  // L'employé dont on regarde la fiche (null : la liste de l'équipe).
+  const [fiche, setFiche] = useState<number | null>(null)
+  const employeFiche = fiche !== null ? (etat.employes[fiche] ?? null) : null
   const prix = prixEmbauche(etat)
   const max = maxEmployes(etat)
   const avecRecruteur = etat.recruteur > 0
@@ -491,20 +549,27 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           </button>
         </div>
       )}
-      {onglet === 'equipe' && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
-      {onglet === 'equipe' &&
-        (['mineur', 'pousseur'] as const).map((role) => {
-          const equipe = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)
-          if (equipe.length === 0) return null
-          return (
-            <div key={role} className="liste-cartes">
-              <h4 className="titre-equipe">{role === 'mineur' ? `⛏️ Mineurs (${equipe.length})` : `🛤️ Pousseurs (${equipe.length})`}</h4>
-              {equipe.map(({ employe, index }) => (
-                <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
-              ))}
-            </div>
-          )
-        })}
+      {/* La fiche d'un employé (on revient à la liste avec « ← Équipe »). */}
+      {onglet === 'equipe' && employeFiche && fiche !== null && (
+        <>
+          <button className="bouton bouton-petit bouton-neutre retour-equipe" onClick={() => setFiche(null)}>
+            ← Équipe
+          </button>
+          <CarteMineur etat={etat} jouer={jouer} employe={employeFiche} index={fiche} onLicencier={() => setALicencier(fiche)} />
+        </>
+      )}
+      {onglet === 'equipe' && !employeFiche && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
+      {/* Toute l'équipe, une ligne chacun : les mineurs, puis les pousseurs. */}
+      {onglet === 'equipe' && !employeFiche && etat.employes.length > 0 && (
+        <div className="liste-employes">
+          {etat.employes
+            .map((employe, index) => ({ employe, index }))
+            .sort((a, b) => (a.employe.role === b.employe.role ? 0 : a.employe.role === 'mineur' ? -1 : 1))
+            .map(({ employe, index }) => (
+              <LigneEmploye key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onOuvrir={() => setFiche(index)} />
+            ))}
+        </div>
+      )}
 
       {onglet === 'chefs' && <Manager etat={etat} jouer={jouer} />}
       {onglet === 'chefs' && <Recruteur etat={etat} jouer={jouer} />}
@@ -552,6 +617,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           onConfirmer={() => {
             jouer((e) => licencier(e, aLicencier))
             setALicencier(null)
+            setFiche(null)
           }}
           onAnnuler={() => setALicencier(null)}
         >

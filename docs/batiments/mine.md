@@ -23,15 +23,17 @@
 
 ## Ce qu'on peut y faire
 
-Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **trois onglets** (`OngletsPanneau`, 27/10) :
+Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **cinq onglets** (`OngletsPanneau`), pour que **rien ne défile**, même au niveau 5 avec un coffre plein de minerais (sur ordinateur comme sur téléphone) :
 
-- **⛏️ Creuser** : le bloc à cliquer, le tableau de production et le coffre (pastille « ! » quand le coffre est plein) ;
-- **🚃 Wagonnets** : les trajets qui partent de la mine (avec leur nombre dans le titre) ;
-- **⬆️ Améliorer** : le niveau de la mine, la taille du coffre et l'ascenseur (pastille « + » quand on peut payer une amélioration).
+- **⛏️ Creuser** : le bloc à cliquer (à gauche) avec ses infos à droite, puis le coffre, puis le rappel du niveau suivant (caché sur téléphone). Pastille « ! » quand le coffre est plein ;
+- **📊 Prod.** : le tableau de production et les goulots (pastille « ! » quand l'ascenseur ou le wagonnet ne suit pas) ;
+- **🚃 Wagons** : les trajets qui partent de la mine (avec leur nombre dans le titre) ;
+- **⬇️ Niv. *N*** : la grande carte du niveau suivant (pastille « + » quand on peut le payer) ;
+- **⬆️ Plus** : la taille du coffre et l'ascenseur (pastille « + » quand on peut payer le coffre).
 
-L'onglet **Creuser** s'ouvre en premier. De haut en bas :
+L'onglet **Creuser** s'ouvre en premier. Le titre du panneau n'a plus de phrase de description (elle est dans la bulle d'aide du titre).
 
-- En titre (onglet Creuser) : « Niveau *N* · **nom du niveau** ».
+- À droite du bloc : « Niveau *N* · **nom du niveau** », le bloc à casser, la jauge de la pioche, la chance de doubler, et une ligne dorée « ⚙️ *X* blocs/s · ≈ *Y* $/min ».
 
 ### Le bloc à cliquer
 

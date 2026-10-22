@@ -21,7 +21,7 @@
 
 Depuis le 27/10, le panneau est rangé en **trois onglets** (`OngletsPanneau`) et n'a plus de long paragraphe d'introduction :
 
-- **👷 Équipe (*n*)** : les salaires (sans manager), puis l'équipe en deux listes, **⛏️ Mineurs (*n*)** et **🛤️ Pousseurs (*n*)**. Pastille « ! » si quelqu'un n'est pas payé. Sans personne : « Personne pour l'instant » et un bouton **➕ Recruter un mineur** qui ouvre l'onglet Recruter ;
+- **👷 Équipe (*n*)** : les salaires sur une ligne (sans manager : le total, le temps payé, « Payer · *prix* »), puis **toute l'équipe, une ligne par employé** (27/10, pour que rien ne défile) : le bord de la couleur de sa rareté, ce qu'il fait, son nom, son rendement (ou l'arrivée de son trajet pour un pousseur), une petite barre de salaire payé, et le bouton de sa prochaine pioche (« ⬆ *prix* »). Les mineurs d'abord, puis les pousseurs. **Toucher une ligne ouvre sa fiche** (la carte complète : rareté, rendement, salaire, sac, pioche, Licencier, trajet d'un pousseur), avec **← Équipe** pour revenir. Pastille « ! » si quelqu'un n'est pas payé. Sans personne : « Personne pour l'instant » et un bouton **➕ Recruter un mineur** qui ouvre l'onglet Recruter ;
 - **➕ Recruter** : **👷 Embaucher un mineur** (ou **🎲 Recruter**) et **🛤️ Embaucher un pousseur**. Pastille « + » quand on peut payer une embauche ;
 - **💼 Chefs** : le **manager** (et la trésorerie) et le **recruteur**. Pastille « ! » si le manager n'a plus de trésorerie.
 
