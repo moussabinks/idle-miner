@@ -460,7 +460,7 @@ export function VueVillage({
     const t = BATIMENTS[b.id].taille
     const centre = versEcran(b.x + t / 2, b.y + t / 2)
     // (au-dessus de la mine, la bulle passe au-dessus de la jauge du coffre)
-    const hauteur = b.id === 'puits' ? 128 : 112
+    const hauteur = b.id === 'puits' ? 112 : 96
     bulles.push(
       <button
         key={b.id}

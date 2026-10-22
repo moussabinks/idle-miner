@@ -9,7 +9,7 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v18'
+const CACHE = 'idle-miner-v19'
 // Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
 // village serait vide hors ligne. (21/10 : images en haute définition et arbres, d'où le cache v4.)
 const IMAGES_DU_VILLAGE = [
@@ -28,7 +28,8 @@ const IMAGES_DU_VILLAGE = [
   '/images/personnages/sprites/manager_devant.webp',
   '/images/personnages/sprites/recruteur_devant.webp',
 ]
-const FICHIERS_DE_BASE = ['/', '/manifest.webmanifest', '/favicon.svg', '/icones/icone-192.png', '/icones/icone-512.png', ...IMAGES_DU_VILLAGE]
+// (27/10) la police des icônes cartoon (outils/icones/fabriquer.py)
+const FICHIERS_DE_BASE = ['/', '/manifest.webmanifest', '/fonts/icones-mega.woff2', '/favicon.svg', '/icones/icone-192.png', '/icones/icone-512.png', ...IMAGES_DU_VILLAGE]
 
 self.addEventListener('install', (evenement) => {
   evenement.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FICHIERS_DE_BASE)))

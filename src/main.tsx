@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './icones.css' // la police des icônes cartoon (avant tout le reste)
 import './index.css'
 import './blocs.css'
 import './effets.css'

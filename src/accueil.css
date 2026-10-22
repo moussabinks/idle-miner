@@ -70,7 +70,7 @@
   display: inline-flex;
   align-items: flex-end;
   margin: 0 0 14px;
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-weight: 400;
   line-height: 0.88;
   letter-spacing: 2px;
@@ -147,7 +147,7 @@
 
 .heros-accroche {
   margin: 8px 0 8px;
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-size: 1.6rem;
   letter-spacing: 1px;
   color: #fff;
@@ -214,7 +214,7 @@
 }
 
 .bouton-mega-titre {
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-size: 1.7rem;
   letter-spacing: 1px;
   line-height: 1;
@@ -259,7 +259,7 @@
 }
 
 .heros-chiffres strong {
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--accent);
@@ -303,7 +303,7 @@
 }
 
 .etape strong {
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-weight: 400;
   font-size: 1.3rem;
   letter-spacing: 1px;
@@ -328,7 +328,7 @@
   border: 2px solid #4a2a05;
   background: linear-gradient(#ffe066, #f2a91c 60%, #c8761a);
   color: #2a1606;
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-size: 1.1rem;
   line-height: 1;
   box-shadow: 0 3px 0 #6b3a08;
@@ -473,7 +473,7 @@
 }
 
 .titre-section {
-  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
   font-weight: 400;
   font-size: 1.6rem;
   letter-spacing: 1px;

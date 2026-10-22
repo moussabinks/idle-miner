@@ -393,176 +393,279 @@
   pointer-events: none;
 }
 
-/* --- Les bulles de notification au-dessus des bâtiments (23/10) -----------------------
-   Une médaille ronde avec l'icône, deux mots dans un ruban, et « +2 » s'il y a d'autres
-   choses à faire là-bas. La couleur dit l'urgence : rouge = alerte, rose = prêt, bleu =
-   nouveau, vert = achetable. Elles sautillent ; les alertes ont en plus un anneau qui
-   s'élargit, et les achats des étincelles. */
+/* --- Les bulles de notification au-dessus des bâtiments (refaites le 27/10) ---------------
+   Comme dans les jeux mobiles : une grosse médaille ronde et brillante (bord blanc épais, reflet,
+   l'icône cartoon en grand), un ruban de couleur à bouts fourchus en travers du bas avec deux
+   mots, et une pointe qui montre le bâtiment. « +2 » dans une pastille rouge s'il y a d'autres
+   choses à faire là-bas. La couleur dit l'urgence : rouge = alerte, rose = prêt, bleu = nouveau,
+   vert = achetable, jaune = trajet à créer.
+   Elle arrive en rebondissant, flotte doucement, et son icône se dandine de temps en temps pour
+   attirer l'œil. Les alertes tremblent et lancent une onde rouge ; les achats ont des étincelles
+   et une lueur verte. */
 
 .bulle-notif {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  translate: -50% -100%;
-  padding: 0 10px 0 0;
-  height: 30px;
-  border: 2.5px solid #fff;
-  border-radius: 999px;
   --couleur-bulle: #f2a821;
   --couleur-bulle-claire: #ffe48a;
-  background: linear-gradient(var(--couleur-bulle-claire), var(--couleur-bulle));
-  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), 0 0 14px color-mix(in srgb, var(--couleur-bulle) 80%, transparent);
+  --couleur-bulle-foncee: #a86a08;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  translate: -50% -100%;
+  padding: 0 0 9px;
+  border: none;
+  background: none;
   color: #fff;
-  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   pointer-events: auto;
-  animation: bulle-arrive 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) backwards, bulle-saute 0.9s 0.35s ease-in-out infinite alternate;
-  transition: scale 0.12s ease;
+  transform-origin: 50% 100%;
+  animation: bulle-arrive 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) backwards, bulle-flotte 1.8s 0.55s ease-in-out infinite;
+  transition: scale 0.15s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
 .bulle-notif:hover {
-  scale: 1.12;
+  scale: 1.15;
 }
 
+.bulle-notif:active {
+  scale: 0.92;
+}
+
+/* La pointe sous le ruban, qui montre le bâtiment. */
 .bulle-notif::after {
-  /* La petite pointe sous la bulle. */
   content: '';
   position: absolute;
-  left: 18px;
-  bottom: -7px;
-  width: 10px;
-  height: 10px;
-  rotate: 45deg;
-  background: var(--couleur-bulle);
-  border-right: 2.5px solid #fff;
-  border-bottom: 2.5px solid #fff;
-  z-index: -1;
+  bottom: 0;
+  left: 50%;
+  width: 14px;
+  height: 11px;
+  translate: -50% 0;
+  background: #fff;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.3));
 }
 
-/* La médaille de l'icône, un peu plus grosse que la bulle. */
+/* La médaille : bord blanc épais, couleur brillante, et un reflet en haut. */
 .bulle-medaille {
   position: relative;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  margin: -6px 4px -6px -6px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  border: 2.5px solid #fff;
-  background: radial-gradient(circle at 35% 30%, var(--couleur-bulle-claire), var(--couleur-bulle));
-  box-shadow: 0 3px 0 rgb(0 0 0 / 0.3), inset 0 -3px 0 rgb(0 0 0 / 0.2);
+  border: 4px solid #fff;
+  background: radial-gradient(circle at 50% 30%, var(--couleur-bulle-claire), var(--couleur-bulle) 62%, var(--couleur-bulle-foncee));
+  box-shadow:
+    0 4px 0 rgb(0 0 0 / 0.35),
+    inset 0 -5px 0 rgb(0 0 0 / 0.18),
+    0 0 18px color-mix(in srgb, var(--couleur-bulle) 75%, transparent);
   overflow: hidden;
+  z-index: 1;
 }
 
-/* Un reflet qui passe sur la médaille de temps en temps. */
+/* Le reflet du haut (une demi-lune blanche) et un éclat qui passe de temps en temps. */
+.bulle-medaille::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 18%;
+  width: 64%;
+  height: 38%;
+  border-radius: 50%;
+  background: linear-gradient(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0));
+}
+
 .bulle-medaille::after {
   content: '';
   position: absolute;
   inset: -30%;
-  background: linear-gradient(115deg, transparent 40%, rgb(255 255 255 / 0.75) 50%, transparent 60%);
+  background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 0.8) 50%, transparent 58%);
   translate: -120% 0;
-  animation: reflet-bulle 2.6s ease-in-out infinite;
+  animation: reflet-bulle 3s ease-in-out infinite;
 }
 
+/* L'icône (la police cartoon du jeu), en grand, qui se dandine. */
 .bulle-icone {
-  font-size: 19px;
-  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.4));
+  position: relative;
+  font-size: 27px;
+  translate: 0 -1px;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.3));
+  animation: bulle-dandine 3.2s ease-in-out infinite;
 }
 
+/* Le ruban : en travers du bas de la médaille, bouts fourchus, texte blanc bien contourné. */
 .bulle-court {
+  position: relative;
+  z-index: 2;
+  margin-top: -11px;
+  padding: 4px 13px 5px;
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  text-shadow: 0 1.5px 0 rgb(0 0 0 / 0.45);
+  background: linear-gradient(var(--couleur-bulle), var(--couleur-bulle-foncee));
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%);
+  text-shadow:
+    -1px -1px 0 #2a1608,
+    1px -1px 0 #2a1608,
+    -1px 1px 0 #2a1608,
+    1px 1px 0 #2a1608,
+    0 2px 0 #2a1608;
 }
 
+/* Le ruban a un liseré clair en haut (dessiné par-dessus, dans le même découpage). */
+.bulle-court::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: rgb(255 255 255 / 0.55);
+}
+
+/* « +2 » : d'autres choses à faire là-bas. */
 .bulle-compte {
   position: absolute;
-  top: -10px;
-  right: -10px;
-  min-width: 20px;
-  height: 20px;
+  top: -5px;
+  right: calc(50% - 34px);
+  z-index: 3;
+  min-width: 21px;
+  height: 21px;
   padding: 0 4px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 2px solid #fff;
-  background: #2a1608;
+  border: 2.5px solid #fff;
+  background: radial-gradient(circle at 40% 30%, #ff7a6a, #d1261a);
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
   font-size: 10px;
   font-weight: 900;
+  animation: bulle-compte 1.6s ease-in-out infinite;
 }
 
 .bulle-alerte {
-  --couleur-bulle: #d63a2f;
-  --couleur-bulle-claire: #ff8a7a;
+  --couleur-bulle: #e0392c;
+  --couleur-bulle-claire: #ff9a86;
+  --couleur-bulle-foncee: #8e1a12;
 }
 
-/* L'alerte : un anneau rouge qui s'élargit autour, comme un radar. */
+/* L'alerte : la médaille tremble, et une onde rouge s'élargit autour, comme un radar. */
+.bulle-alerte .bulle-medaille {
+  animation: bulle-tremble 2.4s ease-in-out infinite;
+}
+
 .bulle-alerte::before {
   content: '';
   position: absolute;
-  inset: -4px;
-  border-radius: inherit;
-  border: 3px solid #ff6a5a;
-  animation: anneau-alerte 1.1s ease-out infinite;
+  top: 0;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin-left: -25px;
+  border-radius: 50%;
+  border: 4px solid #ff6a5a;
+  animation: anneau-alerte 1.2s ease-out infinite;
   pointer-events: none;
 }
 
 .bulle-pret {
-  --couleur-bulle: #c8338a;
-  --couleur-bulle-claire: #ff9ad0;
+  --couleur-bulle: #d23d93;
+  --couleur-bulle-claire: #ffa6d6;
+  --couleur-bulle-foncee: #82185a;
 }
 
 .bulle-nouveau {
-  --couleur-bulle: #3f7fe0;
-  --couleur-bulle-claire: #9fd0ff;
+  --couleur-bulle: #3f84e8;
+  --couleur-bulle-claire: #a8d6ff;
+  --couleur-bulle-foncee: #1f4f9e;
 }
 
 .bulle-achat {
-  --couleur-bulle: #2f9d40;
-  --couleur-bulle-claire: #8ff09a;
+  --couleur-bulle: #35ad46;
+  --couleur-bulle-claire: #a2f5a6;
+  --couleur-bulle-foncee: #1c6e28;
 }
 
-/* Les étincelles dorées autour d'un achat possible. */
+/* Achetable : une lueur verte qui respire autour de la médaille. */
+.bulle-achat .bulle-medaille {
+  animation: bulle-lueur 1.4s ease-in-out infinite;
+}
+
+/* Les étincelles dorées autour d'un achat possible (ou d'un trajet à créer). */
 .bulle-etincelles i {
   position: absolute;
-  width: 7px;
-  height: 7px;
+  z-index: 3;
+  width: 10px;
+  height: 10px;
   background: #fff6b0;
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
   filter: drop-shadow(0 0 3px #ffd84a);
   animation: etincelle-bulle 1.6s ease-in-out infinite;
 }
 
-.bulle-etincelles i:nth-child(1) { left: -8px; top: -8px; }
-.bulle-etincelles i:nth-child(2) { right: -6px; top: -12px; animation-delay: 0.5s; }
-.bulle-etincelles i:nth-child(3) { right: 6px; bottom: -10px; animation-delay: 1s; }
+.bulle-etincelles i:nth-child(1) { left: calc(50% - 36px); top: 2px; }
+.bulle-etincelles i:nth-child(2) { right: calc(50% - 38px); top: 16px; animation-delay: 0.55s; }
+.bulle-etincelles i:nth-child(3) { left: calc(50% - 30px); top: 36px; animation-delay: 1.1s; }
 
+/* Elle arrive en rebondissant (écrasée, étirée, puis à sa place). */
 @keyframes bulle-arrive {
-  from { scale: 0; }
-  to { scale: 1; }
+  0% { scale: 0 0; }
+  45% { scale: 1.2 0.85; }
+  65% { scale: 0.9 1.12; }
+  82% { scale: 1.05 0.96; }
+  100% { scale: 1 1; }
 }
 
+@keyframes bulle-flotte {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* (gardée pour les autres petites choses qui sautillent au village) */
 @keyframes bulle-saute {
   from { transform: translateY(0); }
   to { transform: translateY(-7px); }
 }
 
+@keyframes bulle-dandine {
+  0%, 70%, 100% { rotate: 0deg; scale: 1; }
+  76% { rotate: -14deg; scale: 1.15; }
+  84% { rotate: 12deg; scale: 1.15; }
+  90% { rotate: -6deg; scale: 1.05; }
+  95% { rotate: 3deg; }
+}
+
+@keyframes bulle-tremble {
+  0%, 80%, 100% { rotate: 0deg; }
+  84% { rotate: -9deg; }
+  88% { rotate: 8deg; }
+  92% { rotate: -6deg; }
+  96% { rotate: 4deg; }
+}
+
+@keyframes bulle-lueur {
+  0%, 100% { box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), inset 0 -5px 0 rgb(0 0 0 / 0.18), 0 0 8px rgb(80 230 100 / 0.4); }
+  50% { box-shadow: 0 4px 0 rgb(0 0 0 / 0.35), inset 0 -5px 0 rgb(0 0 0 / 0.18), 0 0 22px 4px rgb(80 230 100 / 0.85); }
+}
+
+@keyframes bulle-compte {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.15; }
+}
+
 @keyframes reflet-bulle {
-  0%, 55% { translate: -120% 0; }
+  0%, 60% { translate: -120% 0; }
   100% { translate: 120% 0; }
 }
 
 @keyframes anneau-alerte {
   from { opacity: 0.9; scale: 1; }
-  to { opacity: 0; scale: 1.35; }
+  to { opacity: 0; scale: 1.7; }
 }
 
 @keyframes etincelle-bulle {
   0%, 100% { opacity: 0; scale: 0.3; rotate: 0deg; }
-  50% { opacity: 1; scale: 1.2; rotate: 45deg; }
+  50% { opacity: 1; scale: 1.3; rotate: 45deg; }
 }
 
 /* --- La barre de boutons du village ------------------------------------------------ */
@@ -841,6 +944,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bulle-notif,
+.bulle-icone,
+.bulle-medaille,
+.bulle-medaille::after,
+.bulle-compte,
+.bulle-notif::before,
 .badge-menu,
 .pastille-nouveau,
 .perso-village .perso-corps,
@@ -1896,10 +2004,9 @@ g.grille-construction {
 
 /* La bulle « 🛤️ Automatiser » au milieu des rails d'un trajet à créer. */
 .bulle-trajet {
-  --couleur-bulle: #e9b10d;
+  --couleur-bulle: #f0b415;
   --couleur-bulle-claire: #fff3a3;
-  color: #4a3200;
-  font-weight: 700;
+  --couleur-bulle-foncee: #a87406;
 }
 
 /* La fenêtre d'un trajet : un réglage par trajet qui passe par les rails touchés. */

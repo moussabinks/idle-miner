@@ -30,7 +30,8 @@
   --x-mineurs: calc(var(--x-foreuse) + var(--col-foreuse) + 3px);
   --pas: calc(var(--taille-case) + 3px);
 
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* « Icones Mega » d'abord : elle ne dessine que les emojis du jeu (src/icones.css). */
+  font-family: 'Icones Mega', system-ui, 'Segoe UI', Roboto, sans-serif;
   color-scheme: dark;
   color: var(--texte);
   background: var(--fond);
