@@ -718,6 +718,14 @@ def etoile_niveau():
     return r(etoile(50, 52, 46, 21), OR, bx=40, by=36) + [(OR[1], etoile(50, 52, 16, 7))]
 
 
+@icone('🍀')
+def trefle():
+    # (30/10) Le bonus de combo « Fortune ».
+    feuilles = union(cercle(36, 34, 17), cercle(64, 34, 17), cercle(36, 60, 17), cercle(64, 60, 17))
+    tige = contour(svg('M 54 64 Q 62 82 74 92'), 6)
+    return r(tige, VERT, d=2, brillance=False) + r(feuilles, VERT) + [(VERT[1], cercle(50, 47, 6))]
+
+
 @icone('🎉')
 def cotillon():
     # (29/10) Un niveau gagné : un cornet d'où sortent des confettis.
