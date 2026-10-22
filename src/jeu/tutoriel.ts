@@ -6,16 +6,18 @@
 //   3. construire le marché (gratuit) ;
 //   4. mettre le coffre dans son sac ;
 //   5. vendre au marché ;
-//   6. bravo, et la suite : la liste des tâches en haut à droite.
+//   6. construire le forgeron (29/10) ;
+//   7. bravo, et la suite : la liste des tâches en haut à droite. Ensuite, le joueur avance seul :
+//      la liste des tâches lui dit quoi faire, sans l'obliger à rien.
 // Ici, seulement les règles (où on en est, quand une étape est faite) : les textes et les flèches
 // sont dans src/composants/Tutoriel.tsx.
 
 import { nbDansSac, type EtatJeu } from './mineur'
 import { batimentPose } from './village'
 
-export type IdEtapeTutoriel = 'bonjour' | 'creuser' | 'marche' | 'sac' | 'vendre' | 'bravo'
+export type IdEtapeTutoriel = 'bonjour' | 'creuser' | 'marche' | 'sac' | 'vendre' | 'forgeron' | 'bravo'
 
-export const ETAPES_TUTORIEL: IdEtapeTutoriel[] = ['bonjour', 'creuser', 'marche', 'sac', 'vendre', 'bravo']
+export const ETAPES_TUTORIEL: IdEtapeTutoriel[] = ['bonjour', 'creuser', 'marche', 'sac', 'vendre', 'forgeron', 'bravo']
 
 // Les blocs à casser à la main avant d'aller plus loin.
 export const BLOCS_TUTORIEL = 10
@@ -45,6 +47,8 @@ export function etapeFaite(etat: EtatJeu, etape: IdEtapeTutoriel): boolean {
       return nbDansSac(etat) > 0 || etat.stats.argentGagne > 0
     case 'vendre':
       return etat.stats.argentGagne > 0
+    case 'forgeron':
+      return batimentPose(etat.village, 'forgeron') !== null
     default:
       return false
   }

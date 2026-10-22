@@ -712,6 +712,27 @@ def _medaille(couleurs, ruban=BLEU):
     return [(ruban[2], r1), (ruban[0], r2)] + r(disque, couleurs, brillance=False) + [(couleurs[1], etoile(50, 64, 15, 7)), (couleurs[2], contour(cercle(50, 64, 21), 2.5))]
 
 
+@icone('⭐', '🌟')
+def etoile_niveau():
+    # (29/10) Le niveau du joueur.
+    return r(etoile(50, 52, 46, 21), OR, bx=40, by=36) + [(OR[1], etoile(50, 52, 16, 7))]
+
+
+@icone('🎉')
+def cotillon():
+    # (29/10) Un niveau gagné : un cornet d'où sortent des confettis.
+    cornet = poly((10, 90), (34, 40), (60, 66))
+    rayures = union(contour(svg('M 22 64 L 44 78'), 4), contour(svg('M 28 52 L 52 66'), 4))
+    return (
+        r(cornet, VIOLET, d=3, brillance=False)
+        + [(OR[1], rayures)]
+        + r(cercle(66, 22, 7), ROUGE, d=2, brillance=False)
+        + r(rect(76, 40, 12, 12, 3), BLEU, d=2, brillance=False)
+        + r(cercle(48, 18, 6), VERT, d=2, brillance=False)
+        + r(etoile(84, 70, 10, 4.5), OR, d=2, brillance=False)
+    )
+
+
 @icone('🏅', '🥇')
 def medaille_or():
     return _medaille(OR)

@@ -16,6 +16,8 @@ import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetD
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
+  batimentProcheDe,
+  MARGE_CLIC_BATIMENT,
   bordsDeVoie,
   cheminEntre,
   lireCle,
@@ -81,9 +83,12 @@ type Props = {
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
-// La force du zoom à la molette (par pixel de défilement) et au pincement (27/10, encore plus
-// fort depuis : un cran de molette double presque le zoom).
-const FORCE_MOLETTE = 0.0085
+// La force du zoom à la molette (par pixel de défilement) et au pincement. (29/10 : un cran de
+// molette zoomait trop d'un coup ; maintenant, un cran change le zoom d'environ 15 %.)
+const FORCE_MOLETTE = 0.0016
+// Un cran de molette ne compte jamais plus que ça (certaines souris envoient de très grands
+// défilements d'un coup).
+const CRAN_MAX = 120
 const FORCE_PINCEMENT = 2.4
 
 export function VueVillage({
@@ -273,6 +278,11 @@ export function VueVillage({
     if (!pointeurs.current.has(e.pointerId)) {
       // La souris passe au-dessus de la carte (sans clic) : le fantôme la suit.
       if (fantome && e.pointerType === 'mouse' && !pinceau) onSurvol(caseSous(e.clientX, e.clientY))
+      // Le bâtiment sous la souris (ou juste à côté) est entouré au sol.
+      if (e.pointerType === 'mouse') {
+        const vise = batimentVise(e.clientX, e.clientY)
+        if (vise !== survol) setSurvol(vise)
+      }
       return
     }
     pointeurs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -299,6 +309,23 @@ export function VueVillage({
     }
   }
 
+  // Le bâtiment qu'un clic à cet endroit viserait : son image sous la souris, ou un bâtiment
+  // juste à côté (29/10). La carte « capture » le doigt ou la souris : e.target est alors la
+  // carte elle-même, jamais l'image du bâtiment ; on cherche donc ce qui est vraiment sous le
+  // point (en traversant le joueur, les bulles...). Sur un chemin, « juste à côté » ne compte
+  // que si on le demande (en mode Modifier, toucher un chemin doit le choisir, lui).
+  function batimentVise(sx: number, sy: number, procheSurChemin = true): IdBatiment | null {
+    const element = document.elementsFromPoint(sx, sy).find((el) => el.hasAttribute('data-cible'))
+    const donnee = element?.getAttribute('data-cible')
+    if (donnee?.startsWith('batiment:')) return donnee.slice(9) as IdBatiment
+    const c = caseSous(sx, sy)
+    const occupant = occupation(village).get(`${c.x},${c.y}`)
+    if (occupant?.type === 'batiment') return occupant.id
+    if (occupant?.type === 'rail' || (occupant?.type === 'chemin' && !procheSurChemin)) return null
+    return batimentProcheDe(village, c.x + 0.5, c.y + 0.5, MARGE_CLIC_BATIMENT)
+  }
+  const [survol, setSurvol] = useState<IdBatiment | null>(null)
+
   function pointerUp(e: React.PointerEvent) {
     pointeurs.current.delete(e.pointerId)
     if (pointeurs.current.size < 2) pincement.current = null
@@ -306,16 +333,17 @@ export function VueVillage({
     geste.current = null
     if (!g || g.deplace || g.mode === 'pinceau') return
     if (performance.now() - g.temps > 600) return
-    // Un simple toucher : on regarde ce qu'il y a dessous (une image de bâtiment, ou la case).
-    const element = (e.target as HTMLElement).closest('[data-cible]')
+    // Un simple toucher : on regarde ce qu'il y a dessous. Un bâtiment (son image, ses cases, ou
+    // juste à côté, 29/10 : avant, un clic sur son toit, qui dépasse de ses cases, ou juste à
+    // côté faisait marcher le joueur sans ouvrir son panneau), sinon des rails ou un chemin.
     const c = caseSous(e.clientX, e.clientY)
     let cible: CibleVillage | null = null
-    const donnee = element?.getAttribute('data-cible')
-    if (donnee?.startsWith('batiment:')) cible = { type: 'batiment', id: donnee.slice(9) as IdBatiment }
-    if (cible === null) {
+    // (un chemin juste à côté d'un bâtiment reste un chemin : App décide, selon le mode)
+    const vise = batimentVise(e.clientX, e.clientY, false)
+    if (vise) cible = { type: 'batiment', id: vise }
+    else {
       const occupant = occupation(village).get(`${c.x},${c.y}`)
-      if (occupant?.type === 'batiment') cible = { type: 'batiment', id: occupant.id }
-      else if (occupant?.type === 'rail') cible = { type: 'rail', x: c.x, y: c.y }
+      if (occupant?.type === 'rail') cible = { type: 'rail', x: c.x, y: c.y }
       else if (occupant?.type === 'chemin') cible = { type: 'chemin', x: c.x, y: c.y }
     }
     onTap(c, cible)
@@ -324,9 +352,10 @@ export function VueVillage({
   function molette(e: React.WheelEvent) {
     const m = versMonde(e.clientX, e.clientY)
     const c = cameraRef.current
-    // Un cran de molette zoome presque du double (27/10 : avant, il fallait tourner longtemps).
+    // Un cran de molette zoome d'environ 15 % (29/10 : avant, presque du double, c'était trop).
     // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
-    const pixels = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
+    const brut = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
+    const pixels = Math.max(-CRAN_MAX, Math.min(CRAN_MAX, brut))
     const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * FORCE_MOLETTE)))
     // On zoome autour du point sous la souris.
     const nouvelle = borner({ z, cx: m.x - (m.x - c.cx) * (c.z / z), cy: m.y - (m.y - c.cy) * (c.z / z) })
@@ -341,21 +370,17 @@ export function VueVillage({
   // Les bâtiments (celui qu'on déplace est remplacé par son fantôme).
   for (const b of village.batiments) {
     if (fantome?.type === 'batiment' && fantome.id === b.id) continue
-    const actif = b.id === batimentActif
+    // (29/10) Toujours la même image, sans classe qui la change : sinon elle devenait floue
+    // (voir .sprite-batiment dans village.css).
     if (b.id === 'puits') {
       // La mine : son image, et par-dessus ce qui évolue (cabine d'ascenseur, niveau).
       objets.push(
-        <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe={actif ? 'sprite-actif' : ''} />,
+        <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
         <MineAnimee key="puits-evolution" etat={etat} x={b.x} y={b.y} miroir={b.miroir} />,
       )
       continue
     }
-    const classes = [
-      actif ? 'sprite-actif' : '',
-      b.id === 'foreuse' && foreuseEnMarche(etat) ? 'sprite-vibre' : '',
-      b.id === 'generateur' && generateurEnMarche(etat) && !actif ? 'sprite-electrique' : '',
-    ].join(' ')
-    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe={classes} />)
+    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" />)
   }
 
   // Le fantôme de ce qu'on place.
@@ -656,6 +681,11 @@ export function VueVillage({
           const c = lireCle(cle)
           return <polygon key={`bord${cle}`} className="case-bord-voie" points={losange(c.x, c.y, 1)} />
         })}
+      {/* Le bâtiment survolé à la souris (29/10 : dit « je suis cliquable », sans toucher à son image). */}
+      {survol && survol !== batimentActif && !fantome && (() => {
+        const b = batimentPose(village, survol)
+        return b ? <polygon className="emprise-survol" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null
+      })()}
       {batimentActif && (() => {
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null

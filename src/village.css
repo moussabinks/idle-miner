@@ -105,29 +105,13 @@
 /* Seul le bâtiment survolé ou ouvert brille (un seul à la fois : ça reste léger). */
 .sprite-batiment {
   cursor: pointer;
-  transition: translate 0.15s cubic-bezier(0.3, 1.6, 0.5, 1), filter 0.15s;
 }
 
-.sprite-actif {
-  filter: drop-shadow(0 0 10px rgb(255 214 90 / 0.95));
-}
-
-/* Survolé (27/10) : il se soulève un peu, s'éclaire, et prend un liseré blanc et un halo doré,
-   pour dire « je suis cliquable ». */
-.sprite-batiment:hover {
-  translate: 0 -5px;
-  filter: brightness(1.12) saturate(1.1) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 16px rgb(255 214 90));
-}
-
-/* La foreuse qui tourne vibre un peu. */
-.sprite-vibre {
-  animation: vibre-batiment 0.16s steps(2) infinite;
-}
-
-@keyframes vibre-batiment {
-  0% { translate: 0 0; }
-  100% { translate: 0.8px -0.6px; }
-}
+/* (29/10) Plus aucun filtre, déplacement ni animation sur l'image d'un bâtiment (survol,
+   bâtiment ouvert, foreuse qui vibre, générateur qui brille) : le navigateur la mettait alors à
+   part, dessinée à une autre échelle que la carte zoomée, et elle devenait floue. L'image reste
+   toujours la même ; le survol et le bâtiment ouvert sont montrés au sol, par un losange doré
+   (.emprise-survol, .emprise-active). */
 
 .boite-svg {
   position: absolute;
@@ -183,6 +167,12 @@
 .emprise-occupee {
   fill: rgb(240 70 60 / 0.35);
   stroke: #ff6a5a;
+}
+
+.emprise-survol {
+  fill: rgb(255 255 255 / 0.12);
+  stroke: rgb(255 240 190 / 0.9);
+  stroke-width: 1.6;
 }
 
 .emprise-active {
@@ -965,7 +955,6 @@
 .perso-village .perso-corps,
 .perso-anneau,
 .perso-poussiere i,
-.sprite-vibre,
 .fantome,
 .emprise-active {
     animation: none;
@@ -1501,11 +1490,8 @@
   background: radial-gradient(closest-side, rgb(0 0 0 / 0.2), rgb(0 0 0 / 0));
 }
 
-/* Le générateur qui donne du courant : il brille, avec de petits éclairs. Sa lueur ne pulse
-   plus (26/10) : un filtre qui change à chaque image coûtait trop cher ; les éclairs bougent. */
-.sprite-electrique {
-  filter: drop-shadow(0 0 8px rgb(255 222 90 / 0.8));
-}
+/* Le générateur qui donne du courant : de petits éclairs bougent au-dessus de lui (plus de
+   lueur en filtre sur l'image depuis le 29/10 : elle la rendait floue). */
 
 @media (prefers-reduced-motion: reduce) {
   .ombre-nuage,
@@ -1513,8 +1499,7 @@
   .papillon-dessin .aile-gauche,
   .papillon-dessin .aile-droite,
   .vol-oiseaux,
-  .oiseau,
-  .sprite-electrique {
+  .oiseau {
     animation: none;
   }
 }

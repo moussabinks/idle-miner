@@ -4,7 +4,7 @@ import { construireBatiment } from './batiments'
 import { cliquerMine, creerPartie, prendreDuCoffre, vendreLot } from './mineur'
 import { avancerTutoriel, etapeSuivante, etapeTutoriel, passerTutoriel } from './tutoriel'
 
-describe('le tutoriel (27/10)', () => {
+describe('le tutoriel (27/10, forgeron le 29/10)', () => {
   it('un nouveau monde le suit étape par étape, en faisant les actions', () => {
     const hasard = aleatoireAvecGraine(1)
     const etat = creerPartie(hasard)
@@ -24,6 +24,12 @@ describe('le tutoriel (27/10)', () => {
     avancerTutoriel(etat)
     expect(etapeTutoriel(etat)).toBe('vendre')
     vendreLot(etat, { ...etat.inventaire })
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('forgeron')
+    // (le forgeron coûte de l'argent et de la pierre)
+    etat.argent += 100
+    etat.coffre.contenu.pierre = 20
+    construireBatiment(etat, 'forgeron', 36, 24)
     avancerTutoriel(etat)
     expect(etapeTutoriel(etat)).toBe('bravo')
     etapeSuivante(etat)

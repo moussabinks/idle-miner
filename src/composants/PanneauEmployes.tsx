@@ -11,6 +11,7 @@ import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
   NIVEAUX_RECRUTEUR,
+  NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   PRIX_MANAGER,
@@ -72,6 +73,7 @@ import { Barre } from './Barre'
 import { Confirmation } from './Confirmation'
 import { OngletsPanneau } from './OngletsPanneau'
 import { RevelationRecrue } from './RevelationRecrue'
+import { verrou } from '../jeu/niveaux'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
 type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void }
@@ -158,7 +160,9 @@ function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
     return (
       <div className="ligne-achat verrouille">
-        <strong>🔒 Manager · niveau {NIVEAU_MINE_MANAGER} de la mine</strong>
+        <strong>
+          🔒 Manager · {etat.niveauMine < NIVEAU_MINE_MANAGER ? `niveau ${NIVEAU_MINE_MANAGER} de la mine` : `au niveau ${NIVEAU_JOUEUR_POUR.manager}`}
+        </strong>
         <span className="discret">Il paiera tous les salaires tout seul, avec l'argent que tu mets dans une cagnotte (la trésorerie).</span>
       </div>
     )
@@ -281,6 +285,7 @@ function Recruteur({ etat, jouer }: Props) {
         niveau={etat.recruteur}
         niveauMax={NIVEAUX_RECRUTEUR.length}
         suivant={prochain && { cout: prochain.cout, texte: etat.recruteur === 0 ? '🎩 Embaucher' : `⬆ Niveau ${etat.recruteur + 1}` }}
+        verrou={verrou(etat, 'recruteur', etat.recruteur)}
         possible={peutAmeliorerRecruteur(etat)}
         onAmeliorer={() => jouer(ameliorerRecruteur)}
         genre={etat.recruteur === 0 ? 'acheter' : 'ameliorer'}
@@ -373,6 +378,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
         suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ ${prochaine.nom}` } : null}
+        verrou={verrou(etat, 'equipement', employe.niveau + 1)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />

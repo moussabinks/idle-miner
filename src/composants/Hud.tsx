@@ -1,4 +1,5 @@
 // Le bandeau du haut, compact (23/10) : une rangée de petites cases arrondies, une par info utile.
+//   ⭐ le niveau du joueur et son XP (29/10) ;
 //   💵 l'argent et ce que la mine produit par seconde ;
 //   📦 le coffre de la mine (avec le niveau de la mine en petit badge) ;
 //   ⛏️ la pioche (sa durabilité) ;
@@ -11,6 +12,7 @@ import { infoNiveauMine } from '../jeu/mine'
 import { railsAlimentes } from '../jeu/wagonnet'
 import { nbSansSalaire } from '../jeu/employes'
 import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
+import { progressionNiveau, prochainDeblocage } from '../jeu/niveaux'
 import { revenuParSeconde } from '../jeu/revenu'
 import { useCompteur } from '../useCompteur'
 
@@ -34,7 +36,7 @@ function nombreCourt(n: number): string {
 }
 
 // Une petite jauge sous une valeur.
-function JaugeMini({ valeur, max, couleur }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' }) {
+function JaugeMini({ valeur, max, couleur }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' | 'violet' }) {
   const pourcentage = max > 0 ? Math.min(100, (valeur / max) * 100) : 0
   return (
     <span className="jauge-mini" aria-hidden="true">
@@ -54,8 +56,24 @@ export function Hud({ etat, nbVentes }: Props) {
   // Le compteur d'argent défile jusqu'à la nouvelle somme (plus satisfaisant qu'un saut).
   const argentAffiche = useCompteur(Math.floor(etat.argent))
 
+  const niveauJoueur = progressionNiveau(etat)
+  const deblocage = prochainDeblocage(etat)
+
   return (
     <header className="bandeau">
+      <div
+        className="info-bandeau bandeau-niveau"
+        title={`Niveau ${niveauJoueur.niveau}${niveauJoueur.pourSuivant ? ` · ${niveauJoueur.xp.toLocaleString('fr-FR')} / ${niveauJoueur.pourSuivant.toLocaleString('fr-FR')} XP pour le niveau ${niveauJoueur.niveau + 1}` : ' (maximum)'}${deblocage ? ` · au niveau ${deblocage.niveau} : ${deblocage.choses.join(', ')}` : ''}. Gagne de l'XP en cassant des blocs, en construisant, en posant des rails, en embauchant et en améliorant.`}
+      >
+        <span className="bandeau-icone">
+          ⭐<b key={niveauJoueur.niveau} className="bandeau-badge badge-niveau">{niveauJoueur.niveau}</b>
+        </span>
+        <span className="bandeau-valeurs">
+          <small>{niveauJoueur.pourSuivant ? `${niveauJoueur.xp}/${niveauJoueur.pourSuivant}` : 'Max'}</small>
+          <JaugeMini valeur={niveauJoueur.xp} max={niveauJoueur.pourSuivant ?? 1} couleur="violet" />
+        </span>
+      </div>
+
       <div
         className="info-bandeau bandeau-argent"
         title={`Ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}

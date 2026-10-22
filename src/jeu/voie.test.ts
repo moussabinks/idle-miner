@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { placePourUnRail, placeLibrePour, poserSol, retirerSol } from './batiments'
 import { notificationsBatiments } from './notifications'
 import { creerTrajet } from './wagonnet'
-import { creerPartie, type EtatJeu } from './mineur'
+import { type EtatJeu } from './mineur'
 import { bordsDeVoie, formeDuRail, viragesDoux } from './village'
 
 function partie(): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1))
+  const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.inventaire = { fer: 300 }
   etat.argent = 100000
   return etat

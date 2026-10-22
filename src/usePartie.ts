@@ -8,6 +8,7 @@ import { BLOCS, type IdBloc } from './jeu/donnees'
 import { nbSansSalaire } from './jeu/employes'
 import { nbDansChariot } from './jeu/foreuse'
 import { cliquerMine, creerPartie, nbDansCoffre, type EtatJeu } from './jeu/mineur'
+import { niveauJoueur } from './jeu/niveaux'
 import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps } from './jeu/temps'
@@ -158,7 +159,8 @@ export function usePartie(idMonde: string) {
       const succes = verifierSucces(copie)
 
       afficherToasts([
-        ...messages.map((texte) => ({ id: prochainId++, texte, succes: false })),
+        // (un niveau gagné s'affiche comme un succès, en doré)
+        ...messages.map((texte) => ({ id: prochainId++, texte, succes: texte.startsWith('🎉 Niveau') })),
         ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
       ])
       const evenements = evenementsEntre(ancien, copie)
@@ -169,7 +171,8 @@ export function usePartie(idMonde: string) {
       if (vente) afficherGain(vente.montant, true)
       else if (!venteWagonnet && copie.argent > ancien.argent) afficherGain(copie.argent - ancien.argent, false)
       jouerSons(evenements)
-      if (succes.length > 0) sons.succes()
+      // (29/10) Un niveau gagné : une petite fanfare (son message arrive avec les autres).
+      if (succes.length > 0 || niveauJoueur(copie) > niveauJoueur(ancien)) sons.succes()
       animer(evenements)
 
       changerEtat(copie)

@@ -186,6 +186,24 @@ export function distanceAuBatiment(b: BatimentPose, x: number, y: number): numbe
 // Le joueur ouvre un bâtiment dès qu'il est à un bloc de son bord (27/10 : avant, 1,3).
 export const RAYON_BATIMENT = 1
 
+// Un clic juste à côté d'un bâtiment (à moins de tant de cases de son bord) le vise quand même.
+export const MARGE_CLIC_BATIMENT = 1.6
+
+// Le bâtiment le plus proche d'un point, s'il est à moins de « marge » cases de son bord (29/10 :
+// un clic juste à côté d'un bâtiment le vise quand même). null s'il n'y en a pas assez près.
+export function batimentProcheDe(village: Village, x: number, y: number, marge: number): IdBatiment | null {
+  let meilleur: IdBatiment | null = null
+  let distanceMin = marge
+  for (const b of village.batiments) {
+    const d = distanceAuBatiment(b, x, y)
+    if (d <= distanceMin) {
+      distanceMin = d
+      meilleur = b.id
+    }
+  }
+  return meilleur
+}
+
 // Où va le joueur quand on touche un bâtiment (27/10) : la case libre collée au bâtiment (le
 // tour extérieur de son emprise, coins compris) qu'il atteint par **le plus court chemin à pied**,
 // en contournant les autres bâtiments. On cherche en cercles qui s'élargissent depuis le joueur

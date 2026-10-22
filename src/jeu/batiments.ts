@@ -12,6 +12,7 @@ import {
   type IdBatiment,
   } from './donnees'
 import { payer, peutPayer, type EtatJeu } from './mineur'
+import { niveauAtteint, niveauPourBatiment, railsDebloques } from './niveaux'
 import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, 
 // ---------------------------------------------------------------------------
 
 export function batimentDebloque(etat: EtatJeu, id: IdBatiment): boolean {
-  return etat.niveauMine >= BATIMENTS[id].niveauMine
+  return etat.niveauMine >= BATIMENTS[id].niveauMine && niveauAtteint(etat, niveauPourBatiment(id))
 }
 
 export function estPose(etat: EtatJeu, id: IdBatiment): boolean {
@@ -111,6 +112,7 @@ export function placePourUnRail(village: Village, x: number, y: number, de: { x:
 
 export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
   if (!peutPayer(etat, coutSol(type))) return false
+  if (type === 'rail' && !railsDebloques(etat)) return false
   if (type === 'rail') return placePourUnRail(etat.village, x, y) === 'ok'
   return empriseLibre(etat.village, { x, y, taille: 1 })
 }

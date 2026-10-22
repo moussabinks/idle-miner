@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { CLICS_MAINS_NUES, PIOCHES } from './donnees'
 import {
@@ -10,7 +11,6 @@ import {
   capaciteCoffre,
   cliquerMine,
   coutReparation,
-  creerPartie,
   descendreNiveauMine,
   disponible,
   equiper,
@@ -32,7 +32,7 @@ import {
 const toujours = (valeur: number) => () => valeur
 
 function partie(): EtatJeu {
-  return creerPartie(aleatoireAvecGraine(1))
+  return partieDeTest(aleatoireAvecGraine(1))
 }
 
 describe('une nouvelle partie', () => {
@@ -165,7 +165,7 @@ describe('le coffre, le sac et le marché', () => {
 
   it('un plus grand sac au bazar', () => {
     const etat = partie()
-    etat.argent = 80
+    etat.argent = 200
     acheterSac(etat)
     expect(tailleSac(etat)).toBe(64)
     expect(etat.argent).toBe(0)
@@ -173,10 +173,10 @@ describe('le coffre, le sac et le marché', () => {
 })
 
 describe('les améliorations de la mine', () => {
-  it('descendre au niveau 2 : 400 $ et 30 fer, et la redstone arrive', () => {
+  it('descendre au niveau 2 : 1 200 $ et 60 fer, et la redstone arrive', () => {
     const etat = partie()
-    etat.argent = 400
-    etat.coffre.contenu = { fer: 30 }
+    etat.argent = 1200
+    etat.coffre.contenu = { fer: 60 }
     expect(descendreNiveauMine(etat, aleatoireAvecGraine(3))[0]).toContain('niveau 2')
     expect(etat.niveauMine).toBe(2)
     expect(etat.argent).toBe(0)
@@ -186,8 +186,8 @@ describe('les améliorations de la mine', () => {
 
   it('le coffre s’agrandit', () => {
     const etat = partie()
-    etat.argent = 150
-    etat.inventaire = { pierre: 40 }
+    etat.argent = 400
+    etat.inventaire = { pierre: 80 }
     agrandirCoffre(etat)
     expect(capaciteCoffre(etat)).toBe(250)
   })
@@ -195,8 +195,8 @@ describe('les améliorations de la mine', () => {
   it('l’ascenseur raccourcit les trajets des mineurs', () => {
     const etat = partie()
     expect(secondesTrajetMineur(etat)).toBe(10)
-    etat.argent = 150
-    etat.inventaire = { fer: 10 }
+    etat.argent = 400
+    etat.inventaire = { fer: 20 }
     ameliorerAscenseur(etat)
     expect(etat.ascenseur.niveau).toBe(1)
     expect(secondesTrajetMineur(etat)).toBe(6)
@@ -220,8 +220,8 @@ describe('les pioches au forgeron', () => {
 
   it('on débloque la pioche suivante, et on peut reprendre l’ancienne', () => {
     const etat = partie()
-    etat.argent = 200
-    etat.coffre.contenu = { fer: 25 }
+    etat.argent = 500
+    etat.coffre.contenu = { fer: 40 }
     expect(acheterPioche(etat, 2)).toEqual([]) // pas avant la pioche en fer
     acheterPioche(etat, 1)
     expect(etat.niveauPioche).toBe(1)

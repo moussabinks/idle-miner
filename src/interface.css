@@ -147,6 +147,24 @@
 .jauge-mini-vert { background: linear-gradient(90deg, #3e9e3e, #8ff09a); }
 .jauge-mini-rouge { background: linear-gradient(90deg, #b8332c, #ff7a73); }
 .jauge-mini-bleu { background: linear-gradient(90deg, #2f6fd6, #8fc6ff); }
+.jauge-mini-violet { background: linear-gradient(90deg, #7b3fd6, #d6a8ff); }
+
+/* Le niveau du joueur (29/10) : un badge violet, qui saute quand on gagne un niveau. */
+.badge-niveau {
+  background: linear-gradient(180deg, #a974ff, #6a2fc9);
+  color: #fff;
+  animation: niveau-gagne 0.7s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+@keyframes niveau-gagne {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-niveau { animation: none; }
+}
 
 /* --- Les petits boutons du coin (en haut à gauche) : icônes seules ----------------- */
 
@@ -1747,4 +1765,10 @@ img[data-tuto-actif] {
   .plein-ecran .panneau-mine-aere .table-coffre {
     gap: 3px 8px;
   }
+}
+
+/* (29/10) La fenêtre « Passer le tutoriel ? » passe devant le tutoriel (avant, elle restait
+   cachée derrière la fenêtre de bienvenue, et le bouton semblait ne rien faire). */
+.voile.voile-devant {
+  z-index: 70;
 }

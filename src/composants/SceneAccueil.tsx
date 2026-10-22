@@ -157,7 +157,7 @@ function objetsFixes(): ReactNode[] {
         </BoiteSvg>,
       )
     } else {
-      objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe={b.id === 'foreuse' ? 'sprite-vibre' : ''} />)
+      objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" />)
     }
   }
   // Les décorations du décor (on ne les achète plus dans le jeu, mais elles ornent l'accueil).

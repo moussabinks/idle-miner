@@ -43,6 +43,7 @@ import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
 import { StockMinerais } from './StockMinerais'
 import { sons } from '../sons'
+import { verrou } from '../jeu/niveaux'
 
 type Props = PropsPanneau & {
   eclats: Eclat[]
@@ -472,6 +473,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
               niveau={etat.niveauMine}
               niveauMax={NIVEAUX_MINE.length}
               suivant={prochain && { cout: prochain.cout, texte: `⬇ Descendre au niveau ${prochain.niveau}` }}
+              verrou={verrou(etat, 'mine', etat.niveauMine)}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer((e) => descendreNiveauMine(e, aleatoireNavigateur))}
             />
@@ -490,6 +492,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
               niveau={etat.coffre.niveau + 1}
               niveauMax={NIVEAUX_COFFRE.length}
               suivant={coffre && { cout: coffre.cout, texte: `⬆ ${coffre.capacite.toLocaleString('fr-FR')} places` }}
+              verrou={verrou(etat, 'coffre', etat.coffre.niveau + 1)}
               possible={coffre !== null && peutPayer(etat, coffre.cout)}
               onAmeliorer={() => jouer(agrandirCoffre)}
             />

@@ -10,6 +10,7 @@
 import { BATIMENTS, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, RESERVE_GENERATEUR_AUTO, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
 import { disponible, payer, payerMateriaux, peutPayer, retirerDe, type EtatJeu } from './mineur'
 import { batimentPose, type BatimentPose, type Case } from './village'
+import { debloque } from './niveaux'
 
 export function generateurPose(etat: EtatJeu): BatimentPose | null {
   return batimentPose(etat.village, 'generateur')
@@ -100,7 +101,7 @@ export function prochainNiveauGenerateur(etat: EtatJeu) {
 
 export function ameliorerGenerateur(etat: EtatJeu): string[] {
   const prochain = prochainNiveauGenerateur(etat)
-  if (!generateurPose(etat) || prochain === null || !peutPayer(etat, prochain.cout)) return []
+  if (!generateurPose(etat) || prochain === null || !debloque(etat, 'generateur', etat.generateur.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.generateur.niveau += 1
   return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, puissance ×${prochain.puissance}.`]

@@ -7,6 +7,7 @@
 
 import { LIAISONS, type IdLiaison } from './donnees'
 import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, nouveauTrajet, type EtatJeu } from './mineur'
+import { donnerXpAVieillePartie } from './niveaux'
 import { railsMineMarche, type Village } from './village'
 
 export const NB_MONDES_MAX = 5
@@ -208,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion22(convertirVersion21(donnees))
+    const convertie = convertirVersion23(convertirVersion22(convertirVersion21(donnees)))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -273,7 +274,7 @@ export function convertirVersion22(donnees: unknown): unknown {
   const choix = trajets.includes('mine-marche') ? 'mine-marche' : (trajets.find((t) => LIAISONS[t]?.depart === 'puits') ?? null)
   return {
     ...ancienne,
-    version: VERSION_ETAT,
+    version: 23,
     employes: ancienne.employes.map((e) => ({ ...e, trajet: e.role === 'pousseur' ? choix : null })),
   }
 }
@@ -303,6 +304,18 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
     typeof etat.village === 'object' &&
-    Array.isArray(etat.village?.batiments)
+    Array.isArray(etat.village?.batiments) &&
+    typeof etat.xp === 'number'
   )
+}
+
+// Version 23 → 24 (29/10) : le niveau du joueur. Une vieille partie reçoit l'XP du niveau qu'il
+// faut pour tout ce qu'elle a déjà (voir niveaux.ts).
+export function convertirVersion23(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 23 || typeof ancienne.village !== 'object' || ancienne.village === null) return donnees
+  const etat = { ...ancienne, version: VERSION_ETAT }
+  donnerXpAVieillePartie(etat)
+  return etat
 }

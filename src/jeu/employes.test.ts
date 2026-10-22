@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
 import {
@@ -27,10 +28,10 @@ import {
   tirerRarete,
   vitesseEmploye,
 } from './employes'
-import { ameliorerAscenseur, creerPartie, nbDansCoffre, type EtatJeu } from './mineur'
+import { ameliorerAscenseur, nbDansCoffre, type EtatJeu } from './mineur'
 
 function partie(argent = 1_000_000): EtatJeu {
-  const etat = creerPartie(aleatoireAvecGraine(1))
+  const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.argent = argent
   return etat
 }
@@ -71,7 +72,7 @@ describe('les mineurs employés', () => {
     const etat = partie()
     embaucher(etat, hasard())
     const avant = blocsParSecondeEmploye(etat, etat.employes[0])
-    etat.inventaire = { fer: 10 }
+    etat.inventaire = { fer: 20 }
     ameliorerAscenseur(etat)
     expect(blocsParSecondeEmploye(etat, etat.employes[0])).toBeGreaterThan(avant)
   })
@@ -136,10 +137,10 @@ describe('les mineurs employés', () => {
     const etat = partie(1000)
     embaucher(etat, hasard())
     const prix = indemnites(etat)
-    expect(prix).toBe(20) // 40 % de 50 $
+    expect(prix).toBe(40) // 40 % de 100 $
     licencier(etat, 0)
     expect(etat.employes).toEqual([])
-    expect(etat.argent).toBe(1000 - 50 - 20)
+    expect(etat.argent).toBe(1000 - 100 - 40)
   })
 })
 
@@ -213,7 +214,7 @@ describe('le manager (niveau 4 de la mine)', () => {
     expect(embaucherManager(etat)).toEqual([])
     etat.niveauMine = 4
     embaucherManager(etat)
-    expect(etat.argent).toBe(1_000_000 - 50 - PRIX_MANAGER)
+    expect(etat.argent).toBe(1_000_000 - 100 - PRIX_MANAGER)
     deposerTresorerie(etat, 10_000)
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)

@@ -1,13 +1,14 @@
 // Le menu « Bâtiments » du village (20/10) : tous les bâtiments du jeu, avec leur prix (le
-// marché est gratuit) ou le niveau de mine qu'il faut (cadenas). On en choisit un, puis on le
+// marché est gratuit) ou le niveau (du joueur, 29/10, ou de la mine) qu'il faut (cadenas). On en choisit un, puis on le
 // pose où on veut sur la carte. Les rails (3 fer la case) et les chemins de pavés sont là aussi.
 // Les minerais se paient avec ceux du sac, puis ceux du coffre de la mine.
 // (Les décorations à acheter ont été retirées le 27/10.)
 // Aucune règle du jeu ici : on lit l'état et on appelle les fonctions de src/jeu/batiments.ts.
 
-import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, LISTE_BATIMENTS, type Cout, type IdBatiment, type IdBloc } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, LISTE_BATIMENTS, NIVEAU_JOUEUR_POUR, type Cout, type IdBatiment, type IdBloc } from '../jeu/donnees'
 import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, type TypeSol } from '../jeu/batiments'
 import { disponible, type EtatJeu } from '../jeu/mineur'
+import { niveauPourBatiment, railsDebloques, verrouNiveau } from '../jeu/niveaux'
 import { IMAGES_BATIMENTS } from './iso'
 
 type Props = {
@@ -62,7 +63,9 @@ function CarteBatiment({ etat, id, nouveau, onPoser }: { etat: EtatJeu; id: IdBa
         {pose ? (
           <span className="ok">✔ Construit</span>
         ) : !debloque ? (
-          <span className="construction-verrou">🔒 Mine niveau {info.niveauMine}</span>
+          <span className="construction-verrou">
+            🔒 {verrouNiveau(etat, niveauPourBatiment(id)) !== null ? `Niveau ${niveauPourBatiment(id)}` : `Mine niveau ${info.niveauMine}`}
+          </span>
         ) : (
           <>
             <PrixConstruction etat={etat} cout={info.cout} />
@@ -94,9 +97,10 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
           {LISTE_BATIMENTS.map((id) => (
             <CarteBatiment key={id} etat={etat} id={id} nouveau={nouveautes.includes(id)} onPoser={() => onPoserBatiment(id)} />
           ))}
-          <article className="carte-construction">
+          <article className={`carte-construction ${railsDebloques(etat) ? '' : 'construction-bloquee'}`}>
             <div className="construction-image">
               <img src="/images/batiments/rails.webp" alt="" draggable={false} />
+              {!railsDebloques(etat) && <span className="construction-cadenas">🔒</span>}
             </div>
             <div className="construction-texte">
               <strong>🛤️ Rails</strong>
@@ -104,10 +108,16 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
               <span className="discret">1 case · {etat.village.rails.length} posée{etat.village.rails.length > 1 ? 's' : ''}</span>
             </div>
             <div className="construction-achat">
-              <PrixConstruction etat={etat} cout={COUT_RAIL} />
-              <button className="bouton bouton-petit bouton-acheter" onClick={() => onPinceau('rail')}>
-                🛤️ Poser des rails
-              </button>
+              {railsDebloques(etat) ? (
+                <>
+                  <PrixConstruction etat={etat} cout={COUT_RAIL} />
+                  <button className="bouton bouton-petit bouton-acheter" onClick={() => onPinceau('rail')}>
+                    🛤️ Poser des rails
+                  </button>
+                </>
+              ) : (
+                <span className="construction-verrou">🔒 Niveau {NIVEAU_JOUEUR_POUR.rails}</span>
+              )}
             </div>
           </article>
           <article className="carte-construction">
