@@ -196,13 +196,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const [batimentVise, setBatimentVise] = useState<IdBatiment | null>(null)
   const vise = batimentVise ? batimentPose(etat.village, batimentVise) : null
   const batimentProche: IdBatiment | null = !pousse && vise && distanceAuBatiment(vise, joueur.x, joueur.y) < RAYON_BATIMENT ? vise.id : null
-  // Le panneau s'ouvre quand on arrive en marchant devant un bâtiment, mais pas quand on y
-  // apparaît d'un coup (au chargement de la partie) : sur téléphone, il cacherait la carte.
-  const [dernierProche, setDernierProche] = useState<IdBatiment | null>(null)
-  if (dernierProche !== batimentProche) {
-    setDernierProche(batimentProche)
-    setPanneauFerme(!joueur.marche)
-  }
   const batimentActif = !edition && !panneauFerme ? batimentProche : null
 
   const allerAuBatiment = useCallback(

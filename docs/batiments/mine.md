@@ -37,6 +37,7 @@ L'onglet **Creuser** s'ouvre en premier. De haut en bas :
 
 - Un **très gros bloc** (150 px, le prochain bloc de la mine, dessiné en CSS : pierre, charbon, fer…) dans un cadre sombre, et dessous « 👆 ⚫ Charbon » et « ⛏️ *N* % de chance de doubler un minerai ».
 - **Chaque clic casse le bloc** : des éclats volent, ce qui tombe s'envole au-dessus (« +1 ⚫ », ou « +2 💎 ×2 ! » en doré quand il est doublé), et un nouveau bloc « pousse » à sa place. Le bloc tombé va dans le **coffre**.
+- **La jauge de la pioche** (27/10), juste sous le bloc : l'icône de la pioche en main, « Pioche en *X* · *reste* / *durabilité* » dans une barre verte, orange sous 20 %, rouge et « Cassée : répare-la au forgeron » à zéro (`JaugePioche`).
 - **Pioche cassée** : « 💥 Pioche cassée : 2 clics par bloc. Fais-la réparer au forgeron. » Après le premier clic, le bloc est fissuré ; le second le casse.
 - **Coffre plein** : le bloc est grisé (« 📦 Coffre plein ! ») : il faut vider le coffre.
 - **Le combo** (27/10) : les clics rapprochés (moins de **0,9 s** entre deux) s'additionnent. Dès **3 clics**, un compteur orange « 🔥 ×*N* » saute à côté du bloc à chaque clic (plus gros et plus doré à partir de 25). Plus le combo est long, plus le cadre et le halo doré sous le bloc brillent (au maximum à 50) ; à partir de 10, le bloc a un liseré doré. Un petit arpège (`sons.combo`) marque les paliers **10, 25, 50, 100, 200 et 500**. Sans clic pendant 0,9 s, le combo retombe à zéro. **C'est seulement pour le plaisir** : le combo ne change rien au jeu (pas de bonus).
@@ -51,6 +52,13 @@ Juste sous le bloc, un tableau de bord (`TableauProduction`) dit **ce que la min
 - coffre plein : « 📦 Coffre plein : la mine et les mineurs sont à l'arrêt ! », et tout tombe à 0.
 
 Ce sont des **moyennes** (les vrais blocs sont tirés au hasard), calculées par la fonction pure `production(etat)` (`src/jeu/production.ts`) : le débit de la mine (`debitMine`, 0 si le coffre est plein), celui de chaque mineur (`blocsParSecondeEmploye`, 0 s'il attend son salaire ou si le coffre est plein) et les dollars par minute (`valeurMoyenneBloc`).
+
+### Les goulots : l'ascenseur et le wagonnet suivent-ils ? (27/10)
+
+Sous le tableau de production (`Goulots`, calculs dans `src/jeu/production.ts`, testés) :
+
+- **L'ascenseur** (`analyseAscenseur`) : chaque mineur fait des allers-retours (creuser, remonter, vider son sac, redescendre). Le temps passé dans le puits (2 trajets d'ascenseur ou d'échelle par cycle) est du temps où il ne creuse pas. On calcule la **part de leur temps perdue dans le puits** (moyenne des mineurs : 2 × trajet ÷ (sac ÷ vitesse + 2 × trajet + vidage)) et ce que rapporterait **le niveau suivant** (blocs/s en plus, en refaisant le calcul avec ce niveau). Au-delà de **20 %** (`PART_PUITS_TROP_LENTE`) et s'il reste un niveau : alerte orange « ⚠️ **Ascenseur trop lent** : tes mineurs passent *X* % de leur temps dans le puits. Niveau suivant : +*Y* bloc/s. » avec un bouton **⬆️ Voir** (onglet Améliorer, où la carte de l'ascenseur redit la même chose). Sinon une ligne verte « ✔ Ascenseur : *X* % du temps des mineurs dans le puits ».
+- **Le wagonnet Mine → Marché** (`analyseWagonnet`) : ce qu'il peut emporter au plus, en blocs par seconde = sa **capacité** ÷ la durée d'un **aller-retour** (aller + retour à sa vitesse, plus les 2 s de chargement et les 2 s de vente : `secondesAllerRetour`), comparé à ce qui arrive dans le coffre (la mine toute seule + les mineurs payés). Trois cas : « ⚠️ **Personne ne pousse le wagonnet du marché** » (ni pousseur payé, ni rails électriques) ; « ⚠️ **Wagonnet saturé** : il emporte au plus *X* bloc/s (aller-retour de *N* s), la mine en sort *Y*. Le coffre se remplit de *Z* bloc/s : agrandis les wagonnets (ou électrifie les rails) » avec **⬆️ Voir** (onglet Wagonnets) ; sinon « ✔ Wagonnet : jusqu'à *X* bloc/s, la mine en sort *Y* ».
 
 ### 📦 Le coffre · *n* / *capacité*
 

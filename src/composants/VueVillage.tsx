@@ -7,9 +7,9 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, LIAISONS, RARETES, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
-import { foreuseEnMarche } from '../jeu/foreuse'
+import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { nombreAbrege } from '../nombres'
 import type { Gain } from '../usePartie'
@@ -525,6 +525,32 @@ export function VueVillage({
     )
   }
 
+  // Les mini-jauges des bâtiments qui travaillent (27/10) : la forge qui fait la pioche d'un
+  // mineur, la foreuse qui fore son prochain bloc, le générateur et son courant qui reste.
+  const auDessus = (id: IdBatiment) => {
+    const b = batimentPose(village, id)
+    if (!b) return null
+    const t = BATIMENTS[id].taille
+    const c = versEcran(b.x + t / 2, b.y + t / 2)
+    return { x: c.x, y: c.y - 70 }
+  }
+  const forgeron = etat.employes.filter((m) => m.etape === 'forge').sort((a, b) => b.progression - a.progression)[0]
+  const pForge = auDessus('forgeron')
+  if (forgeron && pForge) {
+    bulles.push(<MiniJauge key="jauge-forge" x={pForge.x} y={pForge.y} texte={`🔨 Pioche de ${forgeron.nom}`} part={forgeron.progression / SECONDES_FORGE_EMPLOYE} secondes={SECONDES_FORGE_EMPLOYE - forgeron.progression} />)
+  }
+  const pForeuse = auDessus('foreuse')
+  if (pForeuse && foreuseEnMarche(etat)) {
+    const vitesse = vitesseForage(etat)
+    bulles.push(<MiniJauge key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte="⚙️ Forage" part={etat.foreuse.progression} secondes={(1 - etat.foreuse.progression) / Math.max(0.01, vitesse)} />)
+  }
+  const pGenerateur = auDessus('generateur')
+  if (pGenerateur && generateurEnMarche(etat)) {
+    bulles.push(
+      <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte="⚡ Courant" part={etat.generateur.carburant / RESERVE_GENERATEUR_WAGONNET} secondes={etat.generateur.carburant} />,
+    )
+  }
+
   // Quand un wagonnet vend au marché : un gros « +X $ » doré jaillit au-dessus du marché, avec
   // une gerbe de pièces (27/10).
   const marche = batimentPose(village, 'marche')
@@ -713,8 +739,10 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
     return () => cancelAnimationFrame(image)
   }, [duree])
 
-  // Un mineur qui vide son sac dans le coffre (en haut, devant la cabine).
+  // Ce qui se passe dans le puits, en mini-jauge au-dessus de la cabine : un mineur qui vide son
+  // sac dans le coffre, sinon celui qui remonte (ou descend) depuis le plus longtemps.
   const videur = etat.employes.filter((m) => m.etape === 'vide').sort((a, b) => b.progression - a.progression)[0]
+  const voyageur = etat.employes.filter((m) => m.etape === 'monte' || m.etape === 'descend').sort((a, b) => b.progression - a.progression)[0]
   const calage = CALAGES.puits
   const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
   return (
@@ -729,6 +757,15 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
           texte="📦 Déchargement"
           part={videur.progression / SECONDES_VIDAGE_EMPLOYE}
           secondes={SECONDES_VIDAGE_EMPLOYE - videur.progression}
+        />
+      )}
+      {!videur && voyageur && (
+        <MiniJauge
+          x={dessus.x}
+          y={dessus.y}
+          texte={voyageur.etape === 'monte' ? '⬆️ Remontée du sac' : '⬇️ Descente'}
+          part={voyageur.progression / duree}
+          secondes={duree - voyageur.progression}
         />
       )}
     </>

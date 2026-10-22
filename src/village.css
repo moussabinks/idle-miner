@@ -1716,3 +1716,82 @@ g.grille-construction {
   border-radius: inherit;
   background: linear-gradient(#9be86a, #4fae2c);
 }
+
+/* La pioche sous le bloc de la mine (27/10). */
+.jauge-pioche {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: min(260px, 100%);
+}
+
+.jauge-pioche-icone {
+  font-size: 1.1rem;
+}
+
+.jauge-pioche-barre {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.5);
+  overflow: hidden;
+}
+
+.jauge-pioche-barre i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(#9be86a, #4fae2c);
+  transition: width 0.15s;
+}
+
+.pioche-usee .jauge-pioche-barre i {
+  background: linear-gradient(#ffb35a, #e0620e);
+}
+
+.pioche-cassee .jauge-pioche-barre i {
+  background: linear-gradient(#ff7a5a, #d12c0e);
+}
+
+.jauge-pioche-texte {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #fff;
+  -webkit-text-stroke: 0.5px rgb(0 0 0 / 0.6);
+}
+
+/* Les goulots (27/10) : l'ascenseur et le wagonnet suivent-ils ? */
+.goulots {
+  display: grid;
+  gap: 5px;
+}
+
+.goulot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.goulot > span {
+  flex: 1;
+}
+
+.goulot-ok {
+  color: #a8e89a;
+  background: rgb(79 179 90 / 0.15);
+}
+
+.goulot-alerte {
+  color: #ffd9c2;
+  background: rgb(209 68 14 / 0.25);
+  box-shadow: inset 0 0 0 1.5px rgb(255 120 60 / 0.6);
+}
