@@ -80,9 +80,10 @@ type Props = {
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
-// La force du zoom à la molette (par pixel de défilement) et au pincement (27/10).
-const FORCE_MOLETTE = 0.004
-const FORCE_PINCEMENT = 1.7
+// La force du zoom à la molette (par pixel de défilement) et au pincement (27/10, encore plus
+// fort depuis : un cran de molette double presque le zoom).
+const FORCE_MOLETTE = 0.0085
+const FORCE_PINCEMENT = 2.4
 
 export function VueVillage({
   etat,
@@ -317,7 +318,7 @@ export function VueVillage({
   function molette(e: React.WheelEvent) {
     const m = versMonde(e.clientX, e.clientY)
     const c = cameraRef.current
-    // Un cran de molette zoome d'environ 50 % (27/10 : avant, il fallait tourner longtemps).
+    // Un cran de molette zoome presque du double (27/10 : avant, il fallait tourner longtemps).
     // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
     const pixels = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
     const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * FORCE_MOLETTE)))

@@ -90,6 +90,7 @@ function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu;
     <div className={`zone-bloc-mine ${combo >= 10 ? 'zone-en-feu' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
       <button
         className={`bloc-mine ${etat.clics > 0 ? 'bloc-fissure' : ''}`}
+        data-tuto="bloc"
         disabled={plein}
         onClick={cliquer}
         aria-label={`Casser le bloc (${BLOCS[bloc].nom})`}
@@ -331,7 +332,7 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
         })}
       </div>
       <div className="boutons">
-        <button className="bouton bouton-sac" disabled={total === 0 || placeSac === 0} onClick={() => jouer((e) => prendreDuCoffre(e))}>
+        <button className="bouton bouton-sac" data-tuto="sac" disabled={total === 0 || placeSac === 0} onClick={() => jouer((e) => prendreDuCoffre(e))}>
           🎒 Tout mettre dans le sac ({Math.min(total, placeSac)})
         </button>
       </div>

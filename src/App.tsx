@@ -22,6 +22,8 @@ import { PanneauBazar, PanneauForeuse, PanneauGenerateur, PanneauMarche, Panneau
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { FenetreTrajet } from './composants/FenetreTrajet'
+import { Tutoriel } from './composants/Tutoriel'
+import { avancerTutoriel, avecBouton, etapeFaite, etapeSuivante, etapeTutoriel, passerTutoriel } from './jeu/tutoriel'
 import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
 import {
   construireBatiment,
@@ -265,6 +267,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     }
   }
 
+  // Le tutoriel (27/10) : dès que l'action de l'étape est faite, on passe à la suivante.
+  const etapeTuto = etapeTutoriel(etat)
+  const etapeTutoFaite = etapeTuto !== null && !avecBouton(etapeTuto) && etapeFaite(etat, etapeTuto)
+  useEffect(() => {
+    if (etapeTutoFaite) jouer(avancerTutoriel)
+  }, [etapeTutoFaite, jouer])
+
   // Le bouton « Mine » : on va devant la mine (son panneau s'ouvre, avec le bloc à cliquer).
   function allerALaMine() {
     if (pousse) return
@@ -418,7 +427,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     barre = (
       <div className="actions actions-edition">
         {!fantomeFixe && <p className="consigne-edition">👆 Clique (ou touche) la carte pour placer, puis valide.</p>}
-        <button className="bouton bouton-vendre" disabled={!libre} onClick={validerFantome}>
+        <button className="bouton bouton-vendre" data-tuto="construire-ici" disabled={!libre} onClick={validerFantome}>
           ✔ {nouveau ? 'Construire ici' : 'Poser ici'}
         </button>
         {fantome.type !== 'sol' && (
@@ -497,6 +506,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </button>
           <button
             className={`bouton bouton-rond bouton-construire bouton-rond-gros ${nbNouveautes > 0 ? 'bouton-attention' : ''}`}
+            data-tuto="batiments"
             onClick={() => ouvrirConstruction()}
             title="Construire des bâtiments et poser des rails"
           >
@@ -577,7 +587,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
 
         {/* En haut à droite : les missions, et dessous le panneau du bâtiment ouvert. */}
         <div className="colonne-droite">
-          <Missions etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} compact={panneau !== null} />
+          {/* Pendant le tutoriel, la liste des tâches attend (elle arrive au « bravo »). */}
+          {(etapeTuto === null || etapeTuto === 'bravo') && (
+            <Missions etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} compact={panneau !== null} />
+          )}
           {panneau && <div className="panneau-flottant">{panneau}</div>}
         </div>
 
@@ -612,6 +625,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             </div>
           </div>
         </div>
+      )}
+      {etapeTuto !== null && (
+        <Tutoriel
+          etat={etat}
+          ui={{ batimentOuvert: batimentActif, menuConstruction, posePrevue: fantome?.type === 'batiment' ? fantome.id : null }}
+          onSuivant={() => jouer(etapeSuivante)}
+          onPasser={() => jouer(passerTutoriel)}
+        />
       )}
       {trajetsOuverts && <FenetreTrajet etat={etat} liaisons={trajetsOuverts} onValider={validerTrajets} onFermer={fermerTrajets} />}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}

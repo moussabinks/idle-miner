@@ -1,0 +1,40 @@
+import { describe, expect, it } from 'vitest'
+import { aleatoireAvecGraine } from './aleatoire'
+import { construireBatiment } from './batiments'
+import { cliquerMine, creerPartie, prendreDuCoffre, vendreLot } from './mineur'
+import { avancerTutoriel, etapeSuivante, etapeTutoriel, passerTutoriel } from './tutoriel'
+
+describe('le tutoriel (27/10)', () => {
+  it('un nouveau monde le suit étape par étape, en faisant les actions', () => {
+    const hasard = aleatoireAvecGraine(1)
+    const etat = creerPartie(hasard)
+    expect(etapeTutoriel(etat)).toBe('bonjour')
+    // Sans le bouton, on ne passe pas le bonjour.
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('bonjour')
+    etapeSuivante(etat)
+    expect(etapeTutoriel(etat)).toBe('creuser')
+    for (let i = 0; i < 10; i++) cliquerMine(etat, hasard)
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('marche')
+    construireBatiment(etat, 'marche', 28, 40)
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('sac')
+    prendreDuCoffre(etat)
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('vendre')
+    vendreLot(etat, { ...etat.inventaire })
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('bravo')
+    etapeSuivante(etat)
+    expect(etapeTutoriel(etat)).toBeNull()
+  })
+
+  it('on peut le passer, et les vieilles parties n’en ont pas', () => {
+    const etat = creerPartie(aleatoireAvecGraine(2))
+    passerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBeNull()
+    delete etat.tutoriel
+    expect(etapeTutoriel(etat)).toBeNull()
+  })
+})

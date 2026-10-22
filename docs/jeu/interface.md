@@ -193,9 +193,24 @@ Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 
 
 ---
 
+## Le tutoriel (`Tutoriel.tsx`, 27/10)
+
+Un **nouveau monde** commence par un tutoriel (règles dans `src/jeu/tutoriel.ts`, testées ; `etat.tutoriel` = l'étape ; une vieille partie n'a pas le champ et n'a pas de tutoriel). **Pépite**, un hamster mineur, parle dans une carte crème en haut de l'écran (points d'étapes, titre en Luckiest Guy, explication). Une **grosse flèche orange** rebondit sur ce qu'il faut toucher, dans un **cercle doré** qui pulse, et le reste de l'écran est un peu assombri (tout reste cliquable). La cible est trouvée par son attribut (`data-tuto="bloc"`, `data-cible="batiment:puits"`...) et suivie à chaque image ; un bouton dans un panneau défile jusqu'à lui. Sur téléphone, la flèche montre les gros boutons ronds (⛏️ Mine, 💰 Vendre) plutôt que les bâtiments, souvent cachés par le panneau.
+
+On ne passe à l'étape suivante **qu'en faisant l'action** (une petite fanfare à chaque fois) :
+
+1. **Salut, mineur !** (bouton « C'est parti ! ») ;
+2. **Va à la mine** (flèche sur la mine), puis **Casse 10 blocs** (flèche sur le bloc, compteur) ;
+3. **Construis le marché** : ouvrir le menu Bâtiments, « Poser » le marché (gratuit), « Construire ici » ;
+4. **Remplis ton sac** : retourner à la mine, « Tout mettre dans le sac » ;
+5. **Va au marché**, puis **Vends tout !** ;
+6. **Bravo, tu as compris !** (flèche sur la liste des tâches, bouton « Terminer »).
+
+« Passer le tutoriel » (avec confirmation) l'arrête. Une étape déjà faite est sautée.
+
 ## 5. Les missions (`Missions.tsx`)
 
-Depuis le 27/10, la barre « prochain objectif » est **remplacée par les missions** (en haut à droite) : **une à trois** choses à faire, pour guider le joueur du marché jusqu'à l'automatisation. Chaque mission a une **icône**, un **texte** et, quand il y a quelque chose à compter, une **barre de progression** avec son chiffre (« 🪨 12/25 »). La **première est plus grande**. Une mission qu'on peut faire **tout de suite** a une **bordure verte qui pulse** (et une flèche ➜). Règles dans `src/jeu/missions.ts` (testées dans `objectifs.test.ts`), dans cet ordre :
+Depuis le 27/10, la barre « prochain objectif » est **remplacée par les missions** (en haut à droite) : **une à trois** choses à faire, pour guider le joueur du marché jusqu'à l'automatisation. Depuis le 27/10 c'est une **liste de tâches à cocher** : un panneau de bois titré « ☑️ Tâches », et pour chaque tâche une ligne claire (papier) avec une **case ronde**, l'**icône**, la **consigne** en gras (un verbe d'action) et, quand il y a quelque chose à compter, une **barre de progression** avec son chiffre (« 🪨 12/25 »), puis un **bouton d'action** à droite : « Aller » ou « Construire » (bleu), « **Go !** » (vert, qui pulse) quand on peut la faire tout de suite. La **première est plus grande**. Une tâche faite se **coche** (case verte qui rebondit, texte barré, « Fait ! ») puis s'en va. **Pendant le tutoriel**, la liste est cachée (elle arrive au « Bravo »). Règles dans `src/jeu/missions.ts` (testées dans `objectifs.test.ts`), dans cet ordre :
 
 1. **les urgences** : « Paie ton mineur au Personnel » (ou « Paie tes *n* mineurs ») et « Le coffre est plein : vide-le ! » ;
 2. **les premiers pas** : « Construis le marché (gratuit) », « Casse 10 blocs à la mine » (« ⛏️ 3/10 »), « Mets les blocs du coffre dans ton sac », « Vends ton sac au marché » ;
@@ -220,10 +235,10 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 **La caméra** :
 - elle **suit le joueur** en douceur, ou le **wagonnet** que pousse le joueur : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
 - **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
-- **zoomer** : molette (autour du point sous la souris ; depuis le 27/10, **un cran zoome d'environ 50 %**, `FORCE_MOLETTE`, et le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT`, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
+- **zoomer** : molette (autour du point sous la souris ; depuis le 27/10, **un cran zoome presque du double** (`FORCE_MOLETTE` = 0,0085), et le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT` = 2,4, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
 
 **Ce qu'on voit** :
-- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
+- les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés, ils **se soulèvent** un peu, s'éclairent et prennent un **liseré blanc et un halo doré** (et le curseur devient une main) pour dire qu'on peut cliquer ; actifs, ils brillent d'une lueur dorée ; et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
 - au **Personnel**, quand on embauche un pousseur pour un trajet : une **ligne jaune épaisse** en surbrillance (halo qui pulse) relie les deux bâtiments en suivant les rails, et leurs emprises sont entourées d'or ;
 - le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
 - les **employés** quand ils sont dehors : en marche (vers la forge, le Personnel, la mine ou le quai de leur trajet), devant la forge, au quai (les pousseurs, au bord de la voie, au début des rails de leur trajet), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
