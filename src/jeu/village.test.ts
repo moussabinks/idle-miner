@@ -50,8 +50,8 @@ describe('le village vu du ciel', () => {
     expect(construireBatiment(etat, 'marche', 28, 36)).toEqual(['🏗️ Marché construit !'])
     expect(peutConstruire(etat, 'marche')).toBe(false) // un seul marché
     expect(peutConstruire(etat, 'forgeron')).toBe(false)
-    etat.argent = 30
-    etat.inventaire = { pierre: 10 }
+    etat.argent = 20
+    etat.inventaire = { pierre: 5 }
     etat.coffre.contenu = { pierre: 8 }
     construireBatiment(etat, 'forgeron', 36, 28)
     expect(batimentPose(etat.village, 'forgeron')).not.toBeNull()
@@ -76,7 +76,7 @@ describe('le village vu du ciel', () => {
     etat.inventaire = { pierre: 200, fer: 200, redstone: 50 }
     expect(peutConstruire(etat, 'foreuse')).toBe(false)
     etat.niveauMine = 2
-    expect(nouveautesBatiments(etat)).toEqual(['generateur', 'foreuse'])
+    expect(nouveautesBatiments(etat)).toEqual(['foreuse', 'generateur'])
     expect(peutConstruire(etat, 'foreuse')).toBe(true)
   })
 

@@ -209,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion23(convertirVersion22(convertirVersion21(donnees)))
+    const convertie = convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -315,7 +315,15 @@ export function convertirVersion23(donnees: unknown): unknown {
   if (typeof donnees !== 'object' || donnees === null) return donnees
   const ancienne = donnees as EtatJeu
   if (ancienne.version !== 23 || typeof ancienne.village !== 'object' || ancienne.village === null) return donnees
-  const etat = { ...ancienne, version: VERSION_ETAT }
+  const etat = { ...ancienne, version: 24 }
   donnerXpAVieillePartie(etat)
   return etat
+}
+
+// Version 24 → 25 (30/10) : la mine a son ascenseur dès le début (niveau 1 au moins).
+export function convertirVersion24(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 24 || typeof ancienne.ascenseur !== 'object' || ancienne.ascenseur === null) return donnees
+  return { ...ancienne, version: VERSION_ETAT, ascenseur: { ...ancienne.ascenseur, niveau: Math.max(1, ancienne.ascenseur.niveau) } }
 }

@@ -138,9 +138,20 @@ function ameliorations(etat: EtatJeu): Mission[] {
     .map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
 }
 
-export function missions(etat: EtatJeu): Mission[] {
+// « avant » : les missions affichées juste avant (leurs id). (30/10) Une mission affichée reste
+// à sa place tant qu'elle n'est pas faite : la liste ne change plus d'un coup en pleine tâche
+// (« économise pour le sac » qui devenait « récupère 40 fer »). Les nouvelles ne prennent que les
+// places libres. Seules les urgences passent toujours devant.
+export function missions(etat: EtatJeu, avant: string[] = []): Mission[] {
   const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat).slice(0, 1), prochainNiveau(etat), ...ameliorations(etat).slice(1)].filter((m): m is Mission => m !== null)
   // Pas deux fois la même.
   const vues = new Set<string>()
-  return toutes.filter((m) => !vues.has(m.id) && vues.add(m.id)).slice(0, NOMBRE_MAX)
+  const candidates = toutes.filter((m) => !vues.has(m.id) && vues.add(m.id))
+  const urgentes = candidates.filter((m) => ID_URGENCES.includes(m.id))
+  const gardees = avant.map((id) => candidates.find((m) => m.id === id && !ID_URGENCES.includes(m.id))).filter((m): m is Mission => m !== undefined)
+  const nouvelles = candidates.filter((m) => !ID_URGENCES.includes(m.id) && !avant.includes(m.id))
+  return [...urgentes, ...gardees, ...nouvelles].slice(0, NOMBRE_MAX)
 }
+
+// Les urgences (elles passent toujours devant).
+export const ID_URGENCES = ['salaires', 'coffre-plein']

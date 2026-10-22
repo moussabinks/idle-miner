@@ -44,7 +44,9 @@ describe('les goulots : ascenseur et wagonnet', () => {
   it("sans ascenseur, les mineurs perdent beaucoup de temps à l'échelle : l'améliorer rapporte", () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.argent = 1_000_000
+    etat.ascenseur.niveau = 0 // (une vieille partie, à l'échelle)
     embaucher(etat, aleatoireAvecGraine(2))
+    embaucher(etat, aleatoireAvecGraine(3))
     const lent = analyseAscenseur(etat)
     expect(lent.tropLent).toBe(true)
     expect(lent.gainProchainNiveau).toBeGreaterThan(0)

@@ -1,7 +1,7 @@
 # ⭐ Le niveau du joueur
 
 > Depuis le 29/10, le joueur a un **niveau** (de 1 à 30) : en jouant, il gagne de l'**XP** (des points d'expérience), et chaque niveau **débloque** de nouveaux bâtiments, les rails et de nouveaux niveaux d'amélioration. Une fois débloqué, il faut **quand même payer**.
-> Écrit d'après le code au 29/10 : la logique est dans `src/jeu/niveaux.ts`, les chiffres à la fin de `src/jeu/donnees.ts` (`XP_PAR`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX`, `NIVEAU_JOUEUR_POUR`). Le niveau du joueur n'a rien à voir avec le **niveau de la mine** (1 à 5, qu'on achète au panneau de la mine) : voir [mine-et-minage.md](mine-et-minage.md).
+> Écrit d'après le code au 29/10 (déblocages revus le 30/10 : la foreuse avant le générateur, l'ascenseur dès le début) : la logique est dans `src/jeu/niveaux.ts`, les chiffres à la fin de `src/jeu/donnees.ts` (`XP_PAR`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX`, `NIVEAU_JOUEUR_POUR`). Le niveau du joueur n'a rien à voir avec le **niveau de la mine** (1 à 5, qu'on achète au panneau de la mine) : voir [mine-et-minage.md](mine-et-minage.md).
 
 Pourquoi ? Le jeu allait trop vite, et le joueur voyait tout d'un coup (29/10). Avec les niveaux, les choses arrivent une à une, et chaque niveau gagné est une petite fête. Les prix ont aussi été augmentés le même jour (voir [equilibrage.md](equilibrage.md)).
 
@@ -65,14 +65,14 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 
 | Niveau | Ce qui se débloque |
 |---:|---|
-| 1 | 💰 Marché, ⚒️ Forgeron ; tout ce qu'on a au départ (pioche en pierre, sac de 32, coffre de 100, wagonnets de 40…) |
+| 1 | 💰 Marché, ⚒️ Forgeron ; tout ce qu'on a au départ (pioche en pierre, sac de 32, coffre de 100, 🛗 ascenseur niveau 1 dans la mine depuis le 30/10, wagonnets de 40…) |
 | 2 | 👷 **Personnel** ; 📦 coffre de 250 places |
 | 3 | 🎒 **Bazar** ; 🛤️ **les rails et les wagonnets** ; 🎒 sac de 64 places |
-| 4 | ⛏️ **Mine niveau 2** (Veine de redstone) ; ⛏️ pioche en fer ; 🛗 l'ascenseur ; 👷 pioche en pierre pour les mineurs |
-| 5 | ⚡ **Générateur** ; 📦 coffre de 600 places ; 🎒 sac de 128 places |
-| 6 | ⚙️ **Foreuse** ; 🛗 ascenseur niveau 2 ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places |
-| 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or ; ⚡ générateur rayon 20 ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 400 places |
-| 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 |
+| 4 | ⛏️ **Mine niveau 2** (Veine de redstone) ; ⛏️ pioche en fer ; 👷 pioche en pierre pour les mineurs |
+| 5 | ⚙️ **Foreuse** (30/10 : avant le générateur) ; 📦 coffre de 600 places ; 🎒 sac de 128 places ; 🛗 ascenseur niveau 2 |
+| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 400 places |
+| 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or |
+| 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 ; ⚡ générateur rayon 20 |
 | 9 | 🎩 **le recruteur** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 800 |
 | 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
 | 11 | 💼 **le manager** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 1 600 ; 🎩 recruteur niveau 2 |
@@ -86,18 +86,18 @@ Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
 
 | Chose | Niveau du joueur pour chaque niveau |
 |---|---|
-| Bâtiments | Marché 1, Forgeron 1, Personnel 2, Bazar 3, Générateur 5, Foreuse 6 (la mine est posée d'office) |
+| Bâtiments | Marché 1, Forgeron 1, Personnel 2, Bazar 3, Foreuse 5, Générateur 6 (30/10 ; avant, Générateur 5 et Foreuse 6 ; la mine est posée d'office) |
 | Rails (et donc les trajets) | 3 |
 | Mine (niveaux 2 à 5) | 4, 7, 10, 13 |
 | Coffre (250 → 4 000) | 2, 5, 8, 12 |
 | Pioches (fer, or, diamant) | 4, 7, 12 |
 | Sacs (64 → 2 048) | 3, 5, 8, 11, 14, 15 |
-| Ascenseur (niveaux 1 à 6) | 4, 6, 8, 10, 13, 15 |
+| Ascenseur (niveaux 2 à 6) | 5, 8, 10, 13, 15 (le niveau 1 est dans la mine dès le début, 30/10) |
 | Pioche des mineurs (pierre, fer, or, diamant) | 4, 6, 9, 12 |
 | Taille des wagonnets (100, 250, 600) | 6, 9, 12 |
-| Générateur (rayon 20 → 40) | 7, 10, 13, 15 |
-| Forage de la foreuse (0,8 → 3,6) | 7, 9, 11, 14, 15 |
-| Chariot de la foreuse (400 → 6 000) | 7, 9, 11, 14, 15 |
+| Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
+| Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |
+| Chariot de la foreuse (400 → 6 000) | 6, 9, 11, 14, 15 |
 | Recruteur (niveaux 1 à 4) | 9, 11, 13, 15 |
 | Manager | 11 |
 
@@ -115,6 +115,6 @@ Les nouvelles icônes ⭐ / 🌟 (le niveau) et 🎉 (le passage de niveau) sont
 
 ## 5. Sauvegarde et anciennes parties
 
-- L'état garde deux champs (version de sauvegarde **24**, `VERSION_ETAT`) : `xp` (l'XP totale gagnée) et `recordsXp` (le plus haut chiffre de chaque compteur). Le niveau n'est pas rangé : il se recalcule à partir de l'XP.
+- L'état garde deux champs (depuis la version de sauvegarde **24** ; la version actuelle est la **25**, voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md)) : `xp` (l'XP totale gagnée) et `recordsXp` (le plus haut chiffre de chaque compteur). Le niveau n'est pas rangé : il se recalcule à partir de l'XP.
 - Une partie de la **version 23** (d'avant les niveaux) est convertie au chargement (`convertirVersion23` dans `sauvegarde.ts`) : elle reçoit **l'XP du niveau qu'il faut pour tout ce qu'elle possède déjà** (`niveauPourCeQuOnA`, `donnerXpAVieillePartie` : ses bâtiments, ses rails, son niveau de mine, ses améliorations, son recruteur, son manager…), et ses records partent de ce qu'elle a. Rien de ce qu'elle a n'est donc « trop en avance », et la suite se gagne en jouant.
 - Pour les tests, `partieDeTest(aleatoire)` (`src/jeu/partieDeTest.ts`) crée une partie déjà au niveau 30, pour tester une règle sans les cadenas ; les cadenas eux-mêmes sont testés dans `niveaux.test.ts`.

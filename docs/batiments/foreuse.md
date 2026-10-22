@@ -1,11 +1,11 @@
 # ⚙️ Foreuse
 
-> Une machine débloquée au **niveau 2 de la mine** et, depuis le 29/10, au **niveau 6 du joueur** : on pose son bâtiment, on la nourrit au charbon, et elle fore toute seule en remplissant son propre chariot, qu'on vient vider devant elle (ou qu'un wagonnet emporte au marché). Dans le rayon du générateur, elle fore plus vite.
+> Une machine débloquée au **niveau 2 de la mine** et, depuis le 30/10, au **niveau 5 du joueur** (niveau 6 le 29/10) : on pose son bâtiment, on la nourrit au charbon, et elle fore toute seule en remplissant son propre chariot, qu'on vient vider devant elle (ou qu'un wagonnet emporte au marché). Dans le rayon du générateur, elle fore plus vite.
 
 ## Où et quand
 
 - **Où** : là où tu la poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **3 000 $ + 120 pierre + 60 fer** (29/10 ; avant 800 $ + 60 pierre + 30 fer ; les minerais se prennent dans le sac, puis dans le coffre de la mine). Une fois posée, elle est prête : il n'y a plus d'activation à payer. **✏️ Modifier** la déplace ou la retourne (miroir) gratuitement.
-- **Déblocage** : au **niveau 2 de la mine** (`BATIMENTS.foreuse.niveauMine = 2`) **et** au **niveau 6 du joueur** (29/10, `NIVEAU_JOUEUR_POUR.batiments.foreuse` ; c'est le dernier bâtiment du menu). Avant, sa carte du menu Bâtiments a un **cadenas** « 🔒 Niveau 6 » (ou « 🔒 Mine niveau 2 » si c'est la mine qui manque). Ses améliorations demandent aussi un niveau du joueur (tableaux ci-dessous, et [../jeu/niveaux.md](../jeu/niveaux.md)). Au déblocage, la carte prend la pastille **« Nouveau ! »** (jusqu'à ce qu'on ouvre le menu) et le bouton 🏗️ Bâtiments la compte dans son badge.
+- **Déblocage** : au **niveau 2 de la mine** (`BATIMENTS.foreuse.niveauMine = 2`) **et** au **niveau 5 du joueur** (30/10, `NIVEAU_JOUEUR_POUR.batiments.foreuse` ; le 29/10, niveau 6 et dernier bâtiment du menu : depuis le 30/10, elle vient **avant le générateur**). Avant, sa carte du menu Bâtiments a un **cadenas** « 🔒 Niveau 5 » (ou « 🔒 Mine niveau 2 » si c'est la mine qui manque). Ses améliorations demandent aussi un niveau du joueur (tableaux ci-dessous, et [../jeu/niveaux.md](../jeu/niveaux.md)). Au déblocage, la carte prend la pastille **« Nouveau ! »** (jusqu'à ce qu'on ouvre le menu) et le bouton 🏗️ Bâtiments la compte dans son badge.
 - **La porte** : sur la face avant **gauche** du dessin (à droite si elle est retournée).
 - **L'ouvrir** : toucher (ou cliquer) la foreuse : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/foreuse.webp`) : une grande foreuse jaune et noire en spirale sur un bâti en bois, avec des wagonnets d'or. Depuis le 29/10, l'image ne vibre plus quand elle tourne (l'ancienne classe `sprite-vibre` rendait l'image floue) : elle reste toujours la même.
@@ -14,7 +14,7 @@
   - **🛒 « Le chariot est plein : viens le vider ! »** (alerte rouge) ;
   - sinon **🔥 « Plus de charbon ! »** (alerte rouge) ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet de wagonnet qui part d'ici ou y arrive n'a plus de rails complets (un rail enlevé, un bâtiment déplacé) : « Rails coupés entre … : le wagonnet attend. Repose les rails ! ». La bulle est sur les deux bâtiments du trajet ;
-  - **💰 « Une amélioration est achetable ! »** quand un niveau de forage ou de chariot est payable tout de suite.
+  - **💰 « Une amélioration est achetable ! »** quand un niveau de forage ou de chariot est payable tout de suite (depuis le 30/10, seulement pendant le tutoriel).
 
 ## Ce qu'on peut y faire
 
@@ -37,10 +37,10 @@
 
 ### 4. Améliorer la vitesse de forage (6 niveaux, `NIVEAUX_FORAGE`)
 
-| Niveau | Vitesse (blocs/s, sans électricité) | Réservoir (charbons, 28/10) | Coût (29/10) | Niveau du joueur |
+| Niveau | Vitesse (blocs/s, sans électricité) | Réservoir (charbons, 28/10) | Coût (29/10) | Niveau du joueur (30/10) |
 |---|---:|---:|---|---:|
 | 1 | 0,5 | 40 | (de base) | — |
-| 2 | 0,8 | 60 | 3 500 $ + 50 fer + 20 redstone | 7 |
+| 2 | 0,8 | 60 | 3 500 $ + 50 fer + 20 redstone | 6 (avant 7) |
 | 3 | 1,2 | 90 | 10 000 $ + 100 fer + 50 redstone | 9 |
 | 4 | 1,8 | 130 | 25 000 $ + 160 fer + 100 redstone | 11 |
 | 5 | 2,6 | 180 | 60 000 $ + 160 redstone + 50 or | 14 |
@@ -50,10 +50,10 @@ Tout le forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude (ava
 
 ### 5. Agrandir le chariot (6 niveaux, `NIVEAUX_CHARIOT`)
 
-| Niveau | Capacité | Coût (29/10) | Niveau du joueur | Plein en (forage du même niveau, sans électricité) |
+| Niveau | Capacité | Coût (29/10) | Niveau du joueur (30/10) | Plein en (forage du même niveau, sans électricité) |
 |---|---:|---|---:|---|
 | 1 | 200 | (de base) | — | ~7 min (400 s) |
-| 2 | 400 | 2 500 $ + 40 fer | 7 | ~8 min (500 s) |
+| 2 | 400 | 2 500 $ + 40 fer | 6 (avant 7) | ~8 min (500 s) |
 | 3 | 800 | 7 500 $ + 80 fer + 25 redstone | 9 | ~11 min |
 | 4 | 1 600 | 20 000 $ + 150 fer + 70 redstone | 11 | ~15 min |
 | 5 | 3 000 | 50 000 $ + 130 redstone + 40 or | 14 | ~19 min |
@@ -81,7 +81,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« �
 
 ## Lien avec le reste du jeu
 
-- **Missions** (`missions.ts`, `objectifs.ts`) : d'abord « Construis : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine et le niveau 6 du joueur ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, missions d'amélioration). Côté automatisation : « Relie la foreuse à la mine (rails) », puis « Envoie du charbon à la foreuse (à la mine) ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : d'abord « Construis : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine et le niveau 5 du joueur (30/10) ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, missions d'amélioration). Côté automatisation : « Relie la foreuse à la mine (rails) », puis « Envoie du charbon à la foreuse (à la mine) ».
 - **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1), à la main ou par le wagonnet Mine → Foreuse ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché, ou avec le wagonnet Foreuse → Marché. Le **générateur** la booste.
 - **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc au niveau de la mine, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus, la part « ⚙️ Foreuse » de l'écran 📊) et `blocsForeuse`.
 - **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend le chariot quand il est à moitié plein, et améliore le forage et le chariot quand il a plus de 3 000 $.

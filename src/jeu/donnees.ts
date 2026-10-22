@@ -58,7 +58,7 @@ export type NiveauMine = {
 export const NIVEAUX_MINE: NiveauMine[] = [
   // (27/10 : au niveau 1, la mine ne sort rien toute seule : on creuse à la main, ou avec des mineurs)
   { niveau: 1, nom: 'Galerie de surface', poids: { pierre: 70, charbon: 18, fer: 12 }, debit: 0, cout: { materiaux: {} } },
-  { niveau: 2, nom: 'Veine de redstone', poids: { pierre: 60, charbon: 16, fer: 14, redstone: 10 }, debit: 0.25, cout: { argent: 1200, materiaux: { fer: 60 } } },
+  { niveau: 2, nom: 'Veine de redstone', poids: { pierre: 60, charbon: 16, fer: 14, redstone: 10 }, debit: 0.25, cout: { argent: 900, materiaux: { fer: 45 } } },
   { niveau: 3, nom: 'Filon d’or', poids: { pierre: 52, charbon: 14, fer: 14, redstone: 12, or: 8 }, debit: 0.3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 60 } } },
   {
     niveau: 4,
@@ -72,7 +72,7 @@ export const NIVEAUX_MINE: NiveauMine[] = [
     nom: 'Cœur de diamant',
     poids: { pierre: 40, charbon: 11, fer: 12, redstone: 12, or: 12, emeraude: 8, diamant: 5 },
     debit: 0.4,
-    cout: { argent: 110000, materiaux: { or: 130, emeraude: 55 } },
+    cout: { argent: 90000, materiaux: { or: 110, emeraude: 40 } },
   },
 ]
 
@@ -82,10 +82,10 @@ export const NIVEAU_MINE_MAX = NIVEAUX_MINE.length
 // mineurs). Quand il est plein, la mine s'arrête. On l'agrandit au bâtiment Mine.
 export const NIVEAUX_COFFRE: { capacite: number; cout: Cout }[] = [
   { capacite: 100, cout: { materiaux: {} } },
-  { capacite: 250, cout: { argent: 400, materiaux: { pierre: 80 } } },
-  { capacite: 600, cout: { argent: 2000, materiaux: { fer: 80 } } },
-  { capacite: 1500, cout: { argent: 8000, materiaux: { fer: 150, redstone: 40 } } },
-  { capacite: 4000, cout: { argent: 25000, materiaux: { or: 60 } } },
+  { capacite: 250, cout: { argent: 250, materiaux: { pierre: 50 } } },
+  { capacite: 600, cout: { argent: 2500, materiaux: { fer: 100 } } },
+  { capacite: 1500, cout: { argent: 12000, materiaux: { fer: 200, redstone: 60 } } },
+  { capacite: 4000, cout: { argent: 50000, materiaux: { or: 120 } } },
 ]
 
 // ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ export const PIOCHES: Pioche[] = [
     emoji: '⚙️',
     doublement: 0.2,
     durabilite: 300,
-    cout: { argent: 500, materiaux: { fer: 40 } },
+    cout: { argent: 400, materiaux: { fer: 20 } },
     reparation: { argent: 30, materiaux: { fer: 5 } },
     couleur: '#e6e6e6',
   },
@@ -152,18 +152,38 @@ export const PIOCHES: Pioche[] = [
 // Pioche cassée : il faut 2 clics pour casser un bloc.
 export const CLICS_MAINS_NUES = 2
 
+// Les bonus de combo (30/10) : en cliquant vite sans s'arrêter, on atteint des paliers (10, 25,
+// 50... clics d'affilée). Chaque palier donne un petit bonus de quelques secondes : plus de
+// chance de doubler les minerais (« fortune »), puis plusieurs blocs par clic.
+export type BonusCombo = {
+  palier: number // le nombre de clics d'affilée
+  nom: string
+  emoji: string
+  secondes: number // sa durée
+  fortune: number // chance de doubler en plus (0,25 = +25 %)
+  blocs: number // blocs cassés par clic (1 = normal)
+}
+export const BONUS_COMBO: BonusCombo[] = [
+  { palier: 10, nom: 'Fortune', emoji: '🍀', secondes: 3, fortune: 0.25, blocs: 1 },
+  { palier: 25, nom: 'Grande fortune', emoji: '🍀', secondes: 4, fortune: 0.5, blocs: 1 },
+  { palier: 50, nom: 'Double coup', emoji: '💥', secondes: 5, fortune: 0.25, blocs: 2 },
+  { palier: 100, nom: 'Frénésie', emoji: '🔥', secondes: 8, fortune: 1, blocs: 2 },
+  { palier: 200, nom: 'Ruée vers l’or', emoji: '✨', secondes: 10, fortune: 1, blocs: 3 },
+  { palier: 500, nom: 'Légende de la mine', emoji: '🏆', secondes: 15, fortune: 1, blocs: 5 },
+]
+
 // ---------------------------------------------------------------------------
 // Le sac à dos (au bazar) : ce que le joueur porte jusqu'au marché
 // ---------------------------------------------------------------------------
 
 export const SACS = [
   { taille: 32, prix: 0 },
-  { taille: 64, prix: 200 },
-  { taille: 128, prix: 1000 },
-  { taille: 256, prix: 4000 },
-  { taille: 512, prix: 12000 },
-  { taille: 1024, prix: 35000 },
-  { taille: 2048, prix: 100000 },
+  { taille: 64, prix: 150 },
+  { taille: 128, prix: 1200 },
+  { taille: 256, prix: 6000 },
+  { taille: 512, prix: 25000 },
+  { taille: 1024, prix: 90000 },
+  { taille: 2048, prix: 300000 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -171,6 +191,8 @@ export const SACS = [
 // ---------------------------------------------------------------------------
 
 // Sans ascenseur, un mineur met SECONDES_ECHELLE pour remonter (ou redescendre) à l'échelle.
+// (30/10 : la mine a son ascenseur dès le début, au niveau 1 ; l'échelle ne sert plus qu'aux
+// vieilles parties.)
 export const SECONDES_ECHELLE = 10
 
 export type NiveauAscenseur = {
@@ -180,12 +202,12 @@ export type NiveauAscenseur = {
 }
 
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, cout: { argent: 400, materiaux: { fer: 20 } }, secondesTrajet: 6 },
+  { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6 }, // déjà dans la mine au départ
   { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4 },
-  { niveau: 3, cout: { argent: 5000, materiaux: { fer: 100, redstone: 40 } }, secondesTrajet: 2.8 },
-  { niveau: 4, cout: { argent: 15000, materiaux: { fer: 160, redstone: 90 } }, secondesTrajet: 2 },
-  { niveau: 5, cout: { argent: 40000, materiaux: { redstone: 160, or: 40 } }, secondesTrajet: 1.4 },
-  { niveau: 6, cout: { argent: 100000, materiaux: { or: 100, emeraude: 20 } }, secondesTrajet: 1 },
+  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8 },
+  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2 },
+  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4 },
+  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -196,9 +218,10 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 export const EMPLOYES_NIVEAU_1 = 4
 export const EMPLOYES_PAR_NIVEAU = 2
 // Le prix de la 1re, 2e, 3e... embauche (il dépend seulement du nombre de mineurs qu'on a).
-// Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente.
-export const PRIX_EMBAUCHE = [100, 300, 800, 2000, 5000, 12000, 28000, 60000, 120000, 240000]
-export const HAUSSE_APRES_LISTE = 1.6
+// Au-delà de la liste, chaque embauche coûte 2,2 fois la précédente. (30/10 : les prix montent
+// bien plus vite d'une embauche à l'autre, pour qu'il faille farmer.)
+export const PRIX_EMBAUCHE = [80, 400, 1500, 5000, 15000, 40000, 100000, 250000, 600000, 1500000]
+export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4
 // Le temps passé à vider son sac dans le coffre (ou à vendre au marché).
@@ -212,16 +235,18 @@ export const NOMS_EMPLOYES = [
 // environ 35 % de ce qu'il fait sortir de la mine (28/10 : paie toutes les 5 minutes, et plus
 // chère ; avant, 25 % toutes les 10 minutes, c'était trop peu).
 export const SECONDES_PAR_PAIE = 5 * 60
-export const SALAIRES = [35, 70, 155, 350, 770]
+// (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir.)
+export const SALAIRES = [90, 220, 500, 1100, 2400]
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite, et un plus grand
 // sac lui fait faire moins d'allers-retours. Payé en argent seulement.
 export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout: Cout }[] = [
-  { nom: 'Bois', vitesse: 0.15, sac: 10, cout: { materiaux: {} } },
-  { nom: 'Pierre', vitesse: 0.25, sac: 15, cout: { argent: 400, materiaux: {} } },
-  { nom: 'Fer', vitesse: 0.4, sac: 20, cout: { argent: 1500, materiaux: {} } },
-  { nom: 'Or', vitesse: 0.6, sac: 30, cout: { argent: 6000, materiaux: {} } },
-  { nom: 'Diamant', vitesse: 0.9, sac: 45, cout: { argent: 22000, materiaux: {} } },
+  // (30/10 : le mineur en bois creuse plus vite : 0,22 au lieu de 0,15)
+  { nom: 'Bois', vitesse: 0.22, sac: 10, cout: { materiaux: {} } },
+  { nom: 'Pierre', vitesse: 0.32, sac: 15, cout: { argent: 500, materiaux: {} } },
+  { nom: 'Fer', vitesse: 0.48, sac: 20, cout: { argent: 3000, materiaux: {} } },
+  { nom: 'Or', vitesse: 0.7, sac: 30, cout: { argent: 15000, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 1, sac: 45, cout: { argent: 60000, materiaux: {} } },
 ]
 
 // --- La rareté des mineurs (avec le recruteur, dès le niveau 3 de la mine) ---
@@ -412,7 +437,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     taille: 5,
     porte: 'droite',
     niveauMine: 1,
-    cout: { argent: 30, materiaux: { pierre: 15 } },
+    cout: { argent: 20, materiaux: { pierre: 10 } },
   },
   bazar: {
     id: 'bazar',
@@ -422,7 +447,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     taille: 5,
     porte: 'droite',
     niveauMine: 1,
-    cout: { argent: 300, materiaux: { pierre: 60 } },
+    cout: { argent: 200, materiaux: { pierre: 40 } },
   },
   employes: {
     id: 'employes',
@@ -432,7 +457,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     taille: 5,
     porte: 'droite',
     niveauMine: 1,
-    cout: { argent: 250, materiaux: { pierre: 50 } },
+    cout: { argent: 150, materiaux: { pierre: 30 } },
   },
   foreuse: {
     id: 'foreuse',
@@ -457,7 +482,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
 }
 // L'ordre du menu « Bâtiments », celui où ils se débloquent (29/10). La mine est déjà posée au début.
 // L'ordre du menu « Bâtiments » (la mine est déjà posée au début de la partie). (dans l'ordre où ils se débloquent, 29/10)
-export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'employes', 'bazar', 'generateur', 'foreuse']
+export const LISTE_BATIMENTS: IdBatiment[] = ['marche', 'forgeron', 'employes', 'bazar', 'foreuse', 'generateur']
 
 // Les chemins de pavés : seulement pour faire joli (5 $ la case).
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
@@ -542,18 +567,18 @@ export const NIVEAU_JOUEUR_MAX = 30
 // la case i est le niveau qu'il faut pour acheter NIVEAUX_COFFRE[i], PIOCHES[i], etc. (la case 0
 // est ce qu'on a au départ). Une fois débloqué, il faut quand même payer.
 export const NIVEAU_JOUEUR_POUR = {
-  batiments: { puits: 1, marche: 1, forgeron: 1, employes: 2, bazar: 3, generateur: 5, foreuse: 6 } as Record<IdBatiment, number>,
+  batiments: { puits: 1, marche: 1, forgeron: 1, employes: 2, bazar: 3, foreuse: 5, generateur: 6 } as Record<IdBatiment, number>, // (30/10 : la foreuse avant le générateur)
   rails: 3, // poser des rails (et donc créer des trajets de wagonnets)
   mine: [1, 4, 7, 10, 13], // NIVEAUX_MINE
   coffre: [1, 2, 5, 8, 12], // NIVEAUX_COFFRE
   pioches: [1, 4, 7, 12], // PIOCHES
   sacs: [1, 3, 5, 8, 11, 14, 15], // SACS
-  ascenseur: [4, 6, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR
+  ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
   equipement: [1, 4, 6, 9, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs)
   wagonnet: [1, 6, 9, 12], // NIVEAUX_WAGONNET
-  generateur: [1, 7, 10, 13, 15], // NIVEAUX_GENERATEUR
-  forage: [1, 7, 9, 11, 14, 15], // NIVEAUX_FORAGE
-  chariot: [1, 7, 9, 11, 14, 15], // NIVEAUX_CHARIOT
+  generateur: [1, 8, 10, 13, 15], // NIVEAUX_GENERATEUR
+  forage: [1, 6, 9, 11, 14, 15], // NIVEAUX_FORAGE
+  chariot: [1, 6, 9, 11, 14, 15], // NIVEAUX_CHARIOT
   recruteur: [9, 11, 13, 15], // NIVEAUX_RECRUTEUR
   manager: 11,
 }

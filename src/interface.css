@@ -960,33 +960,94 @@
   inset: 0;
   z-index: 49;
   pointer-events: none;
+  /* La position et la taille de la cible, écrites à chaque image par useSuiviCible (30/10). */
+  --x: 0px;
+  --y: 0px;
+  --l: 0px;
+  --h: 0px;
 }
 
+.tuto-cible-cachee {
+  visibility: hidden;
+}
+
+/* (30/10, pour la fluidité) Tout se déplace avec transform (le calque glisse, rien n'est
+   redessiné), et rien n'anime d'ombre ni de filtre : seulement scale et opacity. */
+
+/* Le voile sombre autour de la cible : immobile (il ne pulse pas). */
+.tuto-trou {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  border-radius: 18px;
+  box-shadow: 0 0 0 200vmax rgb(10 6 2 / 0.55);
+  will-change: transform;
+}
+
+/* L'anneau doré qui pulse autour de la cible. */
 .tuto-cercle {
-  position: fixed;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  will-change: transform;
+}
+/* (l'anneau qui pulse est à l'intérieur : son « scale » reste centré sur la cible) */
+.tuto-cercle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   border-radius: 18px;
   border: 5px solid #ffd21f;
   box-shadow:
-    0 0 0 9999px rgb(10 6 2 / 0.55),
     0 0 22px 6px rgb(255 210 31 / 0.9),
     inset 0 0 16px rgb(255 210 31 / 0.7);
-  transition: left 0.12s, top 0.12s, width 0.12s, height 0.12s;
   animation: tuto-pulse 0.9s ease-in-out infinite;
+  will-change: scale;
 }
 
-/* Les ondes : des anneaux dorés qui grandissent et s'effacent. */
+/* Les ondes : des anneaux dorés qui grandissent et s'effacent, au milieu de la cible. */
+.tuto-onde-place,
+.tuto-fleche-place {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+.tuto-onde-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2), 0);
+}
 .tuto-onde {
-  position: fixed;
+  position: absolute;
+  width: clamp(60px, var(--l), 220px);
+  height: clamp(60px, var(--l), 220px);
   translate: -50% -50%;
   border-radius: 50%;
   border: 4px solid #ffe066;
   box-shadow: 0 0 12px #ffd21f;
   opacity: 0;
   animation: tuto-onde 1.5s ease-out infinite;
+  will-change: scale, opacity;
+}
+
+/* La flèche : au-dessus de la cible, au milieu d'un bâtiment, ou dessous si la cible est en haut. */
+.tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) - 8px), 0);
+}
+.tuto-sur-batiment .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2), 0);
+}
+.tuto-cible-dessous .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) + 8px), 0);
 }
 
 .tuto-fleche {
-  position: fixed;
+  position: absolute;
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
@@ -997,8 +1058,10 @@
 .tuto-fleche-dessin {
   display: block;
   font-size: 66px;
+  /* (l'ombre ne bouge pas avec l'animation : le calque est dessiné une fois, puis glisse) */
   filter: drop-shadow(0 0 10px rgb(255 200 40 / 0.95)) drop-shadow(0 4px 0 rgb(0 0 0 / 0.35));
   animation: tuto-rebond 0.6s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  will-change: translate, scale;
 }
 
 /* L'étiquette au-dessus de la flèche (« Touche ici ! »). */
@@ -1015,6 +1078,7 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
   animation: tuto-geste 1.2s ease-in-out infinite;
+  will-change: rotate, scale;
 }
 
 /* La cible est tout en haut : la flèche passe dessous, et pointe vers le haut. */
@@ -1031,13 +1095,10 @@
   margin: 2px 0 0;
 }
 
-/* La cible elle-même palpite et brille (le bouton, le bloc, le bâtiment). */
+/* La cible elle-même palpite (le bouton, le bloc). (30/10) Sans filtre animé, qui faisait
+   ramer ; un bâtiment ne bouge pas (son image deviendrait floue) : l'anneau doré suffit. */
 [data-tuto-actif]:not(img) {
   animation: tuto-cible-palpite 0.9s ease-in-out infinite !important;
-}
-
-img[data-tuto-actif] {
-  animation: tuto-batiment-brille 0.9s ease-in-out infinite !important;
 }
 
 /* La carte d'étape, en haut de l'écran. */
@@ -1384,13 +1445,8 @@ img[data-tuto-actif] {
 }
 
 @keyframes tuto-cible-palpite {
-  0%, 100% { scale: 1; filter: drop-shadow(0 0 0 rgb(255 210 31 / 0)); }
-  50% { scale: 1.07; filter: drop-shadow(0 0 12px rgb(255 210 31 / 0.95)); }
-}
-
-@keyframes tuto-batiment-brille {
-  0%, 100% { filter: brightness(1.05) drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgb(255 214 90 / 0.7)); }
-  50% { filter: brightness(1.25) drop-shadow(0 0 3px #fff) drop-shadow(0 0 24px rgb(255 214 90)); }
+  0%, 100% { scale: 1; }
+  50% { scale: 1.07; }
 }
 
 @keyframes tuto-pulse-bouton {
@@ -1487,7 +1543,7 @@ img[data-tuto-actif] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tuto-cercle,
+  .tuto-cercle::before,
   .tuto-onde,
   .tuto-fleche-dessin,
   .tuto-geste,
@@ -1771,4 +1827,146 @@ img[data-tuto-actif] {
    cachée derrière la fenêtre de bienvenue, et le bouton semblait ne rien faire). */
 .voile.voile-devant {
   z-index: 70;
+}
+
+/* La fenêtre du retour (30/10) : ce qui s'est passé pendant l'absence. */
+.fenetre-absence {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  overflow: hidden;
+  animation: absence-arrive 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.fenetre-absence h2 { margin: 0; }
+.absence-soleil {
+  position: absolute;
+  inset: -40% -40% auto;
+  height: 240px;
+  background: radial-gradient(circle, rgb(255 214 90 / 0.35), transparent 65%);
+  pointer-events: none;
+}
+.absence-lignes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.absence-lignes li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.18);
+  text-align: left;
+  animation: absence-ligne 0.4s both;
+}
+.absence-icone { font-size: 1.3rem; }
+.absence-argent {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ffd84a;
+  text-shadow: 0 2px 0 #7a4a08, 0 0 18px rgb(255 214 90 / 0.6);
+  animation: absence-argent 1.2s ease-in-out infinite alternate;
+}
+@keyframes absence-arrive { from { transform: scale(0.6); opacity: 0; } }
+@keyframes absence-ligne { from { transform: translateX(-20px); opacity: 0; } }
+@keyframes absence-argent { to { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) {
+  .fenetre-absence, .absence-lignes li, .absence-argent { animation: none; }
+}
+
+/* La fenêtre d'un rail, et ses boutons en bas de la fenêtre des trajets (30/10). */
+.fenetre-rail {
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.actions-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgb(255 255 255 / 0.2);
+}
+.boutons-rail { margin: 0; }
+
+/* Le marché quand le sac est vide (30/10) : un message bien visible, et les prix. */
+.sac-vide-marche {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgb(255 196 64 / 0.22), rgb(255 140 40 / 0.12));
+  border: 2px dashed rgb(255 210 110 / 0.7);
+}
+.sac-vide-marche > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.sac-vide-icone { font-size: 2rem; animation: sac-vide 1.6s ease-in-out infinite; }
+@keyframes sac-vide { 50% { transform: rotate(-10deg) translateY(-3px); } }
+.prix-marche {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+}
+.prix-marche li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.18);
+}
+.prix-marche li strong { margin-left: auto; color: #ffd84a; }
+@media (prefers-reduced-motion: reduce) { .sac-vide-icone { animation: none; } }
+
+/* (30/10) Le raccourci vers les améliorations de la mine, sous le coffre. */
+.raccourci-ameliorer {
+  border: 2px solid rgb(255 210 110 / 0.5);
+  border-radius: 12px;
+  padding: 7px 10px;
+  background: rgb(0 0 0 / 0.2);
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+}
+.raccourci-ameliorer:hover { background: rgb(255 255 255 / 0.08); }
+.raccourci-possible {
+  border-color: #6fdc4c;
+  box-shadow: 0 0 12px rgb(111 220 76 / 0.5);
+}
+
+/* (30/10) Les bâtiments qui ont beaucoup d'options ont un panneau plus large sur grand écran. */
+@media (min-width: 1100px) {
+  .jeu.plein-ecran.panneau-large {
+    --largeur-panneau: 480px;
+  }
+}
+
+/* (30/10) Sur grand écran, un panneau ouvert à droite : la carte du tutoriel se met au milieu de
+   la place qui reste à gauche, sous la barre du haut, pour ne jamais cacher le bloc de la mine. */
+@media (min-width: 861px) {
+  .jeu.avec-panneau .tuto-carte {
+    top: 64px;
+    left: calc((100% - var(--largeur-panneau)) / 2);
+    width: min(440px, calc(100% - var(--largeur-panneau) - 48px));
+    margin-left: 0;
+  }
 }

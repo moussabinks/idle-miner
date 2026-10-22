@@ -25,7 +25,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - `src/jeu/` : **logique du jeu en TypeScript pur, sans React ni DOM.** Données (`donnees.ts`), génération de la mine, état du mineur, règles. Tout doit être testable sans navigateur.
 - `src/` (le reste) : composants React. Ils lisent l'état du jeu et appellent ses actions, et ne contiennent pas de règles du jeu.
 - L'aléatoire passe par une fonction injectable, pour qu'on puisse avoir des tests déterministes.
-- Garder un **bot de simulation** dans les tests (`src/jeu/bot.ts`) : il joue une partie complète et vérifie l'équilibrage. Repères (29/10, jeu ralenti) : niveau 2 de la mine en 15 à 40 minutes, rails posés en moins de 10 minutes et électrifiés en moins de 1 h 30, niveau 5 en 4 h à 7 h (médianes).
+- Garder un **bot de simulation** dans les tests (`src/jeu/bot.ts`) : il joue une partie complète et vérifie l'équilibrage. Repères (30/10, jeu ralenti) : niveau 2 de la mine en 15 à 40 minutes, rails posés en moins de 10 minutes et électrifiés en moins de 1 h 30, niveau 5 en 6 h à 9 h (médianes).
 
 ## Conventions
 

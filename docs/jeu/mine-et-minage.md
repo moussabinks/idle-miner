@@ -1,7 +1,7 @@
 # ⛏️ La mine et le minage
 
 > Comment marche la mine depuis le 22/10 (la **mine automatique**) : ses 5 niveaux, le bloc à cliquer, le coffre, les pioches, la mine qui sort des blocs toute seule, et tout ce qui tourne autour : le temps qui passe (et hors ligne), les événements, les découvertes, les succès et les statistiques.
-> Écrit d'après le code au 22/10, mis à jour le 24/10, le 27/10 et le 29/10 (prix plus chers, niveau du joueur) (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
+> Écrit d'après le code au 22/10, mis à jour le 24/10, le 27/10, le 29/10 (prix plus chers, niveau du joueur) et le 30/10 (bonus de combo, fenêtre du retour, nouveaux prix) (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
 
 Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur en mètres, les couches de 10 blocs, l'échelle et l'ascenseur du joueur, le quai, le réservoir, les convois et brouettes, les galeries, les blocs spéciaux (lave, coffres, géodes) et les seaux, le lapis, la netherite, la terre, le gravier et la roche dure, la bedrock et la victoire, le prestige et l'enchanteur. Le code du prestige et de l'enchanteur est rangé dans `archives/` ; le reste est dans l'historique git.
 
@@ -70,7 +70,7 @@ Le **prochain bloc** est toujours tiré d'avance (`prochainBloc`) : c'est le gro
 
 1. **Coffre plein** : rien ne se passe (« 📦 Le coffre de la mine est plein : vide-le et va vendre au marché ! »). Le bloc est grisé.
 2. **Pioche cassée** : il faut **2 clics par bloc** (`CLICS_MAINS_NUES`). Le premier clic fissure le bloc (`clics` = 1) ; le second le casse.
-3. Le bloc casse et va **dans le coffre** : 1 bloc, ou **2** si c'est un minerai et que le tirage tombe sous la **chance de doubler** de la pioche (10 à 45 %, `chanceDoublement`). Pioche cassée : pas de doublement.
+3. Le bloc casse et va **dans le coffre** : 1 bloc, ou **2** si c'est un minerai et que le tirage tombe sous la **chance de doubler** de la pioche (10 à 45 %, `chanceDoublement`). Pioche cassée : pas de doublement (sauf bonus de combo). Depuis le 30/10, un **bonus de combo** en cours ajoute sa fortune à cette chance, et peut multiplier le nombre de blocs (×2, ×3 ou ×5 : voir plus bas).
 4. Les statistiques comptent le bloc (`blocsCasses`, `blocsParType`, `diamantsTrouves` pour les diamants, doublés compris).
 5. Si la pioche n'est pas cassée, elle s'**use d'un point**. Si elle vient de casser : « 💥 Ta pioche en X est cassée ! Il faut 2 clics par bloc : fais-la réparer au forgeron. »
 6. Un **nouveau bloc** est tiré au niveau actuel de la mine.
@@ -79,16 +79,32 @@ Il n'y a **pas de temps de casse** : un clic, un bloc. La vitesse dépend de la 
 
 Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « tac » de la pioche, puis le « crac » du bloc, des éclats volent, et ce qui tombe s'envole au-dessus (« +1 ⚫ », « +2 💎 ×2 ! »).
 
-**Le combo** (27/10, seulement dans l'interface) : les clics à moins de **0,9 s** l'un de l'autre s'additionnent. Dès 3, un compteur « 🔥 ×*N* » saute près du bloc ; plus il monte, plus le cadre et le halo du bloc brillent, et un petit arpège (`sons.combo`) marque les paliers 10, 25, 50, 100, 200 et 500. **Il ne change rien aux règles** : pas de bonus, un clic reste un bloc.
+**Le combo** (27/10, seulement dans l'interface) : les clics à moins de **0,9 s** l'un de l'autre s'additionnent. Dès 3, un compteur « 🔥 ×*N* » saute près du bloc ; plus il monte, plus le cadre et le halo du bloc brillent, et un petit arpège (`sons.combo`) marque les paliers 10, 25, 50, 100, 200 et 500. Jusqu'au 29/10, il ne changeait rien aux règles.
+
+**Les bonus de combo** (30/10, `BONUS_COMBO` dans `donnees.ts`, `activerBonusCombo` et `bonusActif` dans `mineur.ts`) : chaque palier atteint donne maintenant un **bonus de quelques secondes** (il remplace celui en cours), avec un toast « 🍀 Combo ×10 : Fortune ! +25 % de fortune pendant 3 s » :
+
+| Palier | Bonus | Pendant | Effet |
+|---:|---|---:|---|
+| 10 | 🍀 Fortune | 3 s | +25 % de chance de doubler |
+| 25 | 🍀 Grande fortune | 4 s | +50 % |
+| 50 | 💥 Double coup | 5 s | +25 %, 2 blocs par clic |
+| 100 | 🔥 Frénésie | 8 s | +100 %, 2 blocs par clic |
+| 200 | ✨ Ruée vers l'or | 10 s | +100 %, 3 blocs par clic |
+| 500 | 🏆 Légende de la mine | 15 s | +100 %, 5 blocs par clic |
+
+- La **fortune** s'ajoute à la chance de doubler de la pioche (au plus 100 %), même avec une pioche cassée.
+- **Plusieurs blocs par clic** : le bloc tombe en 2, 3 ou 5 exemplaires (deux fois plus s'il est doublé). La pioche ne s'use que d'un point et les statistiques comptent un seul bloc cassé (et donc 1 XP).
+- Le bonus est rangé dans la partie (`etat.bonus` : son palier et l'heure de jeu où il s'arrête) ; sa durée se compte en temps de jeu.
+- **À l'écran** : au-dessus du bloc, une étiquette dorée qui arrive en rebondissant (« 🍀 Fortune +25 % fortune · 3 s »), avec le temps qui reste, et le bloc qui brille. Sans bonus, dès 3 clics de combo : « Prochain bonus à ×*N* : *emoji* *nom* ». L'icône 🍀 est dessinée dans `outils/icones/dessins.py`.
 
 **Le tableau de production** (27/10) : sous le bloc, le panneau de la mine montre combien de blocs sortent par seconde (la mine toute seule, chaque mineur, et tes clics des 3 dernières secondes) et ≈ combien de $ par minute ça vaut. Le calcul est la fonction pure `production(etat)` de `src/jeu/production.ts` (débit de la mine, `blocsParSecondeEmploye` de chaque mineur au travail, 0 si le coffre est plein ou si le mineur attend son salaire, et `valeurMoyenneBloc` pour les dollars). Voir [mine.md](../batiments/mine.md#le-tableau-de-production-2710).
 
 ### Les pioches (`PIOCHES`)
 
-| Pioche | Chance de doubler un minerai | Durabilité | Prix (29/10) | Niveau du joueur | Réparation (cassée) |
+| Pioche | Chance de doubler un minerai | Durabilité | Prix (30/10) | Niveau du joueur | Réparation (cassée) |
 |---|---:|---:|---|---:|---|
 | 🪨 Pierre | 10 % | 150 clics | offerte au départ | — | 5 $ + 10 pierre |
-| ⚙️ Fer | 20 % | 300 | 500 $ + 40 fer | 4 | 30 $ + 5 fer |
+| ⚙️ Fer | 20 % | 300 | 400 $ + 20 fer (29/10 : 500 $ + 40 fer) | 4 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
 | 💎 Diamant | 45 % | 1 000 | 20 000 $ + 20 diamants | 12 | 600 $ + 3 diamants |
 
@@ -101,16 +117,18 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix (29/10) | Niveau du joueur |
+| Niveau | Places | Prix (30/10) | Niveau du joueur |
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
-| 2 | 250 | 400 $ + 80 pierre | 2 |
-| 3 | 600 | 2 000 $ + 80 fer | 5 |
-| 4 | 1 500 | 8 000 $ + 150 fer + 40 redstone | 8 |
-| 5 | 4 000 | 25 000 $ + 60 or | 12 |
+| 2 | 250 | 250 $ + 50 pierre | 2 |
+| 3 | 600 | 2 500 $ + 100 fer | 5 |
+| 4 | 1 500 | 12 000 $ + 200 fer + 60 redstone | 8 |
+| 5 | 4 000 | 50 000 $ + 120 or | 12 |
+
+Le 30/10, le premier coffre est moins cher (avant : 400 $ + 80 pierre), les suivants bien plus (2 000 $ + 80 fer, 8 000 $ + 150 fer + 40 redstone, 25 000 $ + 60 or).
 
 - `rangerDansCoffre` ne range que ce qui tient : le reste est perdu pour un clic (le clic est refusé avant, coffre plein), et **attend dans le sac du mineur** pour un mineur.
-- **🎒 Mettre dans le sac** (`prendreDuCoffre`) : un minerai (bouton 🎒 de sa ligne) ou tout le coffre, il passe dans le sac, **les objets les plus chers d'abord**, tant qu'il y a de la place. « 🎒 *N* objets pris dans le coffre : va les vendre au marché ! »
+- **🎒 Mettre dans le sac** (`prendreDuCoffre`) : un minerai (bouton 🎒 de sa ligne ; depuis le 30/10, un **curseur** sur la ligne choisit combien en prendre, tout par défaut, `StockMinerais.tsx`) ou tout le coffre, il passe dans le sac, **les objets les plus chers d'abord**, tant qu'il y a de la place. « 🎒 *N* objets pris dans le coffre : va les vendre au marché ! »
 
 ### Payer avec le sac et le coffre (`disponible`, `payer`)
 
@@ -124,14 +142,14 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 
 ### Descendre d'un niveau (`descendreNiveauMine`)
 
-| Pour aller au niveau | Prix (29/10) | Niveau du joueur |
+| Pour aller au niveau | Prix (30/10) | Niveau du joueur |
 |---|---|---:|
-| 2 · Veine de redstone | 1 200 $ + 60 fer | 4 |
+| 2 · Veine de redstone | 900 $ + 45 fer | 4 |
 | 3 · Filon d'or | 7 000 $ + 120 fer + 60 redstone | 7 |
 | 4 · Grotte aux émeraudes | 25 000 $ + 120 redstone + 60 or | 10 |
-| 5 · Cœur de diamant | 110 000 $ + 130 or + 55 émeraude | 13 |
+| 5 · Cœur de diamant | 90 000 $ + 110 or + 40 émeraude | 13 |
 
-Depuis le 29/10, les prix sont environ **3 fois plus chers** (avant : 400 $ + 30 fer, 2 500 $ + 60 fer + 30 redstone, 9 000 $ + 60 redstone + 30 or, 30 000 $ + 60 or + 25 émeraude), et chaque niveau demande aussi un **niveau du joueur** (voir [niveaux.md](niveaux.md)). Descendre d'un niveau rapporte **150 XP**.
+Le 30/10, le niveau 2 (avant 1 200 $ + 60 fer) et le niveau 5 (avant 110 000 $ + 130 or + 55 émeraude) sont un peu moins chers. Depuis le 29/10, les prix sont environ **3 fois plus chers** qu'au début (avant le 29/10 : 400 $ + 30 fer, 2 500 $ + 60 fer + 30 redstone, 9 000 $ + 60 redstone + 30 or, 30 000 $ + 60 or + 25 émeraude), et chaque niveau demande aussi un **niveau du joueur** (voir [niveaux.md](niveaux.md)). Descendre d'un niveau rapporte **150 XP**.
 
 Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), recruteur (3), manager (4), et 2 mineurs de plus à chaque niveau. Le niveau 5 est le dernier : il n'y a plus de fin de partie.
 
@@ -152,7 +170,7 @@ Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau
 
 1. Le temps écoulé depuis la dernière sauvegarde est mesuré, plafonné à **8 heures** (`ABSENCE_MAX`). Moins de 30 s : rien à rattraper.
 2. `avancerTemps` est appelé avec toute la durée : la mine, le générateur, la foreuse, les mineurs (et le manager), et les wagonnets (s'ils ont un pousseur ou l'électricité) tournent comme si le jeu était ouvert. **Les clics, eux, ne tournent pas.**
-3. Un message s'affiche : « Pendant ton absence : 📦 *N* blocs de plus dans le coffre de la mine, 🛤️ le wagonnet a rapporté *X* $, ⚙️ la foreuse a remonté *N* blocs, 😠 *N* mineurs attendent leur salaire. » (seulement les morceaux non nuls ; « le wagonnet a rapporté » compte tout l'argent gagné pendant l'absence).
+3. Depuis le 30/10, une **grande fenêtre** résume l'absence (`src/jeu/absence.ts` : `photoPartie` avant, `resumerAbsence` après ; `FenetreAbsence.tsx`) : **« Bon retour, mineur ! »**, la durée (« 2 h 13 »), ce que **les mineurs ont creusé**, ce que **la mine a sorti toute seule**, ce que **la foreuse a foré**, les **voyages** des wagonnets, les blocs **en plus dans le coffre**, l'**argent gagné** en gros (« 💰 +X $ »), et s'il le faut « 😠 *N* mineurs attendent leur salaire : ils se sont arrêtés. Paie-les au Personnel ! ». Le gros bouton **« 💰 Tout récupérer ! »** la ferme avec l'animation et le son d'une vente (l'argent est déjà gagné : le bouton le fête). S'il ne s'est rien passé, pas de fenêtre. (Avant le 30/10 : un simple message « Pendant ton absence : … » de quelques secondes.)
 
 ---
 
@@ -233,15 +251,16 @@ La fenêtre montre 4 tuiles (💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ M
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : `BLOCS`, `MINERAIS_RARES`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `PIOCHES`, `CLICS_MAINS_NUES`.
+- `src/jeu/donnees.ts` : `BLOCS`, `MINERAIS_RARES`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `PIOCHES`, `CLICS_MAINS_NUES`, `BONUS_COMBO` (30/10).
 - `src/jeu/mine.ts` : `infoNiveauMine`, `poidsDesBlocs`, `tirerBloc`, `chancesDesBlocs`, `valeurMoyenneBloc`.
-- `src/jeu/mineur.ts` : le type `EtatJeu`, `creerPartie`, le sac, le coffre, payer (`disponible`, `payer`), le clic (`cliquerMine`), la mine toute seule (`avancerMine`), les niveaux, le coffre, l'ascenseur, la vente, les pioches, le sac.
+- `src/jeu/mineur.ts` : le type `EtatJeu`, `creerPartie`, le sac, le coffre, payer (`disponible`, `payer`), le clic (`cliquerMine`), les bonus de combo (`activerBonusCombo`, `bonusActif`, `secondesBonus`, 30/10), la mine toute seule (`avancerMine`), les niveaux, le coffre, l'ascenseur, la vente, les pioches, le sac.
 - `src/jeu/temps.ts` : `avancerTemps`.
 - `src/jeu/niveaux.ts` : le niveau du joueur, l'XP et les cadenas (29/10, voir [niveaux.md](niveaux.md)).
 - `src/jeu/aleatoire.ts` : l'aléatoire injectable.
 - `src/jeu/decouvertes.ts`, `src/jeu/succes.ts`, `src/jeu/statistiques.ts` : découvertes, succès, statistiques.
 - `src/evenements.ts` : les événements pour les sons et animations.
 - `src/usePartie.ts` : l'horloge, le clic, le rattrapage hors ligne, la sauvegarde.
+- `src/jeu/absence.ts` et `src/composants/FenetreAbsence.tsx` (30/10) : le résumé de l'absence et la fenêtre « Bon retour, mineur ! ».
 - `src/jeu/production.ts` : `production` (blocs par seconde de la mine et de chaque mineur, $ par minute), pour le tableau du panneau de la mine ; testé dans `production.test.ts`.
 - `src/composants/PanneauMine.tsx` : le bloc à cliquer (et son combo), le tableau de production et tout le panneau de la mine ; `src/composants/Statistiques.tsx` : la fenêtre 📊.
-- `src/jeu/mine.test.ts`, `src/jeu/mineur.test.ts` : les tests de la mine et du joueur.
+- `src/jeu/mine.test.ts`, `src/jeu/mineur.test.ts` : les tests de la mine et du joueur ; `src/jeu/nouveautes30.test.ts` (30/10) : bonus de combo, rails remboursés, missions qui gardent leur place, résumé de l'absence.

@@ -4,7 +4,7 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **250 $ + 50 pierre** (29/10 ; avant 100 $ + 30 pierre ; la pierre se prend dans le sac, puis dans le coffre de la mine). Son identifiant dans le code reste `employes`, son nom affiché est **Personnel**. **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **150 $ + 30 pierre** (30/10 ; 250 $ + 50 pierre le 29/10, 100 $ + 30 pierre avant ; la pierre se prend dans le sac, puis dans le coffre de la mine). Son identifiant dans le code reste `employes`, son nom affiché est **Personnel**. **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : au **niveau 2 du joueur** (29/10 ; niveau 1 de la mine ; avant, dès le début). Ensuite, dans son panneau : le **recruteur** au **niveau 3** de la mine **et** au niveau 9 du joueur, le **manager** au **niveau 4** de la mine **et** au niveau 11 du joueur. Les pioches des mineurs demandent aussi un niveau du joueur (voir plus bas, et [../jeu/niveaux.md](../jeu/niveaux.md)).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). Le manager et le recruteur se tiennent devant le bâtiment, et les mineurs qui attendent leur salaire font la queue un peu plus loin devant.
 - **L'ouvrir** : toucher (ou cliquer) le Personnel : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
@@ -14,7 +14,7 @@
   - **😠** (alerte rouge) quand quelqu'un n'est pas payé : « 😠 1 mineur attend son salaire ! », « 😠 *N* mineurs attendent leur salaire ! » ou, avec le manager, « 💼 Trésorerie vide : personne n'est payé ! » (`alerteSalaires`) ;
   - **🛤️ « Sans trajet »** (alerte rouge, 26/10) quand des pousseurs n'ont plus de trajet en service (on a arrêté leur trajet avec ✖ Arrêter) : « *N* pousseur(s) sans trajet : choisis-leur un trajet au Personnel » ;
   - **✨ « Nouveau : Recruteur ! »** au niveau 3 de la mine et **« Nouveau : Manager ! »** au niveau 4, jusqu'à ce qu'on passe devant (`decouvertes.ts`) ;
-  - **💰 « Une amélioration est achetable ! »** quand une embauche, une pioche de mineur, le recruteur ou le manager est payable tout de suite.
+  - **💰 « Une amélioration est achetable ! »** quand une embauche, une pioche de mineur, le recruteur ou le manager est payable tout de suite ; depuis le 30/10, **seulement pendant le tutoriel** (sinon la bulle serait presque toujours là : on peut presque toujours embaucher).
 - **Les personnages au village** : les mineurs sont des **hamsters casqués**, et **la couleur du casque est celle de leur rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique : les mêmes couleurs que leurs cartes), avec leur prénom au-dessus de la tête. On les voit **seulement quand ils sont dehors** : quand ils marchent (vers la forge, vers le Personnel, vers la mine), quand ils récupèrent leur pioche devant la forge, quand ils attendent leur wagonnet au quai (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ), quand ils le poussent (juste derrière lui), et quand ils attendent leur salaire devant le Personnel (bulle 😠, ils tapent du pied). Quand ils sont dans la mine, on voit seulement la **cabine de l'ascenseur** monter et descendre : depuis le 27/10, **les mineurs y sont dessinés dedans** pendant qu'ils descendent ou remontent (ils sont coupés sous le bord avant de la cabine et au bord du puits), et la **jauge du coffre** au-dessus de la mine montre « 👷 *n* » : combien travaillent au fond. Le **manager** et le **recruteur** restent devant le bâtiment, avec leur étiquette « Manager » / « Recruteur ». Dans le panneau, leurs cartes ont leur **portrait**.
 
 ## Ce qu'on peut y faire
@@ -32,17 +32,18 @@ Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur 
 ### 1. Embaucher un mineur (« 👷 Embaucher », ou « 🎲 Recruter » avec le recruteur)
 
 - **Taille de l'équipe** (mineurs et pousseurs ensemble) : **4 employés au niveau 1 de la mine, puis 2 de plus par niveau** (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`) : 4, 6, 8, 10, puis **12** au niveau 5. Le badge affiche « *n* / max ». Équipe complète : « Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus. »
-- **Le prix dépend seulement du nombre d'employés qu'on a en ce moment** (mineurs et pousseurs, `PRIX_EMBAUCHE`). Au-delà de la liste, chaque embauche coûte 60 % de plus que la précédente (`HAUSSE_APRES_LISTE`). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus.
+- **Le prix dépend seulement du nombre d'employés qu'on a en ce moment** (mineurs et pousseurs, `PRIX_EMBAUCHE`). Au-delà de la liste, chaque embauche coûte **2,2 fois** la précédente (`HAUSSE_APRES_LISTE`, 30/10 ; avant, 60 % de plus). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus.
 
 | Embauche | 1re | 2e | 3e | 4e | 5e | 6e | 7e | 8e | 9e | 10e | 11e | 12e |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Prix (29/10) | 100 $ | 300 $ | 800 $ | 2 000 $ | 5 000 $ | 12 000 $ | 28 000 $ | 60 000 $ | 120 000 $ | 240 000 $ | 384 000 $ | 614 400 $ |
+| Prix (30/10) | 80 $ | 400 $ | 1 500 $ | 5 000 $ | 15 000 $ | 40 000 $ | 100 000 $ | 250 000 $ | 600 000 $ | 1 500 000 $ | 3 300 000 $ | 7 260 000 $ |
 
-Les prix ont doublé le 29/10 (avant : 50 $, 150 $, 400 $, 1 000 $…). Chaque embauche rapporte **25 XP**, mais seulement quand l'équipe dépasse sa plus grande taille déjà atteinte : licencier puis réembaucher ne redonne rien.
+Le 30/10, le premier mineur est un peu moins cher, mais les prix **montent bien plus vite** d'une embauche à l'autre, pour qu'il faille farmer (29/10 : 100 $, 300 $, 800 $, 2 000 $, 5 000 $… 240 000 $, puis × 1,6 ; avant le 29/10 : 50 $, 150 $, 400 $, 1 000 $…). Chaque embauche rapporte **25 XP**, mais seulement quand l'équipe dépasse sa plus grande taille déjà atteinte : licencier puis réembaucher ne redonne rien.
 
 - Le nouveau mineur reçoit un **prénom au hasard** pas encore pris (Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot ; avec un numéro si tous sont pris).
-- Il commence avec une **pioche en bois**, **ses 10 premières minutes de salaire comprises**, et descend tout de suite creuser. « 👷 *X* est embauché(e) ! Il descend creuser. » (avec « (rare !) », « (épique !) »… s'il n'est pas commun).
+- Il commence avec une **pioche en bois**, **ses 5 premières minutes de salaire comprises**, et descend tout de suite creuser. « 👷 *X* est embauché(e) ! Il descend creuser. » (avec « (rare !) », « (épique !) »… s'il n'est pas commun).
 - Avec le recruteur, sa **rareté est tirée au hasard** (on ne refuse personne) et une animation la dévoile (voir plus bas).
+- **Au village** (30/10), l'embauche se voit : une **gerbe d'étincelles** jaillit du Personnel avec « 👷 *X* arrive ! », puis le nouveau mineur part vers la mine avec un **halo doré** sous les pieds, des étincelles et une bulle **« ✨ Nouveau ! »** (pendant 6 s).
 
 ### 2. La carte d'un employé
 
@@ -58,17 +59,17 @@ L'infobulle donne son activité en entier, sa vitesse en creusant et le nombre d
 
 Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un plus grand sac (moins d'allers-retours). Payé **en argent seulement** (`NIVEAUX_EMPLOYE`). Ces pioches ne s'usent pas.
 
-| Niveau | Pioche | Vitesse en creusant | Sac | Coût (29/10) | Niveau du joueur | Salaire / 5 min | Blocs par minute (échelle) | Blocs par minute (ascenseur niveau 6) |
+| Niveau | Pioche | Vitesse en creusant | Sac | Coût (30/10) | Niveau du joueur | Salaire / 5 min (30/10) | Blocs par minute (ascenseur niveau 1, au départ) | Blocs par minute (ascenseur niveau 6) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| 1 | Bois | 0,15 bloc/s | 10 | (de base) | — | 35 $ | ~6,8 | ~8,5 |
-| 2 | Pierre | 0,25 bloc/s | 15 | 400 $ | 4 | 70 $ | ~11 | ~14 |
-| 3 | Fer | 0,4 bloc/s | 20 | 1 500 $ | 6 | 155 $ | ~16,7 | ~22 |
-| 4 | Or | 0,6 bloc/s | 30 | 6 000 $ | 9 | 350 $ | ~25 | ~33 |
-| 5 | Diamant | 0,9 bloc/s | 45 | 22 000 $ | 12 | 770 $ | ~37,5 | ~50 |
+| 1 | Bois | 0,22 bloc/s | 10 | (de base) | — | 90 $ | ~10,1 | ~12,1 |
+| 2 | Pierre | 0,32 bloc/s | 15 | 500 $ | 4 | 220 $ | ~14,8 | ~17,7 |
+| 3 | Fer | 0,48 bloc/s | 20 | 3 000 $ | 6 | 500 $ | ~21,6 | ~26,3 |
+| 4 | Or | 0,7 bloc/s | 30 | 15 000 $ | 9 | 1 100 $ | ~31,7 | ~38,4 |
+| 5 | Diamant | 1 bloc/s | 45 | 60 000 $ | 12 | 2 400 $ | ~45,8 | ~55,1 |
 
-Un mineur équipé jusqu'au diamant coûte 29 900 $ de pioches (avant le 29/10 : 150, 600, 2 500 et 9 000 $, soit 12 250 $). Sans le niveau du joueur, la fiche du mineur affiche « 🔒 … · au niveau *N* » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
+Un mineur équipé jusqu'au diamant coûte 78 500 $ de pioches (30/10 ; 29/10 : 400, 1 500, 6 000 et 22 000 $, soit 29 900 $, avec des vitesses de 0,15 à 0,9 bloc/s et des salaires de 35 à 770 $ ; avant le 29/10 : 12 250 $). Le mineur en bois creuse plus vite depuis le 30/10 (0,22 au lieu de 0,15). Sans le niveau du joueur, la fiche du mineur affiche « 🔒 … · au niveau *N* » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
 
-(Pour un mineur commun, trajets compris. Les salaires valent environ 35 % de ce qu'il fait sortir de la mine, payés toutes les 5 minutes depuis le 28/10.)
+(Pour un mineur commun, trajets compris. Depuis le 30/10, les salaires sont **bien plus chers** : environ 40 % de ce qu'il fait sortir de la mine, et plus au début (un mineur en bois au niveau 1 de la mine coûte environ 60 % de ce qu'il sort) ; payés toutes les 5 minutes depuis le 28/10.)
 
 - **Sa pioche lui descend par l'ascenseur** (27/10) : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite ; à la fin de son tour, le mineur attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse (« ⛏️ Le forgeron fait une pioche en … pour *X* : elle lui descendra par l'ascenseur. »). Il ne remonte plus au village pour ça : **un mineur ne remonte que s'il n'est plus payé** (il va alors attendre devant le Personnel). Sans forgeron, il l'a directement. Une pioche ne s'achète pas pour un pousseur (il ne creuse pas).
 
@@ -91,7 +92,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 - Il **marche du Personnel jusqu'au bâtiment de départ** de son trajet (`maisonDe`), puis **attend au quai**, au bord de la voie, à côté du début de ses rails. Sans Personnel posé, il est tout de suite au quai.
 - Dès que **son** wagonnet a quelque chose à porter et que son trajet n'est pas électrique, il le **pousse jusqu'à l'arrivée** (2,5 cases/s × sa rareté), puis le ramène et retourne au quai. Le pousseur d'un autre trajet ne bouge pas : avec plusieurs trajets à pousser, il faut **un pousseur par trajet**.
-- Il est **payé** comme les autres : **35 $ toutes les 5 minutes** (le salaire d'une pioche en bois) × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
+- Il est **payé** comme les autres : **90 $ toutes les 5 minutes** (le salaire d'une pioche en bois, 30/10 ; avant 35 $) × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
 - **Changer son trajet** (la liste sur sa carte, `changerTrajet`) : « 🛤️ *X* va pousser le wagonnet de la mine à la foreuse. » S'il est en train de pousser, il finit d'abord son voyage, puis marche jusqu'au quai de son nouveau trajet (« va au quai de la foreuse »). Le nouveau trajet est créé s'il n'existe pas encore.
 - **Trajet arrêté** (✖ Arrêter au panneau du départ) : il attend au quai pour rien (« 🛤️ attend : son trajet est arrêté »), et la bulle **🛤️ Sans trajet** apparaît sur le Personnel : choisis-lui un autre trajet, ou licencie-le.
 - **Un pousseur par trajet automatique** (27/10) : sans pousseur payé, un wagonnet ne part pas tout seul, même sur des rails électriques (le joueur peut toujours le pousser lui-même). Sur un trajet électrique, le pousseur reste au quai et lance le wagonnet, qui roule seul et bien plus vite. Une bulle « Pousseur ? » sur le Personnel signale un trajet sans pousseur.
@@ -110,7 +111,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 | Employés dans l'équipe | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Indemnités (29/10) | 40 $ | 120 $ | 320 $ | 800 $ | 2 000 $ | 4 800 $ | 11 200 $ | 24 000 $ | 48 000 $ | 96 000 $ | 153 600 $ | 245 800 $ |
+| Indemnités (30/10) | 30 $ | 160 $ | 600 $ | 2 000 $ | 6 000 $ | 16 000 $ | 40 000 $ | 100 000 $ | 240 000 $ | 600 000 $ | 1 320 000 $ | 2 904 000 $ |
 
 - Le mineur part **avec son équipement** (sa pioche et ce qu'il a dans son sac sont perdus). « 👋 *X* est parti(e). Indemnités : … » Réembaucher coûte ensuite le prix normal de la taille d'équipe : c'est le moyen de « retenter sa chance » avec le recruteur.
 
@@ -138,7 +139,7 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 | Légendaire | ×3 | ×2 | orange `#f5a524` |
 | Mythique | ×5 | ×3 | rose `#ff4d8d` |
 
-  Un mineur rare creuse plus vite **et** a un plus grand sac : le temps passé à creuser un sac reste le même, mais chaque aller-retour rapporte plus. Un mineur mythique en diamant sort ainsi environ 187 blocs par minute avec l'échelle.
+  Un mineur rare creuse plus vite **et** a un plus grand sac : le temps passé à creuser un sac reste le même, mais chaque aller-retour rapporte plus. Un mineur mythique en diamant sort ainsi environ 229 blocs par minute avec l'ascenseur du départ.
 - **L'animation d'embauche** (`RevelationRecrue.tsx`, seulement avec le recruteur) : la carte tremble pendant que les couleurs défilent (**1,6 s** de suspense, un clic dévoile tout de suite), puis elle se retourne avec des rayons, des étoiles (★ selon le rang), des confettis (24 + 18 par rang de rareté) et un flash pour légendaire et mythique. Bouton « Au travail ! », « Super ! » (rare, épique) ou « Incroyable ! » (légendaire, mythique). Des sons accompagnent le suspense et la révélation.
 
 ### 8. Le manager et la trésorerie (niveau 4 de la mine)
@@ -152,13 +153,13 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 ## Règles et comportement
 
 - **Le travail d'un mineur**, en boucle (`travailler` dans `employes.ts`) : il **descend** dans la mine, **creuse** jusqu'à ce que son sac soit plein, **remonte**, **vide son sac dans le coffre de la mine** (2 s, `SECONDES_VIDAGE_EMPLOYE`), puis redescend. Il ne creuse pas pendant les trajets.
-- **Ses trajets** : à l'**échelle**, une montée ou une descente dure **10 s** (`SECONDES_ECHELLE`) ; avec l'**ascenseur** (au panneau de la mine), de 6 s (niveau 1) à 1 s (niveau 6).
+- **Ses trajets** : avec l'**ascenseur** (au panneau de la mine, là dès le début depuis le 30/10), une montée ou une descente dure de 6 s (niveau 1) à 1 s (niveau 6). L'**échelle** (**10 s**, `SECONDES_ECHELLE`) ne servait que sans ascenseur, dans les vieilles parties.
 - **Ce qu'il trouve** : des blocs tirés au hasard selon le **niveau de la mine** (les mêmes chances que la mine). Il ne double jamais ses minerais.
 - **Coffre plein** : il attend devant, son sac plein, sans rien faire (« 📦 attend : le coffre de la mine est plein ! »), en continuant d'être payé. Il vide dès qu'il y a de la place.
 - **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : s'il creusait ou descendait, il remonte ; en haut, il vide quand même son sac, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (**2,5 cases par seconde** depuis le 27/10, avant 4 ; `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet. **Plusieurs mineurs payés en même temps repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) ; ceux qui attendent encore leur tour restent à leur place devant le Personnel.
 - **Un mineur n'attend jamais au quai** : s'il y en a un (une vieille partie), il redescend aussitôt creuser.
 - **Le manager paie tout seul** : dès qu'il reste **moins d'une minute** payée (`SECONDES_AVANT_PAIE_MANAGER = 60`), il paie 5 minutes de plus avec la trésorerie, **d'abord lui-même**, puis les mineurs **du moins cher au plus cher** (s'il n'y a pas assez, le plus de mineurs possible continuent). **S'il n'est pas payé, il ne paie plus personne** (« 💼 Ton manager n'est plus payé : la trésorerie est vide ! Remplis-la au Personnel. »). Le travail avance par morceaux de 30 secondes, pour que le manager ait le temps de payer entre deux morceaux après une longue absence.
-- **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec la trésorerie. Au retour, le message « Pendant ton absence » dit combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».
+- **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec la trésorerie. Au retour, la fenêtre « Bon retour, mineur ! » (30/10, `FenetreAbsence.tsx`) dit combien de blocs **tes mineurs ont creusé** et combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».
 
 ## Lien avec le reste du jeu
 
@@ -171,14 +172,14 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 ## Fichiers du code
 
 - `src/jeu/employes.ts` : toutes les règles (embauche des mineurs et des pousseurs `embaucherPousseur` / `peutEmbaucherPousseur`, prix, licenciement, pioches, trajet d'un pousseur `changerTrajet` et son quai `maisonDe`, salaires, travail seconde après seconde, passage à la forge, attente devant le Personnel, recruteur, manager, trésorerie, textes d'activité).
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.employes` : 250 $ + 50 pierre, 5 × 5, porte à droite) et les chiffres (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `PRIX_EMBAUCHE`, `HAUSSE_APRES_LISTE`, `PART_INDEMNITES`, `SALAIRES`, `NIVEAUX_EMPLOYE`, `RARETES`, `NIVEAUX_RECRUTEUR`, `PRIX_MANAGER`, `SALAIRE_MANAGER`, `SECONDES_VIDAGE_EMPLOYE`, `SECONDES_FORGE_EMPLOYE`, `VITESSE_MARCHE`, `VITESSE_POUSSE_MINEUR`…).
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.employes` : 150 $ + 30 pierre, 5 × 5, porte à droite) et les chiffres (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `PRIX_EMBAUCHE`, `HAUSSE_APRES_LISTE`, `PART_INDEMNITES`, `SALAIRES`, `NIVEAUX_EMPLOYE`, `RARETES`, `NIVEAUX_RECRUTEUR`, `PRIX_MANAGER`, `SALAIRE_MANAGER`, `SECONDES_VIDAGE_EMPLOYE`, `SECONDES_FORGE_EMPLOYE`, `VITESSE_MARCHE`, `VITESSE_POUSSE_MINEUR`…).
 - `src/jeu/mineur.ts` : les types `Employe` (rôle `mineur` ou `pousseur` ; `trajet`, le trajet d'un pousseur, `null` pour un mineur ; étapes `creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend` ; `lieu`, `depuis`, `forgeEnAttente`) et `Manager`, l'ascenseur (`secondesTrajetMineur`).
 - `src/jeu/wagonnet.ts` : le pousseur de ce trajet (et lui seul, s'il attend au quai du départ) qui part avec le wagonnet et revient au quai ; la création du trajet à l'embauche (`creerTrajet`).
 - `src/jeu/sauvegarde.ts` : `convertirVersion22` (26/10) : dans une partie de la version 22, les anciens pousseurs prennent le trajet Mine → Marché.
 - `src/jeu/village.ts` : le chemin à pied entre deux bâtiments (`cheminEntre`, `secondesAPied`).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/temps.ts` : fait avancer les mineurs avec le reste du jeu.
-- `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) et le message « Pendant ton absence ».
+- `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) ; `src/jeu/absence.ts` et `src/composants/FenetreAbsence.tsx` (30/10) : le résumé « Bon retour, mineur ! ».
 - `src/jeu/notifications.ts` : les bulles 😠, 🛤️ (sans trajet), ✨ et 💰 au-dessus du Personnel.
 - `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Personnel », achats, missions.
 - `src/jeu/decouvertes.ts` : les bulles « Nouveau : Recruteur / Manager ! ».
@@ -193,4 +194,4 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 - `src/composants/sprites.ts` et `public/images/personnages/sprites/` : les images des personnages tirées des planches (mineur vu devant, derrière, gauche et droite, casque recoloré à la couleur de sa rareté ; manager et recruteur vus de face).
 - `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : un personnage posé sur la grille, sa place devant un bâtiment (`devant`), sa marche le long d'un chemin (`surLeChemin`, `orienter`).
 - `public/images/batiments/employes.webp` : le dessin du bâtiment ; `employes-miroir.webp` : le même avec l'enseigne retournée, pour le bâtiment en miroir (fabriqué par `outils/batiments/textes_miroir.py`, choisi par `imageBatiment` dans `src/composants/iso.ts`) ; `public/images/personnages/manager.webp`, `recruteur.webp` : les portraits du panneau.
-- `src/personnel.css` : les cartes, l'animation d'embauche et les portraits (`.portrait-chef`) ; `src/interface.css` : la carte d'embauche d'un pousseur (`.carte-pousseur`, `.choix-batiments`, `.choix-trajet`, `.titre-equipe`) ; `src/village.css` : les personnages du village (`.perso-village`, `.perso-colere`, `.perso-poste`) et le trajet qui brille (`.case-trajet`, `.emprise-trajet`).
+- `src/personnel.css` : les cartes, l'animation d'embauche et les portraits (`.portrait-chef`) ; `src/interface.css` : la carte d'embauche d'un pousseur (`.carte-pousseur`, `.choix-batiments`, `.choix-trajet`, `.titre-equipe`) ; `src/village.css` : les personnages du village (`.perso-village`, `.perso-colere`, `.perso-poste`), le trajet qui brille (`.case-trajet`, `.emprise-trajet`) et l'arrivée d'un nouveau mineur (30/10 : `.eclat-embauche`, `.perso-nouveau`, `.bulle-nouveau-mineur`).

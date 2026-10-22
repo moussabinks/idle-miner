@@ -10,8 +10,9 @@ import {
   LISTE_BATIMENTS,
   type Cout,
   type IdBatiment,
-  } from './donnees'
-import { payer, peutPayer, type EtatJeu } from './mineur'
+  type IdBloc,
+} from './donnees'
+import { ajouterA, payer, peutPayer, ramasser, type EtatJeu } from './mineur'
 import { niveauAtteint, niveauPourBatiment, railsDebloques } from './niveaux'
 import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
 
@@ -147,10 +148,36 @@ export function deplacerSol(etat: EtatJeu, type: TypeSol, de: { x: number; y: nu
   return []
 }
 
-// Enlever une case (sans remboursement).
+// Enlever une case : elle est remboursée (30/10). Le fer d'un rail revient dans le sac s'il y a
+// de la place, sinon dans le coffre de la mine ; un chemin rend son argent.
 export function retirerSol(etat: EtatJeu, type: TypeSol, x: number, y: number): string[] {
   const liste = listeSol(etat, type)
   const index = liste.indexOf(cleCase(x, y))
-  if (index !== -1) liste.splice(index, 1)
-  return []
+  if (index === -1) return []
+  liste.splice(index, 1)
+  const cout = coutSol(type)
+  etat.argent += cout.argent ?? 0
+  for (const [id, nombre] of Object.entries(cout.materiaux)) {
+    const bloc = id as IdBloc
+    const reste = ramasser(etat, bloc, nombre ?? 0)
+    ajouterA(etat.coffre.contenu, bloc, reste)
+  }
+  return [type === 'rail' ? `🛤️ Rail retiré : +${COUT_RAIL.materiaux.fer ?? 0} 🔩 fer rendus.` : `🪨 Chemin retiré : +${COUT_CHEMIN.argent ?? 0} $ rendus.`]
+}
+
+// Pourquoi on ne peut pas poser un rail ou un chemin ici (null : on peut). Pour le dire au
+// joueur (30/10 : avant, rien ne se passait quand il n'avait plus de fer).
+export function raisonSolImpossible(etat: EtatJeu, type: TypeSol, x: number, y: number): string | null {
+  if (type === 'rail' && !railsDebloques(etat)) return null
+  if (!peutPayer(etat, coutSol(type))) {
+    return type === 'rail'
+      ? `🔩 Plus de fer : un rail coûte ${COUT_RAIL.materiaux.fer ?? 0} fer (sac + coffre de la mine). Va creuser !`
+      : `💵 Pas assez d'argent : un chemin coûte ${COUT_CHEMIN.argent ?? 0} $.`
+  }
+  if (type === 'rail') {
+    const place = placePourUnRail(etat.village, x, y)
+    if (place === 'boucle') return MESSAGE_BOUCLE
+    if (place === 'bords') return MESSAGE_BORDS
+  }
+  return null
 }

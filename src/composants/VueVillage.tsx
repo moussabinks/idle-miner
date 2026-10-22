@@ -17,6 +17,7 @@ import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
   batimentProcheDe,
+  cleCase,
   MARGE_CLIC_BATIMENT,
   bordsDeVoie,
   cheminEntre,
@@ -71,6 +72,9 @@ type Props = {
   fantomeLibre: boolean
   fantomeFixe: boolean // le fantôme a été posé d'un clic (sinon, à la souris, il suit le curseur)
   pinceau: boolean // on peint des rails ou des chemins : chaque case touchée en reçoit un
+  // (30/10) Ce qu'on peint, et si on peut le poser sur une case : un aperçu suit la souris.
+  typePinceau?: 'rail' | 'chemin' | null
+  peutPeindre?: (c: Case) => boolean
   onTap: (c: Case, cible: CibleVillage | null) => void
   onSurvol: (c: Case) => void // la souris passe sur une case (le fantôme la suit tant qu'il n'est pas fixé)
   onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
@@ -100,6 +104,8 @@ export function VueVillage({
   fantomeLibre,
   fantomeFixe,
   pinceau,
+  typePinceau = null,
+  peutPeindre,
   onTap,
   onSurvol,
   onGlisser,
@@ -196,8 +202,21 @@ export function VueVillage({
     const { milieuX: mx, hauteur } = miseEnPageRef.current
     if (mondeRef.current) mondeRef.current.style.transform = `translate(${mx - c.cx * c.z}px, ${hauteur / 2 - c.cy * c.z}px) scale(${c.z})`
   }, [])
+  // (30/10) Pendant un zoom (molette, pavé tactile, pincement) ou quand on fait glisser la carte,
+  // la caméra voulue est gardée ici, hors de React : chaque cran ou chaque mouvement ne redessine
+  // plus tout le village (c'est ce qui saccadait). Quand le geste s'arrête, on la recopie dans
+  // l'état de React (zoom, libre) en une seule fois.
+  const gesteCameraRef = useRef<Camera | null>(null)
+  const finGesteRef = useRef(0)
+  const recopieRef = useRef(false)
   useLayoutEffect(() => {
     miseEnPageRef.current = { milieuX, hauteur: taille.h }
+    // (le geste vient d'être recopié dans l'état : la caméra de React prend le relais)
+    if (recopieRef.current) {
+      recopieRef.current = false
+      gesteCameraRef.current = null
+    }
+    if (gesteCameraRef.current) return
     if (!cameraRef.current.douce) afficheeRef.current = { z: cameraRef.current.z, cx: cameraRef.current.cx, cy: cameraRef.current.cy }
     appliquerCamera()
   })
@@ -208,10 +227,12 @@ export function VueVillage({
       // (le temps d’une image peut être un peu négatif à la première image : on le borne à 0)
       const secondes = Math.max(0, Math.min(0.1, (maintenant - avant) / 1000))
       avant = maintenant
-      const voulue = cameraRef.current
+      const geste = gesteCameraRef.current
+      const voulue = geste ?? cameraRef.current
       const c = afficheeRef.current
-      // Plus elle est loin, plus elle va vite (elle rattrape environ 90 % de l'écart en 0,25 s).
-      const k = voulue.douce ? 1 - Math.exp(-secondes * 9) : 1
+      // Plus elle est loin, plus elle va vite (elle rattrape environ 90 % de l'écart en 0,25 s ;
+      // pendant un zoom, un peu plus vite : 90 % en 0,15 s).
+      const k = voulue.douce ? 1 - Math.exp(-secondes * (geste ? 15 : 9)) : 1
       const nouvelle = { z: c.z + (voulue.z - c.z) * k, cx: c.cx + (voulue.cx - c.cx) * k, cy: c.cy + (voulue.cy - c.cy) * k }
       const bouge = Math.abs(nouvelle.cx - c.cx) + Math.abs(nouvelle.cy - c.cy) + Math.abs(nouvelle.z - c.z) * 100 > 0.01
       afficheeRef.current = nouvelle
@@ -223,6 +244,31 @@ export function VueVillage({
   }, [appliquerCamera])
 
   // --- Souris, doigts, molette ------------------------------------------------
+
+  // La caméra que vise le geste en cours (ou, sans geste, celle de React).
+  const cameraVisee = (): Camera => gesteCameraRef.current ?? cameraRef.current
+
+  // Un geste vise une caméra (en douceur pour un zoom, tout de suite pour faire glisser la carte).
+  // Quand plus rien ne bouge depuis un moment, elle est recopiée dans l'état de React.
+  function viser(c: Camera, douce: boolean) {
+    gesteCameraRef.current = { ...c, douce }
+    window.clearTimeout(finGesteRef.current)
+    const recopier = () => {
+      const g = gesteCameraRef.current
+      if (!g) return
+      const a = afficheeRef.current
+      // (on attend que l'image ait presque rejoint la caméra visée : pas de saut à la fin)
+      if (Math.abs(a.z - g.z) > 0.002 || Math.abs(a.cx - g.cx) + Math.abs(a.cy - g.cy) > 0.5) {
+        finGesteRef.current = window.setTimeout(recopier, 50)
+        return
+      }
+      recopieRef.current = true
+      setZoom(g.z)
+      setLibre({ cx: g.cx, cy: g.cy })
+    }
+    finGesteRef.current = window.setTimeout(recopier, 160)
+  }
+  useEffect(() => () => window.clearTimeout(finGesteRef.current), [])
 
   const pointeurs = useRef(new Map<number, { x: number; y: number }>())
   const geste = useRef<{ mode: 'tap' | 'carte' | 'fantome' | 'pinceau'; depart: { x: number; y: number }; temps: number; camera: Camera; deplace: boolean } | null>(null)
@@ -260,7 +306,7 @@ export function VueVillage({
     pointeurs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointeurs.current.size === 2) {
       const [a, b] = [...pointeurs.current.values()]
-      pincement.current = { distance: Math.hypot(a.x - b.x, a.y - b.y), z: cameraRef.current.z }
+      pincement.current = { distance: Math.hypot(a.x - b.x, a.y - b.y), z: cameraVisee().z }
       geste.current = null
       return
     }
@@ -270,7 +316,7 @@ export function VueVillage({
     // qu'il n'est pas fixé (par un clic), glisser déplace la carte, pas le bâtiment.
     const surLeFantome = fantome !== null && dansLeFantome(c) && (fantomeFixe || e.pointerType !== 'mouse')
     const mode = pinceau ? 'pinceau' : surLeFantome ? 'fantome' : 'tap'
-    geste.current = { mode, depart: { x: e.clientX, y: e.clientY }, temps: performance.now(), camera: cameraRef.current, deplace: false }
+    geste.current = { mode, depart: { x: e.clientX, y: e.clientY }, temps: performance.now(), camera: cameraVisee(), deplace: false }
     if (mode === 'pinceau') onPeindre(c)
   }
 
@@ -278,6 +324,11 @@ export function VueVillage({
     if (!pointeurs.current.has(e.pointerId)) {
       // La souris passe au-dessus de la carte (sans clic) : le fantôme la suit.
       if (fantome && e.pointerType === 'mouse' && !pinceau) onSurvol(caseSous(e.clientX, e.clientY))
+      // (30/10) On pose des rails : l'aperçu du rail suit la souris.
+      if (pinceau && e.pointerType === 'mouse') {
+        const c = caseSous(e.clientX, e.clientY)
+        if (!caseApercu || caseApercu.x !== c.x || caseApercu.y !== c.y) setCaseApercu(c)
+      }
       // Le bâtiment sous la souris (ou juste à côté) est entouré au sol.
       if (e.pointerType === 'mouse') {
         const vise = batimentVise(e.clientX, e.clientY)
@@ -291,7 +342,7 @@ export function VueVillage({
       const distance = Math.hypot(a.x - b.x, a.y - b.y)
       const depart = pincement.current
       // Le zoom suit le pincement en plus fort (puissance FORCE_PINCEMENT) : un petit geste suffit.
-      setZoom(borner({ ...cameraRef.current, z: depart.z * Math.pow(distance / depart.distance, FORCE_PINCEMENT) }).z)
+      viser(borner({ ...cameraVisee(), z: depart.z * Math.pow(distance / depart.distance, FORCE_PINCEMENT) }), true)
       return
     }
     const g = geste.current
@@ -304,8 +355,7 @@ export function VueVillage({
     else if (g.mode === 'pinceau') onPeindre(caseSous(e.clientX, e.clientY))
     else {
       g.mode = 'carte'
-      const c = borner({ ...g.camera, cx: g.camera.cx - dx / g.camera.z, cy: g.camera.cy - dy / g.camera.z })
-      setLibre({ cx: c.cx, cy: c.cy })
+      viser(borner({ ...g.camera, cx: g.camera.cx - dx / g.camera.z, cy: g.camera.cy - dy / g.camera.z }), false)
     }
   }
 
@@ -325,6 +375,23 @@ export function VueVillage({
     return batimentProcheDe(village, c.x + 0.5, c.y + 0.5, MARGE_CLIC_BATIMENT)
   }
   const [survol, setSurvol] = useState<IdBatiment | null>(null)
+
+  // Les mineurs qui viennent d'être embauchés (leurs noms), pendant quelques secondes.
+  const nomsEmployes = etat.employes.map((m) => m.nom).join('|')
+  const [nomsAvant, setNomsAvant] = useState(nomsEmployes)
+  const [arrivees, setArrivees] = useState<string[]>([])
+  if (nomsEmployes !== nomsAvant) {
+    const avant = nomsAvant.split('|')
+    const nouveaux = etat.employes.map((m) => m.nom).filter((nom) => !avant.includes(nom))
+    setNomsAvant(nomsEmployes)
+    if (nouveaux.length > 0) setArrivees((a) => [...a, ...nouveaux])
+  }
+  useEffect(() => {
+    if (arrivees.length === 0) return
+    const minuteur = window.setTimeout(() => setArrivees([]), 6000)
+    return () => clearTimeout(minuteur)
+  }, [arrivees])
+  const [caseApercu, setCaseApercu] = useState<Case | null>(null)
 
   function pointerUp(e: React.PointerEvent) {
     pointeurs.current.delete(e.pointerId)
@@ -350,17 +417,19 @@ export function VueVillage({
   }
 
   function molette(e: React.WheelEvent) {
-    const m = versMonde(e.clientX, e.clientY)
-    const c = cameraRef.current
+    // Le point du monde sous la souris, d'après la caméra visée (les crans s'enchaînent bien).
+    const c = cameraVisee()
+    const rect = conteneurRef.current?.getBoundingClientRect()
+    const m = { x: (e.clientX - (rect?.left ?? 0) - milieuX) / c.z + c.cx, y: (e.clientY - (rect?.top ?? 0) - taille.h / 2) / c.z + c.cy }
     // Un cran de molette zoome d'environ 15 % (29/10 : avant, presque du double, c'était trop).
     // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
     const brut = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
     const pixels = Math.max(-CRAN_MAX, Math.min(CRAN_MAX, brut))
-    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * FORCE_MOLETTE)))
+    // (le pincement du pavé tactile arrive comme une molette avec Ctrl, en tout petits pas)
+    const force = e.ctrlKey ? FORCE_MOLETTE * 5 : FORCE_MOLETTE
+    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * force)))
     // On zoome autour du point sous la souris.
-    const nouvelle = borner({ z, cx: m.x - (m.x - c.cx) * (c.z / z), cy: m.y - (m.y - c.cy) * (c.z / z) })
-    setZoom(nouvelle.z)
-    setLibre({ cx: nouvelle.cx, cy: nouvelle.cy })
+    viser(borner({ z, cx: m.x - (m.x - c.cx) * (c.z / z), cy: m.y - (m.y - c.cy) * (c.z / z) }), true)
   }
 
   // --- Ce qu'on dessine ------------------------------------------------------
@@ -405,6 +474,22 @@ export function VueVillage({
 
   // Les mineurs employés quand ils sont au village.
   const personnel = batimentPose(village, 'employes')
+  // (30/10) Un mineur tout juste embauché : une gerbe d'étincelles jaillit du Personnel, et il
+  // part vers la mine avec un halo doré, des étincelles et une bulle « ✨ Nouveau ! ».
+  if (personnel) {
+    for (const nom of arrivees) {
+      const c = versEcran(personnel.x + BATIMENTS.employes.taille / 2, personnel.y + BATIMENTS.employes.taille / 2)
+      objets.push(
+        <div key={`embauche-${nom}`} className="eclat-embauche" style={{ left: c.x, top: c.y - 30, zIndex: 100000 }} aria-hidden="true">
+          <span className="eclat-embauche-rayons" />
+          {Array.from({ length: 10 }, (_, i) => (
+            <i key={i} style={{ ['--angle' as string]: `${i * 36}deg`, animationDelay: `${(i % 3) * 60}ms` }} />
+          ))}
+          <strong className="eclat-embauche-texte">👷 {nom} arrive !</strong>
+        </div>,
+      )
+    }
+  }
   let enAttente = 0
   let auQuai = 0
   etat.employes.forEach((mineur: Employe, index) => {
@@ -456,10 +541,11 @@ export function VueVillage({
         sens={orientation.sens}
         vue={orientation.vue}
         marche={marche}
-        classe={`perso-mineur ${colere ? 'perso-colere' : ''}`}
+        classe={`perso-mineur ${colere ? 'perso-colere' : ''} ${arrivees.includes(mineur.nom) ? 'perso-nouveau' : ''}`}
         etiquette={
           <>
             {colere && <span className="bulle-colere-village">😠</span>}
+            {arrivees.includes(mineur.nom) && <span className="bulle-nouveau-mineur">✨ Nouveau !</span>}
             {etiquette}
           </>
         }
@@ -695,6 +781,17 @@ export function VueVillage({
       <RayonGenerateur etat={etat} batimentActif={batimentActif} fantome={fantome} />
       {fantome && <LosangeEmprise x={fantome.x} y={fantome.y} taille={tailleFantome(fantome)} libre={fantomeLibre} />}
       {fantome?.type === 'sol' && fantome.sol === 'chemin' && <CaseChemin x={fantome.x} y={fantome.y} />}
+      {/* (30/10) L'aperçu de ce qu'on peint, sous la souris : vert si on peut le poser, rouge sinon. */}
+      {pinceau && caseApercu && typePinceau && (
+        <g className="apercu-pinceau">
+          {typePinceau === 'rail' ? (
+            <RailsDuVillage village={{ ...village, rails: [cleCase(caseApercu.x, caseApercu.y)] }} />
+          ) : (
+            <CaseChemin x={caseApercu.x} y={caseApercu.y} />
+          )}
+          <LosangeEmprise x={caseApercu.x} y={caseApercu.y} taille={1} libre={peutPeindre ? peutPeindre(caseApercu) : true} />
+        </g>
+      )}
     </svg>
   )
 
@@ -830,9 +927,12 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
 
 // Les mineurs qui descendent dans le puits ou en remontent (dans la cabine, ou sur l'échelle).
 function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
+  // (30/10) Pendant qu'un mineur vide son sac, sa caisse pleine reste en haut, dans la cabine :
+  // l'ascenseur ne « disparaît » plus pendant le déchargement.
   return etat.employes
-    .filter((m) => m.etape === 'monte' || m.etape === 'descend')
+    .filter((m) => m.etape === 'monte' || m.etape === 'descend' || (m.role === 'mineur' && m.etape === 'vide'))
     .map((m) => {
+      if (m.etape === 'vide') return { f: 0, pleine: true, contenu: m.sac }
       const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
       // (le sac remonte dans une caisse pleine ; la caisse redescend vide)
       return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte', contenu: m.sac }

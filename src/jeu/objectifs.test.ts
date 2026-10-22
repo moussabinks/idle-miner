@@ -46,15 +46,15 @@ describe('les missions (en haut à droite)', () => {
     expect(liste.length).toBeLessThanOrEqual(3)
   })
 
-  it('un bâtiment : ce qui manque, avec sa progression (« 12 / 50 pierre »)', () => {
+  it('un bâtiment : ce qui manque, avec sa progression (« 12 / 30 pierre »)', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     poser(etat, ['marche', 'forgeron'])
     etat.stats.argentGagne = 100
     etat.argent = 1000
     etat.coffre.contenu = { pierre: 12 }
-    // (le Personnel vient avant le Bazar dans le menu : 250 $ et 50 pierre)
+    // (le Personnel vient avant le Bazar dans le menu : 150 $ et 30 pierre)
     const personnel = missions(etat).find((m) => m.id === 'construire-employes')
-    expect(personnel).toMatchObject({ stand: 'puits', progression: { valeur: 12, max: 50 } })
+    expect(personnel).toMatchObject({ stand: 'puits', progression: { valeur: 12, max: 30 } })
     etat.coffre.contenu = { pierre: 60 }
     expect(missions(etat).find((m) => m.id === 'construire-employes')).toMatchObject({ construction: true, pret: true })
   })

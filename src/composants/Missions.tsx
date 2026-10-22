@@ -21,7 +21,11 @@ type Props = {
 const DUREE_ACCOMPLIE = 1600 // ms
 
 export function Missions({ etat, onAllerAuStand, onConstruire, compact }: Props) {
-  const liste = missions(etat)
+  // (30/10) Les missions déjà affichées gardent leur place jusqu'à ce qu'elles soient faites.
+  const [avant, setAvant] = useState<string[]>([])
+  const liste = missions(etat, avant)
+  // (on retient la liste affichée pendant le rendu, comme le conseille React)
+  if (liste.map((m) => m.id).join('|') !== avant.join('|')) setAvant(liste.map((m) => m.id))
   // La mission accomplie à l'instant (celle du haut qui vient de disparaître).
   const [accomplie, setAccomplie] = useState<Mission | null>(null)
   const premiere = useRef<Mission | null>(liste[0] ?? null)
@@ -42,7 +46,7 @@ export function Missions({ etat, onAllerAuStand, onConstruire, compact }: Props)
     return () => clearTimeout(minuteur)
   }, [accomplie])
 
-  const affichees = compact ? liste.slice(0, 1) : liste
+  const visibles = compact ? liste.slice(0, 1) : liste
   return (
     // Une liste de tâches à cocher (27/10) : une case ronde, l'icône, la consigne (un verbe
     // d'action) et sa barre, et un bouton d'action à droite (« Go ! » quand c'est faisable).
@@ -64,7 +68,7 @@ export function Missions({ etat, onAllerAuStand, onConstruire, compact }: Props)
           <span className="mission-action action-faite">Fait !</span>
         </div>
       )}
-      {affichees.map((m, i) => {
+      {visibles.map((m, i) => {
         const possible = m.construction || m.stand !== null
         return (
           <button

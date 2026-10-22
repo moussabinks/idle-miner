@@ -2,10 +2,12 @@
 // interface pour les deux : le titre et sa barre sur une ligne, puis une ligne par minerai que
 // sort la mine à son niveau (même s'il n'y en a pas encore) : combien il y en a, ce que fait le
 // wagonnet vers le marché (🚃 Vendre / Garder, s'il y a ce trajet), et 🎒 pour le mettre dans son
-// sac. Puis « Tout mettre dans le sac ». On ne vend jamais sur place : on porte au marché, ou un
+// sac. (30/10) Comme au marché, un curseur par minerai choisit combien en prendre (tout, par
+// défaut). Puis « Tout mettre dans le sac ». On ne vend jamais sur place : on porte au marché, ou un
 // wagonnet le fait.
 // Aucune règle du jeu ici : le panneau donne les actions (prendre, envoyer).
 
+import { useState } from 'react'
 import { BLOCS, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import { blocsDuNiveau } from '../jeu/mine'
 import { placeLibre, type EtatJeu, type Inventaire } from '../jeu/mineur'
@@ -27,6 +29,8 @@ type Props = PropsPanneau & {
 
 export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite, textePlein, liaison, reserve = {}, prendre, tutoSac = false }: Props) {
   const placeSac = placeLibre(etat)
+  // Combien prendre de chaque minerai (absent : tout ce qu'il y a).
+  const [choix, setChoix] = useState<Partial<Record<IdBloc, number>>>({})
   const wagonnet = trajetDe(etat, liaison) !== null
   const total = Object.values(contenu).reduce((t, n) => t + (n ?? 0), 0)
   const plein = total >= capacite
@@ -45,9 +49,10 @@ export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite,
         <span className="entete-coffre">Minerai</span>
         <span className="entete-coffre nombre">{nomStock}</span>
         {wagonnet && <span className="entete-coffre">🚃 Wagonnet</span>}
-        <span className="entete-coffre" />
+        <span className="entete-coffre">🎒 Prendre</span>
         {blocs.map((bloc) => {
           const nombre = contenu[bloc] ?? 0
+          const voulu = Math.min(nombre, choix[bloc] ?? nombre)
           const envoye = wagonnet && objetEnvoye(etat, liaison, bloc)
           return (
             <div key={bloc} className={`ligne-coffre ${nombre === 0 ? 'ligne-vide' : ''}`}>
@@ -67,14 +72,32 @@ export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite,
                   </button>
                 </span>
               )}
-              <button
-                className="bouton bouton-petit bouton-sac bouton-sac-ligne"
-                disabled={nombre === 0 || placeSac === 0}
-                title={`Mettre ${Math.min(nombre, placeSac)} ${BLOCS[bloc].nom.toLowerCase()} dans ton sac`}
-                onClick={() => jouer((e) => prendre(e, { [bloc]: nombre }))}
-              >
-                🎒
-              </button>
+              <span className="prendre-coffre">
+                <input
+                  type="range"
+                  min={0}
+                  max={nombre}
+                  value={voulu}
+                  disabled={nombre === 0}
+                  aria-label={`Combien de ${BLOCS[bloc].nom} mettre dans le sac`}
+                  onChange={(e) => {
+                    const valeur = Number(e.target.value)
+                    setChoix({ ...choix, [bloc]: valeur >= nombre ? undefined : valeur })
+                  }}
+                />
+                <small className="prendre-compteur">{Math.min(voulu, placeSac)}</small>
+                <button
+                  className="bouton bouton-petit bouton-sac bouton-sac-ligne"
+                  disabled={voulu === 0 || placeSac === 0}
+                  title={`Mettre ${Math.min(voulu, placeSac)} ${BLOCS[bloc].nom.toLowerCase()} dans ton sac`}
+                  onClick={() => {
+                    jouer((e) => prendre(e, { [bloc]: voulu }))
+                    setChoix({ ...choix, [bloc]: undefined })
+                  }}
+                >
+                  🎒
+                </button>
+              </span>
             </div>
           )
         })}

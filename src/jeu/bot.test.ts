@@ -20,10 +20,11 @@ describe('bot de simulation (équilibrage)', () => {
     expect(m).toBeLessThanOrEqual(40)
   })
 
-  it('arrive au niveau 5 en 4 h à 7 h (médiane)', () => {
+  // (30/10 : salaires, embauches et améliorations bien plus chers : il faut farmer)
+  it('arrive au niveau 5 en 6 h à 9 h (médiane)', () => {
     const m = mediane(parties.map((p) => minutes(p.temps)))
-    expect(m).toBeGreaterThanOrEqual(4 * 60)
-    expect(m).toBeLessThanOrEqual(7 * 60)
+    expect(m).toBeGreaterThanOrEqual(6 * 60)
+    expect(m).toBeLessThanOrEqual(9 * 60)
   })
 
   it('monte de niveau petit à petit : niveau 5 après 8 minutes, niveau 10 après 1 heure (médiane)', () => {
