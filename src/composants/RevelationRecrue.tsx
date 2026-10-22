@@ -4,9 +4,10 @@
 // rare, plus c'est la fête ! Un clic pendant le suspense dévoile tout de suite la carte.
 
 import { useEffect, useState } from 'react'
-import { LISTE_RARETES, RARETES } from '../jeu/donnees'
+import { BATIMENTS, LIAISONS, LISTE_RARETES, RARETES } from '../jeu/donnees'
 import { rareteDe, salaireEmploye } from '../jeu/employes'
 import type { Employe } from '../jeu/mineur'
+import { forcePousseur } from '../jeu/wagonnet'
 import { sons } from '../sons'
 
 const DUREE_SUSPENSE = 1600 // ms
@@ -75,9 +76,14 @@ export function RevelationRecrue({ employe, onFermer }: Props) {
           <div className="revelation-face revelation-face-avant" aria-hidden={!devoilee}>
             <span className="revelation-etoiles">{etoiles}</span>
             <span className="revelation-rarete">{rarete.nom} !</span>
-            <span className="revelation-mineur">👷</span>
+            <span className="revelation-mineur">{employe.role === 'pousseur' ? '🛤️' : '👷'}</span>
             <strong className="revelation-nom">{employe.nom}</strong>
-            {rarete.rendement > 1 ? (
+            {employe.role === 'pousseur' ? (
+              <span className="revelation-bonus">
+                🛤️ {rarete.rendement > 1 ? `Pousse ×${forcePousseur(rarete.id).toLocaleString('fr-FR')} plus vite` : 'Un pousseur solide et fiable.'}
+                <small>{employe.trajet ? `Il pousse le wagonnet ${BATIMENTS[LIAISONS[employe.trajet].depart].nom} → ${BATIMENTS[LIAISONS[employe.trajet].arrivee].nom}.` : 'Choisis-lui un trajet.'}</small>
+              </span>
+            ) : rarete.rendement > 1 ? (
               <span className="revelation-bonus">
                 ⚡ Rendement ×{rarete.rendement.toLocaleString('fr-FR')}
                 <small>

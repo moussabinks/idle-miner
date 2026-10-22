@@ -22,6 +22,7 @@ import {
   LIAISONS,
   LISTE_LIAISONS,
   NIVEAUX_WAGONNET,
+  RARETES,
   RESERVE_FOREUSE_WAGONNET,
   RESERVE_GENERATEUR_WAGONNET,
   SECONDES_CHARGEMENT_WAGONNET,
@@ -33,6 +34,7 @@ import {
   type IdBatiment,
   type IdBloc,
   type IdLiaison,
+  type IdRarete,
 } from './donnees'
 import { retirerDuChariot, selectionChariot } from './foreuse'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
@@ -140,7 +142,15 @@ export function railsAlimentes(etat: EtatJeu): boolean {
 export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.pousseur): number {
   if (pousseur === 'joueur') return VITESSE_POUSSE_JOUEUR
   if (pousseur === 'electricite') return trajetElectrique(etat, trajet.liaison) ? VITESSE_RAILS * puissanceGenerateur(etat) : VITESSE_POUSSE_MINEUR / 2
-  return VITESSE_POUSSE_MINEUR
+  // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard).
+  const employe = etat.employes.find((e) => e.nom === pousseur)
+  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) : 1)
+}
+
+// Combien de fois plus vite pousse un pousseur, selon sa rareté : la moitié du bonus d'un
+// mineur (un mythique, ×5 en creusant, pousse ×3).
+export function forcePousseur(rarete: IdRarete): number {
+  return 1 + ((RARETES[rarete]?.rendement ?? 1) - 1) / 2
 }
 
 // Le temps d'un aller-retour (chargement et vidage compris), à cette vitesse.

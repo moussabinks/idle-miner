@@ -62,7 +62,7 @@ cliquer sur le bloc ─► COFFRE de la mine ─► sac ─► marcher au march�
 2. **Creuser** : on touche la mine (ou le bouton ⛏️ Mine) : le hamster y marche et le panneau s'ouvre, avec le bloc à cliquer. Au niveau 1 : 70 % de pierre, 18 % de charbon, 12 % de fer. La pioche s'use d'un point par clic ; cassée, il faut 2 clics par bloc.
 3. **Vendre** : quand le coffre se remplit, **🎒 Mettre dans le sac**, puis on marche jusqu'au marché et **💰 Vendre la sélection**. On garde un peu de pierre et de fer pour les constructions (une jauge à 0 au marché = objet gardé).
 4. **Construire et améliorer** : forgeron (pioche en fer, 200 $ + 25 fer), bazar (sac), mine (coffre, niveau suivant), Personnel (le premier mineur coûte 50 $).
-5. **Les rails** (3 fer la case, dès le début) : une ligne continue de la mine au marché (jamais en boucle). Au panneau de la mine, **« Envoyer un wagonnet vers le marché »** crée le trajet (gratuit) : le wagonnet (40 places au début) emporte le coffre au marché et revient. Il faut le **pousser** : toi (bouton au panneau de la mine, le hamster fait l'aller-retour avec lui) ou un **mineur pousseur** (au Personnel).
+5. **Les rails** (3 fer la case, dès le début) : une ligne continue de la mine au marché (jamais en boucle). Au panneau de la mine, **« Envoyer un wagonnet vers le marché »** crée le trajet (gratuit) : le wagonnet (40 places au début) emporte le coffre au marché et revient. Il faut le **pousser** : toi (bouton au panneau de la mine, le hamster fait l'aller-retour avec lui) ou un **pousseur**, embauché au Personnel pour ce trajet (on choisit son départ et son arrivée, le trajet brille sur la carte).
 6. **Niveau 2 de la mine** (400 $ + 30 fer) : la redstone arrive, avec la **foreuse** et le **générateur**. Le générateur brûle la redstone (1 redstone = 30 s) et électrifie un cercle de 15 cases autour de lui : si **tous les rails d'un trajet** sont dedans, son wagonnet roule tout seul et plus vite. C'est le revenu passif. Avec d'autres rails, la mine peut aussi envoyer son charbon à la foreuse et sa redstone au générateur, et la foreuse son chariot au marché (4 trajets en tout).
 7. **Niveaux 3, 4 et 5** : or (et le recruteur, pour des mineurs rares), émeraudes (et le manager, qui paie les salaires tout seul), diamants. Chaque niveau permet 2 mineurs de plus (4 au niveau 1, 12 au niveau 5).
 
@@ -101,7 +101,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Échelle** | Le chemin des mineurs sans ascenseur : 10 s par montée ou descente. |
 | **Électricité** | Ce que donne le générateur dans son rayon : rails électriques (les wagonnets roulent tout seuls) et foreuse boostée. |
 | **Emprise** | Les cases qu'occupe un bâtiment ou une décoration. |
-| **Employé (mineur employé)** | Un hamster embauché au Personnel : il creuse, remonte, vide son sac dans le coffre de la mine et redescend, tant qu'on paie son salaire. Rôle « mineur » ou « pousseur ». |
+| **Employé** | Un hamster embauché au Personnel, tant qu'on paie son salaire. Deux métiers : le **mineur** creuse, remonte, vide son sac dans le coffre de la mine et redescend ; le **pousseur** (26/10) pousse le wagonnet d'un seul trajet, choisi à l'embauche. |
 | **Foreuse** | Machine du niveau 2 : au charbon, elle fore seule dans son chariot, plus vite dans le rayon du générateur. Une seule foreuse, 6 niveaux de forage et de chariot. |
 | **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et électrifie un cercle autour de lui (15 à 40 cases). 5 niveaux (rayon et puissance). |
 | **Hamster** | Tous les personnages : le joueur, les mineurs (casque de la couleur de leur rareté), le manager, le recruteur. Ce sont des images découpées dans les planches de l'équipe (vues de devant, derrière, gauche, droite). |
@@ -121,7 +121,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
 | **Puissance** | Ce qui fait rouler les wagonnets électriques plus vite (× 1 à × 3) et booste la foreuse : elle monte avec le niveau du générateur. |
 | **Puisage** | Option du générateur (dès son niveau 2) : il prend tout seul la redstone dans le coffre de la mine, en gardant 5 minutes d'avance. |
-| **Quai** | Le départ d'un trajet (la mine ou la foreuse) : le wagonnet y attend. Les pousseurs attendent au début des rails qui partent de la mine. |
+| **Quai** | Le départ d'un trajet (la mine ou la foreuse) : le wagonnet y attend. Chaque pousseur attend au début des rails de son trajet, devant le bâtiment de départ. |
 | **Rails** | 3 fer la case, dès le début (menu Bâtiments) : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Jamais de boucle. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. Dessiné en pointillés jaunes sur la carte. |

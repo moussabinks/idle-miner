@@ -22,9 +22,18 @@ Drive) :
 de 3 × 3 cases) et `voie_doux_<côtés du coin>` (`es`, `so`, `no`, `ne`), rendues dans un carré de
 2 × 2 cases.
 
+**Les butoirs** (26/10) : au bout d'une ligne (un rail qui n'a qu'une voisine et ne touche pas de
+bâtiment), la voie s'arrête sur un butoir (`butoir` dans `modele3d.py`) : une traverse double, deux
+poteaux en bois tenus par des jambes de force, une grosse poutre peinte en rouge et blanc, et deux
+tampons d'acier tournés vers la voie ; les rails s'arrêtent juste devant. Une image par côté où la
+voie s'arrête : `voie_fin_n`, `voie_fin_e`, `voie_fin_s`, `voie_fin_o`. Un rail tout seul a un
+butoir à chaque bout : `voie_seul_ns`. Le jeu choisit l'image avec `codeDeVoie`. Un bout de ligne
+n'est jamais le bras d'un virage doux : il garde son butoir.
+
 Le jeu (`RailsDuVillage`, dans `src/composants/DessinsVillage.tsx`) pose le talus de toutes les
 cases, puis la voie de la plus loin à la plus proche.
 
     python3 outils/rails/talus.py public/images/rails
     python3 outils/rails/modele3d.py public/images/rails        # toutes les formes
     python3 outils/rails/modele3d.py public/images/rails ns es  # seulement quelques-unes
+    python3 outils/rails/modele3d.py public/images/rails fin_n seul_ns  # les butoirs

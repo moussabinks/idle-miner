@@ -14,7 +14,7 @@
 | Lint | oxlint (plugins `react`, `typescript`, `oxc`), voir `.oxlintrc.json` |
 | En ligne | Supabase (`@supabase/supabase-js`) : comptes, sauvegarde en ligne, classement. Seul « backend », pas de serveur à nous. Le jeu marche sans |
 | Hébergement | Vercel (build = `npm run build`, dossier `dist/`) |
-| Visuel | Le village vu du ciel : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; les personnages sont des images découpées dans les planches de l'équipe (`sprites.ts`) ; les rails sont un talus à plat et une voie en vraie 3D, rendus par des scripts Python (`outils/rails/`) ; les wagonnets, le rayon du générateur, la cabine de la mine, les chemins, les rochers et les décorations sont dessinés en SVG dans le même style ; le bloc à cliquer et ses effets sont en CSS |
+| Visuel | Le village vu du ciel : le décor et les bâtiments sont des images webp fournies par l'équipe (`public/images/`), posées sur la grille par une transformation CSS (`iso.ts`) ; les personnages sont des images découpées dans les planches de l'équipe (`sprites.ts`) ; les rails sont un talus à plat et une voie en vraie 3D, rendus par des scripts Python (`outils/rails/`) ; les wagonnets sont un petit modèle 3D projeté en SVG à chaque image (`Wagonnet3D.tsx`, 26/10) ; le rayon du générateur, la cabine de la mine, les chemins, les rochers et les décorations sont dessinés en SVG dans le même style ; le bloc à cliquer et ses effets sont en CSS |
 | Sons | Web Audio, fabriqués par le code (aucun fichier audio) |
 | PWA | Manifeste + service worker (production uniquement) : installable et jouable hors ligne |
 
@@ -53,15 +53,15 @@ Dépendances de production : seulement `react`, `react-dom` et `@supabase/supaba
 |---|---|
 | `donnees.ts` | Toutes les données et constantes : blocs, niveaux de la mine (`NIVEAUX_MINE`), coffre, pioches, sacs, ascenseur, mineurs (équipement, salaires, raretés, recruteur, manager), rails, trajets des wagonnets (`LIAISONS`, `BATIMENTS_DES_RAILS`, réserves de la foreuse et du générateur), générateur, foreuse, bâtiments, décorations, tenues |
 | `mine.ts` | Les 5 niveaux de la mine : tirer un bloc selon le niveau (`tirerBloc`), les chances, la valeur moyenne d'un bloc |
-| `mineur.ts` | Le type `EtatJeu` (et `Coffre`, `Foreuse`, `Generateur`, `Trajet`, `Employe`, `Manager`, `Statistiques`...), `VERSION_ETAT` (22), `creerPartie`, et les actions du joueur : sac et coffre, payer avec le sac puis le coffre (`disponible`, `payer`), le clic sur le bloc (`cliquerMine`), la mine toute seule (`avancerMine`), niveaux, coffre, ascenseur, prendre dans le coffre, vente, pioches et réparation, sac |
-| `employes.ts` | Les mineurs employés : embauche, équipement, rôle (mineur ou pousseur), travail (creuser, monter, vider dans le coffre, descendre, marcher au village jusqu'à la forge ou au Personnel), salaires, licenciement, recruteur et rareté (niveau 3), manager et trésorerie (niveau 4) |
-| `wagonnet.ts` | **Refait le 24/10** : les trajets des wagonnets (Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché), un wagonnet par trajet : créer et arrêter un trajet, ce qu'il emporte, qui le pousse (joueur, mineur, électricité : `trajetElectrique`, `railsAlimentes`), vitesse, livraison, retour, ligne coupée, taille des wagonnets |
+| `mineur.ts` | Le type `EtatJeu` (et `Coffre`, `Foreuse`, `Generateur`, `Trajet`, `Employe`, `Manager`, `Statistiques`...), `VERSION_ETAT` (23), `creerPartie`, et les actions du joueur : sac et coffre, payer avec le sac puis le coffre (`disponible`, `payer`), le clic sur le bloc (`cliquerMine`), la mine toute seule (`avancerMine`), niveaux, coffre, ascenseur, prendre dans le coffre, vente, pioches et réparation, sac |
+| `employes.ts` | Les employés : embauche des mineurs, et (26/10) des pousseurs pour un trajet (`embaucherPousseur`, `peutEmbaucherPousseur`, `changerTrajet`, leur quai `maisonDe`), équipement, travail (creuser, monter, vider dans le coffre, descendre, marcher au village jusqu'à la forge, au Personnel ou au quai de son trajet), salaires, licenciement, recruteur et rareté (niveau 3), manager et trésorerie (niveau 4) |
+| `wagonnet.ts` | **Refait le 24/10** : les trajets des wagonnets (Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché), un wagonnet par trajet : créer et arrêter un trajet, ce qu'il emporte, qui le pousse (joueur, le pousseur de ce trajet, électricité : `trajetElectrique`, `railsAlimentes`), vitesse, livraison, retour, ligne coupée, taille des wagonnets |
 | `generateur.ts` | **Nouveau (22/10)** : le générateur : rayon (`casesDansLeRayon`), foreuse alimentée, redstone, puisage dans le coffre, améliorations |
 | `foreuse.ts` | La foreuse (niveau 2) : charbon, forage, chariot, améliorations, recharge auto, bonus électrique |
-| `village.ts` | Le village vu du ciel, géométrie seulement : types `Village`, `BatimentPose`, `DecorationPosee` ; grille de 60 × 60 cases, mine posée d'office au milieu, emprises et cases occupées, portes, chemin à pied (A étoile, avec cache), distance et temps à pied, ligne de rails entre deux bâtiments (`railsEntre`, `railsMineMarche`), raccords des rails (`raccordsRail`), pas de boucle (`feraitUneBoucle`), forme d'une case de rails (`formeDuRail`), bords de la voie interdits aux bâtiments (`bordsDeVoie`, `voieDegagee`), virages doux sur trois cases (`viragesDoux`) |
+| `village.ts` | Le village vu du ciel, géométrie seulement : types `Village`, `BatimentPose`, `DecorationPosee` ; grille de 60 × 60 cases, mine posée d'office au milieu, emprises et cases occupées, portes, chemin à pied (A étoile, avec cache), distance et temps à pied, ligne de rails entre deux bâtiments (`railsEntre`, `railsMineMarche`), raccords des rails (`raccordsRail`), pas de boucle (`feraitUneBoucle`), forme d'une case de rails (`formeDuRail`), bords de la voie interdits aux bâtiments (`bordsDeVoie`, `voieDegagee`), virages doux sur trois cases (`viragesDoux`, jamais avec un bout de ligne pour bras) |
 | `batiments.ts` | Les actions du village : construire un bâtiment (débloqué par le niveau de mine), le déplacer ou le retourner, nouveautés du menu Bâtiments, poser / déplacer / enlever des rails (jamais en boucle) et des chemins, acheter / déplacer / enlever des décorations |
 | `tenues.ts` | Les tenues du joueur (Bazar) : acheter, porter, enlever |
-| `notifications.ts` | Les bulles au-dessus des bâtiments posés (salaires, chariot plein, plus de charbon, plus de redstone, pioche cassée, sac plein, coffre plein ou à vider, nouveauté, achetable), triées par urgence |
+| `notifications.ts` | Les bulles au-dessus des bâtiments posés (salaires, rails coupés, pousseurs sans trajet, chariot plein, plus de charbon, plus de redstone, pioche cassée, sac plein, coffre plein ou à vider, nouveauté, achetable), triées par urgence |
 | `succes.ts` | Les 20 succès et `verifierSucces` |
 | `decouvertes.ts` | Le recruteur et le manager tout juste débloqués, montrés par une bulle ✨ au-dessus du Personnel jusqu'à ce qu'on passe devant |
 | `objectifs.ts` | Les achats possibles, bâtiments où une amélioration est achetable, et le « prochain objectif » (dont « Construire : X », « Relier la mine au marché » et les étapes du générateur) |
@@ -82,7 +82,7 @@ Retirés le 22/10 : `talents.ts`, `conditionsPrestige.ts` (vers `archives/presti
 | Fichier | Rôle |
 |---|---|
 | `main.tsx` | Point d'entrée : importe les CSS, monte `<App />` en `StrictMode`, enregistre le service worker |
-| `App.tsx` | `App` (écran d'accueil ou jeu, compte toujours actif) et `Jeu` : assemble les composants, relie boutons et clavier aux actions, gère la construction (fantôme à poser, pinceau des rails et chemins, mode Modifier), choisit le panneau du bâtiment devant lequel se tient le joueur, et bloque le joueur pendant qu'il pousse un wagonnet |
+| `App.tsx` | `App` (écran d'accueil ou jeu, compte toujours actif) et `Jeu` : assemble les composants, relie boutons et clavier aux actions, gère la construction (fantôme à poser, pinceau des rails et chemins, mode Modifier), choisit le panneau du bâtiment devant lequel se tient le joueur, bloque le joueur pendant qu'il pousse un wagonnet, et garde le trajet regardé à l'embauche d'un pousseur (`apercuTrajet`, passé à la carte) |
 | `usePartie.ts` | Hook central : garde l'`EtatJeu`, applique les actions, fait tourner l'horloge, gère le clic sur le bloc (`cliquer`), déclenche sons, animations (éclats, trouvailles) et notifications, rattrape l'absence, sauvegarde automatiquement |
 | `useCompte.ts` | Hook du compte en ligne : session, synchronisation des mondes, envoi du score |
 | `enLigne.ts` | Le seul fichier qui parle à Supabase (comptes, sauvegardes, classement) |
@@ -110,15 +110,15 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | Fichier | Rôle |
 |---|---|
 | `Accueil.tsx` | Écran d'accueil : logo, petit village vivant, 4 cartes « comment jouer », cartes des 5 mondes (niveau de mine, argent, mineurs, blocs ; prévient quand une partie d'avant la v21 repart de zéro), compte, installation, classement, version |
-| `SceneAccueil.tsx` | Le décor de l'accueil : un village tout fait avec des hamsters qui vont et viennent et un wagonnet |
+| `SceneAccueil.tsx` | Le décor de l'accueil : un village tout fait avec des hamsters qui vont et viennent et un wagonnet (le même en 3D que dans le jeu) |
 | `CarteCompte.tsx` | Carte du compte |
 | `CarteClassement.tsx` | Classement (20 premiers), onglets Niveau de mine / Argent |
 | `CarteInstallation.tsx` | Carte « Installer l'application » |
 | `Hud.tsx` | Bandeau du haut : argent et $/s, niveau de la mine et coffre, pioche, sac, mineurs, ⚡, boutons 🔊 et 🎵 |
 | `ProchainObjectif.tsx` | Barre « prochain objectif » sous le bandeau |
-| `VueVillage.tsx` | Le village vu du ciel : décor, bâtiments, rails, chemins, décorations, fantôme, joueur, mineurs dehors, manager et recruteur, wagonnets et leurs pousseurs, rayon du générateur, grille de construction, cabine de la mine qui suit les mineurs, bulles ; caméra (glisser, pincer, molette, suit le joueur ou le wagonnet qu'il pousse) et touchers |
+| `VueVillage.tsx` | Le village vu du ciel : décor, bâtiments, rails, chemins, décorations, fantôme, joueur, mineurs dehors, manager et recruteur, wagonnets et leurs pousseurs, pousseurs au quai de leur trajet, trajet en surbrillance (`trajetEnSurbrillance`, 26/10), rayon du générateur, grille de construction, cabine de la mine qui suit les mineurs, bulles ; caméra (glisser, pincer, molette, suit le joueur ou le wagonnet qu'il pousse) et touchers |
 | `iso.ts` | La projection isométrique, l'ordre d'affichage, le calage des images des bâtiments (`CALAGES`, `transformationSprite`), `pointSurSprite`, la taille du monde, où se tient un personnage devant un bâtiment |
-| `DessinsVillage.tsx` | Les dessins SVG : le terrain, ce qui évolue sur la mine (`DessinEvolutionMine` : cabine, câbles, panneau du niveau), la grille de construction (`GrilleConstruction`), les rails (`RailsDuVillage` : talus puis voie 3D), les chemins, les décorations |
+| `DessinsVillage.tsx` | Les dessins SVG : le terrain, ce qui évolue sur la mine (`DessinEvolutionMine` : cabine, câbles, panneau du niveau), la grille de construction (`GrilleConstruction`), les rails (`RailsDuVillage` : talus puis voie 3D ; `codeDeVoie` choisit l'image de chaque case, butoirs compris), les chemins, les décorations. (Le vieux `DessinWagonnet` est retiré le 26/10.) |
 | `ForetVillage.tsx`, `arbres.ts` | La forêt autour de la clairière |
 | `PlageVillage.tsx`, `plage.ts` | La plage et la mer (sable, galets, algues, crabes...) |
 | `Rochers.tsx` | **Nouveau (24/10)** : les rochers en relief (`Rocher`, `TasDeRochers`), pour la décoration, la mer, le feu de camp et la plage |
@@ -129,7 +129,7 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `MenuConstruction.tsx` | Les menus « 🏗️ Bâtiments » (prix, cadenas de niveau de mine, pastille Nouveau, rails) et « 🌸 Décorations » |
 | `PanneauMine.tsx` | **Nouveau (22/10)** : le panneau de la mine : le bloc à cliquer (éclats, trouvailles), le coffre, les trajets qui partent de la mine, le niveau de la mine, la taille du coffre, l'ascenseur |
 | `Panneaux.tsx` | Panneaux du Marché, du Forgeron (pioches), du Bazar, de la Foreuse et du Générateur, et panneau des succès |
-| `PanneauEmployes.tsx` | Le stand Personnel : embauche, cartes des mineurs (rôle, équipement), salaires, licenciement, recruteur, manager et trésorerie |
+| `PanneauEmployes.tsx` | Le stand Personnel : embauche d'un mineur, embauche d'un pousseur (`EmbauchePousseur` : départ, arrivée, aperçu du trajet sur la carte), listes Mineurs et Pousseurs (équipement, trajet d'un pousseur), salaires, licenciement, recruteur, manager et trésorerie |
 | `PanneauTenues.tsx` | Les tenues du joueur au Bazar |
 | `RevelationRecrue.tsx` | Animation de révélation de la rareté d'un nouveau mineur |
 | `Jauges.tsx` | Jauges de quantité par objet (marché, coffre) |
@@ -142,21 +142,22 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `Toasts.tsx` | Notifications |
 | `Confirmation.tsx` | Fenêtre de confirmation dans le style du jeu |
 | `PanneauTrajets.tsx` | **Nouveau (24/10)** : dans le panneau de la mine et de la foreuse, les trajets qui en partent : « Envoyer un wagonnet vers… », pousser, arrêter, taille des wagonnets |
-| `WagonnetVillage.tsx` | Un wagonnet sur les rails (un par trajet, chargement de la couleur du trajet) (une benne en volume tournée dans le sens de la voie) et son pousseur, avec sa propre animation à chaque image ; les bruits du wagonnet |
+| `WagonnetVillage.tsx` | Un wagonnet sur les rails (un par trajet) : sa place entre ses deux essieux (`ESSIEUX`, il tourne en douceur dans les virages), son remplissage (objets portés ÷ capacité) et son pousseur, avec sa propre animation à chaque image ; les bruits du wagonnet |
+| `Wagonnet3D.tsx` | **Nouveau (26/10)** : le dessin du wagonnet en 3D (`DessinWagonnet3D`), recalculé à chaque image : caisse en planches, cadre d'acier boulonné, quatre roues sur les rails, attelage, éclairage, ombre portée, minerais à facettes de ce qu'il porte. Il remplace l'ancienne benne (`DessinBenne`) |
 | `AmbianceVillage.tsx` | Papillons, oiseaux et ombres des nuages |
 
-Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (le sac au fond de la mine, l'envoi par l'ascenseur) ; le 23/10 : `Personnage.tsx` et `Icone.tsx` (restes de la vue en coupe), l'ambiance de grotte de `ambiance.ts` et le CSS de l'ancienne mine, du prestige et de l'enchanteur (environ 1 500 lignes). Le script qui dessine les tuiles des rails est `outils/rails/dessiner.py` (24/10, il remplace les anciens scripts), celui des textures du sol `outils/sol/textures.py`. Archivés : `ArbrePrestige.tsx`, `CartePrestige.tsx`, `FetePrestige.tsx`, `Victoire.tsx` (`archives/prestige/`) et `PanneauEnchanter.tsx` (`archives/enchanteur/`).
+Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (le sac au fond de la mine, l'envoi par l'ascenseur) ; le 23/10 : `Personnage.tsx` et `Icone.tsx` (restes de la vue en coupe), l'ambiance de grotte de `ambiance.ts` et le CSS de l'ancienne mine, du prestige et de l'enchanteur (environ 1 500 lignes). Les scripts des rails sont dans `outils/rails/` (`talus.py` pour le talus, `modele3d.py` pour la voie en 3D et ses butoirs, voir `outils/rails/LISEZMOI.md`), celui des textures du sol `outils/sol/textures.py`. Archivés : `ArbrePrestige.tsx`, `CartePrestige.tsx`, `FetePrestige.tsx`, `Victoire.tsx` (`archives/prestige/`) et `PanneauEnchanter.tsx` (`archives/enchanteur/`).
 
 ### 3.5 `public/` : fichiers servis tels quels
 
 | Fichier | Rôle |
 |---|---|
 | `manifest.webmanifest` | Manifeste PWA : nom « Mega Digger », `standalone`, portrait, couleurs `#15151a`, icônes |
-| `sw.js` | Service worker : cache `idle-miner-v12` (les images du village sont rangées dès l'installation) ; page réseau d'abord, `/assets/` cache d'abord, autres fichiers cache puis mise à jour ; ne touche jamais aux requêtes vers Supabase |
+| `sw.js` | Service worker : cache `idle-miner-v16` (les images du village sont rangées dès l'installation) ; page réseau d'abord, `/assets/` cache d'abord, autres fichiers cache puis mise à jour ; ne touche jamais aux requêtes vers Supabase |
 | `favicon.svg`, `icones/*.png` | Icônes de l'onglet et de l'application |
 | `images/village/arbres/arbre01.webp` … `arbre12.webp` | Les 12 arbres de la forêt |
 | `images/batiments/*.webp` | Les images des bâtiments (bazar, employes, foreuse, forgeron, generateur, marche, mine avec `mine-cabine` et `mine-devant`), des rails (carte du menu), et de l'enchanteur et de l'arbre de prestige (plus utilisées, gardées pour plus tard) |
-| `images/rails/*.webp`, `images/sol/*.webp` | Les 4 tuiles des rails, les textures d'herbe et de sable |
+| `images/rails/*.webp`, `images/sol/*.webp` | Les tuiles du talus (`talus_*`) et les images de la voie en 3D (`voie_*` : une par forme de case, dont les butoirs `voie_fin_n`, `_e`, `_s`, `_o` et `voie_seul_ns` du 26/10), les textures d'herbe et de sable |
 | `images/personnages/*.webp`, `images/personnages/sprites/*.webp` | Les portraits (accueil, Personnel) et les images des personnages |
 
 ### 3.6 `supabase/` : la base de données
@@ -165,8 +166,9 @@ Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (
 |---|---|
 | `schema.sql` | Table `sauvegardes` (tous les mondes d'un joueur), droits, règles RLS, trigger de date |
 | `classement.sql` | Table `classement`, index, droits, règles RLS (pseudo du compte obligatoire), trigger qui garde le meilleur score. À lancer après `schema.sql` |
+| `classement-remise-a-zero.sql` | **Nouveau (26/10)** : `delete from public.classement;`, à lancer **une fois** pour effacer les anciens scores de prestige (le trigger garde le meilleur score : ils ne redescendraient jamais). Chaque joueur retrouve sa ligne à sa prochaine sauvegarde en ligne. Aucune table créée, RLS inchangées |
 
-Ces scripts se collent à la main dans le SQL Editor de Supabase. Ils n'ont pas changé le 22/10 (le niveau de la mine passe dans la colonne `prestige`).
+Ces scripts se collent à la main dans le SQL Editor de Supabase. Les tables n'ont pas changé le 22/10 (le niveau de la mine passe dans la colonne `prestige`).
 
 ### 3.7 `archives/` : le code mis de côté (22/10)
 
@@ -251,22 +253,22 @@ La sauvegarde dans le `localStorage` se fait au plus une fois par seconde, et en
 
 ## 6. Les tests
 
-Lancés par `npm test` (Vitest), sans navigateur. Le `localStorage` est remplacé par un faux stockage en mémoire. Au 22/10 : **17 fichiers, 120 tests**.
+Lancés par `npm test` (Vitest), sans navigateur. Le `localStorage` est remplacé par un faux stockage en mémoire. Au 26/10 : **18 fichiers, 138 tests**.
 
 | Fichier | Ce qu'il vérifie |
 |---|---|
 | `src/jeu/bot.test.ts` | **Bot d'équilibrage** : 10 parties à graines fixes (1 à 10). Toujours le niveau 5 ; niveau 2 en 5 à 20 min et niveau 5 en 1 h à 2 h 30 (médianes) ; chaque niveau plus long que le précédent ; rails en moins de 5 min et électriques en moins de 40 min ; au moins 4 mineurs, plus de 100 voyages de wagonnet, plus de blocs des mineurs que des clics ; plus de 3 allers-retours à pied au début |
 | `src/jeu/mineur.test.ts` | Début de partie ; clic (coffre, usure, doublement jamais pour la pierre, bloc suivant du bon niveau, pioche cassée, coffre plein) ; la mine toute seule ; prendre dans le coffre ; vente ; payer avec le sac puis le coffre ; sac ; niveau 2 ; coffre ; ascenseur ; réparation ; pioches |
 | `src/jeu/mine.test.ts` | Les blocs de chaque niveau, chances à 100 %, valeur moyenne, débit |
-| `src/jeu/employes.test.ts` | Nombre par niveau, prix, travail (creuser, remonter, vider), ascenseur, coffre plein, équipement, pousseur, licenciement, salaires, recruteur et rareté, manager |
-| `src/jeu/wagonnet.test.ts` | Aucun trajet au début, trajets proposés, ligne complète, joueur qui pousse, objets gardés, pousseur, électrique, ligne coupée, arrêter un trajet, Mine → Foreuse, Foreuse → Marché, plusieurs wagonnets sur les mêmes rails, pas de boucle |
-| `src/jeu/voie.test.ts` | La voie large de deux cases : bords d'une ligne droite, pas de bâtiment, de décoration ni de chemin sur les bords, pas de rail dont la voie passerait sur un objet ; virages doux (oui entre deux lignes droites, non dans un zigzag) |
+| `src/jeu/employes.test.ts` | Nombre par niveau, prix, travail (creuser, remonter, vider), ascenseur, coffre plein, équipement, pousseur embauché pour un trajet (pas sans rails, trajet créé à l'embauche, marche du Personnel au quai de la mine), changer le trajet d'un pousseur (il va au quai de la foreuse), licenciement, salaires, recruteur et rareté, manager |
+| `src/jeu/wagonnet.test.ts` | Aucun trajet au début, trajets proposés, ligne complète, joueur qui pousse, objets gardés, le pousseur de ce trajet, électrique, ligne coupée, arrêter un trajet, Mine → Foreuse, Foreuse → Marché, plusieurs wagonnets sur les mêmes rails, pas de boucle |
+| `src/jeu/voie.test.ts` | La voie large de deux cases : bords d'une ligne droite, pas de bâtiment, de décoration ni de chemin sur les bords, pas de rail dont la voie passerait sur un objet ; virages doux (oui entre deux lignes droites, non dans un zigzag, non si un bras est un bout de ligne : il garde son butoir) ; bulle « Rails coupés » sur les deux bâtiments d'un trajet |
 | `src/jeu/generateur.test.ts` | Rayon, rails électriques, éteint, ligne hors du rayon, foreuse, amélioration et puisage |
 | `src/jeu/foreuse.test.ts` | Charbon (sac puis coffre), chariot, vente, électricité, améliorations et recharge auto |
 | `src/jeu/village.test.ts` | Mine au milieu, prix et déblocage des bâtiments, chevauchement, déplacer et retourner, chemins à pied, ouverture d'un bâtiment de n'importe quel côté, décorations, rails (3 fer), mineurs au village (forge, Personnel), bulles, tenues |
 | `src/jeu/objectifs.test.ts` | Prochain objectif (marché, forgeron, rails, achetable, générateur vide) |
 | `src/jeu/revenu.test.ts` | La mine toute seule, un mineur rentable, un pousseur ne creuse pas |
-| `src/jeu/sauvegarde.test.ts` | Relecture exacte, `null` si absente ou abîmée, partie d'avant la v21 qui repart de zéro, partie v21 convertie (son wagonnet devient le trajet Mine → Marché), temps depuis la sauvegarde, mondes, export/import |
+| `src/jeu/sauvegarde.test.ts` | Relecture exacte, `null` si absente ou abîmée, partie d'avant la v21 qui repart de zéro, partie v21 convertie (son wagonnet devient le trajet Mine → Marché), partie v22 convertie (les anciens pousseurs prennent le trajet Mine → Marché, les mineurs n'en ont pas), temps depuis la sauvegarde, mondes, export/import |
 | `src/jeu/compte.test.ts` | Pseudo, mot de passe, email, choix de synchronisation |
 | `src/jeu/classement.test.ts` | Meilleur niveau de mine et plus d'argent gagné parmi les mondes |
 | `src/jeu/decouvertes.test.ts` | Recruteur et manager à découvrir |
@@ -285,7 +287,7 @@ Il n'y a pas de tests des composants React ni de `enLigne.ts` / `useCompte.ts` (
 - Chaque accès au `localStorage` est protégé par `try/catch`.
 - **Couleurs des boutons** (dans `index.css`) : voir [interface.md § 14](interface.md#14-les-couleurs-des-boutons).
 - **Téléphone** : jouable au pouce, boutons en bas, rien qui déborde en largeur.
-- Changer le format de `EtatJeu` → augmenter `VERSION_ETAT` et décider : écrire une conversion dans `sauvegarde.ts` (comme `convertirVersion21` le 24/10), ou laisser les anciennes parties repartir de zéro comme le 22/10.
+- Changer le format de `EtatJeu` → augmenter `VERSION_ETAT` et décider : écrire une conversion dans `sauvegarde.ts` (comme `convertirVersion21` le 24/10 et `convertirVersion22` le 26/10), ou laisser les anciennes parties repartir de zéro comme le 22/10.
 - Modifier un bâtiment → mettre à jour sa fiche dans `docs/batiments/`. Étape importante → mettre à jour `CONTEXTE.md`.
 - Toute nouvelle table Supabase a ses règles RLS ; jamais de clé `service_role` / secrète dans le code.
 - Garder le bot de simulation et ses repères d'équilibrage (section 6).
@@ -302,4 +304,4 @@ Il n'y a pas de tests des composants React ni de `enLigne.ts` / `useCompte.ts` (
 
 - `vite.config.ts` définit au moment du build la constante globale `__VERSION_JEU__` = `"<commit> · <date du build>"` (le commit : `VERCEL_GIT_COMMIT_SHA` sur Vercel, sinon `git rev-parse --short HEAD`, sinon `local` ; la date à l'heure de Paris).
 - Elle est affichée en petit tout en bas de l'écran d'accueil : ça permet de vérifier que Vercel a bien mis en ligne la dernière version.
-- À ne pas confondre avec `VERSION_ETAT` (format de la sauvegarde, actuellement 22).
+- À ne pas confondre avec `VERSION_ETAT` (format de la sauvegarde, actuellement 23).
