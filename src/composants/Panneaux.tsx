@@ -22,6 +22,8 @@ import {
   rechargeAutoDisponible,
   remplirForeuse,
   secondesDeCharbon,
+  charbonMaxForeuse,
+  placeCharbonForeuse,
   secondesPourRemplir,
   vitesseForage,
 } from '../jeu/foreuse'
@@ -277,6 +279,8 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
   const enMarche = foreuseEnMarche(etat)
   const chariot = prochainNiveauChariot(etat)
   const charbon = disponible(etat, 'charbon')
+  // (le réservoir de la foreuse a une taille : on ne peut pas en mettre plus)
+  const place = placeCharbonForeuse(etat)
   const forage = prochainNiveauForage(etat)
   // Des onglets (27/10), pour que tout tienne sans défiler.
   const [onglet, setOnglet] = useState<'forage' | 'chariot' | 'ameliorer' | 'wagonnets'>('forage')
@@ -307,19 +311,19 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
           </span>
           <Barre
             valeur={secondesDeCharbon(etat)}
-            max={Math.max(secondesDeCharbon(etat), 10 * SECONDES_PAR_CHARBON)}
-            texte={`Charbon : ${Math.ceil(secondesDeCharbon(etat))} s`}
+            max={Math.max(secondesDeCharbon(etat), charbonMaxForeuse(etat) * SECONDES_PAR_CHARBON)}
+            texte={`Charbon : ${Math.ceil(secondesDeCharbon(etat) / SECONDES_PAR_CHARBON)} / ${charbonMaxForeuse(etat)} (${Math.ceil(secondesDeCharbon(etat))} s)`}
             couleur="or"
           />
           <div className="boutons">
-            <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon} (sac + coffre)</span>
-            <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
+            <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon} (sac + coffre){place === 0 && " · réservoir plein"}</span>
+            <Bouton actif={charbon >= 1 && place >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
               +1
             </Bouton>
-            <Bouton actif={charbon >= 10} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 10))}>
+            <Bouton actif={charbon >= 10 && place >= 10} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 10))}>
               +10
             </Bouton>
-            <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
+            <Bouton actif={charbon >= 1 && place >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
               Tout
             </Bouton>
           </div>
@@ -357,10 +361,10 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
             <strong>⚙️ Vitesse de forage</strong>
             <Amelioration
               etat={etat}
-              actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité`}
+              actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité · réservoir ${charbonMaxForeuse(etat)} charbons`}
               niveau={foreuse.niveauVitesse + 1}
               niveauMax={NIVEAUX_FORAGE.length}
-              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
+              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s · ${forage.reservoir} charbons` }}
               possible={peutAmeliorerForage(etat)}
               onAmeliorer={() => jouer(ameliorerForage)}
             />

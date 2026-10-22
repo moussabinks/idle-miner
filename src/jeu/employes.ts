@@ -5,7 +5,7 @@
 // Marché). Ils attendent leur wagonnet au quai, devant le bâtiment de départ de ce trajet, et le
 // poussent dès qu'il a quelque chose à porter (voir wagonnet.ts). Électrique, plus besoin. Les
 // mineurs, eux, ne font que creuser et remonter leur sac dans le coffre de la mine.
-// On leur paie un salaire toutes les 10 minutes (sans manager, 10 minutes à la fois) : sans
+// On leur paie un salaire toutes les 5 minutes (sans manager, 5 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
 // Au niveau 3 de la mine, le recruteur trouve des mineurs plus ou moins rares (un mineur
 // mythique creuse 5 fois plus) ; au niveau 4, le manager paie les salaires avec la trésorerie.
@@ -147,12 +147,12 @@ export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
 // Les salaires
 // ---------------------------------------------------------------------------
 
-// Le salaire de 10 minutes d'un mineur, selon sa pioche et sa rareté.
+// Le salaire de 5 minutes d'un mineur, selon sa pioche et sa rareté.
 export function salaireEmploye(employe: Employe): number {
   return Math.round(SALAIRES[employe.niveau] * rareteDe(employe).salaire)
 }
 
-// Sans manager, on paie au plus 10 minutes à la fois.
+// Sans manager, on paie au plus 5 minutes à la fois.
 function secondesPayables(employe: Employe, secondes: number): number {
   return Math.max(0, Math.min(secondes, SECONDES_PAR_PAIE - employe.tempsPaye))
 }
@@ -161,7 +161,7 @@ function prixDuTemps(employe: Employe, secondes: number): number {
   return Math.ceil((salaireEmploye(employe) * secondes) / SECONDES_PAR_PAIE)
 }
 
-// Ce que coûte de payer `secondes` de plus à chaque mineur (sans dépasser 10 minutes payées).
+// Ce que coûte de payer `secondes` de plus à chaque mineur (sans dépasser 5 minutes payées).
 export function coutSalaires(etat: EtatJeu, secondes: number): number {
   return etat.employes.reduce((total, e) => total + prixDuTemps(e, secondesPayables(e, secondes)), 0)
 }

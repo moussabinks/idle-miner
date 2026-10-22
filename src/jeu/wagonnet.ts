@@ -25,10 +25,8 @@ import {
   LISTE_LIAISONS,
   NIVEAUX_WAGONNET,
   RARETES,
-  RESERVE_FOREUSE_WAGONNET,
   RESERVE_GENERATEUR_WAGONNET,
   SECONDES_CHARGEMENT_WAGONNET,
-  SECONDES_PAR_CHARBON,
   SECONDES_PAR_REDSTONE,
   VITESSE_POUSSE_JOUEUR,
   VITESSE_POUSSE_MINEUR,
@@ -38,7 +36,7 @@ import {
   type IdLiaison,
   type IdRarete,
 } from './donnees'
-import { retirerDuChariot } from './foreuse'
+import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
@@ -293,9 +291,9 @@ export function distanceDepuisLeDepart(etat: EtatJeu, trajet: Trajet): number {
 // Ce que porte chaque wagonnet
 // ---------------------------------------------------------------------------
 
-// Le charbon et la redstone qui manquent à la foreuse et au générateur (pour leurs trajets).
+// Le charbon et la redstone qui manquent à la foreuse (son réservoir) et au générateur.
 function besoinCharbon(etat: EtatJeu): number {
-  return Math.max(0, Math.ceil((RESERVE_FOREUSE_WAGONNET - etat.foreuse.carburant) / SECONDES_PAR_CHARBON))
+  return placeCharbonForeuse(etat)
 }
 
 function besoinRedstone(etat: EtatJeu): number {
@@ -323,7 +321,9 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
         .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - gardeDansLeCoffre(etat, bloc, exclusAutres))])
         .filter(([, nombre]) => nombre > 0)
     case 'mine-foreuse': {
-      const nombre = Math.min(etat.coffre.contenu.charbon ?? 0, besoinCharbon(etat))
+      // Dès que le réservoir n'est plus plein, il emporte tout le charbon du coffre : le surplus
+      // ira dans le chariot de la foreuse (28/10).
+      const nombre = besoinCharbon(etat) > 0 ? (etat.coffre.contenu.charbon ?? 0) : 0
       return nombre > 0 ? [['charbon', nombre]] : []
     }
     case 'mine-generateur': {
@@ -365,7 +365,11 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
     etat.stats.argentWagonnet += gain
     return trajet.pousseur === 'joueur' && gain > 0 ? [`🛤️ Le wagonnet a tout vendu au marché : +${gain} $`] : []
   }
-  if (trajet.liaison === 'mine-foreuse') etat.foreuse.carburant += (chargement.charbon ?? 0) * SECONDES_PAR_CHARBON
+  if (trajet.liaison === 'mine-foreuse') {
+    // Le réservoir, puis le chariot ; ce qui ne rentre nulle part repart avec le wagonnet.
+    const reste = livrerCharbon(etat, chargement.charbon ?? 0)
+    if (reste > 0) trajet.chargement = { charbon: reste }
+  }
   if (trajet.liaison === 'mine-generateur') etat.generateur.carburant += (chargement.redstone ?? 0) * SECONDES_PAR_REDSTONE
   return trajet.pousseur === 'joueur' ? [`🛤️ Livré : ${totalObjets(chargement)} ${trajet.liaison === 'mine-foreuse' ? 'charbon' : 'redstone'}.`] : []
 }
@@ -470,6 +474,8 @@ function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[
     trajet.etape = 'retour'
     trajet.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseTrajet(etat, trajet)
   } else if (trajet.etape === 'retour' && trajet.distance >= longueur) {
+    // Ce qui n'a pas pu être livré retourne dans le coffre.
+    if (totalObjets(trajet.chargement) > 0) rendreChargement(etat, trajet)
     libererPousseur(etat, trajet)
     trajet.etape = 'quai'
     trajet.distance = 0

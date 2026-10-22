@@ -14,6 +14,7 @@
 
 import type { IdBloc } from '../jeu/donnees'
 import { versEcran } from './iso'
+import { minerais } from './minerais'
 
 type P3 = [number, number, number]
 type Point = { x: number; y: number }
@@ -82,14 +83,15 @@ function nuance(couleur: string, facteur: number): string {
 }
 
 // Un minerai à l'écran (taille t en pixels) : ses facettes éclairées en haut à gauche.
-function Minerai({ x, y, t, bloc, variante }: { x: number; y: number; t: number; bloc: IdBloc; variante: number }) {
+// (aussi dans la caisse de l'ascenseur de la mine, pour que tous les minerais se ressemblent)
+export function Minerai({ x, y, t, bloc, variante }: { x: number; y: number; t: number; bloc: IdBloc; variante: number }) {
   const { couleur, cristal } = MINERAIS[bloc]
   const p = (liste: [number, number][]) => liste.map(([a, b]) => `${(x + a * t).toFixed(1)},${(y + b * t).toFixed(1)}`).join(' ')
   if (cristal) {
     // Un cristal taillé : la table (le dessus), les facettes de gauche et de droite, la pointe.
     return (
       <g>
-        <polygon points={p([[-1, -0.15], [-0.55, -0.75], [0.55, -0.75], [1, -0.15], [0, 0.85]])} fill={nuance(couleur, 0.62)} stroke="rgb(20 14 10 / 0.75)" strokeWidth={0.45} strokeLinejoin="round" />
+        <polygon points={p([[-1, -0.15], [-0.55, -0.75], [0.55, -0.75], [1, -0.15], [0, 0.85]])} fill={nuance(couleur, 0.62)} stroke="rgb(20 14 10 / 0.75)" strokeWidth={0.12 * t} strokeLinejoin="round" />
         <polygon points={p([[-0.45, -0.45], [-0.25, -0.72], [0.25, -0.72], [0.45, -0.45], [0, -0.2]])} fill={nuance(couleur, 1.35)} />
         <polygon points={p([[-1, -0.15], [-0.45, -0.45], [0, -0.2], [0, 0.85]])} fill={nuance(couleur, 1.05)} />
         <polygon points={p([[-0.45, -0.45], [-0.55, -0.75], [-0.25, -0.72]])} fill={nuance(couleur, 1.5)} />
@@ -106,26 +108,12 @@ function Minerai({ x, y, t, bloc, variante }: { x: number; y: number; t: number;
   const forme = formes[variante % formes.length]
   return (
     <g>
-      <polygon points={p(forme)} fill={nuance(couleur, 0.7)} stroke="rgb(20 14 10 / 0.75)" strokeWidth={0.45} strokeLinejoin="round" />
+      <polygon points={p(forme)} fill={nuance(couleur, 0.7)} stroke="rgb(20 14 10 / 0.75)" strokeWidth={0.12 * t} strokeLinejoin="round" />
       <polygon points={p([forme[0], forme[1], forme[2], [0.05, -0.1]])} fill={nuance(couleur, 1.18)} />
       <polygon points={p([forme[2], forme[3], [0.55, 0.05], [0.05, -0.1]])} fill={nuance(couleur, 0.95)} />
       <circle cx={x - 0.4 * t} cy={y - 0.35 * t} r={0.12 * t} fill="#ffffff" opacity={0.35} />
     </g>
   )
-}
-
-// Les minerais à mettre dans le wagonnet, à partir de ce qu'il porte : chaque sorte en proportion,
-// mélangées (une liste de 24 places, toujours dans le même ordre).
-function minerais(contenu: Partial<Record<IdBloc, number>>): IdBloc[] {
-  const sortes = (Object.entries(contenu) as [IdBloc, number][]).filter(([, n]) => n > 0)
-  const total = sortes.reduce((t, [, n]) => t + n, 0)
-  if (total === 0) return []
-  const liste: IdBloc[] = []
-  for (const [bloc, n] of sortes) for (let k = 0; k < Math.max(1, Math.round((n / total) * 24)); k++) liste.push(bloc)
-  // Un mélange toujours pareil : on prend une place sur sept, en tournant.
-  const melange: IdBloc[] = []
-  for (let i = 0; i < liste.length; i++) melange.push(liste[(i * 7) % liste.length])
-  return melange
 }
 
 // --- Le dessin ----------------------------------------------------------------------------------

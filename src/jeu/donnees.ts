@@ -208,10 +208,11 @@ export const NOMS_EMPLOYES = [
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
 ]
 
-// Le salaire de 10 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, diamant) :
-// environ 25 % de ce qu'il fait sortir de la mine (27/10 : avant, 15 %, c'était trop peu).
-export const SECONDES_PAR_PAIE = 10 * 60
-export const SALAIRES = [50, 100, 220, 500, 1100]
+// Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, diamant) :
+// environ 35 % de ce qu'il fait sortir de la mine (28/10 : paie toutes les 5 minutes, et plus
+// chère ; avant, 25 % toutes les 10 minutes, c'était trop peu).
+export const SECONDES_PAR_PAIE = 5 * 60
+export const SALAIRES = [35, 70, 155, 350, 770]
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite, et un plus grand
 // sac lui fait faire moins d'allers-retours. Payé en argent seulement.
@@ -256,7 +257,7 @@ export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> 
 // --- Le manager (niveau 4 de la mine) : il paie les salaires avec la trésorerie ---
 export const NIVEAU_MINE_MANAGER = 4
 export const PRIX_MANAGER = 15000
-export const SALAIRE_MANAGER = 600 // toutes les 10 minutes
+export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
 
 // ---------------------------------------------------------------------------
@@ -295,9 +296,8 @@ export const LIAISONS: Record<IdLiaison, InfoLiaison> = {
 export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine-generateur', 'foreuse-marche']
 // Les bâtiments où les rails peuvent arriver (les départs et arrivées des trajets).
 export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
-// Les wagonnets du charbon et de la redstone remplissent la foreuse et le générateur jusqu'à
-// cette réserve (en secondes de marche) : 60 charbons, 60 redstones.
-export const RESERVE_FOREUSE_WAGONNET = 1200
+// Le wagonnet de la redstone remplit le générateur jusqu'à cette réserve (en secondes de marche) :
+// 60 redstones. Celui du charbon remplit le réservoir de la foreuse (voir NIVEAUX_FORAGE).
 export const RESERVE_GENERATEUR_WAGONNET = 1800
 
 // La taille des wagonnets (au bâtiment Mine) : elle vaut pour tous les trajets.
@@ -339,13 +339,15 @@ export const RESERVE_RECHARGE_AUTO = 60
 // Sous électricité, elle fore (1 + puissance) fois plus vite... à moitié : × (1 + puissance / 2).
 export const BONUS_ELECTRIQUE_FOREUSE = 0.5
 
-export const NIVEAUX_FORAGE: { vitesse: number; cout: Cout }[] = [
-  { vitesse: 0.5, cout: { materiaux: {} } },
-  { vitesse: 0.8, cout: { argent: 1500, materiaux: { fer: 30, redstone: 10 } } },
-  { vitesse: 1.2, cout: { argent: 4000, materiaux: { fer: 60, redstone: 30 } } },
-  { vitesse: 1.8, cout: { argent: 10000, materiaux: { fer: 100, redstone: 60 } } },
-  { vitesse: 2.6, cout: { argent: 25000, materiaux: { redstone: 100, or: 30 } } },
-  { vitesse: 3.6, cout: { argent: 60000, materiaux: { or: 60, emeraude: 15 } } },
+// Chaque niveau de forage la rend plus rapide et agrandit son réservoir : le charbon qu'elle peut
+// garder au plus (28/10). Le wagonnet du charbon la remplit jusque-là, et met le reste dans son chariot.
+export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[] = [
+  { vitesse: 0.5, reservoir: 40, cout: { materiaux: {} } },
+  { vitesse: 0.8, reservoir: 60, cout: { argent: 1500, materiaux: { fer: 30, redstone: 10 } } },
+  { vitesse: 1.2, reservoir: 90, cout: { argent: 4000, materiaux: { fer: 60, redstone: 30 } } },
+  { vitesse: 1.8, reservoir: 130, cout: { argent: 10000, materiaux: { fer: 100, redstone: 60 } } },
+  { vitesse: 2.6, reservoir: 180, cout: { argent: 25000, materiaux: { redstone: 100, or: 30 } } },
+  { vitesse: 3.6, reservoir: 250, cout: { argent: 60000, materiaux: { or: 60, emeraude: 15 } } },
 ]
 
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [

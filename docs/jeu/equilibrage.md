@@ -34,7 +34,7 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 | `CLICS_MAINS_NUES` | 2 | clics par bloc avec une pioche cassée |
 | `SECONDES_ECHELLE` | 10 s | un trajet de mineur sans ascenseur |
 | `SECONDES_VIDAGE_EMPLOYE` | 2 s | un mineur vide son sac dans le coffre |
-| `SECONDES_PAR_PAIE` | 600 s | une paie de mineur (10 minutes) |
+| `SECONDES_PAR_PAIE` | 300 s | une paie de mineur (5 minutes, depuis le 28/10) |
 | `SECONDES_PAR_CHARBON` | 20 s | un charbon dans la foreuse |
 | `SECONDES_PAR_REDSTONE` | 30 s | une redstone dans le générateur |
 | `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger un wagonnet au départ, puis le vider à l'arrivée |
@@ -146,7 +146,6 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s |
 | `VITESSE_RAILS` | 8 cases/s × puissance du générateur |
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
-| `RESERVE_FOREUSE_WAGONNET` | 1 200 s de charbon (60 charbons) : le wagonnet Mine → Foreuse remplit jusque-là |
 | `RESERVE_GENERATEUR_WAGONNET` | 1 800 s de redstone (60 redstones) : le wagonnet Mine → Générateur remplit jusque-là |
 
 `NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`) : 40 → **100** (500 $ + 40 fer) → **250** (2 500 $ + 80 fer + 20 redstone) → **600** places (10 000 $ + 40 or).
@@ -155,8 +154,8 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
 - **Aller-retour** (`secondesAllerRetour`) = `2 × longueur ÷ vitesse + 2 × 2 s`.
 - **Chargement**, jusqu'à la capacité :
-  - Mine → Marché : les objets du coffre les plus chers d'abord, sauf les objets gardés (`nonAVendre`), et sauf le charbon et la redstone qui manquent aux réserves ci-dessus (si ces trajets existent) ;
-  - Mine → Foreuse : `arrondi au-dessus((1 200 − réserve de la foreuse) ÷ 20)` charbons, au plus ce qu'il y a dans le coffre ;
+  - Mine → Marché : les objets du coffre les plus chers d'abord, sauf les objets gardés (`nonAVendre`), et sauf le charbon qui manque au réservoir de la foreuse et la redstone qui manque à la réserve du générateur (si ces trajets existent) ;
+  - Mine → Foreuse (28/10) : dès que le réservoir de la foreuse n'est plus plein (`placeCharbonForeuse` > 0), **tout le charbon du coffre** ; à l'arrivée (`livrerCharbon`), il remplit le réservoir (`NIVEAUX_FORAGE[...].reservoir`), le surplus va dans le chariot (tant qu'il y a de la place), et le reste revient dans le coffre ;
   - Mine → Générateur : `arrondi au-dessus((1 800 − réserve du générateur) ÷ 30)` redstones, au plus ce qu'il y a dans le coffre ;
   - Foreuse → Marché : ce qui est coché dans le chariot, le plus cher d'abord (l'argent compte dans `argentWagonnet`).
 - **Électrique** (`trajetElectrique`) : toutes les cases du trajet dans le rayon, générateur allumé avec de la redstone.
@@ -206,13 +205,13 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
 `NIVEAUX_EMPLOYE` (payés en argent, au Personnel) × la rareté (`RARETES`).
 
-| Pioche | Vitesse en creusant | Sac | Prix | Salaire / 10 min |
+| Pioche | Vitesse en creusant | Sac | Prix | Salaire / 5 min |
 |---|---:|---:|---:|---:|
-| Bois | 0,15 bloc/s | 10 | (de base) | 50 $ |
-| Pierre | 0,25 | 15 | 150 $ | 60 $ |
-| Fer | 0,4 | 20 | 600 $ | 140 $ |
-| Or | 0,6 | 30 | 2 500 $ | 320 $ |
-| Diamant | 0,9 | 45 | 9 000 $ | 700 $ |
+| Bois | 0,15 bloc/s | 10 | (de base) | 35 $ |
+| Pierre | 0,25 | 15 | 150 $ | 70 $ |
+| Fer | 0,4 | 20 | 600 $ | 155 $ |
+| Or | 0,6 | 30 | 2 500 $ | 350 $ |
+| Diamant | 0,9 | 45 | 9 000 $ | 770 $ |
 
 - **Un tour** : creuser un sac (`sac ÷ vitesse`), monter, vider (2 s), redescendre. **Blocs par seconde** (`blocsParSecondeEmploye`) = `sac ÷ (sac ÷ vitesse + 2 × trajet + 2)`.
 - La rareté multiplie **la vitesse et le sac** par le même rendement : le temps de creusage d'un sac ne change pas, mais chaque tour rapporte plus (un mythique sort 5 fois plus de blocs par tour).
@@ -225,7 +224,7 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 | Or | 0,417 | 0,521 | 0,556 |
 | Diamant | 0,625 | 0,781 | 0,833 |
 
-- **Salaire** (`salaireEmploye`) = `arrondi(SALAIRES[pioche] × rareté.salaire)`, pour 10 minutes. Depuis le 27/10 : `SALAIRES` = 50, 100, 220, 500, 1 100 $ (bois → diamant, environ 25 % de ce que le mineur fait sortir ; avant 30 à 700 $), et la rareté : ×1, ×1,4, ×1,8, ×2,5, ×4 (commun → mythique). Sans manager, on paie au plus 10 minutes d'avance (au prorata du temps manquant, arrondi au dollar supérieur).
+- **Salaire** (`salaireEmploye`) = `arrondi(SALAIRES[pioche] × rareté.salaire)`, pour 5 minutes. Depuis le 28/10 : `SALAIRES` = 35, 70, 155, 350, 770 $ toutes les 5 minutes (bois → diamant, environ 35 % de ce que le mineur fait sortir ; le 27/10, 50 à 1 100 $ toutes les 10 minutes, 25 %), et la rareté : ×1, ×1,4, ×1,8, ×2,5, ×4 (commun → mythique). Sans manager, on paie au plus 5 minutes d'avance (au prorata du temps manquant, arrondi au dollar supérieur).
 - **Rentabilité** : un mineur commun en bois au niveau 1, à l'échelle, sort 0,113 × 3,04 ≈ 0,34 $/s de blocs pour un salaire de 0,05 $/s (environ 15 %). Un mineur en diamant au niveau 5 avec l'ascenseur au max : 0,833 × 19,79 ≈ 16,5 $/s pour 1,17 $/s de salaire.
 
 ### Raretés (`RARETES`)
@@ -251,7 +250,7 @@ Sans recruteur, 100 % de communs. Le tirage part du plus rare (`tirerRarete`).
 
 ### Manager (niveau 4 de la mine)
 
-`PRIX_MANAGER` = 15 000 $, `SALAIRE_MANAGER` = 600 $ / 10 min. Il paie 10 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que la trésorerie suffit.
+`PRIX_MANAGER` = 15 000 $, `SALAIRE_MANAGER` = 400 $ / 5 min. Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que la trésorerie suffit.
 
 ## Le village
 
@@ -369,7 +368,7 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 | Rails mine → marché | moins de 5 min | `bot.test.ts` |
 | Rails électriques | moins de 40 min | `bot.test.ts` |
 | Remplir le coffre de départ (débit seul) | 8 min 20 | `NIVEAUX_COFFRE`, `NIVEAUX_MINE` |
-| Une paie de mineur | 10 min | `SECONDES_PAR_PAIE` |
+| Une paie de mineur | 5 min | `SECONDES_PAR_PAIE` |
 | Un charbon dans la foreuse / une redstone dans le générateur | 20 s / 30 s | `SECONDES_PAR_CHARBON`, `SECONDES_PAR_REDSTONE` |
 | Remplir le chariot de la foreuse | 400 s (niveau 1) à 1 667 s (niveau 6), sans électricité | `NIVEAUX_CHARIOT`, `NIVEAUX_FORAGE` |
 | Un trajet de mineur | 10 s (échelle) à 1 s (ascenseur niveau 6) | `NIVEAUX_ASCENSEUR` |

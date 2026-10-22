@@ -459,24 +459,50 @@
   border-left: 4px solid #e2b13a;
 }
 
-.choix-batiments {
+/* La liste des trajets à cocher (28/10) : une ligne par trajet, avec son état. */
+.liste-trajets-pousseur {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: 5px;
 }
 
-.etiquette-choix {
-  min-width: 56px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: #f3e2c4;
+.trajet-pousseur {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  border: 2px solid #6b4a2a;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.22);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.choix-batiments .bouton.choisi {
-  background: linear-gradient(#ffd36b, #c88a12);
-  color: #2a1606;
-  box-shadow: 0 0 0 2px #fff3d6, 0 0 12px rgb(255 211 107 / 0.7);
+.trajet-pousseur:hover {
+  border-color: #c99a4a;
+}
+
+.trajet-pousseur.choisi {
+  border-color: #ffd36b;
+  background: rgb(255 211 107 / 0.16);
+  box-shadow: 0 0 10px rgb(255 211 107 / 0.45);
+}
+
+.trajet-pousseur.sans-rails {
+  opacity: 0.7;
+}
+
+.trajet-pousseur input {
+  accent-color: #e2b13a;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.trajet-pousseur-nom {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .titre-equipe {
@@ -1661,4 +1687,64 @@ img[data-tuto-actif] {
 .plein-ecran .liste-vente .mini-bloc {
   width: 18px;
   height: 18px;
+}
+
+/* --- Le panneau de la mine respire (28/10) ---------------------------------------------
+   Ses onglets étaient trop serrés : plus d'espace entre les lignes et entre les cartes, pour
+   lire d'un coup d'œil (tout tient encore sans défiler). */
+
+.plein-ecran .panneau-mine-aere {
+  gap: 10px;
+  line-height: 1.45;
+}
+
+.plein-ecran .panneau-mine-aere .ligne-achat {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.plein-ecran .panneau-mine-aere .amelioration {
+  gap: 7px;
+}
+
+.plein-ecran .panneau-mine-aere .zone-bloc-mine .bloc-mine-texte {
+  gap: 6px;
+}
+
+.plein-ecran .panneau-mine-aere .table-coffre {
+  gap: 6px 10px;
+}
+
+.plein-ecran .panneau-mine-aere .tableau-production {
+  gap: 9px;
+  padding: 10px 12px;
+}
+
+.plein-ecran .panneau-mine-aere .liste-rendements {
+  gap: 6px;
+}
+
+.plein-ecran .panneau-mine-aere .goulot {
+  padding: 7px 10px;
+}
+
+/* Sur téléphone, un peu moins d'air (l'écran est moins haut). */
+@media (max-width: 860px) {
+  .plein-ecran .panneau-mine-aere {
+    gap: 7px;
+    line-height: 1.35;
+  }
+
+  .plein-ecran .panneau-mine-aere .ligne-achat {
+    padding: 8px 10px;
+    gap: 5px;
+  }
+
+  .plein-ecran .panneau-mine-aere .zone-bloc-mine .bloc-mine-texte {
+    gap: 3px;
+  }
+
+  .plein-ecran .panneau-mine-aere .table-coffre {
+    gap: 3px 8px;
+  }
 }

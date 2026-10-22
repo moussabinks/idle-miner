@@ -96,7 +96,7 @@ export function RevelationRecrue({ employe, onFermer }: Props) {
                 <small>Le prochain sera peut-être rare...</small>
               </span>
             )}
-            <span className="revelation-salaire">Salaire : {salaireEmploye(employe).toLocaleString('fr-FR')} $ / 10 min</span>
+            <span className="revelation-salaire">Salaire : {salaireEmploye(employe).toLocaleString('fr-FR')} $ / 5 min</span>
           </div>
         </div>
 

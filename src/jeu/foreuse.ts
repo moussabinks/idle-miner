@@ -45,6 +45,26 @@ export function secondesDeCharbon(etat: EtatJeu): number {
   return etat.foreuse.carburant
 }
 
+// Le réservoir : le charbon qu'elle peut garder au plus (plus grand à chaque niveau de forage).
+export function charbonMaxForeuse(etat: EtatJeu): number {
+  return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].reservoir
+}
+
+// Combien de charbons manquent pour remplir le réservoir.
+export function placeCharbonForeuse(etat: EtatJeu): number {
+  return Math.max(0, Math.floor((charbonMaxForeuse(etat) * SECONDES_PAR_CHARBON - etat.foreuse.carburant) / SECONDES_PAR_CHARBON))
+}
+
+// Le charbon arrivé par les rails : il remplit le réservoir, et le surplus va dans le chariot
+// (un wagonnet Foreuse → Marché pourra le vendre). Rend ce qui n'a pas trouvé de place.
+export function livrerCharbon(etat: EtatJeu, nombre: number): number {
+  const dansLeReservoir = Math.min(nombre, placeCharbonForeuse(etat))
+  etat.foreuse.carburant += dansLeReservoir * SECONDES_PAR_CHARBON
+  const dansLeChariot = Math.min(nombre - dansLeReservoir, Math.max(0, capaciteChariot(etat) - nbDansChariot(etat)))
+  if (dansLeChariot > 0) etat.foreuse.chariot.charbon = (etat.foreuse.chariot.charbon ?? 0) + dansLeChariot
+  return nombre - dansLeReservoir - dansLeChariot
+}
+
 export function nbDansChariot(etat: EtatJeu): number {
   let total = 0
   for (const nombre of Object.values(etat.foreuse.chariot)) total += nombre ?? 0
@@ -68,11 +88,12 @@ export function secondesPourRemplir(etat: EtatJeu, niveauChariot = etat.foreuse.
 // Actions
 // ---------------------------------------------------------------------------
 
-// Met du charbon (du sac, puis du coffre de la mine) dans la foreuse (nombre = Infinity : tout).
+// Met du charbon (du sac, puis du coffre de la mine) dans la foreuse (nombre = Infinity : tout),
+// sans dépasser son réservoir.
 export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   if (!foreusePosee(etat)) return []
-  const mis = Math.min(nombre, disponible(etat, 'charbon'))
-  if (mis <= 0) return []
+  const mis = Math.min(nombre, disponible(etat, 'charbon'), placeCharbonForeuse(etat))
+  if (mis <= 0) return placeCharbonForeuse(etat) === 0 && disponible(etat, 'charbon') > 0 ? ['🔥 Le réservoir de la foreuse est plein.'] : []
   payerMateriaux(etat, { charbon: mis })
   etat.foreuse.carburant += mis * SECONDES_PAR_CHARBON
   return [`🔥 +${mis} charbon dans la foreuse.`]
@@ -101,7 +122,7 @@ export function ameliorerForage(etat: EtatJeu): string[] {
   if (prochain === null || !peutAmeliorerForage(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauVitesse += 1
-  return [`⚙️ Foreuse plus rapide : ${prochain.vitesse} blocs par seconde.`]
+  return [`⚙️ Foreuse plus rapide : ${prochain.vitesse} blocs par seconde, ${prochain.reservoir} charbons de réservoir.`]
 }
 
 export function ameliorerChariot(etat: EtatJeu): string[] {
@@ -171,7 +192,7 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
       const bloc = tirerBloc(etat.niveauMine, aleatoire)
       foreuse.blocsFores += 1
       etat.stats.blocsForeuse += 1
-      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < RESERVE_RECHARGE_AUTO) {
+      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < Math.min(RESERVE_RECHARGE_AUTO, charbonMaxForeuse(etat) * SECONDES_PAR_CHARBON)) {
         foreuse.carburant += SECONDES_PAR_CHARBON
       } else {
         foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1

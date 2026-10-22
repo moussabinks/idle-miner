@@ -405,7 +405,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
   const wagonnetMarche = analyseWagonnet(etat)
   const goulot = (etat.employes.some((e) => e.role === 'mineur') && puits.tropLent) || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
   return (
-    <div className="liste-cartes">
+    <div className="liste-cartes panneau-mine-aere">
       {/* Cinq onglets (27/10), pour que tout tienne sans défiler : creuser (le bloc et le
           coffre), la production, les wagonnets, le niveau de la mine, les améliorations. */}
       <OngletsPanneau

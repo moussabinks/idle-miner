@@ -6,12 +6,14 @@
 
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
-import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
+import { TAILLE_GRILLE, type IdBloc, type IdDecoration } from '../jeu/donnees'
 import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
 import { ImageFigee } from './ImageFigee'
 import { TasDeRochers } from './Rochers'
+import { Minerai } from './Wagonnet3D'
+import { minerais } from './minerais'
 import { cleCase, DIRECTION, lireCle, raccordsRail, viragesDoux, type Case, type VirageDoux, type Village } from '../jeu/village'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
@@ -269,26 +271,75 @@ type PropsEvolutionMine = {
 
 // Une caisse dans le puits (27/10) : les mineurs restent au fond, c'est leur sac qui remonte,
 // dans une caisse en bois pleine de minerais, puis la caisse vide redescend. Où elle en est
-// (0 = en haut, 1 = tout en bas), et si elle est pleine (elle monte) ou vide (elle redescend).
-export type PassagerAscenseur = { f: number; pleine: boolean }
+// (0 = en haut, 1 = tout en bas), si elle est pleine (elle monte) ou vide (elle redescend), et
+// ce qu'elle porte (le sac du mineur, pour les couleurs des minerais).
+export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>> }
 
-// La caisse de minerais, dessinée dans les pixels de l'image de la mine, posée sur (x, y) : du bois,
-// des cerclages, et des minerais qui dépassent quand elle est pleine.
-function CaisseMinerais({ x, y, pleine }: { x: number; y: number; pleine: boolean }) {
+// Les minerais précieux font briller la caisse.
+const PRECIEUX: IdBloc[] = ['or', 'emeraude', 'diamant']
+
+// Où sont posés les minerais du tas, au-dessus de la caisse (en pixels de la caisse, avant
+// l'échelle) : la rangée du fond, le haut du tas, puis la rangée du devant (dessinée par-dessus).
+const TAS_CAISSE: [number, number, number][] = [
+  [-34, -66, 16], [-11, -69, 17], [12, -68, 16], [34, -65, 15],
+  [-22, -80, 16], [1, -84, 18], [23, -79, 15],
+  [-8, -94, 15],
+  [-38, -62, 14], [-17, -64, 15], [4, -62, 16], [25, -64, 15], [44, -61, 13],
+]
+// (les 8 premiers sont derrière le bord de la caisse, les 5 derniers débordent par-dessus)
+const DERRIERE_LE_BORD = 8
+
+// La caisse de minerais (28/10, refaite), dans les pixels de l'image de la mine, posée sur (x, y) :
+// une caisse en planches avec des coins dorés (comme les bâtiments), et un tas des mêmes
+// minerais à facettes que dans les wagonnets. Avec de l'or, des émeraudes ou des diamants, elle
+// brille et des étincelles sautent du tas.
+function CaisseMinerais({ x, y, pleine, contenu = {} }: { x: number; y: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>> }) {
+  const liste = pleine ? minerais(Object.keys(contenu).length > 0 ? contenu : { pierre: 3, charbon: 1, fer: 1 }) : []
+  const precieuse = pleine && PRECIEUX.some((bloc) => (contenu[bloc] ?? 0) > 0)
   return (
-    <g className="caisse-minerais" transform={`translate(${x} ${y}) scale(1.5)`}>
-      {pleine && (
-        <g>
-          <circle cx="-22" cy="-62" r="15" fill="#8d8d8a" stroke="#3b2412" strokeWidth="4" />
-          <circle cx="4" cy="-68" r="17" fill="#f5b82e" stroke="#3b2412" strokeWidth="4" />
-          <circle cx="28" cy="-60" r="13" fill="#4fd3f0" stroke="#3b2412" strokeWidth="4" />
-          <circle cx="-4" cy="-58" r="11" fill="#e8452f" stroke="#3b2412" strokeWidth="4" />
+    <g className={`caisse-minerais ${precieuse ? 'caisse-precieuse' : ''}`} transform={`translate(${x} ${y}) scale(1.5)`}>
+      {/* Une lueur dorée derrière le tas quand il y a du précieux. */}
+      {precieuse && <ellipse className="lueur-caisse" cx="0" cy="-72" rx="60" ry="34" fill="#ffd84a" />}
+      {/* Le tas de minerais, du fond vers le devant. */}
+      {liste.length > 0 &&
+        TAS_CAISSE.slice(0, DERRIERE_LE_BORD).map(([mx, my, t], i) => <Minerai key={i} x={mx} y={my} t={t} bloc={liste[(i * 5) % liste.length]} variante={i} />)}
+      {/* La caisse : le dessus du bord (clair), la face avant en trois planches, deux cerclages. */}
+      <path d="M-50 -56 L50 -56 L46 0 L-46 0 Z" fill="#9a5e2c" stroke="#3b2412" strokeWidth="5" strokeLinejoin="round" />
+      <path d="M-48 -38 L48 -38 M-47 -19 L47 -19" stroke="#6e3f1b" strokeWidth="3" />
+      <path d="M-40 -50 L-12 -50 M6 -31 L36 -31 M-34 -12 L-6 -12" stroke="#c4834a" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+      <rect x="-53" y="-62" width="106" height="12" rx="4" fill="#d39250" stroke="#3b2412" strokeWidth="4" />
+      <rect x="-26" y="-58" width="9" height="58" fill="#7d7f86" stroke="#3b2412" strokeWidth="3" />
+      <rect x="17" y="-58" width="9" height="58" fill="#7d7f86" stroke="#3b2412" strokeWidth="3" />
+      {/* Le devant du tas, qui déborde un peu par-dessus le bord. */}
+      {liste.length > 0 &&
+        TAS_CAISSE.slice(DERRIERE_LE_BORD).map(([mx, my, t], i) => {
+          const k = i + DERRIERE_LE_BORD
+          return <Minerai key={k} x={mx} y={my} t={t} bloc={liste[(k * 5) % liste.length]} variante={k} />
+        })}
+      {/* Les coins dorés, avec leurs rivets. */}
+      {[-1, 1].map((cote) => (
+        <g key={cote}>
+          <path d={`M${cote * 53} -62 L${cote * 37} -62 L${cote * 37} -50 L${cote * 41} -46 L${cote * 41} -44 L${cote * 51} -44 Z`} fill="#f2c14a" stroke="#3b2412" strokeWidth="3" strokeLinejoin="round" />
+          <path d={`M${cote * 47} 0 L${cote * 33} 0 L${cote * 33} -8 L${cote * 46} -12 Z`} fill="#f2c14a" stroke="#3b2412" strokeWidth="3" strokeLinejoin="round" />
+          <circle cx={cote * 45} cy={-53} r="2.2" fill="#fff3c0" />
+          <circle cx={cote * 40} cy={-4} r="2" fill="#fff3c0" />
         </g>
-      )}
-      <rect x="-48" y="-58" width="96" height="58" rx="6" fill="#a86a33" stroke="#3b2412" strokeWidth="5" />
-      <rect x="-48" y="-58" width="96" height="12" rx="4" fill="#d39250" stroke="#3b2412" strokeWidth="4" />
-      <rect x="-30" y="-58" width="10" height="58" fill="#c98512" stroke="#3b2412" strokeWidth="3" />
-      <rect x="20" y="-58" width="10" height="58" fill="#c98512" stroke="#3b2412" strokeWidth="3" />
+      ))}
+      {/* Des étincelles qui sautent du tas. */}
+      {precieuse &&
+        [
+          [-36, -96, 0],
+          [32, -100, 0.6],
+          [6, -112, 1.2],
+        ].map(([ex, ey, retard], i) => (
+          <path
+            key={i}
+            className="etincelle-caisse"
+            style={{ animationDelay: `${retard}s` }}
+            d={`M${ex} ${ey - 9} L${ex + 3} ${ey - 3} L${ex + 9} ${ey} L${ex + 3} ${ey + 3} L${ex} ${ey + 9} L${ex - 3} ${ey + 3} L${ex - 9} ${ey} L${ex - 3} ${ey - 3} Z`}
+            fill="#fff6b0"
+          />
+        ))}
     </g>
   )
 }
@@ -316,7 +367,7 @@ const POINTS_MINE = {
 // De combien de pixels de l'image la cabine descend : au repos, son plancher est au ras du sol
 // (au bord du puits) ; tout en bas, elle a disparu dans le puits. Sans ascenseur, les câbles
 // pendent au fond.
-const CABINE_EN_HAUT = -100
+const CABINE_EN_HAUT = -150
 const CABINE_EN_BAS = 200
 const CABLES_SANS_ASCENSEUR = 240
 
@@ -375,7 +426,7 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
               const hauteur = ascenseur ? decalage : CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * p.f
               const x = POINTS_MINE.plancher[0] + (i - (dansLaCabine.length - 1) / 2) * 160
               // (posée un peu haut : on la voit bien dépasser des parois de la cabine)
-              return <CaisseMinerais key={i} x={x} y={POINTS_MINE.plancher[1] - 40 + hauteur} pleine={p.pleine} />
+              return <CaisseMinerais key={i} x={x} y={POINTS_MINE.plancher[1] - 40 + hauteur} pleine={p.pleine} contenu={p.contenu} />
             })}
           </g>
         </g>

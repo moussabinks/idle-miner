@@ -805,7 +805,7 @@ function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
     .map((m) => {
       const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
       // (le sac remonte dans une caisse pleine ; la caisse redescend vide)
-      return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte' }
+      return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte', contenu: m.sac }
     })
 }
 
