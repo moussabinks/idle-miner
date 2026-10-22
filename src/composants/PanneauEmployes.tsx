@@ -65,7 +65,7 @@ import {
 } from '../jeu/employes'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { batimentPose } from '../jeu/village'
-import { ligneDe, trajetDe } from '../jeu/wagonnet'
+import { forcePousseur, ligneDe, trajetDe } from '../jeu/wagonnet'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -312,7 +312,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
           {employe.nom}
           <span className={`pastille-rarete rarete-${employe.rarete}`}>
             {rarete.nom}
-            {rarete.rendement > 1 && ` ×${rarete.rendement.toLocaleString('fr-FR')}`}
+            {rarete.rendement > 1 && ` ×${(pousseur ? forcePousseur(rarete.id) : rarete.rendement).toLocaleString('fr-FR')}`}
           </span>
           <span className="etape-employe">
             {iconeActiviteEmploye(employe)} {etape}
@@ -381,7 +381,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
 
 // L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
 // trajet brille sur la carte (s'il y a des rails), puis on confirme.
-function EmbauchePousseur({ etat, jouer, onApercuTrajet }: PropsPanneau) {
+function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPanneau & { onRecrue: (employe: Employe) => void }) {
   const departs = [...new Set(LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee)).map((l) => LIAISONS[l].depart))]
   const [depart, setDepart] = useState<IdBatiment | null>(departs.length === 1 ? departs[0] : null)
   const arrivees = LISTE_LIAISONS.filter((l) => LIAISONS[l].depart === depart && batimentPose(etat.village, LIAISONS[l].arrivee))
@@ -433,9 +433,15 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet }: PropsPanneau) {
         <Achat
           etat={etat}
           cout={{ argent: prix, materiaux: {} }}
-          texte="🛤️ Embaucher pour ce trajet"
+          texte={etat.recruteur > 0 ? '🎲 Recruter pour ce trajet' : '🛤️ Embaucher pour ce trajet'}
           possible={choisie !== null && peutEmbaucherPousseur(etat, choisie)}
-          onAcheter={() => choisie && jouer((e) => embaucherPousseur(e, aleatoireNavigateur, choisie))}
+          onAcheter={() => {
+            if (!choisie) return
+            const avant = etat.employes.length
+            const apres = jouer((e) => embaucherPousseur(e, aleatoireNavigateur, choisie))
+            // Avec le recruteur, sa rareté est une surprise : on la dévoile en grand, comme pour un mineur.
+            if (etat.recruteur > 0 && apres.employes.length > avant) onRecrue(apres.employes[apres.employes.length - 1])
+          }}
           genre="recruter"
         />
       )}
@@ -500,7 +506,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
         )}
       </div>
 
-      <EmbauchePousseur etat={etat} jouer={jouer} onApercuTrajet={onApercuTrajet} />
+      <EmbauchePousseur etat={etat} jouer={jouer} onApercuTrajet={onApercuTrajet} onRecrue={setRecrue} />
 
       {(['mineur', 'pousseur'] as const).map((role) => {
         const equipe = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)

@@ -8,6 +8,7 @@ import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
 import {
   avancerWagonnets,
+  forcePousseur,
   capaciteWagonnet,
   creerTrajet,
   joueurPousse,
@@ -107,6 +108,11 @@ describe('les trajets des wagonnets', () => {
     for (let i = 0; i < 400 && etat.stats.voyagesWagonnet === 0; i++) avancerTemps(etat, 0.5, aleatoireAvecGraine(i))
     expect(etat.stats.voyagesWagonnet).toBeGreaterThan(0)
     expect(etat.argent).toBeGreaterThan(argentDepart)
+  })
+
+  it('un pousseur rare pousse plus vite (la moitié du bonus d’un mineur)', () => {
+    expect(forcePousseur('commun')).toBe(1)
+    expect(forcePousseur('mythique')).toBe(3)
   })
 
   it('électrique, il roule tout seul et bien plus vite', () => {
