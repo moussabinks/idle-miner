@@ -9,7 +9,7 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v15'
+const CACHE = 'idle-miner-v16'
 // Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
 // village serait vide hors ligne. (21/10 : images en haute définition et arbres, d'où le cache v4.)
 const IMAGES_DU_VILLAGE = [
@@ -18,6 +18,7 @@ const IMAGES_DU_VILLAGE = [
   ...['droit', 'virage', 't', 'croix', 'doux'].map((nom) => `/images/rails/talus_${nom}.webp`),
   ...['ns', 'eo', 'es', 'so', 'no', 'ne', 'nes', 'eso', 'nso', 'neo', 'neso'].map((code) => `/images/rails/voie_${code}.webp`),
   ...['es', 'so', 'no', 'ne'].map((code) => `/images/rails/voie_doux_${code}.webp`),
+  ...['fin_n', 'fin_e', 'fin_s', 'fin_o', 'seul_ns'].map((code) => `/images/rails/voie_${code}.webp`),
   ...['herbe', 'sable'].map((nom) => `/images/sol/${nom}.webp`),
   ...['manager', 'mineur', 'recruteur'].map((nom) => `/images/personnages/${nom}.webp`),
   // Les personnages vus de devant, de derrière, de gauche et de droite (src/composants/sprites.ts).

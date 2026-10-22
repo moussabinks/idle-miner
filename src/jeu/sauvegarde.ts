@@ -5,6 +5,7 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
+import { LIAISONS, type IdLiaison } from './donnees'
 import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, nouveauTrajet, type EtatJeu } from './mineur'
 import { railsMineMarche, type Village } from './village'
 
@@ -207,7 +208,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion21(donnees)
+    const convertie = convertirVersion22(convertirVersion21(donnees))
     return estUnEtatValide(convertie) ? convertie : null
   } catch {
     return null
@@ -250,9 +251,25 @@ export function convertirVersion21(donnees: unknown): unknown {
   for (const employe of ancienne.employes ?? []) if (employe.etape === 'pousse') employe.etape = 'quai'
   return {
     ...reste,
-    version: VERSION_ETAT,
+    version: 22,
     niveauWagonnets: typeof wagonnet?.niveau === 'number' ? wagonnet.niveau : 0,
     trajets: avecLigne ? [nouveauTrajet('mine-marche')] : [],
+  }
+}
+
+// Une partie de la version 22 (avant les pousseurs embauchés pour un trajet, le 26/10) : chaque
+// pousseur prend le trajet Mine → Marché (ou, s'il n'existe pas, le premier trajet qui part de
+// la mine) ; les mineurs n'ont pas de trajet.
+export function convertirVersion22(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as { version?: unknown; employes?: { role?: string; trajet?: unknown }[]; trajets?: { liaison: IdLiaison }[] }
+  if (ancienne.version !== 22 || !Array.isArray(ancienne.employes)) return donnees
+  const trajets = Array.isArray(ancienne.trajets) ? ancienne.trajets.map((t) => t.liaison) : []
+  const choix = trajets.includes('mine-marche') ? 'mine-marche' : (trajets.find((t) => LIAISONS[t]?.depart === 'puits') ?? null)
+  return {
+    ...ancienne,
+    version: VERSION_ETAT,
+    employes: ancienne.employes.map((e) => ({ ...e, trajet: e.role === 'pousseur' ? choix : null })),
   }
 }
 

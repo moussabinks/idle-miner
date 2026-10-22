@@ -411,12 +411,13 @@ function morceauDeVoie(r: Raccords): Morceau {
 }
 
 // Le nom de l'image 3D de la voie d'une case : ses côtés reliés, dans l'ordre n, e, s, o (« ns »,
-// « es », « nes »...). Seule ou avec une seule voisine, elle va tout droit.
+// « es », « nes »...). Un bout de ligne (une seule voisine, et pas de bâtiment) a un butoir du côté
+// où la voie s'arrête (« fin_n »...) ; un rail tout seul en a deux (« seul_ns »).
 function codeDeVoie(r: Raccords): string {
   const liste = COTES.filter((c) => r[c])
   if (liste.length >= 2) return liste.join('')
-  const axe = liste[0] ?? 'n'
-  return axe === 'n' || axe === 's' ? 'ns' : 'eo'
+  if (liste.length === 1) return `fin_${OPPOSE[liste[0]]}`
+  return 'seul_ns'
 }
 
 // Tous les rails du village : le talus de toutes les cases d'abord, puis la voie en 3D. Les
@@ -746,26 +747,3 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
   return <g transform={miroir ? `translate(${2 * c.x} 0) scale(-1 1)` : undefined}>{dessin}</g>
 }
 
-// ---------------------------------------------------------------------------
-// Le wagonnet (sur les rails)
-// ---------------------------------------------------------------------------
-
-export function DessinWagonnet({ c, plein = true }: { c: Point; plein?: boolean }) {
-  return (
-    <g transform={`translate(${c.x} ${c.y})`}>
-      <ellipse cx="0" cy="3" rx="13" ry="5" fill="rgb(0 0 0 / 0.25)" />
-      {/* Le chargement (des minerais qui dépassent), seulement quand il est plein. */}
-      {plein && (
-        <>
-          <circle cx="-5" cy="-15" r="3.4" fill="#4ee8dc" />
-          <circle cx="2" cy="-16" r="3.2" fill="#ffd84a" />
-          <circle cx="7" cy="-14" r="3" fill="#e04848" />
-        </>
-      )}
-      <path d="M-12 -13 L12 -13 L9 0 L-9 0 Z" fill="#6e6e78" stroke="#25252b" strokeWidth="1.3" />
-      <path d="M-12 -13 L12 -13" stroke="#e2b13a" strokeWidth="2" />
-      <circle cx="-6" cy="1" r="2.6" fill="#2a2a30" />
-      <circle cx="6" cy="1" r="2.6" fill="#2a2a30" />
-    </g>
-  )
-}

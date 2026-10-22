@@ -14,11 +14,14 @@ import { construireBatiment, estPose, peutConstruire, peutPoserSol, poserSol } f
 import {
   ameliorerEmploye,
   ameliorerRecruteur,
-  changerRole,
   coutAmeliorationEmploye,
   deposerTresorerie,
   depensesParPaie,
   embaucher,
+  embaucherPousseur,
+  indemnites,
+  licencier,
+  peutEmbaucherPousseur,
   embaucherManager,
   managerDebloque,
   nbSansSalaire,
@@ -195,8 +198,14 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 4 * 3600): Resul
 
     // Un pousseur pour le wagonnet, tant que les rails ne sont pas électriques.
     const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
-    if (trajetDe(etat, 'mine-marche') && !railsAlimentes(etat) && pousseurs.length === 0 && etat.employes.length >= 2) changerRole(etat, 0, 'pousseur')
-    if (railsAlimentes(etat)) etat.employes.forEach((e, i) => e.role === 'pousseur' && changerRole(etat, i, 'mineur'))
+    if (trajetDe(etat, 'mine-marche') && !railsAlimentes(etat) && pousseurs.length === 0 && etat.employes.length >= 1 && peutEmbaucherPousseur(etat, 'mine-marche')) {
+      embaucherPousseur(etat, aleatoire, 'mine-marche')
+    }
+    // Électrique, plus besoin de pousseur : il le licencie.
+    if (railsAlimentes(etat)) {
+      const i = etat.employes.findIndex((e) => e.role === 'pousseur' && e.etape !== 'pousse')
+      if (i !== -1 && etat.argent >= indemnites(etat) * 2) licencier(etat, i)
+    }
 
     // Le générateur : il le remplit de redstone, puis le laisse se servir dans le coffre.
     if (estPose(etat, 'generateur')) {

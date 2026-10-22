@@ -7,7 +7,7 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, DECORATIONS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment } from '../jeu/donnees'
+import { BATIMENTS, DECORATIONS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
 import { secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
@@ -70,6 +70,7 @@ type Props = {
   onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
   panneauOuvert: boolean // un panneau est ouvert à droite (ordinateur) : la caméra se décale à gauche
+  trajetEnSurbrillance?: IdLiaison | null // un trajet qui brille sur la carte (quand on embauche un pousseur)
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -89,6 +90,7 @@ export function VueVillage({
   onGlisser,
   onPeindre,
   panneauOuvert,
+  trajetEnSurbrillance = null,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -150,8 +152,6 @@ export function VueVillage({
     const k = distanceDepuisLeDepart(etat, trajetPousse) / longueurTrajet(ligneDuJoueur)
     return surLaTrace(trace, k * longueurTrace(trace))
   })()
-  // Les mineurs pousseurs attendent au quai, à côté du début des rails qui partent de la mine.
-  const ligne = ligneDe(etat, 'mine-marche') ?? etat.trajets.map((t) => (LIAISONS[t.liaison].depart === 'puits' ? ligneDe(etat, t.liaison) : null)).find((l) => l) ?? null
   // Quand le joueur pousse un wagonnet, c'est lui que la caméra suit.
   const pousse = wagonnet !== null
   // Le joueur se met à pousser le wagonnet : la caméra le suit de nouveau (même si on avait
@@ -410,9 +410,19 @@ export function VueVillage({
     } else if (mineur.etape === 'forge') {
       const b = batimentPose(village, 'forgeron')
       if (b) position = devant(b, 1 + (index % 4), 0.9)
-    } else if (mineur.etape === 'quai' && ligne) {
-      // Il attend un wagonnet à côté du début des rails.
-      position = { x: ligne[0].x + 1.2 + 0.7 * auQuai, y: ligne[0].y + 0.3 + 0.5 * auQuai++ }
+    } else if (mineur.etape === 'quai') {
+      // Il attend son wagonnet à côté du début des rails de son trajet (au bord de la voie).
+      const ligneQuai = mineur.trajet ? ligneDe(etat, mineur.trajet) : null
+      const maison = batimentPose(village, mineur.trajet ? LIAISONS[mineur.trajet].depart : 'puits')
+      if (ligneQuai) {
+        const a = ligneQuai[0]
+        const b = ligneQuai[1] ?? a
+        const sens = { x: b.x - a.x, y: b.y - a.y }
+        const cote = sens.x === 0 && sens.y === 0 ? { x: 1, y: 0 } : { x: -sens.y, y: sens.x }
+        position = { x: a.x + 0.5 + cote.x * 1.3 + sens.x * 0.6 * auQuai, y: a.y + 0.5 + cote.y * 1.3 + sens.y * 0.6 * auQuai++ }
+      } else if (maison) {
+        position = devant(maison, 3 + auQuai++, 1.2)
+      }
     } else if (mineur.etape === 'attend' && personnel) {
       position = devant(personnel, 2 + enAttente++, 1.6)
       colere = true
@@ -511,6 +521,39 @@ export function VueVillage({
         return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
       })}
       <RailsDuVillage village={village} />
+      {/* Le trajet qu'on regarde au Personnel : une ligne jaune épaisse qui brille, du centre du
+          bâtiment de départ au centre de celui d'arrivée en suivant les rails (les bâtiments,
+          dessinés par-dessus, la cachent à leurs deux bouts). Leurs emprises sont entourées d'or. */}
+      {trajetEnSurbrillance &&
+        (() => {
+          const ligneVue = ligneDe(etat, trajetEnSurbrillance)
+          if (!ligneVue) return null
+          const { depart, arrivee } = LIAISONS[trajetEnSurbrillance]
+          const batimentDepart = batimentPose(village, depart)
+          const batimentArrivee = batimentPose(village, arrivee)
+          // Les points de la ligne, au milieu de chaque case (et des deux bâtiments).
+          const etapes: { x: number; y: number }[] = ligneVue.map((c) => ({ x: c.x + 0.5, y: c.y + 0.5 }))
+          if (batimentDepart) etapes.unshift({ x: batimentDepart.x + BATIMENTS[depart].taille / 2, y: batimentDepart.y + BATIMENTS[depart].taille / 2 })
+          if (batimentArrivee) etapes.push({ x: batimentArrivee.x + BATIMENTS[arrivee].taille / 2, y: batimentArrivee.y + BATIMENTS[arrivee].taille / 2 })
+          const points = etapes
+            .map((p) => {
+              const e = versEcran(p.x, p.y)
+              return `${e.x},${e.y}`
+            })
+            .join(' ')
+          return (
+            <g className="trajet-en-surbrillance">
+              {[batimentDepart && depart, batimentArrivee && arrivee].map((id) => {
+                const b = id ? batimentPose(village, id) : null
+                return id && b ? <polygon key={id} className="emprise-trajet" points={losange(b.x, b.y, BATIMENTS[id].taille)} /> : null
+              })}
+              {/* Le halo (large et flou), puis la ligne jaune, puis un filet clair au milieu. */}
+              <polyline className="ligne-trajet-halo" points={points} />
+              <polyline className="ligne-trajet" points={points} />
+              <polyline className="ligne-trajet-reflet" points={points} />
+            </g>
+          )
+        })()}
       {/* Quand on pose un bâtiment, une décoration ou un chemin : les cases au bord des voies (sous
           la demi-voie qui déborde de chaque côté du rail) sont interdites, en rouge. */}
       {fantome &&

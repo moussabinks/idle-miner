@@ -110,7 +110,8 @@ export type Trajet = {
 // Ce que fait un mineur employé :
 //   - un mineur : il creuse au fond (« creuse »), remonte (« monte »), vide son sac dans le
 //     coffre (« vide »), redescend (« descend ») ;
-//   - un pousseur : il attend le wagonnet au quai (« quai ») et le pousse jusqu'au marché et
+//   - un pousseur (embauché pour un trajet, 26/10) : il attend son wagonnet au quai, devant le
+//     bâtiment de départ de son trajet (« quai »), et le pousse jusqu'à l'arrivée et
 //     retour (« pousse ») ;
 //   - les deux marchent dans le village (« marche » : à la forge, au Personnel, à la mine),
 //     récupèrent leur pioche (« forge ») ou attendent leur salaire (« attend »).
@@ -122,6 +123,7 @@ export type Employe = {
   rarete: IdRarete
   niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
   role: RoleEmploye
+  trajet: IdLiaison | null // le trajet d'un pousseur (null pour un mineur)
   etape: EtapeEmploye
   progression: number // blocs (en creusant) ou secondes (trajet, vidage, marche...)
   sac: Inventaire
@@ -174,7 +176,9 @@ export type EtatJeu = {
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.
 // Version 22 (24/10) : les trajets des wagonnets (une partie de la version 21 est convertie).
-export const VERSION_ETAT = 22
+// Version 23 (26/10) : les pousseurs sont embauchés pour un trajet (une partie de la version 22
+// est convertie : un ancien pousseur prend le trajet Mine → Marché).
+export const VERSION_ETAT = 23
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------

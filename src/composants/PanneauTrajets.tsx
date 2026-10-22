@@ -92,9 +92,9 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
             ? 'Au quai : rien à porter pour l’instant.'
             : electrique
               ? 'Il part tout seul.'
-              : etat.employes.some((e) => e.role === 'pousseur')
-                ? 'Un mineur pousseur va le pousser.'
-                : 'Au quai. Pousse-le, ou mets un mineur « pousseur » au Personnel.'}
+              : etat.employes.some((e) => e.role === 'pousseur' && e.trajet === liaison)
+                ? 'Son pousseur va le pousser.'
+                : 'Au quai. Pousse-le, ou embauche un pousseur pour ce trajet au Personnel.'}
       </span>
       {enRoute(trajet) && (
         <Barre valeur={distanceDepuisLeDepart(etat, trajet)} max={longueurTrajet(ligne)} texte={trajet.etape === 'aller' ? `→ ${arrivee.nom}` : `← ${depart.nom}`} couleur="or" />

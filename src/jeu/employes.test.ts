@@ -9,7 +9,8 @@ import {
   avancerEmployes,
   blocsParSecondeEmploye,
   chancesRecrutement,
-  changerRole,
+  changerTrajet,
+  embaucherPousseur,
   coutSalaires,
   deposerTresorerie,
   embaucher,
@@ -96,15 +97,39 @@ describe('les mineurs employés', () => {
     expect(salaireEmploye(mineur)).toBeGreaterThan(30)
   })
 
-  it('pousseur : il remonte et attend le wagonnet au quai', () => {
-    const etat = partie()
-    embaucher(etat, hasard())
-    avancerEmployes(etat, 15, hasard()) // il creuse
-    changerRole(etat, 0, 'pousseur')
+  it('un pousseur est embauché pour un trajet : il va attendre au quai du départ', () => {
+    const etat = partie(1000)
+    // Pas de rails : pas de pousseur possible.
+    expect(embaucherPousseur(etat, hasard(), 'mine-marche')).toEqual([])
+    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'employes', x: 20, y: 30, miroir: false })
+    for (let y = 35; y <= 39; y++) etat.village.rails.push(`30,${y}`)
+    embaucherPousseur(etat, hasard(), 'mine-marche')
+    const p = etat.employes[0]
+    expect(p.role).toBe('pousseur')
+    expect(p.trajet).toBe('mine-marche')
+    // Le trajet a été créé avec l'embauche.
+    expect(etat.trajets.map((t) => t.liaison)).toEqual(['mine-marche'])
+    // Il marche du Personnel à la mine, puis attend au quai.
+    expect(p.etape).toBe('marche')
     avancerEmployes(etat, 30, hasard())
+    expect(p.etape).toBe('quai')
+    expect(p.lieu).toBe('puits')
+  })
+
+  it('on peut changer le trajet d’un pousseur', () => {
+    const etat = partie(1000)
+    etat.niveauMine = 2
+    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'foreuse', x: 34, y: 40, miroir: false })
+    for (let y = 35; y <= 39; y++) etat.village.rails.push(`30,${y}`)
+    etat.village.rails.push('33,42')
+    embaucherPousseur(etat, hasard(), 'mine-marche')
+    avancerEmployes(etat, 5, hasard())
     expect(etat.employes[0].etape).toBe('quai')
-    changerRole(etat, 0, 'mineur')
-    expect(etat.employes[0].etape).toBe('descend')
+    changerTrajet(etat, 0, 'foreuse-marche')
+    expect(etat.employes[0].trajet).toBe('foreuse-marche')
+    avancerEmployes(etat, 60, hasard())
+    expect(etat.employes[0].lieu).toBe('foreuse')
+    expect(etat.employes[0].etape).toBe('quai')
   })
 
   it('licencier coûte des indemnités', () => {

@@ -41,7 +41,7 @@ import {
   type TypeSol,
 } from './jeu/batiments'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
-import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration } from './jeu/donnees'
+import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration, type IdLiaison } from './jeu/donnees'
 import { notificationsBatiments } from './jeu/notifications'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
@@ -107,6 +107,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   const [fantomeFixe, setFantomeFixe] = useState(false)
   const [pinceau, setPinceau] = useState<TypeSol | null>(null)
   const [modifier, setModifier] = useState(false)
+  // Le trajet qu'on regarde en embauchant un pousseur (au Personnel) : il brille sur la carte.
+  const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
   const edition = fantome !== null || pinceau !== null || modifier
 
   // Le fantôme peut-il être posé là où il est ?
@@ -405,7 +407,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         )}
         {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} />}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
-        {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} />}
+        {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
       </section>
     )
   } else if (aideOuverte) {
@@ -561,6 +563,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           onGlisser={deplacerFantome}
           onPeindre={peindre}
           panneauOuvert={panneau !== null}
+          trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
         />
         <Gains gains={gains} />
       </main>

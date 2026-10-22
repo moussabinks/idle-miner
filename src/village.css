@@ -371,8 +371,7 @@
 
 .wagonnet-village {
   position: absolute;
-  width: 40px;
-  height: 34px;
+  /* Sa taille est celle de son cadre (les attributs width et height du dessin). */
   overflow: visible;
   pointer-events: none;
 }
@@ -1353,4 +1352,58 @@
   fill: rgb(230 70 50 / 0.28);
   stroke: rgb(255 120 100 / 0.6);
   stroke-width: 0.6;
+}
+
+/* Le trajet qu'on regarde en embauchant un pousseur (26/10) : une ligne jaune épaisse en
+   surbrillance relie les deux bâtiments en suivant les rails, et ils sont entourés d'or. */
+.ligne-trajet-halo,
+.ligne-trajet,
+.ligne-trajet-reflet {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.ligne-trajet-halo {
+  stroke: rgb(255 216 74 / 0.45);
+  stroke-width: 22;
+  filter: blur(6px);
+  animation: trajet-brille 1.4s ease-in-out infinite;
+}
+
+.ligne-trajet {
+  stroke: #ffd21f;
+  stroke-width: 10;
+  filter: drop-shadow(0 0 4px #ffb800);
+}
+
+.ligne-trajet-reflet {
+  stroke: #fff7c2;
+  stroke-width: 2.5;
+  opacity: 0.9;
+}
+
+.emprise-trajet {
+  fill: rgb(255 214 90 / 0.25);
+  stroke: #ffd84a;
+  stroke-width: 3;
+  stroke-dasharray: 8 5;
+  animation: trajet-tourne 1.2s linear infinite;
+}
+
+@keyframes trajet-brille {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes trajet-tourne {
+  to { stroke-dashoffset: -26; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ligne-trajet-halo,
+  .emprise-trajet {
+    animation: none;
+  }
 }

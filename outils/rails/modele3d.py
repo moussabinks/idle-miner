@@ -67,6 +67,8 @@ MATIERES = {
     'champignon': ((214, 220, 230), 1.0),
     'selle': ((72, 76, 86), 0.3),
     'boulon': ((60, 63, 72), 0.5),
+    'rouge': ((196, 52, 44), 0.25),
+    'blanc': ((236, 232, 224), 0.2),
 }
 NOMS_MATIERES = list(MATIERES)
 
@@ -221,6 +223,25 @@ def plancher(modele):
         modele.boite(C, C + k * (2 * c / 3), 0, 2 * c, 2 * c / 3 - 0.012, TRAVERSE['bas'], TRAVERSE['haut'], 'planche')
 
 
+def butoir(m, v=0.1):
+    # Un butoir au bout de la voie (au nord de la case, en v) : deux poteaux, une grosse poutre
+    # peinte en rouge et blanc, et deux tampons d'acier tournés vers la voie. Il est posé sur une
+    # traverse double, et les rails s'arrêtent juste devant.
+    m.boite(C, v + 0.04, 0, 1.3, 0.26, TRAVERSE['bas'], TRAVERSE['haut'] + 0.01, 'bois')
+    for u in (A, B):
+        m.boite(u, v, 0, 0.11, 0.11, TRAVERSE['haut'], 0.44, 'bois')
+        # Une jambe de force, derrière, pour tenir le choc.
+        m.boite(u, v - 0.1, 0, 0.08, 0.08, TRAVERSE['haut'], 0.24, 'bois')
+    m.boite(C, v, 0, 2 * D + 0.3, 0.13, 0.3, 0.46, 'rouge')
+    for k in (-2, -1, 0, 1, 2):
+        m.boite(C + k * 0.2, v + 0.002, 0.6, 0.06, 0.135, 0.305, 0.455, 'blanc')
+    huit = [(0.055 * np.cos(t), 0.38 + 0.055 * np.sin(t)) for t in np.linspace(0, 2 * np.pi, 9)[:-1]]
+    plaque = [(0.075 * np.cos(t), 0.38 + 0.075 * np.sin(t)) for t in np.linspace(0, 2 * np.pi, 9)[:-1]]
+    for u in (A, B):
+        m.prisme([(u, v + 0.065), (u, v + 0.16)], huit, 'acier')
+        m.prisme([(u, v + 0.16), (u, v + 0.185)], plaque, 'acier', matiere_dessus='champignon')
+
+
 def modele_de_base(forme):
     # Les quatre formes de base (comme les tuiles du talus) : droit nord – sud, virage sud – est,
     # T (ligne nord – sud, branche à l'est) et croisement.
@@ -246,6 +267,24 @@ def modele_de_base(forme):
             traverse(m, 2 + 1.5 * np.cos(a), 2 + 1.5 * np.sin(a), a, rails_sur=(-D, D))
         rail(m, arc((2, 2), 1.5 - D, np.pi, 1.5 * np.pi, n=40))
         rail(m, arc((2, 2), 1.5 + D, np.pi, 1.5 * np.pi, n=64))
+    elif forme in ('fin', 'seul'):
+        # Un bout de ligne : un butoir au nord (et aussi au sud pour un rail tout seul).
+        seul = forme == 'seul'
+        for v in PAS[1:] if not seul else PAS[1:2]:
+            traverse(m, C, v, 0, rails_sur=(-D, D))
+        fin = 0.82 if seul else 1
+        rail(m, droite((A, 0.27), (A, fin)))
+        rail(m, droite((B, 0.27), (B, fin)))
+        butoir(m)
+        if seul:
+            # Le deuxième butoir, au sud : le même, tourné d'un demi-tour.
+            avant = len(m.triangles)
+            butoir(m)
+            for i in range(avant, len(m.triangles)):
+                t, mat, obj, axe = m.triangles[i]
+                t = t.copy()
+                t[:, 0], t[:, 1] = 2 * C - t[:, 0], 2 * C - t[:, 1]
+                m.triangles[i] = (t, mat, obj, axe)
     elif forme == 't':
         traverse(m, C, PAS[0], 0, COURTE, rails_sur=(-D, D))
         traverse(m, C, PAS[2], 0, COURTE, rails_sur=(-D, D))
@@ -477,6 +516,17 @@ if __name__ == '__main__':
         image = rendre(modele_de_base(base), quarts)
         image.save(f'{dossier}/voie_{code}.webp', 'WEBP', quality=90, method=6)
         print(code, base, quarts, image.size)
+    # Les bouts de ligne : un butoir du côté où la voie s'arrête (n, e, s, o) ; un rail tout seul
+    # en a deux (dans les deux sens).
+    VUE.update(VUE_CASE)
+    for quarts, cote in enumerate('neso'):
+        if not seules or f'fin_{cote}' in seules:
+            rendre(modele_de_base('fin'), quarts).save(f'{dossier}/voie_fin_{cote}.webp', 'WEBP', quality=90, method=6)
+            print('fin', cote)
+    for quarts, code in enumerate(['ns']):  # (tout seul, il est toujours nord – sud)
+        if not seules or f'seul_{code}' in seules:
+            rendre(modele_de_base('seul'), quarts).save(f'{dossier}/voie_seul_{code}.webp', 'WEBP', quality=90, method=6)
+            print('seul', code)
     # Les virages doux : un par direction (les côtés du coin : es, so, no, ne).
     cotes = {'s', 'e'}
     for quarts in range(4):

@@ -215,6 +215,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 **Ce qu'on voit** :
 - les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ;
+- au **Personnel**, quand on embauche un pousseur pour un trajet : une **ligne jaune épaisse** en surbrillance (halo qui pulse) relie les deux bâtiments en suivant les rails, et leurs emprises sont entourées d'or ;
 - le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
 - les **mineurs employés** quand ils sont dehors : en marche (vers la forge, le Personnel ou la mine), devant la forge, au quai des rails (pousseurs), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
 - le **manager** et le **recruteur** (s'ils sont embauchés), devant le Personnel, avec une étiquette dorée ;
