@@ -11,7 +11,7 @@ import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, t
 import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
 import { TasDeRochers } from './Rochers'
-import { lireCle, raccordsRail, type Village } from '../jeu/village'
+import { cleCase, DIRECTION, lireCle, raccordsRail, viragesDoux, type Case, type VirageDoux, type Village } from '../jeu/village'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -338,6 +338,29 @@ const FORMES_RAILS = {
 // Le cadre des images de la voie (en pixels du monde), autour du coin du haut de la case : le
 // même que dans outils/rails/modele3d.py (CADRE).
 const CADRE_VOIE = { x: -35, y: -15, largeur: 70, hauteur: 46 }
+// Les virages doux (25/10) : dans un carré de 2 × 2 cases, autour du coin du haut de ce carré
+// (outils/rails/modele3d.py, VUE_DOUX).
+const CADRE_DOUX = { x: -42, y: -12, largeur: 84, hauteur: 58 }
+// Où est la case du coin dans son carré, selon le nombre de quarts de tour (le virage de base,
+// sans tourner, a son coin en haut à gauche et ses bras au sud et à l'est).
+const COIN_DANS_LE_CARRE: Case[] = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+]
+
+// Le dessin d'un virage doux : son carré de 2 × 2 cases et ses quarts de tour.
+function carreDuVirage(v: VirageDoux): { origine: Case; quarts: number } {
+  let bras: Cote[] = ['s', 'e']
+  for (let k = 0; k < 4; k++) {
+    if (bras.every((c) => v.bras.includes(c))) {
+      return { origine: { x: v.coin.x - COIN_DANS_LE_CARRE[k].x, y: v.coin.y - COIN_DANS_LE_CARRE[k].y }, quarts: k }
+    }
+    bras = bras.map((c) => QUART[c])
+  }
+  return { origine: v.coin, quarts: 0 }
+}
 
 type Cote = 'n' | 'e' | 's' | 'o'
 const COTES: Cote[] = ['n', 'e', 's', 'o']
@@ -396,50 +419,55 @@ function codeDeVoie(r: Raccords): string {
   return axe === 'n' || axe === 's' ? 'ns' : 'eo'
 }
 
-// Tous les rails du village : le talus de toutes les cases d'abord, puis la voie en 3D.
+// Tous les rails du village : le talus de toutes les cases d'abord, puis la voie en 3D. Les
+// virages doux (sur trois cases) remplacent le dessin de leurs trois cases.
 export function RailsDuVillage({ village }: { village: Village }) {
-  const cases = village.rails
-    .map((cle) => {
-      const c = lireCle(cle)
-      const raccords = raccordsRail(village, c.x, c.y)
-      // La tuile du talus (2 × 2 cases) commence une demi-case avant la case du rail, dans les deux sens.
-      const coinTalus = versEcran(c.x - 0.5, c.y - 0.5)
-      const surLaCase = `matrix(${2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${-2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${coinTalus.x} ${coinTalus.y})`
-      return { cle, x: c.x, y: c.y, surLaCase, talus: morceauDeVoie(raccords), voie: codeDeVoie(raccords) }
-    })
-    // De la plus loin à la plus proche (comme les bâtiments).
-    .sort((a, b) => a.x + a.y - (b.x + b.y))
+  const virages = viragesDoux(village).map((v) => ({ v, ...carreDuVirage(v) }))
+  const dansUnVirage = new Set(virages.flatMap(({ v }) => [v.coin, ...v.bras.map((c) => ({ x: v.coin.x + DIRECTION[c].x, y: v.coin.y + DIRECTION[c].y }))].map((c) => cleCase(c.x, c.y))))
+  const talus: { cle: string; transform: string; image: string; quarts: number }[] = []
+  const voie: { cle: string; profondeur: number; image: string; x: number; y: number; cadre: typeof CADRE_VOIE }[] = []
+  for (const cle of village.rails) {
+    if (dansUnVirage.has(cle)) continue
+    const c = lireCle(cle)
+    const raccords = raccordsRail(village, c.x, c.y)
+    const morceau = morceauDeVoie(raccords)
+    // La tuile du talus (2 × 2 cases) commence une demi-case avant la case du rail, dans les deux sens.
+    const coinTalus = versEcran(c.x - 0.5, c.y - 0.5)
+    talus.push({ cle, transform: `matrix(${2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${-2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${coinTalus.x} ${coinTalus.y})`, image: morceau.image, quarts: morceau.quarts })
+    const coin = versEcran(c.x, c.y)
+    voie.push({ cle, profondeur: c.x + c.y, image: `voie_${codeDeVoie(raccords)}`, x: coin.x, y: coin.y, cadre: CADRE_VOIE })
+  }
+  for (const { v, origine, quarts } of virages) {
+    const cle = `doux${cleCase(v.coin.x, v.coin.y)}`
+    // Le talus d'un virage doux : une tuile de 3 × 3 cases, autour de son carré de 2 × 2.
+    const coinTalus = versEcran(origine.x - 0.5, origine.y - 0.5)
+    talus.push({ cle, transform: `matrix(${3 * DEMI_LARGEUR} ${3 * DEMI_HAUTEUR} ${-3 * DEMI_LARGEUR} ${3 * DEMI_HAUTEUR} ${coinTalus.x} ${coinTalus.y})`, image: 'talus_doux', quarts })
+    const coin = versEcran(origine.x, origine.y)
+    voie.push({ cle, profondeur: origine.x + origine.y + 1, image: `voie_doux_${v.bras.join('')}`, x: coin.x, y: coin.y, cadre: CADRE_DOUX })
+  }
+  // De la plus loin à la plus proche (comme les bâtiments).
+  voie.sort((a, b) => a.profondeur - b.profondeur)
   return (
     <g className="rails-village">
       <g className="rails-talus">
-        {cases.map(({ cle, surLaCase, talus }) => (
-          <g key={cle} transform={surLaCase}>
+        {talus.map((t) => (
+          <g key={t.cle} transform={t.transform}>
             <image
-              href={`/images/rails/${talus.image}.webp`}
+              href={`/images/rails/${t.image}.webp`}
               x="0"
               y="0"
               width="1"
               height="1"
               preserveAspectRatio="none"
-              transform={talus.quarts ? `rotate(${talus.quarts * 90} 0.5 0.5)` : undefined}
+              transform={t.quarts ? `rotate(${t.quarts * 90} 0.5 0.5)` : undefined}
             />
           </g>
         ))}
       </g>
       <g className="rails-voie">
-        {cases.map(({ cle, x, y, voie }) => {
-          const coin = versEcran(x, y)
-          return (
-            <image
-              key={cle}
-              href={`/images/rails/voie_${voie}.webp`}
-              x={coin.x + CADRE_VOIE.x}
-              y={coin.y + CADRE_VOIE.y}
-              width={CADRE_VOIE.largeur}
-              height={CADRE_VOIE.hauteur}
-            />
-          )
-        })}
+        {voie.map((v) => (
+          <image key={v.cle} href={`/images/rails/${v.image}.webp`} x={v.x + v.cadre.x} y={v.y + v.cadre.y} width={v.cadre.largeur} height={v.cadre.hauteur} />
+        ))}
       </g>
     </g>
   )

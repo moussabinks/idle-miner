@@ -17,6 +17,11 @@ Drive) :
    continue d'un côté et deux rails en L de l'autre ; le croisement a quatre rails en L (les
    rails ne se croisent jamais) ; les deux ont un plancher en bois au centre.
 
+**Les virages doux** (25/10) : quand un virage a deux lignes droites pour voisines, le jeu dessine
+à la place un grand quart de cercle (rayon 1,5 case) sur les trois cases : `talus_doux` (une tuile
+de 3 × 3 cases) et `voie_doux_<côtés du coin>` (`es`, `so`, `no`, `ne`), rendues dans un carré de
+2 × 2 cases.
+
 Le jeu (`RailsDuVillage`, dans `src/composants/DessinsVillage.tsx`) pose le talus de toutes les
 cases, puis la voie de la plus loin à la plus proche.
 
