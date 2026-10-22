@@ -92,6 +92,7 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
       </div>
 
       {etat ? (
+        // Les chiffres du monde, sur un papier clair (comme la liste des tâches du jeu).
         <ul className="carte-monde-infos">
           <li>🕳️ Mine niveau {etat.niveauMine}</li>
           <li>💵 {Math.floor(etat.argent).toLocaleString('fr-FR')} $</li>
@@ -202,7 +203,7 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
             ) : (
               <button className="bouton bouton-mega" disabled={bloque} onClick={creer}>
                 <span className="bouton-mega-titre">⛏️ Commencer</span>
-                <span className="bouton-mega-detail">Ta clairière et ta mine t’attendent</span>
+                <span className="bouton-mega-detail">Pépite te guide pas à pas</span>
               </button>
             )}
             <a className="bouton bouton-mondes" href="#mondes">
@@ -210,16 +211,26 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
             </a>
           </div>
 
+          {/* Trois chiffres, chacun sur sa médaille (comme les bulles du village). */}
           <ul className="heros-chiffres">
             <li>
+              <span className="chiffre-medaille" aria-hidden="true">
+                💎
+              </span>
               <strong>{NIVEAU_MINE_MAX}</strong>
               <span>niveaux de mine</span>
             </li>
             <li>
-              <strong>⚡</strong>
-              <span>des rails électriques</span>
+              <span className="chiffre-medaille" aria-hidden="true">
+                ⚡
+              </span>
+              <strong>100 %</strong>
+              <span>automatique</span>
             </li>
             <li>
+              <span className="chiffre-medaille" aria-hidden="true">
+                🏗️
+              </span>
               <strong>{LISTE_BATIMENTS.length}</strong>
               <span>bâtiments à poser</span>
             </li>
@@ -273,8 +284,9 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
                 creer()
               }}
             >
+              <img className="nouveau-monde-pepite" src="/images/personnages/sprites/mineur_commun_devant.webp" alt="" draggable={false} />
               <h3>✨ Nouveau monde</h3>
-              <span className="discret">Une nouvelle partie, depuis le tout début.</span>
+              <span className="nouveau-monde-texte">Une nouvelle partie depuis le début : Pépite te montre tout, pas à pas.</span>
               <input
                 value={nouveauNom}
                 maxLength={24}
