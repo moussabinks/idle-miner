@@ -63,7 +63,20 @@ const DELAI_COMBO = 900 // ms
 const PALIERS_COMBO = [10, 25, 50, 100, 200, 500]
 
 // Le bloc à casser, en très grand, avec ses éclats, les minerais qui en sortent et le combo.
-function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu; eclats: Eclat[]; trouvailles: Trouvaille[]; onCliquer: () => void }) {
+function BlocACliquer({
+  etat,
+  eclats,
+  trouvailles,
+  onCliquer,
+  clicsParSeconde,
+}: {
+  etat: EtatJeu
+  eclats: Eclat[]
+  trouvailles: Trouvaille[]
+  onCliquer: () => void
+  clicsParSeconde: number
+}) {
+  const prod = production(etat)
   const bloc = etat.prochainBloc
   const plein = coffrePlein(etat)
   const cassee = estCassee(etat)
@@ -121,14 +134,18 @@ function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu;
           </span>
         )}
       </button>
-      {/* Ta pioche et sa durabilité, juste sous le bloc (27/10). */}
-      <JaugePioche etat={etat} />
+      {/* À côté du bloc (27/10) : le niveau, le bloc, ta pioche et ce que produit la mine. */}
       <div className="bloc-mine-texte">
+        <span className="discret titre-niveau-mine">
+          Niveau {etat.niveauMine} · <strong>{infoNiveauMine(etat.niveauMine).nom}</strong>
+        </span>
         <strong>{plein ? '📦 Coffre plein !' : `👆 ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
+        <JaugePioche etat={etat} />
         <span className="discret">
-          {cassee
-            ? '💥 Pioche cassée : 2 clics par bloc. Fais-la réparer au forgeron.'
-            : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de chance de doubler un minerai`}
+          {cassee ? '💥 Pioche cassée : 2 clics par bloc (forgeron).' : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de doubler un minerai`}
+        </span>
+        <span className="production-mini">
+          ⚙️ {parSeconde(prod.total + clicsParSeconde)} blocs/s · ≈ {Math.round(prod.dollarsParMinute).toLocaleString('fr-FR')} $/min
         </span>
       </div>
     </div>
@@ -156,7 +173,7 @@ function JaugePioche({ etat }: { etat: EtatJeu }) {
 
 // Les goulots (27/10) : l'ascenseur et le wagonnet du marché suivent-ils la production ? Une
 // alerte quand ils ne suivent pas, une ligne verte quand tout va bien.
-function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: 'wagonnets' | 'ameliorer') => void }) {
+function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: OngletMine) => void }) {
   const ascenseur = analyseAscenseur(etat)
   const wagonnet = analyseWagonnet(etat)
   const aMineurs = etat.employes.some((e) => e.role === 'mineur')
@@ -166,9 +183,9 @@ function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: 'wagonnets'
       {aMineurs &&
         (ascenseur.tropLent ? (
           <div className="goulot goulot-alerte">
-            <span>
-              ⚠️ <strong>Ascenseur trop lent</strong> : tes mineurs passent {Math.round(ascenseur.partDansLePuits * 100)} % de leur temps dans le puits.
-              {ascenseur.gainProchainNiveau !== null && ` Niveau suivant : +${parSeconde(ascenseur.gainProchainNiveau)} bloc/s.`}
+            <span title={`Tes mineurs passent ${Math.round(ascenseur.partDansLePuits * 100)} % de leur temps dans le puits.`}>
+              ⚠️ <strong>Ascenseur trop lent</strong> : {Math.round(ascenseur.partDansLePuits * 100)} % du temps dans le puits
+              {ascenseur.gainProchainNiveau !== null && ` · +${parSeconde(ascenseur.gainProchainNiveau)} bloc/s au niveau suivant`}
             </span>
             <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('ameliorer')}>
               ⬆️ Voir
@@ -188,10 +205,10 @@ function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: 'wagonnets'
           </div>
         ) : wagonnet.surplus > 0.005 ? (
           <div className="goulot goulot-alerte">
-            <span>
-              ⚠️ <strong>Wagonnet saturé</strong> : il emporte au plus {parSeconde(wagonnet.debitMax)} bloc/s (aller-retour de {Math.round(wagonnet.secondesAllerRetour)} s), la mine en
-              sort {parSeconde(wagonnet.apport)}. Le coffre se remplit de {parSeconde(wagonnet.surplus)} bloc/s : agrandis les wagonnets
-              {wagonnet.moteur === 'pousseur' ? ' ou électrifie les rails' : ''}.
+            <span
+              title={`Il emporte au plus ${parSeconde(wagonnet.debitMax)} bloc/s (aller-retour de ${Math.round(wagonnet.secondesAllerRetour)} s), la mine en sort ${parSeconde(wagonnet.apport)}. Le coffre se remplit de ${parSeconde(wagonnet.surplus)} bloc/s : agrandis les wagonnets${wagonnet.moteur === 'pousseur' ? ' ou électrifie les rails' : ''}.`}
+            >
+              ⚠️ <strong>Wagonnet saturé</strong> : {parSeconde(wagonnet.debitMax)} bloc/s au plus, la mine en sort {parSeconde(wagonnet.apport)} · agrandis-le
             </span>
             <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('wagonnets')}>
               ⬆️ Voir
@@ -286,13 +303,13 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
   }
   return (
     <div className="ligne-achat coffre-mine">
-      <div className="ligne-titre">
+      {/* Le titre et la barre sur une seule ligne (la place est comptée). */}
+      <div className="coffre-entete">
         <strong>📦 Coffre</strong>
-        <span className={plein ? 'texte-alerte' : 'discret'}>
-          {total} / {capaciteCoffre(etat)}
-        </span>
+        <div className="coffre-barre">
+          <Barre valeur={total} max={capaciteCoffre(etat)} texte={plein ? `Plein (${total}) : la mine s’arrête !` : `${total} / ${capaciteCoffre(etat)}`} couleur={plein ? 'rouge' : 'or'} />
+        </div>
       </div>
-      <Barre valeur={total} max={capaciteCoffre(etat)} texte={plein ? 'Plein : la mine s’arrête !' : `${total} objets`} couleur={plein ? 'rouge' : 'or'} />
       <div className={`table-coffre ${wagonnet ? '' : 'sans-wagonnet'}`}>
         <span className="entete-coffre">Minerai</span>
         <span className="entete-coffre nombre">Coffre</span>
@@ -336,8 +353,8 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
           🎒 Tout mettre dans le sac ({Math.min(total, placeSac)})
         </button>
       </div>
-      {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
-      {!wagonnet && <span className="discret">🛤️ Relie la mine au marché avec des rails : un wagonnet vendra le coffre tout seul.</span>}
+      {placeSac === 0 && <span className="discret manque">🎒 Sac plein : va d’abord vendre au marché.</span>}
+      {!wagonnet && <span className="discret">🛤️ Des rails jusqu’au marché : un wagonnet vendra le coffre tout seul.</span>}
     </div>
   )
 }
@@ -405,11 +422,14 @@ function ProchainNiveau({ etat, onVoir }: { etat: EtatJeu; onVoir: () => void })
   )
 }
 
+// Les onglets du panneau (27/10 : cinq, pour que rien ne défile).
+type OngletMine = 'creuser' | 'production' | 'wagonnets' | 'niveau' | 'ameliorer'
+
 // Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
 const FENETRE_CLICS = 3000 // ms
 
 export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
-  const [onglet, setOnglet] = useState<'creuser' | 'wagonnets' | 'ameliorer'>('creuser')
+  const [onglet, setOnglet] = useState<OngletMine>('creuser')
   // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
   const clics = useRef<number[]>([])
   const [clicsParSeconde, setClicsParSeconde] = useState(0)
@@ -429,30 +449,37 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
   const puits = analyseAscenseur(etat)
-  // Ce qu'on peut améliorer tout de suite (pour la pastille de l'onglet).
-  const ameliorable = (prochain !== null && peutPayer(etat, prochain.cout)) || (coffre !== null && peutPayer(etat, coffre.cout))
+  // Ce qu'on peut acheter tout de suite (pour les pastilles des onglets).
+  const niveauAchetable = prochain !== null && peutPayer(etat, prochain.cout)
+  const ameliorable = coffre !== null && peutPayer(etat, coffre.cout)
+  // Un goulot (ascenseur trop lent, wagonnet saturé) : une pastille « ! » sur l'onglet Production.
+  const wagonnetMarche = analyseWagonnet(etat)
+  const goulot = (etat.employes.some((e) => e.role === 'mineur') && puits.tropLent) || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
   return (
     <div className="liste-cartes">
-      {/* Trois onglets (27/10) : creuser (le bloc, la production, le coffre), les wagonnets, et
-          les améliorations. */}
+      {/* Cinq onglets (27/10), pour que tout tienne sans défiler : creuser (le bloc et le
+          coffre), la production, les wagonnets, le niveau de la mine, les améliorations. */}
       <OngletsPanneau
         onglets={[
           { id: 'creuser', titre: '⛏️ Creuser', pastille: coffrePlein(etat) ? '!' : null },
-          { id: 'wagonnets', titre: etat.trajets.length > 0 ? `🚃 Wagonnets (${etat.trajets.length})` : '🚃 Wagonnets' },
-          { id: 'ameliorer', titre: '⬆️ Améliorer', pastille: ameliorable ? '+' : null },
+          { id: 'production', titre: '📊 Prod.', pastille: goulot ? '!' : null },
+          { id: 'wagonnets', titre: etat.trajets.length > 0 ? `🚃 Wagons (${etat.trajets.length})` : '🚃 Wagons' },
+          { id: 'niveau', titre: `⬇️ Niv. ${etat.niveauMine}`, pastille: niveauAchetable ? '+' : null },
+          { id: 'ameliorer', titre: '⬆️ Plus', pastille: ameliorable ? '+' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
       />
       {onglet === 'creuser' && (
         <>
-          <p className="discret titre-niveau-mine">
-            Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong>
-          </p>
-          <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
-          {/* Le plus utile d'abord : le coffre, puis le niveau suivant, puis les chiffres. */}
+          <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} clicsParSeconde={clicsParSeconde} />
           <CoffreMine etat={etat} jouer={jouer} />
-          <ProchainNiveau etat={etat} onVoir={() => setOnglet('ameliorer')} />
+          <ProchainNiveau etat={etat} onVoir={() => setOnglet('niveau')} />
+        </>
+      )}
+
+      {onglet === 'production' && (
+        <>
           <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
           <Goulots etat={etat} onVoir={setOnglet} />
         </>
@@ -460,9 +487,8 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
 
       {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" />}
 
-      {onglet === 'ameliorer' && (
+      {onglet === 'niveau' && (
         <>
-
           {/* Descendre d'un niveau (27/10) : la grande carte, avec tout ce qu'on y gagne. */}
           <div className={`ligne-achat carte-niveau-mine ${prochain && peutPayer(etat, prochain.cout) ? 'niveau-achetable' : ''}`}>
             <div className="ligne-titre">
@@ -502,6 +528,11 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
             />
           </div>
 
+        </>
+      )}
+
+      {onglet === 'ameliorer' && (
+        <>
           <div className="ligne-achat">
             <strong>📦 Taille du coffre</strong>
             <Amelioration

@@ -489,3 +489,133 @@
   border: 2px solid #c8962e;
   box-shadow: 0 0 0 2px #3a2210, 0 0 12px rgb(255 190 80 / 0.3);
 }
+
+/* --- L'équipe en lignes (27/10) : toute l'équipe tient sans défiler --------------------
+   Une ligne par employé : le bord gauche de la couleur de sa rareté, ce qu'il fait, son nom,
+   son rendement (ou son trajet), une petite barre de salaire payé, et sa prochaine pioche.
+   On la touche pour ouvrir sa fiche. */
+
+.liste-employes {
+  display: grid;
+  gap: 3px;
+}
+
+.ligne-employe {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto 62px 76px;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 2px 6px 2px 8px;
+  border-radius: 9px;
+  border-left: 4px solid var(--couleur-rarete, #b9b4ab);
+  background: var(--carte-claire);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.ligne-employe:hover {
+  background: color-mix(in srgb, var(--carte-claire) 80%, var(--couleur-rarete, #fff));
+}
+
+.ligne-employe-alerte {
+  box-shadow: inset 0 0 0 1.5px rgb(255 100 80 / 0.7);
+}
+
+.ligne-employe-icone {
+  text-align: center;
+}
+
+.ligne-employe-nom {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--couleur-rarete, #fff) 45%, #fff3d6);
+}
+
+.ligne-employe-stat {
+  font-size: 0.72rem;
+  color: #d9c9ad;
+  white-space: nowrap;
+}
+
+/* Le salaire payé : une petite barre verte avec le temps qui reste. */
+.ligne-employe-paye {
+  position: relative;
+  height: 16px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.45);
+  overflow: hidden;
+}
+
+.ligne-employe-paye i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(#7fe07f, #3a9a3a);
+}
+
+.ligne-employe-alerte .ligne-employe-paye i {
+  background: linear-gradient(#ff8a7a, #c0392b);
+}
+
+.ligne-employe-paye span {
+  position: relative;
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.7);
+}
+
+.ligne-employe-pioche.bouton {
+  min-height: 0;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.ligne-employe-suite {
+  text-align: center;
+  font-weight: 900;
+  color: #d9c9ad;
+}
+
+.retour-equipe {
+  align-self: flex-start;
+}
+
+/* Sur téléphone : le rendement passe dans la bulle d'aide. */
+@media (max-width: 420px) {
+  .ligne-employe {
+    grid-template-columns: 22px minmax(0, 1fr) 56px 72px;
+  }
+
+  .ligne-employe-stat {
+    display: none;
+  }
+}
+
+.ligne-employe {
+  min-height: 27px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.plein-ecran .ligne-employe .ligne-employe-pioche.bouton {
+  height: 22px;
+  min-height: 0;
+  padding: 0 6px;
+  line-height: 22px;
+}
+
+.carte-salaires .ligne-titre {
+  gap: 8px;
+}
+
+.salaires-resume {
+  flex: 1;
+  font-size: 0.75rem;
+}

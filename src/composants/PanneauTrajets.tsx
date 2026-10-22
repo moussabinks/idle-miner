@@ -51,12 +51,16 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
   )
 
   if (!ligne) {
+    // Une seule ligne (27/10) : l'explication complète est dans la bulle d'aide.
     return (
-      <div className="ligne-achat trajet trajet-sans-rails">
-        {titre}
-        <span className="discret">
-          Relie {le(info.depart)} {au(info.arrivee)} avec des rails (menu Bâtiments, 3 🔩 fer la case), puis touche la bulle 🛤️ sur les rails : un wagonnet {info.description}.
-        </span>
+      <div
+        className="ligne-achat trajet trajet-sans-rails"
+        title={`Relie ${le(info.depart)} ${au(info.arrivee)} avec des rails (menu Bâtiments, 3 fer la case), puis touche la bulle 🛤️ sur les rails : un wagonnet ${info.description}.`}
+      >
+        <div className="ligne-titre">
+          {titre}
+          <span className="discret">🛤️ Pas encore de rails</span>
+        </div>
       </div>
     )
   }

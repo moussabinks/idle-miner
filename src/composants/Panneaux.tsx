@@ -3,6 +3,7 @@
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import { useState, type ReactNode } from 'react'
+import { OngletsPanneau } from './OngletsPanneau'
 import { BATIMENTS, BLOCS, LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc } from '../jeu/donnees'
 import {
   ameliorerChariot,
@@ -61,7 +62,7 @@ import {
 } from '../jeu/mineur'
 import { SUCCES } from '../jeu/succes'
 import { batimentPose } from '../jeu/village'
-import { ligneDe, trajetElectrique } from '../jeu/wagonnet'
+import { liaisonsDepuis, ligneDe, trajetElectrique } from '../jeu/wagonnet'
 import { PanneauTrajets } from './PanneauTrajets'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -284,118 +285,140 @@ export function PanneauForeuse({ etat, jouer }: PropsPanneau) {
   const selection = selectionChariot(etat)
   const valeurSelection = valeurDe(selection)
   const nbSelection = Object.values(selection).reduce((total, n) => total + (n ?? 0), 0)
+  // Des onglets (27/10), pour que tout tienne sans défiler.
+  const [onglet, setOnglet] = useState<'forage' | 'chariot' | 'ameliorer' | 'wagonnets'>('forage')
+  const avecTrajets = liaisonsDepuis(etat, 'foreuse').length > 0
+  const ameliorable = peutAmeliorerForage(etat) || peutAmeliorerChariot(etat)
 
   return (
     <div className="liste-cartes">
-      <div className="ligne-achat">
-        <div className="ligne-titre">
-          <strong>État</strong>
-          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'En marche' : chariotPlein(etat) ? 'Chariot plein' : 'Plus de charbon'}</span>
+      <OngletsPanneau
+        onglets={[
+          { id: 'forage', titre: '⚙️ Forage', pastille: !enMarche && !chariotPlein(etat) ? '!' : null },
+          { id: 'chariot', titre: `🛒 Chariot`, pastille: chariotPlein(etat) ? '!' : null },
+          { id: 'ameliorer', titre: '⬆️ Améliorer', pastille: ameliorable ? '+' : null },
+          ...(avecTrajets ? [{ id: 'wagonnets' as const, titre: '🚃 Wagons' }] : []),
+        ]}
+        actif={onglet}
+        onChoisir={setOnglet}
+      />
+      {onglet === 'forage' && (
+        <div className="ligne-achat">
+          <div className="ligne-titre">
+            <strong>État</strong>
+            <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'En marche' : chariotPlein(etat) ? 'Chariot plein' : 'Plus de charbon'}</span>
+          </div>
+          <span className="discret">
+            {vitesseForage(etat).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc(s) par seconde
+            {foreuseAlimentee(etat) ? ' (⚡ boostée par le générateur)' : ''} · {foreuse.blocsFores.toLocaleString('fr-FR')} blocs forés
+          </span>
+          <Barre
+            valeur={secondesDeCharbon(etat)}
+            max={Math.max(secondesDeCharbon(etat), 10 * SECONDES_PAR_CHARBON)}
+            texte={`Charbon : ${Math.ceil(secondesDeCharbon(etat))} s`}
+            couleur="or"
+          />
+          <div className="boutons">
+            <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon} (sac + coffre)</span>
+            <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
+              +1
+            </Bouton>
+            <Bouton actif={charbon >= 10} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 10))}>
+              +10
+            </Bouton>
+            <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
+              Tout
+            </Bouton>
+          </div>
+          {rechargeAutoDisponible(etat) ? (
+            <label className="case-option">
+              <input type="checkbox" checked={foreuse.rechargeAuto} onChange={() => jouer(basculerRechargeAuto)} />
+              Recharge automatique : elle brûle le charbon qu'elle remonte (en gardant une minute d'avance)
+            </label>
+          ) : (
+            <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {NIVEAU_RECHARGE_AUTO + 1} de forage.</span>
+          )}
+          {!foreuseAlimentee(etat) && <span className="discret">⚡ Dans le rayon du générateur allumé, elle fore plus vite.</span>}
         </div>
-        <span className="discret">
-          {vitesseForage(etat).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc(s) par seconde
-          {foreuseAlimentee(etat) ? ' (⚡ boostée par le générateur)' : ''} · {foreuse.blocsFores.toLocaleString('fr-FR')} blocs forés
-        </span>
-        <Barre
-          valeur={secondesDeCharbon(etat)}
-          max={Math.max(secondesDeCharbon(etat), 10 * SECONDES_PAR_CHARBON)}
-          texte={`Charbon : ${Math.ceil(secondesDeCharbon(etat))} s`}
-          couleur="or"
-        />
-        <div className="boutons">
-          <span className="discret">1 charbon = {SECONDES_PAR_CHARBON} s · tu en as {charbon} (sac + coffre)</span>
-          <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 1))}>
-            +1
-          </Bouton>
-          <Bouton actif={charbon >= 10} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, 10))}>
-            +10
-          </Bouton>
-          <Bouton actif={charbon >= 1} genre="charbon" onClick={() => jouer((e) => remplirForeuse(e, Infinity))}>
-            Tout
-          </Bouton>
+      )}
+
+      {onglet === 'chariot' && (
+        <div className="ligne-achat">
+          <strong>Chariot</strong>
+          <Barre valeur={nbDansChariot(etat)} max={capaciteChariot(etat)} texte={`${nbDansChariot(etat)} / ${capaciteChariot(etat)}`} couleur="violet" />
+          {contenu.length === 0 ? (
+            <span className="discret">Le chariot est vide.</span>
+          ) : (
+            <>
+              <div className="ligne-titre">
+                <span className="discret">Coche ce que tu vends (ou mets dans ton sac) :</span>
+                {/* Tout cocher d'un coup (ou tout décocher, si tout est déjà coché). */}
+                <button
+                  className="bouton bouton-petit bouton-neutre"
+                  onClick={() => jouer((e) => cocherToutChariot(e, contenu.some(([id]) => foreuse.nonCoches.includes(id))))}
+                >
+                  {contenu.some(([id]) => foreuse.nonCoches.includes(id)) ? '☑️ Tout' : '☐ Aucun'}
+                </button>
+              </div>
+              <ul className="liste-vente liste-chariot">
+                {contenu.map(([id, nombre]) => {
+                  const coche = !foreuse.nonCoches.includes(id)
+                  return (
+                    <li key={id} className={coche ? '' : 'garde'}>
+                      <label>
+                        <input type="checkbox" checked={coche} onChange={() => jouer((e) => basculerChariot(e, id))} />
+                        <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
+                        <span className="inventaire-nom">{BLOCS[id].nom}</span>
+                        <span className="inventaire-nombre">×{nombre}</span>
+                        <span className="inventaire-valeur">{valeurDe({ [id]: nombre })} $</span>
+                      </label>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+          <div className="boutons">
+            <Bouton actif={valeurSelection > 0} genre="vendre" onClick={() => jouer(vendreChariot)}>
+              💰 Vendre la sélection{valeurSelection > 0 && ` · +${valeurSelection.toLocaleString('fr-FR')} $`}
+            </Bouton>
+            <Bouton actif={nbSelection > 0 && placeLibre(etat) > 0} genre="sac" onClick={() => jouer(viderChariotDansSac)}>
+              🎒 Mettre dans le sac ({Math.min(nbSelection, placeLibre(etat))})
+            </Bouton>
+          </div>
         </div>
-        {rechargeAutoDisponible(etat) ? (
-          <label className="case-option">
-            <input type="checkbox" checked={foreuse.rechargeAuto} onChange={() => jouer(basculerRechargeAuto)} />
-            Recharge automatique : elle brûle le charbon qu'elle remonte (en gardant une minute d'avance)
-          </label>
-        ) : (
-          <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {NIVEAU_RECHARGE_AUTO + 1} de forage.</span>
-        )}
-        {!foreuseAlimentee(etat) && <span className="discret">⚡ Dans le rayon du générateur allumé, elle fore plus vite.</span>}
-      </div>
+      )}
 
-      <div className="ligne-achat">
-        <strong>Chariot</strong>
-        <Barre valeur={nbDansChariot(etat)} max={capaciteChariot(etat)} texte={`${nbDansChariot(etat)} / ${capaciteChariot(etat)}`} couleur="violet" />
-        {contenu.length === 0 ? (
-          <span className="discret">Le chariot est vide.</span>
-        ) : (
-          <>
-            <div className="ligne-titre">
-              <span className="discret">Coche ce que tu veux vendre ou mettre dans ton sac.</span>
-              {/* Tout cocher d'un coup (ou tout décocher, si tout est déjà coché). */}
-              <button
-                className="bouton bouton-petit bouton-neutre"
-                onClick={() => jouer((e) => cocherToutChariot(e, contenu.some(([id]) => foreuse.nonCoches.includes(id))))}
-              >
-                {contenu.some(([id]) => foreuse.nonCoches.includes(id)) ? '☑️ Tout sélectionner' : '☐ Tout désélectionner'}
-              </button>
-            </div>
-            <ul className="liste-vente liste-chariot">
-              {contenu.map(([id, nombre]) => {
-                const coche = !foreuse.nonCoches.includes(id)
-                return (
-                  <li key={id} className={coche ? '' : 'garde'}>
-                    <label>
-                      <input type="checkbox" checked={coche} onChange={() => jouer((e) => basculerChariot(e, id))} />
-                      <span className={`mini-bloc bloc-${id} roche-pierre`} aria-hidden="true" />
-                      <span className="inventaire-nom">{BLOCS[id].nom}</span>
-                      <span className="inventaire-nombre">×{nombre}</span>
-                      <span className="inventaire-valeur">{valeurDe({ [id]: nombre })} $</span>
-                    </label>
-                  </li>
-                )
-              })}
-            </ul>
-          </>
-        )}
-        <div className="boutons">
-          <Bouton actif={valeurSelection > 0} genre="vendre" onClick={() => jouer(vendreChariot)}>
-            💰 Vendre la sélection{valeurSelection > 0 && ` · +${valeurSelection.toLocaleString('fr-FR')} $`}
-          </Bouton>
-          <Bouton actif={nbSelection > 0 && placeLibre(etat) > 0} genre="sac" onClick={() => jouer(viderChariotDansSac)}>
-            🎒 Mettre dans le sac ({Math.min(nbSelection, placeLibre(etat))})
-          </Bouton>
-        </div>
-      </div>
+      {onglet === 'ameliorer' && (
+        <>
+          <div className="ligne-achat">
+            <strong>⚙️ Vitesse de forage</strong>
+            <Amelioration
+              etat={etat}
+              actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité`}
+              niveau={foreuse.niveauVitesse + 1}
+              niveauMax={NIVEAUX_FORAGE.length}
+              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
+              possible={peutAmeliorerForage(etat)}
+              onAmeliorer={() => jouer(ameliorerForage)}
+            />
+          </div>
 
-      <div className="ligne-achat">
-        <strong>⚙️ Vitesse de forage</strong>
-        <Amelioration
-          etat={etat}
-          actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité`}
-          niveau={foreuse.niveauVitesse + 1}
-          niveauMax={NIVEAUX_FORAGE.length}
-          suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s` }}
-          possible={peutAmeliorerForage(etat)}
-          onAmeliorer={() => jouer(ameliorerForage)}
-        />
-      </div>
-
-      <div className="ligne-achat">
-        <strong>🛒 Taille du chariot</strong>
-        <Amelioration
-          etat={etat}
-          actuel={`${capaciteChariot(etat).toLocaleString('fr-FR')} places · plein en ${minutes(secondesPourRemplir(etat))}`}
-          niveau={foreuse.niveauChariot + 1}
-          niveauMax={NIVEAUX_CHARIOT.length}
-          suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite.toLocaleString('fr-FR')} places (${minutes(secondesPourRemplir(etat, foreuse.niveauChariot + 1))})` }}
-          possible={peutAmeliorerChariot(etat)}
-          onAmeliorer={() => jouer(ameliorerChariot)}
-        />
-      </div>
-      <PanneauTrajets etat={etat} jouer={jouer} depart="foreuse" />
+          <div className="ligne-achat">
+            <strong>🛒 Taille du chariot</strong>
+            <Amelioration
+              etat={etat}
+              actuel={`${capaciteChariot(etat).toLocaleString('fr-FR')} places · plein en ${minutes(secondesPourRemplir(etat))}`}
+              niveau={foreuse.niveauChariot + 1}
+              niveauMax={NIVEAUX_CHARIOT.length}
+              suivant={chariot && { cout: chariot.cout, texte: `⬆ ${chariot.capacite.toLocaleString('fr-FR')} places (${minutes(secondesPourRemplir(etat, foreuse.niveauChariot + 1))})` }}
+              possible={peutAmeliorerChariot(etat)}
+              onAmeliorer={() => jouer(ameliorerChariot)}
+            />
+          </div>
+        </>
+      )}
+      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="foreuse" />}
     </div>
   )
 }
@@ -408,93 +431,109 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
   const redstone = disponible(etat, 'redstone')
   const enMarche = generateurEnMarche(etat)
   const prochain = prochainNiveauGenerateur(etat)
+  // Deux onglets (27/10) : le courant, et ce qu'il alimente avec son amélioration.
+  const [onglet, setOnglet] = useState<'courant' | 'rayon'>('courant')
   return (
     <div className="liste-cartes">
-      <div className="ligne-achat">
-        <div className="ligne-titre">
-          <strong>⚡ Courant</strong>
-          <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'Allumé' : !g.allume ? 'Éteint' : 'Plus de redstone'}</span>
+      <OngletsPanneau
+        onglets={[
+          { id: 'courant', titre: '⚡ Courant', pastille: g.allume && !enMarche ? '!' : null },
+          { id: 'rayon', titre: '🔌 Rayon et amélioration', pastille: prochain !== null && peutPayer(etat, prochain.cout) ? '+' : null },
+        ]}
+        actif={onglet}
+        onChoisir={setOnglet}
+      />
+      {onglet === 'courant' && (
+        <div className="ligne-achat">
+          <div className="ligne-titre">
+            <strong>⚡ Courant</strong>
+            <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'Allumé' : !g.allume ? 'Éteint' : 'Plus de redstone'}</span>
+          </div>
+          <span className="discret">
+            Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte) · puissance ×{puissanceGenerateur(etat)}
+          </span>
+          <Barre
+            valeur={g.carburant}
+            max={Math.max(g.carburant, 10 * SECONDES_PAR_REDSTONE)}
+            texte={`Redstone : ${minutes(g.carburant)}`}
+            couleur="rouge"
+          />
+          <div className="boutons">
+            <span className="discret">1 redstone = {SECONDES_PAR_REDSTONE} s · tu en as {redstone} (sac + coffre)</span>
+            <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 1))}>
+              +1
+            </Bouton>
+            <Bouton actif={redstone >= 10} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 10))}>
+              +10
+            </Bouton>
+            <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, Infinity))}>
+              Tout
+            </Bouton>
+            <Bouton actif genre="neutre" onClick={() => jouer(basculerGenerateur)}>
+              {g.allume ? '⏸ Éteindre' : '▶ Allumer'}
+            </Bouton>
+          </div>
+          {puisageDisponible(etat) ? (
+            <label className="case-option">
+              <input type="checkbox" checked={g.puiseDansLeCoffre} onChange={() => jouer(basculerPuisage)} />
+              Il se sert tout seul dans le coffre de la mine (en gardant 5 minutes d'avance)
+            </label>
+          ) : (
+            <span className="discret">🔒 Au niveau {NIVEAU_GENERATEUR_AUTO + 1}, il se servira tout seul en redstone dans le coffre de la mine.</span>
+          )}
         </div>
-        <span className="discret">
-          Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte) · puissance ×{puissanceGenerateur(etat)}
-        </span>
-        <Barre
-          valeur={g.carburant}
-          max={Math.max(g.carburant, 10 * SECONDES_PAR_REDSTONE)}
-          texte={`Redstone : ${minutes(g.carburant)}`}
-          couleur="rouge"
-        />
-        <div className="boutons">
-          <span className="discret">1 redstone = {SECONDES_PAR_REDSTONE} s · tu en as {redstone} (sac + coffre)</span>
-          <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 1))}>
-            +1
-          </Bouton>
-          <Bouton actif={redstone >= 10} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, 10))}>
-            +10
-          </Bouton>
-          <Bouton actif={redstone >= 1} genre="charbon" onClick={() => jouer((e) => remplirGenerateur(e, Infinity))}>
-            Tout
-          </Bouton>
-          <Bouton actif genre="neutre" onClick={() => jouer(basculerGenerateur)}>
-            {g.allume ? '⏸ Éteindre' : '▶ Allumer'}
-          </Bouton>
-        </div>
-        {puisageDisponible(etat) ? (
-          <label className="case-option">
-            <input type="checkbox" checked={g.puiseDansLeCoffre} onChange={() => jouer(basculerPuisage)} />
-            Il se sert tout seul dans le coffre de la mine (en gardant 5 minutes d'avance)
-          </label>
-        ) : (
-          <span className="discret">🔒 Au niveau {NIVEAU_GENERATEUR_AUTO + 1}, il se servira tout seul en redstone dans le coffre de la mine.</span>
-        )}
-      </div>
+      )}
 
-      {/* Ce qui est branché : la ligne de rails et la foreuse. */}
-      <div className="ligne-achat">
-        <strong>🔌 Ce qu'il alimente</strong>
-        <ul className="liste-simple">
-          {etat.trajets.length === 0 && <li>🛤️ Rails : pas encore de trajet de wagonnet.</li>}
-          {etat.trajets.map((t) => {
-            const ligne = ligneDe(etat, t.liaison)
-            const info = LIAISONS[t.liaison]
-            return (
-              <li key={t.liaison}>
-                🛤️ {BATIMENTS[info.depart].nom} → {BATIMENTS[info.arrivee].nom} :{' '}
-                {!ligne
-                  ? 'rails coupés.'
-                  : trajetElectrique(etat, t.liaison)
-                    ? '✔ électrique, le wagonnet roule tout seul !'
-                    : casesDansLeRayon(etat, ligne)
-                      ? 'dans le rayon, mais le générateur ne donne pas de courant.'
-                      : '✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
+      {onglet === 'rayon' && (
+        <>
+          {/* Ce qui est branché : la ligne de rails et la foreuse. */}
+          <div className="ligne-achat">
+            <strong>🔌 Ce qu'il alimente</strong>
+            <ul className="liste-simple">
+              {etat.trajets.length === 0 && <li>🛤️ Rails : pas encore de trajet de wagonnet.</li>}
+              {etat.trajets.map((t) => {
+                const ligne = ligneDe(etat, t.liaison)
+                const info = LIAISONS[t.liaison]
+                return (
+                  <li key={t.liaison}>
+                    🛤️ {BATIMENTS[info.depart].nom} → {BATIMENTS[info.arrivee].nom} :{' '}
+                    {!ligne
+                      ? 'rails coupés.'
+                      : trajetElectrique(etat, t.liaison)
+                        ? '✔ électrique, le wagonnet roule tout seul !'
+                        : casesDansLeRayon(etat, ligne)
+                          ? 'dans le rayon, mais le générateur ne donne pas de courant.'
+                          : '✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
+                  </li>
+                )
+              })}
+              <li>
+                ⚙️ Foreuse :{' '}
+                {!batimentPose(etat.village, 'foreuse')
+                  ? 'pas encore construite.'
+                  : foreuseAlimentee(etat)
+                    ? '✔ boostée !'
+                    : batimentDansLeRayon(etat, 'foreuse')
+                      ? 'dans le rayon, mais sans courant.'
+                      : '✖ hors du rayon.'}
               </li>
-            )
-          })}
-          <li>
-            ⚙️ Foreuse :{' '}
-            {!batimentPose(etat.village, 'foreuse')
-              ? 'pas encore construite.'
-              : foreuseAlimentee(etat)
-                ? '✔ boostée !'
-                : batimentDansLeRayon(etat, 'foreuse')
-                  ? 'dans le rayon, mais sans courant.'
-                  : '✖ hors du rayon.'}
-          </li>
-        </ul>
-      </div>
+            </ul>
+          </div>
 
-      <div className="ligne-achat">
-        <strong>⬆ Améliorer</strong>
-        <Amelioration
-          etat={etat}
-          actuel={`Rayon ${rayonGenerateur(etat)} cases · puissance ×${puissanceGenerateur(etat)}`}
-          niveau={g.niveau + 1}
-          niveauMax={NIVEAUX_GENERATEUR.length}
-          suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ×${prochain.puissance}` }}
-          possible={prochain !== null && peutPayer(etat, prochain.cout)}
-          onAmeliorer={() => jouer(ameliorerGenerateur)}
-        />
-      </div>
+          <div className="ligne-achat">
+            <strong>⬆ Améliorer</strong>
+            <Amelioration
+              etat={etat}
+              actuel={`Rayon ${rayonGenerateur(etat)} cases · puissance ×${puissanceGenerateur(etat)}`}
+              niveau={g.niveau + 1}
+              niveauMax={NIVEAUX_GENERATEUR.length}
+              suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ×${prochain.puissance}` }}
+              possible={prochain !== null && peutPayer(etat, prochain.cout)}
+              onAmeliorer={() => jouer(ameliorerGenerateur)}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

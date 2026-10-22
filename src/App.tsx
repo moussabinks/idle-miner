@@ -371,14 +371,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     panneau = (
       <section className={`carte panneau panneau-batiment ${batimentActif === 'puits' ? 'panneau-mine' : ''}`}>
         <div className="entete-panneau">
-          <h2 className="titre-stand">
+          {/* (sa description passe en bulle d'aide sur le titre : la place est comptée, 27/10) */}
+          <h2 className="titre-stand" title={info.description}>
             <span aria-hidden="true">{info.emoji}</span> {info.nom}
           </h2>
           <button className="bouton-fermer" onClick={() => setPanneauFerme(true)} aria-label="Fermer">
             ✖
           </button>
         </div>
-        <p className="discret">{info.description}</p>
         {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />}
         {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
