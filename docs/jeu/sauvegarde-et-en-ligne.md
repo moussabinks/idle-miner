@@ -1,7 +1,7 @@
 # Sauvegarde, comptes en ligne et classement
 
 > Comment Mega Digger garde la progression du joueur : dans le navigateur (`localStorage`), et en option en ligne sur Supabase (compte, synchronisation, classement).
-> Rédigé d'après le code au 22/10 (la mine automatique, version 21). Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (type `Village`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`.
+> Rédigé d'après le code au 22/10 (la mine automatique, version 21), mis à jour le 24/10 (les trajets des wagonnets, version 22). Fichiers concernés : `src/jeu/sauvegarde.ts`, `src/jeu/mineur.ts` (type `EtatJeu`), `src/jeu/village.ts` (type `Village`), `src/usePartie.ts`, `src/jeu/compte.ts`, `src/enLigne.ts`, `src/useCompte.ts`, `src/jeu/classement.ts`, `src/composants/CarteClassement.tsx`, `src/composants/CarteCompte.tsx`, `src/composants/Accueil.tsx`, `supabase/schema.sql`, `supabase/classement.sql`.
 
 Principe général : **le `localStorage` est la sauvegarde principale.** Le jeu y écrit au plus une fois par seconde (et en quittant la page) et marche entièrement sans réseau. Le compte en ligne est facultatif : il recopie tous les mondes du navigateur sur Supabase pour les retrouver sur un autre appareil, et envoie le score au classement.
 
@@ -55,7 +55,7 @@ Fonctions :
 | `supprimerMonde(stockage, id)` | Retire le monde de la liste et efface ses clés `idle-miner-monde-<id>` et `-horodatage` |
 | `marquerJoue(stockage, id)` | Met `joueLe` à maintenant (le monde remonte en tête de liste) |
 | `sauvegarder(stockage, id, etat)` | Écrit l'`EtatJeu` en JSON et l'horodatage |
-| `charger(stockage, id)` | Lit la partie et vérifie qu'elle est **à la version actuelle (21)** et valide (1.5). Renvoie `null` si absente, illisible, invalide ou **d'une version plus ancienne** (pas de migration : les parties d'avant la mine automatique repartent de zéro) |
+| `charger(stockage, id)` | Lit la partie et convertit une partie de la version 21 (`convertirVersion21`), puis vérifie qu'elle est **à la version actuelle (22)** et valide (1.5). Renvoie `null` si absente, illisible, invalide ou **d'avant la version 21** (les parties d'avant la mine automatique repartent de zéro) |
 | `partieAncienne(stockage, id)` | Vrai si le monde contient une partie lisible d'une version plus ancienne que la 21 (avant la mine automatique) : l'accueil prévient qu'elle repart de zéro |
 | `secondesDepuisSauvegarde(stockage, id)` | Secondes écoulées depuis l'horodatage (0 si inconnu) |
 
@@ -67,13 +67,15 @@ Dans le jeu, le lien « Recommencer à zéro » (avec confirmation) remplace la 
 
 Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienne clé `idle-miner-sauvegarde` existe : son contenu est copié dans `idle-miner-monde-1` (et `idle-miner-horodatage` dans `idle-miner-monde-1-horodatage`), les anciennes clés sont effacées, et la liste reçoit `{ id: '1', nom: 'Monde 1', couleur: 0 }` datée de l'ancien horodatage.
 
-### 1.5 La version de l'état (et la remise à zéro du 22/10)
+### 1.5 La version de l'état (la remise à zéro du 22/10, la conversion du 24/10)
 
-`VERSION_ETAT = 21` (dans `src/jeu/mineur.ts`, depuis le 22/10 : **la mine automatique** ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 21** avec tous les champs attendus ; sinon il renvoie `null`.
+`VERSION_ETAT = 22` (dans `src/jeu/mineur.ts`, depuis le 24/10 : **les trajets des wagonnets** ; 21 le 22/10, **la mine automatique** (`VERSION_MINE_AUTOMATIQUE`) ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version 22** avec tous les champs attendus ; sinon il renvoie `null`.
 
-**Pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
+**La conversion 21 → 22** (24/10, `convertirVersion21` dans `sauvegarde.ts`) : l'ancien wagonnet unique (`wagonnet`) est retiré. Sa taille devient `niveauWagonnets` (gardée pour tous les wagonnets). Si les rails reliaient la mine au marché, la partie reçoit le trajet Mine → Marché (`trajets`), sinon aucun trajet. Les mineurs qui poussaient le wagonnet retournent au quai. Un test de `sauvegarde.test.ts` le vérifie.
 
-**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de migration (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
+**Avant la version 21, pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
+
+**Ajouter une version** : augmenter `VERSION_ETAT` dans `mineur.ts` et compléter `estUnEtatValide()` si un nouveau champ est obligatoire. Pour garder les parties des joueurs, écrire une fonction de conversion (de la version N − 1 à N, avec son test dans `sauvegarde.test.ts`) appelée par `charger`, comme `convertirVersion21` ; sinon elles repartent de zéro, comme le 20/10 et le 22/10.
 
 Pour mémoire : les versions 1 à 17 (avant le 20/10) avaient une chaîne de migrations (surface et échelle, foreuses, assistant, donjons, prestige, mineurs, recruteur et manager…), retirée du code le 20/10 ; elle reste dans l'historique git.
 
@@ -83,10 +85,10 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 | Champ | Type | Sens |
 |---|---|---|
-| `version` | nombre | Version du format (21) |
+| `version` | nombre | Version du format (22) |
 | `argent` | nombre | Argent en poche |
 | `inventaire` | `{ bloc: nombre }` | Contenu du sac à dos |
-| `nonAVendre` | liste d'`IdBloc` | Objets gardés au marché (ni vendus, ni emportés par le wagonnet) |
+| `nonAVendre` | liste d'`IdBloc` | Objets gardés au marché (ni vendus, ni emportés par le wagonnet du marché) |
 | `niveauSac` | nombre | Taille du sac (index dans `SACS`) |
 | `niveauMine` | 1 à 5 | Niveau de la mine |
 | `coffre` | `{ niveau, contenu }` | Le coffre de la mine : sa taille (index dans `NIVEAUX_COFFRE`) et ce qu'il contient |
@@ -103,7 +105,8 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 | `tresorerie` | nombre | Argent mis de côté pour les salaires |
 | `foreuse` | objet `Foreuse` | La foreuse |
 | `generateur` | objet `Generateur` | Le générateur |
-| `wagonnet` | objet `Wagonnet` | Le wagonnet |
+| `niveauWagonnets` | nombre | La taille des wagonnets (index dans `NIVEAUX_WAGONNET`), pour tous les trajets |
+| `trajets` | liste de `Trajet` | Les trajets de wagonnets créés par le joueur (vide au début) |
 | `succes` | liste de textes | Identifiants des succès débloqués |
 | `stats` | `Statistiques` | Statistiques de la partie |
 | `decouvertes` | liste (`'recruteur'`, `'manager'`) | Nouveautés déjà vues devant le Personnel |
@@ -115,7 +118,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Generateur`** : `niveau` (index dans `NIVEAUX_GENERATEUR`), `carburant` (secondes de courant restantes), `allume`, `puiseDansLeCoffre`.
 
-**`Wagonnet`** : `niveau` (index dans `NIVEAUX_WAGONNET`), `etape` (`quai`, `aller`, `retour`), `distance` (cases déjà parcourues sur ce trajet), `chargement` (inventaire), `pousseur` (`'joueur'`, `'electricite'`, le prénom d'un mineur, ou `null`).
+**`Trajet`** : `liaison` (`mine-marche`, `mine-foreuse`, `mine-generateur` ou `foreuse-marche`, un seul trajet par liaison), `etape` (`quai`, `aller`, `retour`), `distance` (cases déjà parcourues sur cette étape), `chargement` (inventaire), `pousseur` (`'joueur'`, `'electricite'`, le prénom d'un mineur, ou `null`).
 
 **`Employe`** : `nom`, `rarete` (`commun`, `rare`, `epique`, `legendaire`, `mythique`), `niveau` (sa pioche, index dans `NIVEAUX_EMPLOYE`), `role` (`mineur` ou `pousseur`), `etape` (`creuse`, `monte`, `vide`, `descend`, `quai`, `pousse`, `marche`, `forge`, `attend`), `progression` (blocs en creusant, ou secondes), `sac`, `blocsCasses`, `tempsPaye` (secondes de travail déjà payées), `lieu` (le bâtiment où il est, ou vers lequel il marche), `depuis` (celui d'où il part), `forgeEnAttente`.
 
@@ -123,7 +126,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Statistiques`** : `blocsCasses`, `blocsMine`, `argentGagne`, `argentForeuse`, `argentWagonnet`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `diamantsTrouves`, `salairesPayes`, `tempsDeJeu`, `voyagesWagonnet` (voir [mine-et-minage.md](mine-et-minage.md#9-les-statistiques-srcjeustatistiquests-fenêtre-)).
 
-`estUnEtatValide()` vérifie : `version === 21`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `wagonnet`, `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes`, `village` (avec sa liste `batiments`), `tenue` et `tenuesAchetees`.
+`estUnEtatValide()` vérifie : `version === 22`, et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes`, `village` (avec sa liste `batiments`), `tenue` et `tenuesAchetees`.
 
 ### 1.7 Quand le jeu sauvegarde (`src/usePartie.ts`)
 
@@ -138,7 +141,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 1. `marquerJoue` (le monde remonte en tête de liste).
 2. `charger` ; si `null` (pas de partie, partie abîmée, ou partie d'une ancienne version), une partie neuve est créée (`creerPartie`) : le joueur est au village, devant la mine, avec 0 $ et le marché à poser.
 3. Sinon, l'absence = `secondesDepuisSauvegarde`, plafonnée à **8 heures** (`ABSENCE_MAX`). Moins de 30 s : rien à rattraper.
-4. `avancerTemps(etat, absence)` est appelé avec toute la durée (il avance par morceaux d'une minute) : la mine toute seule, le générateur, la foreuse, les mineurs employés (et le manager) et le wagonnet (poussé par un mineur ou électrique) avancent (voir `src/jeu/temps.ts`).
+4. `avancerTemps(etat, absence)` est appelé avec toute la durée (il avance par morceaux d'une minute) : la mine toute seule, le générateur, la foreuse, les mineurs employés (et le manager) et les wagonnets (poussés par un mineur ou électriques) avancent (voir `src/jeu/temps.ts`).
 5. Un message s'affiche au démarrage (environ 7 s) : « Pendant ton absence : 📦 N blocs de plus dans le coffre de la mine, 🛤️ le wagonnet a rapporté X $, ⚙️ la foreuse a remonté N blocs, 😠 N mineurs attendent leur salaire. » (seulement les morceaux non nuls ; X = tout l'argent gagné pendant l'absence).
 
 Les clics du joueur, eux, ne continuent pas.
@@ -146,7 +149,7 @@ Les clics du joueur, eux, ne continuent pas.
 ### 1.9 Hors ligne
 
 - Sans réseau, tout marche : la partie est dans le `localStorage`.
-- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, cache `idle-miner-v8` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
+- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production** (`src/installation.ts`). Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, cache `idle-miner-v12` ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
 - Connecté mais sans réseau : le compte passe en statut « hors-ligne » et réessaie tout seul (voir 2.5).
 
 ---

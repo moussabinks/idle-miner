@@ -137,7 +137,7 @@ export function MenuConstruction({ etat, onglet, onOnglet, onFermer, onPoserBati
               </div>
               <div className="construction-texte">
                 <strong>🛤️ Rails</strong>
-                <span className="discret">Relie la mine au marché par une ligne continue : le wagonnet y emporte le coffre de la mine. Pose-les en ligne, ils se raccordent tout seuls ; un rail posé sur le côté fait un virage.</span>
+                <span className="discret">Relie deux bâtiments (mine, marché, foreuse, générateur), puis envoie un wagonnet depuis le panneau du départ. Pose-les en ligne, ils se raccordent tout seuls ; un rail sur le côté fait un virage ou un embranchement. Pas de boucle !</span>
                 <span className="discret">1 case · {etat.village.rails.length} posée{etat.village.rails.length > 1 ? 's' : ''}</span>
               </div>
               <div className="construction-achat">

@@ -61,6 +61,20 @@ describe('sauvegarde', () => {
     expect(partieAncienne(stockage, '1')).toBe(false)
   })
 
+  it('une partie de la version 21 garde tout : son wagonnet devient le trajet Mine → Marché', () => {
+    const stockage = fauxStockage()
+    const { niveauWagonnets: _niveau, trajets: _trajets, ...partie21 } = creerPartie(aleatoireAvecGraine(1))
+    partie21.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
+    for (let y = 35; y <= 39; y++) partie21.village.rails.push(`30,${y}`)
+    stockage.setItem(cleMonde('1'), JSON.stringify({ ...partie21, version: 21, argent: 777, wagonnet: { niveau: 2, etape: 'aller', distance: 3, chargement: {}, pousseur: 'joueur' } }))
+    expect(partieAncienne(stockage, '1')).toBe(false)
+    const etat = charger(stockage, '1')
+    expect(etat?.argent).toBe(777)
+    expect(etat?.niveauWagonnets).toBe(2)
+    expect(etat?.trajets.map((t) => t.liaison)).toEqual(['mine-marche'])
+    expect(etat?.trajets[0].etape).toBe('quai')
+  })
+
   it('compte le temps passé depuis la dernière sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)

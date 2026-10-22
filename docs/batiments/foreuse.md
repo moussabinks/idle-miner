@@ -1,6 +1,6 @@
 # ⚙️ Foreuse
 
-> Une machine débloquée au **niveau 2 de la mine** : on pose son bâtiment, on la nourrit au charbon, et elle fore toute seule en remplissant son propre chariot, qu'on vient vider devant elle. Dans le rayon du générateur, elle fore plus vite.
+> Une machine débloquée au **niveau 2 de la mine** : on pose son bâtiment, on la nourrit au charbon, et elle fore toute seule en remplissant son propre chariot, qu'on vient vider devant elle (ou qu'un wagonnet emporte au marché). Dans le rayon du générateur, elle fore plus vite.
 
 ## Où et quand
 
@@ -62,6 +62,15 @@ Tout le forage : 100 500 $ + 190 fer + 200 redstone + 90 or + 15 émeraude. Mess
 
 Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 400 places · plein en 8 min »). Message : « 🛒 Chariot plus grand : *N* places. »
 
+### 6. Les wagonnets (24/10)
+
+Deux trajets de wagonnets touchent la foreuse (voir [mine.md](mine.md#les-wagonnets) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets)) :
+
+- **Mine → Foreuse** (créé au panneau de la mine) : le wagonnet lui apporte le **charbon du coffre de la mine**, jusqu'à une réserve de **20 minutes** (60 charbons, `RESERVE_FOREUSE_WAGONNET` = 1 200 s). Le wagonnet du marché laisse alors ce charbon dans le coffre.
+- **Foreuse → Marché** (créé ici, en bas du panneau, bloc « 🛤️ Wagonnets ») : le wagonnet emporte **ce qui est coché dans le chariot** et le vend au marché. Cet argent compte dans `argentWagonnet` (la part « 🛤️ Wagonnet » des statistiques), pas dans `argentForeuse`.
+
+Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un wagonnet vers le marché »** ; ensuite **🛤️ Pousser** et **✖ Arrêter**.
+
 ## Règles et comportement
 
 - **Quand elle tourne** : seulement si elle est **posée**, qu'il lui reste **du charbon**, et que **le chariot n'est pas plein** (`foreuseEnMarche`). Elle ne brûle pas de charbon pour rien : chariot plein, elle s'arrête (« 🛒 Le chariot de la foreuse est plein : viens le vider. ») ; plus de charbon : « 🔥 La foreuse n'a plus de charbon. »
@@ -73,8 +82,8 @@ Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le p
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, prochain objectif « …à la foreuse ! »).
-- **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1) ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché. Le **générateur** la booste.
+- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, prochain objectif « …à la foreuse ! »). Quand il n'y a plus rien à acheter : « Relier la foreuse à la mine · des rails : un wagonnet lui apportera le charbon », puis « Envoyer du charbon à la foreuse · à la mine : « envoyer un wagonnet vers la foreuse » ».
+- **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1), à la main ou par le wagonnet Mine → Foreuse ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché, ou avec le wagonnet Foreuse → Marché. Le **générateur** la booste.
 - **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc au niveau de la mine, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus, la part « ⚙️ Foreuse » de l'écran 📊) et `blocsForeuse`.
 - **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend le chariot quand il est à moitié plein, et améliore le forage et le chariot quand il a plus de 3 000 $.
 
@@ -83,6 +92,7 @@ Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le p
 - `src/jeu/foreuse.ts` : toutes les règles (charbon, forage seconde après seconde, chariot, améliorations, recharge automatique, vitesse électrique).
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.foreuse` : 800 $ + 60 pierre + 30 fer, 5 × 5, porte à gauche, niveau 2 de la mine) et les chiffres (`SECONDES_PAR_CHARBON`, `NIVEAU_RECHARGE_AUTO`, `RESERVE_RECHARGE_AUTO`, `BONUS_ELECTRIQUE_FOREUSE`, `NIVEAUX_FORAGE`, `NIVEAUX_CHARIOT`).
 - `src/jeu/generateur.ts` : `foreuseAlimentee`, `puissanceGenerateur`.
+- `src/jeu/wagonnet.ts` : les trajets Mine → Foreuse (le charbon) et Foreuse → Marché (le chariot).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`batimentDebloque`, `construireBatiment`, `deplacerBatiment`).
 - `src/jeu/mineur.ts` : le type `Foreuse` et `nouvelleForeuse()`.
 - `src/jeu/temps.ts` : fait avancer la foreuse avec le reste du jeu (`avancerTemps`).
@@ -91,7 +101,7 @@ Tout le chariot : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude. Le p
 - `src/jeu/objectifs.ts` : « Construire : Foreuse », achats, prochain objectif.
 - `src/jeu/revenu.ts` et `src/jeu/statistiques.ts` : ce qu'elle rapporte ($/s et statistiques).
 - `src/jeu/foreuse.test.ts` : les tests.
-- `src/composants/Panneaux.tsx` : le panneau du bâtiment (`PanneauForeuse`).
+- `src/composants/Panneaux.tsx` : le panneau du bâtiment (`PanneauForeuse`) ; `src/composants/PanneauTrajets.tsx` : son bloc « 🛤️ Wagonnets ».
 - `src/composants/MenuConstruction.tsx` : la carte de la foreuse dans le menu Bâtiments (cadenas, « Nouveau ! »).
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, la vibration et les bulles.
 - `public/images/batiments/foreuse.webp` : le dessin de la foreuse.

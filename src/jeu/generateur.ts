@@ -1,14 +1,15 @@
 // Le générateur (22/10, niveau 2 de la mine) : il brûle de la redstone et électrifie tout ce qui
 // est dans son rayon (un cercle autour de lui, en cases) :
-//   - les rails : si toute la ligne de la mine au marché est dans le rayon, le wagonnet roule
-//     tout seul (plus besoin de le pousser), d'autant plus vite que le générateur est puissant ;
+//   - les rails : si toutes les cases d'un trajet sont dans le rayon, son wagonnet roule tout
+//     seul (plus besoin de le pousser), d'autant plus vite que le générateur est puissant
+//     (voir wagonnet.ts) ;
 //   - la foreuse : elle fore plus vite.
 // On le remplit de redstone (de son sac ou du coffre de la mine). À partir du niveau 2, il peut
 // se servir tout seul dans le coffre de la mine.
 
 import { BATIMENTS, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, RESERVE_GENERATEUR_AUTO, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
 import { disponible, payer, payerMateriaux, peutPayer, retirerDe, type EtatJeu } from './mineur'
-import { batimentPose, railsMineMarche, type BatimentPose, type Case } from './village'
+import { batimentPose, type BatimentPose, type Case } from './village'
 
 export function generateurPose(etat: EtatJeu): BatimentPose | null {
   return batimentPose(etat.village, 'generateur')
@@ -54,15 +55,9 @@ export function batimentDansLeRayon(etat: EtatJeu, id: IdBatiment): boolean {
   return caseDansLeRayon(etat, { x: Math.floor(b.x + t / 2), y: Math.floor(b.y + t / 2) })
 }
 
-// Toute la ligne de rails de la mine au marché est-elle dans le rayon ?
-export function railsDansLeRayon(etat: EtatJeu): boolean {
-  const rails = railsMineMarche(etat.village)
-  return rails !== null && rails.every((c) => caseDansLeRayon(etat, c))
-}
-
-// Les rails sont électriques : le wagonnet roule tout seul.
-export function railsAlimentes(etat: EtatJeu): boolean {
-  return generateurEnMarche(etat) && railsDansLeRayon(etat)
+// Toutes ces cases (une ligne de rails, par exemple) sont-elles dans le rayon ?
+export function casesDansLeRayon(etat: EtatJeu, cases: Case[]): boolean {
+  return cases.length > 0 && cases.every((c) => caseDansLeRayon(etat, c))
 }
 
 export function foreuseAlimentee(etat: EtatJeu): boolean {

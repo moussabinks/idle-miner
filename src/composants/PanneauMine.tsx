@@ -3,12 +3,13 @@
 //     et ce qui tombe va dans le coffre ;
 //   - le coffre de la mine : tout ce qui sort de la mine y attend (clics, mine toute seule,
 //     mineurs). On le met dans son sac pour aller le vendre au marché ;
-//   - le wagonnet, quand des rails relient la mine au marché : on peut le pousser soi-même ;
-//   - les améliorations : descendre d'un niveau, agrandir le coffre, l'ascenseur, le wagonnet.
+//   - les trajets des wagonnets qui partent de la mine (PanneauTrajets) : vers le marché, la
+//     foreuse, le générateur ;
+//   - les améliorations : descendre d'un niveau, agrandir le coffre, l'ascenseur, les wagonnets.
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
 import { useState } from 'react'
-import { BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAUX_WAGONNET, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
+import { BLOCS, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
 import { chancesDesBlocs, infoNiveauMine } from '../jeu/mine'
 import {
   agrandirCoffre,
@@ -27,19 +28,8 @@ import {
   reglerVente,
   type EtatJeu,
 } from '../jeu/mineur'
-import { railsAlimentes } from '../jeu/generateur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import {
-  ameliorerWagonnet,
-  capaciteWagonnet,
-  distanceDepuisLaMine,
-  ligneDuWagonnet,
-  longueurTrajet,
-  peutPousserWagonnet,
-  prochainNiveauWagonnet,
-  pousserWagonnet,
-  wagonnetEnRoute,
-} from '../jeu/wagonnet'
+import { trajetDe } from '../jeu/wagonnet'
 import { lotChoisi, type Choix } from '../choix'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { Amelioration } from './Amelioration'
@@ -47,6 +37,7 @@ import { AmeliorationAscenseur } from './Ascenseur'
 import { Barre } from './Barre'
 import { Jauges } from './Jauges'
 import type { PropsPanneau } from './Panneaux'
+import { PanneauTrajets } from './PanneauTrajets'
 
 type Props = PropsPanneau & {
   eclats: Eclat[]
@@ -112,59 +103,6 @@ function Chances({ niveau }: { niveau: number }) {
   )
 }
 
-// Le wagonnet : où il en est, le pousser soi-même, l'agrandir.
-function Wagonnet({ etat, jouer }: PropsPanneau) {
-  const ligne = ligneDuWagonnet(etat)
-  const w = etat.wagonnet
-  if (!ligne) {
-    return (
-      <div className="ligne-achat">
-        <strong>🛤️ Wagonnet</strong>
-        <span className="discret">
-          Pose des rails de la mine jusqu'au marché (menu Bâtiments, 3 🔩 fer la case) : le wagonnet y emportera le coffre et le vendra tout
-          seul à l'arrivée. Tu peux le pousser, ou demander à un mineur de le faire (au Personnel).
-        </span>
-      </div>
-    )
-  }
-  const electrique = railsAlimentes(etat)
-  const pousseur = w.pousseur === 'joueur' ? 'toi' : w.pousseur === 'electricite' ? 'l’électricité ⚡' : w.pousseur
-  const prochain = prochainNiveauWagonnet(etat)
-  return (
-    <div className="ligne-achat">
-      <div className="ligne-titre">
-        <strong>🛤️ Wagonnet</strong>
-        {electrique && <span className="badge badge-vert">⚡ Électrique</span>}
-      </div>
-      <span className="discret">
-        {wagonnetEnRoute(etat)
-          ? `${w.etape === 'aller' ? 'En route vers le marché' : 'Revient à la mine'}, poussé par ${pousseur}.`
-          : electrique
-            ? 'Il part tout seul dès qu’il y a quelque chose dans le coffre.'
-            : etat.employes.some((e) => e.role === 'pousseur')
-              ? 'Un mineur pousseur attend au quai : il le pousse dès qu’il y a quelque chose dans le coffre.'
-              : 'Au quai. Pousse-le jusqu’au marché, ou mets un mineur « pousseur » au Personnel.'}{' '}
-        Les objets gardés au marché restent dans le coffre.
-      </span>
-      {wagonnetEnRoute(etat) && <Barre valeur={distanceDepuisLaMine(etat)} max={longueurTrajet(ligne)} texte={w.etape === 'aller' ? '→ Marché' : '← Mine'} couleur="or" />}
-      <div className="boutons">
-        <button className="bouton bouton-petit bouton-voyage" disabled={!peutPousserWagonnet(etat)} onClick={() => jouer(pousserWagonnet)}>
-          🛤️ Pousser le wagonnet ({Math.min(capaciteWagonnet(etat), nbDansCoffre(etat))} objets)
-        </button>
-      </div>
-      <Amelioration
-        etat={etat}
-        actuel={`${capaciteWagonnet(etat).toLocaleString('fr-FR')} places`}
-        niveau={w.niveau + 1}
-        niveauMax={NIVEAUX_WAGONNET.length}
-        suivant={prochain && { cout: prochain.cout, texte: `⬆ ${prochain.capacite.toLocaleString('fr-FR')} places` }}
-        possible={prochain !== null && !wagonnetEnRoute(etat) && peutPayer(etat, prochain.cout)}
-        onAmeliorer={() => jouer(ameliorerWagonnet)}
-      />
-    </div>
-  )
-}
-
 export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
   const [choix, setChoix] = useState<Choix>({})
   // Le coffre, les objets les plus précieux en premier.
@@ -213,9 +151,9 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
               </button>
             </div>
             {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
-            {ligneDuWagonnet(etat) && (
+            {trajetDe(etat, 'mine-marche') && (
               <div className="garder-coffre">
-                <span className="discret">Le wagonnet laisse dans le coffre :</span>
+                <span className="discret">Le wagonnet du marché laisse dans le coffre :</span>
                 {piles.map(([bloc]) => (
                   <label key={bloc} className="case-option">
                     <input type="checkbox" checked={etat.nonAVendre.includes(bloc)} onChange={(e) => jouer((x) => reglerVente(x, bloc, !e.target.checked))} />
@@ -228,7 +166,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
         )}
       </div>
 
-      <Wagonnet etat={etat} jouer={jouer} />
+      <PanneauTrajets etat={etat} jouer={jouer} depart="puits" />
 
       {/* Descendre d'un niveau : de nouveaux minerais, plus rares et plus chers. */}
       <div className="ligne-achat">

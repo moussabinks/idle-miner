@@ -3,7 +3,7 @@
 Le sommaire de toute la doc est dans [../jeu/vue-d-ensemble.md](../jeu/vue-d-ensemble.md). Le village vu du ciel lui-même (la grille, la construction, les rails, les décorations, le menu Modifier, les bulles de notification, les personnages) a sa fiche : [../jeu/village.md](../jeu/village.md).
 
 Une fiche par bâtiment : quand il se débloque, ce qu'il coûte à poser, ce qu'on y fait (avec les chiffres), ses règles et les fichiers du code concernés.
-Ces fiches décrivent le code au 22/10 (la mine automatique) : **les mettre à jour quand on change un bâtiment.**
+Ces fiches décrivent le code au 22/10 (la mine automatique), avec les trajets des wagonnets du 24/10 : **les mettre à jour quand on change un bâtiment.**
 
 L'**arbre de prestige** et l'**enchanteur** sont retirés du jeu le 22/10 : leur code et leurs fiches sont rangés dans `archives/prestige/` (`fiche-prestige.md`) et `archives/enchanteur/` (`fiche-enchanteur.md`). Leurs dessins sont toujours dans `public/images/batiments/`.
 
@@ -21,7 +21,7 @@ Le village est une **clairière de 60 × 60 cases** vue du ciel (à 45°, comme 
 
 | Bâtiment | Taille | Porte (dessin non retourné) | Prix pour le poser | Déblocage | Fiche |
 |---|---|---|---|---|---|
-| ⛏️ Mine (bloc à cliquer, coffre, niveaux, ascenseur, wagonnet) | 10 × 10 | face avant gauche | — (posée au milieu dès le début) | dès le début | [mine.md](mine.md) |
+| ⛏️ Mine (bloc à cliquer, coffre, niveaux, ascenseur, trajets des wagonnets) | 10 × 10 | face avant gauche | — (posée au milieu dès le début) | dès le début | [mine.md](mine.md) |
 | 💰 Marché | 5 × 5 | face avant gauche | **gratuit** | dès le début | [marche.md](marche.md) |
 | ⚒️ Forgeron | 5 × 5 | face avant droite | 20 $ + 15 pierre | dès le début | [forgeron.md](forgeron.md) |
 | 🎒 Bazar | 5 × 5 | face avant droite | 60 $ + 25 pierre | dès le début | [bazar.md](bazar.md) |
@@ -34,5 +34,5 @@ Notes :
 
 - La **porte** est l'une des deux faces tournées vers nous : « gauche » = la face qui regarde vers le bas à gauche de l'écran, « droite » = vers le bas à droite. Retourner un bâtiment (miroir) met la porte de l'autre côté. Les mineurs entrent par la case devant la porte (ou la case libre la plus proche si elle est bouchée).
 - Les prix sont petits exprès : on pose le marché, le forgeron, le bazar et le Personnel dans les premières minutes (`BATIMENTS` dans `src/jeu/donnees.ts`).
-- Une ligne de **rails** continue de la mine au marché permet au **wagonnet** d'emporter le coffre de la mine et de le vendre au marché. Il faut le pousser (toi, ou un mineur pousseur), ou le rendre électrique avec le **générateur** : voir [mine.md](mine.md#le-wagonnet) et [generateur.md](generateur.md).
+- Les **rails** relient deux bâtiments (jamais en boucle). Au panneau du bâtiment de départ, on **envoie un wagonnet** : 4 trajets possibles, un wagonnet chacun (Mine → Marché pour vendre le coffre, Mine → Foreuse pour le charbon, Mine → Générateur pour la redstone, Foreuse → Marché pour vendre le chariot). Il faut les pousser (toi, ou un mineur pousseur), ou les rendre électriques avec le **générateur** : voir [mine.md](mine.md#les-wagonnets), [generateur.md](generateur.md) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
 - Les **décorations** et les **chemins de pavés** (menu 🌸 Décos) sont seulement jolis : voir [../jeu/village.md](../jeu/village.md).

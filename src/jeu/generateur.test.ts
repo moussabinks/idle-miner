@@ -10,13 +10,13 @@ import {
   caseDansLeRayon,
   foreuseAlimentee,
   generateurEnMarche,
-  railsAlimentes,
   rayonGenerateur,
   remplirGenerateur,
 } from './generateur'
-import { creerPartie, type EtatJeu } from './mineur'
+import { creerPartie, nouveauTrajet, type EtatJeu } from './mineur'
+import { railsAlimentes } from './wagonnet'
 
-// Une partie avec le marché en (28, 40), une ligne de rails de 5 cases de la mine au marché, et
+// Une partie avec le marché en (28, 40), une ligne de rails de 5 cases de la mine au marché (et son trajet), et
 // le générateur posé juste à côté (son centre en 37,5 ; 39,5).
 function partie(): EtatJeu {
   const etat = creerPartie(aleatoireAvecGraine(1))
@@ -24,6 +24,7 @@ function partie(): EtatJeu {
   etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'generateur', x: 35, y: 37, miroir: false })
   etat.inventaire = { fer: 15 }
   for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+  etat.trajets.push(nouveauTrajet('mine-marche'))
   return etat
 }
 

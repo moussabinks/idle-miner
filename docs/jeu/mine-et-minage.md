@@ -1,7 +1,7 @@
 # ⛏️ La mine et le minage
 
 > Comment marche la mine depuis le 22/10 (la **mine automatique**) : ses 5 niveaux, le bloc à cliquer, le coffre, les pioches, la mine qui sort des blocs toute seule, et tout ce qui tourne autour : le temps qui passe (et hors ligne), les événements, les découvertes, les succès et les statistiques.
-> Écrit d'après le code au 22/10 (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnet), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
+> Écrit d'après le code au 22/10, mis à jour le 24/10 (`src/jeu/mine.ts`, `src/jeu/mineur.ts`, `src/jeu/donnees.ts`, `src/jeu/temps.ts`…). Les fiches des bâtiments donnent le détail de chaque achat : [mine.md](../batiments/mine.md) (coffre, niveaux, ascenseur, wagonnets), [forgeron.md](../batiments/forgeron.md) (pioches), [bazar.md](../batiments/bazar.md) (sac), [marche.md](../batiments/marche.md), [foreuse.md](../batiments/foreuse.md), [personnel.md](../batiments/personnel.md), [generateur.md](../batiments/generateur.md).
 
 Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur en mètres, les couches de 10 blocs, l'échelle et l'ascenseur du joueur, le quai, le réservoir, les convois et brouettes, les galeries, les blocs spéciaux (lave, coffres, géodes) et les seaux, le lapis, la netherite, la terre, le gravier et la roche dure, la bedrock et la victoire, le prestige et l'enchanteur. Le code du prestige et de l'enchanteur est rangé dans `archives/` ; le reste est dans l'historique git.
 
@@ -16,7 +16,7 @@ Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur e
   2. **la mine toute seule** (0,2 à 0,4 bloc par seconde) ;
   3. **les mineurs employés**, qui remontent leur sac et le vident dans le coffre.
 - La **foreuse** a son propre chariot (elle ne remplit pas le coffre).
-- **Coffre plein = tout s'arrête** (clics, mine, mineurs) : il faut le vider. Trois façons : le mettre dans son sac et aller le vendre au marché à pied, le **wagonnet** (rails jusqu'au marché, poussé ou électrique), et le générateur qui se sert en redstone.
+- **Coffre plein = tout s'arrête** (clics, mine, mineurs) : il faut le vider. Trois façons : le mettre dans son sac et aller le vendre au marché à pied, les **wagonnets** (un trajet Mine → Marché, et aussi Mine → Foreuse pour le charbon et Mine → Générateur pour la redstone, poussés ou électriques), et le générateur qui se sert en redstone.
 
 ```
 clic / mine toute seule / mineurs ──► COFFRE de la mine ──► sac ──(à pied)──► marché ──► $
@@ -110,7 +110,7 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 
 ### Payer avec le sac et le coffre (`disponible`, `payer`)
 
-Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, coffre, ascenseur, wagonnet, foreuse, générateur, charbon et redstone), les minerais d'un prix se comptent et se prennent **dans le sac, puis dans le coffre de la mine**. Le menu Bâtiments, les prix (`PrixCout`) et les objectifs comptent les deux.
+Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, coffre, ascenseur, wagonnets, foreuse, générateur, charbon et redstone), les minerais d'un prix se comptent et se prennent **dans le sac, puis dans le coffre de la mine**. Le menu Bâtiments, les prix (`PrixCout`) et les objectifs comptent les deux.
 
 ### La mine toute seule (`avancerMine`, `debitMine`)
 
@@ -135,9 +135,9 @@ Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau
 
 ### L'horloge (`src/usePartie.ts`)
 
-- L'horloge tourne **tout le temps** (la mine sort ses blocs toute seule) : toutes les **50 ms** (`INTERVALLE_HORLOGE`), et à chaque image de l'écran (`requestAnimationFrame`) pendant que le joueur pousse le wagonnet (pour que le mouvement soit fluide). Un tic compte au plus 1 s (onglet en pause, par exemple).
-- À chaque tic, `avancerTemps(etat, secondes, aleatoire)` (`src/jeu/temps.ts`) fait avancer, dans l'ordre : **la mine** (`avancerMine`, qui compte aussi le temps de jeu), **le générateur** (`avancerGenerateur`), **la foreuse** (`avancerForeuse`), **les mineurs** (`avancerEmployes`) et **le wagonnet** (`avancerWagonnet`).
-- Pour une longue durée, il avance par **morceaux d'une minute au plus** (`PAS_MAX`) : le générateur a le temps de se resservir dans le coffre, le wagonnet de faire plusieurs voyages… Les mineurs, eux, avancent par morceaux de 30 s (pour que le manager paie entre deux).
+- L'horloge tourne **tout le temps** (la mine sort ses blocs toute seule) : toutes les **50 ms** (`INTERVALLE_HORLOGE`), et à chaque image de l'écran (`requestAnimationFrame`) pendant que le joueur pousse un wagonnet (pour que le mouvement soit fluide). Un tic compte au plus 1 s (onglet en pause, par exemple).
+- À chaque tic, `avancerTemps(etat, secondes, aleatoire)` (`src/jeu/temps.ts`) fait avancer, dans l'ordre : **la mine** (`avancerMine`, qui compte aussi le temps de jeu), **le générateur** (`avancerGenerateur`), **la foreuse** (`avancerForeuse`), **les mineurs** (`avancerEmployes`) et **les wagonnets** (`avancerWagonnets`, chaque trajet à son tour).
+- Pour une longue durée, il avance par **morceaux d'une minute au plus** (`PAS_MAX`) : le générateur a le temps de se resservir dans le coffre, les wagonnets de faire plusieurs voyages… Les mineurs, eux, avancent par morceaux de 30 s (pour que le manager paie entre deux).
 - La sauvegarde se fait **au plus une fois par seconde** (l'état change sans arrêt), et en quittant la page.
 
 ### Hors ligne (au chargement d'un monde)
@@ -145,7 +145,7 @@ Le niveau change tout de suite (le bloc à cliquer est retiré au nouveau niveau
 À l'ouverture d'un monde (`chargerOuCreer`) :
 
 1. Le temps écoulé depuis la dernière sauvegarde est mesuré, plafonné à **8 heures** (`ABSENCE_MAX`). Moins de 30 s : rien à rattraper.
-2. `avancerTemps` est appelé avec toute la durée : la mine, le générateur, la foreuse, les mineurs (et le manager), et le wagonnet (s'il a un pousseur ou l'électricité) tournent comme si le jeu était ouvert. **Les clics, eux, ne tournent pas.**
+2. `avancerTemps` est appelé avec toute la durée : la mine, le générateur, la foreuse, les mineurs (et le manager), et les wagonnets (s'ils ont un pousseur ou l'électricité) tournent comme si le jeu était ouvert. **Les clics, eux, ne tournent pas.**
 3. Un message s'affiche : « Pendant ton absence : 📦 *N* blocs de plus dans le coffre de la mine, 🛤️ le wagonnet a rapporté *X* $, ⚙️ la foreuse a remonté *N* blocs, 😠 *N* mineurs attendent leur salaire. » (seulement les morceaux non nuls ; « le wagonnet a rapporté » compte tout l'argent gagné pendant l'absence).
 
 ---
@@ -157,11 +157,11 @@ L'interface compare l'état **avant** et **après** chaque action (`evenementsEn
 | Événement | Quand | Ce que ça déclenche |
 |---|---|---|
 | `casse` | un clic a cassé le bloc (`blocsCasses` a augmenté) ; avec le nombre tombé (1 ou 2) et s'il est rare | le « crac » (plus lourd pour un bloc dur), « plink » pour un minerai ou pluie d'étincelles pour un rare, 2 pièces si doublé ; les éclats et le minerai qui s'envole |
-| `vente` | l'argent a monté sans compter le wagonnet (marché, chariot de la foreuse) | le « ka-ching ! » (plus de pièces pour une grosse vente), la grosse animation « +X $ », le compteur qui saute |
+| `vente` | l'argent a monté sans compter les wagonnets (marché, chariot de la foreuse vendu par le joueur) | le « ka-ching ! » (plus de pièces pour une grosse vente), la grosse animation « +X $ », le compteur qui saute |
 | `achat` | l'argent a baissé | « pop » et 2 pièces (sauf si c'est une amélioration) |
-| `amelioration` | un niveau de plus quelque part : mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur | la petite fanfare (à la place du son d'achat) |
+| `amelioration` | un niveau de plus quelque part : mine, coffre, ascenseur, forage, chariot, générateur, taille des wagonnets, sac, meilleure pioche, recruteur, pioche d'un mineur | la petite fanfare (à la place du son d'achat) |
 | `piocheCassee` | la pioche en main vient de casser | « clang » triste |
-| `wagonnet` | le wagonnet a vendu au marché (`argentWagonnet` a monté) | 3 pièces discrètes, et un petit « +X $ » en haut de l'écran |
+| `wagonnet` | un wagonnet a vendu au marché (`argentWagonnet` a monté) | 3 pièces discrètes, et un petit « +X $ » en haut de l'écran |
 
 ---
 
@@ -175,7 +175,7 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, e
 
 ## 8. Les succès (`src/jeu/succes.ts`)
 
-**20 succès**, vérifiés après chaque action et chaque tic d'horloge (`verifierSucces`). Un succès obtenu affiche « *emoji* Succès : *titre* » (toast doré, petite fanfare). On les voit avec le bouton 🏅.
+**21 succès**, vérifiés après chaque action et chaque tic d'horloge (`verifierSucces`). Un succès obtenu affiche « *emoji* Succès : *titre* » (toast doré, petite fanfare). On les voit avec le bouton 🏅.
 
 | Succès | Condition |
 |---|---|
@@ -192,8 +192,9 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, e
 | 💠 Ça brille ! | trouver un diamant (en cliquant) |
 | 👷 Patron | embaucher ton premier mineur |
 | 👥 Chef d'équipe | avoir 6 mineurs |
-| 🛤️ Cheminot | relier la mine au marché avec des rails |
-| ⚡ Électricien | électrifier les rails avec le générateur |
+| 🛤️ Cheminot | créer un trajet de wagonnet |
+| ⚡ Électricien | électrifier les rails avec le générateur (au moins un trajet électrique) |
+| 🗺️ Réseau complet | faire rouler un wagonnet sur les 4 trajets |
 | 🚃 Ligne régulière | faire 100 voyages de wagonnet |
 | 💰 Riche | gagner 5 000 $ |
 | 🤑 Magnat | gagner 100 000 $ |
@@ -214,10 +215,10 @@ Les compteurs de la partie (`Statistiques` dans `mineur.ts`) :
 | `blocsMineurs` | les blocs creusés par les mineurs employés |
 | `blocsForeuse` | les blocs forés par la foreuse |
 | `diamantsTrouves` | les diamants trouvés en cliquant (doublés compris) |
-| `argentGagne` | tout l'argent gagné (marché, wagonnet, chariot) |
-| `argentWagonnet` | l'argent des voyages du wagonnet |
+| `argentGagne` | tout l'argent gagné (marché, wagonnets, chariot) |
+| `argentWagonnet` | l'argent vendu par les wagonnets (Mine → Marché et Foreuse → Marché) |
 | `argentForeuse` | l'argent des chariots de la foreuse |
-| `voyagesWagonnet` | les voyages du wagonnet jusqu'au marché |
+| `voyagesWagonnet` | les voyages des wagonnets (toutes les livraisons, sur tous les trajets) |
 | `salairesPayes` | les salaires payés aux mineurs et au manager |
 | `tempsDeJeu` | le temps de jeu, en secondes (hors ligne compris) |
 

@@ -421,7 +421,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </p>
         <p className="discret">
           Devant la <strong>mine</strong>, clique sur le bloc pour creuser : tout va dans le coffre de la mine. Mets-le dans ton sac et va le
-          vendre au <strong>marché</strong>. Puis relie la mine au marché avec des <strong>rails</strong> : le wagonnet fera les voyages pour toi.
+          vendre au <strong>marché</strong>. Puis relie la mine au marché avec des <strong>rails</strong> et, au panneau de la mine, envoie un <strong>wagonnet</strong> : il fera les voyages pour toi.
         </p>
         <p className="discret">
           Les boutons <strong>Bâtiments</strong> et <strong>Décos</strong> en bas à droite servent à construire, <strong>Modifier</strong> à

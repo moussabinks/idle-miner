@@ -170,11 +170,11 @@ export function longueurTrace(points: { x: number; y: number }[]): number {
   return total
 }
 
-// La trace du wagonnet sur la ligne de rails (23/10) : il part du bord de la mine, suit le milieu
-// de la voie (tout droit au centre des cases, en quart de cercle dans les virages, comme le
-// dessin des rails), et arrive au bord du marché.
-export function traceDeLaVoie(village: Village, ligne: Case[]): { x: number; y: number }[] {
-  const dans = (id: 'puits' | 'marche', c: Case) => {
+// La trace d'un wagonnet sur une ligne de rails (23/10) : il part du bord du bâtiment de départ
+// (la mine, par exemple), suit le milieu de la voie (tout droit au centre des cases, en quart de
+// cercle dans les virages, comme le dessin des rails), et arrive au bord du bâtiment d'arrivée.
+export function traceDeLaVoie(village: Village, ligne: Case[], depart: IdBatiment = 'puits', arrivee: IdBatiment = 'marche'): { x: number; y: number }[] {
+  const dans = (id: IdBatiment, c: Case) => {
     const b = batimentPose(village, id)
     if (!b) return false
     const e = empriseBatiment(b)
@@ -187,14 +187,14 @@ export function traceDeLaVoie(village: Village, ligne: Case[]): { x: number; y: 
     { x: -1, y: 0 },
   ]
   // Le côté de la case qui donne vers la case précédente (ou la mine) et vers la suivante (ou le marché).
-  const cote = (c: Case, vers: Case | 'puits' | 'marche') => {
+  const cote = (c: Case, vers: Case | IdBatiment, sens: 1 | -1) => {
     if (typeof vers !== 'string') return { x: Math.sign(vers.x - c.x), y: Math.sign(vers.y - c.y) }
-    return voisins.find((d) => dans(vers, { x: c.x + d.x, y: c.y + d.y })) ?? { x: 0, y: vers === 'puits' ? -1 : 1 }
+    return voisins.find((d) => dans(vers, { x: c.x + d.x, y: c.y + d.y })) ?? { x: 0, y: sens }
   }
   const trace: { x: number; y: number }[] = []
   ligne.forEach((c, i) => {
-    const entree = cote(c, i > 0 ? ligne[i - 1] : 'puits')
-    const sortie = cote(c, i < ligne.length - 1 ? ligne[i + 1] : 'marche')
+    const entree = cote(c, i > 0 ? ligne[i - 1] : depart, -1)
+    const sortie = cote(c, i < ligne.length - 1 ? ligne[i + 1] : arrivee, 1)
     const centre = { x: c.x + 0.5, y: c.y + 0.5 }
     const bordEntree = { x: centre.x + entree.x * 0.5, y: centre.y + entree.y * 0.5 }
     const bordSortie = { x: centre.x + sortie.x * 0.5, y: centre.y + sortie.y * 0.5 }

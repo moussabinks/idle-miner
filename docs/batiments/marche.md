@@ -1,6 +1,6 @@
 # 💰 Marché
 
-> Le stand où l'on vend le contenu de son sac à dos contre de l'argent, au prix fixe de chaque bloc. C'est aussi le bout de la ligne de rails : le wagonnet y vend le coffre de la mine.
+> Le stand où l'on vend le contenu de son sac à dos contre de l'argent, au prix fixe de chaque bloc. C'est aussi l'arrivée de deux trajets de wagonnets : Mine → Marché (le coffre de la mine) et Foreuse → Marché (le chariot de la foreuse).
 
 ## Où et quand
 
@@ -13,7 +13,7 @@
 - **Description** (en haut du panneau) : « Vends tes blocs et minerais. »
 - **Bulle au-dessus** (`notifications.ts`) : **🎒 « Ton sac est plein : viens vendre ! »** (bulle rouge d'alerte) quand le sac est plein. Le marché n'a pas d'amélioration : jamais de bulle 💰 « achetable ».
 - **Animations et sons d'une vente** : un « +X $ » au milieu de l'écran avec une gerbe de pièces (`src/effets.css`), le compteur d'argent du bandeau qui saute et défile jusqu'à la nouvelle somme, et un « ka-ching ! » de caisse (`sons.vente`) : plus la vente est grosse, plus il y a de pièces (de 3 à 12).
-- **Pas de marché, pas de vente** : tant qu'il n'est pas posé, on ne peut rien vendre, et le wagonnet ne peut pas rouler (il n'a pas de bout de ligne).
+- **Pas de marché, pas de vente** : tant qu'il n'est pas posé, on ne peut rien vendre, et aucun wagonnet ne peut y aller (pas de trajet vers le marché).
 
 ## Ce qu'on peut y faire
 
@@ -49,30 +49,30 @@ Les chances de chaque bloc, niveau par niveau, sont dans [mine.md](mine.md#les-5
 ## Règles et comportement
 
 - **On vend ce qu'on a dans le sac** : chaque quantité demandée est arrondie vers le bas et ramenée entre 0 et ce qu'il y a dans le sac. Si le total vaut 0 : « Rien à vendre pour le moment. » Sinon : « 💰 Vente : +X $ ».
-- **Le coffre de la mine ne se vend pas d'ici** : il faut d'abord le mettre dans son sac au panneau de la mine, puis marcher jusqu'au marché. C'est la boucle du début de partie. Avec des rails, le wagonnet fait ce voyage à ta place.
+- **Le coffre de la mine ne se vend pas d'ici** : il faut d'abord le mettre dans son sac au panneau de la mine, puis marcher jusqu'au marché. C'est la boucle du début de partie. Avec des rails et le trajet Mine → Marché, le wagonnet fait ce voyage à ta place.
 - **Statistiques** : chaque vente ajoute son gain à `stats.argentGagne` (l'argent gagné dans la partie, qui compte pour les succès et le classement). L'écran 📊 la range dans « Toi (marché) ».
-- **Les objets gardés** (`nonAVendre`) servent deux fois : ils ne sont pas vendus au marché, **et le wagonnet les laisse dans le coffre de la mine** (on peut aussi les cocher depuis le panneau de la mine). Pratique pour garder du fer pour les rails, ou de la redstone pour le générateur.
+- **Les objets gardés** (`nonAVendre`) servent deux fois : ils ne sont pas vendus au marché, **et le wagonnet du marché les laisse dans le coffre de la mine** (on peut aussi les cocher depuis le panneau de la mine). Pratique pour garder du fer pour les rails, ou de la redstone pour le générateur.
 - **Il existe aussi** une action « Vendre tout » (`vendre`, qui vend tout sauf les objets gardés) dans la logique du jeu (le bot s'en sert), mais l'interface utilise seulement « Vendre la sélection » (`vendreLot`).
 
 ## Lien avec le reste du jeu
 
 - **Toutes les ventes utilisent le même calcul** (`valeurDe` : la somme des prix, arrondie) :
   - le **marché** (toi, avec ton sac) ;
-  - le **wagonnet** : au bout de la ligne de rails, il vend tout son chargement en arrivant, puis repart vers la mine. L'argent va dans les statistiques du wagonnet. Voir [mine.md](mine.md#le-wagonnet) ;
+  - les **wagonnets** : le wagonnet Mine → Marché vend tout son chargement en arrivant, puis repart vers la mine ; il laisse dans le coffre les objets gardés, et le charbon et la redstone qui manquent à la foreuse et au générateur (si ces trajets existent). Le wagonnet Foreuse → Marché vend ce qui est coché dans le chariot. L'argent va dans les statistiques des wagonnets (`argentWagonnet`). Voir [mine.md](mine.md#les-wagonnets) et [foreuse.md](foreuse.md) ;
   - le **chariot de la foreuse** : vendu directement au stand Foreuse (pas besoin de venir au marché).
 - **Les mineurs employés ne vont plus au marché** (22/10) : ils vident leur sac dans le coffre de la mine.
-- **Où le poser** : près de la mine ! Plus le marché est près, plus les allers-retours à pied sont courts au début, moins il faut de rails (3 fer la case), plus le wagonnet fait de voyages, et plus il est facile de mettre toute la ligne dans le rayon du générateur.
+- **Où le poser** : près de la mine ! Plus le marché est près, plus les allers-retours à pied sont courts au début, moins il faut de rails (3 fer la case), plus le wagonnet fait de voyages, et plus il est facile de mettre tout le trajet dans le rayon du générateur. Pense aussi à la foreuse, qui peut y envoyer son chariot.
 - **Objectifs** (`objectifs.ts`) : tant qu'il n'est pas posé, « Construire : Marché » est le premier objectif (gratuit). Ensuite, le marché ne propose aucun achat. Son nom dans les objectifs est « au marché ».
-- **Succès** : « 💰 Riche » (gagner 5 000 $), « 🤑 Magnat » (100 000 $), « 🛤️ Cheminot » (relier la mine au marché avec des rails).
-- **Classement** : l'argent gagné au total vient des ventes, du wagonnet et du chariot.
+- **Succès** : « 💰 Riche » (gagner 5 000 $), « 🤑 Magnat » (100 000 $), « 🛤️ Cheminot » (créer un trajet de wagonnet).
+- **Classement** : l'argent gagné au total vient des ventes, des wagonnets et du chariot.
 
 ## Fichiers du code
 
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.marche` : gratuit, 5 × 5, porte à gauche) et les prix de vente (`BLOCS`).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`construireBatiment`, `deplacerBatiment`).
-- `src/jeu/village.ts` : la porte, le chemin à pied, les rails mine → marché (`railsMineMarche`).
+- `src/jeu/village.ts` : la porte, le chemin à pied, les rails entre deux bâtiments (`railsEntre`, `railsMineMarche`).
 - `src/jeu/mineur.ts` : les règles de vente (`valeurDe`, `vendreLot`, `vendre`, `objetsAVendre`, `reglerVente`, `encaisser`, `nonAVendre`).
-- `src/jeu/wagonnet.ts` : le wagonnet qui vend le coffre au marché (`avancerWagonnet`).
+- `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche` et `foreuse-marche`, `avancerWagonnets`).
 - `src/jeu/foreuse.ts` : la vente du chariot de la foreuse (`vendreChariot`).
 - `src/jeu/notifications.ts` : la bulle 🎒 « sac plein ».
 - `src/jeu/objectifs.ts` : « Construire : Marché ».

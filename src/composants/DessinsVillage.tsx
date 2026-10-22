@@ -8,6 +8,10 @@ import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
 import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
+import { nuance } from './couleurs'
+import { Boule, OmbreAuSol } from './Relief'
+import { TasDeRochers } from './Rochers'
+import { lireCle, raccordsRail, type Village } from '../jeu/village'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -50,10 +54,14 @@ export function BoiteSvg({ x, y, taille, hauteur, marge = 12, classe = '', style
 // Le terrain (21/10) : le sol en damier de la clairière, et la forêt tout autour
 // ---------------------------------------------------------------------------
 
-// Les deux verts du damier (comme le sol de Clash of Clans). Une case sur deux est plus claire :
-// le quadrillage se devine sans lignes, et il sert à poser les bâtiments.
-const VERT_CLAIR = '#86c13f'
-const VERT_FONCE = '#79b437'
+// Les deux verts du damier (comme le sol de Clash of Clans). Une case sur deux est à peine plus
+// claire (24/10 : bien moins qu'avant, ça faisait trop quadrillage) : on devine la grille sans
+// la voir. Par-dessus, une texture d'herbe (des taches et des brins, herbe.webp) qui se répète
+// sans couture, et de grandes taches floues : le sol a l'air d'un vrai pré. Quand on construit,
+// une vraie grille apparaît (GrilleConstruction).
+const VERT_CLAIR = '#83bf3e'
+const VERT_FONCE = '#7eb83a'
+const IMAGE_HERBE = '/images/sol/herbe.webp'
 
 // Le losange de la clairière, un peu agrandi (marge en cases), en points « x,y ».
 function losangeClairiere(marge: number): string {
@@ -102,10 +110,12 @@ const DETAILS_HERBE = semerDetails()
 // plus l'air tout plat, comme un vrai pré. Toujours aux mêmes places.
 const TACHES_HERBE = (() => {
   const hasard = aleatoireAvecGraine(2310)
-  return Array.from({ length: 26 }, () => {
-    const e = versEcran(2 + hasard() * (TAILLE_GRILLE - 4), 2 + hasard() * (TAILLE_GRILLE - 4))
-    const claire = hasard() < 0.45
-    return { x: e.x, y: e.y, rx: 40 + hasard() * 90, ry: 20 + hasard() * 40, couleur: claire ? '#a6d659' : '#5e9a2a', opacite: 0.22 + hasard() * 0.2 }
+  return Array.from({ length: 60 }, () => {
+    const e = versEcran(1 + hasard() * (TAILLE_GRILLE - 2), 1 + hasard() * (TAILLE_GRILLE - 2))
+    const tirage = hasard()
+    // Des taches claires (soleil), sombres (herbe plus haute) et un peu jaunes (herbe sèche).
+    const couleur = tirage < 0.4 ? '#a6d659' : tirage < 0.85 ? '#5e9a2a' : '#c2c45a'
+    return { x: e.x, y: e.y, rx: 30 + hasard() * 110, ry: 16 + hasard() * 50, couleur, opacite: 0.2 + hasard() * 0.22 }
   })
 })()
 
@@ -162,13 +172,20 @@ export const TerrainVillage = memo(function TerrainVillage() {
           <rect x="1" width="1" height="1" fill={VERT_FONCE} />
           <rect y="1" width="1" height="1" fill={VERT_FONCE} />
         </pattern>
+        {/* La texture de l'herbe, à plat à l'écran (256 pixels du monde, sans couture). */}
+        <pattern id="motif-herbe" patternUnits="userSpaceOnUse" width="256" height="256">
+          <image href={IMAGE_HERBE} width="256" height="256" />
+        </pattern>
         {/* Les petits détails de l'herbe (voir DetailsHerbe) */}
         <path id="touffe-herbe" d="M-3.6 0 Q-3.4 -3 -5 -5.4 Q-2.2 -3.6 -1.6 0 Z M-1.4 0 Q-1 -4.4 0.2 -7 Q0.8 -3.8 1 0 Z M0.8 0 Q2 -3.2 4.6 -4.8 Q2.8 -2.4 2.8 0 Z" fill="#5f9a2a" />
         <path id="brins-herbe" d="M-1.6 0 Q-1.6 -2.6 -2.8 -4.4 M0 0 Q0.2 -3 1 -5.2 M1.4 0 Q2 -1.8 3.2 -2.8" stroke="#a5d65a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
         <path id="tige-fleur" d="M0 0 Q-0.2 -2.6 0.6 -5 M0 -1.6 Q-1.6 -2.2 -2.2 -1.2" stroke="#4e8a24" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+        {/* Un petit galet en relief : son ombre, le côté dans l'ombre, puis le dessus éclairé. */}
         <g id="caillou-herbe">
-          <ellipse cx="0" cy="-0.6" rx="2.4" ry="1.3" fill="#9a958c" />
-          <ellipse cx="-0.5" cy="-1" rx="1.2" ry="0.55" fill="#c4bfb5" />
+          <ellipse cx="0.6" cy="0.1" rx="2.8" ry="1.1" fill="rgb(0 0 0 / 0.22)" />
+          <path d="M-2.4 -0.2 Q-2.5 -2.2 -0.4 -2.5 Q2.2 -2.6 2.4 -0.6 Q2.2 0.3 0 0.4 Q-2.2 0.4 -2.4 -0.2 Z" fill="#7d786f" />
+          <path d="M-2.1 -0.9 Q-2 -2.2 -0.4 -2.4 Q1.6 -2.5 1.9 -1.2 Q0.4 -0.6 -2.1 -0.9 Z" fill="#b9b4aa" />
+          <ellipse cx="-0.8" cy="-1.8" rx="0.7" ry="0.3" fill="#e2ded6" />
         </g>
         <g id="trefle-herbe">
           <circle cx="-1.2" cy="-1.4" r="1.3" fill="#4f9a2c" />
@@ -190,6 +207,9 @@ export const TerrainVillage = memo(function TerrainVillage() {
         <filter id="flou-bord-damier" x="-10%" y="-10%" width="120%" height="120%">
           <feGaussianBlur stdDeviation="9" />
         </filter>
+        <mask id="masque-herbe" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
+          <polygon points={losangeClairiere(3)} fill="#fff" filter="url(#flou-aureole)" />
+        </mask>
         {/* Le damier s'efface doucement sur son bord. */}
         <mask id="masque-damier" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
           <polygon points={losangeClairiere(0.5)} fill="#fff" filter="url(#flou-bord-damier)" />
@@ -199,11 +219,29 @@ export const TerrainVillage = memo(function TerrainVillage() {
       <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
       <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
       <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
+      <polygon points={losangeClairiere(4)} fill="url(#motif-herbe)" mask="url(#masque-herbe)" />
       <TachesHerbe />
       <DetailsHerbe />
     </svg>
   )
 })
+
+// La grille de construction (24/10) : quand on pose ou déplace quelque chose (ou qu'on peint des
+// rails), de fines lignes claires montrent les cases. Le reste du temps, le sol est un pré.
+export function GrilleConstruction() {
+  const origine = versEcran(0, 0)
+  const enIso = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${origine.x} ${origine.y})`
+  return (
+    <g className="grille-construction">
+      <defs>
+        <pattern id="motif-grille" patternUnits="userSpaceOnUse" width="1" height="1" patternTransform={enIso}>
+          <path d="M0 0 H1 M0 0 V1" stroke="#ffffff" strokeWidth="0.045" fill="none" />
+        </pattern>
+      </defs>
+      <polygon points={losangeClairiere(0)} fill="url(#motif-grille)" />
+    </g>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // La mine (10 × 10) : l'image fournie (mine.webp), et ce qui évolue par-dessus
@@ -279,20 +317,32 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
 
 type Raccords = { n: boolean; e: boolean; s: boolean; o: boolean }
 
-// Les rails (23/10) : les tuiles du dessin de l'équipe (« Tuiles de voies ferrées isométriques »,
-// sur le Drive), remises à plat en vue de dessus par un script (outils/rails/) : un morceau tout
-// droit, un virage (le morceau droit courbé : exactement le même style), un T (la ligne droite et
-// deux virages qui en partent) et un croisement. Dans les tuiles à plusieurs voies, tous les
-// ballasts sont posés d'abord, puis les traverses, puis les rails : les voies se mêlent sans
-// couture. On les pose sur la case avec la même projection que le sol, tournées dans le bon sens.
-// Le joueur n'achète que des rails : chaque case choisit toute seule son dessin selon ses
-// voisines (une ligne droite se raccorde, un rail posé de côté fait un virage ou un T).
-const IMAGES_RAILS = {
-  droit: '/images/rails/rail_droit.webp', // relie le nord (y - 1) et le sud (y + 1)
-  virage: '/images/rails/rail_virage.webp', // relie le sud (y + 1) et l'est (x + 1)
-  t: '/images/rails/rail_t.webp', // la ligne nord-sud, et l'embranchement vers l'est
-  croix: '/images/rails/rail_croix.webp', // les quatre côtés
+// Les rails (24/10) : les tuiles dessinées par outils/rails/dessiner.py, dans le style du dessin
+// « propriété-rail-design » de l'équipe (sur le Drive) : un morceau tout droit, un virage, un T
+// (la ligne continue d'un côté, deux rails en L de l'autre, un plancher au centre) et un
+// croisement (quatre rails en L : les rails ne se croisent pas). Le joueur n'achète que des
+// rails : chaque case choisit toute seule son dessin selon ses voisines.
+//
+// Un rail se pose sur une case, mais la voie est large de deux cases : elle déborde d'une
+// demi-case de chaque côté. Chaque tuile couvre donc 2 × 2 cases, centrée sur la case du rail.
+// Pour le relief, chaque tuile a quatre calques, et on pose le premier calque de toutes les
+// cases, puis le deuxième, etc. (sinon le talus d'une voie passerait sur les rails d'une autre) :
+//   1. le flanc du talus, un peu plus bas à l'écran (on voit l'épaisseur du talus) ;
+//   2. le dessus du talus (la terre et les cailloux) ;
+//   3. l'ombre des traverses et des rails, un peu décalée ;
+//   4. les traverses et les rails.
+const FORMES_RAILS = {
+  droit: 'rail_droit', // relie le nord (y - 1) et le sud (y + 1)
+  virage: 'rail_virage', // relie le sud (y + 1) et l'est (x + 1)
+  t: 'rail_t', // la ligne nord-sud, et l'embranchement vers l'est
+  croix: 'rail_croix', // les quatre côtés
 }
+const CALQUES_RAILS = [
+  { calque: 'cote', decalage: 'translate(0 5)' },
+  { calque: 'ballast', decalage: '' },
+  { calque: 'ombre', decalage: 'translate(3 4)' },
+  { calque: 'voie', decalage: '' },
+] as const
 
 type Cote = 'n' | 'e' | 's' | 'o'
 const COTES: Cote[] = ['n', 'e', 's', 'o']
@@ -300,7 +350,7 @@ const COTES: Cote[] = ['n', 'e', 's', 'o']
 const QUART: Record<Cote, Cote> = { n: 'e', e: 's', s: 'o', o: 'n' }
 const OPPOSE: Record<Cote, Cote> = { n: 's', e: 'o', s: 'n', o: 'e' }
 
-type Morceau = { image: string; quarts: number }
+type Morceau = { image: string; quarts: number } // image : le nom de la forme (sans le calque)
 
 // Combien de quarts de tour pour amener le côté « depuis » sur le côté « vers ».
 function quartsDe(depuis: Cote, vers: Cote): number {
@@ -319,10 +369,10 @@ function quartsDe(depuis: Cote, vers: Cote): number {
 //   - quatre : un croisement.
 function morceauDeVoie(r: Raccords): Morceau {
   const liste = COTES.filter((c) => r[c])
-  if (liste.length === 4) return { image: IMAGES_RAILS.croix, quarts: 0 }
+  if (liste.length === 4) return { image: FORMES_RAILS.croix, quarts: 0 }
   if (liste.length === 3) {
     const branche = COTES.find((c) => r[c] && !r[OPPOSE[c]]) as Cote
-    return { image: IMAGES_RAILS.t, quarts: quartsDe('e', branche) }
+    return { image: FORMES_RAILS.t, quarts: quartsDe('e', branche) }
   }
   if (liste.length === 2 && OPPOSE[liste[0]] !== liste[1]) {
     // Le virage de base relie le sud et l'est : on le tourne jusqu'à relier les deux voisines.
@@ -336,26 +386,47 @@ function morceauDeVoie(r: Raccords): Morceau {
       }
       return (x === a && y === b) || (x === b && y === a)
     })
-    return { image: IMAGES_RAILS.virage, quarts: quarts ?? 0 }
+    return { image: FORMES_RAILS.virage, quarts: quarts ?? 0 }
   }
   const axe = liste[0] ?? 'n'
-  return { image: IMAGES_RAILS.droit, quarts: axe === 'n' || axe === 's' ? 0 : 1 }
+  return { image: FORMES_RAILS.droit, quarts: axe === 'n' || axe === 's' ? 0 : 1 }
 }
 
-export function CaseRail({ x, y, raccords }: { x: number; y: number; raccords: Raccords }) {
-  const coin = versEcran(x, y)
-  // La case vue de dessus (1 × 1) posée sur la grille isométrique : la même projection que le sol.
-  const surLaCase = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${coin.x} ${coin.y})`
-  const m = morceauDeVoie(raccords)
+// Tous les rails du village, calque par calque.
+export function RailsDuVillage({ village }: { village: Village }) {
+  const cases = village.rails.map((cle) => {
+    const c = lireCle(cle)
+    // La tuile (2 × 2 cases) commence une demi-case avant la case du rail, dans les deux sens.
+    const coin = versEcran(c.x - 0.5, c.y - 0.5)
+    const surLaCase = `matrix(${2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${-2 * DEMI_LARGEUR} ${2 * DEMI_HAUTEUR} ${coin.x} ${coin.y})`
+    return { cle, surLaCase, morceau: morceauDeVoie(raccordsRail(village, c.x, c.y)) }
+  })
   return (
-    <g className="case-rail" transform={surLaCase}>
-      <image href={m.image} x="0" y="0" width="1" height="1" preserveAspectRatio="none" transform={m.quarts ? `rotate(${m.quarts * 90} 0.5 0.5)` : undefined} />
+    <g className="rails-village">
+      {CALQUES_RAILS.map(({ calque, decalage }) => (
+        <g key={calque} className={`rails-${calque}`} transform={decalage || undefined}>
+          {cases.map(({ cle, surLaCase, morceau }) => (
+            <g key={cle} transform={surLaCase}>
+              <image
+                href={`/images/rails/${morceau.image}_${calque}.webp`}
+                x="0"
+                y="0"
+                width="1"
+                height="1"
+                preserveAspectRatio="none"
+                transform={morceau.quarts ? `rotate(${morceau.quarts * 90} 0.5 0.5)` : undefined}
+              />
+            </g>
+          ))}
+        </g>
+      ))}
     </g>
   )
 }
 
 export function CaseChemin({ x, y }: { x: number; y: number }) {
-  // Quatre pavés arrondis par case, de deux gris différents.
+  // Quatre pavés par case, de deux gris différents, en relief (24/10) : un flanc sombre et un
+  // bord éclairé.
   const paves: [number, number, number][] = [
     [0.27, 0.27, 0],
     [0.73, 0.27, 1],
@@ -365,21 +436,28 @@ export function CaseChemin({ x, y }: { x: number; y: number }) {
   return (
     <g className="case-chemin">
       <polygon points={poly([[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]])} fill="#b49a72" />
-      {paves.map(([dx, dy, teinte], i) => (
-        <polygon
-          key={i}
-          points={poly([
-            [x + dx - 0.2, y + dy - 0.2],
-            [x + dx + 0.2, y + dy - 0.2],
-            [x + dx + 0.2, y + dy + 0.2],
-            [x + dx - 0.2, y + dy + 0.2],
-          ])}
-          fill={teinte ? '#a8a49c' : '#c4c0b6'}
-          stroke="#6d6860"
-          strokeWidth="0.8"
-          strokeLinejoin="round"
-        />
-      ))}
+      {paves.map(([dx, dy, teinte], i) => {
+        const coins = poly([
+          [x + dx - 0.2, y + dy - 0.2],
+          [x + dx + 0.2, y + dy - 0.2],
+          [x + dx + 0.2, y + dy + 0.2],
+          [x + dx - 0.2, y + dy + 0.2],
+        ])
+        // Le bord éclairé du pavé : ses deux côtés qui regardent vers le haut de l'écran.
+        const reflet = poly([
+          [x + dx - 0.18, y + dy + 0.16],
+          [x + dx - 0.18, y + dy - 0.18],
+          [x + dx + 0.16, y + dy - 0.18],
+        ])
+        return (
+          <g key={i}>
+            {/* Le pavé dépasse un peu du sol : on voit son flanc, plus sombre, juste dessous. */}
+            <polygon points={coins} transform="translate(0 1.8)" fill="#5f5a52" />
+            <polygon points={coins} fill={teinte ? '#a8a49c' : '#c4c0b6'} stroke="#6d6860" strokeWidth="0.8" strokeLinejoin="round" />
+            <polyline points={reflet} fill="none" stroke="#ffffff" strokeWidth="0.9" opacity="0.45" strokeLinecap="round" />
+          </g>
+        )
+      })}
     </g>
   )
 }
@@ -408,12 +486,15 @@ function Fleurs({ c, couleur }: { c: Point; couleur: string }) {
   ]
   return (
     <g>
-      <ellipse cx={c.x} cy={c.y} rx="14" ry="7" fill="#4f9a34" opacity="0.8" />
+      <OmbreAuSol cx={c.x} cy={c.y + 1} rx={15} ry={6} force={0.2} />
+      <ellipse cx={c.x} cy={c.y} rx="14" ry="7" fill="#3f8a2c" />
+      <ellipse cx={c.x - 2} cy={c.y - 1.5} rx="11" ry="5" fill="#57a83a" />
       {positions.map(([dx, dy], i) => (
         <g key={i}>
           <line x1={c.x + dx} y1={c.y + dy} x2={c.x + dx} y2={c.y + dy - 7} stroke="#2f6e20" strokeWidth="1.4" />
-          <circle cx={c.x + dx} cy={c.y + dy - 8} r="3.2" fill={couleur} stroke="rgb(0 0 0 / 0.35)" strokeWidth="0.6" />
-          <circle cx={c.x + dx} cy={c.y + dy - 8} r="1.1" fill="#ffe27a" />
+          <ellipse cx={c.x + dx + 2} cy={c.y + dy - 4} rx="2.4" ry="1.1" fill="#4c9a32" transform={`rotate(-30 ${c.x + dx + 2} ${c.y + dy - 4})`} />
+          <Boule cx={c.x + dx} cy={c.y + dy - 8} r={3.4} couleur={couleur} />
+          <circle cx={c.x + dx - 0.3} cy={c.y + dy - 8.3} r="1.1" fill="#ffe27a" />
         </g>
       ))}
     </g>
@@ -423,12 +504,16 @@ function Fleurs({ c, couleur }: { c: Point; couleur: string }) {
 function ArbreRond({ c, couleurs, tronc = '#7a4a22', fleurs = false }: { c: Point; couleurs: [string, string, string]; tronc?: string; fleurs?: boolean }) {
   return (
     <g>
-      <ellipse cx={c.x} cy={c.y + 2} rx="24" ry="11" fill="rgb(0 0 0 / 0.25)" />
+      <OmbreAuSol cx={c.x + 6} cy={c.y + 2} rx={28} ry={12} />
       <path d={`M${c.x - 5} ${c.y} Q${c.x - 4} ${c.y - 30} ${c.x - 1} ${c.y - 40} L${c.x + 4} ${c.y - 40} Q${c.x + 6} ${c.y - 26} ${c.x + 6} ${c.y} Z`} fill={tronc} stroke="#3a2210" strokeWidth="1.2" />
-      <circle cx={c.x - 16} cy={c.y - 46} r="17" fill={couleurs[0]} stroke="rgb(0 0 0 / 0.3)" strokeWidth="1.2" />
-      <circle cx={c.x + 16} cy={c.y - 48} r="17" fill={couleurs[0]} stroke="rgb(0 0 0 / 0.3)" strokeWidth="1.2" />
-      <circle cx={c.x} cy={c.y - 62} r="21" fill={couleurs[1]} stroke="rgb(0 0 0 / 0.3)" strokeWidth="1.2" />
-      <circle cx={c.x - 6} cy={c.y - 70} r="8" fill={couleurs[2]} opacity="0.7" />
+      {/* Le tronc est rond : un reflet à gauche, l'ombre du feuillage en haut. */}
+      <path d={`M${c.x - 3} ${c.y - 2} Q${c.x - 2.5} ${c.y - 26} ${c.x} ${c.y - 36}`} stroke={nuance(tronc, 1.35)} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      <path d={`M${c.x + 3.5} ${c.y - 1} Q${c.x + 4.5} ${c.y - 22} ${c.x + 3} ${c.y - 38}`} stroke={nuance(tronc, 0.6)} strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx={c.x + 1} cy={c.y - 36} rx="7" ry="3" fill="rgb(0 0 0 / 0.3)" />
+      <Boule cx={c.x + 16} cy={c.y - 48} r={17} couleur={nuance(couleurs[0], 0.9)} />
+      <Boule cx={c.x - 16} cy={c.y - 46} r={17} couleur={couleurs[0]} />
+      <Boule cx={c.x} cy={c.y - 62} r={21} couleur={couleurs[1]} />
+      <circle cx={c.x - 6} cy={c.y - 70} r="8" fill={couleurs[2]} opacity="0.55" />
       {fleurs &&
         [
           [-14, -54],
@@ -457,32 +542,33 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
     case 'buisson':
       dessin = (
         <g>
-          <ellipse cx={c.x} cy={c.y + 2} rx="15" ry="6" fill="rgb(0 0 0 / 0.22)" />
-          <circle cx={c.x - 7} cy={c.y - 6} r="9" fill="#3f8a2c" stroke="rgb(0 0 0 / 0.3)" />
-          <circle cx={c.x + 7} cy={c.y - 7} r="9" fill="#4c9c34" stroke="rgb(0 0 0 / 0.3)" />
-          <circle cx={c.x} cy={c.y - 13} r="9" fill="#5fb340" stroke="rgb(0 0 0 / 0.3)" />
-          <circle cx={c.x + 4} cy={c.y - 12} r="1.6" fill="#e5534b" />
-          <circle cx={c.x - 5} cy={c.y - 5} r="1.6" fill="#e5534b" />
+          <OmbreAuSol cx={c.x + 2} cy={c.y + 2} rx={17} ry={6.5} />
+          <Boule cx={c.x + 7} cy={c.y - 7} r={9} couleur="#46932f" />
+          <Boule cx={c.x - 7} cy={c.y - 6} r={9} couleur="#4c9c34" />
+          <Boule cx={c.x} cy={c.y - 13} r={9.5} couleur="#5fb340" />
+          <Boule cx={c.x + 4} cy={c.y - 12} r={1.8} couleur="#e5534b" contour={false} />
+          <Boule cx={c.x - 5} cy={c.y - 5} r={1.8} couleur="#e5534b" contour={false} />
+          <Boule cx={c.x + 8} cy={c.y - 4} r={1.6} couleur="#e5534b" contour={false} />
         </g>
       )
       break
     case 'rocher':
-      dessin = (
-        <g>
-          <ellipse cx={c.x} cy={c.y + 2} rx="15" ry="6" fill="rgb(0 0 0 / 0.25)" />
-          <path d={`M${c.x - 14} ${c.y} Q${c.x - 15} ${c.y - 14} ${c.x - 4} ${c.y - 18} Q${c.x + 10} ${c.y - 20} ${c.x + 14} ${c.y - 6} Q${c.x + 15} ${c.y + 2} ${c.x} ${c.y + 3} Z`} fill="#9b968e" stroke="#3c3833" strokeWidth="1.4" />
-          <path d={`M${c.x - 6} ${c.y - 14} Q${c.x + 2} ${c.y - 17} ${c.x + 8} ${c.y - 12}`} stroke="#c9c4ba" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-          <ellipse cx={c.x + 7} cy={c.y - 2} rx="4" ry="2" fill="#5fa040" />
-        </g>
-      )
+      // Un rocher en relief (Rochers.tsx), toujours le même à la même place.
+      dessin = <TasDeRochers x={c.x} y={c.y + 3} graine={Math.round(x * 31 + y * 17)} />
       break
     case 'tonneau':
       dessin = (
         <g>
-          <ellipse cx={c.x} cy={c.y + 1} rx="12" ry="5" fill="rgb(0 0 0 / 0.25)" />
+          <OmbreAuSol cx={c.x + 2} cy={c.y + 1} rx={14} ry={5.5} />
           <path d={`M${c.x - 10} ${c.y - 2} Q${c.x - 13} ${c.y - 14} ${c.x - 10} ${c.y - 26} L${c.x + 10} ${c.y - 26} Q${c.x + 13} ${c.y - 14} ${c.x + 10} ${c.y - 2} Z`} fill="#9a6532" stroke="#3a2210" strokeWidth="1.4" />
+          {/* Le tonneau est rond : plus clair à gauche, plus sombre à droite, et ses douelles. */}
+          <path d={`M${c.x - 6} ${c.y - 2.5} Q${c.x - 9} ${c.y - 14} ${c.x - 6} ${c.y - 25.5}`} stroke="#c58a4e" strokeWidth="3" fill="none" />
+          <path d={`M${c.x + 5} ${c.y - 2.5} Q${c.x + 9} ${c.y - 14} ${c.x + 5} ${c.y - 25.5} L${c.x + 10} ${c.y - 26} Q${c.x + 13} ${c.y - 14} ${c.x + 10} ${c.y - 2} Z`} fill="rgb(40 20 8 / 0.35)" />
+          <path d={`M${c.x} ${c.y - 1.5} V${c.y - 26} M${c.x - 4} ${c.y - 2} Q${c.x - 5} ${c.y - 14} ${c.x - 4} ${c.y - 26} M${c.x + 4} ${c.y - 2} Q${c.x + 5} ${c.y - 14} ${c.x + 4} ${c.y - 26}`} stroke="rgb(58 34 16 / 0.45)" strokeWidth="0.7" fill="none" />
           <ellipse cx={c.x} cy={c.y - 26} rx="10" ry="4" fill="#7a4a22" stroke="#3a2210" strokeWidth="1.2" />
+          <ellipse cx={c.x + 0.5} cy={c.y - 25.4} rx="7.5" ry="2.6" fill="#5e3818" />
           <path d={`M${c.x - 12} ${c.y - 8} H${c.x + 12} M${c.x - 12} ${c.y - 20} H${c.x + 12}`} stroke="#5b5e66" strokeWidth="2.4" />
+          <path d={`M${c.x - 11} ${c.y - 8.8} H${c.x - 2} M${c.x - 11} ${c.y - 20.8} H${c.x - 2}`} stroke="#a9adb6" strokeWidth="0.9" />
           <circle cx={c.x - 3} cy={c.y - 27} r="2.4" fill="#ffd84a" />
           <circle cx={c.x + 3} cy={c.y - 26} r="2.2" fill="#ffd84a" />
         </g>
@@ -491,14 +577,19 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
     case 'caisse':
       dessin = (
         <g>
-          <ellipse cx={c.x} cy={c.y + 2} rx="15" ry="6" fill="rgb(0 0 0 / 0.25)" />
+          <OmbreAuSol cx={c.x + 3} cy={c.y + 2} rx={17} ry={6.5} />
           <polygon points={`${c.x - 14},${c.y - 6} ${c.x},${c.y + 2} ${c.x + 14},${c.y - 6} ${c.x + 14},${c.y - 18} ${c.x},${c.y - 10} ${c.x - 14},${c.y - 18}`} fill="#a8743e" stroke="#3a2210" strokeWidth="1.3" />
           <polygon points={`${c.x - 14},${c.y - 18} ${c.x},${c.y - 26} ${c.x + 14},${c.y - 18} ${c.x},${c.y - 10}`} fill="#5a3a1a" stroke="#3a2210" strokeWidth="1.3" />
           <circle cx={c.x - 5} cy={c.y - 19} r="3.6" fill="#4ee8dc" stroke="rgb(0 0 0 / 0.3)" />
           <circle cx={c.x + 4} cy={c.y - 20} r="3.6" fill="#e04848" stroke="rgb(0 0 0 / 0.3)" />
           <circle cx={c.x} cy={c.y - 15} r="3.4" fill="#ffd84a" stroke="rgb(0 0 0 / 0.3)" />
+          {/* Les deux faces : la gauche éclairée, la droite à l'ombre, avec leurs planches. */}
+          <polygon points={`${c.x},${c.y - 10} ${c.x + 14},${c.y - 18} ${c.x + 14},${c.y - 6} ${c.x},${c.y + 2}`} fill="rgb(40 20 8 / 0.3)" />
+          <path d={`M${c.x - 14} ${c.y - 12} L${c.x} ${c.y - 4} L${c.x + 14} ${c.y - 12}`} stroke="#3a2210" strokeWidth="0.8" fill="none" opacity="0.6" />
+          <path d={`M${c.x - 13} ${c.y - 17} L${c.x - 1} ${c.y - 10}`} stroke="#d2a066" strokeWidth="1" />
           <rect x={c.x - 15.5} y={c.y - 19.5} width="4" height="4" fill="#e2b13a" />
           <rect x={c.x + 11.5} y={c.y - 19.5} width="4" height="4" fill="#e2b13a" />
+          <rect x={c.x - 1.8} y={c.y - 11.5} width="3.6" height="13" fill="#e2b13a" stroke="#7a5308" strokeWidth="0.5" />
         </g>
       )
       break
@@ -509,7 +600,10 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
           <circle cx={c.x} cy={c.y - 44} r="16" fill="#ffcf5a" opacity="0.28" className="lueur-lanterne" />
           <rect x={c.x - 2.5} y={c.y - 40} width="5" height="40" fill="#6b4422" stroke="#3a2210" strokeWidth="1" />
           <rect x={c.x - 6} y={c.y - 4} width="12" height="5" rx="1.5" fill="#857f77" stroke="#3c3833" />
+          <rect x={c.x - 0.5} y={c.y - 40} width="2.5" height="36" fill="rgb(40 20 8 / 0.35)" />
           <rect x={c.x - 6} y={c.y - 52} width="12" height="14" rx="2" fill="#ffd86b" stroke="#6b4a10" strokeWidth="1.4" />
+          <rect x={c.x - 4.5} y={c.y - 50.5} width="3" height="11" rx="1" fill="#fff6c8" opacity="0.8" />
+          <rect x={c.x + 1.5} y={c.y - 50.5} width="3" height="11" rx="1" fill="#e9a632" opacity="0.6" />
           <rect x={c.x - 8} y={c.y - 55} width="16" height="4" rx="1.5" fill="#e2b13a" stroke="#7a5308" />
         </g>
       )
@@ -520,6 +614,8 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
           <ellipse cx={c.x} cy={c.y + 2} rx="16" ry="6" fill="rgb(0 0 0 / 0.22)" />
           <polygon points={`${c.x - 15},${c.y - 8} ${c.x + 3},${c.y + 2} ${c.x + 15},${c.y - 4} ${c.x - 3},${c.y - 14}`} fill="#b07a3f" stroke="#3a2210" strokeWidth="1.3" />
           <polygon points={`${c.x - 3},${c.y - 14} ${c.x + 15},${c.y - 4} ${c.x + 15},${c.y - 14} ${c.x - 3},${c.y - 24}`} fill="#9a6532" stroke="#3a2210" strokeWidth="1.3" />
+          <path d={`M${c.x - 12} ${c.y - 9} L${c.x + 6} ${c.y + 1} M${c.x - 8} ${c.y - 11} L${c.x + 10} ${c.y - 1}`} stroke="#7a4a22" strokeWidth="0.9" />
+          <path d={`M${c.x} ${c.y - 18} L${c.x + 15} ${c.y - 9.5}`} stroke="#c58a4e" strokeWidth="1.1" />
           <line x1={c.x - 12} y1={c.y - 7} x2={c.x - 12} y2={c.y} stroke="#3a2210" strokeWidth="2" />
           <line x1={c.x + 12} y1={c.y - 4} x2={c.x + 12} y2={c.y + 2} stroke="#3a2210" strokeWidth="2" />
         </g>
@@ -534,17 +630,22 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
     case 'sapin':
       dessin = (
         <g>
-          <ellipse cx={c.x} cy={c.y + 2} rx="20" ry="9" fill="rgb(0 0 0 / 0.25)" />
+          <OmbreAuSol cx={c.x + 5} cy={c.y + 2} rx={24} ry={10} />
           <rect x={c.x - 4} y={c.y - 14} width="8" height="15" fill="#6b4422" stroke="#3a2210" />
           {[0, 1, 2].map((i) => (
-            <polygon
-              key={i}
-              points={`${c.x - 24 + i * 5},${c.y - 12 - i * 20} ${c.x},${c.y - 44 - i * 20} ${c.x + 24 - i * 5},${c.y - 12 - i * 20}`}
-              fill={i === 2 ? '#3e9a46' : '#2f7d3a'}
-              stroke="rgb(0 0 0 / 0.35)"
-              strokeWidth="1.2"
-              strokeLinejoin="round"
-            />
+            <g key={i}>
+              <polygon
+                points={`${c.x - 24 + i * 5},${c.y - 12 - i * 20} ${c.x},${c.y - 44 - i * 20} ${c.x + 24 - i * 5},${c.y - 12 - i * 20}`}
+                fill={i === 2 ? '#3e9a46' : '#2f7d3a'}
+                stroke="rgb(0 0 0 / 0.35)"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+              {/* La moitié droite à l'ombre, la gauche éclairée, et l'ombre de l'étage du dessus. */}
+              <polygon points={`${c.x},${c.y - 44 - i * 20} ${c.x + 24 - i * 5},${c.y - 12 - i * 20} ${c.x + 2},${c.y - 14 - i * 20}`} fill="rgb(0 30 10 / 0.3)" />
+              <polygon points={`${c.x - 2},${c.y - 40 - i * 20} ${c.x - 20 + i * 5},${c.y - 14 - i * 20} ${c.x - 8},${c.y - 15 - i * 20}`} fill="#ffffff" opacity="0.12" />
+              {i < 2 && <path d={`M${c.x - 18 + i * 5} ${c.y - 31 - i * 20} Q${c.x} ${c.y - 26 - i * 20} ${c.x + 18 - i * 5} ${c.y - 31 - i * 20}`} stroke="rgb(0 0 0 / 0.25)" strokeWidth="3" fill="none" />}
+            </g>
           ))}
         </g>
       )
@@ -554,7 +655,11 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
         <g>
           <ellipse cx={c.x} cy={c.y + 4} rx="34" ry="16" fill="rgb(0 0 0 / 0.25)" />
           <ellipse cx={c.x} cy={c.y} rx="32" ry="15" fill="#9b968e" stroke="#3c3833" strokeWidth="1.6" />
-          <ellipse cx={c.x} cy={c.y - 3} rx="26" ry="11" fill="#4fb7e8" stroke="#2a6f99" strokeWidth="1.2" />
+          <ellipse cx={c.x} cy={c.y + 2} rx="32" ry="13" fill="#7a756d" />
+          <ellipse cx={c.x} cy={c.y - 1} rx="32" ry="14" fill="#a9a49b" />
+          <ellipse cx={c.x} cy={c.y - 3} rx="26" ry="11" fill="#2f8fc4" stroke="#2a6f99" strokeWidth="1.2" />
+          <ellipse cx={c.x + 2} cy={c.y - 1.5} rx="23" ry="8.5" fill="#4fb7e8" />
+          <ellipse cx={c.x - 9} cy={c.y - 5} rx="7" ry="2.2" fill="#e6f7ff" opacity="0.5" />
           <ellipse className="eau-fontaine" cx={c.x} cy={c.y - 3} rx="20" ry="8" fill="none" stroke="#bfeaff" strokeWidth="1.4" opacity="0.8" />
           <rect x={c.x - 5} y={c.y - 34} width="10" height="31" rx="3" fill="#b2ada4" stroke="#3c3833" strokeWidth="1.2" />
           <ellipse cx={c.x} cy={c.y - 34} rx="13" ry="5" fill="#c4c0b6" stroke="#3c3833" strokeWidth="1.2" />
@@ -582,6 +687,9 @@ export function DessinDecoration({ id, x, y, taille, miroir }: { id: IdDecoratio
           <circle cx={c.x - 5} cy={c.y - 60} r="2" fill="#5a3a00" />
           <circle cx={c.x + 5} cy={c.y - 60} r="2" fill="#5a3a00" />
           <circle cx={c.x - 6} cy={c.y - 64} r="5" fill="#fff8d0" opacity="0.5" />
+          <path d={`M${c.x + 8} ${c.y - 46} A15 14 0 0 0 ${c.x + 10} ${c.y - 23} A15 14 0 0 1 ${c.x + 15} ${c.y - 34} Z`} fill="rgb(120 70 0 / 0.35)" />
+          <path d={`M${c.x + 9} ${c.y - 69} A15 15 0 0 1 ${c.x + 10} ${c.y - 47} A15 15 0 0 0 ${c.x + 15} ${c.y - 58} Z`} fill="rgb(120 70 0 / 0.35)" />
+          <ellipse cx={c.x - 7} cy={c.y - 38} rx="4" ry="6" fill="#fff8d0" opacity="0.35" />
         </g>
       )
       break

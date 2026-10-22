@@ -1,6 +1,6 @@
 # Équilibrage : toutes les données et les formules
 
-> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `tenues.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
+> Toutes les tables chiffrées du jeu et les formules, réunies au même endroit, d'après le code au 22/10 (la mine automatique ; trajets des wagonnets le 24/10 : `src/jeu/donnees.ts`, `mine.ts`, `mineur.ts`, `employes.ts`, `wagonnet.ts`, `generateur.ts`, `foreuse.ts`, `village.ts`, `batiments.ts`, `tenues.ts`, `revenu.ts`, `bot.ts`, `bot.test.ts`).
 > Pour le fonctionnement de chaque bâtiment (boutons, messages, cas limites), voir les fiches de [../batiments/](../batiments/README.md). Pour le village vu du ciel (grille, placement, menus), voir [village.md](village.md). Pour le concept et la progression en un coup d'œil, voir [vue-d-ensemble.md](vue-d-ensemble.md).
 
 Conventions : « bloc/s » = blocs par seconde ; les distances au village sont en **cases** de la grille. Les niveaux affichés commencent à 1 ; dans le code, la plupart sont des index qui commencent à 0 (coffre, sac, wagonnet, générateur, forage, chariot, pioches des mineurs). Plus de prestige, de bonus de vente, de talents ni d'enchantements depuis le 22/10 (archivés dans `archives/`).
@@ -14,7 +14,7 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 5. [Les pioches et le clic](#les-pioches-et-le-clic)
 6. [Le sac à dos](#le-sac-à-dos)
 7. [L'ascenseur des mineurs](#lascenseur-des-mineurs)
-8. [Les rails et le wagonnet](#les-rails-et-le-wagonnet)
+8. [Les rails et les wagonnets](#les-rails-et-les-wagonnets)
 9. [Le générateur](#le-générateur)
 10. [La foreuse](#la-foreuse)
 11. [Les mineurs employés](#les-mineurs-employés)
@@ -37,9 +37,9 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 | `SECONDES_PAR_PAIE` | 600 s | une paie de mineur (10 minutes) |
 | `SECONDES_PAR_CHARBON` | 20 s | un charbon dans la foreuse |
 | `SECONDES_PAR_REDSTONE` | 30 s | une redstone dans le générateur |
-| `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger le wagonnet au quai, puis le vider au marché |
+| `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger un wagonnet au départ, puis le vider à l'arrivée |
 | `TAILLE_GRILLE` | 60 | la clairière fait 60 × 60 cases |
-| Horloge (`usePartie.ts`) | tic de 50 ms | à chaque image de l'écran quand le joueur pousse le wagonnet |
+| Horloge (`usePartie.ts`) | tic de 50 ms | à chaque image de l'écran quand le joueur pousse un wagonnet |
 | `PAS_MAX` (`temps.ts`) | 60 s | une longue durée avance par morceaux d'une minute |
 | `PAS_EMPLOYES` (`employes.ts`) | 30 s | les mineurs avancent par morceaux de 30 s (le manager paie entre deux) |
 | Absence max (`ABSENCE_MAX`) | 8 h | temps rattrapé au retour |
@@ -137,7 +137,7 @@ Total : 61 980 $. Le sac ne sert qu'à porter (coffre ou chariot → marché) et
 
 Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 
-## Les rails et le wagonnet
+## Les rails et les wagonnets
 
 | Constante | Valeur |
 |---|---|
@@ -146,12 +146,20 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s |
 | `VITESSE_RAILS` | 8 cases/s × puissance du générateur |
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
+| `RESERVE_FOREUSE_WAGONNET` | 1 200 s de charbon (60 charbons) : le wagonnet Mine → Foreuse remplit jusque-là |
+| `RESERVE_GENERATEUR_WAGONNET` | 1 800 s de redstone (60 redstones) : le wagonnet Mine → Générateur remplit jusque-là |
 
-`NIVEAUX_WAGONNET` : 40 → **100** (500 $ + 40 fer) → **250** (2 500 $ + 80 fer + 20 redstone) → **600** places (10 000 $ + 40 or).
+`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`) : 40 → **100** (500 $ + 40 fer) → **250** (2 500 $ + 80 fer + 20 redstone) → **600** places (10 000 $ + 40 or).
 
-- **Ligne** (`railsMineMarche`) : la plus courte suite de rails continue (voisins par un côté) d'une case collée à la mine à une case collée au marché. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
+- **Trajets** (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, un wagonnet chacun, créés gratuitement par le joueur.
+- **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
 - **Aller-retour** (`secondesAllerRetour`) = `2 × longueur ÷ vitesse + 2 × 2 s`.
-- **Chargement** : les objets du coffre les plus chers d'abord, sauf les objets gardés (`nonAVendre`), jusqu'à la capacité.
+- **Chargement**, jusqu'à la capacité :
+  - Mine → Marché : les objets du coffre les plus chers d'abord, sauf les objets gardés (`nonAVendre`), et sauf le charbon et la redstone qui manquent aux réserves ci-dessus (si ces trajets existent) ;
+  - Mine → Foreuse : `arrondi au-dessus((1 200 − réserve de la foreuse) ÷ 20)` charbons, au plus ce qu'il y a dans le coffre ;
+  - Mine → Générateur : `arrondi au-dessus((1 800 − réserve du générateur) ÷ 30)` redstones, au plus ce qu'il y a dans le coffre ;
+  - Foreuse → Marché : ce qui est coché dans le chariot, le plus cher d'abord (l'argent compte dans `argentWagonnet`).
+- **Électrique** (`trajetElectrique`) : toutes les cases du trajet dans le rayon, générateur allumé avec de la redstone.
 - Exemple : la ligne du bot (3 cases, longueur 4) : poussé par toi 6,7 s l'aller-retour, par un mineur 7,2 s, électrique au niveau 1 du générateur 5 s. Un wagonnet de 40 places électrique y emporte donc jusqu'à 8 objets par seconde, bien plus que ce que sort la mine : c'est la longueur de la ligne et la capacité qui comptent quand la mine grossit.
 
 ## Le générateur
@@ -165,7 +173,7 @@ Total : 63 750 $ + 200 fer + 175 redstone + 80 or + 10 émeraude.
 | 5 | 40 | ×3 | 24 cases/s | ×2,5 | 50 000 $ + 400 fer + 300 redstone |
 
 - **Consommation** : 1 redstone = 30 s, soit 2 par minute, **120 par heure**, quel que soit le niveau.
-- **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`. Rails électriques = toute la ligne dedans **et** générateur allumé avec de la redstone.
+- **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`. Un trajet est électrique quand toutes ses cases sont dedans **et** que le générateur est allumé avec de la redstone (chaque trajet compte à part).
 - **Foreuse** : vitesse × `(1 + BONUS_ELECTRIQUE_FOREUSE × puissance)`, avec `BONUS_ELECTRIQUE_FOREUSE` = 0,5.
 - **Puisage** (`NIVEAU_GENERATEUR_AUTO` = index 1, donc le 2e niveau) : sous 300 s de réserve (`RESERVE_GENERATEUR_AUTO`), il prend dans le coffre `arrondi au-dessus((300 − réserve) ÷ 30)` redstone (au plus ce qu'il y a).
 - La redstone que demande le générateur (2 / min) est petite à côté de ce que sort la mine : au niveau 2, la mine seule sort 0,25 × 10 % = 1,5 redstone par minute, et les clics et les mineurs bien plus.
@@ -315,7 +323,7 @@ Seulement pour le style, payées en argent ; on change de tenue gratuitement (`t
 | `RAYON_BATIMENT` | 1,3 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
 
 - **Distance à pied** (`distanceEntre`) : de la case devant l'entrée d'un bâtiment à celle de l'autre, par le plus court chemin en 8 directions (une diagonale compte √2, on ne coupe pas le coin d'un bâtiment), en contournant ce qui bloque (`trouverChemin`, A étoile).
-- **Le joueur ne marche pas** pendant qu'il pousse le wagonnet : il fait l'aller-retour avec lui (3 cases/s).
+- **Le joueur ne marche pas** pendant qu'il pousse un wagonnet : il fait l'aller-retour avec lui (3 cases/s).
 
 ## Revenus par seconde
 
@@ -324,7 +332,7 @@ Seulement pour le style, payées en argent ; on change de tenue gratuitement (`t
 - **mine** = débit × valeur moyenne d'un bloc (0 si le coffre est plein) ;
 - **mineurs** = pour chaque mineur **payé** : blocs par seconde × valeur moyenne (0 pour un pousseur), **moins** son salaire ÷ 600 ; moins le salaire du manager ÷ 600 s'il est au travail. Coffre plein : seulement la partie négative (les salaires) ;
 - **foreuse** = vitesse (électricité comprise) × valeur moyenne, si elle tourne ;
-- **total** = mine + mineurs + foreuse. Les **clics ne comptent pas**, ni le wagonnet (il ne fait que vendre).
+- **total** = mine + mineurs + foreuse. Les **clics ne comptent pas**, ni les wagonnets (ils ne font que porter).
 
 Ce que fait la mine seule : **0,61 $/s** au niveau 1, 1,15 au niveau 2, 2,25 au niveau 3, 4,57 au niveau 4, **7,92 $/s** au niveau 5.
 
@@ -349,10 +357,10 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 ### Ce qu'il fait
 
 - **Chaque seconde** : il règle ce qu'il garde, achète ce qu'il peut, va vendre à pied si besoin, puis **clique 2 fois** sur le bloc de la mine (`CLICS_PAR_SECONDE`) et laisse passer 1 s de jeu (`avancerTemps`).
-- **Le village** : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (28, 38), juste sous la mine, puis le **forgeron** (36, 24), le **Personnel** (19, 31), le **bazar** (19, 25), le **générateur** (35, 37, contre la ligne) et la **foreuse** (36, 31). Il pose **3 cases de rails** (30, 35 à 37) entre la mine et le marché dès qu'il a le fer (9 fer).
+- **Le village** : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (28, 38), juste sous la mine, puis le **forgeron** (36, 24), le **Personnel** (19, 31), le **bazar** (19, 25), le **générateur** (35, 37, contre la ligne) et la **foreuse** (36, 31). Il pose **3 cases de rails** (30, 35 à 37) entre la mine et le marché dès qu'il a le fer (9 fer), puis y envoie aussitôt un wagonnet (trajet Mine → Marché).
 - **Vendre à pied** : tant que le wagonnet ne roule pas (ni pousseur, ni électricité), il va vendre quand le coffre est à moitié plein : il met le coffre dans son sac (sauf sa réserve), marche jusqu'au marché, vend tout et revient (`2 × distance ÷ 5` secondes de jeu en plus).
 - **Ce qu'il garde** (`reserve`, `reglerGarde`) : les minerais du prochain bâtiment, de la prochaine pioche, de la réparation, du prochain niveau de mine, du prochain coffre, des rails et de 20 redstone pour le générateur. Il les met dans `nonAVendre` (le wagonnet les laisse) tant qu'il n'en a pas 1,5 fois assez et que le coffre est à moins de 80 %.
-- **Les achats** : réparer dès que la pioche casse ; pioche suivante ; niveau de mine dès qu'il peut ; payer les salaires dès que quelqu'un a moins d'une minute payée ; embaucher et améliorer les mineurs en gardant une paie d'avance ; recruteur dès qu'il peut ; manager à partir de 20 000 $ (et remplir la trésorerie) ; **un pousseur** dès qu'il a des rails et 2 mineurs (remis à creuser quand les rails sont électriques) ; générateur rempli de 10 redstone sous 2 minutes de réserve, puisage coché dès le niveau 2, amélioré à 2 fois son prix ; foreuse remplie de 10 charbons sous 1 minute, chariot vendu à moitié plein, améliorée au-dessus de 3 000 $ ; ascenseur (à partir de 2 mineurs), coffre, wagonnet (à 2 fois son prix) et sac (à 3 fois son prix).
+- **Les achats** : réparer dès que la pioche casse ; pioche suivante ; niveau de mine dès qu'il peut ; payer les salaires dès que quelqu'un a moins d'une minute payée ; embaucher et améliorer les mineurs en gardant une paie d'avance ; recruteur dès qu'il peut ; manager à partir de 20 000 $ (et remplir la trésorerie) ; **un pousseur** dès qu'il a le trajet Mine → Marché et 2 mineurs (remis à creuser quand les rails sont électriques) ; générateur rempli de 10 redstone sous 2 minutes de réserve, puisage coché dès le niveau 2, amélioré à 2 fois son prix ; foreuse remplie de 10 charbons sous 1 minute, chariot vendu à moitié plein, améliorée au-dessus de 3 000 $ ; ascenseur (à partir de 2 mineurs), coffre, taille des wagonnets (à 2 fois son prix) et sac (à 3 fois son prix).
 - Les achats se font **sans compter la marche** (on suppose qu'il passe devant en allant vendre).
 
 ### Ce que vérifie `bot.test.ts`
@@ -363,7 +371,7 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 | Niveau 2 (médiane) | **5 à 20 minutes** |
 | Niveau 5 (médiane) | **1 h à 2 h 30** |
 | Progression | chaque niveau prend plus de temps que le précédent (médiane, à 20 % près) |
-| Rails | la mine est reliée au marché en **moins de 5 minutes** (toutes les parties) |
+| Rails | le trajet Mine → Marché existe en **moins de 5 minutes** (toutes les parties) |
 | Électricité | les rails sont électriques en **moins de 40 minutes** (toutes les parties) |
 | Automatisation | au moins 4 mineurs, plus de 100 voyages de wagonnet, et les mineurs sortent plus de blocs que les clics |
 | Début à pied | plus de 3 allers-retours à pied au marché |

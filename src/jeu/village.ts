@@ -3,14 +3,15 @@
 //
 // Ce fichier ne contient que la géométrie : qui occupe quelle case, où est la porte d'un
 // bâtiment, le chemin à pied d'un bâtiment à l'autre (on contourne les bâtiments), et la ligne
-// de rails entre la mine et le marché. Les actions (construire, poser des rails...) sont dans
-// batiments.ts, le wagonnet qui va au marché dans wagonnet.ts.
+// de rails entre deux bâtiments. Les actions (construire, poser des rails...) sont dans
+// batiments.ts, les wagonnets et leurs trajets dans wagonnet.ts.
 //
 // Les coordonnées : x va vers le bas à droite de l'écran, y vers le bas à gauche (vue
 // isométrique). La case (0, 0) est le coin du haut de la clairière.
 
 import {
   BATIMENTS,
+  BATIMENTS_DES_RAILS,
   DECORATIONS,
   TAILLE_GRILLE,
   VITESSE_MARCHE,
@@ -342,7 +343,7 @@ export function secondesAPied(village: Village, de: IdBatiment, vers: IdBatiment
 }
 
 // ---------------------------------------------------------------------------
-// Les rails : la ligne de la mine au marché
+// Les rails : les lignes entre les bâtiments
 // ---------------------------------------------------------------------------
 
 const DIRECTIONS_RAILS = [
@@ -418,13 +419,53 @@ export function railsMineMarche(village: Village): Case[] | null {
 }
 
 // Les voisins d'une case de rails (pour dessiner les virages) : nord (y-1), est (x+1), sud (y+1), ouest (x-1).
-// Un rail collé à un bâtiment se raccorde aussi à lui.
+// Un bout de ligne (un rail qui n'a qu'un voisin, ou aucun) collé à un bâtiment des trajets se
+// raccorde aussi à lui ; un rail qui passe le long d'un bâtiment ne s'y raccorde pas.
 export function raccordsRail(village: Village, x: number, y: number): { n: boolean; e: boolean; s: boolean; o: boolean } {
   const rails = new Set(village.rails)
-  const versBatiment = (cx: number, cy: number) =>
-    village.batiments.some((b) => (b.id === 'puits' || b.id === 'marche') && toucheEmprise({ x, y }, empriseBatiment(b)) && occupe(empriseBatiment(b), cx, cy))
-  const lie = (cx: number, cy: number) => rails.has(cleCase(cx, cy)) || versBatiment(cx, cy)
-  return { n: lie(x, y - 1), e: lie(x + 1, y), s: lie(x, y + 1), o: lie(x - 1, y) }
+  const rail = (cx: number, cy: number) => rails.has(cleCase(cx, cy))
+  const r = { n: rail(x, y - 1), e: rail(x + 1, y), s: rail(x, y + 1), o: rail(x - 1, y) }
+  const nombre = [r.n, r.e, r.s, r.o].filter(Boolean).length
+  if (nombre >= 2) return r
+  const batiments = village.batiments.filter((b) => BATIMENTS_DES_RAILS.includes(b.id) && toucheEmprise({ x, y }, empriseBatiment(b)))
+  const versBatiment = (cx: number, cy: number) => batiments.some((b) => occupe(empriseBatiment(b), cx, cy))
+  // Un seul raccord vers un bâtiment (le côté opposé au rail voisin s'il y en a un).
+  const cotes: ('n' | 'e' | 's' | 'o')[] = r.n ? ['s', 'e', 'o'] : r.e ? ['o', 'n', 's'] : r.s ? ['n', 'e', 'o'] : r.o ? ['e', 'n', 's'] : ['n', 'e', 's', 'o']
+  const position = { n: [x, y - 1], e: [x + 1, y], s: [x, y + 1], o: [x - 1, y] } as const
+  const cote = cotes.find((c) => versBatiment(position[c][0], position[c][1]))
+  if (cote) r[cote] = true
+  return r
+}
+
+// Poser un rail sur cette case ferait-il une boucle ? Les rails ne doivent jamais tourner en rond
+// (24/10) : un wagonnet va d'un bâtiment à un autre, par une seule route. Il y a boucle si deux
+// des rails voisins de la case sont déjà reliés entre eux par d'autres rails.
+// « sans » : une case de rails à ne pas compter (celle qu'on est en train de déplacer).
+export function feraitUneBoucle(village: Village, x: number, y: number, sans: string | null = null): boolean {
+  const rails = new Set(village.rails)
+  if (sans !== null) rails.delete(sans)
+  rails.delete(cleCase(x, y))
+  const voisins = DIRECTIONS_RAILS.map((d) => cleCase(x + d.x, y + d.y)).filter((cle) => rails.has(cle))
+  if (voisins.length < 2) return false
+  // On colore les rails par groupes reliés : deux voisins du même groupe ferment une boucle.
+  const groupe = new Map<string, number>()
+  voisins.forEach((depart, numero) => {
+    if (groupe.has(depart)) return
+    const file = [depart]
+    groupe.set(depart, numero)
+    while (file.length > 0) {
+      const c = lireCle(file.pop() as string)
+      for (const d of DIRECTIONS_RAILS) {
+        const v = cleCase(c.x + d.x, c.y + d.y)
+        if (rails.has(v) && !groupe.has(v)) {
+          groupe.set(v, numero)
+          file.push(v)
+        }
+      }
+    }
+  })
+  const groupes = voisins.map((cle) => groupe.get(cle))
+  return new Set(groupes).size < groupes.length
 }
 
 function occupe(emprise: Emprise, x: number, y: number): boolean {

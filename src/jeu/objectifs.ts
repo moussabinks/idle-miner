@@ -7,7 +7,7 @@ import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, PIOCHES, PRIX_MANAGER, SAC
 import { batimentDebloque } from './batiments'
 import { coutAmeliorationEmploye, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
-import { generateurPose, prochainNiveauGenerateur, railsAlimentes } from './generateur'
+import { generateurPose, prochainNiveauGenerateur } from './generateur'
 import {
   coutPioche,
   disponible,
@@ -19,7 +19,7 @@ import {
   type EtatJeu,
 } from './mineur'
 import { batimentPose } from './village'
-import { ligneDuWagonnet, prochainNiveauWagonnet } from './wagonnet'
+import { ligneDe, prochainNiveauWagonnet, railsAlimentes, trajetDe } from './wagonnet'
 
 // Les stands du village : ce sont les bâtiments posés sur la grille (voir village.ts).
 export type IdStand = IdBatiment
@@ -51,7 +51,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? 'Construire l’ascenseur' : `Ascenseur niveau ${ascenseur.niveau}`, cout: ascenseur.cout })
   }
   const wagonnet = prochainNiveauWagonnet(etat)
-  if (wagonnet && ligneDuWagonnet(etat)) achats.push({ stand: 'puits', nom: `Wagonnet de ${wagonnet.capacite.toLocaleString('fr-FR')} places`, cout: wagonnet.cout })
+  if (wagonnet && etat.trajets.length > 0) achats.push({ stand: 'puits', nom: `Wagonnets de ${wagonnet.capacite.toLocaleString('fr-FR')} places`, cout: wagonnet.cout })
 
   const prixSac = prixProchainSac(etat)
   if (prixSac !== null && pose('bazar')) achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })
@@ -127,10 +127,16 @@ function etapeAutomatisation(etat: EtatJeu): Objectif | null {
   const objectif = (texte: string, detail: string, stand: IdStand | null): Objectif => ({ texte, detail, stand, valeur: 0, max: 1, pret: false, construction: false })
   if (!batimentPose(etat.village, 'marche')) return null
   // Les rails se posent depuis le menu Bâtiments : le clic l'ouvre.
-  if (!ligneDuWagonnet(etat)) return { ...objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null), construction: true }
+  if (!ligneDe(etat, 'mine-marche')) return { ...objectif('Relier la mine au marché', 'pose des rails (menu Bâtiments, 3 fer la case)', null), construction: true }
+  if (!trajetDe(etat, 'mine-marche')) return objectif('Créer un trajet de wagonnet', 'à la mine : « envoyer un wagonnet vers le marché »', 'puits')
   if (generateurPose(etat) && !railsAlimentes(etat)) {
     if (etat.generateur.carburant <= 0) return objectif('Allumer le générateur', 'mets-lui de la redstone', 'generateur')
-    return objectif('Électrifier les rails', 'toute la ligne doit être dans le rayon du générateur', 'generateur')
+    return objectif('Électrifier les rails', 'tout un trajet doit être dans le rayon du générateur', 'generateur')
+  }
+  // Relier la foreuse : la mine lui apporte son charbon, et elle envoie son chariot au marché.
+  if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'mine-foreuse')) {
+    if (!ligneDe(etat, 'mine-foreuse')) return { ...objectif('Relier la foreuse à la mine', 'des rails : un wagonnet lui apportera le charbon', null), construction: true }
+    return objectif('Envoyer du charbon à la foreuse', 'à la mine : « envoyer un wagonnet vers la foreuse »', 'puits')
   }
   return null
 }
@@ -147,7 +153,7 @@ export function prochainObjectif(etat: EtatJeu, nomBloc: (bloc: IdBloc) => strin
   }
   // Pas de rails : c'est l'étape la plus importante, avant d'économiser pour le reste.
   const etape = etapeAutomatisation(etat)
-  if (etape && !ligneDuWagonnet(etat) && disponible(etat, 'fer') > 0) return etape
+  if (etape && !trajetDe(etat, 'mine-marche') && (ligneDe(etat, 'mine-marche') !== null || disponible(etat, 'fer') > 0)) return etape
   if (achats.length > 0) {
     // Le plus proche : celui dont on a la plus grande part de l'argent.
     const part = (a: AchatPossible) => (a.cout.argent ? Math.min(1, etat.argent / a.cout.argent) : 1)

@@ -14,7 +14,7 @@ import {
     type IdDecoration,
 } from './donnees'
 import { payer, peutPayer, type EtatJeu } from './mineur'
-import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre, type Occupant } from './village'
+import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre, feraitUneBoucle, type Occupant } from './village'
 
 // ---------------------------------------------------------------------------
 // Les bâtiments
@@ -93,10 +93,13 @@ function listeSol(etat: EtatJeu, type: TypeSol): string[] {
 }
 
 export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
-  return peutPayer(etat, coutSol(type)) && empriseLibre(etat.village, { x, y, taille: 1 })
+  return peutPayer(etat, coutSol(type)) && empriseLibre(etat.village, { x, y, taille: 1 }) && !(type === 'rail' && feraitUneBoucle(etat.village, x, y))
 }
 
+export const MESSAGE_BOUCLE = '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.'
+
 export function poserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): string[] {
+  if (type === 'rail' && empriseLibre(etat.village, { x, y, taille: 1 }) && feraitUneBoucle(etat.village, x, y)) return [MESSAGE_BOUCLE]
   if (!peutPoserSol(etat, type, x, y)) return []
   payer(etat, coutSol(type))
   listeSol(etat, type).push(cleCase(x, y))
@@ -110,6 +113,7 @@ export function deplacerSol(etat: EtatJeu, type: TypeSol, de: { x: number; y: nu
   if (index === -1) return []
   const ignorer = { type, cle: cleCase(de.x, de.y) } as Occupant & { cle: string }
   if (!empriseLibre(etat.village, { x: vers.x, y: vers.y, taille: 1 }, ignorer)) return []
+  if (type === 'rail' && feraitUneBoucle(etat.village, vers.x, vers.y, cleCase(de.x, de.y))) return [MESSAGE_BOUCLE]
   liste[index] = cleCase(vers.x, vers.y)
   return []
 }

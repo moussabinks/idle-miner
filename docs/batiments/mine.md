@@ -1,6 +1,6 @@
 # ⛏️ Mine
 
-> Le cœur du jeu, au milieu de la clairière (22/10 : la mine automatique). On ne descend plus dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**. La mine sort aussi des blocs toute seule. C'est ici qu'on **descend d'un niveau** (5 niveaux, de nouveaux minerais à chaque fois), qu'on agrandit le coffre, qu'on construit l'ascenseur des mineurs et qu'on **pousse le wagonnet** vers le marché.
+> Le cœur du jeu, au milieu de la clairière (22/10 : la mine automatique). On ne descend plus dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**. La mine sort aussi des blocs toute seule. C'est ici qu'on **descend d'un niveau** (5 niveaux, de nouveaux minerais à chaque fois), qu'on agrandit le coffre, qu’on construit l’ascenseur des mineurs et qu’on **envoie des wagonnets** vers le marché, la foreuse et le générateur.
 > Les règles détaillées du minage (le bloc, les pioches, les niveaux) sont aussi dans [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md).
 
 ## Où et quand
@@ -15,8 +15,8 @@
   - un **panneau en bois** planté sur le sol de devant affiche le niveau de la mine (« Niv. 3 »).
 - **Bulles au-dessus** (`notifications.ts`) :
   - **📦 « Le coffre de la mine est plein : viens le vider ! »** (alerte rouge) ;
-  - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de rails jusqu'au marché ;
-  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou du wagonnet (si la ligne de rails existe) est payable tout de suite.
+  - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de trajet Mine → Marché ;
+  - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite.
 - **Le bandeau** (en haut de l'écran) montre toujours le niveau de la mine, son nom et le remplissage du coffre (la case clignote en rouge quand il est plein).
 
 ## Ce qu'on peut y faire
@@ -36,14 +36,18 @@ Le panneau (`PanneauMine.tsx`), de haut en bas :
 - Une barre : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
 - Vide : « Vide. Clique sur le bloc pour le remplir ! »
 - Sinon, les **jauges** de son contenu (les objets les plus chers en haut) et **🎒 Mettre dans le sac (*n*)** (kaki) : on choisit combien prendre de chaque objet, et ils passent dans le sac à dos (tant qu'il y a de la place). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. »
-- Avec une ligne de rails jusqu'au marché : « Le wagonnet laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet ne l'emporte pas (c'est la même liste que les objets gardés du marché).
+- Avec le trajet Mine → Marché : « Le wagonnet du marché laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet du marché ne l'emporte pas (c'est la même liste que les objets gardés du marché).
 
-### Le wagonnet
+### Les trajets de wagonnets (24/10)
 
-- **Sans rails** : « Pose des rails de la mine jusqu'au marché (menu Bâtiments, 3 🔩 fer la case) : le wagonnet y emportera le coffre et le vendra tout seul à l'arrivée. Tu peux le pousser, ou demander à un mineur de le faire (au Personnel). »
-- **Avec une ligne de rails** : où il en est (« Au quai… », « En route vers le marché, poussé par toi / *prénom* / l'électricité ⚡ », « Revient à la mine… ») avec une barre « → Marché » / « ← Mine » pendant le trajet, un badge **⚡ Électrique** si les rails le sont, et le rappel « Les objets gardés au marché restent dans le coffre. »
-- **🛤️ Pousser le wagonnet (*n* objets)** (bouton bois) : le hamster du joueur **fait l'aller-retour avec le wagonnet** : il le pousse jusqu'au marché (où tout est vendu), puis le ramène au quai. Pendant ce temps, on ne peut pas marcher ailleurs (le bouton ⛏️ Mine devient « Wagonnet… », les flèches et les touchers sur la carte ne font rien) et aucun panneau n'est ouvert. Grisé si le wagonnet est déjà en route ou s'il n'y a rien à emporter.
-- La ligne d'amélioration de la **taille du wagonnet** (impossible pendant un trajet).
+Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent de la mine, vers chaque bâtiment construit parmi le **marché** (💰, il vend le coffre), la **foreuse** (🔥, il lui apporte le charbon) et le **générateur** (🔴, il lui apporte la redstone). Pour chacun :
+
+- **Sans rails** : « Relie la mine au marché avec des rails (menu Bâtiments, 3 🔩 fer la case) : un wagonnet emporte le coffre de la mine et le vend au marché. » (de même pour la foreuse et le générateur).
+- **Rails posés, pas de trajet** : « Les rails sont posés ! » et **🛤️ Envoyer un wagonnet vers le marché** (bleu, gratuit) : c'est le joueur qui choisit ses trajets.
+- **Trajet créé** : où en est son wagonnet (« Au quai : rien à porter pour l’instant. », « Il part tout seul. », « Un mineur pousseur va le pousser. », « En route vers le marché, poussé par toi / *prénom* / l'électricité ⚡ », « Revient à la mine »), avec une barre pendant le trajet et un badge **⚡ Électrique** si tout le trajet l'est.
+  - **🛤️ Pousser (*n* objets)** (bouton bois) : le hamster du joueur **fait l'aller-retour avec le wagonnet** : il le pousse jusqu'à l'arrivée, puis le ramène au quai. Pendant ce temps, on ne peut pas marcher ailleurs (le bouton ⛏️ Mine devient « Wagonnet… », les flèches et les touchers sur la carte ne font rien) et aucun panneau n'est ouvert. On ne pousse qu'un wagonnet à la fois. Grisé si le wagonnet est déjà en route ou s'il n'y a rien à porter.
+  - **✖ Arrêter** (rouge) : supprime le trajet (son chargement retourne dans le coffre, les rails restent).
+- Dès qu'il y a un trajet : la ligne d'amélioration **🛒 Taille des wagonnets**, qui vaut pour **tous** les wagonnets (même ceux qui partent de la foreuse). Un wagonnet déjà chargé garde son chargement : la nouvelle taille compte à son prochain départ.
 
 ### ⬇ Niveau de la mine
 
@@ -105,7 +109,7 @@ Il ne transporte que les **mineurs employés** (le joueur ne descend plus). Sans
 | 5 | 1,4 s | 15 000 $ + 100 redstone + 20 or |
 | 6 | 1 s | 40 000 $ + 60 or + 10 émeraude |
 
-### Le wagonnet (`NIVEAUX_WAGONNET`)
+### La taille des wagonnets (`NIVEAUX_WAGONNET`)
 
 | Niveau | Places | Prix |
 |---|---:|---|
@@ -114,7 +118,7 @@ Il ne transporte que les **mineurs employés** (le joueur ne descend plus). Sans
 | 3 | 250 | 2 500 $ + 80 fer + 20 redstone |
 | 4 | 600 | 10 000 $ + 40 or |
 
-Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : **3 cases/s** poussé par toi, **2,5 cases/s** par un mineur pousseur, **8 cases/s × la puissance du générateur** avec l'électricité (8 à 24 cases/s). Charger au quai et vider au marché prennent **2 s** chacun (`SECONDES_CHARGEMENT_WAGONNET`).
+Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : **3 cases/s** poussé par toi, **2,5 cases/s** par un mineur pousseur, **8 cases/s × la puissance du générateur** avec l'électricité (8 à 24 cases/s). Charger au départ et vider à l'arrivée prennent **2 s** chacun (`SECONDES_CHARGEMENT_WAGONNET`).
 
 ## Règles et comportement
 
@@ -123,24 +127,30 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **Tout ce qui sort de la mine y va** : tes clics, les blocs que la mine sort toute seule, et les sacs des mineurs employés (la foreuse a son propre chariot). Il ne contient que des blocs.
 - **Coffre plein = tout s'arrête** : le bloc ne se clique plus, la mine ne sort plus rien, et les mineurs qui remontent **attendent** devant le coffre, leur sac plein (« 📦 attend : le coffre de la mine est plein ! »), en continuant d'être payés. Le « $/s » du bandeau tombe à 0 (ou en dessous, à cause des salaires).
 - **On paie aussi avec le coffre** : partout dans le jeu, les minerais d'un achat se prennent **d'abord dans le sac**, **puis dans le coffre** (`disponible`, `payer`). Pas besoin de porter le fer jusqu'au forgeron.
-- Il ne se vide que de trois façons : 🎒 Mettre dans le sac, le wagonnet, et le générateur qui se sert en redstone (à partir de son niveau 2).
+- Il ne se vide que de trois façons : 🎒 Mettre dans le sac, les wagonnets (vers le marché, la foreuse, le générateur), et le générateur qui se sert en redstone (à partir de son niveau 2).
 
 ### La mine toute seule
 
 - Elle sort **0,2 à 0,4 bloc par seconde** selon le niveau (le « vieux treuil », `debit`), tant que le coffre a de la place, même jeu fermé (8 h au plus). Ces blocs ne sont **jamais doublés** et n'usent pas la pioche.
 - Le bloc à cliquer, lui, n'est pas cassé par la mine : il attend ton clic.
 
-### Le wagonnet
+### Les wagonnets
 
-- Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée à la mine et une case collée au **marché**, posé (`ligneDuWagonnet`, `railsMineMarche`). Les rails : **3 fer la case**, dès le début (menu 🏗️ Bâtiments). Voir [../jeu/village.md](../jeu/village.md).
-- **La longueur d'un trajet** = le nombre de cases de la ligne la plus courte **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
-- **Au départ**, il se remplit avec le coffre, **les objets les plus chers d'abord**, jusqu'à sa capacité, **sauf les objets gardés** (`nonAVendre`). Au marché, il vend tout (« 🛤️ Le wagonnet a vendu le coffre au marché : +*X* $ » quand c'est toi qui pousses), puis revient au quai.
+- Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** (cases voisines par un côté) entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet (« Envoyer un wagonnet vers… »). Les rails : **3 fer la case**, dès le début (menu 🏗️ Bâtiments), et **jamais en boucle** : entre deux bâtiments, une seule route. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
+- **4 trajets**, un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur (ils partent d'ici), et Foreuse → Marché (il part de la foreuse, voir [foreuse.md](foreuse.md)). Plusieurs wagonnets peuvent partager les mêmes rails : ils se croisent sans se gêner.
+- **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
+- **Ce qu'il emporte au départ**, jusqu'à sa capacité :
+  - **vers le marché** : le coffre, **les objets les plus chers d'abord**, **sauf les objets gardés** (`nonAVendre`) et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets existent). Au marché, il vend tout (« 🛤️ Le wagonnet a tout vendu au marché : +*X* $ » quand c'est toi qui pousses) ;
+  - **vers la foreuse** : le charbon du coffre, jusqu'à lui faire **60 charbons** de réserve (`RESERVE_FOREUSE_WAGONNET` = 1 200 s) ;
+  - **vers le générateur** : la redstone du coffre, jusqu'à lui faire **60 redstones** de réserve (`RESERVE_GENERATEUR_WAGONNET` = 1 800 s).
+  - Puis il revient au quai. S'il n'a rien à porter, il reste au quai.
 - **Qui le fait avancer** (il ne part jamais tout seul sans eux) :
-  - **toi**, avec « Pousser le wagonnet » ;
-  - **un mineur pousseur** (rôle choisi au Personnel) qui attend au quai : il part dès qu'il y a quelque chose à emporter. Voir [personnel.md](personnel.md) ;
-  - **l'électricité** : si toute la ligne est dans le rayon du générateur allumé, il part tout seul dès qu'il y a quelque chose à emporter, et roule plus vite. Voir [generateur.md](generateur.md). S'il perd le courant en route, il finit son trajet doucement (1,25 case/s).
-- **Ligne coupée** (un rail enlevé, le marché déplacé) : le wagonnet revient aussitôt au quai, son chargement retourne dans le coffre, et le pousseur retourne l'attendre.
-- Il roule aussi jeu fermé (avec un pousseur ou l'électricité).
+  - **toi**, avec « Pousser » (un wagonnet à la fois) ;
+  - **un mineur pousseur** (rôle choisi au Personnel) qui attend au quai : il pousse un wagonnet qui a quelque chose à porter. Voir [personnel.md](personnel.md) ;
+  - **l'électricité** : si **toutes les cases de ce trajet** sont dans le rayon du générateur allumé (`trajetElectrique`), il part tout seul dès qu'il a quelque chose à porter, et roule plus vite. Voir [generateur.md](generateur.md). S'il perd le courant en route, il finit son trajet doucement (1,25 case/s).
+- **Ligne coupée** (un rail enlevé, un bâtiment déplacé) : le wagonnet revient aussitôt au quai, son chargement retourne d'où il vient, et le pousseur retourne au quai. Le trajet reste : il repartira quand les rails seront refaits.
+- **Au village**, chaque wagonnet roule sur sa ligne, plein à l'aller, avec un chargement de la couleur de son trajet : des minerais de toutes les couleurs (vers le marché), du charbon noir (vers la foreuse), de la redstone rouge (vers le générateur).
+- Ils roulent aussi jeu fermé (avec un pousseur ou l'électricité).
 
 ### L'ascenseur et l'échelle
 
@@ -154,23 +164,23 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ## Lien avec le reste du jeu
 
-- **Marché** : on y porte le coffre (à pied, dans le sac) ou le wagonnet y va sur les rails. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Bazar** : un plus grand sac pour porter plus du coffre au marché. **Personnel** : les mineurs remplissent le coffre et poussent le wagonnet. **Foreuse** et **Générateur** : débloqués au niveau 2.
-- **Objectifs** (`objectifs.ts`) : « Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnet de *N* places » (achats du stand `puits`, « achetable à la mine ! ») ; et l'étape « Relier la mine au marché · pose des rails (menu Bâtiments, 3 fer la case) » quand on a du fer et pas encore de ligne.
-- **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Cœur de diamant (niveaux 2 à 5), Ça brille ! (un diamant), Cheminot (rails), Ligne régulière (100 voyages de wagonnet).
+- **Marché** : on y porte le coffre (à pied, dans le sac) ou le wagonnet Mine → Marché y va sur les rails. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Bazar** : un plus grand sac pour porter plus du coffre au marché. **Personnel** : les mineurs remplissent le coffre et poussent les wagonnets. **Foreuse** et **Générateur** : débloqués au niveau 2 ; la mine peut leur envoyer leur charbon et leur redstone par wagonnet.
+- **Objectifs** (`objectifs.ts`) : « Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnets de *N* places » (achats du stand `puits`, « achetable à la mine ! ») ; et les étapes « Relier la mine au marché · pose des rails (menu Bâtiments, 3 fer la case) » quand on a du fer et pas encore de ligne, puis « Créer un trajet de wagonnet · à la mine : « envoyer un wagonnet vers le marché » », et plus tard « Envoyer du charbon à la foreuse ».
+- **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Cœur de diamant (niveaux 2 à 5), Ça brille ! (un diamant), Cheminot (un trajet de wagonnet), Réseau complet (les 4 trajets), Ligne régulière (100 voyages de wagonnet).
 - **Classement** : le niveau de la mine (le meilleur de tes mondes) est envoyé dans la colonne « prestige » du serveur. Voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).
-- **Statistiques** : blocs cassés en cliquant (par sorte), blocs sortis tout seuls de la mine, voyages et argent du wagonnet.
+- **Statistiques** : blocs cassés en cliquant (par sorte), blocs sortis tout seuls de la mine, voyages et argent des wagonnets.
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `NIVEAUX_WAGONNET`, `COUT_RAIL`, les vitesses du wagonnet et `SECONDES_CHARGEMENT_WAGONNET`.
+- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `NIVEAUX_WAGONNET`, `COUT_RAIL`, les trajets (`LIAISONS`, `RESERVE_FOREUSE_WAGONNET`, `RESERVE_GENERATEUR_WAGONNET`), les vitesses des wagonnets et `SECONDES_CHARGEMENT_WAGONNET`.
 - `src/jeu/mine.ts` : tirer un bloc selon le niveau (`tirerBloc`), les chances (`chancesDesBlocs`), la valeur moyenne d'un bloc (`valeurMoyenneBloc`).
 - `src/jeu/mineur.ts` : le coffre (`capaciteCoffre`, `rangerDansCoffre`, `prendreDuCoffre`, `agrandirCoffre`), payer avec le sac puis le coffre (`disponible`, `payer`), le clic (`cliquerMine`), la mine toute seule (`avancerMine`, `debitMine`), les niveaux (`descendreNiveauMine`) et l'ascenseur (`ameliorerAscenseur`, `secondesTrajetMineur`).
-- `src/jeu/wagonnet.ts` : la ligne (`ligneDuWagonnet`), le chargement, la vitesse, pousser (`pousserWagonnet`), agrandir, le temps qui passe (`avancerWagonnet`).
-- `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails mine → marché (`railsMineMarche`).
+- `src/jeu/wagonnet.ts` : les trajets (`ligneDe`, `creerTrajet`, `supprimerTrajet`), le chargement, la vitesse (`trajetElectrique`), pousser (`pousserTrajet`), agrandir (`ameliorerWagonnet`), le temps qui passe (`avancerWagonnets`).
+- `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails entre deux bâtiments (`railsEntre`), sans boucle (`feraitUneBoucle`).
 - `src/jeu/batiments.ts` : déplacer ou retourner la mine, poser les rails.
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts` : les bulles 📦 et 💰, les achats du stand `puits`.
-- `src/composants/PanneauMine.tsx` : le panneau (bloc à cliquer, coffre, wagonnet, niveau, coffre, ascenseur) ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
+- `src/composants/PanneauMine.tsx` : le panneau (bloc à cliquer, coffre, trajets, niveau, coffre, ascenseur) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.
-- `src/composants/DessinsVillage.tsx` : la cabine qui monte et descend et le panneau du niveau (`DessinEvolutionMine`) ; `src/composants/VueVillage.tsx` : la hauteur de la cabine (`hauteurCabine`), le wagonnet et son pousseur sur les rails.
+- `src/composants/DessinsVillage.tsx` : la cabine qui monte et descend et le panneau du niveau (`DessinEvolutionMine`) ; `src/composants/VueVillage.tsx` : la hauteur de la cabine (`hauteurCabine`), les wagonnets et leurs pousseurs sur les rails (`WagonnetVillage.tsx`).
 - `src/village.css` : le bloc à cliquer (`.bloc-mine`, `.eclats-bloc-mine`, `.trouvaille-bloc-mine`) ; `src/blocs.css` : le dessin des blocs.
 - `public/images/batiments/mine.webp`, `mine-cabine.webp`, `mine-devant.webp` : le dessin de la mine, sa cabine et son devant.

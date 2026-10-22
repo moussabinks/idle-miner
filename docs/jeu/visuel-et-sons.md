@@ -25,7 +25,7 @@
   - les **bâtiments** : `public/images/batiments/*.webp` (marché, forgeron, bazar, Personnel, foreuse, générateur, et l'image des rails pour le menu), des dessins en vue isométrique au fond transparent, chacun posé sur une dalle de 5 × 5 pavés, et la **mine** (`mine.webp`, avec ses calques `mine-cabine.webp` et `mine-devant.webp`), calée sur 10 × 10 cases. Chacun est **calé sur la grille** par une matrice CSS, sans déformation (`CALAGES`, `transformationSprite` dans `iso.ts`) ; une ombre douce au sol (`ombre-batiment`) l'ancre sur l'herbe. Les dessins de l'enchanteur et de l'arbre de prestige restent dans le dossier, mais ne servent plus ;
   - les **portraits** du mineur, du manager et du recruteur : `public/images/personnages/*.webp` (sur l'accueil et dans le panneau du Personnel) ;
   - **les personnages** : `public/images/personnages/sprites/*.webp`, découpés dans les planches de l'équipe (voir [§ 4](#4-les-personnages--des-hamsters)).
-- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins dorés, lanternes) : la cabine et le panneau de la mine, les rails, le **wagonnet**, le **rayon du générateur**, les chemins de pavés, les décorations (`DessinsVillage.tsx`, `VueVillage.tsx`), la plage.
+- Tout le reste du village est **dessiné en SVG dans le même style** (bois, pierre grise, coins dorés, lanternes) : la cabine et le panneau de la mine, les rails, les **wagonnets**, le **rayon du générateur**, les chemins de pavés, les décorations (`DessinsVillage.tsx`, `VueVillage.tsx`), la plage.
 - **En CSS** : les **blocs** (le gros bloc à cliquer, et les petits blocs des jauges, du chariot et des statistiques), les éclats, les minerais qui s'envolent, les ventes, les bulles. Les autres icônes sont des **émojis** (choix du 19/10 : style cartoon, « pas de pixel art, pour ne pas ressembler à Minecraft »).
 - **Style cartoon** : formes rondes, cailloux irréguliers, panneaux en bois arrondis, contours sombres.
 - **Thème sombre** (`color-scheme: dark`). Les couleurs de base (`:root` de `index.css`) :
@@ -115,7 +115,7 @@ Tous les personnages sont des **hamsters** : des **images** tirées des planches
 | Effet | Quand | Description |
 |---|---|---|
 | **Grosse vente** | chaque vente du joueur (marché, chariot de la foreuse) | « +*X* $ » en grosses lettres jaunes contournées de brun, au milieu en haut : apparaît en grossissant, se pose, monte et s'efface (1,8 s), avec une **gerbe de 12 pièces** dorées |
-| **Petit gain** | argent qui n'est pas une vente du joueur (le wagonnet qui vend au marché) | « +*X* $ » doré qui monte et s'efface (1,2 s), en haut au milieu de l'écran (`.gains-village`) |
+| **Petit gain** | argent qui n'est pas une vente du joueur (un wagonnet qui vend au marché) | « +*X* $ » doré qui monte et s'efface (1,2 s), en haut au milieu de l'écran (`.gains-village`) |
 | **Compteur qui défile** | toute variation d'au moins 5 $ | l'argent du bandeau défile jusqu'à la nouvelle somme en 0,6 s |
 | **Compteur qui saute** | chaque vente | grossit à 130 % en virant au jaune lumineux (0,5 s) |
 
@@ -176,10 +176,10 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 
 | Ordre | Calque | Contenu |
 |---|---|---|
-| 1 | **Terrain** (`TerrainVillage`, un SVG dessiné une seule fois) | le sous-bois sombre, une auréole d'herbe floue, le **damier** (`#86c13f` / `#79b437`) dont le bord s'efface dans l'herbe, de grandes **taches** d'herbe plus claire ou plus sombre, très floues (23/10, `TachesHerbe`), et les petits détails de l'herbe : touffes, brins, fleurs, trèfles, cailloux et champignons rouges à pois blancs |
-| 1 bis | **Forêt derrière** (tuiles de canvas) et **plage** | les arbres du haut et des côtés ; le sable et la mer |
-| 2 | **Sol** (`sol-village`, un SVG de la taille du monde) | les ombres des bâtiments, les chemins de pavés, les rails, le losange en tirets dorés du bâtiment actif, le **rayon du générateur**, le losange vert ou rouge de ce qu'on pose |
-| 3 | **Objets** | bâtiments, mine (et sa cabine), décorations, personnages, wagonnet, triés par profondeur |
+| 1 | **Terrain** (`TerrainVillage`, un SVG dessiné une seule fois) | le sous-bois sombre, une auréole d'herbe floue, le **damier**, à peine visible depuis le 24/10 (`#83bf3e` / `#7eb83a`), dont le bord s'efface dans l'herbe ; par-dessus, une **texture d'herbe** qui se répète sans couture (`public/images/sol/herbe.webp`, 256 px), une soixantaine de grandes **taches** très floues (soleil, herbe haute, herbe sèche, `TachesHerbe`), et les petits détails de l'herbe : touffes, brins, fleurs, trèfles, petits cailloux ombrés et champignons rouges à pois blancs |
+| 1 bis | **Forêt derrière** (tuiles de canvas) et **plage** | les arbres du haut et des côtés ; le sable (texture `sable.webp`) et la mer |
+| 2 | **Sol** (`sol-village`, un SVG de la taille du monde) | les ombres des bâtiments, les chemins de pavés, les rails, le losange en tirets dorés du bâtiment actif, le **rayon du générateur**, le losange vert ou rouge de ce qu'on pose, et la **grille de construction** (`GrilleConstruction`, 24/10) : de fines lignes blanches sur les cases, seulement quand on pose ou déplace quelque chose, ou qu'on peint des rails ou des chemins |
+| 3 | **Objets** | bâtiments, mine (et sa cabine), décorations, personnages, wagonnets, triés par profondeur |
 | 3 bis | **Forêt devant** (`z-index` 90 000) | les arbres du bas de la carte, devant tout le reste |
 | 3 ter | **La vie du village** (`AmbianceVillage.tsx`, `z-index` 99 990, 23/10) | des **papillons** de couleur qui font des boucles en battant des ailes, des **vols d'oiseaux** qui traversent le ciel avec leur ombre sur l'herbe, et l'**ombre des nuages** qui glisse lentement sur la carte. Tout en CSS, aux mêmes places à chaque fois (hasard à graine fixe) |
 | 4 | **Bulles** (`z-index` 100 000) | les bulles de notification, toujours devant tout |
@@ -190,19 +190,22 @@ Le village est une carte **isométrique** (vue du ciel à 45°, comme Clash of C
 - **La mine** : l'image fournie (`mine.webp`), et par-dessus ce qui **évolue** (`DessinEvolutionMine`, en SVG, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
   - **la cabine de l'ascenseur** (`mine-cabine.webp`, tirée du dessin « mine avec ascenseur »), dès qu'il est construit, pendue à **deux câbles** (gris en pointillés sur un trait sombre) qui partent du treuil. Elle **suit le premier mineur qui monte ou descend** (`hauteurCabine` : 0 = en haut, 1 = en bas, selon l'avancée de son trajet) et attend en haut le reste du temps. En bas, elle passe derrière la barrière et le sol de devant (`mine-devant.webp`, dessiné par-dessus). Sans ascenseur, les câbles pendent au fond du puits ;
   - **un panneau en bois** planté sur le sol de devant, à gauche, avec « Niv. *N* ».
-- **Les rails** (`CaseRail`, 23/10) : les tuiles du dessin de l'équipe (« Tuiles de voies ferrées isométriques » sur le Drive : ballast de terre et de cailloux, traverses en bois, rails en acier avec leurs attaches). Un script les a remises à plat en vue de dessus, puis on les repose sur chaque case avec la même projection que le sol (`public/images/rails/`) :
-  - `rail_droit.webp` : un morceau tout droit d'une case (deux traverses, raccordable sans couture) ;
-  - `rail_virage.webp` : le virage, fabriqué en **courbant** le morceau droit en quart de cercle (rayon d'une demi-case autour d'un coin) : exactement le même style ;
-  - `rail_t.webp` : le **T** (embranchement) : la ligne droite et **deux virages** qui en partent vers le côté, pour que le wagonnet puisse tourner d'un côté comme de l'autre ;
-  - `rail_croix.webp` : le **croisement** : les deux lignes droites l'une sur l'autre.
+- **Les rails** (`RailsDuVillage`, redessinés le 24/10) : quatre formes vues de dessus (`public/images/rails/`), dessinées par un script (`outils/rails/dessiner.py`, Python et Pillow, voir `outils/rails/LISEZMOI.md`) dans le style du fichier « propriété-rail-design » de l'équipe (Drive). **Un rail se pose sur une case, mais la voie est large de deux cases** : elle déborde d'une demi-case à gauche et à droite (chaque tuile couvre 2 × 2 cases, centrée sur la case du rail ; dans le sens de la voie, elle s'arrête au bord de la case). Les formes :
+  - `rail_droit` : un morceau tout droit ;
+  - `rail_virage` : le virage, en quart de cercle ;
+  - `rail_t` : le **T** (embranchement) : la ligne droite continue d'un côté ; de l'autre, **deux rails en L** qui tournent vers la branche ; un **plancher en bois** au centre ;
+  - `rail_croix` : le **croisement** : **quatre rails en L** dans les coins (avec un petit arrondi : les rails ne se croisent jamais) et un plancher en bois au centre.
 
-  Pour que les voies se mêlent sans couture, le morceau droit est séparé en trois calques (le ballast, refait au propre ; les traverses ; les rails) : dans le T et le croisement, tous les ballasts sont posés d'abord, puis toutes les traverses, puis tous les rails (`outils/rails/calques.py`).
+  **Le relief** : chaque forme a quatre calques, et on pose le premier calque de toutes les cases, puis le deuxième, etc. : le **flanc du talus** (plus sombre, posé un peu plus bas : on voit l'épaisseur du talus), le **dessus du talus** (terre bombée, bord plus sombre, cailloux avec leur ombre et leur reflet), l'**ombre** des traverses et des rails (décalée), puis les **traverses** (épaisses, reflet sur l'arête, veines, tire-fonds) et les **rails** (contour foncé, flanc gris, dessus poli brillant).
 
-  On n'achète que des rails : chaque case **choisit toute seule** son dessin selon ses voisines (et la mine ou le marché collés à elle, `raccordsRail`), en tournant la tuile d'un quart de tour si besoin : seule ou avec une voisine → tout droit vers elle ; deux voisines en face → tout droit ; deux voisines à angle droit → **virage** ; trois voisines → **T** ; quatre → **croisement**. Le **wagonnet suit la voie** : tout droit au milieu des cases, en quart de cercle dans les virages (`traceDeLaVoie` dans `iso.ts`). L'image du menu Bâtiments (`images/batiments/rails.webp`) est le morceau droit de la planche.
-- **Le wagonnet** (`WagonnetVillage.tsx`, 23/10) : une **benne en volume** (vue de 3/4 : le fond, quatre parois grises plus claires du côté de la lumière, un bord doré, quatre roues), **tournée dans le sens de la voie** : elle pivote dans les virages. **À l'aller**, elle est **pleine** (des minerais turquoise, jaune, rouge et gris qui dépassent) ; au retour et au quai, vide. **Électrique**, elle a une **lueur jaune**. Pour qu'il roule **bien fluide**, il a sa propre animation à chaque image : le jeu ne donne sa position que 20 fois par seconde, alors entre deux nouvelles, on le fait avancer tout seul à sa vitesse. Son pousseur (le joueur ou un mineur) marche derrière lui **le long de la voie** (dans les virages aussi). Quand le joueur commence à pousser, la caméra le suit de nouveau, même si on avait déplacé la carte.
+  On n'achète que des rails : chaque case **choisit toute seule** son dessin selon ses voisines (`raccordsRail`), en tournant la tuile d'un quart de tour si besoin : seule ou avec une voisine → tout droit vers elle ; deux voisines en face → tout droit ; deux voisines à angle droit → **virage** ; trois voisines → **T** ; quatre → **croisement**. Un bout de ligne collé à la mine, au marché, à la foreuse ou au générateur se raccorde à lui ; un rail qui passe le long d'un bâtiment, non. Le **wagonnet suit la voie** (une benne plus grande depuis que la voie est large) : tout droit au milieu des cases, en quart de cercle dans les virages (`traceDeLaVoie` dans `iso.ts`). L'image du menu Bâtiments (`images/batiments/rails.webp`) est un morceau droit.
+- **Les wagonnets** (`WagonnetVillage.tsx`, 23/10 ; un par trajet depuis le 24/10) : une **benne en volume** (vue de 3/4 : le fond, quatre parois grises plus claires du côté de la lumière, un bord doré, quatre roues), **tournée dans le sens de la voie** : elle pivote dans les virages. **À l'aller**, elle est **pleine**, de la couleur de son trajet (des minerais de toutes les couleurs vers le marché, du charbon noir vers la foreuse, de la redstone rouge vers le générateur) ; au retour et au quai, vide. **Électrique**, elle a une **lueur jaune**. Pour qu'il roule **bien fluide**, il a sa propre animation à chaque image : le jeu ne donne sa position que 20 fois par seconde, alors entre deux nouvelles, on le fait avancer tout seul à sa vitesse. Son pousseur (le joueur ou un mineur) marche derrière lui **le long de la voie** (dans les virages aussi). Quand le joueur commence à pousser, la caméra le suit de nouveau, même si on avait déplacé la carte.
 - **Le rayon du générateur** (`RayonGenerateur`) : un cercle de *R* cases autour du centre du générateur, dessiné comme un polygone de 64 points projeté sur la grille (une ellipse à l'écran). **Pointillés jaunes** (`rgb(255 214 60)`) avec un fond jaune très léger. Quand on est devant le générateur ou qu'on le pose : plus épais, plus visible, et les **pointillés tournent** (`rayon-tourne`, 1,6 s). Sans courant : **gris**. Caché s'il ne donne pas de courant et qu'on ne le regarde pas.
 - **Les chemins** (`CaseChemin`) : des pavés gris clair sur de la terre beige.
-- **Les décorations** (`DessinDecoration`) : fleurs, buisson, rocher, tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs, fontaine (son jet pulse), statue du hamster d'or.
+- **Les rochers** (`Rochers.tsx`, 24/10 : `Rocher`, `TasDeRochers`) : un petit **volume à facettes** (low-poly), éclairé d'en haut à gauche comme les bâtiments, avec un contour foncé, des fissures, un reflet sur l'arête éclairée, parfois de la mousse ; dans l'eau, le pied est plus foncé et mouillé. Toujours le même à la même place (une « graine »). Ils servent pour la décoration « rocher », les rochers de la mer, les pierres du feu de camp et les galets de la plage.
+- **La plage** (`PlageVillage.tsx`) : le sable a sa texture (`sable.webp`), des rides du vent et une bande mouillée qui brille près de l'eau ; des galets en relief, des algues, du bois flotté, des traces de pas qui partent du ponton et **deux crabes** qui se promènent de côté.
+- **Les textures du sol** (`public/images/sol/herbe.webp` et `sable.webp`) sont fabriquées par `outils/sol/textures.py`.
+- **Les décorations** (`DessinDecoration`) : fleurs, buisson, rocher (en relief), tonneau, caisse de minerais, lanterne (qui vacille), banc, grand arbre, sapin, cerisier en fleurs, fontaine (son jet pulse), statue du hamster d'or.
 - **Les personnages** : voir [§ 4.1](#41-au-village--perso-elementsvillagetsx).
 
 ### 7.4 Les bulles de notification
@@ -231,7 +234,7 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `rare` | or, émeraude ou diamant cassé | une pluie d'étincelles qui monte |
 | `pieces(2)` | un minerai **doublé** | 2 pièces |
 | `vente` | une vente (marché, chariot de la foreuse) | « ka-ching ! » de caisse, puis des pièces : **plus la vente est grosse, plus il y a de pièces** (3 à 12) |
-| `pieces(3)` | le wagonnet a vendu au marché | 3 pièces discrètes |
+| `pieces(3)` | un wagonnet a vendu au marché | 3 pièces discrètes |
 | `achat` | un achat sans amélioration (construction, rachat, réparation, embauche…) | « pop » puis deux notes qui montent, et 2 pièces |
 | `amelioration` | un niveau de plus (mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur) : remplace alors `achat` | trois notes qui montent « niveau supérieur ! » |
 | `piocheCassee` | la pioche en main casse | « clang » triste |
@@ -242,8 +245,8 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `pas` | toutes les 0,34 s pendant que le joueur marche (`App.tsx`) | un petit froissement d'herbe |
 | `construction` | un nouveau bâtiment est posé (`App.tsx`) | trois coups de marteau sur du bois, puis trois notes |
 | `rail` | une case de rails posée au pinceau (`App.tsx`) | un « clang » de métal et la traverse en bois |
-| `wagonnet` | le wagonnet passe sur un joint de rail (une fois par case, `WagonnetVillage.tsx`) | « ta-tac », plus doux quand il est électrique |
-| `cloche` | le wagonnet arrive au marché | une petite cloche |
+| `wagonnet` | un wagonnet passe sur un joint de rail (une fois par case, `WagonnetVillage.tsx`) | « ta-tac », plus doux quand il est électrique |
+| `cloche` | un wagonnet arrive au bout de son trajet | une petite cloche |
 | `electricite` | on met de la redstone dans le générateur | un grésillement électrique qui monte |
 
 Retirés le 22/10 (avec la mine en coupe, ses blocs spéciaux et le prestige) : `lave`, `coffre`, `geode`, `nouvelleCouche`, `ding` (l'ascenseur), l'ancien `pas` (l'échelle), `talent` et `prestige`.
@@ -306,7 +309,7 @@ Toutes ont le même dessin : sur un fond carré arrondi gris-bleu très sombre (
 
 Enregistré **seulement en production** (`enregistrerServiceWorker` dans `src/installation.ts`, appelé par `main.tsx` ; en développement le cache gênerait), au chargement de la page, avec `updateViaCache: 'none'`. S'il échoue (navigation privée…), le jeu marche quand même, sans hors ligne.
 
-- Cache **`idle-miner-v9`** (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 10 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, foreuse, forgeron, generateur, marche, rails), les 2 tuiles de `images/rails/`, les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
+- Cache **`idle-miner-v12`** (changer ce nom vide le cache de tous les joueurs). À l'installation, il range `/`, `/manifest.webmanifest`, `/favicon.svg`, `/icones/icone-192.png`, `/icones/icone-512.png`, et **les images du village** (`IMAGES_DU_VILLAGE` : les 12 arbres, 10 images de `images/batiments/` (mine, mine-cabine, mine-devant, bazar, employes, foreuse, forgeron, generateur, marche, rails), les 4 tuiles de `images/rails/`, les 2 textures de `images/sol/` (herbe, sable), les 3 portraits de `images/personnages/`, les 26 images des personnages de `images/personnages/sprites/`). Il prend la main tout de suite (`skipWaiting`, `clients.claim`). À l'activation, il efface les caches d'un autre nom (changer `CACHE` vide le cache de tous les joueurs).
 - Seules les requêtes **GET de notre propre site** passent par lui (Supabase n'est jamais mis en cache).
 
 | Requête | Stratégie |
@@ -323,3 +326,7 @@ Résultat : **le jeu marche hors ligne** (sans compte en ligne ni classement).
 - **iPhone / iPad** (y compris les iPad qui se présentent comme un Mac tactile) : pas d'invitation possible, la carte explique le bouton Partager.
 - **Déjà installé** (`display-mode: standalone`, ou `navigator.standalone` sur iPhone) : rien n'est proposé.
 - Le hook `useInstallation()` renvoie le mode (`installe`, `bouton`, `ios`, `rien`) et `installer()` ; la carte de l'accueil est décrite dans [interface.md § 2.5](interface.md#25-la-carte--installer--carteinstallationtsx).
+
+## Le relief des décorations et des chemins (24/10)
+
+La lumière vient d'en haut à gauche. `Relief.tsx` donne deux outils : `Boule` (une boule en volume : côté à l'ombre, partie éclairée décalée vers la lumière, reflet) et `OmbreAuSol` (une ombre douce, un peu vers la droite). Les buissons, les feuillages des arbres et les fleurs sont faits de boules ; le tronc a un reflet à gauche et l'ombre du feuillage en haut ; le tonneau est rond (clair à gauche, sombre à droite, douelles, cercles brillants) ; la caisse a une face à l'ombre et ses planches ; le sapin a sa moitié droite à l'ombre ; la lanterne a une vitre brillante ; la fontaine a un bassin en épaisseur et un reflet sur l'eau ; la statue dorée a ses ombres. Les **pavés des chemins** dépassent du sol : un flanc sombre dessous et un bord éclairé.

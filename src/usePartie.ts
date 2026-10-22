@@ -84,7 +84,7 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; messageAbsence: strin
   const gagne = etat.argent - avant.argent
   const morceaux: string[] = []
   if (coffre > 0) morceaux.push(`📦 ${coffre} blocs de plus dans le coffre de la mine`)
-  if (gagne > 0) morceaux.push(`🛤️ le wagonnet a rapporté ${Math.round(gagne).toLocaleString('fr-FR')} $`)
+  if (gagne > 0) morceaux.push(`🛤️ les wagonnets ont rapporté ${Math.round(gagne).toLocaleString('fr-FR')} $`)
   if (fores > 0) morceaux.push(`⚙️ la foreuse a remonté ${fores} blocs`)
   const sansSalaire = nbSansSalaire(etat)
   if (sansSalaire > 0) morceaux.push(sansSalaire === 1 ? '😠 un mineur attend son salaire' : `😠 ${sansSalaire} mineurs attendent leur salaire`)

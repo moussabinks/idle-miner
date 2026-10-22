@@ -5,7 +5,8 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { VERSION_ETAT, type EtatJeu } from './mineur'
+import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, nouveauTrajet, type EtatJeu } from './mineur'
+import { railsMineMarche, type Village } from './village'
 
 export const NB_MONDES_MAX = 5
 
@@ -206,7 +207,8 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    return estUnEtatValide(donnees) ? donnees : null
+    const convertie = convertirVersion21(donnees)
+    return estUnEtatValide(convertie) ? convertie : null
   } catch {
     return null
   }
@@ -219,7 +221,7 @@ export function partieAncienne(stockage: Stockage, id: string): boolean {
     const texte = stockage.getItem(cleMonde(id))
     if (texte === null) return false
     const donnees = JSON.parse(texte) as { version?: unknown }
-    return typeof donnees.version === 'number' && donnees.version < VERSION_ETAT
+    return typeof donnees.version === 'number' && donnees.version < VERSION_MINE_AUTOMATIQUE
   } catch {
     return false
   }
@@ -233,6 +235,24 @@ export function secondesDepuisSauvegarde(stockage: Stockage, id: string, mainten
     return Math.max(0, (maintenant - horodatage) / 1000)
   } catch {
     return 0
+  }
+}
+
+// Une partie de la version 21 (avant les trajets, le 24/10) : son wagonnet unique devient le
+// trajet Mine → Marché (s'il avait sa ligne de rails), et sa taille vaut pour tous les wagonnets.
+export function convertirVersion21(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as { version?: unknown; wagonnet?: { niveau?: number }; village?: Village; employes?: { etape: string }[] }
+  if (ancienne.version !== VERSION_MINE_AUTOMATIQUE || typeof ancienne.village !== 'object') return donnees
+  const { wagonnet, ...reste } = ancienne
+  const avecLigne = Array.isArray(ancienne.village.rails) && Array.isArray(ancienne.village.batiments) && railsMineMarche(ancienne.village) !== null
+  // Les pousseurs qui étaient en route retournent au quai (le wagonnet repart du quai).
+  for (const employe of ancienne.employes ?? []) if (employe.etape === 'pousse') employe.etape = 'quai'
+  return {
+    ...reste,
+    version: VERSION_ETAT,
+    niveauWagonnets: typeof wagonnet?.niveau === 'number' ? wagonnet.niveau : 0,
+    trajets: avecLigne ? [nouveauTrajet('mine-marche')] : [],
   }
 }
 
@@ -253,7 +273,8 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
     typeof etat.generateur === 'object' &&
-    typeof etat.wagonnet === 'object' &&
+    typeof etat.niveauWagonnets === 'number' &&
+    Array.isArray(etat.trajets) &&
     Array.isArray(etat.employes) &&
     typeof etat.recruteur === 'number' &&
     typeof etat.manager === 'object' &&
