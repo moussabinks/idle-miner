@@ -8,11 +8,11 @@
 // dans le sens de la voie, d'un essieu à l'autre. On le dessine en 3D (Wagonnet3D.tsx).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { LIAISONS, RARETES } from '../jeu/donnees'
+import { LIAISONS, RARETES, SECONDES_CHARGEMENT_WAGONNET, type IdBatiment } from '../jeu/donnees'
 import { totalObjets, type EtatJeu, type Trajet } from '../jeu/mineur'
 import { capaciteWagonnet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
-import { Perso } from './ElementsVillage'
+import { MiniJauge, Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
 
@@ -22,6 +22,13 @@ import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcr
 const ESSIEUX = 0.6
 // Le pousseur marche à cette distance derrière le wagonnet (en cases, le long de la voie).
 const RECUL_POUSSEUR = 1.15
+
+// Ce que fait le wagonnet à son arrivée, selon le bâtiment.
+const TEXTES_LIVRAISON: Partial<Record<IdBatiment, string>> = {
+  marche: '💰 Vente',
+  foreuse: '⚫ Livraison du charbon',
+  generateur: '🔴 Livraison de la redstone',
+}
 
 export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Trajet }) {
   const info = LIAISONS[w.liaison]
@@ -96,8 +103,14 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const roule = w.etape !== 'quai'
   const mineur = roule && !joueurPousse ? etat.employes.find((m) => m.nom === w.pousseur && m.etape === 'pousse') : undefined
   const e = versEcran(ici.x, ici.y)
+  // À l'arrêt pour charger (au départ) ou pour livrer (à l'arrivée) : la distance est négative
+  // pendant ce temps-là (voir wagonnet.ts). Une mini-jauge montre ce qui se passe.
+  const enPause = roule && distance < 0 && vitesse > 0
+  const restePause = enPause ? -distance / vitesse : 0
+  const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? '⚙️ Chargement du chariot' : '📦 Chargement') : TEXTES_LIVRAISON[info.arrivee] ?? '📦 Déchargement'
   return (
     <>
+      {enPause && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / SECONDES_CHARGEMENT_WAGONNET} secondes={restePause} />}
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
         style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}

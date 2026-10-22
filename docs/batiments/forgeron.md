@@ -4,7 +4,7 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 15 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (la barre d'objectif propose « Construire : Forgeron »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 15 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (les missions proposent « Construis : Forgeron »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : dès le début, jamais de cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
@@ -17,9 +17,7 @@
 
 ## Ce qu'on peut y faire
 
-Le panneau liste les 4 pioches, de la moins bonne à la meilleure. Pour chacune : son nom, le badge **« Équipée »** si c'est celle qu'on tient, la ligne « *N* % de chance de doubler un minerai · durabilité *D* clics », et, si on la possède, une **barre de durabilité** (verte, « restant / total », ou rouge « Cassée : 2 clics par bloc »).
-
-Les pioches plus loin que la suivante sont grisées : « 🔒 Pioche en X · Débloque d'abord la pioche précédente. »
+Depuis le 27/10, le panneau est plus court : il montre seulement **la pioche en main** et **la prochaine à débloquer**. Les autres pioches qu'on possède sont rangées dans un menu repliable **« Autres pioches (*n*) »**. S'il en reste plus loin, une ligne dit « 🔒 Encore *n* pioche(s) à débloquer ensuite. » Pour chaque pioche montrée : son nom, le badge **« Équipée »** si c'est celle qu'on tient, la ligne « *N* % de chance de doubler un minerai · durabilité *D* clics », et, si on la possède, une **barre de durabilité** (verte, « restant / total », ou rouge « Cassée : 2 clics par bloc »).
 
 | Bouton | Quand il apparaît | Ce qu'il fait |
 |---|---|---|
@@ -80,7 +78,7 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`src/jeu/objectifs.ts`) : tant que le forgeron n'est pas posé, l'objectif est « Construire : Forgeron ». Une fois posé, la pioche suivante est le **premier** achat d'amélioration de `achatsPossibles` (juste après les bâtiments à construire). Si on peut la payer, le prochain objectif devient « Pioche en X · achetable au forgeron ! » et la bulle 💰 apparaît. Sinon, la barre d'objectif peut montrer « 180 / 200 $ » ou « il manque 12 Fer ».
+- **Missions** (`src/jeu/missions.ts`, `src/jeu/objectifs.ts`) : tant que le forgeron n'est pas posé, une mission dit « Construis : Forgeron » (avec ce qu'il manque : « Gagne *X* $ » ou « Récupère *N* pierre »). Une fois posé, la pioche suivante est le **premier** achat d'amélioration de `achatsPossibles` (juste après les bâtiments à construire). Si on peut la payer, la bulle 💰 apparaît ; sinon, une mission d'amélioration peut la proposer (« 🪨 12/25 » ou « 💵 180/200 »).
 - **Stand Personnel** : les pioches des mineurs employés (`NIVEAUX_EMPLOYE` : bois, pierre, fer, or, diamant) s'achètent là-bas, en argent seulement. Elles ne s'usent pas. **Si un forgeron est posé**, le mineur amélioré vient **chercher sa pioche à la forge** : « ⛏️ X va chercher sa pioche en … à la forge. » À la fin de son tour (après avoir vidé son sac dans le coffre), il marche jusqu'au forgeron, y reste **3 secondes** (`SECONDES_FORGE_EMPLOYE`, « 🔨 récupère sa nouvelle pioche »), puis retourne à la mine. Sa nouvelle pioche compte tout de suite. Sans forgeron, il l'a directement (« ⛏️ X a maintenant une pioche en … »).
 - **Bandeau** (`src/composants/Hud.tsx`) : la pioche équipée et sa barre de durabilité.
 - **Panneau de la mine** : le rappel « ⛏️ *N* % de chance de doubler un minerai » à côté du bloc.
@@ -95,7 +93,7 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 - `src/jeu/mineur.ts` : les règles des pioches (`acheterPioche`, `peutAcheterPioche`, `coutPioche`, `equiper`, `coutReparation`, `reparer`, `usure`, `estCassee`, `chanceDoublement`), le clic et l'usure (`cliquerMine`).
 - `src/jeu/employes.ts` : le passage des mineurs à la forge (`ameliorerEmploye`, `forgeEnAttente`, étape `forge`).
 - `src/jeu/notifications.ts` : les bulles 🔧 « pioche cassée » et 💰 « achetable ».
-- `src/jeu/objectifs.ts` : « Construire : Forgeron », puis la pioche suivante.
+- `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Forgeron », puis la pioche suivante.
 - `src/jeu/succes.ts` : les trois succès des pioches.
 - `src/composants/Panneaux.tsx` : le panneau du forgeron (`PanneauPioches`).
 - `src/composants/Amelioration.tsx` : le composant `Achat` (prix à gauche, bouton à droite).

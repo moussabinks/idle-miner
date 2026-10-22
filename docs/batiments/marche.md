@@ -4,7 +4,7 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière. C'est un bâtiment de **5 × 5 cases**, **gratuit** : c'est le premier qu'on pose, puisqu'on commence la partie avec 0 $. Au tout début, la barre « 🎯 prochain objectif » dit « Construire : Marché · gratuit : pose-le (menu Bâtiments) ! ».
+- **Où** : là où tu le poses dans la clairière. C'est un bâtiment de **5 × 5 cases**, **gratuit** : c'est le premier qu'on pose, puisqu'on commence la partie avec 0 $. Au tout début, la première **mission** (en haut à droite) dit « Construis le marché (gratuit) » : un clic ouvre le menu Bâtiments. Une fois posé, les missions suivantes sont « Casse 10 blocs à la mine », « Mets les blocs du coffre dans ton sac » et « Vends ton sac au marché ».
 - **Le poser** : menu **🏗️ Bâtiments** → carte « 💰 Marché » → **🏗️ Poser**. Un fantôme du bâtiment suit le doigt ou la souris (vert si la place est libre, rouge sinon) ; un clic sur la carte le fixe, **↔ Retourner** le met en miroir, **✔ Construire ici** le pose. Plus tard, **✏️ Modifier** permet de le déplacer ou de le retourner gratuitement.
 - **Déblocage** : dès le début, jamais de cadenas.
 - **La porte** : sur la face avant **gauche** du dessin (à droite s'il est retourné).
@@ -18,7 +18,7 @@
 
 ## Ce qu'on peut y faire
 
-Le panneau affiche « Choisis combien vendre de chaque objet (garde-en pour une pioche, des rails, le générateur…). » Si le sac est vide : « Ton sac est vide. Va le remplir au coffre de la mine ! »
+Le panneau montre directement les jauges du sac (plus de phrase d'explication au-dessus, 27/10). **Si le sac est vide**, il n'affiche plus qu'**une seule phrase** (« 🎒 Ton sac est vide. Remplis-le au coffre de la mine, puis reviens vendre ici ! »), sans bouton inutile.
 
 | Élément | Ce qu'il fait |
 |---|---|
@@ -63,7 +63,7 @@ Les chances de chaque bloc, niveau par niveau, sont dans [mine.md](mine.md#les-5
   - le **chariot de la foreuse** : vendu directement au stand Foreuse (pas besoin de venir au marché).
 - **Les mineurs employés ne vont plus au marché** (22/10) : ils vident leur sac dans le coffre de la mine.
 - **Où le poser** : près de la mine ! Plus le marché est près, plus les allers-retours à pied sont courts au début, moins il faut de rails (3 fer la case), plus le wagonnet fait de voyages, et plus il est facile de mettre tout le trajet dans le rayon du générateur. Pense aussi à la foreuse, qui peut y envoyer son chariot.
-- **Objectifs** (`objectifs.ts`) : tant qu'il n'est pas posé, « Construire : Marché » est le premier objectif (gratuit). Ensuite, le marché ne propose aucun achat. Son nom dans les objectifs est « au marché ».
+- **Missions** : tant qu'il n'est pas posé, « Construis le marché (gratuit) » est la première mission (`missions.ts`). Ensuite, le marché ne propose aucun achat ; vendre fait partie des premiers pas (« Vends ton sac au marché »).
 - **Succès** : « 💰 Riche » (gagner 5 000 $), « 🤑 Magnat » (100 000 $), « 🛤️ Cheminot » (créer un trajet de wagonnet).
 - **Classement** : l'argent gagné au total vient des ventes, des wagonnets et du chariot.
 
@@ -76,7 +76,7 @@ Les chances de chaque bloc, niveau par niveau, sont dans [mine.md](mine.md#les-5
 - `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche` et `foreuse-marche`, `avancerWagonnets`).
 - `src/jeu/foreuse.ts` : la vente du chariot de la foreuse (`vendreChariot`).
 - `src/jeu/notifications.ts` : les bulles 🎒 « sac plein » et 🚧 « rails coupés ».
-- `src/jeu/objectifs.ts` : « Construire : Marché ».
+- `src/jeu/missions.ts` : la mission « Construis le marché (gratuit) » et les premiers pas.
 - `src/composants/Panneaux.tsx` : le panneau du marché (`PanneauMarche`).
 - `src/composants/Jauges.tsx` : les jauges pour choisir les quantités (aussi utilisées pour le coffre de la mine).
 - `src/choix.ts` : le calcul du lot choisi avec les jauges (`lotChoisi`).

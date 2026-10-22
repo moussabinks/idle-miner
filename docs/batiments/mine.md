@@ -11,21 +11,27 @@
 - **L'ouvrir** : toucher (ou cliquer) la mine, ou le gros bouton rond **⛏️ Mine** en bas à gauche de l'écran : le hamster marche jusqu'au côté de la mine le plus proche de lui, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case de la mine, de n'importe quel côté. Au chargement d'une partie, le panneau reste fermé (il ne s'ouvre qu'en arrivant en marchant).
 - **Description** (en haut du panneau) : « Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre. »
 - **Le dessin au village** : le dessin de la mine de l'équipe (une fosse en planches et en pierre, avec son treuil, ses minerais et ses lanternes, `public/images/batiments/mine.webp`), calé pile sur ses 10 × 10 cases (`CALAGES.puits`). Par-dessus (`DessinEvolutionMine` dans `DessinsVillage.tsx`) :
-  - dès que l'**ascenseur** est construit, **sa cabine** (`mine-cabine.webp`) pend aux deux câbles du treuil et **suit le premier mineur qui monte ou descend** : elle descend avec lui, remonte avec lui, et attend en haut le reste du temps. Tout en bas, elle est à moitié cachée derrière la barrière de devant (`mine-devant.webp`). Sans ascenseur, les câbles pendent au fond ;
+  - dès que l'**ascenseur** est construit, **sa cabine** (`mine-cabine.webp`) pend aux deux câbles du treuil et **suit le premier mineur qui monte ou descend** : elle descend avec lui, remonte avec lui, et attend en haut le reste du temps. Tout en bas, elle est à moitié cachée derrière la barrière de devant (`mine-devant.webp`). Sans ascenseur, les câbles pendent au fond. Depuis le 27/10, **les mineurs sont dessinés dans la cabine** quand ils descendent (de dos) ou remontent (de face), **trois au plus** à la fois : on ne voit que le haut de leur corps, coupés sous le bord avant de la cabine (`PassagerAscenseur`, `passagers` de `DessinEvolutionMine`). Sans ascenseur, ils descendent l'échelle et disparaissent sous le bord du puits ;
   - un **panneau en bois** planté sur le sol de devant affiche le niveau de la mine (« Niv. 3 »).
 - **Bulles au-dessus** (`notifications.ts`) :
   - **📦 « Le coffre de la mine est plein : viens le vider ! »** (alerte rouge) ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet qui part de la mine (ou qui y arrive) n'a plus de rails complets : « Rails coupés entre mine et marché : le wagonnet attend. Repose les rails ! ». La même bulle est sur l'autre bâtiment du trajet ;
   - **📦 « *N* objets dans le coffre : porte-les au marché »** (bulle rose « prêt ») quand le coffre a au moins 20 objets et qu'il n'y a pas encore de trajet Mine → Marché ;
   - **💰 « Une amélioration est achetable ! »** quand le niveau suivant de la mine, du coffre, de l'ascenseur (si on a des mineurs) ou des wagonnets (s'il y a au moins un trajet) est payable tout de suite.
-- **La jauge du coffre** (27/10) : au-dessus de la mine, une petite barre est **toujours visible** : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »…). Elle est verte, passe à l'**orange** à 75 % et au **rouge** quand le coffre est plein (elle grossit alors et rétrécit, comme un cœur qui bat). On voit d'un coup d'œil s'il faut vider le coffre. Les bulles de la mine sont un peu plus haut, au-dessus de cette jauge.
+- **La jauge du coffre** (27/10) : au-dessus de la mine, une petite barre est **toujours visible** : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »…). Elle est verte, passe à l'**orange** à 75 % et au **rouge** quand le coffre est plein (elle grossit alors et rétrécit, comme un cœur qui bat). On voit d'un coup d'œil s'il faut vider le coffre. À côté, « 👷 *n* » (depuis le 27/10) dit combien de mineurs **travaillent au fond de la mine** (ils descendent, creusent, remontent ou vident leur sac). Les bulles de la mine sont un peu plus haut, au-dessus de cette jauge.
 - **Le bandeau** (en haut de l'écran) montre toujours le niveau de la mine, son nom et le remplissage du coffre (la case clignote en rouge quand il est plein).
 
 ## Ce qu'on peut y faire
 
-Le panneau (`PanneauMine.tsx`, refait le 27/10), de haut en bas :
+Le panneau (`PanneauMine.tsx`, refait le 27/10) est rangé en **trois onglets** (`OngletsPanneau`, 27/10) :
 
-- En titre : « Niveau *N* · **nom du niveau** ».
+- **⛏️ Creuser** : le bloc à cliquer, le tableau de production et le coffre (pastille « ! » quand le coffre est plein) ;
+- **🚃 Wagonnets** : les trajets qui partent de la mine (avec leur nombre dans le titre) ;
+- **⬆️ Améliorer** : le niveau de la mine, la taille du coffre et l'ascenseur (pastille « + » quand on peut payer une amélioration).
+
+L'onglet **Creuser** s'ouvre en premier. De haut en bas :
+
+- En titre (onglet Creuser) : « Niveau *N* · **nom du niveau** ».
 
 ### Le bloc à cliquer
 
@@ -51,7 +57,7 @@ Ce sont des **moyennes** (les vrais blocs sont tirés au hasard), calculées par
 - Une barre (plus grosse depuis le 27/10) : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
 - Vide : « Vide. Clique sur le bloc pour le remplir ! »
 - Sinon, les **jauges** de son contenu (les objets les plus chers en haut) et **🎒 Mettre dans le sac (*n*)** (kaki) : on choisit combien prendre de chaque objet, et ils passent dans le sac à dos (tant qu'il y a de la place). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. »
-- Avec le trajet Mine → Marché : « Le wagonnet du marché laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet du marché ne l'emporte pas (c'est la même liste que les objets gardés du marché).
+- Avec le trajet Mine → Marché : un menu repliable **« Ce que le wagonnet ne vend pas »** (`<details class="plus-d-infos">`, 27/10 : l'option est rangée pour ne pas encombrer le panneau). Dedans, « Le wagonnet du marché laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet du marché ne l'emporte pas (c'est la même liste que les objets gardés du marché).
 
 ### Les trajets de wagonnets (24/10)
 
@@ -170,7 +176,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ### L'ascenseur et l'échelle
 
 - Ils ne servent qu'aux **mineurs employés** : chaque mineur remonte son sac plein (une montée), le vide dans le coffre en **2 s**, puis redescend (une descente). Voir [personnel.md](personnel.md).
-- L'ascenseur n'est proposé dans les objectifs qu'une fois qu'on a au moins un mineur.
+- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur.
 
 ### Descendre d'un niveau
 
@@ -180,7 +186,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ## Lien avec le reste du jeu
 
 - **Marché** : on y porte le coffre (à pied, dans le sac) ou le wagonnet Mine → Marché y va sur les rails. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Bazar** : un plus grand sac pour porter plus du coffre au marché. **Personnel** : les mineurs remplissent le coffre, et les pousseurs (un par trajet) poussent les wagonnets. **Foreuse** et **Générateur** : débloqués au niveau 2 ; la mine peut leur envoyer leur charbon et leur redstone par wagonnet.
-- **Objectifs** (`objectifs.ts`) : « Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnets de *N* places » (achats du stand `puits`, « achetable à la mine ! ») ; et les étapes « Relier la mine au marché · pose des rails (menu Bâtiments, 3 fer la case) » quand on a du fer et pas encore de ligne, puis « Créer un trajet de wagonnet · à la mine : « envoyer un wagonnet vers le marché » », et plus tard « Envoyer du charbon à la foreuse ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Casse 10 blocs à la mine » au début, l'urgence « Le coffre est plein : vide-le ! », les améliorations du stand `puits` (« Mine niveau *N* : *nom* », « Coffre de *N* places », « Construire l'ascenseur » / « Ascenseur niveau *N* », « Wagonnets de *N* places ») ; et les étapes de l'automatisation : « Récupère *N* fer pour les rails », « Pose des rails de la mine au marché », « Envoie un wagonnet vers le marché (à la mine) », et plus tard « Envoie du charbon à la foreuse (à la mine) ».
 - **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Cœur de diamant (niveaux 2 à 5), Ça brille ! (un diamant), Cheminot (un trajet de wagonnet), Réseau complet (les 4 trajets), Ligne régulière (100 voyages de wagonnet).
 - **Classement** : le niveau de la mine (le meilleur de tes mondes) est envoyé dans la colonne « prestige » du serveur. Voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).
 - **Statistiques** : blocs cassés en cliquant (par sorte), blocs sortis tout seuls de la mine, voyages et argent des wagonnets.
@@ -193,7 +199,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - `src/jeu/wagonnet.ts` : les trajets (`ligneDe`, `creerTrajet`, `supprimerTrajet`), le chargement, la vitesse (`trajetElectrique`), pousser (`pousserTrajet`), agrandir (`ameliorerWagonnet`), le temps qui passe (`avancerWagonnets`).
 - `src/jeu/village.ts` : la mine posée au milieu (`POSITION_MINE`, `nouveauVillage`), sa porte, les rails entre deux bâtiments (`railsEntre`), sans boucle (`feraitUneBoucle`).
 - `src/jeu/batiments.ts` : déplacer ou retourner la mine, poser les rails.
-- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts` : les bulles 📦, 🚧 et 💰, les achats du stand `puits`.
+- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/missions.ts` : les bulles 📦, 🚧 et 💰, les achats du stand `puits`, les missions.
 - `src/jeu/production.ts` : la production pour le tableau de bord (`production` : mine, chaque mineur, total, dollars par minute), testée dans `production.test.ts`.
 - `src/composants/PanneauMine.tsx` : le panneau (titre du niveau, bloc à cliquer et combo, tableau de production, coffre, trajets, niveau, coffre, ascenseur) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.

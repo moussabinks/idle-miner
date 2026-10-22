@@ -114,7 +114,7 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 
 ### Payer avec le sac et le coffre (`disponible`, `payer`)
 
-Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, coffre, ascenseur, wagonnets, foreuse, générateur, charbon et redstone), les minerais d'un prix se comptent et se prennent **dans le sac, puis dans le coffre de la mine**. Le menu Bâtiments, les prix (`PrixCout`) et les objectifs comptent les deux.
+Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, coffre, ascenseur, wagonnets, foreuse, générateur, charbon et redstone), les minerais d'un prix se comptent et se prennent **dans le sac, puis dans le coffre de la mine**. Le menu Bâtiments, les prix (`PrixCout`) et les missions comptent les deux.
 
 ### La mine toute seule (`avancerMine`, `debitMine`)
 

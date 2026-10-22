@@ -288,7 +288,7 @@ Les **décorations** à acheter (fleurs, arbres, fontaine, statue…) et les **t
 | Constante | Valeur | Qui |
 |---|---|---|
 | `VITESSE_JOUEUR` | 5 cases/s | le joueur |
-| `VITESSE_MARCHE` | 4 cases/s | les mineurs employés (vers la forge, le Personnel, la mine) |
+| `VITESSE_MARCHE` | 2,5 cases/s (27/10 ; avant 4) | les mineurs employés (vers la forge, le Personnel, la mine) |
 | `SECONDES_FORGE_EMPLOYE` | 3 s | un mineur récupère sa nouvelle pioche à la forge |
 | `RAYON_BATIMENT` | 1,3 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
 
