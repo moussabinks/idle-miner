@@ -97,6 +97,22 @@ describe('les trajets des wagonnets', () => {
     expect(joueurPousse(etat)).toBe(false)
   })
 
+  it('il ne vend qu’une fois le déchargement fini, au marché', () => {
+    const etat = partieAvecTrajet()
+    etat.coffre.contenu = { fer: 10 }
+    pousserTrajet(etat, 'mine-marche')
+    const trajet = trajetDe(etat, 'mine-marche')!
+    for (let i = 0; i < 200 && trajet.etape === 'aller'; i++) avancerWagonnets(etat, 0.1)
+    // Arrivé : il décharge, sans encore rien vendre.
+    expect(trajet.etape).toBe('retour')
+    expect(trajet.distance).toBeLessThan(0)
+    expect(etat.argent).toBe(0)
+    expect(trajet.chargement).toEqual({ fer: 10 })
+    for (let i = 0; i < 200 && trajet.distance < 0; i++) avancerWagonnets(etat, 0.1)
+    expect(etat.argent).toBe(120)
+    expect(trajet.chargement).toEqual({})
+  })
+
   it('il laisse dans le coffre les objets gardés au marché', () => {
     const etat = partieAvecTrajet()
     etat.coffre.contenu = { fer: 10 }

@@ -12,7 +12,6 @@ import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/ge
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { nombreAbrege } from '../nombres'
-import type { Gain } from '../usePartie'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
@@ -74,17 +73,9 @@ type Props = {
   onGlisser: (c: Case) => void // on fait glisser le fantôme avec le doigt ou la souris
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
   trajetEnSurbrillance?: IdLiaison | null // un trajet qui brille sur la carte (quand on embauche un pousseur)
-  ventesMarche?: Gain[] // les ventes des wagonnets, à montrer au-dessus du marché
   zonesRails?: boolean // on pose des rails : les bâtiments qu'on peut relier sont entourés de jaune
   onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
 }
-
-// La gerbe de pièces d'une vente au marché : 10 pièces qui partent en éventail vers le haut.
-const PIECES_MARCHE = Array.from({ length: 10 }, (_, i) => {
-  const angle = Math.PI * (1.1 + (i / 9) * 0.8)
-  const portee = 46 + (i % 3) * 16
-  return { dx: Math.round(Math.cos(angle) * portee), dy: Math.round(Math.sin(angle) * portee), retard: (i % 4) * 35 }
-})
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
@@ -106,7 +97,6 @@ export function VueVillage({
   onGlisser,
   onPeindre,
   trajetEnSurbrillance = null,
-  ventesMarche = [],
   zonesRails = false,
   onOuvrirTrajet,
 }: Props) {
@@ -583,24 +573,6 @@ export function VueVillage({
     bulles.push(
       <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte="⚡ Courant" part={etat.generateur.carburant / RESERVE_GENERATEUR_WAGONNET} secondes={etat.generateur.carburant} />,
     )
-  }
-
-  // Quand un wagonnet vend au marché : un gros « +X $ » doré jaillit au-dessus du marché, avec
-  // une gerbe de pièces (27/10).
-  const marche = batimentPose(village, 'marche')
-  if (marche) {
-    const t = BATIMENTS.marche.taille
-    const centre = versEcran(marche.x + t / 2, marche.y + t / 2)
-    for (const vente of ventesMarche) {
-      bulles.push(
-        <span key={`vente${vente.id}`} className="vente-marche" style={{ left: centre.x, top: centre.y - 120 }} aria-hidden="true">
-          <span className="vente-marche-texte">+{Math.round(vente.montant).toLocaleString('fr-FR')} $</span>
-          {PIECES_MARCHE.map((p, i) => (
-            <i key={i} className="piece-marche" style={{ ['--dx' as string]: `${p.dx}px`, ['--dy' as string]: `${p.dy}px`, animationDelay: `${p.retard}ms` }} />
-          ))}
-        </span>,
-      )
-    }
   }
 
   // Le sol : chemins, rails, grille, emprises.

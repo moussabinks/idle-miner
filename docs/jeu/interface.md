@@ -233,7 +233,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 - le **rayon du générateur** : un cercle en pointillés jaunes (bien visible quand on est devant le générateur ou qu'on le pose, discret quand il donne du courant) ;
 - les **bulles de notification** au-dessus des bâtiments ;
 - **la jauge du coffre** (27/10), toujours au-dessus de la mine : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »), une barre verte, **orange** dès 75 %, **rouge** et qui pulse quand le coffre est plein. Les bulles de la mine sont un peu plus haut pour passer au-dessus ;
-- **les ventes des wagonnets au marché** (27/10) : un gros « +*X* $ » doré jaillit au-dessus du marché avec un éclair de lumière et une gerbe de pièces en éventail, puis monte et s'efface (2,2 s).
+- **les ventes des wagonnets au marché** (27/10) : un « +X $ » doré jaillit **juste au-dessus du wagonnet**, par-dessus le marché, **quand il a fini de décharger** (la jauge « 💰 Vente » finie : c'est là que l'argent arrive). Il compte de 0 jusqu'au montant, puis claque (rebond, éclair blanc), avec une onde dorée, des étoiles, les 3 minerais vendus les plus chers qui sautent, et une fontaine de 12 pièces qui monte puis retombe (2 s). Plus grand avec un halo à partir de 500 $. Le compteur d'argent du bandeau saute aussi (`VenteWagonnet` dans `WagonnetVillage.tsx`).
 
 **La plage hors de l'écran** (27/10) : quand la caméra ne voit pas la plage, ses animations (l'eau, les objets) sont mises en pause (`plage-cachee`), pour ne pas faire travailler le navigateur pour rien.
 
@@ -257,7 +257,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 
 **En construction** (placement, pinceau, Modifier) : la grille s'affiche, et ce qu'on pose est un **fantôme** un peu transparent qui pulse, sur un losange **vert** (libre) ou **rouge** (occupé). Voir [§ 7](#7-les-boutons-du-bas).
 
-**Les petits gains** : pour l'argent qui n'est ni une vente ni une vente de wagonnet, un petit « +*X* $ » doré monte en haut au milieu de l'écran (`Gains.tsx`). Depuis le 27/10, les ventes des wagonnets ne l'affichent plus : elles ont leur « +*X* $ » au-dessus du marché (voir plus haut). Une vente au marché ou du chariot fait la grosse animation (§ 11).
+**Les petits gains** : pour l'argent qui n'est ni une vente ni une vente de wagonnet, un petit « +*X* $ » doré monte en haut au milieu de l'écran (`Gains.tsx`). Depuis le 27/10, les ventes des wagonnets ne l'affichent plus : elles ont leur « +*X* $ » au-dessus du wagonnet (voir plus haut). Une vente au marché ou du chariot fait la grosse animation (§ 11).
 
 ---
 

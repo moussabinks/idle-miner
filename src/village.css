@@ -317,6 +317,21 @@
   100% { translate: 0 0; rotate: -3deg; scale: 1.06 0.94; }
 }
 
+/* Un pousseur derrière son wagonnet (27/10) : il marche bien plus stable, penché en avant,
+   presque sans sautiller (il appuie sur le wagonnet). */
+.perso-pousseur.perso-marche .perso-corps {
+  animation: pas-pousseur 0.68s ease-in-out infinite;
+}
+
+.perso-pousseur.perso-marche .perso-penche {
+  rotate: calc(var(--sens, 1) * 6deg);
+}
+
+@keyframes pas-pousseur {
+  0%, 50%, 100% { translate: 0 0; rotate: -1deg; scale: 1.015 0.985; }
+  25%, 75% { translate: 0 -1px; rotate: 1deg; scale: 1 1; }
+}
+
 /* Au repos : il respire doucement. */
 .perso-village:not(.perso-marche) .perso-corps {
   animation: respire 2.4s ease-in-out infinite;
@@ -1515,71 +1530,134 @@ g.grille-construction {
   }
 }
 
-/* Un wagonnet vend au marché (27/10) : un gros « +X $ » doré jaillit au-dessus du marché, avec
-   un éclair de lumière et une gerbe de pièces (les mêmes que pour tes ventes, effets.css). */
-.vente-marche {
+/* Un wagonnet vend au marché (27/10) : quand il a fini de décharger, un « +X $ » doré jaillit
+   juste au-dessus de lui, par-dessus le marché. Il compte de 0 au montant, puis « claque » (gros
+   rebond, reflet qui passe). Autour : une onde dorée, des étoiles, les minerais vendus qui sautent
+   et une fontaine de pièces qui monte puis retombe. Assez petit pour ne pas cacher le village. */
+.vente-wagonnet {
   position: absolute;
   width: 0;
   height: 0;
   display: grid;
   place-items: center;
   pointer-events: none;
+  z-index: 1000000; /* par-dessus les bâtiments */
 }
 
-/* L'éclair de lumière derrière le texte : un dégradé qui grandit et s'efface (pas de flou). */
-.vente-marche::before {
-  content: '';
+.vente-onde {
   position: absolute;
-  width: 150px;
-  height: 150px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(255 236 140 / 0.85), rgb(255 200 60 / 0.35) 55%, rgb(255 200 60 / 0));
-  animation: vente-marche-eclair 0.7s ease-out forwards;
+  border: 3px solid #ffe066;
+  background: radial-gradient(closest-side, rgb(255 240 150 / 0.75), rgb(255 200 60 / 0.25) 60%, rgb(255 200 60 / 0));
+  animation: vente-onde 0.6s ease-out forwards;
 }
 
-.vente-marche-texte {
+.vente-texte {
   position: relative;
   white-space: nowrap;
-  font-size: 2.1rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #ffe066;
-  -webkit-text-stroke: 1.5px #5a3a00;
-  text-shadow: 0 3px 0 #3a2400, 0 5px 0 rgb(0 0 0 / 0.35);
-  animation: vente-marche 2.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  -webkit-text-stroke: 1.2px #5a3a00;
+  filter: drop-shadow(0 2px 0 #3a2400) drop-shadow(0 2px 1px rgb(0 0 0 / 0.3));
+  animation: vente-texte 2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
-.piece-marche {
+/* Le compte est fini : il claque (gros rebond) et brille en blanc un instant. */
+.vente-texte.vente-fini {
+  animation: vente-texte 2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards, vente-claque 0.35s ease-out, vente-flash 0.5s ease-out;
+}
+
+/* Une grosse vente (500 $ et plus) : un peu plus grande, avec un halo. */
+.vente-texte.vente-grosse {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 2px 0 #3a2400) drop-shadow(0 0 6px rgb(255 214 60 / 0.9));
+}
+
+.vente-piece {
   position: absolute;
-  width: 15px;
-  height: 15px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff6c0 0 18%, #f5c518 20% 60%, #b8860b 62%);
-  box-shadow: 0 0 0 1.5px #5a3a00;
+  box-shadow: 0 0 0 1.2px #5a3a00;
   opacity: 0;
-  animation: piece 1.1s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+  animation: vente-piece 0.95s cubic-bezier(0.25, 0.6, 0.5, 1) forwards;
 }
 
-@keyframes vente-marche {
-  0% { opacity: 0; transform: translateY(20px) scale(0.2) rotate(-10deg); }
-  12% { opacity: 1; transform: translateY(0) scale(1.5) rotate(4deg); }
-  22% { transform: scale(0.95) rotate(-2deg); }
-  30% { transform: scale(1.08) rotate(0); }
-  38% { transform: scale(1); }
-  75% { opacity: 1; transform: translateY(-18px) scale(1); }
-  100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
+.vente-etoile {
+  position: absolute;
+  color: #fff6c0;
+  font-size: 14px;
+  text-shadow: 0 0 6px #ffd84a;
+  opacity: 0;
+  animation: vente-etoile 0.7s ease-out forwards;
 }
 
-@keyframes vente-marche-eclair {
+.vente-objet {
+  position: absolute;
+  font-size: 15px;
+  opacity: 0;
+  animation: vente-objet 0.55s ease-out forwards;
+}
+
+@keyframes vente-onde {
   from { opacity: 1; transform: scale(0.2); }
-  to { opacity: 0; transform: scale(1.4); }
+  to { opacity: 0; transform: scale(1.6); }
+}
+
+@keyframes vente-texte {
+  0% { opacity: 0; transform: translateY(14px) scale(0.3); }
+  14% { opacity: 1; transform: translateY(0) scale(1.25); }
+  24% { transform: scale(0.95); }
+  32% { transform: scale(1.04); }
+  40% { transform: scale(1); }
+  78% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.85); }
+}
+
+@keyframes vente-claque {
+  0% { scale: 1; }
+  40% { scale: 1.3; }
+  100% { scale: 1; }
+}
+
+@keyframes vente-flash {
+  from { color: #fffdf0; }
+  to { color: #ffe066; }
+}
+
+/* Les pièces montent en éventail, puis retombent (la gravité). */
+@keyframes vente-piece {
+  0% { opacity: 1; translate: 0 0; scale: 0.6; }
+  45% { opacity: 1; translate: var(--dx) var(--dy); scale: 1; rotate: 180deg; }
+  100% { opacity: 0; translate: calc(var(--dx) * 1.4) calc(var(--dy) * -0.2 + 18px); scale: 0.8; rotate: 360deg; }
+}
+
+@keyframes vente-etoile {
+  0% { opacity: 0; translate: 0 0; scale: 0.2; rotate: 0deg; }
+  40% { opacity: 1; scale: 1.2; }
+  100% { opacity: 0; translate: var(--dx) var(--dy); scale: 0.5; rotate: 160deg; }
+}
+
+/* Les minerais vendus sautent un peu, puis disparaissent (ils deviennent des pièces). */
+@keyframes vente-objet {
+  0% { opacity: 0; translate: var(--dx) 18px; scale: 0.5; }
+  35% { opacity: 1; translate: var(--dx) -6px; scale: 1.1; }
+  100% { opacity: 0; translate: var(--dx) -2px; scale: 0.2; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vente-marche-texte,
-  .vente-marche::before {
+  .vente-texte,
+  .vente-texte.vente-fini,
+  .vente-onde {
     animation: none;
   }
-  .piece-marche {
+  .vente-piece,
+  .vente-etoile,
+  .vente-objet {
     display: none;
   }
 }

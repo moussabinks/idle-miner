@@ -8,8 +8,8 @@
 // dans le sens de la voie, d'un essieu à l'autre. On le dessine en 3D (Wagonnet3D.tsx).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { LIAISONS, RARETES, SECONDES_CHARGEMENT_WAGONNET, type IdBatiment } from '../jeu/donnees'
-import { totalObjets, type EtatJeu, type Trajet } from '../jeu/mineur'
+import { BLOCS, LIAISONS, RARETES, SECONDES_CHARGEMENT_WAGONNET, type IdBatiment } from '../jeu/donnees'
+import { totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from '../jeu/mineur'
 import { capaciteWagonnet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
 import { MiniJauge, Perso } from './ElementsVillage'
@@ -28,6 +28,65 @@ const TEXTES_LIVRAISON: Partial<Record<IdBatiment, string>> = {
   marche: '💰 Vente',
   foreuse: '⚫ Livraison du charbon',
   generateur: '🔴 Livraison de la redstone',
+}
+
+// La vente d'un wagonnet au marché (27/10) : quand il a fini de décharger, un « +X $ » doré
+// jaillit juste au-dessus de lui (par-dessus le marché), compte de 0 jusqu'au montant, avec une
+// onde, des étoiles, les minerais vendus qui sautent et une fontaine de pièces qui retombent.
+type Vente = { id: number; montant: number; x: number; y: number; objets: string[] }
+const DUREE_VENTE = 2000 // ms
+let prochaineVente = 0
+
+// La fontaine de pièces : 12 pièces en éventail, qui montent puis retombent.
+const PIECES = Array.from({ length: 12 }, (_, i) => {
+  const angle = Math.PI * (1.12 + (i / 11) * 0.76)
+  const portee = 34 + (i % 3) * 12
+  return { dx: Math.round(Math.cos(angle) * portee), dy: Math.round(Math.sin(angle) * portee), retard: (i % 4) * 40 }
+})
+// Les étoiles autour du montant.
+const ETOILES = [
+  { dx: -46, dy: -12, retard: 60 },
+  { dx: 44, dy: -18, retard: 140 },
+  { dx: -30, dy: -38, retard: 220 },
+  { dx: 32, dy: -40, retard: 300 },
+]
+
+function VenteWagonnet({ vente }: { vente: Vente }) {
+  // Le montant monte de 0 jusqu'au total en un peu moins d'une demi-seconde (ralenti à la fin).
+  const [affiche, setAffiche] = useState(0)
+  useEffect(() => {
+    let image = 0
+    const debut = performance.now()
+    const compter = (maintenant: number) => {
+      const t = Math.max(0, Math.min(1, (maintenant - debut) / 450))
+      setAffiche(Math.round(vente.montant * (1 - (1 - t) ** 3)))
+      if (t < 1) image = requestAnimationFrame(compter)
+    }
+    image = requestAnimationFrame(compter)
+    return () => cancelAnimationFrame(image)
+  }, [vente.montant])
+  const fini = affiche === vente.montant
+  return (
+    <span className="vente-wagonnet" style={{ left: vente.x, top: vente.y }} aria-hidden="true">
+      <span className="vente-onde" />
+      {vente.objets.map((emoji, i) => (
+        <span key={i} className="vente-objet" style={{ ['--dx' as string]: `${(i - (vente.objets.length - 1) / 2) * 18}px`, animationDelay: `${i * 70}ms` }}>
+          {emoji}
+        </span>
+      ))}
+      {PIECES.map((p, i) => (
+        <i key={i} className="vente-piece" style={{ ['--dx' as string]: `${p.dx}px`, ['--dy' as string]: `${p.dy}px`, animationDelay: `${120 + p.retard}ms` }} />
+      ))}
+      {ETOILES.map((e, i) => (
+        <b key={i} className="vente-etoile" style={{ ['--dx' as string]: `${e.dx}px`, ['--dy' as string]: `${e.dy}px`, animationDelay: `${e.retard}ms` }}>
+          ✦
+        </b>
+      ))}
+      <span className={`vente-texte ${fini ? 'vente-fini' : ''} ${vente.montant >= 500 ? 'vente-grosse' : ''}`}>
+        +{affiche.toLocaleString('fr-FR')} $
+      </span>
+    </span>
+  )
 }
 
 export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Trajet }) {
@@ -80,7 +139,32 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
     etapeAvant.current = w.etape
   }, [w.etape, versLeMarche])
 
-  if (!ligne || !trace) return null
+  // La vente au marché : le chargement vient d'être vidé (à la fin du déchargement).
+  const [ventes, setVentes] = useState<Vente[]>([])
+  const chargementAvant = useRef<Inventaire>(w.chargement)
+  useEffect(() => {
+    const avant = chargementAvant.current
+    chargementAvant.current = w.chargement
+    if (!versLeMarche || !trace || w.etape !== 'retour' || totalObjets(avant) === 0 || totalObjets(w.chargement) > 0) return
+    const montant = valeurDe(avant)
+    if (montant <= 0) return
+    // Les 3 minerais les plus chers du chargement, qui sautent avant de devenir des pièces.
+    const objets = Object.keys(avant)
+      .sort((a, b) => BLOCS[b as keyof typeof BLOCS].prix - BLOCS[a as keyof typeof BLOCS].prix)
+      .slice(0, 3)
+      .map((id) => BLOCS[id as keyof typeof BLOCS].emoji)
+    // Il a fini de décharger au bout de la voie, devant le marché : c'est là que jaillit la vente.
+    const fin = longueurTrace(trace)
+    const a = surLaTrace(trace, fin)
+    const b = surLaTrace(trace, Math.max(0, fin - ESSIEUX / 2))
+    const ou = versEcran((a.x + b.x) / 2, (a.y + b.y) / 2)
+    const vente = { id: prochaineVente++, montant, x: ou.x, y: ou.y - 46, objets }
+    setVentes((liste) => [...liste.slice(-1), vente])
+    window.setTimeout(() => setVentes((liste) => liste.filter((v) => v.id !== vente.id)), DUREE_VENTE)
+  }, [w.chargement, w.etape, versLeMarche, trace])
+  const ventesVisibles = ventes.map((v) => <VenteWagonnet key={`vente${v.id}`} vente={v} />)
+
+  if (!ligne || !trace) return <>{ventesVisibles}</>
   // Où on en est sur la trace (du départ à l'arrivée), et dans quel sens on roule.
   const d = dRoule
   const depuisLeDepart = w.etape === 'retour' ? longueur - d : w.etape === 'aller' ? d : 0
@@ -110,6 +194,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? '⚙️ Chargement du chariot' : '📦 Chargement') : TEXTES_LIVRAISON[info.arrivee] ?? '📦 Déchargement'
   return (
     <>
+      {ventesVisibles}
       {enPause && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / SECONDES_CHARGEMENT_WAGONNET} secondes={restePause} />}
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
@@ -121,7 +206,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
       >
         <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={remplissage} contenu={w.chargement} />
       </svg>
-      {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur" />}
+      {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche classe="perso-joueur perso-pousseur" />}
       {mineur && (
         <Perso
           qui={RARETES[mineur.rarete] ? mineur.rarete : 'commun'}
@@ -130,7 +215,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
           sens={orientation.sens}
           vue={orientation.vue}
           marche
-          classe="perso-mineur"
+          classe="perso-mineur perso-pousseur"
           etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>}
         />
       )}

@@ -386,10 +386,13 @@ function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[
 
   const messages: string[] = []
   const longueur = longueurTrajet(ligne)
+  const avant = trajet.distance
   trajet.distance += secondes * vitesseTrajet(etat, trajet)
+  // Le vidage à l'arrivée prend un peu de temps (la distance du retour est négative pendant ce
+  // temps-là) : il ne livre (et ne vend) qu'une fois le vidage fini, quand il repart.
+  if (trajet.etape === 'retour' && avant < 0 && trajet.distance >= 0) messages.push(...livrer(etat, trajet))
   if (trajet.etape === 'aller' && trajet.distance >= longueur) {
-    // À l'arrivée : il livre (le vidage prend un peu de temps, compté sur le retour).
-    messages.push(...livrer(etat, trajet))
+    // À l'arrivée : il s'arrête pour vider son chargement (la livraison se fait à la fin).
     trajet.etape = 'retour'
     trajet.distance = -SECONDES_CHARGEMENT_WAGONNET * vitesseTrajet(etat, trajet)
   } else if (trajet.etape === 'retour' && trajet.distance >= longueur) {
