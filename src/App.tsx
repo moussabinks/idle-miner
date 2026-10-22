@@ -64,7 +64,7 @@ const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: '
 
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
-  const { etat, toasts, gains, ventesMarche, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer } = usePartie(monde.id)
+  const { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer } = usePartie(monde.id)
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
@@ -528,7 +528,6 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           onGlisser={deplacerFantome}
           onPeindre={peindre}
           trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
-          ventesMarche={ventesMarche}
           zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
           onOuvrirTrajet={setTrajetsOuverts}
         />
