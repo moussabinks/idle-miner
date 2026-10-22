@@ -18,8 +18,10 @@ import {
   capaciteCoffre,
   chanceDoublement,
   coffrePlein,
+  durabiliteRestante,
   descendreNiveauMine,
   estCassee,
+  piocheEnMain,
   nbDansCoffre,
   peutPayer,
   placeLibre,
@@ -31,7 +33,7 @@ import {
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, rareteDe } from '../jeu/employes'
-import { production } from '../jeu/production'
+import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import { trajetDe } from '../jeu/wagonnet'
 import { lotChoisi, type Choix } from '../choix'
 import type { Eclat, Trouvaille } from '../usePartie'
@@ -119,6 +121,8 @@ function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu;
           </span>
         )}
       </button>
+      {/* Ta pioche et sa durabilité, juste sous le bloc (27/10). */}
+      <JaugePioche etat={etat} />
       <div className="bloc-mine-texte">
         <strong>{plein ? '📦 Coffre plein !' : `👆 ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
         <span className="discret">
@@ -127,6 +131,77 @@ function BlocACliquer({ etat, eclats, trouvailles, onCliquer }: { etat: EtatJeu;
             : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de chance de doubler un minerai`}
         </span>
       </div>
+    </div>
+  )
+}
+
+// La pioche en main : son nom et sa durabilité (rouge quand elle s'use, « cassée » à zéro).
+function JaugePioche({ etat }: { etat: EtatJeu }) {
+  const pioche = piocheEnMain(etat)
+  const reste = durabiliteRestante(etat)
+  const part = reste / Math.max(1, pioche.durabilite)
+  const niveau = reste <= 0 ? 'pioche-cassee' : part < 0.2 ? 'pioche-usee' : ''
+  return (
+    <div className={`jauge-pioche ${niveau}`} title={`Pioche en ${pioche.nom} : ${reste} / ${pioche.durabilite} clics`}>
+      <span className="jauge-pioche-icone" aria-hidden="true">
+        {reste <= 0 ? '💥' : pioche.emoji}
+      </span>
+      <span className="jauge-pioche-barre">
+        <i style={{ width: `${Math.round(part * 100)}%` }} />
+        <span className="jauge-pioche-texte">{reste <= 0 ? 'Cassée : répare-la au forgeron' : `Pioche en ${pioche.nom} · ${reste} / ${pioche.durabilite}`}</span>
+      </span>
+    </div>
+  )
+}
+
+// Les goulots (27/10) : l'ascenseur et le wagonnet du marché suivent-ils la production ? Une
+// alerte quand ils ne suivent pas, une ligne verte quand tout va bien.
+function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: 'wagonnets' | 'ameliorer') => void }) {
+  const ascenseur = analyseAscenseur(etat)
+  const wagonnet = analyseWagonnet(etat)
+  const aMineurs = etat.employes.some((e) => e.role === 'mineur')
+  if (!aMineurs && !wagonnet) return null
+  return (
+    <div className="goulots">
+      {aMineurs &&
+        (ascenseur.tropLent ? (
+          <div className="goulot goulot-alerte">
+            <span>
+              ⚠️ <strong>Ascenseur trop lent</strong> : tes mineurs passent {Math.round(ascenseur.partDansLePuits * 100)} % de leur temps dans le puits.
+              {ascenseur.gainProchainNiveau !== null && ` Niveau suivant : +${parSeconde(ascenseur.gainProchainNiveau)} bloc/s.`}
+            </span>
+            <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('ameliorer')}>
+              ⬆️ Voir
+            </button>
+          </div>
+        ) : (
+          <div className="goulot goulot-ok">
+            ✔ Ascenseur : {Math.round(ascenseur.partDansLePuits * 100)} % du temps des mineurs dans le puits
+          </div>
+        ))}
+      {wagonnet &&
+        (wagonnet.moteur === 'personne' ? (
+          <div className="goulot goulot-alerte">
+            <span>
+              ⚠️ <strong>Personne ne pousse le wagonnet du marché</strong> : embauche un pousseur (Personnel) ou électrifie les rails.
+            </span>
+          </div>
+        ) : wagonnet.surplus > 0.005 ? (
+          <div className="goulot goulot-alerte">
+            <span>
+              ⚠️ <strong>Wagonnet saturé</strong> : il emporte au plus {parSeconde(wagonnet.debitMax)} bloc/s (aller-retour de {Math.round(wagonnet.secondesAllerRetour)} s), la mine en
+              sort {parSeconde(wagonnet.apport)}. Le coffre se remplit de {parSeconde(wagonnet.surplus)} bloc/s : agrandis les wagonnets
+              {wagonnet.moteur === 'pousseur' ? ' ou électrifie les rails' : ''}.
+            </span>
+            <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('wagonnets')}>
+              ⬆️ Voir
+            </button>
+          </div>
+        ) : (
+          <div className="goulot goulot-ok">
+            ✔ Wagonnet : jusqu'à {parSeconde(wagonnet.debitMax)} bloc/s, la mine en sort {parSeconde(wagonnet.apport)}
+          </div>
+        ))}
     </div>
   )
 }
@@ -223,6 +298,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
   const niveau = infoNiveauMine(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
+  const puits = analyseAscenseur(etat)
   // Ce qu'on peut améliorer tout de suite (pour la pastille de l'onglet).
   const ameliorable = (prochain !== null && peutPayer(etat, prochain.cout)) || (coffre !== null && peutPayer(etat, coffre.cout))
   return (
@@ -245,6 +321,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
           </p>
           <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
           <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
+          <Goulots etat={etat} onVoir={setOnglet} />
 
           {/* Le coffre : tout ce qui sort de la mine. */}
           <div className="ligne-achat">
@@ -341,6 +418,14 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
           <div className="ligne-achat">
             <strong>🛗 Ascenseur</strong>
             <span className="discret">Tes mineurs remontent leur sac (et redescendent) plus vite.</span>
+            {/* Est-ce utile de l'améliorer ? La part du temps perdue dans le puits (27/10). */}
+            {etat.employes.some((e) => e.role === 'mineur') && (
+              <span className={puits.tropLent ? 'texte-alerte' : 'discret'}>
+                {puits.tropLent ? '⚠️ ' : '✔ '}
+                Tes mineurs passent {Math.round(puits.partDansLePuits * 100)} % de leur temps dans le puits
+                {puits.gainProchainNiveau !== null && ` · niveau suivant : +${parSeconde(puits.gainProchainNiveau)} bloc/s`}.
+              </span>
+            )}
             <AmeliorationAscenseur etat={etat} jouer={jouer} />
           </div>
         </>

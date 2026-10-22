@@ -287,7 +287,7 @@ Les **décorations** à acheter (fleurs, arbres, fontaine, statue…) et les **t
 
 | Constante | Valeur | Qui |
 |---|---|---|
-| `VITESSE_JOUEUR` | 5 cases/s | le joueur |
+| `VITESSE_JOUEUR` | 7,5 cases/s (27/10 ; avant 5) | le joueur |
 | `VITESSE_MARCHE` | 2,5 cases/s (27/10 ; avant 4) | les mineurs employés (vers la forge, le Personnel, la mine) |
 | `SECONDES_FORGE_EMPLOYE` | 3 s | un mineur récupère sa nouvelle pioche à la forge |
 | `RAYON_BATIMENT` | 1,3 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
@@ -374,4 +374,4 @@ Ce qu'il faut pour descendre, et les grandes améliorations qui arrivent à peu 
 | Remplir le chariot de la foreuse | 400 s (niveau 1) à 1 667 s (niveau 6), sans électricité | `NIVEAUX_CHARIOT`, `NIVEAUX_FORAGE` |
 | Un trajet de mineur | 10 s (échelle) à 1 s (ascenseur niveau 6) | `NIVEAUX_ASCENSEUR` |
 | Rattrapage hors ligne | 8 h au plus | `ABSENCE_MAX` |
-| Le joueur traverse la clairière (60 cases) | ≈ 12 s (5 cases/s) | `VITESSE_JOUEUR` |
+| Le joueur traverse la clairière (60 cases) | ≈ 8 s (7,5 cases/s) | `VITESSE_JOUEUR` |

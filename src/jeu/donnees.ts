@@ -463,7 +463,7 @@ export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
 // (les mineurs : 2,5 depuis le 27/10, pour qu'on les voie bien marcher ; avant 4)
 export const VITESSE_MARCHE = 2.5
 // Le joueur marche un peu plus vite que ses mineurs (c'est lui le patron).
-export const VITESSE_JOUEUR = 5
+export const VITESSE_JOUEUR = 7.5 // (27/10 : 1,5 fois plus vite qu'avant)
 // Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.
 export const SECONDES_FORGE_EMPLOYE = 3
 

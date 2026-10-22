@@ -93,6 +93,14 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
   )
 })
 
+// « 1,4 s », « 42 s », « 12 min ».
+function dureeCourte(secondes: number): string {
+  const s = Math.max(0, secondes)
+  if (s < 10) return `${s.toLocaleString('fr-FR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} s`
+  if (s < 60) return `${Math.ceil(s)} s`
+  return `${Math.floor(s / 60)} min`
+}
+
 // Une mini-jauge au-dessus d'un objet du village (27/10) : ce qui se passe (« 📦 Chargement »),
 // le temps qu'il reste, et une petite barre qui se remplit. Pour le wagonnet qui charge ou vend,
 // l'ascenseur qui décharge...
@@ -100,7 +108,7 @@ export function MiniJauge({ x, y, texte, part, secondes }: { x: number; y: numbe
   return (
     <div className="mini-jauge" style={{ left: x, top: y }} aria-hidden="true">
       <span className="mini-jauge-texte">
-        {texte} <b>{Math.max(0, secondes).toLocaleString('fr-FR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} s</b>
+        {texte} <b>{dureeCourte(secondes)}</b>
       </span>
       <span className="mini-jauge-piste">
         <i style={{ width: `${Math.round(Math.max(0, Math.min(1, part)) * 100)}%` }} />
