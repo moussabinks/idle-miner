@@ -37,7 +37,7 @@ import {
 import { AmbianceVillage } from './AmbianceVillage'
 import { WagonnetVillage } from './WagonnetVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
-import { ObjetsPlage, SolPlage } from './PlageVillage'
+import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
   HAUTEUR_MONDE,
@@ -503,18 +503,17 @@ export function VueVillage({
   // Le sol : chemins, rails, grille, emprises.
   const sol = (
     <svg className="sol-village" viewBox={`0 0 ${LARGEUR_MONDE} ${HAUTEUR_MONDE}`} aria-hidden="true">
-      <defs>
-        <filter id="flou-ombre-batiment" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
-      </defs>
       {/* Une ombre douce sous chaque bâtiment (la lumière vient d'en haut à gauche) : il est posé
-          sur le sol, pas collé dessus. */}
+          sur le sol, pas collé dessus. Trois losanges transparents l'un sur l'autre, du plus grand
+          au plus petit : le bord est doux sans flou (un flou faisait ramer le jeu). */}
       {village.batiments
         .filter((b) => b.id !== 'puits')
-        .map((b) => (
-          <polygon key={`ombre-${b.id}`} className="ombre-batiment" points={losange(b.x + 0.6, b.y + 0.2, BATIMENTS[b.id].taille - 0.5)} filter="url(#flou-ombre-batiment)" />
-        ))}
+        .flatMap((b) =>
+          [0.6, 0, -0.6].map((marge) => {
+            const taille = BATIMENTS[b.id].taille - 0.5 + marge
+            return <polygon key={`ombre-${b.id}-${marge}`} className="ombre-batiment" points={losange(b.x + 0.6 - marge / 2, b.y + 0.2 - marge / 2, taille)} />
+          }),
+        )}
       {(fantome || pinceau) && <GrilleConstruction />}
       {village.chemins.map((cle) => {
         const c = lireCle(cle)
@@ -618,6 +617,7 @@ export function VueVillage({
       <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''}`}>
         <TerrainVillage />
         <SolPlage />
+        <EauPlage />
         {sol}
         <ForetDerriere vue={vueForet} />
         <div className="objets-village">{objets}</div>

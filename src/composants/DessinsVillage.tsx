@@ -10,6 +10,7 @@ import { TAILLE_GRILLE, type IdDecoration } from '../jeu/donnees'
 import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
+import { ImageFigee } from './ImageFigee'
 import { TasDeRochers } from './Rochers'
 import { cleCase, DIRECTION, lireCle, raccordsRail, viragesDoux, type Case, type VirageDoux, type Village } from '../jeu/village'
 
@@ -119,6 +120,12 @@ const TACHES_HERBE = (() => {
   })
 })()
 
+// Le dessin d'une touffe d'herbe, à réutiliser avec <use href="#touffe-herbe" /> (le sol de la
+// plage en a besoin aussi, dans son propre dessin).
+export function TouffeHerbe() {
+  return <path id="touffe-herbe" d="M-3.6 0 Q-3.4 -3 -5 -5.4 Q-2.2 -3.6 -1.6 0 Z M-1.4 0 Q-1 -4.4 0.2 -7 Q0.8 -3.8 1 0 Z M0.8 0 Q2 -3.2 4.6 -4.8 Q2.8 -2.4 2.8 0 Z" fill="#5f9a2a" />
+}
+
 function TachesHerbe() {
   return (
     <g className="taches-herbe" filter="url(#flou-taches)">
@@ -152,7 +159,8 @@ function DetailsHerbe() {
   )
 }
 
-// Tout le sol, dessiné une seule fois (il ne change jamais). Du plus loin au plus près :
+// Tout le sol, dessiné une seule fois (il ne change jamais), puis figé en image (ImageFigee) :
+// le navigateur n'a plus à redessiner ses flous à chaque image. Du plus loin au plus près :
 // - une herbe sombre partout (le sous-bois, sous les arbres de la forêt) ;
 // - une large auréole d'herbe plus claire autour de la clairière, aux bords très flous ;
 // - le damier, dont le bord se fond dans cette herbe (sur un peu plus d'une case) : on passe
@@ -165,64 +173,66 @@ export const TerrainVillage = memo(function TerrainVillage() {
   // Le motif du damier est dessiné en cases, puis posé en vue isométrique par cette matrice.
   const enIso = `matrix(${DEMI_LARGEUR} ${DEMI_HAUTEUR} ${-DEMI_LARGEUR} ${DEMI_HAUTEUR} ${origine.x} ${origine.y})`
   return (
-    <svg className="terrain-village" style={{ left: x0, top: y0, width: l, height: h }} viewBox={`${x0} ${y0} ${l} ${h}`} aria-hidden="true">
-      <defs>
-        <pattern id="motif-damier" patternUnits="userSpaceOnUse" width="2" height="2" patternTransform={enIso}>
-          <rect width="2" height="2" fill={VERT_CLAIR} />
-          <rect x="1" width="1" height="1" fill={VERT_FONCE} />
-          <rect y="1" width="1" height="1" fill={VERT_FONCE} />
-        </pattern>
-        {/* La texture de l'herbe, à plat à l'écran (256 pixels du monde, sans couture). */}
-        <pattern id="motif-herbe" patternUnits="userSpaceOnUse" width="256" height="256">
-          <image href={IMAGE_HERBE} width="256" height="256" />
-        </pattern>
-        {/* Les petits détails de l'herbe (voir DetailsHerbe) */}
-        <path id="touffe-herbe" d="M-3.6 0 Q-3.4 -3 -5 -5.4 Q-2.2 -3.6 -1.6 0 Z M-1.4 0 Q-1 -4.4 0.2 -7 Q0.8 -3.8 1 0 Z M0.8 0 Q2 -3.2 4.6 -4.8 Q2.8 -2.4 2.8 0 Z" fill="#5f9a2a" />
-        <path id="brins-herbe" d="M-1.6 0 Q-1.6 -2.6 -2.8 -4.4 M0 0 Q0.2 -3 1 -5.2 M1.4 0 Q2 -1.8 3.2 -2.8" stroke="#a5d65a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-        <path id="tige-fleur" d="M0 0 Q-0.2 -2.6 0.6 -5 M0 -1.6 Q-1.6 -2.2 -2.2 -1.2" stroke="#4e8a24" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-        {/* Un petit galet en relief : son ombre, le côté dans l'ombre, puis le dessus éclairé. */}
-        <g id="caillou-herbe">
-          <ellipse cx="0.6" cy="0.1" rx="2.8" ry="1.1" fill="rgb(0 0 0 / 0.22)" />
-          <path d="M-2.4 -0.2 Q-2.5 -2.2 -0.4 -2.5 Q2.2 -2.6 2.4 -0.6 Q2.2 0.3 0 0.4 Q-2.2 0.4 -2.4 -0.2 Z" fill="#7d786f" />
-          <path d="M-2.1 -0.9 Q-2 -2.2 -0.4 -2.4 Q1.6 -2.5 1.9 -1.2 Q0.4 -0.6 -2.1 -0.9 Z" fill="#b9b4aa" />
-          <ellipse cx="-0.8" cy="-1.8" rx="0.7" ry="0.3" fill="#e2ded6" />
-        </g>
-        <g id="trefle-herbe">
-          <circle cx="-1.2" cy="-1.4" r="1.3" fill="#4f9a2c" />
-          <circle cx="1.2" cy="-1.4" r="1.3" fill="#56a432" />
-          <circle cx="0" cy="-2.8" r="1.3" fill="#5fae36" />
-        </g>
-        <g id="champignon-herbe">
-          <rect x="-0.7" y="-3" width="1.4" height="3" rx="0.6" fill="#f3e6d2" />
-          <path d="M-3 -2.6 Q-2.8 -5.6 0 -5.8 Q2.8 -5.6 3 -2.6 Z" fill="#e0483c" />
-          <circle cx="-1.2" cy="-4.2" r="0.55" fill="#fff" />
-          <circle cx="1.1" cy="-3.6" r="0.45" fill="#fff" />
-        </g>
-        <filter id="flou-taches" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="16" />
-        </filter>
-        <filter id="flou-aureole" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="38" />
-        </filter>
-        <filter id="flou-bord-damier" x="-10%" y="-10%" width="120%" height="120%">
-          <feGaussianBlur stdDeviation="9" />
-        </filter>
-        <mask id="masque-herbe" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
-          <polygon points={losangeClairiere(3)} fill="#fff" filter="url(#flou-aureole)" />
-        </mask>
-        {/* Le damier s'efface doucement sur son bord. */}
-        <mask id="masque-damier" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
-          <polygon points={losangeClairiere(0.5)} fill="#fff" filter="url(#flou-bord-damier)" />
-        </mask>
-      </defs>
-      <rect x={x0} y={y0} width={l} height={h} fill="#2f5e1d" />
-      <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
-      <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
-      <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
-      <polygon points={losangeClairiere(4)} fill="url(#motif-herbe)" mask="url(#masque-herbe)" />
-      <TachesHerbe />
-      <DetailsHerbe />
-    </svg>
+    <ImageFigee nom="terrain">
+      <svg className="terrain-village" style={{ left: x0, top: y0, width: l, height: h }} viewBox={`${x0} ${y0} ${l} ${h}`} aria-hidden="true">
+        <defs>
+          <pattern id="motif-damier" patternUnits="userSpaceOnUse" width="2" height="2" patternTransform={enIso}>
+            <rect width="2" height="2" fill={VERT_CLAIR} />
+            <rect x="1" width="1" height="1" fill={VERT_FONCE} />
+            <rect y="1" width="1" height="1" fill={VERT_FONCE} />
+          </pattern>
+          {/* La texture de l'herbe, à plat à l'écran (256 pixels du monde, sans couture). */}
+          <pattern id="motif-herbe" patternUnits="userSpaceOnUse" width="256" height="256">
+            <image href={IMAGE_HERBE} width="256" height="256" />
+          </pattern>
+          {/* Les petits détails de l'herbe (voir DetailsHerbe) */}
+          <TouffeHerbe />
+          <path id="brins-herbe" d="M-1.6 0 Q-1.6 -2.6 -2.8 -4.4 M0 0 Q0.2 -3 1 -5.2 M1.4 0 Q2 -1.8 3.2 -2.8" stroke="#a5d65a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+          <path id="tige-fleur" d="M0 0 Q-0.2 -2.6 0.6 -5 M0 -1.6 Q-1.6 -2.2 -2.2 -1.2" stroke="#4e8a24" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+          {/* Un petit galet en relief : son ombre, le côté dans l'ombre, puis le dessus éclairé. */}
+          <g id="caillou-herbe">
+            <ellipse cx="0.6" cy="0.1" rx="2.8" ry="1.1" fill="rgb(0 0 0 / 0.22)" />
+            <path d="M-2.4 -0.2 Q-2.5 -2.2 -0.4 -2.5 Q2.2 -2.6 2.4 -0.6 Q2.2 0.3 0 0.4 Q-2.2 0.4 -2.4 -0.2 Z" fill="#7d786f" />
+            <path d="M-2.1 -0.9 Q-2 -2.2 -0.4 -2.4 Q1.6 -2.5 1.9 -1.2 Q0.4 -0.6 -2.1 -0.9 Z" fill="#b9b4aa" />
+            <ellipse cx="-0.8" cy="-1.8" rx="0.7" ry="0.3" fill="#e2ded6" />
+          </g>
+          <g id="trefle-herbe">
+            <circle cx="-1.2" cy="-1.4" r="1.3" fill="#4f9a2c" />
+            <circle cx="1.2" cy="-1.4" r="1.3" fill="#56a432" />
+            <circle cx="0" cy="-2.8" r="1.3" fill="#5fae36" />
+          </g>
+          <g id="champignon-herbe">
+            <rect x="-0.7" y="-3" width="1.4" height="3" rx="0.6" fill="#f3e6d2" />
+            <path d="M-3 -2.6 Q-2.8 -5.6 0 -5.8 Q2.8 -5.6 3 -2.6 Z" fill="#e0483c" />
+            <circle cx="-1.2" cy="-4.2" r="0.55" fill="#fff" />
+            <circle cx="1.1" cy="-3.6" r="0.45" fill="#fff" />
+          </g>
+          <filter id="flou-taches" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="16" />
+          </filter>
+          <filter id="flou-aureole" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="38" />
+          </filter>
+          <filter id="flou-bord-damier" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="9" />
+          </filter>
+          <mask id="masque-herbe" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
+            <polygon points={losangeClairiere(3)} fill="#fff" filter="url(#flou-aureole)" />
+          </mask>
+          {/* Le damier s'efface doucement sur son bord. */}
+          <mask id="masque-damier" maskUnits="userSpaceOnUse" x={x0} y={y0} width={l} height={h}>
+            <polygon points={losangeClairiere(0.5)} fill="#fff" filter="url(#flou-bord-damier)" />
+          </mask>
+        </defs>
+        <rect x={x0} y={y0} width={l} height={h} fill="#2f5e1d" />
+        <polygon points={losangeClairiere(5)} fill="#4f8a2a" filter="url(#flou-aureole)" />
+        <polygon points={losangeClairiere(1.5)} fill="#6aa534" filter="url(#flou-bord-damier)" />
+        <polygon points={losangeClairiere(1.6)} fill="url(#motif-damier)" mask="url(#masque-damier)" />
+        <polygon points={losangeClairiere(4)} fill="url(#motif-herbe)" mask="url(#masque-herbe)" />
+        <TachesHerbe />
+        <DetailsHerbe />
+      </svg>
+    </ImageFigee>
   )
 })
 
@@ -264,39 +274,55 @@ const IMAGE_DEVANT_MINE = '/images/batiments/mine-devant.webp'
 
 // Les points utiles de l'image de la mine, en pixels de l'image.
 const POINTS_MINE = {
-  // où les deux câbles sortent du treuil, et où ils s'accrochent à la cabine (posée en haut)
+  // où les deux câbles sortent du treuil, et où ils s'accrochent à la cabine (dans son image)
   treuil: [[632, 264], [732, 253]] as [number, number][],
-  accroches: [[634, 476], [744, 545]] as [number, number][],
+  accroches: [[634, 476], [744, 530]] as [number, number][],
+  // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la cabine ne se
+  // voit qu'au-dessus de ce bord (en dessous, elle est dans le puits, cachée par la terre)
+  bordDuPuits: [[440, 588], [500, 611], [600, 652], [700, 624], [780, 596], [840, 560]] as [number, number][],
   // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
   panneau: [250, 470] as [number, number],
 }
 
-// De combien de pixels de l'image la cabine descend : tout en haut (au ras du treuil) et tout en
-// bas (cachée à moitié derrière la barrière de devant). Sans ascenseur, les câbles pendent au fond.
-const CABINE_EN_HAUT = -150
-const CABINE_EN_BAS = 35
+// De combien de pixels de l'image la cabine descend : au repos, son plancher est au ras du sol
+// (au bord du puits) ; tout en bas, elle a disparu dans le puits. Sans ascenseur, les câbles
+// pendent au fond.
+const CABINE_EN_HAUT = -100
+const CABINE_EN_BAS = 200
 const CABLES_SANS_ASCENSEUR = 240
+
+// La zone où la cabine se voit : tout ce qui est au-dessus du bord du puits.
+const ZONE_CABINE = [[440, 0], [840, 0], ...POINTS_MINE.bordDuPuits.slice().reverse()].map(([x, y]) => `${x},${y}`).join(' ')
 
 export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCabine }: PropsEvolutionMine) {
   const calage = CALAGES.puits
   const f = Math.max(0, Math.min(1, hauteurCabine))
   const decalage = ascenseur ? CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * f : CABLES_SANS_ASCENSEUR
   const panneau = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.panneau)
+  // Un identifiant à part pour chaque mine dessinée (l'écran d'accueil en dessine une aussi).
+  const idZone = `zone-cabine-${x}-${y}`
   return (
     <g className="evolution-mine">
       {/* Les câbles, la cabine et le devant, posés comme l'image de la mine (miroir compris). */}
       <g transform={transformationSprite(calage, x, y, 10, miroir)}>
-        {POINTS_MINE.treuil.map(([tx, ty], i) => {
-          const [ax, ay] = POINTS_MINE.accroches[i]
-          const chemin = `M${tx} ${ty} L${ax} ${ay + decalage}`
-          return (
-            <g key={i} className="cable-mine">
-              <path d={chemin} stroke="#2b2b30" strokeWidth="9" strokeLinecap="round" />
-              <path d={chemin} stroke="#a9adb5" strokeWidth="5" strokeDasharray="5 4" strokeLinecap="round" />
-            </g>
-          )
-        })}
-        {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
+        <clipPath id={idZone}>
+          <polygon points={ZONE_CABINE} />
+        </clipPath>
+        <g clipPath={`url(#${idZone})`}>
+          {/* Les câbles tombent du treuil jusqu'aux crochets de la cabine. Leurs torons défilent
+              quand elle bouge : on voit le câble s'enrouler ou se dérouler. */}
+          {POINTS_MINE.treuil.map(([tx, ty], i) => {
+            const [ax, ay] = POINTS_MINE.accroches[i]
+            const chemin = `M${tx} ${ty} L${ax} ${ay + decalage}`
+            return (
+              <g key={i} className="cable-mine">
+                <path d={chemin} stroke="#2b2b30" strokeWidth="7" strokeLinecap="round" />
+                <path d={chemin} stroke="#a9adb5" strokeWidth="3.5" strokeDasharray="6 4" strokeDashoffset={-decalage} strokeLinecap="round" />
+              </g>
+            )
+          })}
+          {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
+        </g>
         <image href={IMAGE_DEVANT_MINE} x="0" y="0" width={calage.largeur} height={calage.hauteur} />
       </g>
       {/* Le panneau du niveau de la mine, planté sur le sol de devant. */}
