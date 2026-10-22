@@ -130,7 +130,7 @@ Les **tenues du Bazar** (chapeaux, hauts), qui ne se voyaient que dans un aperç
 | Coffre ou sac plein | la case Mine ou Sac du bandeau a une bordure rouge, tremble et s'entoure d'un halo rouge (en boucle) |
 | Jauge du coffre au-dessus de la mine (27/10) | toujours là : « 📦 *n* / *capacité* » sur une barre **verte**, **orange** dès 75 % (`jauge-haute`), **rouge** et qui grossit puis rétrécit en boucle quand le coffre est plein (`jauge-pleine`) ; figée si le système demande moins de mouvement |
 | Combo du bloc de la mine (27/10) | dès 3 clics rapides, une pastille orange « 🔥 ×*N* » saute à chaque clic (`combo-saute`), plus grosse et plus dorée à partir de 25 ; le cadre du bloc et un **halo doré** (un dégradé, sans flou) brillent de plus en plus jusqu'à un combo de 50 (`--ardeur`) ; à partir de 10, le bloc a un liseré doré (`zone-en-feu`) |
-| Prochain objectif prêt | bordure verte, halo vert qui pulse (1,6 s) |
+| Mission faisable tout de suite | bordure verte, halo vert qui pulse (1,6 s) ; mission accomplie : ✔, texte barré et son de succès |
 | Bulles de notification du village | sautent de 6 px en grossissant un peu (0,9 s), couleur selon la sorte (voir [§ 7.4](#74-les-bulles-de-notification)) |
 | Pastille du bouton 🏗️ Bâtiments, ruban « Nouveau ! » du menu | sautent (0,8 s) |
 | Bâtiment actif | lueur dorée autour du dessin, losange de son emprise en tirets dorés qui défilent (1 s) |

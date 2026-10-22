@@ -1664,3 +1664,55 @@ g.grille-construction {
 .plage-cachee .objets-plage * {
   animation-play-state: paused;
 }
+
+/* Les mineurs au travail dans la mine, à côté de la jauge du coffre (27/10). */
+.jauge-coffre-mineurs {
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff3d6;
+  background: rgb(0 0 0 / 0.4);
+}
+
+/* Les mini-jauges (27/10) : chargement, vente, déchargement... au-dessus de l'objet. */
+.mini-jauge {
+  position: absolute;
+  display: grid;
+  gap: 2px;
+  min-width: 84px;
+  padding: 3px 6px 4px;
+  border-radius: 8px;
+  border: 1.5px solid #5a3a12;
+  background: rgb(30 18 8 / 0.88);
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 99998;
+  white-space: nowrap;
+}
+
+.mini-jauge-texte {
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff3d6;
+  text-align: center;
+}
+
+.mini-jauge-texte b {
+  color: #ffe066;
+}
+
+.mini-jauge-piste {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  overflow: hidden;
+}
+
+.mini-jauge-piste i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(#9be86a, #4fae2c);
+}

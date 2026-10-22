@@ -94,6 +94,12 @@ export function transformationSprite(calage: Calage, x: number, y: number, taill
   return `matrix(${echelle}, 0, 0, ${echelle}, ${e}, ${f}) ${retourne}`.trim()
 }
 
+// Combien de pixels du monde pour un pixel de l'image d'un bâtiment (la même partout).
+export function echelleSprite(calage: Calage, taille: number): number {
+  const r = calage.retrait ?? RETRAIT_BATIMENT
+  return (2 * DEMI_LARGEUR * (taille - 2 * r)) / (calage.droite.x - calage.gauche.x)
+}
+
 // L'échelle et le décalage (e, f) de l'image posée sur son emprise.
 function placementSprite(calage: Calage, x: number, y: number, taille: number, miroir: boolean): { echelle: number; e: number; f: number } {
   const r = calage.retrait ?? RETRAIT_BATIMENT

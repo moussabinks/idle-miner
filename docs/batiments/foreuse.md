@@ -83,7 +83,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, prochain objectif « …à la foreuse ! »). Quand il n'y a plus rien à acheter : « Relier la foreuse à la mine · des rails : un wagonnet lui apportera le charbon », puis « Envoyer du charbon à la foreuse · à la mine : « envoyer un wagonnet vers la foreuse » ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : d'abord « Construis : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, missions d'amélioration). Côté automatisation : « Relie la foreuse à la mine (rails) », puis « Envoie du charbon à la foreuse (à la mine) ».
 - **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1), à la main ou par le wagonnet Mine → Foreuse ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché, ou avec le wagonnet Foreuse → Marché. Le **générateur** la booste.
 - **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc au niveau de la mine, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus, la part « ⚙️ Foreuse » de l'écran 📊) et `blocsForeuse`.
 - **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend le chariot quand il est à moitié plein, et améliore le forage et le chariot quand il a plus de 3 000 $.
@@ -99,7 +99,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, **« 🛤️ Envoyer un
 - `src/jeu/temps.ts` : fait avancer la foreuse avec le reste du jeu (`avancerTemps`).
 - `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) et le message « Pendant ton absence ».
 - `src/jeu/notifications.ts` : les bulles 🛒, 🔥, 🚧 et 💰 au-dessus de la foreuse.
-- `src/jeu/objectifs.ts` : « Construire : Foreuse », achats, prochain objectif.
+- `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Foreuse », achats, missions.
 - `src/jeu/revenu.ts` et `src/jeu/statistiques.ts` : ce qu'elle rapporte ($/s et statistiques).
 - `src/jeu/foreuse.test.ts` : les tests.
 - `src/composants/Panneaux.tsx` : le panneau du bâtiment (`PanneauForeuse`) ; `src/composants/PanneauTrajets.tsx` : son bloc « 🛤️ Wagonnets ».

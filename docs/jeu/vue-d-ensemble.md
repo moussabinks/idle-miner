@@ -13,7 +13,7 @@
 | [village.md](village.md) | Le village vu du ciel : la grille, poser et payer les bâtiments, Modifier, rails (sans boucle) et trajets de wagonnets, chemins, personnages, bulles de notification. |
 | [mine-et-minage.md](mine-et-minage.md) | La mine à 5 niveaux : les blocs, le bloc à cliquer, le coffre, les pioches, la mine toute seule, le temps qui passe (et hors ligne), événements, découvertes, succès, statistiques. |
 | [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, sacs, ascenseur, wagonnets, générateur, foreuse, mineurs, raretés, bâtiments, revenus), le bot de simulation et les durées de jeu. |
-| [interface.md](interface.md) | L'écran : accueil, bandeau, carte du village, boutons, menus, panneaux, notifications, objectifs, téléphone. |
+| [interface.md](interface.md) | L'écran : accueil, bandeau, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. |
 | [visuel-et-sons.md](visuel-et-sons.md) | Le style graphique (images, SVG, CSS), les animations, les bruitages et la musique (Web Audio), l'application installable. |
 | [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md) | Les 5 mondes dans `localStorage`, le hors-ligne, les comptes Supabase et le classement. |
 | [architecture.md](architecture.md) | L'organisation du code (`src/jeu/` pur, composants React), les tests et le déploiement. |
@@ -116,7 +116,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Monde** | Une partie séparée (jusqu'à 5), choisie sur l'écran d'accueil. |
 | **Niveau de la mine** | De 1 à 5 : il décide des blocs qui sortent, du débit, du nombre de mineurs, et débloque des bâtiments. On l'achète au panneau de la mine. Il compte pour le classement. |
 | **Objets gardés** | Les objets mis à 0 au marché (ou cochés au panneau de la mine) : ils ne sont pas vendus, et le wagonnet du marché les laisse dans le coffre. Le jeu s'en souvient (`nonAVendre`). |
-| **Objectif** | La barre « 🎯 prochain objectif » sous le bandeau : un bâtiment à poser, l'achat le plus proche, ou une étape de l'automatisation (rails, trajets, générateur, foreuse). |
+| **Mission** | Depuis le 27/10, une à trois choses à faire, en haut à droite (à la place de la barre « prochain objectif ») : une urgence (salaires, coffre plein), un premier pas, un bâtiment à poser, une étape de l'automatisation (rails, trajets, pousseur, mineur, générateur, foreuse) ou l'amélioration la plus proche. Chacune a sa progression (« 🪨 12/25 »). |
 | **Paie / salaire** | Ce que coûtent 10 minutes de travail d'un mineur (selon sa pioche et sa rareté). Sans manager, on paie au plus 10 minutes d'avance. |
 | **Porte** | L'entrée d'un bâtiment, sur sa face avant gauche ou droite. Le joueur peut ouvrir un bâtiment de n'importe quel côté. |
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
@@ -129,7 +129,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Recharge automatique** | Option de la foreuse (dès le 3e niveau de forage) : elle brûle le charbon qu'elle fore tant que sa réserve est sous 60 s. |
 | **Recruteur** | Débloqué au niveau 3 de la mine (4 niveaux) : donne une rareté aux mineurs embauchés. |
 | **Rendement** | Le multiplicateur de rareté d'un mineur (vitesse de creusage et taille du sac). |
-| **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |
+| **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau en haut à gauche (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |
 | **Sac (à dos)** | Ce que le joueur porte du coffre (ou du chariot) jusqu'au marché : 32 à 2 048 places (7 tailles au Bazar). |
 | **Stand** | L'ancien nom des bâtiments (le code l'emploie encore, par exemple `IdStand` dans `objectifs.ts`). |
 | **Succès** | 21 accomplissements (`succes.ts`). |

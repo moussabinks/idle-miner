@@ -4,7 +4,7 @@
 
 ## Où et quand
 
-- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 25 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, pas de sac plus grand (la barre d'objectif propose « Construire : Bazar »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
+- **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **60 $ + 25 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, pas de sac plus grand (les missions proposent « Construis : Bazar »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : dès le début, sans cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le bazar : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
@@ -46,7 +46,7 @@ Le Bazar vendait aussi des **tenues** pour le hamster (chapeaux et hauts, seulem
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : tant que le bazar n'est pas posé, « Construire : Bazar ». Ensuite, le prochain sac fait partie des `achatsPossibles` (« Sac de *N* places »), ce qui fait apparaître la bulle 💰 et peut devenir le prochain objectif (« achetable au bazar ! »).
+- **Missions** (`missions.ts`, `objectifs.ts`) : tant que le bazar n'est pas posé, « Construis : Bazar ». Ensuite, le prochain sac fait partie des `achatsPossibles` (« Sac de *N* places »), ce qui fait apparaître la bulle 💰 et peut devenir une mission d'amélioration.
 - **Autres bâtiments** : on remplit le sac au **coffre de la mine** et on le vide au **Marché**. Les mineurs employés ont leur propre sac, lié à leur pioche (au Personnel), pas au Bazar.
 - **Bot de simulation** (`bot.ts`) : il achète le sac suivant quand il a trois fois son prix.
 
@@ -56,7 +56,7 @@ Le Bazar vendait aussi des **tenues** pour le hamster (chapeaux et hauts, seulem
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
 - `src/jeu/mineur.ts` : `acheterSac`, `prixProchainSac`, `tailleSac`, `placeLibre`, `prendreDuCoffre`.
 - `src/jeu/notifications.ts` : la bulle 💰 au-dessus du bazar.
-- `src/jeu/objectifs.ts` : « Construire : Bazar », achat « Sac de *N* places ».
+- `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Bazar », achat « Sac de *N* places ».
 - `src/composants/Panneaux.tsx` : `PanneauBazar` (le sac).
 - `src/composants/Amelioration.tsx` : la ligne d'amélioration (carrés de niveaux, bouton).
 - `src/composants/MenuConstruction.tsx` : la carte du bazar dans le menu Bâtiments.

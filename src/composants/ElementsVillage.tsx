@@ -92,3 +92,19 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
     />
   )
 })
+
+// Une mini-jauge au-dessus d'un objet du village (27/10) : ce qui se passe (« 📦 Chargement »),
+// le temps qu'il reste, et une petite barre qui se remplit. Pour le wagonnet qui charge ou vend,
+// l'ascenseur qui décharge...
+export function MiniJauge({ x, y, texte, part, secondes }: { x: number; y: number; texte: string; part: number; secondes: number }) {
+  return (
+    <div className="mini-jauge" style={{ left: x, top: y }} aria-hidden="true">
+      <span className="mini-jauge-texte">
+        {texte} <b>{Math.max(0, secondes).toLocaleString('fr-FR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} s</b>
+      </span>
+      <span className="mini-jauge-piste">
+        <i style={{ width: `${Math.round(Math.max(0, Math.min(1, part)) * 100)}%` }} />
+      </span>
+    </div>
+  )
+}

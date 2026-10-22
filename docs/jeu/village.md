@@ -47,7 +47,7 @@ Le menu **🏗️ Bâtiments** (gros bouton rond en bas à droite) montre tous l
 
 À la fin du menu, deux cartes de plus : **🛤️ Rails** (§ 4) et **🪨 Chemin de pavés** (§ 6). Depuis le 27/10, c'est la seule fenêtre de construction (plus d'onglet ni de bouton 🌸 Décos).
 
-Une pastille **« Nouveau ! »** marque un bâtiment tout juste débloqué, jusqu'à ce qu'on ouvre le menu (`batimentsVus`). Le bouton du menu a un **badge** qui compte les bâtiments nouveaux ou constructibles tout de suite. La barre « 🎯 prochain objectif » propose aussi « Construire : X » et ouvre le menu d'un clic.
+Une pastille **« Nouveau ! »** marque un bâtiment tout juste débloqué, jusqu'à ce qu'on ouvre le menu (`batimentsVus`). Le bouton du menu a un **badge** qui compte les bâtiments nouveaux ou constructibles tout de suite. Les **missions** (en haut à droite) proposent aussi « Construis : X » (avec ce qui manque : « Gagne *X* $ », « Récupère *N* pierre ») et ouvrent le menu d'un clic.
 
 | Bâtiment | Prix pour le poser | Débloqué au | Porte (sans miroir) |
 |---|---|---|---|
@@ -135,13 +135,13 @@ Tous les personnages sont des **hamsters** : les **images des planches de l'équ
   - Il marche avec les **flèches du clavier** (dans les 4 directions de la grille, combinables, en glissant le long des obstacles), ou va tout seul là où on touche la carte (case ou bâtiment). Il marche à **5 cases par seconde** (`VITESSE_JOUEUR`).
   - **Pendant qu'il pousse un wagonnet**, il est dessiné juste derrière le wagonnet, sur les rails, et fait l'aller-retour avec lui : il ne peut pas aller ailleurs (les flèches et les touchers ne font rien, le bouton ⛏️ Mine affiche « Wagonnet… »), et la caméra suit le wagonnet.
   - **Espace** : il saute (pour le plaisir).
-  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette ou en pinçant (elle revient sur lui quand il remarche). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
-- **Les employés** (mineurs et pousseurs) : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Les mineurs travaillent surtout **dans la mine** (on ne les voit pas, seulement la **cabine de l'ascenseur** qui monte et descend avec eux sur le dessin de la mine). On les voit au village quand :
-  1. ils **marchent** (`marche`, 4 cases/s) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
+  - La caméra le suit ; on peut aussi faire glisser la carte, zoomer à la molette (un cran ≈ 50 %) ou en pinçant, plus fort depuis le 27/10 (elle revient sur lui quand il remarche). Depuis le 27/10, elle **ne bouge plus quand un panneau s'ouvre** à droite (avant, elle se décalait de 210 px) : le joueur garde sa vue.
+- **Les employés** (mineurs et pousseurs) : la planche du mineur, avec le casque **recoloré à la couleur de sa rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique), son nom au-dessus de la tête. Les mineurs travaillent surtout **dans la mine** (on ne les voit pas au fond : seulement la **cabine de l'ascenseur** qui monte et descend sur le dessin de la mine, avec **les mineurs dedans** depuis le 27/10 ; la jauge du coffre dit « 👷 *n* »). On les voit au village quand :
+  1. ils **marchent** (`marche`, **2,5 cases/s** depuis le 27/10, avant 4) : vers la forge, vers le Personnel quand ils ne sont plus payés, de retour vers la mine, ou (les pousseurs) vers le quai de leur trajet ;
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
   3. ils **attendent leur wagonnet au quai** (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ) ;
   4. ils **poussent un wagonnet** (juste derrière lui) ;
-  5. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied).
+  5. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied). Une fois payés ensemble, ils **repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) : ceux qui attendent leur tour restent à leur place devant le Personnel.
 - **Le recruteur** et **le manager** restent **devant le bâtiment Personnel**, avec leur étiquette (ils ne bougent pas : on n'utilise que leur image de face).
 
 ## 8. Les bulles de notification

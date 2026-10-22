@@ -54,6 +54,9 @@ const PAS_EMPLOYES = 30
 // ---------------------------------------------------------------------------
 
 // 4 mineurs au niveau 1 de la mine, puis 2 de plus par niveau.
+// Les mineurs payés en même temps repartent du Personnel l'un après l'autre, à cet écart (en s).
+const ECART_DEPART = 0.7
+
 export function maxEmployes(etat: EtatJeu): number {
   return EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU * (etat.niveauMine - 1)
 }
@@ -496,7 +499,13 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
     }
     if (employe.etape === 'attend') {
       if (employe.tempsPaye <= 0) break
+      // Payé : il repart. Quand ils partent à plusieurs, ils s'en vont l'un après l'autre (27/10)
+      // et pas tous ensemble au même endroit : chacun attend son tour (progression négative).
+      // Chacun attend son tour derrière ceux qui marchent déjà depuis le Personnel.
+      const devant = etat.employes.filter((e) => e !== employe && e.etape === 'marche' && e.depuis === 'employes').length
       messages.push(...suite(etat, employe, 'employes'))
+      // (« as string » : TypeScript croit encore qu'il attend, mais suite() vient de le changer)
+      if ((employe.etape as string) === 'marche') employe.progression = -ECART_DEPART * devant
       continue
     }
     // Au quai ou en train de pousser : c'est le wagonnet qui décide (voir wagonnet.ts).

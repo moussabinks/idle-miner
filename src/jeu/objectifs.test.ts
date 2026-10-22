@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { poserSol } from './batiments'
-import { BLOCS, type IdBatiment } from './donnees'
+import type { IdBatiment } from './donnees'
 import { creerPartie, type EtatJeu } from './mineur'
-import { prochainObjectif, standsAchetables } from './objectifs'
-
-const nomBloc = (bloc: keyof typeof BLOCS) => BLOCS[bloc].nom
+import { embaucher } from './employes'
+import { missions } from './missions'
+import { standsAchetables } from './objectifs'
 
 // Les bâtiments posés « à la main » (sans les payer), à des places libres autour de la mine.
 const PLACES: Record<Exclude<IdBatiment, 'puits'>, [number, number]> = {
@@ -21,40 +21,70 @@ function poser(etat: EtatJeu, ids: (keyof typeof PLACES)[]): void {
   for (const id of ids) etat.village.batiments.push({ id, x: PLACES[id][0], y: PLACES[id][1], miroir: false })
 }
 
-describe('prochain objectif', () => {
-  it('tout au début : poser le marché (gratuit), puis construire le forgeron', () => {
+describe('les missions (en haut à droite)', () => {
+  const ids = (etat: EtatJeu) => missions(etat).map((m) => m.id)
+
+  it('tout au début : poser le marché, casser des blocs, les vendre', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Construire : Marché', stand: 'marche', pret: true, construction: true })
+    expect(missions(etat)[0]).toMatchObject({ id: 'marche', construction: true, pret: true })
     poser(etat, ['marche'])
-    etat.argent = 10
-    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Construire : Forgeron', detail: '10 / 20 $', construction: true })
+    expect(missions(etat)[0]).toMatchObject({ id: 'casser', stand: 'puits', progression: { valeur: 0, max: 10 } })
+    etat.stats.blocsCasses = 10
+    etat.coffre.contenu = { pierre: 10 }
+    expect(ids(etat)[0]).toBe('remplir-sac')
+    etat.inventaire = { pierre: 10 }
+    expect(missions(etat)[0]).toMatchObject({ id: 'vendre', stand: 'marche' })
   })
 
-  it('dès qu’on a du fer : relier la mine au marché avec des rails', () => {
+  it('il y a toujours une à trois missions', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    poser(etat, ['marche'])
+    etat.stats.argentGagne = 5
+    const liste = missions(etat)
+    expect(liste.length).toBeGreaterThanOrEqual(1)
+    expect(liste.length).toBeLessThanOrEqual(3)
+  })
+
+  it('un bâtiment : ce qui manque, avec sa progression (« 12 / 25 pierre »)', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    poser(etat, ['marche', 'forgeron'])
+    etat.stats.argentGagne = 100
+    etat.argent = 1000
+    etat.coffre.contenu = { pierre: 12 }
+    const bazar = missions(etat).find((m) => m.id === 'construire-bazar')
+    expect(bazar).toMatchObject({ stand: 'puits', progression: { valeur: 12, max: 25 } })
+    etat.coffre.contenu = { pierre: 30 }
+    expect(missions(etat).find((m) => m.id === 'construire-bazar')).toMatchObject({ construction: true, pret: true })
+  })
+
+  it('l’automatisation : du fer pour les rails, les rails, puis le wagonnet', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     poser(etat, ['marche', 'forgeron', 'bazar', 'employes'])
-    etat.coffre.contenu = { fer: 2 }
-    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Relier la mine au marché', construction: true })
-    etat.inventaire = { fer: 15 }
+    etat.stats.argentGagne = 100
+    expect(ids(etat)).toContain('fer-rails')
+    etat.inventaire = { fer: 300 }
+    expect(ids(etat)).toContain('rails')
     for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
-    expect(prochainObjectif(etat, nomBloc)?.texte).not.toBe('Relier la mine au marché')
+    expect(ids(etat)).toContain('trajet')
   })
 
-  it('montre ce qui est payable tout de suite, au bon bâtiment', () => {
+  it('les urgences passent devant : salaires, coffre plein', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    poser(etat, ['marche', 'employes'])
+    etat.argent = 10_000
+    embaucher(etat, aleatoireAvecGraine(2))
+    etat.employes[0].tempsPaye = 0
+    etat.employes[0].etape = 'attend'
+    expect(ids(etat)[0]).toBe('salaires')
+  })
+})
+
+describe('stands achetables', () => {
+  it('montre les bâtiments où un achat est payable tout de suite', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     poser(etat, ['marche', 'forgeron', 'bazar', 'employes'])
     etat.argent = 200
     etat.coffre.contenu = { fer: 25 }
-    expect(prochainObjectif(etat, nomBloc)).toMatchObject({ texte: 'Pioche en Fer', stand: 'forgeron', pret: true })
     expect(standsAchetables(etat)).toEqual(expect.arrayContaining(['forgeron', 'employes']))
-  })
-
-  it('le générateur posé mais vide : il faut l’allumer avec de la redstone', () => {
-    const etat = creerPartie(aleatoireAvecGraine(1))
-    etat.niveauMine = 5
-    poser(etat, ['marche', 'forgeron', 'bazar', 'employes', 'foreuse', 'generateur'])
-    etat.inventaire = { fer: 15 }
-    for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
-    expect(prochainObjectif(etat, nomBloc)?.stand).not.toBeNull()
   })
 })

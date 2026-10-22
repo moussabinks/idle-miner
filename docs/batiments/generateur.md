@@ -84,7 +84,7 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : « Construire : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » pour le niveau suivant. Quand rien n'est à acheter, l'objectif peut être « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · tout un trajet doit être dans le rayon du générateur ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » (amélioration) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
 - **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
 - **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
 - **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, coche le puisage dès le niveau 2, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 40 minutes** de jeu.
@@ -98,7 +98,7 @@ Total des améliorations : 81 000 $ + 880 fer + 570 redstone. Message : « ⚡ G
 - `src/jeu/wagonnet.ts` : les trajets électriques (`trajetElectrique`, `railsAlimentes`), le wagonnet qui part tout seul et sa vitesse électrique ; le trajet Mine → Générateur qui lui apporte la redstone.
 - `src/jeu/foreuse.ts` : la vitesse de forage boostée (`vitesseForage`).
 - `src/jeu/mineur.ts` : le type `Generateur` (`niveau`, `carburant`, `allume`, `puiseDansLeCoffre`) dans `EtatJeu`.
-- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : les bulles 🔴 et 🚧, les objectifs, le succès Électricien.
+- `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : les bulles 🔴 et 🚧, les missions, le succès Électricien.
 - `src/composants/Panneaux.tsx` : `PanneauGenerateur`.
 - `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), les wagonnets électriques ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.
 - `src/composants/iso.ts` : le calage de l'image ; `public/images/batiments/generateur.webp` : le dessin.

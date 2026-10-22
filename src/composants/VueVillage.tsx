@@ -7,7 +7,7 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, LIAISONS, RARETES, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, LIAISONS, RARETES, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
@@ -31,17 +31,20 @@ import {
   CaseChemin,
   RailsDuVillage,
   DessinEvolutionMine,
+  type PassagerAscenseur,
   LosangeEmprise,
   GrilleConstruction,
   TerrainVillage,
 } from './DessinsVillage'
 import { AmbianceVillage } from './AmbianceVillage'
 import { WagonnetVillage } from './WagonnetVillage'
-import { ImageBatiment, Perso } from './ElementsVillage'
+import { ImageBatiment, MiniJauge, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { BOITES_PLAGE } from './plage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
+  CALAGES,
+  pointSurSprite,
   HAUTEUR_MONDE,
   LIMITES_CAMERA,
   devant,
@@ -84,6 +87,9 @@ const PIECES_MARCHE = Array.from({ length: 10 }, (_, i) => {
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
+// La force du zoom à la molette (par pixel de défilement) et au pincement (27/10).
+const FORCE_MOLETTE = 0.004
+const FORCE_PINCEMENT = 1.7
 
 export function VueVillage({
   etat,
@@ -273,7 +279,8 @@ export function VueVillage({
       const [a, b] = [...pointeurs.current.values()]
       const distance = Math.hypot(a.x - b.x, a.y - b.y)
       const depart = pincement.current
-      setZoom(borner({ ...cameraRef.current, z: depart.z * (distance / depart.distance) }).z)
+      // Le zoom suit le pincement en plus fort (puissance FORCE_PINCEMENT) : un petit geste suffit.
+      setZoom(borner({ ...cameraRef.current, z: depart.z * Math.pow(distance / depart.distance, FORCE_PINCEMENT) }).z)
       return
     }
     const g = geste.current
@@ -316,7 +323,10 @@ export function VueVillage({
   function molette(e: React.WheelEvent) {
     const m = versMonde(e.clientX, e.clientY)
     const c = cameraRef.current
-    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-e.deltaY * 0.0015)))
+    // Un cran de molette zoome d'environ 50 % (27/10 : avant, il fallait tourner longtemps).
+    // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
+    const pixels = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
+    const z = Math.min(ZOOM_MAX, Math.max(zoomMin, c.z * Math.exp(-pixels * FORCE_MOLETTE)))
     // On zoome autour du point sous la souris.
     const nouvelle = borner({ z, cx: m.x - (m.x - c.cx) * (c.z / z), cy: m.y - (m.y - c.cy) * (c.z / z) })
     setZoom(nouvelle.z)
@@ -335,16 +345,7 @@ export function VueVillage({
       // La mine : son image, et par-dessus ce qui évolue (cabine d'ascenseur, niveau).
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe={actif ? 'sprite-actif' : ''} />,
-        <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
-          <DessinEvolutionMine
-            x={b.x}
-            y={b.y}
-            miroir={b.miroir}
-            niveau={etat.niveauMine}
-            ascenseur={etat.ascenseur.niveau > 0}
-            hauteurCabine={hauteurCabine(etat)}
-          />
-        </BoiteSvg>,
+        <MineAnimee key="puits-evolution" etat={etat} x={b.x} y={b.y} miroir={b.miroir} />,
       )
       continue
     }
@@ -386,10 +387,13 @@ export function VueVillage({
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
     let marche = false
     let colere = false
-    if (mineur.etape === 'marche') {
+    if (mineur.etape === 'marche' && mineur.progression < 0 && mineur.depuis === 'employes' && personnel) {
+      // Payé, il attend son tour pour partir, à sa place devant le Personnel.
+      position = devant(personnel, 2 + enAttente++, 1.6)
+    } else if (mineur.etape === 'marche') {
       const chemin = cheminEntre(village, mineur.depuis, mineur.lieu)
       if (chemin) {
-        const point = surLeChemin(chemin, Math.min(longueurChemin(chemin), mineur.progression * VITESSE_MARCHE))
+        const point = surLeChemin(chemin, Math.max(0, Math.min(longueurChemin(chemin), mineur.progression * VITESSE_MARCHE)))
         position = point
         orientation = orienter(point.dx, point.dy)
         marche = true
@@ -499,6 +503,7 @@ export function VueVillage({
     const capacite = capaciteCoffre(etat)
     const part = Math.min(1, dans / Math.max(1, capacite))
     const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
+    const mineursAuFond = mineursDansLaMine(etat)
     bulles.push(
       <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 78 }} title={`Coffre de la mine : ${dans} / ${capacite}`}>
         <span className="jauge-coffre-icone" aria-hidden="true">
@@ -510,6 +515,12 @@ export function VueVillage({
             {nombreAbrege(dans)} / {nombreAbrege(capacite)}
           </span>
         </span>
+        {/* Les mineurs au travail dans la mine (on ne les voit pas : ils sont au fond). */}
+        {mineursAuFond > 0 && (
+          <span className="jauge-coffre-mineurs" title={`${mineursAuFond} mineur(s) au travail dans la mine`}>
+            👷 {mineursAuFond}
+          </span>
+        )}
       </div>,
     )
   }
@@ -664,13 +675,79 @@ export function VueVillage({
   )
 }
 
-// Où est la cabine de l'ascenseur (0 = en haut, 1 = en bas) : elle suit le premier mineur qui
-// monte ou descend. Sinon, elle attend en haut.
-function hauteurCabine(etat: EtatJeu): number {
-  const mineur = etat.employes.find((m) => m.etape === 'monte' || m.etape === 'descend')
-  if (!mineur) return 0
-  const f = Math.min(1, mineur.progression / secondesTrajetMineur(etat))
-  return mineur.etape === 'descend' ? f : 1 - f
+// Ce qui bouge sur la mine (27/10) : la cabine de l'ascenseur, ses passagers, et la mini-jauge
+// quand un mineur vide son sac dans le coffre. La cabine a sa propre position, qui avance à
+// vitesse limitée vers le mineur le plus proche (ou remonte en haut quand personne ne bouge) :
+// elle fait des allers-retours, sans jamais sauter d'un bout à l'autre du puits.
+function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: number; miroir: boolean }) {
+  const passagers = passagersAscenseur(etat)
+  const duree = secondesTrajetMineur(etat)
+  // La hauteur où la cabine doit aller : celle du passager le plus proche d'elle, sinon en haut.
+  const [hauteur, setHauteur] = useState(0)
+  const hauteurRef = useRef(0)
+  // (les hauteurs des passagers, mises à jour après chaque rendu, lues à chaque image)
+  const cibles = useRef<number[]>([])
+  const cleCibles = passagers.map((p) => p.f.toFixed(3)).join(',')
+  useEffect(() => {
+    cibles.current = cleCibles ? cleCibles.split(',').map(Number) : []
+  }, [cleCibles])
+  useEffect(() => {
+    let image = 0
+    let avant = performance.now()
+    const avancer = (maintenant: number) => {
+      const secondes = Math.min(0.1, (maintenant - avant) / 1000)
+      avant = maintenant
+      const ici = hauteurRef.current
+      const liste = cibles.current
+      const cible = liste.length === 0 ? 0 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
+      // Un peu plus vite que les mineurs, pour rattraper celui qu'elle va chercher.
+      const pas = (1.6 / Math.max(0.5, duree)) * secondes
+      const suivante = Math.abs(cible - ici) <= pas ? cible : ici + Math.sign(cible - ici) * pas
+      if (Math.abs(suivante - ici) > 1e-4) {
+        hauteurRef.current = suivante
+        setHauteur(suivante)
+      }
+      image = requestAnimationFrame(avancer)
+    }
+    image = requestAnimationFrame(avancer)
+    return () => cancelAnimationFrame(image)
+  }, [duree])
+
+  // Un mineur qui vide son sac dans le coffre (en haut, devant la cabine).
+  const videur = etat.employes.filter((m) => m.etape === 'vide').sort((a, b) => b.progression - a.progression)[0]
+  const calage = CALAGES.puits
+  const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
+  return (
+    <>
+      <BoiteSvg x={x} y={y} taille={10} hauteur={130} style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
+        <DessinEvolutionMine x={x} y={y} miroir={miroir} niveau={etat.niveauMine} ascenseur={etat.ascenseur.niveau > 0} hauteurCabine={hauteur} passagers={passagers} />
+      </BoiteSvg>
+      {videur && (
+        <MiniJauge
+          x={dessus.x}
+          y={dessus.y}
+          texte="📦 Déchargement"
+          part={videur.progression / SECONDES_VIDAGE_EMPLOYE}
+          secondes={SECONDES_VIDAGE_EMPLOYE - videur.progression}
+        />
+      )}
+    </>
+  )
+}
+
+// Les mineurs qui descendent dans le puits ou en remontent (dans la cabine, ou sur l'échelle).
+function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
+  return etat.employes
+    .filter((m) => m.etape === 'monte' || m.etape === 'descend')
+    .map((m) => {
+      const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
+      return { qui: RARETES[m.rarete] ? m.rarete : 'commun', f: m.etape === 'descend' ? f : 1 - f, descend: m.etape === 'descend' }
+    })
+}
+
+// Combien de mineurs travaillent dans la mine en ce moment (pour la jauge du coffre).
+function mineursDansLaMine(etat: EtatJeu): number {
+  return etat.employes.filter((m) => m.role === 'mineur' && ['descend', 'creuse', 'monte', 'vide'].includes(m.etape)).length
 }
 
 // Le cercle du rayon du générateur, vu du ciel (une ellipse : la grille est en losange).

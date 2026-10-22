@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { basculerMusique, musiqueActive } from './ambiance'
 import { basculerSon, sonActif, sons } from './sons'
 import { Accueil } from './composants/Accueil'
-import { ProchainObjectif } from './composants/ProchainObjectif'
+import { Missions } from './composants/Missions'
 import { Gains } from './composants/Gains'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
@@ -187,30 +187,15 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
 
-  // --- Les bâtiments : on marche jusqu'à eux, puis le panneau s'ouvre ---
+  // --- Les bâtiments : on les touche, on marche jusqu'à eux, puis le panneau s'ouvre ---
   const [panneauFerme, setPanneauFerme] = useState(false)
 
-  // Le bâtiment près duquel se tient le joueur : à moins de RAYON_BATIMENT cases de son bord,
-  // de n'importe quel côté (plus besoin de chercher la porte).
-  // Le bâtiment qu'on a touché pour y aller : s'il est assez près, c'est lui qu'on ouvre (même si
-  // un autre bâtiment voisin est aussi près, par exemple entre la forge et la mine).
+  // Le bâtiment qu'on a touché pour y aller. Son panneau s'ouvre quand le joueur arrive à moins
+  // de RAYON_BATIMENT cases de son bord. Seulement lui (27/10) : passer à côté d'un autre
+  // bâtiment (en marchant, avec les flèches) n'ouvre plus rien.
   const [batimentVise, setBatimentVise] = useState<IdBatiment | null>(null)
-  let batimentProche: IdBatiment | null = null
   const vise = batimentVise ? batimentPose(etat.village, batimentVise) : null
-  if (pousse) {
-    batimentProche = null
-  } else if (vise && distanceAuBatiment(vise, joueur.x, joueur.y) < RAYON_BATIMENT) {
-    batimentProche = vise.id
-  } else {
-    let meilleure = RAYON_BATIMENT
-    for (const b of etat.village.batiments) {
-      const distance = distanceAuBatiment(b, joueur.x, joueur.y)
-      if (distance < meilleure) {
-        meilleure = distance
-        batimentProche = b.id
-      }
-    }
-  }
+  const batimentProche: IdBatiment | null = !pousse && vise && distanceAuBatiment(vise, joueur.x, joueur.y) < RAYON_BATIMENT ? vise.id : null
   // Le panneau s'ouvre quand on arrive en marchant devant un bâtiment, mais pas quand on y
   // apparaît d'un coup (au chargement de la partie) : sur téléphone, il cacherait la carte.
   const [dernierProche, setDernierProche] = useState<IdBatiment | null>(null)
@@ -329,6 +314,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       if (!direction || menuConstruction) return
       evenement.preventDefault()
       if (!evenement.repeat) {
+        setBatimentVise(null)
+        // Avec les flèches, il ne va plus vers le bâtiment touché : son panneau se ferme.
         setBatimentVise(null)
         village.fleche(direction, true)
       }
@@ -538,8 +525,10 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
 
       {/* Tout le reste est posé par-dessus la scène, comme dans Clash of Clans. */}
       <div className="interface">
+        {/* En haut à gauche (27/10) : la barre (argent, coffre, pioche, sac, mineurs), et dessous
+            les petits boutons (stats, succès, aide, réglages). */}
         <div className="interface-haut">
-          {/* En haut à gauche : le monde, les stats, les succès, l'aide et les réglages. */}
+          <Hud etat={etat} nbVentes={nbVentes} />
           <nav className="boutons-coin" aria-label="Menu du jeu">
             <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Statistiques">
               <span aria-hidden="true">📊</span>
@@ -573,12 +562,13 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
               </div>
             )}
           </nav>
-          <Hud etat={etat} nbVentes={nbVentes} />
         </div>
-        <ProchainObjectif etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} />
 
-        {/* Le panneau du bâtiment, par-dessus la carte. */}
-        {panneau && <div className="panneau-flottant">{panneau}</div>}
+        {/* En haut à droite : les missions, et dessous le panneau du bâtiment ouvert. */}
+        <div className="colonne-droite">
+          <Missions etat={etat} onAllerAuStand={(id) => allerAuBatiment(id)} onConstruire={() => ouvrirConstruction()} compact={panneau !== null} />
+          {panneau && <div className="panneau-flottant">{panneau}</div>}
+        </div>
 
         <div className="interface-bas">
           {barre}

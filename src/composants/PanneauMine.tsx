@@ -40,6 +40,7 @@ import { AmeliorationAscenseur } from './Ascenseur'
 import { Barre } from './Barre'
 import { Jauges } from './Jauges'
 import type { PropsPanneau } from './Panneaux'
+import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
 import { sons } from '../sons'
 
@@ -198,6 +199,7 @@ const FENETRE_CLICS = 3000 // ms
 
 export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Props) {
   const [choix, setChoix] = useState<Choix>({})
+  const [onglet, setOnglet] = useState<'creuser' | 'wagonnets' | 'ameliorer'>('creuser')
   // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
   const clics = useRef<number[]>([])
   const [clicsParSeconde, setClicsParSeconde] = useState(0)
@@ -221,102 +223,128 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer }: Pro
   const niveau = infoNiveauMine(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
+  // Ce qu'on peut améliorer tout de suite (pour la pastille de l'onglet).
+  const ameliorable = (prochain !== null && peutPayer(etat, prochain.cout)) || (coffre !== null && peutPayer(etat, coffre.cout))
   return (
     <div className="liste-cartes">
-      <p className="discret titre-niveau-mine">
-        Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong>
-      </p>
-      <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
-      <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
+      {/* Trois onglets (27/10) : creuser (le bloc, la production, le coffre), les wagonnets, et
+          les améliorations. */}
+      <OngletsPanneau
+        onglets={[
+          { id: 'creuser', titre: '⛏️ Creuser', pastille: coffrePlein(etat) ? '!' : null },
+          { id: 'wagonnets', titre: etat.trajets.length > 0 ? `🚃 Wagonnets (${etat.trajets.length})` : '🚃 Wagonnets' },
+          { id: 'ameliorer', titre: '⬆️ Améliorer', pastille: ameliorable ? '+' : null },
+        ]}
+        actif={onglet}
+        onChoisir={setOnglet}
+      />
+      {onglet === 'creuser' && (
+        <>
+          <p className="discret titre-niveau-mine">
+            Niveau {etat.niveauMine} · <strong>{niveau.nom}</strong>
+          </p>
+          <BlocACliquer etat={etat} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} />
+          <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
 
-      {/* Le coffre : tout ce qui sort de la mine. */}
-      <div className="ligne-achat">
-        <strong>
-          📦 Coffre · {nbDansCoffre(etat)} / {capaciteCoffre(etat)}
-        </strong>
-        <div className="barre-coffre-mine">
-          <Barre valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} texte={coffrePlein(etat) ? 'Plein : la mine s’arrête !' : `${nbDansCoffre(etat)} objets`} couleur={coffrePlein(etat) ? 'rouge' : 'or'} />
-        </div>
-        {piles.length === 0 ? (
-          <span className="discret">Vide. Clique sur le bloc pour le remplir !</span>
-        ) : (
-          <>
-            <Jauges
-              piles={piles}
-              choix={choix}
-              gardes={[]}
-              onChanger={(bloc, valeur) => setChoix({ ...choix, [bloc]: valeur })}
-              prixUnitaire={(bloc) => BLOCS[bloc].prix}
-              onToutSelectionner={() => setChoix(Object.fromEntries(piles.map(([bloc]) => [bloc, 'max'])))}
-            />
-            <div className="boutons">
-              <button
-                className="bouton bouton-sac"
-                disabled={nbLot === 0 || placeSac === 0}
-                onClick={() => {
-                  jouer((e) => prendreDuCoffre(e, lot))
-                  setChoix({})
-                }}
-              >
-                🎒 Mettre dans le sac ({Math.min(nbLot, placeSac)})
-              </button>
+          {/* Le coffre : tout ce qui sort de la mine. */}
+          <div className="ligne-achat">
+            <strong>
+              📦 Coffre · {nbDansCoffre(etat)} / {capaciteCoffre(etat)}
+            </strong>
+            <div className="barre-coffre-mine">
+              <Barre valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} texte={coffrePlein(etat) ? 'Plein : la mine s’arrête !' : `${nbDansCoffre(etat)} objets`} couleur={coffrePlein(etat) ? 'rouge' : 'or'} />
             </div>
-            {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
-            {trajetDe(etat, 'mine-marche') && (
-              <div className="garder-coffre">
-                <span className="discret">Le wagonnet du marché laisse dans le coffre :</span>
-                {piles.map(([bloc]) => (
-                  <label key={bloc} className="case-option">
-                    <input type="checkbox" checked={etat.nonAVendre.includes(bloc)} onChange={(e) => jouer((x) => reglerVente(x, bloc, !e.target.checked))} />
-                    {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
-                  </label>
-                ))}
-              </div>
+            {piles.length === 0 ? (
+              <span className="discret">Vide. Clique sur le bloc pour le remplir !</span>
+            ) : (
+              <>
+                <Jauges
+                  piles={piles}
+                  choix={choix}
+                  gardes={[]}
+                  onChanger={(bloc, valeur) => setChoix({ ...choix, [bloc]: valeur })}
+                  prixUnitaire={(bloc) => BLOCS[bloc].prix}
+                  onToutSelectionner={() => setChoix(Object.fromEntries(piles.map(([bloc]) => [bloc, 'max'])))}
+                />
+                <div className="boutons">
+                  <button
+                    className="bouton bouton-sac"
+                    disabled={nbLot === 0 || placeSac === 0}
+                    onClick={() => {
+                      jouer((e) => prendreDuCoffre(e, lot))
+                      setChoix({})
+                    }}
+                  >
+                    🎒 Mettre dans le sac ({Math.min(nbLot, placeSac)})
+                  </button>
+                </div>
+                {placeSac === 0 && <span className="discret manque">🎒 Ton sac est plein : va d’abord vendre au marché.</span>}
+                {/* Une option rarement utile : rangée dans « plus d'infos ». */}
+                {trajetDe(etat, 'mine-marche') && (
+                  <details className="plus-d-infos">
+                    <summary>Ce que le wagonnet ne vend pas</summary>
+                    <div className="garder-coffre">
+                      <span className="discret">Le wagonnet du marché laisse dans le coffre :</span>
+                      {piles.map(([bloc]) => (
+                        <label key={bloc} className="case-option">
+                          <input type="checkbox" checked={etat.nonAVendre.includes(bloc)} onChange={(e) => jouer((x) => reglerVente(x, bloc, !e.target.checked))} />
+                          {BLOCS[bloc].emoji} {BLOCS[bloc].nom}
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
-      <PanneauTrajets etat={etat} jouer={jouer} depart="puits" />
+      {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" />}
 
-      {/* Descendre d'un niveau : de nouveaux minerais, plus rares et plus chers. */}
-      <div className="ligne-achat">
-        <strong>⬇ Niveau de la mine</strong>
-        <Chances niveau={etat.niveauMine} />
-        {prochain && (
-          <span className="discret">
-            Au niveau {prochain.niveau} : <Chances niveau={prochain.niveau} />
-          </span>
-        )}
-        <Amelioration
-          etat={etat}
-          actuel={`Niveau ${etat.niveauMine} / ${NIVEAU_MINE_MAX}`}
-          niveau={etat.niveauMine}
-          niveauMax={NIVEAUX_MINE.length}
-          suivant={prochain && { cout: prochain.cout, texte: `⬇ ${prochain.nom}` }}
-          possible={prochain !== null && peutPayer(etat, prochain.cout)}
-          onAmeliorer={() => jouer((e) => descendreNiveauMine(e, aleatoireNavigateur))}
-        />
-      </div>
+      {onglet === 'ameliorer' && (
+        <>
 
-      <div className="ligne-achat">
-        <strong>📦 Taille du coffre</strong>
-        <Amelioration
-          etat={etat}
-          actuel={`${capaciteCoffre(etat).toLocaleString('fr-FR')} places`}
-          niveau={etat.coffre.niveau + 1}
-          niveauMax={NIVEAUX_COFFRE.length}
-          suivant={coffre && { cout: coffre.cout, texte: `⬆ ${coffre.capacite.toLocaleString('fr-FR')} places` }}
-          possible={coffre !== null && peutPayer(etat, coffre.cout)}
-          onAmeliorer={() => jouer(agrandirCoffre)}
-        />
-      </div>
+          {/* Descendre d'un niveau : de nouveaux minerais, plus rares et plus chers. */}
+          <div className="ligne-achat">
+            <strong>⬇ Niveau de la mine</strong>
+            <Chances niveau={etat.niveauMine} />
+            {prochain && (
+              <span className="discret">
+                Au niveau {prochain.niveau} : <Chances niveau={prochain.niveau} />
+              </span>
+            )}
+            <Amelioration
+              etat={etat}
+              actuel={`Niveau ${etat.niveauMine} / ${NIVEAU_MINE_MAX}`}
+              niveau={etat.niveauMine}
+              niveauMax={NIVEAUX_MINE.length}
+              suivant={prochain && { cout: prochain.cout, texte: `⬇ ${prochain.nom}` }}
+              possible={prochain !== null && peutPayer(etat, prochain.cout)}
+              onAmeliorer={() => jouer((e) => descendreNiveauMine(e, aleatoireNavigateur))}
+            />
+          </div>
 
-      <div className="ligne-achat">
-        <strong>🛗 Ascenseur</strong>
-        <span className="discret">Tes mineurs remontent leur sac (et redescendent) plus vite.</span>
-        <AmeliorationAscenseur etat={etat} jouer={jouer} />
-      </div>
+          <div className="ligne-achat">
+            <strong>📦 Taille du coffre</strong>
+            <Amelioration
+              etat={etat}
+              actuel={`${capaciteCoffre(etat).toLocaleString('fr-FR')} places`}
+              niveau={etat.coffre.niveau + 1}
+              niveauMax={NIVEAUX_COFFRE.length}
+              suivant={coffre && { cout: coffre.cout, texte: `⬆ ${coffre.capacite.toLocaleString('fr-FR')} places` }}
+              possible={coffre !== null && peutPayer(etat, coffre.cout)}
+              onAmeliorer={() => jouer(agrandirCoffre)}
+            />
+          </div>
+
+          <div className="ligne-achat">
+            <strong>🛗 Ascenseur</strong>
+            <span className="discret">Tes mineurs remontent leur sac (et redescendent) plus vite.</span>
+            <AmeliorationAscenseur etat={etat} jouer={jouer} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

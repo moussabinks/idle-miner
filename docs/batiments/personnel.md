@@ -15,13 +15,17 @@
   - **🛤️ « Sans trajet »** (alerte rouge, 26/10) quand des pousseurs n'ont plus de trajet en service (on a arrêté leur trajet avec ✖ Arrêter) : « *N* pousseur(s) sans trajet : choisis-leur un trajet au Personnel » ;
   - **✨ « Nouveau : Recruteur ! »** au niveau 3 de la mine et **« Nouveau : Manager ! »** au niveau 4, jusqu'à ce qu'on passe devant (`decouvertes.ts`) ;
   - **💰 « Une amélioration est achetable ! »** quand une embauche, une pioche de mineur, le recruteur ou le manager est payable tout de suite.
-- **Les personnages au village** : les mineurs sont des **hamsters casqués**, et **la couleur du casque est celle de leur rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique : les mêmes couleurs que leurs cartes), avec leur prénom au-dessus de la tête. On les voit **seulement quand ils sont dehors** : quand ils marchent (vers la forge, vers le Personnel, vers la mine), quand ils récupèrent leur pioche devant la forge, quand ils attendent leur wagonnet au quai (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ), quand ils le poussent (juste derrière lui), et quand ils attendent leur salaire devant le Personnel (bulle 😠, ils tapent du pied). Quand ils sont dans la mine, on voit seulement la **cabine de l'ascenseur** monter et descendre avec eux. Le **manager** et le **recruteur** restent devant le bâtiment, avec leur étiquette « Manager » / « Recruteur ». Dans le panneau, leurs cartes ont leur **portrait**.
+- **Les personnages au village** : les mineurs sont des **hamsters casqués**, et **la couleur du casque est celle de leur rareté** (gris commun, bleu rare, violet épique, orange légendaire, rose mythique : les mêmes couleurs que leurs cartes), avec leur prénom au-dessus de la tête. On les voit **seulement quand ils sont dehors** : quand ils marchent (vers la forge, vers le Personnel, vers la mine), quand ils récupèrent leur pioche devant la forge, quand ils attendent leur wagonnet au quai (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ), quand ils le poussent (juste derrière lui), et quand ils attendent leur salaire devant le Personnel (bulle 😠, ils tapent du pied). Quand ils sont dans la mine, on voit seulement la **cabine de l'ascenseur** monter et descendre : depuis le 27/10, **les mineurs y sont dessinés dedans** pendant qu'ils descendent ou remontent (ils sont coupés sous le bord avant de la cabine et au bord du puits), et la **jauge du coffre** au-dessus de la mine montre « 👷 *n* » : combien travaillent au fond. Le **manager** et le **recruteur** restent devant le bâtiment, avec leur étiquette « Manager » / « Recruteur ». Dans le panneau, leurs cartes ont leur **portrait**.
 
 ## Ce qu'on peut y faire
 
-Le panneau commence par « Tes mineurs creusent pour toi et remontent leur sac dans le coffre de la mine, même jeu fermé ; tes pousseurs poussent les wagonnets de leur trajet. En échange : un salaire toutes les 10 minutes, sinon ils attendent ici, mécontents. »
+Depuis le 27/10, le panneau est rangé en **trois onglets** (`OngletsPanneau`) et n'a plus de long paragraphe d'introduction :
 
-Puis, de haut en bas : les salaires (ou le manager), le recruteur, **👷 Embaucher un mineur**, **🛤️ Embaucher un pousseur**, et l'équipe, rangée en deux listes : **⛏️ Mineurs (*n*)** et **🛤️ Pousseurs (*n*)**.
+- **👷 Équipe (*n*)** : les salaires (sans manager), puis l'équipe en deux listes, **⛏️ Mineurs (*n*)** et **🛤️ Pousseurs (*n*)**. Pastille « ! » si quelqu'un n'est pas payé. Sans personne : « Personne pour l'instant » et un bouton **➕ Recruter un mineur** qui ouvre l'onglet Recruter ;
+- **➕ Recruter** : **👷 Embaucher un mineur** (ou **🎲 Recruter**) et **🛤️ Embaucher un pousseur**. Pastille « + » quand on peut payer une embauche ;
+- **💼 Chefs** : le **manager** (et la trésorerie) et le **recruteur**. Pastille « ! » si le manager n'a plus de trésorerie.
+
+Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur **Équipe**.
 
 **Deux métiers** (26/10) : les **mineurs** ne font que creuser et remonter leur sac dans le coffre de la mine. Les **pousseurs** ne creusent jamais : ils poussent le wagonnet d'un seul trajet. On ne passe plus de l'un à l'autre (l'ancien bouton « 🛤️ Pousser le wagonnet / ⛏️ Creuser » est retiré).
 
@@ -40,10 +44,10 @@ Puis, de haut en bas : les salaires (ou le manager), le recruteur, **👷 Embauc
 
 ### 2. La carte d'un employé
 
-Une carte compacte par employé, pour voir toute l'équipe d'un coup :
+Une carte compacte par employé (encore raccourcie le 27/10), pour voir toute l'équipe d'un coup :
 
 - son **prénom**, sa **rareté** (avec « ×*N* » si elle n'est pas commune), l'icône de ce qu'il fait et le temps restant (⛏️ creuse, ⏫ remonte, 📦 vide son sac, ⏬ redescend, 🛤️ au quai ou pousse, 🔨 à la forge, 🚶 marche, 😠 pas payé), et le lien **Licencier** ;
-- **un mineur** : ce qu'il rapporte (« ⛏️ ~*X* $ de blocs / 10 min (*N* / min) · salaire *Y* $ »), deux petites jauges (**⏳ temps payé**, vert ou rouge « 😠 Plus payé », et **🎒 sac**) et la ligne d'amélioration de sa **pioche** ;
+- **un mineur** : « ⛏️ *x* bloc/s · salaire *y* / 10 min » (ce que ses blocs valent par 10 minutes est dans l'info-bulle), deux petites jauges (**⏳ temps payé**, vert ou rouge « 😠 Plus payé », et **🎒 sac**) et la ligne d'amélioration de sa **pioche**, **seulement s'il reste une amélioration** (au niveau max, rien n'est montré) ;
 - **un pousseur** : « 🛤️ Pousse le wagonnet **Mine → Marché** · salaire *Y* $ », une liste pour **changer son trajet** (seulement les trajets qui ont leurs rails), et la jauge **⏳ temps payé**. Pas de sac ni de pioche : il ne creuse pas.
 
 L'infobulle donne son activité en entier, sa vitesse en creusant et le nombre de blocs qu'il a cassés.
@@ -137,7 +141,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 - Avant : carte verrouillée « 🔒 Manager · niveau 4 de la mine ».
 - **Embauche : 15 000 $** (`PRIX_MANAGER`), ses 10 premières minutes comprises.
 - **Son salaire : 600 $ toutes les 10 minutes** (`SALAIRE_MANAGER`), payé par la trésorerie.
-- **La trésorerie** est une cagnotte qu'on remplit. Boutons : « +*manque* » (juste ce qu'il faut pour une paie de toute l'équipe), **« Remplir pour 1 h »** (jusqu'à 6 paies de toute l'équipe), **+1 000 $**, **+10 000 $**, **+100 000 $**, **« Tout mettre »** et **« Tout reprendre »**.
+- **La trésorerie** est une cagnotte qu'on remplit. Boutons : « +*manque* » (juste ce qu'il faut pour une paie de toute l'équipe), **« Remplir pour 1 h »** (jusqu'à 6 paies de toute l'équipe), **+10 000 $**, **« Tout mettre »** et **« Tout reprendre »** (depuis le 27/10, il n'y a plus de +1 000 $ ni de +100 000 $). Tout cela est dans l'onglet **Chefs**.
 - Une jauge montre la trésorerie face au prix d'une paie de toute l'équipe (manager compris), et le panneau dit combien de temps elle tient. Badge « Au travail » ou « 😠 Pas payé ».
 
 ## Règles et comportement
@@ -146,14 +150,14 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 - **Ses trajets** : à l'**échelle**, une montée ou une descente dure **10 s** (`SECONDES_ECHELLE`) ; avec l'**ascenseur** (au panneau de la mine), de 6 s (niveau 1) à 1 s (niveau 6).
 - **Ce qu'il trouve** : des blocs tirés au hasard selon le **niveau de la mine** (les mêmes chances que la mine). Il ne double jamais ses minerais.
 - **Coffre plein** : il attend devant, son sac plein, sans rien faire (« 📦 attend : le coffre de la mine est plein ! »), en continuant d'être payé. Il vide dès qu'il y a de la place.
-- **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : s'il creusait ou descendait, il remonte ; en haut, il vide quand même son sac, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (4 cases par seconde, `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet.
+- **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : s'il creusait ou descendait, il remonte ; en haut, il vide quand même son sac, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (**2,5 cases par seconde** depuis le 27/10, avant 4 ; `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet. **Plusieurs mineurs payés en même temps repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) ; ceux qui attendent encore leur tour restent à leur place devant le Personnel.
 - **Un mineur n'attend jamais au quai** : s'il y en a un (une vieille partie), il redescend aussitôt creuser.
 - **Le manager paie tout seul** : dès qu'il reste **moins d'une minute** payée (`SECONDES_AVANT_PAIE_MANAGER = 60`), il paie 10 minutes de plus avec la trésorerie, **d'abord lui-même**, puis les mineurs **du moins cher au plus cher** (s'il n'y a pas assez, le plus de mineurs possible continuent). **S'il n'est pas payé, il ne paie plus personne** (« 💼 Ton manager n'est plus payé : la trésorerie est vide ! Remplis-la au Personnel. »). Le travail avance par morceaux de 30 secondes, pour que le manager ait le temps de payer entre deux morceaux après une longue absence.
 - **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec la trésorerie. Au retour, le message « Pendant ton absence » dit combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».
 
 ## Lien avec le reste du jeu
 
-- **Objectifs** (`objectifs.ts`) : d'abord « Construire : Personnel » ; une fois posé, « Embaucher un mineur », « Pioche en … pour *X* », « Embaucher le recruteur » / « Recruteur niveau *N* » et « Embaucher le manager » font partie des achats possibles (bulle 💰, prochain objectif « …au Personnel ! »).
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Personnel » ; une fois posé, « Embauche un pousseur pour le wagonnet » et « Embauche un mineur au Personnel » font partie de l'automatisation, et **« Paie ton mineur au Personnel »** (ou « Paie tes *n* mineurs ») est une urgence, passée devant les autres. « Embaucher un mineur », « Pioche en … pour *X* », le recruteur et le manager sont aussi des achats possibles (bulle 💰, missions d'amélioration).
 - **Autres bâtiments** : ils remplissent le **coffre de la mine** ; l'**ascenseur** (au panneau de la mine) raccourcit leurs trajets ; les **pousseurs** (un par trajet) font rouler les wagonnets (vers le **Marché**, la **Foreuse** ou le **Générateur**) tant que leurs trajets ne sont pas électriques ; ils passent au **Forgeron** chercher leur nouvelle pioche. Leurs pioches ne coûtent que de l'argent : le fer, la redstone et l'or restent pour la mine, les rails, la foreuse et le générateur.
 - **Revenus et statistiques** : l'indicateur « $/s » compte chaque mineur **payé** qui creuse (sac plein ÷ durée d'un tour, trajets compris, × valeur moyenne d'un bloc), moins les salaires de tous les mineurs payés (pousseurs compris) et celui du manager (`revenu.ts`) ; les statistiques comptent `blocsMineurs` et `salairesPayes`.
 - **Succès** : « 👷 Patron » (un premier mineur), « 👥 Chef d'équipe » (6 mineurs).
@@ -171,7 +175,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 - `src/jeu/temps.ts` : fait avancer les mineurs avec le reste du jeu.
 - `src/usePartie.ts` : le rattrapage hors ligne (8 h au plus) et le message « Pendant ton absence ».
 - `src/jeu/notifications.ts` : les bulles 😠, 🛤️ (sans trajet), ✨ et 💰 au-dessus du Personnel.
-- `src/jeu/objectifs.ts` : « Construire : Personnel », achats, prochain objectif.
+- `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Personnel », achats, missions.
 - `src/jeu/decouvertes.ts` : les bulles « Nouveau : Recruteur / Manager ! ».
 - `src/jeu/revenu.ts` et `src/jeu/statistiques.ts` : ce qu'ils rapportent ($/s et statistiques).
 - `src/jeu/employes.test.ts` : les tests (dont l'embauche d'un pousseur pour un trajet et le changement de trajet).

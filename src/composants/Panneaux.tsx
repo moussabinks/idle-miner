@@ -120,21 +120,24 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
     })
   }
 
+  // Sac vide : une seule phrase, rien d'autre (27/10).
+  if (piles.length === 0) {
+    return (
+      <div className="liste-cartes">
+        <p className="discret">🎒 Ton sac est vide. Remplis-le au coffre de la mine, puis reviens vendre ici !</p>
+      </div>
+    )
+  }
   return (
     <div className="liste-cartes">
-      <p className="discret">Choisis combien vendre de chaque objet (garde-en pour une pioche, des rails, le générateur…).</p>
-      {piles.length === 0 ? (
-        <p className="discret">Ton sac est vide. Va le remplir au coffre de la mine !</p>
-      ) : (
-        <Jauges
-          piles={piles}
-          choix={choix}
-          gardes={etat.nonAVendre}
-          onChanger={changer}
-          prixUnitaire={(bloc) => BLOCS[bloc].prix}
-          onToutSelectionner={toutSelectionner}
-        />
-      )}
+      <Jauges
+        piles={piles}
+        choix={choix}
+        gardes={etat.nonAVendre}
+        onChanger={changer}
+        prixUnitaire={(bloc) => BLOCS[bloc].prix}
+        onToutSelectionner={toutSelectionner}
+      />
       <button
         className="bouton bouton-vendre"
         disabled={gain === 0}
@@ -145,6 +148,7 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
       >
         💰 Vendre la sélection {gain > 0 && `· +${gain.toLocaleString('fr-FR')} $`}
       </button>
+      <p className="discret">Garde des minerais (curseur) pour une pioche, des rails, le générateur…</p>
     </div>
   )
 }
@@ -153,78 +157,88 @@ export function PanneauMarche({ etat, jouer }: PropsPanneau) {
 
 // Le forgeron : acheter, réparer et changer de pioche. Une meilleure pioche double plus souvent
 // les minerais qu'on casse en cliquant.
+// Une pioche au forgeron : sa durabilité, et ce qu'on peut faire (équiper, réparer, racheter).
+function CartePioche({ etat, jouer, pioche }: PropsPanneau & { pioche: (typeof PIOCHES)[number] }) {
+  const possedee = pioche.niveau in etat.pioches
+  const equipee = pioche.niveau === etat.niveauPioche
+  const prochaine = pioche.niveau === etat.meilleure + 1
+  const usure = etat.pioches[pioche.niveau] ?? 0
+  const cout = coutReparation(etat, pioche.niveau)
+  return (
+    <div className={`ligne-achat ${equipee ? 'equipee' : ''}`}>
+      <div className="ligne-titre">
+        <strong>
+          {pioche.emoji} Pioche en {pioche.nom}
+        </strong>
+        {equipee && <span className="badge">Équipée</span>}
+      </div>
+      <span className="discret">
+        {Math.round(pioche.doublement * 100)} % de chance de doubler un minerai · durabilité {pioche.durabilite} clics
+      </span>
+
+      {possedee && (
+        <Barre
+          valeur={pioche.durabilite - usure}
+          max={pioche.durabilite}
+          texte={usure >= pioche.durabilite ? 'Cassée : 2 clics par bloc' : `${pioche.durabilite - usure} / ${pioche.durabilite}`}
+          couleur={usure >= pioche.durabilite ? 'rouge' : 'vert'}
+        />
+      )}
+
+      {possedee && !equipee && (
+        <div className="boutons">
+          <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
+            Équiper
+          </Bouton>
+        </div>
+      )}
+      {/* Réparer : un peu d'argent et quelques minerais (selon l'usure). */}
+      {possedee && usure > 0 && cout && (
+        <Achat
+          etat={etat}
+          cout={cout}
+          texte="🔧 Réparer"
+          possible={peutReparer(etat, pioche.niveau)}
+          onAcheter={() => jouer((e) => reparer(e, pioche.niveau))}
+          genre="reparer"
+        />
+      )}
+      {/* Débloquer ou racheter neuve : le prix à gauche, comme partout. */}
+      {(prochaine || pioche.niveau > 0) && (
+        <Achat
+          etat={etat}
+          cout={coutPioche(pioche.niveau)}
+          texte={prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'}
+          possible={peutAcheterPioche(etat, pioche.niveau)}
+          onAcheter={() => jouer((e) => acheterPioche(e, pioche.niveau))}
+        />
+      )}
+    </div>
+  )
+}
+
+// Le forgeron (27/10 : plus simple) : la pioche en main et la prochaine à débloquer ; les autres
+// pioches qu'on a déjà sont rangées dans « Autres pioches ».
 export function PanneauPioches({ etat, jouer }: PropsPanneau) {
+  const principales = PIOCHES.filter((p) => p.niveau === etat.niveauPioche || p.niveau === etat.meilleure + 1)
+  const autres = PIOCHES.filter((p) => p.niveau in etat.pioches && p.niveau !== etat.niveauPioche && p.niveau !== etat.meilleure + 1)
+  const aVenir = PIOCHES.filter((p) => p.niveau > etat.meilleure + 1).length
   return (
     <div className="liste-cartes">
-      {PIOCHES.map((pioche) => {
-        const possedee = pioche.niveau in etat.pioches
-        const equipee = pioche.niveau === etat.niveauPioche
-        const debloquee = pioche.niveau <= etat.meilleure
-        const prochaine = pioche.niveau === etat.meilleure + 1
-        const usure = etat.pioches[pioche.niveau] ?? 0
-        const cout = coutReparation(etat, pioche.niveau)
-
-        if (!debloquee && !prochaine) {
-          return (
-            <div key={pioche.niveau} className="ligne-achat verrouille">
-              <strong>🔒 Pioche en {pioche.nom}</strong>
-              <span className="discret">Débloque d'abord la pioche précédente.</span>
-            </div>
-          )
-        }
-
-        return (
-          <div key={pioche.niveau} className={`ligne-achat ${equipee ? 'equipee' : ''}`}>
-            <div className="ligne-titre">
-              <strong>
-                {pioche.emoji} Pioche en {pioche.nom}
-              </strong>
-              {equipee && <span className="badge">Équipée</span>}
-            </div>
-            <span className="discret">
-              {Math.round(pioche.doublement * 100)} % de chance de doubler un minerai · durabilité {pioche.durabilite} clics
-            </span>
-
-            {possedee && (
-              <Barre
-                valeur={pioche.durabilite - usure}
-                max={pioche.durabilite}
-                texte={usure >= pioche.durabilite ? 'Cassée : 2 clics par bloc' : `${pioche.durabilite - usure} / ${pioche.durabilite}`}
-                couleur={usure >= pioche.durabilite ? 'rouge' : 'vert'}
-              />
-            )}
-
-            {possedee && !equipee && (
-              <div className="boutons">
-                <Bouton actif genre="neutre" onClick={() => jouer((e) => equiper(e, pioche.niveau))}>
-                  Équiper
-                </Bouton>
-              </div>
-            )}
-            {/* Réparer : un peu d'argent et quelques minerais (selon l'usure). */}
-            {possedee && usure > 0 && cout && (
-              <Achat
-                etat={etat}
-                cout={cout}
-                texte="🔧 Réparer"
-                possible={peutReparer(etat, pioche.niveau)}
-                onAcheter={() => jouer((e) => reparer(e, pioche.niveau))}
-                genre="reparer"
-              />
-            )}
-            {/* Débloquer ou racheter neuve : le prix à gauche, comme partout. */}
-            {(prochaine || pioche.niveau > 0) && (
-              <Achat
-                etat={etat}
-                cout={coutPioche(pioche.niveau)}
-                texte={prochaine ? '🔓 Débloquer' : '🛒 Racheter neuve'}
-                possible={peutAcheterPioche(etat, pioche.niveau)}
-                onAcheter={() => jouer((e) => acheterPioche(e, pioche.niveau))}
-              />
-            )}
+      {principales.map((pioche) => (
+        <CartePioche key={pioche.niveau} etat={etat} jouer={jouer} pioche={pioche} />
+      ))}
+      {aVenir > 0 && <span className="discret">🔒 Encore {aVenir} pioche{aVenir > 1 ? 's' : ''} à débloquer ensuite.</span>}
+      {autres.length > 0 && (
+        <details className="plus-d-infos">
+          <summary>Autres pioches ({autres.length})</summary>
+          <div className="liste-cartes">
+            {autres.map((pioche) => (
+              <CartePioche key={pioche.niveau} etat={etat} jouer={jouer} pioche={pioche} />
+            ))}
           </div>
-        )
-      })}
+        </details>
+      )}
     </div>
   )
 }

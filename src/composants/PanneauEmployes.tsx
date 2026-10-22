@@ -71,6 +71,7 @@ import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import { Confirmation } from './Confirmation'
+import { OngletsPanneau } from './OngletsPanneau'
 import { RevelationRecrue } from './RevelationRecrue'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
@@ -225,7 +226,7 @@ function Manager({ etat, jouer }: Props) {
         >
           Remplir pour 1 h
         </button>
-        {[1000, 10000, 100000].map((montant) => (
+        {[10000].map((montant) => (
           <button
             key={montant}
             className="bouton bouton-petit bouton-payer"
@@ -342,9 +343,9 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         </div>
       ) : (
         <div className="module-ligne">
-          <span className="discret">
-            ⛏️ ~{argent(rapporte)} de blocs / 10 min ({(blocsParSecondeEmploye(etat, employe) * 60).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} / min) · salaire{' '}
-            {argent(salaireEmploye(employe))}
+          {/* Court (27/10) : son rendement et son salaire ; le détail est dans l'info-bulle. */}
+          <span className="discret" title={`Ses blocs valent environ ${argent(rapporte)} toutes les 10 minutes`}>
+            ⛏️ {blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc/s · salaire {argent(salaireEmploye(employe))} / 10 min
           </span>
         </div>
       )}
@@ -364,7 +365,8 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
           />
         )}
       </div>
-      {!pousseur && (
+      {/* Sa pioche : seulement s'il reste une amélioration (au niveau max, rien à montrer). */}
+      {!pousseur && coutPioche !== null && prochaine && (
       <Amelioration
         etat={etat}
         actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
@@ -455,6 +457,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   // Le mineur qu'on veut licencier : on demande d'abord confirmation (fenêtre du jeu).
   const [aLicencier, setALicencier] = useState<number | null>(null)
 
+  const [onglet, setOnglet] = useState<'equipe' | 'recruter' | 'chefs'>(etat.employes.length === 0 ? 'recruter' : 'equipe')
   const prix = prixEmbauche(etat)
   const max = maxEmployes(etat)
   const avecRecruteur = etat.recruteur > 0
@@ -465,61 +468,80 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
     if (avecRecruteur && apres.employes.length > avant) setRecrue(apres.employes[apres.employes.length - 1])
   }
 
+  const sansSalaire = nbSansSalaire(etat)
+  const managerVide = etat.manager.embauche && !managerAuTravail(etat)
   return (
     <div className="liste-cartes">
-      <p className="discret">
-        Tes mineurs creusent pour toi et remontent leur sac dans le coffre de la mine, même jeu fermé ; tes pousseurs poussent les wagonnets
-        de leur trajet. En échange : un salaire toutes les 10 minutes, sinon ils attendent ici, mécontents.
-      </p>
+      {/* Trois onglets (27/10) : l'équipe (et les salaires), recruter, les chefs. */}
+      <OngletsPanneau
+        onglets={[
+          { id: 'equipe', titre: `👷 Équipe (${etat.employes.length})`, pastille: sansSalaire > 0 ? '!' : null },
+          { id: 'recruter', titre: '➕ Recruter', pastille: prix !== null && etat.argent >= prix ? '+' : null },
+          { id: 'chefs', titre: '💼 Chefs', pastille: managerVide ? '!' : null },
+        ]}
+        actif={onglet}
+        onChoisir={setOnglet}
+      />
 
-      {etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
-      <Manager etat={etat} jouer={jouer} />
-      <Recruteur etat={etat} jouer={jouer} />
-
-      <div className={`ligne-achat ${avecRecruteur ? 'carte-recrutement' : ''}`}>
-        <div className="ligne-titre">
-          <strong>{avecRecruteur ? '🎲 Recruter un mineur' : '👷 Embaucher un mineur'}</strong>
-          <span className="badge">
-            {etat.employes.length} / {max}
-          </span>
+      {onglet === 'equipe' && etat.employes.length === 0 && (
+        <div className="ligne-achat">
+          <span className="discret">Personne pour l'instant. Tes mineurs creuseront pour toi, même jeu fermé !</span>
+          <button className="bouton bouton-petit bouton-acheter" onClick={() => setOnglet('recruter')}>
+            ➕ Recruter un mineur
+          </button>
         </div>
-        {prix === null ? (
-          <span className="discret">
-            Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus.
-            {avecRecruteur && ' Licencie un mineur pour tenter ta chance avec un autre !'}
-          </span>
-        ) : (
-          <>
-            <span className="discret">
-              {avecRecruteur ? 'Commun, rare... ou mythique ? On ne refuse personne : c’est la surprise ! ' : ''}
-              Ses 10 premières minutes de salaire sont comprises. Le prix monte avec la taille de l'équipe.
+      )}
+      {onglet === 'equipe' && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
+      {onglet === 'equipe' &&
+        (['mineur', 'pousseur'] as const).map((role) => {
+          const equipe = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)
+          if (equipe.length === 0) return null
+          return (
+            <div key={role} className="liste-cartes">
+              <h4 className="titre-equipe">{role === 'mineur' ? `⛏️ Mineurs (${equipe.length})` : `🛤️ Pousseurs (${equipe.length})`}</h4>
+              {equipe.map(({ employe, index }) => (
+                <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
+              ))}
+            </div>
+          )
+        })}
+
+      {onglet === 'chefs' && <Manager etat={etat} jouer={jouer} />}
+      {onglet === 'chefs' && <Recruteur etat={etat} jouer={jouer} />}
+
+      {onglet === 'recruter' && (
+        <div className={`ligne-achat ${avecRecruteur ? 'carte-recrutement' : ''}`}>
+          <div className="ligne-titre">
+            <strong>{avecRecruteur ? '🎲 Recruter un mineur' : '👷 Embaucher un mineur'}</strong>
+            <span className="badge">
+              {etat.employes.length} / {max}
             </span>
-            <Achat
-              etat={etat}
-              cout={{ argent: prix, materiaux: {} }}
-              texte={avecRecruteur ? '🎲 Recruter' : '👷 Embaucher'}
-              possible={etat.argent >= prix}
-              onAcheter={recruter}
-              genre={avecRecruteur ? 'recruter' : 'acheter'}
-            />
-          </>
-        )}
-      </div>
-
-      <EmbauchePousseur etat={etat} jouer={jouer} onApercuTrajet={onApercuTrajet} onRecrue={setRecrue} />
-
-      {(['mineur', 'pousseur'] as const).map((role) => {
-        const equipe = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)
-        if (equipe.length === 0) return null
-        return (
-          <div key={role} className="liste-cartes">
-            <h4 className="titre-equipe">{role === 'mineur' ? `⛏️ Mineurs (${equipe.length})` : `🛤️ Pousseurs (${equipe.length})`}</h4>
-            {equipe.map(({ employe, index }) => (
-              <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
-            ))}
           </div>
-        )
-      })}
+          {prix === null ? (
+            <span className="discret">
+              Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus.
+              {avecRecruteur && ' Licencie un mineur pour tenter ta chance avec un autre !'}
+            </span>
+          ) : (
+            <>
+              <span className="discret">
+                {avecRecruteur ? 'Commun, rare... ou mythique ? On ne refuse personne : c’est la surprise ! ' : ''}
+                Ses 10 premières minutes de salaire sont comprises. Le prix monte avec la taille de l'équipe.
+              </span>
+              <Achat
+                etat={etat}
+                cout={{ argent: prix, materiaux: {} }}
+                texte={avecRecruteur ? '🎲 Recruter' : '👷 Embaucher'}
+                possible={etat.argent >= prix}
+                onAcheter={recruter}
+                genre={avecRecruteur ? 'recruter' : 'acheter'}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {onglet === 'recruter' && <EmbauchePousseur etat={etat} jouer={jouer} onApercuTrajet={onApercuTrajet} onRecrue={setRecrue} />}
 
       {recrue && <RevelationRecrue employe={recrue} onFermer={() => setRecrue(null)} />}
       {aLicencier !== null && etat.employes[aLicencier] && (

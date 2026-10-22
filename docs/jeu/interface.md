@@ -1,7 +1,7 @@
 # L'interface de Mega Digger
 
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
-> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
+> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10 ; missions, bandeau à gauche, onglets et zoom le 27/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
 
 Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affichent au format français (`1 250 $`).
 
@@ -11,7 +11,7 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 2. [L'écran d'accueil](#2-lécran-daccueil-accueiltsx)
 3. [L'écran de jeu : la mise en page](#3-lécran-de-jeu--la-mise-en-page)
 4. [Les boutons du coin et le bandeau (HUD)](#4-les-boutons-du-coin-et-le-bandeau-hud)
-5. [La barre « prochain objectif »](#5-la-barre--prochain-objectif--prochainobjectiftsx)
+5. [Les missions](#5-les-missions-missionstsx)
 6. [La carte du village](#6-la-carte-du-village-vuevillagetsx)
 7. [Les boutons du bas](#7-les-boutons-du-bas)
 8. [Le panneau d'un bâtiment](#8-le-panneau-dun-bâtiment)
@@ -143,20 +143,20 @@ Un seul mode (classe `jeu plein-ecran mode-village`) : le **village vu du ciel**
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│[🌍]       [Argent $/s][Mine · coffre][Pioche][Sac][👷 ⚡ 🔊 🎵]│  bandeau (HUD)
-│[📊]                       🎯 prochain objectif ············  │
-│[🏅]                                        ┌───────────────┐ │
-│[❔]        LA CARTE (village vu du ciel)   │ PANNEAU       │ │
-│[⚙️]        sur tout l'écran                │ du bâtiment   │ │
-│                                            │ (la mine : le │ │
-│                 messages (toasts)          │ bloc à cliquer)│ │
+│[Argent $/s][Mine · coffre][Pioche][Sac][👷 ⚡]   ┌ MISSIONS ───┐ │  bandeau (HUD)
+│[📊]                                              └─────────────┘ │
+│[🏅]                                        ┌───────────────┐     │
+│[❔]        LA CARTE (village vu du ciel)   │ PANNEAU       │     │
+│[⚙️]        sur tout l'écran                │ du bâtiment   │     │
+│                                            │ (la mine : le │     │
+│                 messages (toasts)          │ bloc à cliquer)│    │
 │ (⛏️)          ← ↑ → ↓ pour marcher           (✏️) (🏗️)     │  boutons ronds
 └──────────────────────────────────────────────────────────────┘
 ```
 
-- **En haut à gauche** (`boutons-coin`) : une colonne de petits boutons carrés en bois (§ 4.1).
-- **En haut à droite** : le bandeau (§ 4.2), et dessous le prochain objectif (§ 5).
-- **Le panneau** (`panneau-flottant`) : sur ordinateur, une carte de 400 px (350 px sur un écran moyen) à droite ; depuis le 27/10, la caméra **ne bouge plus** quand il s'ouvre (avant, elle se décalait de 210 px vers la gauche) : le joueur garde sa vue. Sur téléphone, il monte du bas, au-dessus des boutons (55 % de la hauteur au plus).
+- **En haut à gauche** : le bandeau (§ 4.2), et **dessous** la colonne de petits boutons carrés en bois (`boutons-coin`, § 4.1). Depuis le 27/10, le bandeau est à gauche, au-dessus des boutons (avant, il était en haut à droite).
+- **En haut à droite** (`colonne-droite`, 27/10) : les **missions** (§ 5), et dessous le panneau du bâtiment ouvert.
+- **Le panneau** (`panneau-flottant`) : sur ordinateur, une carte de 400 px (350 px sur un écran moyen) à droite ; depuis le 27/10, la caméra **ne bouge plus** quand il s'ouvre (avant, elle se décalait de 210 px vers la gauche) : le joueur garde sa vue. Il se place **sous les missions**, dans la colonne de droite. Sur téléphone, il monte du bas, au-dessus des boutons (55 % de la hauteur au plus).
 - **En bas** : de **gros boutons ronds** : ⛏️ Mine en bas à gauche, ✏️ Modifier et 🏗️ Bâtiments en bas à droite (§ 7).
 - La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé, et `avec-panneau` quand un panneau est ouvert.
 
@@ -177,6 +177,8 @@ Une colonne de petits boutons carrés en bois, en haut à gauche, **sans texte**
 
 ### 4.2 Le bandeau (`Hud.tsx`, styles dans `src/interface.css`)
 
+Depuis le 27/10, il est **en haut à gauche**, au-dessus des petits boutons du coin (`.interface-haut` en colonne).
+
 Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 px sur téléphone, sur deux lignes si besoin). Chaque case a une icône dans un rond, une valeur et une mini-jauge ; le détail est dans l'info-bulle. Une case **rougit et palpite** quand il faut agir.
 
 | Case | Contenu | Alerte |
@@ -191,16 +193,23 @@ Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 
 
 ---
 
-## 5. La barre « prochain objectif » (`ProchainObjectif.tsx`)
+## 5. Les missions (`Missions.tsx`)
 
-Une ligne fine en forme de pilule juste sous le bandeau : « 🎯 **Pioche en Fer** · 180 / 200 $ » avec une jauge dorée dessous. Règles dans `src/jeu/objectifs.ts` :
+Depuis le 27/10, la barre « prochain objectif » est **remplacée par les missions** (en haut à droite) : **une à trois** choses à faire, pour guider le joueur du marché jusqu'à l'automatisation. Chaque mission a une **icône**, un **texte** et, quand il y a quelque chose à compter, une **barre de progression** avec son chiffre (« 🪨 12/25 »). La **première est plus grande**. Une mission qu'on peut faire **tout de suite** a une **bordure verte qui pulse** (et une flèche ➜). Règles dans `src/jeu/missions.ts` (testées dans `objectifs.test.ts`), dans cet ordre :
 
-1. si un achat est payable tout de suite : d'abord les **bâtiments à poser** (« ✨ **Construire : Marché** · gratuit : pose-le (menu Bâtiments) ! », ou « · à poser (menu Bâtiments) ! »), puis les améliorations des bâtiments posés, dans l'ordre : pioche suivante (forgeron), niveau de la mine, coffre, ascenseur (si on a des mineurs), taille des wagonnets (s'il y a un trajet), sac, foreuse, générateur, Personnel (« ✨ *nom* · achetable à la mine ! ») ; bordure verte qui pulse, jauge pleine ;
-2. sinon, tant qu'il n'y a pas de trajet Mine → Marché (et qu'on a du fer ou déjà les rails) : « **Relier la mine au marché** · pose des rails (menu Bâtiments, 3 fer la case) » (le clic ouvre le menu Bâtiments), puis, les rails posés, « **Créer un trajet de wagonnet** · à la mine : « envoyer un wagonnet vers le marché » » ;
-3. sinon l'achat dont on a la plus grande part de l'argent : détail « *argent* / *prix* $ » ou « il manque *n* *minerai* » (les minerais comptent le sac et le coffre) ;
-4. quand il n'y a plus rien à acheter : les étapes du générateur, « Allumer le générateur · mets-lui de la redstone » ou « Électrifier les rails · tout un trajet doit être dans le rayon du générateur » ; puis, si la foreuse est posée, « Relier la foreuse à la mine · des rails : un wagonnet lui apportera le charbon » (ouvre le menu Bâtiments) et « Envoyer du charbon à la foreuse · à la mine : « envoyer un wagonnet vers la foreuse » ».
+1. **les urgences** : « Paie ton mineur au Personnel » (ou « Paie tes *n* mineurs ») et « Le coffre est plein : vide-le ! » ;
+2. **les premiers pas** : « Construis le marché (gratuit) », « Casse 10 blocs à la mine » (« ⛏️ 3/10 »), « Mets les blocs du coffre dans ton sac », « Vends ton sac au marché » ;
+3. **le prochain bâtiment** à construire (dans l'ordre du menu) : « Gagne *X* $ : construis : *bâtiment* », « Récupère *N* pierre : construis : *bâtiment* », puis « Construis : *bâtiment* » quand tout est là ;
+4. **l'automatisation**, étape par étape : « Récupère *N* fer pour les rails », « Pose des rails de la mine au marché », « Envoie un wagonnet vers le marché », « Embauche un pousseur pour le wagonnet » (sans électricité), « Embauche un mineur au Personnel », puis les étapes du générateur (« Mets de la redstone dans le générateur », « Mets tous les rails dans le rayon du générateur ») et de la foreuse (« Relie la foreuse à la mine (rails) », « Envoie du charbon à la foreuse ») ;
+5. **les améliorations les plus proches** : celles dont on a déjà la plus grande part de l'argent (pioche, niveau de la mine, coffre, sac...).
+
+On ne garde jamais deux fois la même mission, et au plus **trois** à la fois.
 
 **Clic** : pour une construction (ou les rails), ouvre le **menu Bâtiments** ; sinon le hamster marche jusqu'au bon bâtiment (le panneau s'ouvre en arrivant).
+
+**Mission accomplie** : elle reste un instant avec un **✔ et le texte barré**, avec le son de succès, avant de laisser la place à la suivante. (Une urgence qui s'en va, comme « Paie ton mineur », ne compte pas comme accomplie.)
+
+**Quand un panneau de bâtiment est ouvert** : sur ordinateur, **seule la première mission** reste affichée, au-dessus du panneau ; sur téléphone, les missions sont **cachées** (le panneau prend la moitié de l'écran). Sans panneau, un téléphone montre **2 missions au plus**.
 
 ---
 
@@ -211,7 +220,7 @@ Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage,
 **La caméra** :
 - elle **suit le joueur** en douceur, ou le **wagonnet** que pousse le joueur : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
 - **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
-- **zoomer** : molette (autour du point sous la souris) ou **pincer** à deux doigts, entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
+- **zoomer** : molette (autour du point sous la souris ; depuis le 27/10, **un cran zoome d'environ 50 %**, `FORCE_MOLETTE`, et le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT`, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6.
 
 **Ce qu'on voit** :
 - les **bâtiments** (de vraies images, calées sur leur emprise) ; survolés ou actifs, ils brillent d'une lueur dorée, et le losange de l'emprise du bâtiment actif est entouré de tirets dorés qui défilent. La foreuse **vibre** quand elle tourne. Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
@@ -402,7 +411,7 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 
 ### 11.1 Les toasts (`Toasts.tsx`)
 
-- Sur ordinateur : sous l'objectif. Sur téléphone : **en haut au centre de l'écran**, plus petits, et seulement les **2 derniers**.
+- Sur ordinateur : sous la barre du haut. Sur téléphone : **en haut au centre de l'écran**, plus petits, et seulement les **2 derniers**.
 - Au plus **5** à la fois, chacun **3,5 s** ; un message identique à un toast déjà affiché n'est pas répété.
 - Les messages viennent des actions du jeu (`src/jeu`), plus :
   - **succès** : « *emoji* Succès : *titre* » (bordure et texte dorés, petite fanfare) ;
@@ -417,7 +426,7 @@ Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
 | petit « +*X* $ » en haut | un wagonnet a vendu au marché |
 | compteur d'argent qui défile et saute | bandeau |
 | case Mine (coffre) ou Sac qui clignote en rouge et tremble | bandeau, coffre ou sac plein |
-| barre « prochain objectif » qui pulse en vert | un achat est possible |
+| mission avec une bordure verte qui pulse | on peut la faire tout de suite |
 | bulles de notification au-dessus des bâtiments | carte ([§ 6](#6-la-carte-du-village-vuevillagetsx)) |
 | pastille rouge sur 🏗️ Bâtiments, ruban « Nouveau ! » dans le menu | bâtiments débloqués ou constructibles |
 | lueur dorée et losange en tirets autour du bâtiment actif | carte |
@@ -445,7 +454,7 @@ Pendant la partie, le navigateur ne zoome pas la page (Ctrl + molette, Ctrl + / 
 ### 12.2 La souris
 
 - Cliquer un **bâtiment** → le hamster y marche, puis le panneau s'ouvre ; cliquer une **case** → il y marche ; cliquer une **bulle** → il va au bâtiment. **Glisser** déplace la carte, la **molette** zoome autour de la souris. En construction, le fantôme suit la souris.
-- Cliquer la **barre « prochain objectif »** : aller au bon bâtiment, ou ouvrir le menu Bâtiments.
+- Cliquer une **mission** : aller au bon bâtiment, ou ouvrir le menu Bâtiments.
 - Cliquer le **bloc de la mine** : casser un bloc.
 - Bulles (`title`) au survol sur de nombreux éléments ($/s, bulles de notification, cartes des mineurs…).
 
@@ -469,8 +478,8 @@ Ce n'est que de l'affichage (la logique du jeu ne sait pas où il est) :
 | Largeur | Ce qui change |
 |---|---|
 | partout | plein écran ; marges `env(safe-area-inset-*)` hors de l'encoche ; seule la carte zoome |
-| **> 860 px** (ordinateur) | le bandeau en haut à droite, les boutons du coin en haut à gauche, le panneau à droite (400 px, 350 px entre 861 et 1 180 px), les gros boutons ronds en bas, les toasts sous l'objectif |
-| **≤ 860 px** (tablette, téléphone) | boutons du coin de 44 px sans texte ; bandeau en petites cases ; l'objectif passe en bas, au-dessus des boutons ; boutons ronds plus petits ; le **panneau d'un bâtiment** monte du bas au-dessus des boutons (55 % de la hauteur au plus) ; le menu Bâtiments prend presque toute la hauteur ; toasts en haut (2 au plus) ; rappel du clavier caché |
+| **> 860 px** (ordinateur) | le bandeau en haut à gauche et les boutons du coin dessous, les missions en haut à droite avec le panneau dessous (400 px, 350 px entre 861 et 1 180 px), les gros boutons ronds en bas, les toasts sous la barre du haut |
+| **≤ 860 px** (tablette, téléphone) | boutons du coin de 44 px sans texte ; bandeau en petites cases ; les missions restent en haut à droite (2 au plus, cachées quand un panneau est ouvert) ; boutons ronds plus petits ; le **panneau d'un bâtiment** monte du bas au-dessus des boutons (55 % de la hauteur au plus) ; le menu Bâtiments prend presque toute la hauteur ; toasts en haut (2 au plus) ; rappel du clavier caché |
 | **≤ 640 px** | statistiques : tuiles sur 2 colonnes |
 | sans survol (`hover: none`) | rappel des flèches caché, champs à 16 px |
 

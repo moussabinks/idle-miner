@@ -156,6 +156,24 @@ describe('les salaires', () => {
     expect(etat.stats.salairesPayes).toBe(30)
   })
 
+  it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    for (const e of etat.employes) {
+      e.etape = 'attend'
+      e.lieu = 'employes'
+      e.tempsPaye = 0
+    }
+    payerSalaires(etat, SECONDES_PAR_PAIE)
+    avancerEmployes(etat, 1, hasard())
+    const progressions = etat.employes.map((e) => e.progression)
+    expect(etat.employes.every((e) => e.etape === 'marche' && e.lieu === 'puits')).toBe(true)
+    expect(new Set(progressions).size).toBe(3)
+  })
+
   it('sans salaire, il ne creuse plus', () => {
     const etat = partie()
     embaucher(etat, hasard())
