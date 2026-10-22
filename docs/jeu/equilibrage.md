@@ -290,7 +290,7 @@ Les **décorations** à acheter (fleurs, arbres, fontaine, statue…) et les **t
 | `VITESSE_JOUEUR` | 7,5 cases/s (27/10 ; avant 5) | le joueur |
 | `VITESSE_MARCHE` | 2,5 cases/s (27/10 ; avant 4) | les mineurs employés (vers la forge, le Personnel, la mine) |
 | `SECONDES_FORGE_EMPLOYE` | 3 s | un mineur récupère sa nouvelle pioche à la forge |
-| `RAYON_BATIMENT` | 1,3 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
+| `RAYON_BATIMENT` | 1 case | le panneau d'un bâtiment s'ouvre à cette distance de son bord |
 
 - **Distance à pied** (`distanceEntre`) : de la case devant l'entrée d'un bâtiment à celle de l'autre, par le plus court chemin en 8 directions (une diagonale compte √2, on ne coupe pas le coin d'un bâtiment), en contournant les bâtiments, seuls obstacles depuis le 27/10 (`trouverChemin`, A étoile).
 - **Le joueur ne marche pas** pendant qu'il pousse un wagonnet : il fait l'aller-retour avec lui (3 cases/s).

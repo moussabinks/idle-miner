@@ -16,7 +16,7 @@ Le village est une **clairière de 60 × 60 cases** vue du ciel (à 45°, comme 
 - sa carte a un **bord doré** quand on peut le poser tout de suite (27/10) ;
 - on le paie **une seule fois** ; les minerais se prennent dans le **sac**, puis dans le **coffre de la mine** ;
 - **✏️ Modifier** permet ensuite de le **déplacer** ou de le **retourner** (miroir), gratuitement. On ne peut pas le détruire. Retourné, un bâtiment garde ses écritures lisibles (27/10 : l'enseigne « HIRING » du Personnel a une image à part, voir [personnel.md](personnel.md)) ;
-- on l'**ouvre** en le touchant (ou en cliquant dessus) : le hamster du joueur marche jusqu'au côté du bâtiment le plus proche de lui, puis son panneau s'ouvre. Aux flèches du clavier, le panneau s'ouvre quand on arrive en marchant à moins de **1,3 case** du bâtiment, **de n'importe quel côté** ;
+- on l'**ouvre** en le touchant (ou en cliquant dessus) : le hamster du joueur marche jusqu'au côté du bâtiment le plus proche de lui, puis son panneau s'ouvre. Aux flèches du clavier, le panneau s'ouvre quand on arrive en marchant à moins de **1 case** du bâtiment, **de n'importe quel côté** ;
 - de petites **bulles** sautent au-dessus d'un bâtiment quand il y a quelque chose à y faire (voir chaque fiche et [../jeu/village.md](../jeu/village.md)) ;
 - tant qu'un bâtiment n'est pas posé, ses achats n'existent pas (pas de mission d'amélioration, pas de bulle) : une mission propose alors « Construis : X ».
 

@@ -20,6 +20,7 @@ import {
   caseAccesProche,
   distanceAuBatiment,
   distanceEntre,
+  longueurChemin,
   porte,
   railsMineMarche,
   trouverChemin,
@@ -115,6 +116,33 @@ describe('marcher dans le village', () => {
     const c = caseAccesProche(etat.village, mine, { x: 30.5, y: 20.5 })
     expect(c).toEqual({ x: 30, y: 24 })
     expect(distanceAuBatiment(mine, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
+  })
+
+  it('va au point du tour du bâtiment le plus proche à pied, en contournant les autres (27/10)', () => {
+    const etat = partie()
+    // Le marché à droite de la mine, le joueur à gauche : la mine est entre les deux.
+    etat.village.batiments.push({ id: 'marche', x: 40, y: 28, miroir: false })
+    const marche = batimentPose(etat.village, 'marche')!
+    const depart = { x: 20, y: 30 }
+    const c = caseAccesProche(etat.village, marche, { x: 20.5, y: 30.5 })
+    expect(distanceAuBatiment(marche, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
+    // Aucune autre case du tour du marché n'est plus près à pied.
+    const longueur = (x: number, y: number) => longueurChemin(trouverChemin(etat.village, depart, { x, y }) ?? [])
+    const choisie = longueur(c.x, c.y)
+    for (let x = 39; x <= 45; x++) {
+      for (let y = 27; y <= 33; y++) {
+        if (x >= 40 && x < 45 && y >= 28 && y < 33) continue
+        expect(choisie).toBeLessThanOrEqual(longueur(x, y) + 1e-9)
+      }
+    }
+    // Ce n'est pas la case en face du joueur (derrière la mine, il faudrait la contourner davantage).
+    expect(c).not.toEqual({ x: 39, y: 30 })
+  })
+
+  it('pas de bulle rose sur la mine quand le coffre se remplit (la jauge le montre, 27/10)', () => {
+    const etat = partie()
+    etat.coffre.contenu = { pierre: 40 }
+    expect(notificationsBatiments(etat).puits).toBeUndefined()
   })
 
   it('compte la distance à pied entre deux bâtiments (de porte à porte)', () => {

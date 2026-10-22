@@ -7,7 +7,7 @@
 - **Où** : là où tu le poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **20 $ + 15 pierre** (la pierre se prend dans le sac, puis dans le coffre de la mine). Tant qu'il n'est pas posé, on ne peut ni acheter ni réparer de pioche (les missions proposent « Construis : Forgeron »). **✏️ Modifier** le déplace ou le retourne (miroir) gratuitement.
 - **Déblocage** : dès le début, jamais de cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
-- **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1,3 case du bâtiment, de n'importe quel côté.
+- **L'ouvrir** : toucher (ou cliquer) le forgeron : le hamster marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
 - **Dessin au village** : une image en vue isométrique (`public/images/batiments/forgeron.webp`) : une forge en pierre et en bois avec son toit, sa cheminée qui fume, son enclume et des pioches exposées. Elle brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Pioches et réparations. »
 - **Bulles au-dessus** (`notifications.ts`) :

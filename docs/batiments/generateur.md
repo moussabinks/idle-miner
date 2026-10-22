@@ -7,7 +7,7 @@
 - **Où** : là où tu le poses dans la clairière. C'est un bâtiment de **5 × 5 cases**, comme les autres.
 - **Déblocage** : au **niveau 2 de la mine** (« Veine de redstone »). Avant, sa carte du menu 🏗️ Bâtiments a un cadenas « 🔒 Mine niveau 2 ». C'est aussi le niveau où la redstone commence à sortir de la mine.
 - **Prix pour le poser** : **1 200 $ + 50 fer + 20 redstone**, une seule fois. Les minerais se prennent dans le sac, puis dans le coffre de la mine.
-- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). On peut l'ouvrir de n'importe quel côté (à moins de 1,3 case).
+- **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). On peut l'ouvrir de n'importe quel côté (à moins de 1 case).
 - **Le dessin au village** : une image en vue isométrique (`public/images/batiments/generateur.webp`) : une grosse bobine dorée et vitrée pleine d'éclairs jaunes, dans un bâti en bois et en métal, avec des tuyaux en cuivre, un cadran, deux petites bobines aux coins et des arcs électriques au-dessus, sur une dalle de 5 × 5 pavés.
 - **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse. »
 - **Le rayon sur la carte** : un **cercle en pointillés jaunes** autour du générateur (une ellipse à l'écran, car la grille est en losange) :
