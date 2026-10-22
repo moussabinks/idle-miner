@@ -803,3 +803,232 @@
   border-color: #6e4420;
   background: #1c1108;
 }
+
+/* =========================================================================
+   Le nouveau style (27/10) : l'accueil prend le look du jeu. Des panneaux de bois clair au
+   gros contour brun (comme la liste des tâches), des papiers crème pour ce qu'on lit, des
+   titres en ruban doré, des médailles brillantes, et des cartes qui se soulèvent.
+   ========================================================================= */
+
+.accueil .carte {
+  border: 3px solid #3b2412;
+  border-radius: 18px;
+  background: linear-gradient(#7a5230, #5a3a1e);
+  box-shadow:
+    inset 0 2px 0 rgb(255 220 160 / 0.35),
+    0 6px 0 rgb(0 0 0 / 0.35),
+    0 12px 24px rgb(0 0 0 / 0.3);
+  color: #fff3d6;
+}
+
+.accueil .carte .discret {
+  color: #f0dcb8;
+}
+
+/* Les titres de section : un ruban doré aux bouts fourchus, avec un contour brun. */
+.titre-section {
+  position: relative;
+  align-self: flex-start;
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 8px 30px 6px;
+  color: #3b2412;
+  text-shadow: 0 2px 0 rgb(255 255 255 / 0.5);
+  filter: drop-shadow(2px 0 0 #3b2412) drop-shadow(-2px 0 0 #3b2412) drop-shadow(0 2px 0 #3b2412) drop-shadow(0 -2px 0 #3b2412) drop-shadow(0 4px 0 rgb(0 0 0 / 0.35));
+}
+
+.titre-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(#fff0a0, #ffc21f 55%, #e0960e);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%, 14px 50%);
+}
+
+.titre-section .discret {
+  color: #6b4a22;
+  font-size: 0.9rem;
+}
+
+/* Les trois chiffres du bandeau : des pastilles avec leur médaille. */
+.heros-chiffres {
+  gap: 8px;
+}
+
+/* (le fond de toute la page, sous l'accueil : la même terre sombre que son décor) */
+body:has(.accueil) {
+  background: #0f0a05;
+}
+
+.heros-chiffres li {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 7px;
+  padding: 3px 12px 3px 3px;
+  border: 3px solid #3b2412;
+  border-radius: 999px;
+  background: linear-gradient(rgb(60 38 18 / 0.92), rgb(30 18 8 / 0.92));
+  box-shadow: 0 4px 0 rgb(0 0 0 / 0.35);
+}
+
+.chiffre-medaille {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: radial-gradient(circle at 50% 30%, #fff3a3, #f0a815 62%, #a86a08);
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.35);
+  font-size: 1.2rem;
+}
+
+.heros-chiffres strong {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.heros-chiffres span:not(.chiffre-medaille) {
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+/* Comment jouer : bois clair, contour brun, et elles se soulèvent au survol. */
+.etape {
+  border: 3px solid #3b2412;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--couleur-etape) 35%, transparent), transparent 65%),
+    linear-gradient(#7a5230, #4a2e16);
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.35), 0 6px 0 rgb(0 0 0 / 0.35);
+}
+
+.etape:hover {
+  translate: 0 -5px;
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.35), 0 11px 0 rgb(0 0 0 / 0.3), 0 0 24px color-mix(in srgb, var(--couleur-etape) 45%, transparent);
+}
+
+.etape strong {
+  -webkit-text-stroke: 1px #3b2412;
+  text-shadow: 0 3px 0 #3b2412;
+}
+
+.etape .discret {
+  color: #f5e6c8;
+}
+
+/* Les mondes : un panneau de bois (bandeau de la couleur du monde), leurs chiffres sur un papier. */
+.accueil .carte-monde {
+  border-top: 9px solid var(--couleur-monde, var(--accent));
+  background: linear-gradient(#7a5230, #5a3a1e);
+}
+
+.carte-monde:hover {
+  translate: 0 -5px;
+  box-shadow:
+    inset 0 2px 0 rgb(255 220 160 / 0.35),
+    0 11px 0 rgb(0 0 0 / 0.3),
+    0 0 26px color-mix(in srgb, var(--couleur-monde, var(--accent)) 45%, transparent);
+}
+
+.carte-monde h3 {
+  font-family: 'Luckiest Guy', 'Icones Mega', 'Arial Black', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: #ffe9a8;
+  text-shadow: 0 2px 0 #3b2412;
+}
+
+.carte-monde-infos {
+  padding: 8px 10px;
+  border: 2px solid #c9a36a;
+  border-radius: 12px;
+  background: linear-gradient(#fff8e6, #f3dfb4);
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+  color: #3b2412;
+  font-weight: 800;
+}
+
+/* « Dernière partie » : un petit ruban doré. */
+.carte-monde .badge {
+  padding: 3px 10px;
+  border: 2px solid #3b2412;
+  border-radius: 999px;
+  background: linear-gradient(#fff0a0, #ffc21f);
+  color: #3b2412;
+  font-weight: 900;
+  box-shadow: 0 2px 0 #3b2412;
+}
+
+/* Un nouveau monde : un papier crème, avec Pépite qui passe la tête. */
+.accueil .carte-nouveau-monde {
+  position: relative;
+  border: 3px solid #3b2412;
+  border-top-width: 3px;
+  border-style: solid;
+  background: linear-gradient(#fff8e6, #ffe7b0);
+  color: #3b2412;
+  overflow: visible;
+}
+
+.carte-nouveau-monde h3 {
+  color: #e07a0e;
+  text-shadow: 0 2px 0 #fff;
+}
+
+.nouveau-monde-texte {
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding-right: 60px;
+}
+
+.nouveau-monde-pepite {
+  position: absolute;
+  top: -34px;
+  right: 6px;
+  width: 70px;
+  filter: drop-shadow(0 4px 0 rgb(0 0 0 / 0.25));
+  animation: pepite-accueil 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pepite-accueil {
+  0%, 100% { rotate: -5deg; translate: 0 0; }
+  50% { rotate: 5deg; translate: 0 -5px; }
+}
+
+/* Les champs : du papier crème, bord brun. */
+.accueil input {
+  border: 2px solid #c9a36a;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #3b2412;
+  font-weight: 600;
+}
+
+.accueil input::placeholder {
+  color: #a0855e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nouveau-monde-pepite {
+    animation: none;
+  }
+}
+
+/* Sur téléphone, les trois pastilles passent à la ligne si besoin (rien ne déborde). */
+@media (max-width: 760px) {
+  .heros-chiffres {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .heros-chiffres strong {
+    font-size: 1rem;
+  }
+}

@@ -42,7 +42,7 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 
 ## 2. L'écran d'accueil (`Accueil.tsx`)
 
-Dans le style des images du village (bois, or, lanternes). Derrière toute la page, un dégradé brun très sombre. Toutes les cartes de l'accueil (compte, mondes, classement, installer) sont en **bois sombre avec un filet doré**. De haut en bas :
+Dans le style des images du village (bois, or, lanternes). Derrière toute la page, un dégradé brun très sombre. Depuis le 27/10, l'accueil a **le look du jeu** : toutes les cartes (compte, mondes, classement, installer, « comment jouer ») sont des **panneaux de bois clair au gros contour brun** (comme la liste des tâches), qui se soulèvent au survol ; les titres de section sont des **rubans dorés** aux bouts fourchus ; les trois chiffres du bandeau sont des pastilles avec leur **médaille** (💎 5 niveaux de mine, ⚡ 100 % automatique, 🏗️ bâtiments à poser) ; les chiffres d'un monde sont sur un **papier crème** ; la carte « Nouveau monde » est un papier crème où **Pépite** passe la tête (« Pépite te montre tout, pas à pas ») ; les champs sont crème au bord brun. Le bouton « Commencer » dit « Pépite te guide pas à pas ». De haut en bas :
 
 ### 2.1 Le grand bandeau (« héros »)
 
@@ -195,18 +195,15 @@ Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 
 
 ## Le tutoriel (`Tutoriel.tsx`, 27/10)
 
-Un **nouveau monde** commence par un tutoriel (règles dans `src/jeu/tutoriel.ts`, testées ; `etat.tutoriel` = l'étape ; une vieille partie n'a pas le champ et n'a pas de tutoriel). **Pépite**, un hamster mineur, parle dans une carte crème en haut de l'écran (points d'étapes, titre en Luckiest Guy, explication). Une **grosse flèche orange** rebondit sur ce qu'il faut toucher, dans un **cercle doré** qui pulse, et le reste de l'écran est un peu assombri (tout reste cliquable). La cible est trouvée par son attribut (`data-tuto="bloc"`, `data-cible="batiment:puits"`...) et suivie à chaque image ; un bouton dans un panneau défile jusqu'à lui. Sur téléphone, la flèche montre les gros boutons ronds (⛏️ Mine, 💰 Vendre) plutôt que les bâtiments, souvent cachés par le panneau.
+Un **nouveau monde** commence par un tutoriel (règles dans `src/jeu/tutoriel.ts`, testées ; `etat.tutoriel` = l'étape ; une vieille partie n'a pas le champ et n'a pas de tutoriel). **Pépite**, un hamster mineur, accompagne le joueur :
 
-On ne passe à l'étape suivante **qu'en faisant l'action** (une petite fanfare à chaque fois) :
+- **Au début, une grande fenêtre** (fond assombri) : Pépite se présente et explique **le but** : devenir le plus riche des mineurs et creuser jusqu'au cœur de diamant, en 4 médailles qui arrivent l'une après l'autre (⛏️ Creuse, 💰 Vends, 🏗️ Construis, ⚡ Automatise). Gros bouton qui pulse « C'est parti ! », et « Je connais déjà : passer le tutoriel ».
+- **À chaque étape**, une carte crème en haut de l'écran (qui brille et rebondit à chaque nouvelle consigne) : « Étape *n* / 4 » et ses points, le titre, la consigne, et **pourquoi** (💡 « Les blocs et les minerais se vendent au marché. »).
+- **Ce qu'il faut toucher est mis en scène** : le reste de l'écran s'assombrit nettement, un cercle doré pulse autour, **trois ondes dorées** en partent sans arrêt, une **grosse flèche** rebondit avec une étiquette « Touche ici ! » / « Clique vite ! » / « Pose-le ! » qui se dandine, et **la cible elle-même palpite et brille** (attribut `data-tuto-actif` posé sur l'élément ; un bâtiment s'illumine d'un halo doré, et la flèche montre son milieu). La cible est trouvée par son attribut (`data-tuto="bloc"`, `data-cible="batiment:puits"`...) et suivie à chaque image ; un bouton dans un panneau défile jusqu'à lui. Sur téléphone, la flèche montre les gros boutons ronds (⛏️ Mine, 💰 Vendre) plutôt que les bâtiments, souvent cachés par le panneau.
+- **Chaque étape réussie** fait jaillir au milieu de l'écran une médaille verte ✔ et « Bravo ! », avec des confettis et une fanfare.
+- **À la fin, une grande fenêtre de félicitations** (confettis) : la suite (embaucher, poser des rails, descendre la mine), la flèche sur la liste des tâches, et « À moi de jouer ! ».
 
-1. **Salut, mineur !** (bouton « C'est parti ! ») ;
-2. **Va à la mine** (flèche sur la mine), puis **Casse 10 blocs** (flèche sur le bloc, compteur) ;
-3. **Construis le marché** : ouvrir le menu Bâtiments, « Poser » le marché (gratuit), « Construire ici » ;
-4. **Remplis ton sac** : retourner à la mine, « Tout mettre dans le sac » ;
-5. **Va au marché**, puis **Vends tout !** ;
-6. **Bravo, tu as compris !** (flèche sur la liste des tâches, bouton « Terminer »).
-
-« Passer le tutoriel » (avec confirmation) l'arrête. Une étape déjà faite est sautée.
+On ne passe à l'étape suivante **qu'en faisant l'action** : aller à la mine et casser 10 blocs ; construire le marché (menu Bâtiments, « Poser », « Construire ici ») ; mettre le coffre dans le sac ; aller au marché et vendre. « Passer le tutoriel » (avec confirmation) l'arrête. Une étape déjà faite est sautée.
 
 ## 5. Les missions (`Missions.tsx`)
 
