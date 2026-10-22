@@ -375,7 +375,7 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
       <g transform={`translate(${panneau.x} ${panneau.y})`}>
         <rect x="-2" y="-30" width="4" height="30" fill="#6b4422" stroke="#2a1608" strokeWidth="0.8" />
         <rect x="-21" y="-42" width="42" height="17" rx="3" fill="#a8743e" stroke="#4a2c12" strokeWidth="1.5" />
-        <text x="0" y="-29.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#2a1606" fontFamily="system-ui, sans-serif">
+        <text x="0" y="-29.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#2a1606" fontFamily="'Icones Mega', system-ui, sans-serif">
           Niv. {niveau}
         </text>
       </g>

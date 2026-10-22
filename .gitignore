@@ -25,3 +25,4 @@ dist-ssr
 
 # Captures d'écran de test (elles ne servent pas au jeu)
 /*.png
+__pycache__/
