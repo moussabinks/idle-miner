@@ -185,33 +185,52 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
 }
 
 // La position de la cible à l'écran, suivie à chaque image. La cible reçoit aussi l'attribut
-// data-tuto-actif : elle brille et palpite (interface.css).
-function useRectangle(selecteur: string | null): DOMRect | null {
-  const [rect, setRect] = useState<DOMRect | null>(null)
-  const dernier = useRef('')
+// data-tuto-actif : elle palpite (interface.css).
+// (30/10, pour la fluidité) On ne redessine plus le tutoriel à chaque image : la position est
+// écrite directement dans des variables CSS du calque doré (--x, --y, --l, --h), et les
+// éléments s'y déplacent avec transform (le navigateur n'a qu'à faire glisser leurs calques).
+// React ne change que quand la cible apparaît, disparaît, ou passe en haut de l'écran.
+type Suivi = { visible: boolean; dessous: boolean }
+function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDivElement | null>, surBatiment: boolean): Suivi {
+  const [suivi, setSuivi] = useState<Suivi>({ visible: false, dessous: false })
+  const dernierSuivi = useRef(suivi)
   useEffect(() => {
-    dernier.current = '?' // (la première image met toujours la position à jour)
     if (!selecteur) return
     let image = 0
     let defile = false
     let marquee: Element | null = null
+    let derniere = ''
+    let n = 0
     const suivre = () => {
-      const element = document.querySelector(selecteur)
-      if (element !== marquee) {
-        marquee?.removeAttribute('data-tuto-actif')
-        element?.setAttribute('data-tuto-actif', '')
-        marquee = element
+      // (on ne cherche la cible dans la page que de temps en temps, ou si elle a disparu)
+      if (!marquee || !marquee.isConnected || n++ % 15 === 0) {
+        const element = document.querySelector(selecteur)
+        if (element !== marquee) {
+          marquee?.removeAttribute('data-tuto-actif')
+          element?.setAttribute('data-tuto-actif', '')
+          marquee = element
+        }
       }
-      const r = element?.getBoundingClientRect() ?? null
+      const r = marquee?.getBoundingClientRect() ?? null
       // Un bouton dans un panneau : on le fait défiler jusqu'à lui (une fois).
-      if (element && !defile && !selecteur.startsWith('[data-cible')) {
-        element.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      if (marquee && !defile && !surBatiment) {
+        marquee.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
         defile = true
       }
-      const cle = r && r.width > 0 ? `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}` : ''
-      if (cle !== dernier.current) {
-        dernier.current = cle
-        setRect(cle ? r : null)
+      const visible = r !== null && r.width > 0
+      const cle = visible ? `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}` : ''
+      if (visible && cle !== derniere && calque.current) {
+        derniere = cle
+        const style = calque.current.style
+        style.setProperty('--x', `${Math.round(r.left)}px`)
+        style.setProperty('--y', `${Math.round(r.top)}px`)
+        style.setProperty('--l', `${Math.round(r.width)}px`)
+        style.setProperty('--h', `${Math.round(r.height)}px`)
+      }
+      const dessous = visible && !surBatiment && r.top < 140
+      if (visible !== dernierSuivi.current.visible || dessous !== dernierSuivi.current.dessous) {
+        dernierSuivi.current = { visible, dessous }
+        setSuivi(dernierSuivi.current)
       }
       image = requestAnimationFrame(suivre)
     }
@@ -220,8 +239,8 @@ function useRectangle(selecteur: string | null): DOMRect | null {
       cancelAnimationFrame(image)
       marquee?.removeAttribute('data-tuto-actif')
     }
-  }, [selecteur])
-  return selecteur ? rect : null
+  }, [selecteur, calque, surBatiment])
+  return selecteur ? suivi : { visible: false, dessous: false }
 }
 
 // Les confettis du « Bravo ! » et des grandes fenêtres.
@@ -331,7 +350,10 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
     }
   }, [etape])
   const c = etape ? consigne(etape, etat, ui) : null
-  const rect = useRectangle(c?.cible ?? null)
+  // Un bâtiment a une grande image (avec du vide autour) : la flèche montre son milieu.
+  const surBatiment = c?.cible?.startsWith('[data-cible') ?? false
+  const calque = useRef<HTMLDivElement>(null)
+  const suivi = useSuiviCible(c?.cible ?? null, calque, surBatiment)
   if (!etape || !c) return null
 
   const fenetrePasser = confirmer && (
@@ -359,42 +381,30 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
   }
 
   const numero = ETAPES_TUTORIEL.indexOf(etape)
-  // La flèche au-dessus de la cible (en dessous si la cible est tout en haut de l'écran). Un
-  // bâtiment a une grande image (avec du vide autour) : la flèche montre son milieu.
-  const surBatiment = c.cible?.startsWith('[data-cible') ?? false
-  const dessous = rect !== null && !surBatiment && rect.top < 140
-  const marge = 8
-  const centreX = rect ? rect.left + rect.width / 2 : 0
-  const centreY = rect ? rect.top + rect.height / 2 : 0
-  const hautFleche = rect ? (surBatiment ? centreY : dessous ? rect.bottom + marge : rect.top - marge) : 0
   return (
     <>
-      {rect && (
-        <div className="tuto-cible" aria-hidden="true">
-          <div
-            className="tuto-cercle"
-            style={{ left: rect.left - marge, top: rect.top - marge, width: rect.width + marge * 2, height: rect.height + marge * 2 }}
-          />
+      {/* Le calque doré : toujours là (caché tant que la cible n'est pas trouvée), déplacé par
+          useSuiviCible sans repasser par React. */}
+      {c.cible && (
+        <div
+          ref={calque}
+          className={`tuto-cible ${suivi.visible ? '' : 'tuto-cible-cachee'} ${surBatiment ? 'tuto-sur-batiment' : ''} ${suivi.dessous ? 'tuto-cible-dessous' : ''}`}
+          aria-hidden="true"
+        >
+          {/* Le voile sombre autour de la cible (immobile), puis l'anneau doré qui pulse. */}
+          <div className="tuto-trou" />
+          <div className="tuto-cercle" />
           {/* Des ondes dorées qui partent de la cible, comme un caillou dans l'eau. */}
           {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="tuto-onde"
-              style={{
-                left: centreX,
-                top: centreY,
-                width: Math.min(220, Math.max(60, rect.width)),
-                height: Math.min(220, Math.max(60, rect.width)),
-                animationDelay: `${i * 0.5}s`,
-              }}
-            />
+            <div key={i} className="tuto-onde-place">
+              <div className="tuto-onde" style={{ animationDelay: `${i * 0.5}s` }} />
+            </div>
           ))}
-          <div
-            className={`tuto-fleche ${dessous ? 'tuto-fleche-dessous' : ''}`}
-            style={{ left: centreX, top: hautFleche }}
-          >
-            <span className="tuto-fleche-dessin">⬇</span>
-            <span className="tuto-geste">{c.geste}</span>
+          <div className="tuto-fleche-place">
+            <div className={`tuto-fleche ${suivi.dessous ? 'tuto-fleche-dessous' : ''}`}>
+              <span className="tuto-fleche-dessin">⬇</span>
+              <span className="tuto-geste">{c.geste}</span>
+            </div>
           </div>
         </div>
       )}

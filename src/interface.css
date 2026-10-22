@@ -960,33 +960,94 @@
   inset: 0;
   z-index: 49;
   pointer-events: none;
+  /* La position et la taille de la cible, écrites à chaque image par useSuiviCible (30/10). */
+  --x: 0px;
+  --y: 0px;
+  --l: 0px;
+  --h: 0px;
 }
 
+.tuto-cible-cachee {
+  visibility: hidden;
+}
+
+/* (30/10, pour la fluidité) Tout se déplace avec transform (le calque glisse, rien n'est
+   redessiné), et rien n'anime d'ombre ni de filtre : seulement scale et opacity. */
+
+/* Le voile sombre autour de la cible : immobile (il ne pulse pas). */
+.tuto-trou {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  border-radius: 18px;
+  box-shadow: 0 0 0 200vmax rgb(10 6 2 / 0.55);
+  will-change: transform;
+}
+
+/* L'anneau doré qui pulse autour de la cible. */
 .tuto-cercle {
-  position: fixed;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  will-change: transform;
+}
+/* (l'anneau qui pulse est à l'intérieur : son « scale » reste centré sur la cible) */
+.tuto-cercle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   border-radius: 18px;
   border: 5px solid #ffd21f;
   box-shadow:
-    0 0 0 9999px rgb(10 6 2 / 0.55),
     0 0 22px 6px rgb(255 210 31 / 0.9),
     inset 0 0 16px rgb(255 210 31 / 0.7);
-  transition: left 0.12s, top 0.12s, width 0.12s, height 0.12s;
   animation: tuto-pulse 0.9s ease-in-out infinite;
+  will-change: scale;
 }
 
-/* Les ondes : des anneaux dorés qui grandissent et s'effacent. */
+/* Les ondes : des anneaux dorés qui grandissent et s'effacent, au milieu de la cible. */
+.tuto-onde-place,
+.tuto-fleche-place {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+.tuto-onde-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2), 0);
+}
 .tuto-onde {
-  position: fixed;
+  position: absolute;
+  width: clamp(60px, var(--l), 220px);
+  height: clamp(60px, var(--l), 220px);
   translate: -50% -50%;
   border-radius: 50%;
   border: 4px solid #ffe066;
   box-shadow: 0 0 12px #ffd21f;
   opacity: 0;
   animation: tuto-onde 1.5s ease-out infinite;
+  will-change: scale, opacity;
+}
+
+/* La flèche : au-dessus de la cible, au milieu d'un bâtiment, ou dessous si la cible est en haut. */
+.tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) - 8px), 0);
+}
+.tuto-sur-batiment .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2), 0);
+}
+.tuto-cible-dessous .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) + 8px), 0);
 }
 
 .tuto-fleche {
-  position: fixed;
+  position: absolute;
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
@@ -997,8 +1058,10 @@
 .tuto-fleche-dessin {
   display: block;
   font-size: 66px;
+  /* (l'ombre ne bouge pas avec l'animation : le calque est dessiné une fois, puis glisse) */
   filter: drop-shadow(0 0 10px rgb(255 200 40 / 0.95)) drop-shadow(0 4px 0 rgb(0 0 0 / 0.35));
   animation: tuto-rebond 0.6s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate;
+  will-change: translate, scale;
 }
 
 /* L'étiquette au-dessus de la flèche (« Touche ici ! »). */
@@ -1015,6 +1078,7 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
   animation: tuto-geste 1.2s ease-in-out infinite;
+  will-change: rotate, scale;
 }
 
 /* La cible est tout en haut : la flèche passe dessous, et pointe vers le haut. */
@@ -1031,13 +1095,10 @@
   margin: 2px 0 0;
 }
 
-/* La cible elle-même palpite et brille (le bouton, le bloc, le bâtiment). */
+/* La cible elle-même palpite (le bouton, le bloc). (30/10) Sans filtre animé, qui faisait
+   ramer ; un bâtiment ne bouge pas (son image deviendrait floue) : l'anneau doré suffit. */
 [data-tuto-actif]:not(img) {
   animation: tuto-cible-palpite 0.9s ease-in-out infinite !important;
-}
-
-img[data-tuto-actif] {
-  animation: tuto-batiment-brille 0.9s ease-in-out infinite !important;
 }
 
 /* La carte d'étape, en haut de l'écran. */
@@ -1384,13 +1445,8 @@ img[data-tuto-actif] {
 }
 
 @keyframes tuto-cible-palpite {
-  0%, 100% { scale: 1; filter: drop-shadow(0 0 0 rgb(255 210 31 / 0)); }
-  50% { scale: 1.07; filter: drop-shadow(0 0 12px rgb(255 210 31 / 0.95)); }
-}
-
-@keyframes tuto-batiment-brille {
-  0%, 100% { filter: brightness(1.05) drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px rgb(255 214 90 / 0.7)); }
-  50% { filter: brightness(1.25) drop-shadow(0 0 3px #fff) drop-shadow(0 0 24px rgb(255 214 90)); }
+  0%, 100% { scale: 1; }
+  50% { scale: 1.07; }
 }
 
 @keyframes tuto-pulse-bouton {
@@ -1487,7 +1543,7 @@ img[data-tuto-actif] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tuto-cercle,
+  .tuto-cercle::before,
   .tuto-onde,
   .tuto-fleche-dessin,
   .tuto-geste,
