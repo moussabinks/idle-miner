@@ -143,6 +143,7 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 | `Statistiques.tsx` | Fenêtre des statistiques |
 | `Toasts.tsx` | Notifications |
 | `Confirmation.tsx` | Fenêtre de confirmation dans le style du jeu |
+| `FenetreTrajet.tsx` | **Nouveau (27/10)** : la fenêtre d'un trajet (bulle « 🛤️ Automatiser » ou rails touchés) : activer l'automatisation, objets à envoyer, ✔ Valider (`reglerTrajet`) |
 | `PanneauTrajets.tsx` | **Nouveau (24/10)** : dans le panneau de la mine et de la foreuse, les trajets qui en partent : « Envoyer un wagonnet vers… », pousser, arrêter, taille des wagonnets |
 | `WagonnetVillage.tsx` | Un wagonnet sur les rails (un par trajet) : sa place entre ses deux essieux (`ESSIEUX`, il tourne en douceur dans les virages), son remplissage (objets portés ÷ capacité) et son pousseur, avec sa propre animation à chaque image ; les bruits du wagonnet |
 | `Wagonnet3D.tsx` | **Nouveau (26/10)** : le dessin du wagonnet en 3D (`DessinWagonnet3D`), recalculé à chaque image : caisse en planches, cadre d'acier boulonné, quatre roues sur les rails, attelage, éclairage, ombre portée, minerais à facettes de ce qu'il porte. Il remplace l'ancienne benne (`DessinBenne`) |

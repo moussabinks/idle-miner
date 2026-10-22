@@ -1795,3 +1795,159 @@ g.grille-construction {
   background: rgb(209 68 14 / 0.25);
   box-shadow: inset 0 0 0 1.5px rgb(255 120 60 / 0.6);
 }
+
+/* Les bâtiments qu'on peut relier par des rails (27/10) : pendant qu'on pose des rails, leur
+   emprise est entourée d'une ligne jaune qui brille, tout pile sur son bord. */
+.zone-connectable-halo {
+  fill: rgb(255 214 60 / 0.22);
+  stroke: rgb(255 216 74 / 0.6);
+  stroke-width: 22;
+  stroke-linejoin: round;
+  animation: trajet-brille 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.zone-connectable-ligne {
+  fill: none;
+  stroke: #ffe000;
+  stroke-width: 7;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px #fff27a);
+  pointer-events: none;
+}
+
+/* La bulle « 🛤️ Automatiser » au milieu des rails d'un trajet à créer. */
+.bulle-trajet {
+  --couleur-bulle: #e9b10d;
+  --couleur-bulle-claire: #fff3a3;
+  color: #4a3200;
+  font-weight: 700;
+}
+
+/* La fenêtre d'un trajet : un réglage par trajet qui passe par les rails touchés. */
+.fenetre-trajet {
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border-color: #ffd21f;
+  animation: eclat 0.25s ease-out;
+}
+
+.fenetre-trajet h2 {
+  color: #ffd21f;
+  text-align: center;
+}
+
+.reglage-trajet {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 2px solid rgb(255 255 255 / 0.15);
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.2);
+}
+
+.reglage-trajet.reglage-actif {
+  border-color: rgb(255 210 31 / 0.6);
+}
+
+.reglage-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reglage-trajet p {
+  margin: 6px 0;
+}
+
+.reglage-sous-titre {
+  font-weight: 700;
+}
+
+.reglage-trajet .petit {
+  font-size: 0.8em;
+}
+
+/* L'interrupteur : rouge (arrêté) ou vert (activé). */
+.interrupteur-trajet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #b8402f;
+  border-radius: 999px;
+  background: rgb(184 64 47 / 0.25);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.interrupteur-trajet.allume {
+  border-color: #3fa34d;
+  background: rgb(63 163 77 / 0.3);
+}
+
+.interrupteur-curseur {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: #b8402f;
+  transition: background 0.15s;
+}
+
+.interrupteur-curseur::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: translate 0.15s;
+}
+
+.allume .interrupteur-curseur {
+  background: #3fa34d;
+}
+
+.allume .interrupteur-curseur::after {
+  translate: 18px 0;
+}
+
+/* Les objets à envoyer : des pastilles à toucher (vert = envoyé, gris = gardé). */
+.objets-trajet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.objet-trajet {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border: 2px solid rgb(255 255 255 / 0.2);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.25);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9em;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.objet-trajet.envoye {
+  border-color: #3fa34d;
+  background: rgb(63 163 77 / 0.3);
+  opacity: 1;
+}
+
+.objet-trajet-coche {
+  font-size: 0.8em;
+}

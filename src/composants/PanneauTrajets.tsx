@@ -56,7 +56,7 @@ function Trajet({ etat, jouer, liaison }: PropsPanneau & { liaison: IdLiaison })
       <div className="ligne-achat trajet trajet-sans-rails">
         {titre}
         <span className="discret">
-          Relie {le(info.depart)} {au(info.arrivee)} avec des rails (menu Bâtiments, 3 🔩 fer la case) : un wagonnet {info.description}.
+          Relie {le(info.depart)} {au(info.arrivee)} avec des rails (menu Bâtiments, 3 🔩 fer la case), puis touche la bulle 🛤️ sur les rails : un wagonnet {info.description}.
         </span>
       </div>
     )

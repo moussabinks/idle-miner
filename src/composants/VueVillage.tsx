@@ -7,13 +7,13 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { nombreAbrege } from '../nombres'
 import type { Gain } from '../usePartie'
-import { distanceDepuisLeDepart, ligneDe, longueurTrajet, trajetDuJoueur } from '../jeu/wagonnet'
+import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
@@ -75,6 +75,8 @@ type Props = {
   onPeindre: (c: Case) => void // le doigt glisse sur une case en mode pinceau
   trajetEnSurbrillance?: IdLiaison | null // un trajet qui brille sur la carte (quand on embauche un pousseur)
   ventesMarche?: Gain[] // les ventes des wagonnets, à montrer au-dessus du marché
+  zonesRails?: boolean // on pose des rails : les bâtiments qu'on peut relier sont entourés de jaune
+  onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
 }
 
 // La gerbe de pièces d'une vente au marché : 10 pièces qui partent en éventail vers le haut.
@@ -105,6 +107,8 @@ export function VueVillage({
   onPeindre,
   trajetEnSurbrillance = null,
   ventesMarche = [],
+  zonesRails = false,
+  onOuvrirTrajet,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -493,6 +497,36 @@ export function VueVillage({
     )
   }
 
+  // Les trajets à créer (27/10) : dès que des rails relient deux bâtiments, une bulle « 🛤️ »
+  // apparaît au milieu de la ligne. On la touche pour régler l'automatisation du trajet.
+  for (const liaison of trajetsAProposer(etat)) {
+    const ligneProposee = ligneDe(etat, liaison)
+    if (!ligneProposee) continue
+    const milieu = milieuDeLigne(ligneProposee)
+    const p = versEcran(milieu.x + 0.5, milieu.y + 0.5)
+    const info = LIAISONS[liaison]
+    bulles.push(
+      <button
+        key={`trajet-${liaison}`}
+        className="bulle-notif bulle-trajet"
+        style={{ left: p.x, top: p.y - 24 }}
+        title={`Automatiser le trajet ${BATIMENTS[info.depart].nom} → ${BATIMENTS[info.arrivee].nom}`}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => onOuvrirTrajet?.([liaison])}
+      >
+        <span className="bulle-medaille">
+          <span className="bulle-icone">🛤️</span>
+        </span>
+        <span className="bulle-court">{info.emoji} Automatiser</span>
+        <span className="bulle-etincelles">
+          <i />
+          <i />
+          <i />
+        </span>
+      </button>,
+    )
+  }
+
   // La jauge du coffre de la mine, toujours au-dessus d'elle (27/10) : on voit d'un coup d'œil
   // s'il faut le vider. Elle passe à l'orange puis au rouge (et clignote) quand il est plein.
   const puits = batimentPose(village, 'puits')
@@ -622,6 +656,18 @@ export function VueVillage({
             </g>
           )
         })()}
+      {/* On pose des rails (27/10) : les bâtiments qu'on peut relier (mine, marché, foreuse,
+          générateur) sont entourés d'une ligne jaune qui brille, tout pile sur le bord de leur
+          emprise. Les rails partent de là. */}
+      {zonesRails &&
+        village.batiments
+          .filter((b) => BATIMENTS_DES_RAILS.includes(b.id))
+          .map((b) => (
+            <g key={`zone-${b.id}`} className="zone-connectable">
+              <polygon className="zone-connectable-halo" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} />
+              <polygon className="zone-connectable-ligne" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} />
+            </g>
+          ))}
       {/* Quand on pose un bâtiment ou un chemin : les cases au bord des voies (sous
           la demi-voie qui déborde de chaque côté du rail) sont interdites, en rouge. */}
       {fantome &&
