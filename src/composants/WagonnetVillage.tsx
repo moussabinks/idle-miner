@@ -21,6 +21,8 @@ type Point = { x: number; y: number }
 const LONGUEUR = 1.05
 const LARGEUR = 0.84
 const HAUTEUR = 15
+// Les roues roulent sur les rails : la benne est posée à leur hauteur (en pixels du monde).
+const SUR_LES_RAILS = 3.6
 // Le pousseur marche à cette distance derrière la benne (en cases, le long de la voie).
 const RECUL_POUSSEUR = 1.15
 
@@ -46,7 +48,8 @@ function DessinBenne({ x, y, dx, dy, plein, chargement, electrique }: { x: numbe
     [-1, 1],
   ].map(([a, b]) => {
     const g = { x: x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2) * b, y: y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2) * b }
-    return versEcran(g.x, g.y)
+    const e = versEcran(g.x, g.y)
+    return { x: e.x, y: e.y - SUR_LES_RAILS }
   })
   const hauts = coins.map((c) => ({ x: c.x, y: c.y - HAUTEUR }))
   const pts = (liste: Point[]) => liste.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
@@ -61,14 +64,16 @@ function DessinBenne({ x, y, dx, dy, plein, chargement, electrique }: { x: numbe
     })
     .sort((a, b) => a.milieu - b.milieu)
   const centre = versEcran(x, y)
-  const centreHaut = { x: centre.x, y: centre.y - HAUTEUR }
+  const centreHaut = { x: centre.x, y: centre.y - HAUTEUR - SUR_LES_RAILS }
   // Les roues : sous les deux grands côtés, vers l'avant et vers l'arrière.
   const roues = [
     [0.6, 1],
     [-0.6, 1],
     [0.6, -1],
     [-0.6, -1],
-  ].map(([a, b]) => versEcran(x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2 + 0.02) * b, y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2 + 0.02) * b))
+  ]
+    .map(([a, b]) => versEcran(x + avant.x * (LONGUEUR / 2) * a + cote.x * (LARGEUR / 2 + 0.02) * b, y + avant.y * (LONGUEUR / 2) * a + cote.y * (LARGEUR / 2 + 0.02) * b))
+    .map((r) => ({ x: r.x, y: r.y - SUR_LES_RAILS }))
   return (
     <g className={electrique ? 'benne-electrique' : ''}>
       <ellipse cx={centre.x} cy={centre.y + 1.5} rx={21} ry={9} fill="rgb(0 0 0 / 0.28)" />
