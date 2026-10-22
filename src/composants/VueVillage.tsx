@@ -521,21 +521,36 @@ export function VueVillage({
         return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
       })}
       <RailsDuVillage village={village} />
-      {/* Le trajet qu'on regarde au Personnel : ses rails et ses deux bâtiments brillent. */}
+      {/* Le trajet qu'on regarde au Personnel : une ligne jaune épaisse qui brille, du centre du
+          bâtiment de départ au centre de celui d'arrivée en suivant les rails (les bâtiments,
+          dessinés par-dessus, la cachent à leurs deux bouts). Leurs emprises sont entourées d'or. */}
       {trajetEnSurbrillance &&
         (() => {
           const ligneVue = ligneDe(etat, trajetEnSurbrillance)
           if (!ligneVue) return null
           const { depart, arrivee } = LIAISONS[trajetEnSurbrillance]
+          const batimentDepart = batimentPose(village, depart)
+          const batimentArrivee = batimentPose(village, arrivee)
+          // Les points de la ligne, au milieu de chaque case (et des deux bâtiments).
+          const etapes: { x: number; y: number }[] = ligneVue.map((c) => ({ x: c.x + 0.5, y: c.y + 0.5 }))
+          if (batimentDepart) etapes.unshift({ x: batimentDepart.x + BATIMENTS[depart].taille / 2, y: batimentDepart.y + BATIMENTS[depart].taille / 2 })
+          if (batimentArrivee) etapes.push({ x: batimentArrivee.x + BATIMENTS[arrivee].taille / 2, y: batimentArrivee.y + BATIMENTS[arrivee].taille / 2 })
+          const points = etapes
+            .map((p) => {
+              const e = versEcran(p.x, p.y)
+              return `${e.x},${e.y}`
+            })
+            .join(' ')
           return (
             <g className="trajet-en-surbrillance">
-              {[depart, arrivee].map((id) => {
-                const b = batimentPose(village, id)
-                return b ? <polygon key={id} className="emprise-trajet" points={losange(b.x, b.y, BATIMENTS[id].taille)} /> : null
+              {[batimentDepart && depart, batimentArrivee && arrivee].map((id) => {
+                const b = id ? batimentPose(village, id) : null
+                return id && b ? <polygon key={id} className="emprise-trajet" points={losange(b.x, b.y, BATIMENTS[id].taille)} /> : null
               })}
-              {ligneVue.map((c, i) => (
-                <polygon key={i} className="case-trajet" style={{ animationDelay: `${(i * 0.06).toFixed(2)}s` }} points={losange(c.x, c.y, 1)} />
-              ))}
+              {/* Le halo (large et flou), puis la ligne jaune, puis un filet clair au milieu. */}
+              <polyline className="ligne-trajet-halo" points={points} />
+              <polyline className="ligne-trajet" points={points} />
+              <polyline className="ligne-trajet-reflet" points={points} />
             </g>
           )
         })()}

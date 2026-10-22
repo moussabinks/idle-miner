@@ -1354,14 +1354,34 @@
   stroke-width: 0.6;
 }
 
-/* Le trajet qu'on regarde en embauchant un pousseur (26/10) : ses rails brillent en vague,
-   ses deux bâtiments sont entourés d'or. */
-.case-trajet {
-  fill: rgb(255 214 90 / 0.8);
-  stroke: #fffbe6;
-  stroke-width: 1.4;
-  filter: drop-shadow(0 0 6px #ffd84a);
+/* Le trajet qu'on regarde en embauchant un pousseur (26/10) : une ligne jaune épaisse en
+   surbrillance relie les deux bâtiments en suivant les rails, et ils sont entourés d'or. */
+.ligne-trajet-halo,
+.ligne-trajet,
+.ligne-trajet-reflet {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.ligne-trajet-halo {
+  stroke: rgb(255 216 74 / 0.45);
+  stroke-width: 22;
+  filter: blur(6px);
   animation: trajet-brille 1.4s ease-in-out infinite;
+}
+
+.ligne-trajet {
+  stroke: #ffd21f;
+  stroke-width: 10;
+  filter: drop-shadow(0 0 4px #ffb800);
+}
+
+.ligne-trajet-reflet {
+  stroke: #fff7c2;
+  stroke-width: 2.5;
+  opacity: 0.9;
 }
 
 .emprise-trajet {
@@ -1373,7 +1393,7 @@
 }
 
 @keyframes trajet-brille {
-  0%, 100% { opacity: 0.35; }
+  0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
 }
 
@@ -1382,7 +1402,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .case-trajet,
+  .ligne-trajet-halo,
   .emprise-trajet {
     animation: none;
   }
