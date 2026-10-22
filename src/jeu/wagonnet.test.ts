@@ -14,7 +14,9 @@ import {
   joueurPousse,
   ligneDe,
   liaisonsDepuis,
+  envoyerObjet,
   liaisonsSurLaCase,
+  objetEnvoye,
   milieuDeLigne,
   objetsAuChoix,
   reglerTrajet,
@@ -282,5 +284,26 @@ describe('la fenêtre des trajets (27/10)', () => {
     const etat = partieAvecTrajet()
     reglerTrajet(etat, 'mine-marche', { actif: false, exclus: [] })
     expect(etat.trajets).toEqual([])
+  })
+})
+
+describe('les minerais du wagonnet, au panneau de la mine (27/10)', () => {
+  it('on coche ou décoche un minerai, même absent du coffre', () => {
+    const etat = partieAvecTrajet()
+    expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(true)
+    envoyerObjet(etat, 'mine-marche', 'fer', false)
+    expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(false)
+    etat.coffre.contenu = { fer: 5, pierre: 2 }
+    pousserTrajet(etat, 'mine-marche')
+    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ pierre: 2 })
+  })
+
+  it('le renvoyer enlève aussi le « gardé » du marché', () => {
+    const etat = partieAvecTrajet()
+    etat.nonAVendre = ['fer']
+    expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(false)
+    envoyerObjet(etat, 'mine-marche', 'fer', true)
+    expect(etat.nonAVendre).toEqual([])
+    expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(true)
   })
 })

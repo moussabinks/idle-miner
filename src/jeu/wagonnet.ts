@@ -21,9 +21,7 @@
 import {
   BLOCS,
   LIAISONS,
-  LISTE_BLOCS,
   LISTE_LIAISONS,
-  NIVEAUX_MINE,
   NIVEAUX_WAGONNET,
   RARETES,
   RESERVE_FOREUSE_WAGONNET,
@@ -40,6 +38,7 @@ import {
   type IdRarete,
 } from './donnees'
 import { retirerDuChariot, selectionChariot } from './foreuse'
+import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
@@ -93,8 +92,7 @@ export function creerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
 // la redstone) : la liste est vide.
 export function objetsAuChoix(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
   if (LIAISONS[liaison].arrivee !== 'marche') return []
-  const poids = NIVEAUX_MINE[Math.min(etat.niveauMine, NIVEAUX_MINE.length) - 1].poids
-  return LISTE_BLOCS.filter((bloc) => (poids[bloc] ?? 0) > 0)
+  return blocsDuNiveau(etat.niveauMine)
 }
 
 // Ce que le wagonnet de ce trajet emporte toujours (sans choix).
@@ -119,6 +117,24 @@ export function reglerTrajet(etat: EtatJeu, liaison: IdLiaison, reglage: Reglage
   if (!trajet) return messages
   trajet.exclus = exclus
   return messages.length > 0 ? messages : ['🛤️ Trajet réglé.']
+}
+
+// Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet, ou
+// « gardé » au marché pour le trajet de la mine.)
+export function objetEnvoye(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc): boolean {
+  if (exclusDe(etat, liaison).includes(bloc)) return false
+  return !(LIAISONS[liaison].depart === 'puits' && etat.nonAVendre.includes(bloc))
+}
+
+// Cocher ou décocher un minerai pour le wagonnet d'un trajet (au panneau de la mine).
+export function envoyerObjet(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc, envoyer: boolean): string[] {
+  const trajet = trajetDe(etat, liaison)
+  if (!trajet) return []
+  const exclus = (trajet.exclus ?? []).filter((b) => b !== bloc)
+  trajet.exclus = envoyer ? exclus : [...exclus, bloc]
+  // Envoyé : il n'est plus « gardé » non plus (sinon le wagonnet le laisserait quand même).
+  if (envoyer && LIAISONS[liaison].depart === 'puits') etat.nonAVendre = etat.nonAVendre.filter((b) => b !== bloc)
+  return []
 }
 
 // Les trajets qui passent par cette case de rails (on la touche pour les régler).

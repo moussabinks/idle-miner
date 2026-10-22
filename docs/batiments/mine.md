@@ -63,25 +63,28 @@ Sous le tableau de production (`Goulots`, calculs dans `src/jeu/production.ts`, 
 ### 📦 Le coffre · *n* / *capacité*
 
 - Une barre (plus grosse depuis le 27/10) : le remplissage (rouge et « Plein : la mine s'arrête ! » quand il est plein).
-- Vide : « Vide. Clique sur le bloc pour le remplir ! »
-- Sinon, les **jauges** de son contenu (les objets les plus chers en haut) et **🎒 Mettre dans le sac (*n*)** (kaki) : on choisit combien prendre de chaque objet, et ils passent dans le sac à dos (tant qu'il y a de la place). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. »
-- Avec le trajet Mine → Marché : un menu repliable **« Ce que le wagonnet ne vend pas »** (`<details class="plus-d-infos">`, 27/10 : l'option est rangée pour ne pas encombrer le panneau). Dedans, « Le wagonnet du marché laisse dans le coffre : » et une case à cocher par objet. Un objet coché est **gardé** : le wagonnet du marché ne l'emporte pas (c'est la même liste que les objets gardés du marché).
+- **Un tableau, une ligne par minerai** (27/10, `CoffreMine`) : **tous les minerais que sort la mine à son niveau**, même à 0 (plus ceux d'un ancien niveau qui resteraient), les plus chers en haut. Pour chacun : son nom et son prix, **combien il y en a** (grisé à 0), et :
+  - avec le trajet Mine → Marché, **🚃 Wagonnet : Vendre / Garder** (deux boutons collés, vert = le wagonnet l'emporte et le vend, brun = il le laisse dans le coffre ; `envoyerObjet`, la même liste que les objets de la fenêtre du trajet). « Vendre » enlève aussi le minerai des objets gardés du marché. On le règle à l'avance, avant même d'en avoir. Avec un trajet vers la foreuse (ou le générateur), le charbon (la redstone) porte la mention « 🔥 foreuse d'abord » (« ⚡ générateur d'abord ») ;
+  - **🎒** (kaki) : met tout ce minerai dans le sac (tant qu'il y a de la place).
+- Dessous, **🎒 Tout mettre dans le sac (*n*)** (les plus chers d'abord). Il faut ensuite **marcher jusqu'au marché** pour les vendre. Sac plein : « 🎒 Ton sac est plein : va d'abord vendre au marché. » Sans trajet vers le marché : « 🛤️ Relie la mine au marché avec des rails : un wagonnet vendra le coffre tout seul. »
+- Sous le coffre, **le rappel du niveau suivant** (`ProchainNiveau`) : « ⬇ Niveau *N* : *nom* », le nouveau minerai, la valeur d'un bloc en plus (« +51 % ») et les bâtiments débloqués ; « 💰 Achetable ! » et une lueur verte quand on peut le payer. Un clic ouvre l'onglet Améliorer.
 
 ### Les trajets de wagonnets (24/10)
 
 Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent de la mine, vers chaque bâtiment construit parmi le **marché** (💰, il vend le coffre), la **foreuse** (🔥, il lui apporte le charbon) et le **générateur** (🔴, il lui apporte la redstone). Pour chacun :
 
 - **Sans rails** : « Relie la mine au marché avec des rails (menu Bâtiments, 3 🔩 fer la case) : un wagonnet emporte le coffre de la mine et le vend au marché. » (de même pour la foreuse et le générateur).
-- **Rails posés, pas de trajet** : « Les rails sont posés ! » et **🛤️ Envoyer un wagonnet vers le marché** (bleu, gratuit) : c'est le joueur qui choisit ses trajets.
+- **Rails posés, pas de trajet** : « Les rails sont posés ! Touche la bulle 🛤️ Automatiser sur les rails pour lancer le wagonnet » (27/10 : le bouton « Envoyer un wagonnet vers… » est retiré, le trajet se crée sur la carte).
 - **Trajet créé** : où en est son wagonnet (« Au quai : rien à porter pour l’instant. », « Il part tout seul. », « Son pousseur va le pousser. », « Au quai. Pousse-le, ou embauche un pousseur pour ce trajet au Personnel. », « En route vers le marché, poussé par toi / *prénom* / l'électricité ⚡ », « Revient à la mine »), avec une barre pendant le trajet et un badge **⚡ Électrique** si tout le trajet l'est.
   - **🛤️ Pousser (*n* objets)** (bouton bois) : le hamster du joueur **fait l'aller-retour avec le wagonnet** : il le pousse jusqu'à l'arrivée, puis le ramène au quai. Pendant ce temps, on ne peut pas marcher ailleurs (le bouton ⛏️ Mine devient « Wagonnet… », les flèches et les touchers sur la carte ne font rien) et aucun panneau n'est ouvert. On ne pousse qu'un wagonnet à la fois. Grisé si le wagonnet est déjà en route ou s'il n'y a rien à porter.
   - **✖ Arrêter** (rouge) : supprime le trajet (son chargement retourne dans le coffre, les rails restent).
 - Dès qu'il y a un trajet : la ligne d'amélioration **🛒 Taille des wagonnets**, qui vaut pour **tous** les wagonnets (même ceux qui partent de la foreuse). Un wagonnet déjà chargé garde son chargement : la nouvelle taille compte à son prochain départ.
 
-### ⬇ Niveau de la mine
+### ⬇ Descendre au niveau suivant (en haut de l'onglet Améliorer)
 
-- Les chances de chaque bloc au niveau actuel (« 🪨 70 % ⚫ 18 % 🔩 12 % »), puis celles du niveau suivant.
-- La ligne d'amélioration « Niveau *N* / 5 » et le bouton **⬇ *nom du niveau suivant*** avec son prix. Message : « ⛏️ La mine descend au niveau 3 : Filon d'or ! »
+- Une **grande carte** (bord doré, verte et lumineuse quand on peut la payer) : « ⬇ Descendre au niveau *N* », le nom du niveau en grand, puis **ce qu'on y gagne** (`gainsNiveauSuivant` dans `mine.ts`, `GainsNiveau`) : ✨ le nouveau minerai et son prix, 💰 la valeur moyenne d'un bloc (avant → après, « +51 % »), ⚙️ les blocs par minute que la mine sort toute seule, 👷 +2 mineurs, 🏗️ les bâtiments débloqués (foreuse et générateur au niveau 2), 🎲 le recruteur (niveau 3), 💼 le manager (niveau 4).
+- Les chances de chaque bloc (maintenant et au niveau suivant) sont rangées dans « Les chances de chaque minerai ».
+- La ligne d'amélioration et le bouton **⬇ Descendre au niveau *N*** avec son prix. Message : « ⛏️ La mine descend au niveau 3 : Filon d'or ! » Au niveau 5 : « 🏆 Mine au plus profond ».
 
 ### 📦 Taille du coffre et 🛗 Ascenseur
 
