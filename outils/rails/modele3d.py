@@ -30,8 +30,16 @@ SUR = 2  # on dessine 2 fois plus fin, puis on réduit (bords lisses)
 F = FINALE * SUR
 # Le cadre de l'image, en pixels du monde, par rapport au coin (0, 0) de la case.
 CADRE = {'x0': -35, 'x1': 35, 'y0': -15, 'y1': 31}
-LARGEUR_IMG = (CADRE['x1'] - CADRE['x0']) * F
-HAUTEUR_IMG = (CADRE['y1'] - CADRE['y0']) * F
+# La vue en cours : une case seule, ou (pour les virages doux) un carré de 2 × 2 cases. Le centre
+# (autour duquel on tourne le modèle), le cadre de l'image et le sol qui reçoit les ombres.
+VUE = {'centre': 0.5, 'cadre': CADRE, 'sol': (-0.6, 1.6), 'ombre': 1.4}
+VUE_CASE = dict(VUE)
+VUE_DOUX = {'centre': 1.0, 'cadre': {'x0': -42, 'x1': 42, 'y0': -12, 'y1': 46}, 'sol': (-0.6, 2.4), 'ombre': 2.2}
+
+
+def taille_image():
+    c = VUE['cadre']
+    return (c['x1'] - c['x0']) * F, (c['y1'] - c['y0']) * F
 
 # D'où vient la lumière (en haut à gauche de l'écran, assez haut) ; vers où est la caméra.
 LUMIERE = np.array([-0.62, -0.18, 0.76])
@@ -228,6 +236,16 @@ def modele_de_base(forme):
             traverse(m, 1 + 0.5 * np.cos(a), 1 + 0.5 * np.sin(a), a, rails_sur=(-D, D))
         rail(m, arc((1, 1), 0.5 - D, np.pi, 1.5 * np.pi, n=14))
         rail(m, arc((1, 1), 0.5 + D, np.pi, 1.5 * np.pi, n=36))
+    elif forme == 'doux':
+        # Le virage doux (25/10), dans un carré de 2 × 2 cases : le coin en (0, 0), ses bras au sud
+        # (0, 1) et à l'est (1, 0). Un quart de cercle de rayon 1,5 autour de (2, 2), qui part du
+        # bas de la case du sud et arrive au bout de la case de l'est. Sept traverses, à peu près
+        # aussi espacées que sur une ligne droite.
+        for k in range(7):
+            a = np.pi + H * (k + 0.5) / 7
+            traverse(m, 2 + 1.5 * np.cos(a), 2 + 1.5 * np.sin(a), a, rails_sur=(-D, D))
+        rail(m, arc((2, 2), 1.5 - D, np.pi, 1.5 * np.pi, n=40))
+        rail(m, arc((2, 2), 1.5 + D, np.pi, 1.5 * np.pi, n=64))
     elif forme == 't':
         traverse(m, C, PAS[0], 0, COURTE, rails_sur=(-D, D))
         traverse(m, C, PAS[2], 0, COURTE, rails_sur=(-D, D))
@@ -270,11 +288,12 @@ def toutes_les_formes():
 
 
 def tourner(points, quarts):
-    # Un quart de tour (n → e) autour du centre de la case : (dx, dy) → (-dy, dx).
+    # Un quart de tour (n → e) autour du centre de la vue : (dx, dy) → (-dy, dx).
     p = points.copy()
     for _ in range(quarts):
-        dx, dy = p[..., 0] - C, p[..., 1] - C
-        p[..., 0], p[..., 1] = C - dy, C + dx
+        c = VUE['centre']
+        dx, dy = p[..., 0] - c, p[..., 1] - c
+        p[..., 0], p[..., 1] = c - dy, c + dx
     return p
 
 
@@ -288,8 +307,8 @@ def tourner_axe(axe, quarts):
 # --- Le rendu -------------------------------------------------------------------------------
 def vers_image(p):
     # Un point 3D (cases) → l'image (pixels de l'image), et sa profondeur (plus grand = plus près).
-    X = ((p[..., 0] - p[..., 1]) * DEMI_LARGEUR - CADRE['x0']) * F
-    Y = ((p[..., 0] + p[..., 1]) * DEMI_HAUTEUR - p[..., 2] * HAUTEUR_Z - CADRE['y0']) * F
+    X = ((p[..., 0] - p[..., 1]) * DEMI_LARGEUR - VUE['cadre']['x0']) * F
+    Y = ((p[..., 0] + p[..., 1]) * DEMI_HAUTEUR - p[..., 2] * HAUTEUR_Z - VUE['cadre']['y0']) * F
     profondeur = p @ CAMERA
     return X, Y, profondeur
 
@@ -338,14 +357,14 @@ def base_lumiere():
 
 
 TAILLE_OMBRE = 1400
-ZONE_OMBRE = (-1.4, 1.4)  # en cases, autour du centre de la case, dans la vue de la lumière
 
 
 def vers_lumiere(p):
     e1, e2 = base_lumiere()
-    q = p - np.array([C, C, 0])
-    a = (q @ e1 - ZONE_OMBRE[0]) / (ZONE_OMBRE[1] - ZONE_OMBRE[0]) * TAILLE_OMBRE
-    b = (q @ e2 - ZONE_OMBRE[0]) / (ZONE_OMBRE[1] - ZONE_OMBRE[0]) * TAILLE_OMBRE
+    q = p - np.array([VUE['centre'], VUE['centre'], 0])
+    z = VUE['ombre']
+    a = (q @ e1 + z) / (2 * z) * TAILLE_OMBRE
+    b = (q @ e2 + z) / (2 * z) * TAILLE_OMBRE
     return a, b, q @ LUMIERE
 
 
@@ -377,7 +396,9 @@ def rendre(modele, quarts):
     # 2. La vue de la caméra : seulement les faces tournées vers elle, plus le sol (z = 0) qui
     # reçoit les ombres (il est invisible, sauf l'ombre).
     visibles = normales @ CAMERA > 1e-4
-    sol = np.array([[[-0.6, -0.6, 0], [1.6, -0.6, 0], [1.6, 1.6, 0]], [[-0.6, -0.6, 0], [1.6, 1.6, 0], [-0.6, 1.6, 0]]])
+    s0, s1 = VUE['sol']
+    sol = np.array([[[s0, s0, 0], [s1, s0, 0], [s1, s1, 0]], [[s0, s0, 0], [s1, s1, 0], [s0, s1, 0]]])
+    LARGEUR_IMG, HAUTEUR_IMG = taille_image()
     tri = np.concatenate([sommets[visibles], sol])
     X, Y, P = vers_image(tri)
     valeurs = tri  # on retrouve la position 3D de chaque pixel
@@ -452,6 +473,17 @@ if __name__ == '__main__':
     for code, (base, quarts) in formes.items():
         if seules and code not in seules:
             continue
+        VUE.update(VUE_CASE)
         image = rendre(modele_de_base(base), quarts)
         image.save(f'{dossier}/voie_{code}.webp', 'WEBP', quality=90, method=6)
         print(code, base, quarts, image.size)
+    # Les virages doux : un par direction (les côtés du coin : es, so, no, ne).
+    cotes = {'s', 'e'}
+    for quarts in range(4):
+        code = cote_code(cotes)
+        if not seules or f'doux_{code}' in seules:
+            VUE.update(VUE_DOUX)
+            image = rendre(modele_de_base('doux'), quarts)
+            image.save(f'{dossier}/voie_doux_{code}.webp', 'WEBP', quality=90, method=6)
+            print('doux', code, quarts, image.size)
+        cotes = {QUART[x] for x in cotes}

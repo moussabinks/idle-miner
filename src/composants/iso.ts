@@ -7,7 +7,7 @@
 // en damier et la forêt autour sont dessinés par le jeu (TerrainVillage, ForetVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
-import { batimentPose, empriseBatiment, porte, porteAGauche, type BatimentPose, type Case, type Village } from '../jeu/village'
+import { batimentPose, cleCase, empriseBatiment, porte, porteAGauche, viragesDoux, type BatimentPose, type Case, type Village } from '../jeu/village'
 
 // La moitié de la largeur et de la hauteur d'une case à l'écran (la taille des images des
 // bâtiments est calée dessus : elle ne change pas si la clairière grandit).
@@ -172,7 +172,8 @@ export function longueurTrace(points: { x: number; y: number }[]): number {
 
 // La trace d'un wagonnet sur une ligne de rails (23/10) : il part du bord du bâtiment de départ
 // (la mine, par exemple), suit le milieu de la voie (tout droit au centre des cases, en quart de
-// cercle dans les virages, comme le dessin des rails), et arrive au bord du bâtiment d'arrivée.
+// cercle dans les virages, comme le dessin des rails ; un grand quart de cercle sur trois cases
+// dans les virages doux), et arrive au bord du bâtiment d'arrivée.
 export function traceDeLaVoie(village: Village, ligne: Case[], depart: IdBatiment = 'puits', arrivee: IdBatiment = 'marche'): { x: number; y: number }[] {
   const dans = (id: IdBatiment, c: Case) => {
     const b = batimentPose(village, id)
@@ -192,7 +193,33 @@ export function traceDeLaVoie(village: Village, ligne: Case[], depart: IdBatimen
     return voisins.find((d) => dans(vers, { x: c.x + d.x, y: c.y + d.y })) ?? { x: 0, y: sens }
   }
   const trace: { x: number; y: number }[] = []
+  // Les virages doux (sur trois cases) : la case du coin, et les cases de ses deux bras.
+  const doux = new Map(viragesDoux(village).map((v) => [cleCase(v.coin.x, v.coin.y), v]))
+  const sauter = new Set<number>() // les cases déjà faites par un virage doux
   ligne.forEach((c, i) => {
+    if (sauter.has(i)) return
+    // Un virage doux : la case d'avant, le coin, la case d'après forment un grand quart de cercle
+    // (rayon 1,5 case) autour du coin de leur carré de 2 × 2 cases.
+    const coinDoux = i + 1 < ligne.length - 1 ? doux.get(cleCase(ligne[i + 1].x, ligne[i + 1].y)) : undefined
+    if (coinDoux) {
+      const k = ligne[i + 1]
+      const centreK = { x: k.x + 0.5, y: k.y + 0.5 }
+      const da = { x: c.x - k.x, y: c.y - k.y }
+      const db = { x: ligne[i + 2].x - k.x, y: ligne[i + 2].y - k.y }
+      const debut = { x: centreK.x + 1.5 * da.x, y: centreK.y + 1.5 * da.y }
+      const fin = { x: centreK.x + 1.5 * db.x, y: centreK.y + 1.5 * db.y }
+      const centre = { x: centreK.x + 1.5 * (da.x + db.x), y: centreK.y + 1.5 * (da.y + db.y) }
+      if (i === 0) trace.push(debut)
+      const a = { x: debut.x - centre.x, y: debut.y - centre.y }
+      const b = { x: fin.x - centre.x, y: fin.y - centre.y }
+      for (let n = 1; n <= 18; n++) {
+        const angle = (n / 18) * (Math.PI / 2)
+        trace.push({ x: centre.x + a.x * Math.cos(angle) + b.x * Math.sin(angle), y: centre.y + a.y * Math.cos(angle) + b.y * Math.sin(angle) })
+      }
+      sauter.add(i + 1)
+      sauter.add(i + 2)
+      return
+    }
     const entree = cote(c, i > 0 ? ligne[i - 1] : depart, -1)
     const sortie = cote(c, i < ligne.length - 1 ? ligne[i + 1] : arrivee, 1)
     const centre = { x: c.x + 0.5, y: c.y + 0.5 }

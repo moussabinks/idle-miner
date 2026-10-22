@@ -15,6 +15,7 @@ import { distanceDepuisLeDepart, ligneDe, longueurTrajet, trajetDuJoueur } from 
 import type { Notification } from '../jeu/notifications'
 import {
   batimentPose,
+  bordsDeVoie,
   cheminEntre,
   lireCle,
   longueurChemin,
@@ -510,6 +511,14 @@ export function VueVillage({
         return <CaseChemin key={`ch${cle}`} x={c.x} y={c.y} />
       })}
       <RailsDuVillage village={village} />
+      {/* Quand on pose un bâtiment, une décoration ou un chemin : les cases au bord des voies (sous
+          la demi-voie qui déborde de chaque côté du rail) sont interdites, en rouge. */}
+      {fantome &&
+        !(fantome.type === 'sol' && fantome.sol === 'rail') &&
+        [...bordsDeVoie(village)].map((cle) => {
+          const c = lireCle(cle)
+          return <polygon key={`bord${cle}`} className="case-bord-voie" points={losange(c.x, c.y, 1)} />
+        })}
       {batimentActif && (() => {
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null

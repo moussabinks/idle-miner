@@ -34,6 +34,7 @@ import {
   nouveautesBatiments,
   batimentsConstructibles,
   peutPoserSol,
+  placePourUnRail,
   poserSol,
   retirerDecoration,
   retirerSol,
@@ -116,6 +117,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       return empriseLibre(etat.village, empriseBatiment(f), ignorer)
     }
     if (f.type === 'decoration') return empriseLibre(etat.village, empriseDecoration(f), f.n !== null ? { type: 'decoration', n: f.n } : null)
+    if (f.sol === 'rail') return placePourUnRail(etat.village, f.x, f.y, f.de ?? null) === 'ok'
     const ignorer = f.de ? ({ type: f.sol, cle: cleCase(f.de.x, f.de.y) } as Occupant & { cle: string }) : null
     return empriseLibre(etat.village, { x: f.x, y: f.y, taille: 1 }, ignorer)
   }

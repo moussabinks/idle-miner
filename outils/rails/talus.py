@@ -140,6 +140,25 @@ def tuile(nom):
     return image.resize((TAILLE, TAILLE), Image.LANCZOS)
 
 
+def tuile_douce():
+    # Le virage doux (25/10) : une tuile de 3 × 3 cases autour d'un carré de 2 × 2 cases (de 0,5
+    # à 2,5 ici) ; le coin du virage est la case du haut à gauche, ses bras au sud et à l'est.
+    # Un anneau de rayon 1,5 autour du coin du bas à droite (2,5 ; 2,5).
+    global TAILLE, GRAND, CASES, U, V
+    TAILLE, CASES = 768, 3.0
+    GRAND = TAILLE * 3
+    u = (np.arange(GRAND) + 0.5) / GRAND * CASES
+    U, V = np.meshgrid(u, u)
+    r = np.hypot(U - 2.5, V - 2.5)
+    dans = (U <= 2.5) & (V <= 2.5)
+    masque = (np.abs(r - 1.5) <= LARGEUR_TALUS) & dans
+    coeur = (np.abs(r - 1.5) <= LARGEUR_TALUS - 0.1) & dans
+    loin = lambda x, y, rayon: abs(x - 2.5) > rayon + 0.02 and abs(y - 2.5) > rayon + 0.02
+    image = talus((bord_irregulier(masque, 5) & masque) | coeur, 5, loin)
+    return image.resize((TAILLE, TAILLE), Image.LANCZOS)
+
+
 if __name__ == '__main__':
     for nom in ['droit', 'virage', 't', 'croix']:
         tuile(nom).save(f'{dossier}/talus_{nom}.webp', 'WEBP', quality=86, method=6)
+    tuile_douce().save(f'{dossier}/talus_doux.webp', 'WEBP', quality=86, method=6)

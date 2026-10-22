@@ -14,7 +14,7 @@ import {
     type IdDecoration,
 } from './donnees'
 import { payer, peutPayer, type EtatJeu } from './mineur'
-import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre, feraitUneBoucle, type Occupant } from './village'
+import { batimentPose, cleCase, empriseBatiment, empriseDecoration, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
 
 // ---------------------------------------------------------------------------
 // Les bâtiments
@@ -92,14 +92,37 @@ function listeSol(etat: EtatJeu, type: TypeSol): string[] {
   return type === 'rail' ? etat.village.rails : etat.village.chemins
 }
 
-export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
-  return peutPayer(etat, coutSol(type)) && empriseLibre(etat.village, { x, y, taille: 1 }) && !(type === 'rail' && feraitUneBoucle(etat.village, x, y))
+export const MESSAGE_BOUCLE = '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.'
+export const MESSAGE_BORDS = '🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.'
+
+// Peut-on mettre un rail sur cette case (« de » : la case d'où on le déplace, s'il y en a une) ?
+//   - 'occupee' : la case est prise (ou un chemin, un bâtiment... est déjà là) ;
+//   - 'boucle' : les rails tourneraient en rond ;
+//   - 'bords' : sa voie (ou celle de ses voisins, qui change de forme) passerait sur un bâtiment,
+//     une décoration ou un chemin ;
+//   - 'ok' : on peut.
+export function placePourUnRail(village: Village, x: number, y: number, de: { x: number; y: number } | null = null): 'ok' | 'occupee' | 'boucle' | 'bords' {
+  const cleDe = de ? cleCase(de.x, de.y) : null
+  const ignorer = cleDe ? ({ type: 'rail', cle: cleDe } as Occupant & { cle: string }) : null
+  if (!empriseLibre(village, { x, y, taille: 1 }, ignorer, true)) return 'occupee'
+  if (feraitUneBoucle(village, x, y, cleDe)) return 'boucle'
+  const rails = [...village.rails.filter((c) => c !== cleDe), cleCase(x, y)]
+  if (!voieDegagee({ ...village, rails })) return 'bords'
+  return 'ok'
 }
 
-export const MESSAGE_BOUCLE = '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.'
+export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
+  if (!peutPayer(etat, coutSol(type))) return false
+  if (type === 'rail') return placePourUnRail(etat.village, x, y) === 'ok'
+  return empriseLibre(etat.village, { x, y, taille: 1 })
+}
 
 export function poserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): string[] {
-  if (type === 'rail' && empriseLibre(etat.village, { x, y, taille: 1 }) && feraitUneBoucle(etat.village, x, y)) return [MESSAGE_BOUCLE]
+  if (type === 'rail') {
+    const place = placePourUnRail(etat.village, x, y)
+    if (place === 'boucle') return [MESSAGE_BOUCLE]
+    if (place === 'bords') return [MESSAGE_BORDS]
+  }
   if (!peutPoserSol(etat, type, x, y)) return []
   payer(etat, coutSol(type))
   listeSol(etat, type).push(cleCase(x, y))
@@ -111,9 +134,15 @@ export function deplacerSol(etat: EtatJeu, type: TypeSol, de: { x: number; y: nu
   const liste = listeSol(etat, type)
   const index = liste.indexOf(cleCase(de.x, de.y))
   if (index === -1) return []
-  const ignorer = { type, cle: cleCase(de.x, de.y) } as Occupant & { cle: string }
-  if (!empriseLibre(etat.village, { x: vers.x, y: vers.y, taille: 1 }, ignorer)) return []
-  if (type === 'rail' && feraitUneBoucle(etat.village, vers.x, vers.y, cleCase(de.x, de.y))) return [MESSAGE_BOUCLE]
+  if (type === 'rail') {
+    const place = placePourUnRail(etat.village, vers.x, vers.y, de)
+    if (place === 'boucle') return [MESSAGE_BOUCLE]
+    if (place === 'bords') return [MESSAGE_BORDS]
+    if (place !== 'ok') return []
+  } else {
+    const ignorer = { type, cle: cleCase(de.x, de.y) } as Occupant & { cle: string }
+    if (!empriseLibre(etat.village, { x: vers.x, y: vers.y, taille: 1 }, ignorer)) return []
+  }
   liste[index] = cleCase(vers.x, vers.y)
   return []
 }

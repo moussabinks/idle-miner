@@ -1346,3 +1346,11 @@
     animation: none;
   }
 }
+
+/* Les cases au bord des voies (25/10) : interdites aux bâtiments, aux décorations et aux chemins
+   (la voie y déborde). On les montre en rouge pendant qu'on pose quelque chose. */
+.case-bord-voie {
+  fill: rgb(230 70 50 / 0.28);
+  stroke: rgb(255 120 100 / 0.6);
+  stroke-width: 0.6;
+}

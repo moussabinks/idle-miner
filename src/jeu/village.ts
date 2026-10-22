@@ -125,11 +125,17 @@ function memeOccupant(a: Occupant, b: Occupant): boolean {
 
 // Peut-on poser quelque chose sur cette emprise ? Elle doit tenir dans la clairière, sans
 // chevaucher rien d'autre (sauf « ignorer » : l'élément qu'on est en train de déplacer).
-export function empriseLibre(village: Village, emprise: Emprise, ignorer: (Occupant & { cle?: string }) | null = null): boolean {
+//
+// Les cases au bord d'une voie (sous la demi-voie qui déborde de chaque côté du rail, voir
+// bordsDeVoie) sont interdites aux bâtiments, aux décorations et aux chemins : « pourUnRail »
+// les autorise (un rail posé là se raccorde à la voie). Pour un rail, voir aussi voieDegagee.
+export function empriseLibre(village: Village, emprise: Emprise, ignorer: (Occupant & { cle?: string }) | null = null, pourUnRail = false): boolean {
   if (!dansLaGrille(emprise)) return false
   const cases = occupation(village)
+  const bords = pourUnRail ? null : bordsDeVoie(village)
   return casesDe(emprise).every((c) => {
     const cle = cleCase(c.x, c.y)
+    if (bords?.has(cle)) return false
     const occupant = cases.get(cle)
     if (!occupant) return true
     if (ignorer === null || !memeOccupant(occupant, ignorer)) return false
@@ -470,4 +476,118 @@ export function feraitUneBoucle(village: Village, x: number, y: number, sans: st
 
 function occupe(emprise: Emprise, x: number, y: number): boolean {
   return x >= emprise.x && y >= emprise.y && x < emprise.x + emprise.taille && y < emprise.y + emprise.taille
+}
+
+// ---------------------------------------------------------------------------
+// La voie est large de deux cases (25/10)
+// ---------------------------------------------------------------------------
+// Un rail se pose sur une case, mais sa voie (le talus, les traverses) déborde d'une demi-case de
+// chaque côté. Les cases où déborde une demi-voie sont ses « bords » : on n'y pose ni bâtiment,
+// ni décoration, ni chemin.
+
+export type Cote = 'n' | 'e' | 's' | 'o'
+export const COTES: Cote[] = ['n', 'e', 's', 'o']
+export const DIRECTION: Record<Cote, Case> = { n: { x: 0, y: -1 }, e: { x: 1, y: 0 }, s: { x: 0, y: 1 }, o: { x: -1, y: 0 } }
+export const OPPOSE: Record<Cote, Cote> = { n: 's', e: 'o', s: 'n', o: 'e' }
+
+// La forme d'une case de rails, telle qu'on la dessine : les côtés qu'elle relie (dans l'ordre
+// n, e, s, o). Seule, ou avec une seule voisine, elle va tout droit.
+export function formeDuRail(village: Village, x: number, y: number): Cote[] {
+  const r = raccordsRail(village, x, y)
+  const liste = COTES.filter((c) => r[c])
+  if (liste.length >= 2) return liste
+  const axe = liste[0] ?? 'n'
+  return axe === 'n' || axe === 's' ? ['n', 's'] : ['e', 'o']
+}
+
+// Les bords de toutes les voies : pour chaque rail, les cases voisines du côté où la voie ne va
+// pas (les deux côtés d'une ligne droite, l'extérieur d'un virage, le dos d'un T).
+const cacheBords = new Map<string, Set<string>>()
+
+// La signature des rails et des bâtiments (les raccords des rails n'en dépendent que).
+function signatureRails(village: Village): string {
+  return `${village.rails.join('|')}#${village.batiments.map((b) => `${b.id}${b.x},${b.y}`).join('|')}`
+}
+
+export function bordsDeVoie(village: Village): Set<string> {
+  const cle = signatureRails(village)
+  const deja = cacheBords.get(cle)
+  if (deja) return deja
+  const bords = new Set<string>()
+  const rails = new Set(village.rails)
+  for (const cle of village.rails) {
+    const c = lireCle(cle)
+    const forme = formeDuRail(village, c.x, c.y)
+    for (const cote of COTES) {
+      if (forme.includes(cote)) continue
+      const voisine = cleCase(c.x + DIRECTION[cote].x, c.y + DIRECTION[cote].y)
+      if (!rails.has(voisine)) bords.add(voisine)
+    }
+  }
+  if (cacheBords.size >= CACHE_MAX) cacheBords.delete(cacheBords.keys().next().value as string)
+  cacheBords.set(cle, bords)
+  return bords
+}
+
+// Les rails de ce village ont-ils la place pour leur voie ? (Aucun bâtiment, aucune décoration,
+// aucun chemin sur leurs bords.) On s'en sert avant de poser ou de déplacer un rail : le nouveau
+// rail change aussi la forme de ses voisins.
+export function voieDegagee(village: Village): boolean {
+  const cases = occupation(village)
+  for (const cle of bordsDeVoie(village)) {
+    const occupant = cases.get(cle)
+    if (occupant && occupant.type !== 'rail') return false
+  }
+  return true
+}
+
+// ---------------------------------------------------------------------------
+// Les virages doux (25/10)
+// ---------------------------------------------------------------------------
+// Un virage serré tient dans une seule case ; mais quand ses deux voisines sont des lignes
+// droites, on dessine à la place un grand virage doux sur les trois cases (la voisine, le coin,
+// l'autre voisine) : un quart de cercle de rayon 1,5 case. Le wagonnet le suit aussi. Ce n'est
+// que du dessin : les rails, les trajets et les longueurs ne changent pas.
+
+export type VirageDoux = {
+  coin: Case // la case du virage
+  bras: [Cote, Cote] // ses deux côtés (dans l'ordre n, e, s, o)
+}
+
+const cacheVirages = new Map<string, VirageDoux[]>()
+
+export function viragesDoux(village: Village): VirageDoux[] {
+  const cle = signatureRails(village)
+  const deja = cacheVirages.get(cle)
+  if (deja) return deja
+  const rails = new Set(village.rails)
+  const pris = new Set<string>() // les cases déjà dans un virage doux
+  const virages: VirageDoux[] = []
+  // Toujours dans le même ordre, pour que deux virages qui se disputent une case gardent le même gagnant.
+  const tries = [...village.rails].sort((a, b) => {
+    const ca = lireCle(a)
+    const cb = lireCle(b)
+    return ca.y - cb.y || ca.x - cb.x
+  })
+  for (const cleCoin of tries) {
+    const coin = lireCle(cleCoin)
+    const forme = formeDuRail(village, coin.x, coin.y)
+    if (forme.length !== 2 || OPPOSE[forme[0]] === forme[1]) continue
+    const bras = forme as [Cote, Cote]
+    // Chaque bras doit être une ligne droite dans le bon sens, et libre.
+    const cases = bras.map((cote) => ({ cote, c: { x: coin.x + DIRECTION[cote].x, y: coin.y + DIRECTION[cote].y } }))
+    const bons = cases.every(({ cote, c }) => {
+      const cleBras = cleCase(c.x, c.y)
+      if (!rails.has(cleBras) || pris.has(cleBras)) return false
+      const f = formeDuRail(village, c.x, c.y)
+      return f.length === 2 && f.includes(cote) && f.includes(OPPOSE[cote])
+    })
+    if (!bons || pris.has(cleCoin)) continue
+    pris.add(cleCoin)
+    for (const { c } of cases) pris.add(cleCase(c.x, c.y))
+    virages.push({ coin, bras })
+  }
+  if (cacheVirages.size >= CACHE_MAX) cacheVirages.delete(cacheVirages.keys().next().value as string)
+  cacheVirages.set(cle, virages)
+  return virages
 }
