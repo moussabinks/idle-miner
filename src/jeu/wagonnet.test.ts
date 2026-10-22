@@ -14,6 +14,11 @@ import {
   joueurPousse,
   ligneDe,
   liaisonsDepuis,
+  liaisonsSurLaCase,
+  milieuDeLigne,
+  objetsAuChoix,
+  reglerTrajet,
+  trajetsAProposer,
   peutCreerTrajet,
   peutPousser,
   pousserTrajet,
@@ -231,5 +236,35 @@ describe('pas de boucle dans les rails', () => {
     expect(etat.village.rails).toContain('12,12')
     // Un embranchement (un T) reste possible.
     expect(peutPoserSol(etat, 'rail', 9, 6)).toBe(true)
+  })
+})
+
+describe('la fenêtre des trajets (27/10)', () => {
+  it('des rails qui relient deux bâtiments proposent un trajet, au milieu de la ligne', () => {
+    const etat = partie()
+    expect(trajetsAProposer(etat)).toEqual(['mine-marche'])
+    expect(milieuDeLigne(ligneDe(etat, 'mine-marche')!)).toEqual({ x: 30, y: 37 })
+    // Toucher un rail de la ligne ouvre son trajet ; une case sans rail, rien.
+    expect(liaisonsSurLaCase(etat, 30, 36)).toEqual(['mine-marche'])
+    expect(liaisonsSurLaCase(etat, 10, 10)).toEqual([])
+    reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
+    expect(trajetsAProposer(etat)).toEqual([])
+  })
+
+  it('les objets décochés ne partent pas au marché (ils restent dans le coffre)', () => {
+    const etat = partie()
+    expect(objetsAuChoix(etat, 'mine-marche')).toEqual(['pierre', 'charbon', 'fer'])
+    expect(objetsAuChoix(etat, 'mine-foreuse')).toEqual([])
+    reglerTrajet(etat, 'mine-marche', { actif: true, exclus: ['pierre'] })
+    etat.coffre.contenu = { pierre: 20, fer: 3 }
+    pousserTrajet(etat, 'mine-marche')
+    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ fer: 3 })
+    expect(etat.coffre.contenu.pierre).toBe(20)
+  })
+
+  it('arrêter l’automatisation supprime le trajet', () => {
+    const etat = partieAvecTrajet()
+    reglerTrajet(etat, 'mine-marche', { actif: false, exclus: [] })
+    expect(etat.trajets).toEqual([])
   })
 })

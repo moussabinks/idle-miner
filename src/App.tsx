@@ -21,6 +21,7 @@ import { PanneauMine } from './composants/PanneauMine'
 import { PanneauBazar, PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
+import { FenetreTrajet } from './composants/FenetreTrajet'
 import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
 import {
   construireBatiment,
@@ -53,7 +54,7 @@ import {
   type Occupant,
 } from './jeu/village'
 import { capaciteCoffre, coffrePlein, nbDansCoffre, nbDansSac, sacPlein, valeurDe } from './jeu/mineur'
-import { joueurPousse } from './jeu/wagonnet'
+import { joueurPousse, liaisonsSurLaCase, reglerTrajet, type ReglageTrajet } from './jeu/wagonnet'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
@@ -99,6 +100,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // Le trajet qu'on regarde en embauchant un pousseur (au Personnel) : il brille sur la carte.
   const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
   const edition = fantome !== null || pinceau !== null || modifier
+  // La fenêtre des trajets ouverte (27/10) : les trajets des rails qu'on a touchés.
+  const [trajetsOuverts, setTrajetsOuverts] = useState<IdLiaison[] | null>(null)
+  const fermerTrajets = useCallback(() => setTrajetsOuverts(null), [])
+
+  function validerTrajets(reglages: Partial<Record<IdLiaison, ReglageTrajet>>) {
+    jouer((e) => Object.entries(reglages).flatMap(([liaison, reglage]) => reglerTrajet(e, liaison as IdLiaison, reglage as ReglageTrajet)))
+    setTrajetsOuverts(null)
+  }
 
   // Le fantôme peut-il être posé là où il est ?
   function fantomeLibre(f: Fantome | null): boolean {
@@ -238,6 +247,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
       }
       return
+    }
+    // Des rails qui relient des bâtiments : on ouvre la fenêtre de leurs trajets (27/10).
+    if (cible?.type === 'rail') {
+      const liaisons = liaisonsSurLaCase(etat, cible.x, cible.y)
+      if (liaisons.length > 0) {
+        setTrajetsOuverts(liaisons)
+        return
+      }
     }
     // Il pousse le wagonnet : il ne peut pas aller ailleurs avant d'être revenu.
     if (pousse) return
@@ -512,6 +529,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           onPeindre={peindre}
           trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
           ventesMarche={ventesMarche}
+          zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
+          onOuvrirTrajet={setTrajetsOuverts}
         />
         <Gains gains={gains} />
       </main>
@@ -595,6 +614,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           </div>
         </div>
       )}
+      {trajetsOuverts && <FenetreTrajet etat={etat} liaisons={trajetsOuverts} onValider={validerTrajets} onFermer={fermerTrajets} />}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
     </div>
   )

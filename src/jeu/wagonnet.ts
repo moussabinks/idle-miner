@@ -19,8 +19,11 @@
 //     seul, plus vite : c'est l'automatisation.
 
 import {
+  BLOCS,
   LIAISONS,
+  LISTE_BLOCS,
   LISTE_LIAISONS,
+  NIVEAUX_MINE,
   NIVEAUX_WAGONNET,
   RARETES,
   RESERVE_FOREUSE_WAGONNET,
@@ -76,6 +79,62 @@ export function creerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
   if (!peutCreerTrajet(etat, liaison)) return []
   etat.trajets.push(nouveauTrajet(liaison))
   return [`🛤️ Nouveau trajet : un wagonnet ${LIAISONS[liaison].description}.`]
+}
+
+// ---------------------------------------------------------------------------
+// Régler un trajet (la fenêtre qui s'ouvre en touchant ses rails, 27/10)
+// ---------------------------------------------------------------------------
+// Dès que des rails relient deux bâtiments, une bulle apparaît au milieu de la ligne : on la
+// touche (ou on touche les rails) pour régler le trajet : l'activer ou non, et choisir les objets
+// que le wagonnet emporte.
+
+// Les objets qu'on peut choisir d'envoyer sur ce trajet. Vers le marché : tout ce que sort la
+// mine à son niveau actuel. Vers la foreuse et le générateur, il n'y a pas le choix (le charbon,
+// la redstone) : la liste est vide.
+export function objetsAuChoix(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
+  if (LIAISONS[liaison].arrivee !== 'marche') return []
+  const poids = NIVEAUX_MINE[Math.min(etat.niveauMine, NIVEAUX_MINE.length) - 1].poids
+  return LISTE_BLOCS.filter((bloc) => (poids[bloc] ?? 0) > 0)
+}
+
+// Ce que le wagonnet de ce trajet emporte toujours (sans choix).
+export function objetFixe(liaison: IdLiaison): IdBloc | null {
+  if (liaison === 'mine-foreuse') return 'charbon'
+  if (liaison === 'mine-generateur') return 'redstone'
+  return null
+}
+
+export function exclusDe(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
+  return trajetDe(etat, liaison)?.exclus ?? []
+}
+
+export type ReglageTrajet = { actif: boolean; exclus: IdBloc[] }
+
+// Le joueur valide la fenêtre du trajet : on crée le trajet, on change ses objets, ou on l'arrête.
+export function reglerTrajet(etat: EtatJeu, liaison: IdLiaison, reglage: ReglageTrajet): string[] {
+  const exclus = reglage.exclus.filter((bloc) => bloc in BLOCS)
+  if (!reglage.actif) return supprimerTrajet(etat, liaison)
+  const messages = trajetDe(etat, liaison) ? [] : creerTrajet(etat, liaison)
+  const trajet = trajetDe(etat, liaison)
+  if (!trajet) return messages
+  trajet.exclus = exclus
+  return messages.length > 0 ? messages : ['🛤️ Trajet réglé.']
+}
+
+// Les trajets qui passent par cette case de rails (on la touche pour les régler).
+export function liaisonsSurLaCase(etat: EtatJeu, x: number, y: number): IdLiaison[] {
+  return LISTE_LIAISONS.filter((id) => ligneDe(etat, id)?.some((c) => c.x === x && c.y === y) ?? false)
+}
+
+// Les trajets possibles (leurs rails sont posés) mais pas encore créés : une bulle « 🛤️ » les
+// signale au milieu de leur ligne.
+export function trajetsAProposer(etat: EtatJeu): IdLiaison[] {
+  return LISTE_LIAISONS.filter((id) => trajetDe(etat, id) === null && ligneDe(etat, id) !== null)
+}
+
+// La case au milieu d'une ligne de rails (là où on met sa bulle).
+export function milieuDeLigne(ligne: Case[]): Case {
+  return ligne[Math.floor((ligne.length - 1) / 2)]
 }
 
 // Le joueur arrête un trajet : son chargement retourne d'où il vient.
@@ -188,7 +247,7 @@ function besoinRedstone(etat: EtatJeu): number {
 // pour les rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la
 // foreuse, la redstone du générateur).
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
-  if (etat.nonAVendre.includes(bloc)) return Infinity
+  if (etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)) return Infinity
   if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
   if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
   return 0
@@ -209,8 +268,10 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison): [IdBloc, number][] {
       const nombre = Math.min(etat.coffre.contenu.redstone ?? 0, besoinRedstone(etat))
       return nombre > 0 ? [['redstone', nombre]] : []
     }
-    case 'foreuse-marche':
-      return parPrix(selectionChariot(etat))
+    case 'foreuse-marche': {
+      const exclus = exclusDe(etat, liaison)
+      return parPrix(selectionChariot(etat)).filter(([bloc]) => !exclus.includes(bloc))
+    }
   }
 }
 

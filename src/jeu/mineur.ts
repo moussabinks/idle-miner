@@ -104,6 +104,9 @@ export type Trajet = {
   chargement: Inventaire
   // Qui le fait avancer : le joueur, un mineur (son nom), ou l'électricité.
   pousseur: 'joueur' | 'electricite' | string | null
+  // Les objets que le joueur ne veut pas envoyer sur ce trajet (réglé dans la fenêtre du trajet).
+  // Absent dans les vieilles parties : rien d'exclu.
+  exclus?: IdBloc[]
 }
 
 // Ce que fait un mineur employé :
