@@ -111,6 +111,7 @@ Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même él
 - **Salaire de 5 minutes** = salaire de sa pioche (tableau ci-dessus) × multiplicateur de sa rareté, arrondi.
 - (23/10) Le temps payé s'affiche **arrondi à la minute au-dessus** : juste après la paie, « payés 5 min » (avant, « 4 min » dès la première seconde passée).
 - Sans manager, **on ne paie que 5 minutes à la fois** : le bouton complète chaque mineur jusqu'à 5 minutes payées, et ne fait payer que le temps manquant (au prorata, arrondi au dollar supérieur). La carte « 💵 Salaires » indique le total pour 5 minutes et le temps qu'il reste au moins payé (« Tout le monde est payé pour encore 4 min. On paie 5 minutes à la fois (le manager, au niveau 4 de la mine, s'en chargera pour toi). »). Elle passe en rouge quand quelqu'un attend son salaire.
+- (23/10) **Payer un seul employé** : sur sa carte, un bouton **💵 Payer *Nom* · *prix*** (vert, qui respire en rouge s'il n'est plus payé) le complète jusqu'à 5 minutes, lui seul (`payerEmploye`, `coutSalaireEmploye`). Le bouton du haut devient « Payer tout le monde · *prix* », avec « 💡 Ou paie chacun sur sa carte, juste en dessous. » Le bouton n'est là que s'il y a quelque chose à payer.
 - Cette carte disparaît quand on a embauché le manager.
 
 ### 6. Licencier un employé (lien « Licencier » sur sa carte)

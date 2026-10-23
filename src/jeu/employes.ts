@@ -298,6 +298,30 @@ export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
   return [`💵 Salaires payés (${paye.toLocaleString('fr-FR')} $) : tes mineurs travaillent encore ${Math.ceil(tempsPayeMin(etat) / 60)} min.`]
 }
 
+// (23/10) Payer un seul employé : il est complété jusqu'à 5 minutes payées, comme avec « Payer »
+// pour tout le monde (sans manager).
+export function coutSalaireEmploye(employe: Employe, secondes = SECONDES_PAR_PAIE): number {
+  return prixDuTemps(employe, secondesPayables(employe, secondes))
+}
+
+export function peutPayerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_PAR_PAIE): boolean {
+  const employe = etat.employes[index]
+  if (!employe || etat.manager.embauche) return false
+  const cout = coutSalaireEmploye(employe, secondes)
+  return cout > 0 && etat.argent >= cout
+}
+
+export function payerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_PAR_PAIE): string[] {
+  const employe = etat.employes[index]
+  if (!employe || !peutPayerEmploye(etat, index, secondes)) return []
+  const temps = secondesPayables(employe, secondes)
+  const paye = prixDuTemps(employe, temps)
+  employe.tempsPaye += temps
+  etat.argent -= paye
+  etat.stats.salairesPayes += paye
+  return [`💵 ${employe.nom} est payé(e) (${paye.toLocaleString('fr-FR')} $) : encore ${Math.ceil(employe.tempsPaye / 60)} min de travail.`]
+}
+
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
   if (etat.manager.embauche && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Trésorerie vide : personne n’est payé !'
