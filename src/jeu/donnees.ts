@@ -342,7 +342,7 @@ export const NIVEAUX_MANAGER: { minutesEveil: number; cout: Cout }[] = [
 
 // Les rails se paient en fer (dès le début). Il faut une ligne continue de la mine au marché :
 // alors le wagonnet peut porter le coffre au marché. Sans électricité, on le pousse (toi au
-// début, puis un pousseur embauché pour ce trajet) ; avec le générateur, il roule tout seul.
+// début, puis un pousseur embauché pour ce trajet) ; avec le générateur, le pousseur va plus vite.
 export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 // Les vitesses, en cases par seconde.
 export const VITESSE_POUSSE_JOUEUR = 3
@@ -626,6 +626,9 @@ export const XP_PAR = {
   amelioration: 30, // un niveau de n'importe quelle amélioration (coffre, pioche, sac, ascenseur...)
   niveauMine: 150, // descendre la mine d'un niveau
   voyage: 3, // un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas)
+  // (23/10) En plus des 30 d'une amélioration : agrandir les wagonnets ou améliorer un pousseur
+  // rapporte 90 de plus (120 en tout), pour donner envie d'automatiser.
+  wagonnet: 90,
 }
 
 // L'XP qu'il faut pour passer du niveau n au niveau n + 1 : de plus en plus.

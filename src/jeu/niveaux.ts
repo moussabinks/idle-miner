@@ -178,6 +178,8 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
       etat.employes.reduce((total, e) => total + e.niveau, 0),
     niveauMine: etat.niveauMine,
     voyage: etat.stats.voyagesWagonnet,
+    // (23/10) les wagonnets agrandis et les pousseurs améliorés (un bonus en plus d'« amelioration »)
+    wagonnet: etat.niveauWagonnets + etat.employes.reduce((total, e) => total + (e.role === 'pousseur' ? e.niveau : 0), 0),
   }
 }
 

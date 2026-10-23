@@ -21,6 +21,7 @@ Presque tout ce qu'on fait rapporte de l'XP (`XP_PAR`) :
 | ⬆️ Acheter un niveau d'amélioration (coffre, pioche, sac, ascenseur, taille des wagonnets, forage, chariot, générateur, recruteur, manager, pioche d'un mineur) | 30 |
 | ⬇️ Descendre la mine d'un niveau | 150 |
 | 🔁 Un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas) | 3 |
+| 🚃 Agrandir les wagonnets ou améliorer un pousseur (23/10) : en plus des 30 d'une amélioration | +90 (120 en tout) |
 
 ### Une chose ne rapporte qu'une fois
 
