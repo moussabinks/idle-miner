@@ -175,6 +175,7 @@ Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (
 |---|---|
 | `schema.sql` | Table `sauvegardes` (tous les mondes d'un joueur), droits, règles RLS, trigger de date |
 | `classement.sql` | Table `classement`, index, droits, règles RLS (pseudo du compte obligatoire), trigger qui garde le meilleur score. À lancer après `schema.sql` |
+| `classement-portefeuille.sql` | **Nouveau (23/10)** : le trigger ne garde plus le maximum de l'argent (le classement se fait à l'argent en poche, qui peut baisser) |
 | `classement-niveau-mine.sql` | **Nouveau (23/10)**, facultatif : le trigger ne garde le maximum que pour l'argent, et les anciens prestiges (plus de 5) repassent à 0 |
 | `classement-remise-a-zero.sql` | **Nouveau (26/10)** : `delete from public.classement;`, à lancer **une fois** pour effacer les anciens scores de prestige (le trigger garde le meilleur score : ils ne redescendraient jamais). Chaque joueur retrouve sa ligne à sa prochaine sauvegarde en ligne. Aucune table créée, RLS inchangées |
 

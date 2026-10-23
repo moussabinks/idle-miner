@@ -356,6 +356,18 @@ describe('un mineur embauché (23/10)', () => {
   })
 })
 
+describe('le salaire d’un pousseur (23/10)', () => {
+  it('monte avec sa vitesse et la taille de son chariot', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    embaucher(etat, hasard())
+    const pousseur = { ...etat.employes[0], role: 'pousseur' as const, rarete: 'commun' as const, niveau: 0, chariot: 0 }
+    expect(salaireEmploye(pousseur)).toBe(400)
+    expect(salaireEmploye({ ...pousseur, niveau: 2 })).toBe(900)
+    expect(salaireEmploye({ ...pousseur, niveau: 2, chariot: 3 })).toBe(1500)
+  })
+})
+
 describe('la pioche des mineurs suit la mine (23/10)', () => {
   it('pas de pioche en diamant avant la mine de diamant', () => {
     const etat = partie()

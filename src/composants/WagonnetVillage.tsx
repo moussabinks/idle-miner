@@ -196,7 +196,8 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   return (
     <>
       {ventesVisibles}
-      {enPause && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / secondesArret(etat, w.liaison)} secondes={restePause} />}
+      {/* (23/10) La jauge seulement quand il vend au marché (plus pour charger ou décharger). */}
+      {enPause && w.etape !== 'aller' && info.arrivee === 'marche' && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / secondesArret(etat, w.liaison)} secondes={restePause} />}
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
         style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}

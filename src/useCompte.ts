@@ -28,6 +28,8 @@ import {
 
 // Toutes les 20 s, on envoie les mondes s'ils ont changé.
 const INTERVALLE_ENVOI = 20_000 // ms
+// (23/10) Le score (l'argent en poche change tout le temps) ne part qu'une fois toutes les 5 minutes.
+const INTERVALLE_SCORE = 5 * 60 * 1000 // ms
 
 export type StatutCompte =
   | 'chargement' // on regarde si une session est ouverte
@@ -63,6 +65,7 @@ export function useCompte() {
   const occupe = useRef(false)
   // Le dernier score envoyé au classement (on ne le renvoie que s'il a changé).
   const dernierScore = useRef('')
+  const dateDernierScore = useRef(0)
 
   // Le score part avec les mondes. S'il est refusé (pseudo d'un ancien compte, par exemple),
   // tant pis : la sauvegarde des mondes compte plus que le classement.
@@ -70,9 +73,11 @@ export function useCompte() {
     const score = meilleurScore(parties)
     const texte = JSON.stringify(score)
     if (texte === dernierScore.current || (score.prestige === 0 && score.argent === 0)) return
+    if (Date.now() - dateDernierScore.current < INTERVALLE_SCORE) return
     try {
       await envoyerScore(j, score)
       dernierScore.current = texte
+      dateDernierScore.current = Date.now()
     } catch {
       // On réessaiera au prochain envoi.
     }

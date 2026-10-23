@@ -273,7 +273,7 @@ Il n'y a **pas de fusion monde par monde** : c'est toujours l'ensemble des monde
 
 - `Score = { prestige, argent }`. Depuis le 22/10, le champ `prestige` contient **le niveau de la mine** (1 à 5) : le serveur garde ce nombre dans sa colonne `prestige` (celle de l'ancien classement), sans changer la table.
 - `meilleurScore(copie)` : pour chaque monde de la copie de tous les mondes, relit la partie avec `charger` et garde **le meilleur niveau de mine** et **le plus d'argent gagné**, chacun séparément (ils peuvent venir de deux mondes différents). Une partie d'une ancienne version (`charger` renvoie `null`) ne compte pas. Comme le serveur garde toujours le **meilleur** score envoyé (4.2), les anciens scores ne baissent pas avec la remise à zéro du 22/10 : un joueur qui avait atteint le prestige 8 garde « 8 » dans la colonne `prestige`, plus que le niveau de mine maximum (5), tant que la table n'est pas vidée. Depuis le 26/10, le jeu les cache et un script les efface : voir 3.4.
-- L'argent classé est `stats.argentGagne` arrondi vers le bas : tout l'argent gagné dans la partie (marché, wagonnet, chariot), pas l'argent en poche.
+- (23/10 bis) L'argent classé est l'**argent en poche** (`etat.argent`, arrondi vers le bas) du meilleur monde, envoyé **toutes les 5 minutes au plus** (`INTERVALLE_SCORE` dans `useCompte.ts`). Avant : `stats.argentGagne` arrondi vers le bas : tout l'argent gagné dans la partie (marché, wagonnet, chariot), pas l'argent en poche.
 
 ### 3.2 L'envoi du score (`useCompte.ts`)
 
@@ -285,7 +285,7 @@ Il n'y a **pas de fusion monde par monde** : c'est toujours l'ensemble des monde
 ### 3.3 L'affichage (`src/composants/CarteClassement.tsx`)
 
 - Sur l'écran d'accueil, à droite. Visible par tout le monde, même sans compte. Détails de l'écran : [interface.md](interface.md#26-le-classement-carteclassementtsx).
-- **Depuis le 23/10, seulement à l'argent gagné** (`lireClassement(nombre)` : tri par `argent`, puis `prestige` pour départager). Le niveau de mine est affiché à côté (`niveauMineAffiche` : rien pour une ligne avec un ancien prestige, plus de 5), mais ne compte pas. Plus d'onglet « Niveau de mine ».
+- **Depuis le 23/10, seulement à l'argent** (en poche depuis le 23/10 bis ; il faut lancer `supabase/classement-portefeuille.sql`, sinon le serveur garde le plus haut montant jamais envoyé et l'argent ne baisse jamais) (`lireClassement(nombre)` : tri par `argent`, puis `prestige` pour départager). Le niveau de mine est affiché à côté (`niveauMineAffiche` : rien pour une ligne avec un ancien prestige, plus de 5), mais ne compte pas. Plus d'onglet « Niveau de mine ».
 - Les **50** premiers (`NB_LIGNES`), en podium pour les 3 premiers. La ligne du joueur connecté est mise en valeur (pseudo comparé sans la casse).
 - **La place du joueur** (`placeDuScore(argent, pseudo)`, deux requêtes) : le nombre de joueurs qui ont gagné plus (`count` exact, sans le joueur lui-même), et celui qui est juste devant (le plus petit argent au-dessus). Le score utilisé est le meilleur argent gagné des mondes de ce navigateur (`meilleurArgent`), même sans compte (« tu serais 7e ! »).
 - **Plus de filtre sur la colonne `prestige`** (23/10) : avant, le jeu cachait les lignes avec `prestige` > 5 ; comme le serveur gardait le plus grand prestige, un joueur qui avait un ancien prestige restait caché pour toujours, et le classement pouvait ne montrer que soi-même. Il garde le filtre sur la date (`modifie_le` après le 22/10 : seulement les joueurs qui ont rejoué depuis la mine automatique).

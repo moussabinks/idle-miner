@@ -90,7 +90,7 @@ export async function envoyerScore(joueur: Joueur, score: Score): Promise<void> 
   if (error) throw new Error(error.message)
 }
 
-// (23/10) Le classement se fait seulement à l'argent gagné (le niveau de la mine est affiché, mais
+// (23/10) Le classement se fait seulement à l'argent (en poche depuis le 23/10 bis) (le niveau de la mine est affiché, mais
 // ne compte pas ; il départage seulement deux joueurs à égalité). Lisible même sans compte.
 // Les scores d'avant la mine automatique (le 22/10) ne comptent plus : seulement les joueurs qui ont
 // rejoué depuis.
