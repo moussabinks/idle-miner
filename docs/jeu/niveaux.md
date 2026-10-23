@@ -21,7 +21,10 @@ Presque tout ce qu'on fait rapporte de l'XP (`XP_PAR`) :
 | ⬆️ Acheter un niveau d'amélioration (coffre, pioche, sac, ascenseur, taille des wagonnets, forage, chariot, générateur, recruteur, manager, pioche d'un mineur) | 30 |
 | ⬇️ Descendre la mine d'un niveau | 150 |
 | 🔁 Un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas) | 3 |
-| 🚃 Agrandir les wagonnets ou améliorer un pousseur (23/10) : en plus des 30 d'une amélioration | +90 (120 en tout) |
+| 💰 **Tout ce qu'on achète, selon son prix** (23/10, `valeurInvestie`) : bâtiments, niveaux de la mine, améliorations, pioches des employés, chefs. Le prix compte l'argent et les minerais à leur prix au marché. En plus des lignes ci-dessus | 1 par 80 $ (`VALEUR_PAR_XP`) |
+| 💵 **L'argent gagné** (ventes au marché, wagonnets, chariot ; 23/10) | 1 par 200 $ (`ARGENT_PAR_XP`) |
+
+**Pourquoi (23/10)** : avant, une amélioration rapportait 30 XP qu'elle coûte 1 000 $ ou 300 000 $, et l'XP venait surtout des clics. Un joueur qui avait tout acheté à son niveau restait bloqué : seul le minage à la main le faisait avancer. Maintenant, une amélioration chère rapporte bien plus (agrandir les wagonnets : ~55 XP pour le 2e niveau, ~135 pour le 3e, ~380 pour le 4e ; un mineur en pioche de diamant : ~780), et l'argent gagné en rapporte un peu : chaque niveau débloque des achats qui rapportent de quoi approcher le suivant. Le bot (qui clique sans arrêt) gagne environ 45 000 XP en clics et 28 000 XP sans clic sur une partie : un joueur qui laisse tourner arrive vers le niveau 13 quand il peut payer la mine niveau 5, un joueur qui clique beaucoup est loin devant. Une partie d'avant ce changement reçoit l'XP de tout ce qu'elle a déjà acheté (au premier chargement), ce qui débloque ceux qui étaient coincés.
 
 ### Une chose ne rapporte qu'une fois
 
