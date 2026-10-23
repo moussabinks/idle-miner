@@ -213,7 +213,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
       if (cout && etat.argent >= (cout.argent ?? 0) + marge() && peutPayer(etat, cout)) ameliorerEmploye(etat, i)
     }
     if (peutAmeliorerRecruteur(etat)) ameliorerRecruteur(etat)
-    if (managerDebloque(etat) && !etat.manager.embauche && etat.argent >= 20000) embaucherManager(etat)
+    if (managerDebloque(etat) && !etat.manager.embauche && etat.argent >= 15000) embaucherManager(etat)
 
     // Un pousseur pour le wagonnet (27/10 : il en faut un même sur des rails électriques).
     const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
