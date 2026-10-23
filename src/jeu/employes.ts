@@ -9,8 +9,8 @@
 // mineurs, eux, ne font que creuser et remonter leur sac dans le coffre de la mine.
 // On leur paie un salaire toutes les 5 minutes (sans manager, 5 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
-// Au niveau 3 de la mine, le recruteur trouve des mineurs plus ou moins rares (un mineur
-// mythique creuse 5 fois plus) ; au niveau 4, le manager paie les salaires avec la trésorerie.
+// Au niveau 3 de la mine, le manager paie les salaires avec la trésorerie ; au niveau 4, le
+// recruteur trouve des mineurs plus ou moins rares (un mineur mythique creuse 5 fois plus).
 // Quand on améliore sa pioche, un mineur va d'abord la chercher à la forge.
 
 import { choisir, type Aleatoire } from './aleatoire'
@@ -330,7 +330,7 @@ export function alerteSalaires(etat: EtatJeu): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Le manager (niveau 4 de la mine) et la trésorerie
+// Le manager (niveau 3 de la mine) et la trésorerie
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
@@ -421,7 +421,7 @@ function payerParManager(etat: EtatJeu): void {
 }
 
 // ---------------------------------------------------------------------------
-// Le recruteur (niveau 3 de la mine) et la rareté
+// Le recruteur (niveau 4 de la mine) et la rareté
 // ---------------------------------------------------------------------------
 
 export function recruteurDebloque(etat: EtatJeu): boolean {

@@ -191,7 +191,7 @@ L'interface compare l'état **avant** et **après** chaque action (`evenementsEn
 
 ## 7. Les découvertes (`src/jeu/decouvertes.ts`)
 
-Deux choses se débloquent au Personnel en descendant dans la mine : le **recruteur** (niveau 3) et le **manager** (niveau 4). Tant que le joueur n'est pas passé devant le Personnel, une bulle **✨ « Nouveau : Recruteur ! »** (ou Manager) saute au-dessus du bâtiment. Elle disparaît pour de bon dès qu'il arrive devant (`marquerDecouvert`, liste `decouvertes` de la sauvegarde).
+Deux choses se débloquent au Personnel en descendant dans la mine : le **manager** (niveau 3) et le **recruteur** (niveau 4 ; inversés le 23/10). Tant que le joueur n'est pas passé devant le Personnel, une bulle **✨ « Nouveau : Manager ! »** (ou Recruteur) saute au-dessus du bâtiment. Elle disparaît pour de bon dès qu'il arrive devant (`marquerDecouvert`, liste `decouvertes` de la sauvegarde).
 
 Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, eux, la pastille « Nouveau ! » du menu Bâtiments (`batimentsVus`).
 

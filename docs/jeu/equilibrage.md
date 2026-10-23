@@ -82,8 +82,8 @@ Les prix ne changent jamais (pas de prix variables, plus de bonus de vente). Une
 | Pour aller au niveau | Prix (`cout`, 30/10) | Niv. joueur | Ce qui se débloque |
 |---|---|---:|---|
 | 2 | 900 $ + 45 fer | 4 | Foreuse, Générateur (`niveauMine: 2`) |
-| 3 | 7 000 $ + 120 fer + 60 redstone | 7 | Recruteur (`NIVEAU_MINE_RECRUTEUR`) |
-| 4 | 25 000 $ + 120 redstone + 60 or | 10 | Manager (`NIVEAU_MINE_MANAGER`) |
+| 3 | 7 000 $ + 120 fer + 60 redstone | 7 | Manager (`NIVEAU_MINE_MANAGER`, 23/10) |
+| 4 | 25 000 $ + 120 redstone + 60 or | 10 | Recruteur (`NIVEAU_MINE_RECRUTEUR`, 23/10) |
 | 5 | 90 000 $ + 110 or + 40 émeraude | 13 | (le dernier niveau : le diamant) |
 
 Total pour aller au niveau 5 : **122 900 $ + 165 fer + 180 redstone + 170 or + 40 émeraude** (29/10 : 143 200 $ + 180 fer + 180 redstone + 190 or + 55 émeraude ; avant le 29/10 : 41 900 $ + 90 fer + 90 redstone + 90 or + 25 émeraude). Chaque niveau donne aussi **2 mineurs de plus** au maximum.
@@ -259,7 +259,7 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 | Légendaire | ×3 | ×2 |
 | Mythique | ×5 | ×3 |
 
-### Recruteur (`NIVEAUX_RECRUTEUR`, niveau 3 de la mine)
+### Recruteur (`NIVEAUX_RECRUTEUR`, niveau 4 de la mine)
 
 | Niveau | Prix (29/10) | Niv. joueur | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -270,7 +270,7 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 
 Sans recruteur, 100 % de communs. Le tirage part du plus rare (`tirerRarete`).
 
-### Manager (niveau 4 de la mine)
+### Manager (niveau 3 de la mine)
 
 `PRIX_MANAGER` = 35 000 $ (29/10 ; avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que la trésorerie suffit.
 

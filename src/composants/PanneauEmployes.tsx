@@ -2,7 +2,7 @@
 // caisse de l'ascenseur remonte ce qu'ils cassent dans le coffre de la mine), et (26/10) des pousseurs, chacun pour un trajet de wagonnet : on
 // choisit son départ et son arrivée, et le trajet brille sur la carte avant qu'on confirme.
 // On leur paie un salaire toutes les 5 minutes (ou c'est le manager qui s'en charge, au
-// niveau 4 de la mine). Au niveau 3, le recruteur trouve des mineurs plus ou moins rares :
+// niveau 3 de la mine). Au niveau 4, le recruteur trouve des mineurs plus ou moins rares :
 // chaque embauche est une surprise.
 
 import { useEffect, useState, type ReactNode } from 'react'
@@ -124,7 +124,7 @@ function Chances({ etat, apercu }: { etat: EtatJeu; apercu: boolean }) {
 }
 
 // Les salaires (sans le manager) : on complète jusqu'à 5 minutes payées, pas plus (pour
-// payer d'avance plus longtemps, il faut le manager, au niveau 4 de la mine).
+// payer d'avance plus longtemps, il faut le manager, au niveau 3 de la mine).
 function Salaires({ etat, jouer }: Props) {
   const sansSalaire = nbSansSalaire(etat)
   const cout10 = coutSalaires(etat, SECONDES_PAR_PAIE)
@@ -168,7 +168,7 @@ function TitreChef({ role, titre, children }: { role: 'manager' | 'recruteur'; t
   )
 }
 
-// Le manager (niveau 4 de la mine) et sa trésorerie.
+// Le manager (niveau 3 de la mine) et sa trésorerie.
 function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
     return (
@@ -281,7 +281,7 @@ function Manager({ etat, jouer }: Props) {
   )
 }
 
-// Le recruteur (niveau 3 de la mine) : il trouve des mineurs rares. Il se paie seulement en argent.
+// Le recruteur (niveau 4 de la mine) : il trouve des mineurs rares. Il se paie seulement en argent.
 function Recruteur({ etat, jouer }: Props) {
   if (!recruteurDebloque(etat)) {
     return (

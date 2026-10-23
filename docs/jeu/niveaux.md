@@ -61,7 +61,7 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 
 ## 3. Ce que débloque chaque niveau
 
-`NIVEAU_JOUEUR_POUR` donne le niveau qu'il faut pour chaque chose. Pour les améliorations, c'est un tableau qui suit celui des données : la case *i* est le niveau qu'il faut pour acheter le niveau *i* (la case 0 est ce qu'on a au départ). Certaines choses demandent **aussi** un niveau de la mine : la foreuse et le générateur (mine niveau 2), le recruteur (mine niveau 3), le manager (mine niveau 4). Comme descendre la mine demande lui-même un niveau du joueur, ces deux conditions vont ensemble.
+`NIVEAU_JOUEUR_POUR` donne le niveau qu'il faut pour chaque chose. Pour les améliorations, c'est un tableau qui suit celui des données : la case *i* est le niveau qu'il faut pour acheter le niveau *i* (la case 0 est ce qu'on a au départ). Certaines choses demandent **aussi** un niveau de la mine : la foreuse et le générateur (mine niveau 2), le manager (mine niveau 3), le recruteur (mine niveau 4 ; inversés le 23/10). Comme descendre la mine demande lui-même un niveau du joueur, ces deux conditions vont ensemble.
 
 | Niveau | Ce qui se débloque |
 |---:|---|
@@ -73,12 +73,12 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 | 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 400 places |
 | 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or |
 | 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 ; ⚡ générateur rayon 20 |
-| 9 | 🎩 **le recruteur** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 800 |
+| 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 800 |
 | 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
-| 11 | 💼 **le manager** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 1 600 ; 🎩 recruteur niveau 2 |
-| 12 | 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 600 places |
-| 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 5 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 |
-| 14 | 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 3 000 |
+| 11 | 🎩 **le recruteur** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 1 600 ; 💼 manager 1 h hors ligne |
+| 12 | 🎩 recruteur niveau 2 ; 💼 manager 2 h hors ligne ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 600 places |
+| 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 5 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 ; 💼 manager 4 h hors ligne |
+| 14 | 💼 manager 8 h hors ligne ; 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 3 000 |
 | 15 | 🎒 sac de 2 048 places ; 🛗 ascenseur niveau 6 ; ⚡ générateur rayon 40 ; ⚙️ forage 3,6 ; 🛒 chariot de 6 000 ; 🎩 recruteur niveau 4 |
 | 16 à 30 | rien de nouveau pour l'instant : tout est débloqué au niveau 15 |
 
@@ -98,8 +98,8 @@ Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
 | Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
 | Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |
 | Chariot de la foreuse (400 → 6 000) | 6, 9, 11, 14, 15 |
-| Recruteur (niveaux 1 à 4) | 9, 11, 13, 15 |
-| Manager | 11 |
+| Recruteur (niveaux 1 à 4) | 11, 12, 13, 15 (23/10 ; avant : 9, 11, 13, 15) |
+| Manager | 9 (23/10 ; avant : 11), puis son temps hors ligne : 11, 12, 13, 14 |
 
 Les règles qui vérifient ces cadenas : `debloque(etat, chose, index)` et `niveauAtteint`, appelées par chaque achat (`prochainNiveauMine`, `prochainNiveauCoffre`, `peutAcheterPioche`…), par `batimentDebloque` (`batiments.ts`), par la pose des rails (`peutPoserSol`, `railsDebloques`) et par la liste des achats possibles (`objectifs.ts`) : une chose sous cadenas ne fait ni bulle ni mission d'amélioration.
 

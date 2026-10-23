@@ -1,5 +1,5 @@
-// Ce qui se débloque en descendant dans la mine : le recruteur (niveau 3) et le manager
-// (niveau 4), au stand Personnel. Tant que le joueur n'est pas allé voir, une bulle ✨ saute
+// Ce qui se débloque en descendant dans la mine : le manager (niveau 3) et le recruteur
+// (niveau 4, inversés le 23/10), au stand Personnel. Tant que le joueur n'est pas allé voir, une bulle ✨ saute
 // au-dessus du bâtiment (voir notifications.ts). Elle disparaît (pour de bon) dès qu'il arrive devant.
 
 import { managerDebloque, recruteurDebloque } from './employes'

@@ -421,7 +421,7 @@ Une fenêtre dans le style du jeu : titre, explication, **✔ *Confirmer*** (ver
 
 ### 10.4 La révélation d'une recrue (`RevelationRecrue.tsx`)
 
-Avec le recruteur (niveau 3 de la mine), chaque embauche est une surprise :
+Avec le recruteur (niveau 4 de la mine), chaque embauche est une surprise :
 1. **suspense (1,6 s)** : une carte « 🎩 ? Le recruteur cherche... » qui tremble et grossit, le fond passe par les 5 couleurs de rareté, roulement de tambour. Un clic dévoile tout de suite ;
 2. **révélation** : la carte se retourne (3D) : étoiles (1 à 5), « *Rareté* ! », le prénom, « ⚡ Rendement ×*n* » (ou un petit mot pour un commun), le salaire par 5 min ; rayons, confettis, flash pour légendaire et mythique ;
 3. bouton (arc-en-ciel) : **Au travail !** (commun), **Super !** (rare, épique), **Incroyable !** (légendaire, mythique).
