@@ -274,7 +274,7 @@ Sans recruteur, 100 % de communs. Le tirage part du plus rare (`tirerRarete`).
 
 ### Manager (niveau 3 de la mine)
 
-`PRIX_MANAGER` = 10 000 $ (23/10 ; avant 35 000 $, et encore avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Ses améliorations (temps payé jeu fermé : 1 h, 2 h, 4 h, 8 h) : 30 000, 70 000, 160 000 et 350 000 $ (23/10 ; avant 6 000 à 85 000 $, moins cher que son embauche). Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que l’argent du joueur suffit (23/10 : plus de trésorerie).
+`PRIX_MANAGER` = 10 000 $ (23/10 ; avant 35 000 $, et encore avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Ses améliorations (le temps qu'il reste éveillé, 23/10 : 15 min au départ, puis 30, 45, 60 et 90 min ; jeu ouvert ou fermé, puis il s'endort jusqu'à ce qu'on le réveille) : 30 000, 70 000, 160 000 et 350 000 $ (23/10 ; avant 6 000 à 85 000 $, moins cher que son embauche). Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que l’argent du joueur suffit (23/10 : plus de trésorerie).
 
 ## Le village
 

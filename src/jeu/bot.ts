@@ -28,7 +28,9 @@ import {
   prixEmbauche,
   salairesParPaie,
   tempsPayeMin,
-  managerActif,
+  fatigueManager,
+  managerPaieLesSalaires,
+  reveillerManager,
 } from './employes'
 import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
 import { ameliorerGenerateur, prochainNiveauGenerateur, remplirGenerateur } from './generateur'
@@ -196,7 +198,9 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     }
 
     // Les salaires : le bot paie dès que quelqu'un a moins d'une minute payée.
-    if (!managerActif(etat) && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
+    // (23/10) Le manager fatigue : le bot le réveille quand il a dépassé la moitié.
+    if (etat.manager.embauche && fatigueManager(etat) > 0.5) reveillerManager(etat)
+    if (!managerPaieLesSalaires(etat) && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
       payerSalaires(etat, SECONDES_PAR_PAIE)
     }
 

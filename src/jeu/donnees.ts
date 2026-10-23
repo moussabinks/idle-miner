@@ -319,16 +319,18 @@ export const NIVEAU_MINE_MANAGER = 3
 export const PRIX_MANAGER = 10000 // (23/10 ; avant 35 000 $)
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
-// (23/10) Jeu fermé, le manager ne paie les salaires que pendant un temps (30 minutes au départ) :
-// l'améliorer l'allonge petit à petit. Jeu ouvert, il paie toujours.
+// (23/10) La fatigue : le manager ne reste éveillé que « minutesEveil » (15 min au niveau 1),
+// jeu ouvert comme jeu fermé ; puis il s'endort et ne paie plus personne, jusqu'à ce que le joueur
+// le réveille au Personnel. On ne peut donc pas laisser le jeu tourner tout seul à l'infini.
+// L'améliorer le garde éveillé plus longtemps.
 // (23/10) Ses améliorations coûtent bien plus que son embauche (10 000 $) : 30 000, 70 000,
 // 160 000 et 350 000 $ (avant 6 000 à 85 000 $).
-export const NIVEAUX_MANAGER: { minutesHorsLigne: number; cout: Cout }[] = [
-  { minutesHorsLigne: 30, cout: { materiaux: {} } },
-  { minutesHorsLigne: 60, cout: { argent: 30000, materiaux: {} } },
-  { minutesHorsLigne: 120, cout: { argent: 70000, materiaux: {} } },
-  { minutesHorsLigne: 240, cout: { argent: 160000, materiaux: {} } },
-  { minutesHorsLigne: 480, cout: { argent: 350000, materiaux: {} } },
+export const NIVEAUX_MANAGER: { minutesEveil: number; cout: Cout }[] = [
+  { minutesEveil: 15, cout: { materiaux: {} } },
+  { minutesEveil: 30, cout: { argent: 30000, materiaux: {} } },
+  { minutesEveil: 45, cout: { argent: 70000, materiaux: {} } },
+  { minutesEveil: 60, cout: { argent: 160000, materiaux: {} } },
+  { minutesEveil: 90, cout: { argent: 350000, materiaux: {} } },
 ]
 
 // ---------------------------------------------------------------------------

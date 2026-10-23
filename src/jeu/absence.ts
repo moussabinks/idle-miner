@@ -6,7 +6,7 @@
 import type { EtatJeu } from './mineur'
 import { nbDansCoffre } from './mineur'
 import { nbDansChariot } from './foreuse'
-import { managerActif, nbSansSalaire, prochainNiveauManager, secondesManagerHorsLigne } from './employes'
+import { managerActif, nbSansSalaire, prochainNiveauManager, secondesEveilManager } from './employes'
 
 export type ResumeAbsence = {
   secondes: number // le temps passé
@@ -52,7 +52,7 @@ export function resumerAbsence(avant: PhotoPartie, etat: EtatJeu, secondes: numb
     voyages: etat.stats.voyagesWagonnet - avant.voyages,
     ventesWagonnets: Math.max(0, Math.round(etat.stats.argentWagonnet - avant.ventesWagonnets)),
     sansSalaire: nbSansSalaire(etat),
-    absenceMax: managerActif(etat) ? secondesManagerHorsLigne(etat) : null,
+    absenceMax: managerActif(etat) ? secondesEveilManager(etat) : null,
     managerAuMax: prochainNiveauManager(etat) === null,
   }
   const rien = resume.blocsMineurs + resume.blocsMine + resume.blocsForeuse + resume.argent + resume.voyages <= 0

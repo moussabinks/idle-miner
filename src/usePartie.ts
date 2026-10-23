@@ -78,7 +78,7 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: Resume
   const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
   if (absence < 30) return { etat, resumeAbsence: null }
   const avant = photoPartie(etat)
-  avancerTemps(etat, absence, aleatoireNavigateur, true)
+  avancerTemps(etat, absence, aleatoireNavigateur)
   return { etat, resumeAbsence: resumerAbsence(avant, etat, absence) }
 }
 

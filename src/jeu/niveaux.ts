@@ -122,7 +122,7 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['ascenseur', (i) => (i === 0 ? '🛗 L’ascenseur' : `🛗 Ascenseur niveau ${NIVEAUX_ASCENSEUR[i].niveau}`)],
     ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
     ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()}`],
-    ['tempsManager', (i) => `💼 Manager : il paie ${dureeTexte(NIVEAUX_MANAGER[i].minutesHorsLigne)} jeu fermé`],
+    ['tempsManager', (i) => `💼 Manager : éveillé ${dureeTexte(NIVEAUX_MANAGER[i].minutesEveil)}`],
     ['wagonnet', (i) => `🚃 Wagonnets de ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],

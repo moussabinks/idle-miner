@@ -9,7 +9,8 @@
 // mineurs, eux, ne font que creuser et remonter leur sac dans le coffre de la mine.
 // On leur paie un salaire toutes les 5 minutes (sans manager, 5 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
-// Au niveau 3 de la mine, le manager paie les salaires avec l'argent du joueur ; au niveau 4, le
+// Au niveau 3 de la mine, le manager paie les salaires avec l'argent du joueur, tant qu'il est
+// éveillé (23/10 : la fatigue) ; au niveau 4, le
 // recruteur trouve des mineurs plus ou moins rares (un mineur mythique creuse 5 fois plus).
 // Quand on améliore sa pioche, un mineur va d'abord la chercher à la forge.
 
@@ -282,7 +283,7 @@ export function nbSansSalaire(etat: EtatJeu): number {
 
 export function peutPayerSalaires(etat: EtatJeu, secondes: number): boolean {
   const cout = coutSalaires(etat, secondes)
-  return !managerActif(etat) && cout > 0 && etat.argent >= cout
+  return !managerPaieLesSalaires(etat) && cout > 0 && etat.argent >= cout
 }
 
 export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
@@ -306,7 +307,7 @@ export function coutSalaireEmploye(employe: Employe, secondes = SECONDES_PAR_PAI
 
 export function peutPayerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_PAR_PAIE): boolean {
   const employe = etat.employes[index]
-  if (!employe || managerActif(etat)) return false
+  if (!employe || managerPaieLesSalaires(etat)) return false
   const cout = coutSalaireEmploye(employe, secondes)
   return cout > 0 && etat.argent >= cout
 }
@@ -324,6 +325,7 @@ export function payerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_P
 
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
+  if (managerEndormi(etat)) return '💤 Ton manager dort : réveille-le au Personnel !'
   if (managerActif(etat) && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Plus assez d’argent : personne n’est payé !'
   if (sansSalaire > 0) return sansSalaire === 1 ? '😠 1 mineur attend son salaire !' : `😠 ${sansSalaire} mineurs attendent leur salaire !`
   return null
@@ -349,17 +351,44 @@ export function basculerManager(etat: EtatJeu): string[] {
   return [etat.manager.actif ? '💼 Ton manager reprend le travail : il paie les salaires tout seul.' : '💼 Manager arrêté : tu paies les salaires toi-même.']
 }
 
+// (23/10) La fatigue : il reste éveillé secondesEveilManager (15 min au niveau 1), jeu ouvert
+// comme jeu fermé, puis il s'endort : il ne paie plus personne (et on ne lui doit rien) tant que
+// le joueur ne l'a pas réveillé au Personnel. Endormi, on paie ses employés soi-même.
+export function secondesEveilManager(etat: EtatJeu): number {
+  return NIVEAUX_MANAGER[Math.min(etat.manager.niveau ?? 0, NIVEAUX_MANAGER.length - 1)].minutesEveil * 60
+}
+
+// La fatigue, de 0 (tout juste réveillé) à 1 (endormi).
+export function fatigueManager(etat: EtatJeu): number {
+  return Math.min(1, (etat.manager.fatigue ?? 0) / secondesEveilManager(etat))
+}
+
+export function secondesAvantSommeil(etat: EtatJeu): number {
+  return Math.max(0, secondesEveilManager(etat) - (etat.manager.fatigue ?? 0))
+}
+
+export function managerEndormi(etat: EtatJeu): boolean {
+  return managerActif(etat) && fatigueManager(etat) >= 1
+}
+
+// Le manager s'occupe des salaires : embauché, allumé et éveillé.
+export function managerPaieLesSalaires(etat: EtatJeu): boolean {
+  return managerActif(etat) && !managerEndormi(etat)
+}
+
+export function reveillerManager(etat: EtatJeu): string[] {
+  if (!etat.manager.embauche) return []
+  const dormait = managerEndormi(etat)
+  etat.manager.fatigue = 0
+  return [dormait ? '☕ Ton manager est réveillé : il reprend les salaires !' : '☕ Ton manager est en pleine forme.']
+}
+
 export function managerAuTravail(etat: EtatJeu): boolean {
-  return managerActif(etat) && etat.manager.tempsPaye > 0
+  return managerPaieLesSalaires(etat) && etat.manager.tempsPaye > 0
 }
 
 export function salaireManager(): number {
   return SALAIRE_MANAGER
-}
-
-// (23/10) Jeu fermé, il ne paie que pendant ce temps (en secondes) : 30 min au départ.
-export function secondesManagerHorsLigne(etat: EtatJeu): number {
-  return NIVEAUX_MANAGER[Math.min(etat.manager.niveau ?? 0, NIVEAUX_MANAGER.length - 1)].minutesHorsLigne * 60
 }
 
 export function prochainNiveauManager(etat: EtatJeu) {
@@ -376,25 +405,25 @@ export function ameliorerManager(etat: EtatJeu): string[] {
   if (!prochain || !peutAmeliorerManager(etat)) return []
   payer(etat, prochain.cout)
   etat.manager.niveau = (etat.manager.niveau ?? 0) + 1
-  const m = prochain.minutesHorsLigne
-  return [`💼 Ton manager paie maintenant les salaires ${m < 60 ? `${m} min` : `${m / 60} h`} quand le jeu est fermé.`]
+  const m = prochain.minutesEveil
+  return [`💼 Ton manager reste maintenant éveillé ${m < 60 ? `${m} min` : `${(m / 60).toLocaleString('fr-FR')} h`} (jeu ouvert ou fermé).`]
 }
 
 export function embaucherManager(etat: EtatJeu): string[] {
   if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
   etat.argent -= PRIX_MANAGER
-  etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0 }
+  etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0, fatigue: 0 }
   return ['💼 Manager embauché ! Il paiera les salaires tout seul, avec ton argent.']
 }
 
 export function depensesParPaie(etat: EtatJeu): number {
-  return salairesParPaie(etat) + (managerActif(etat) ? salaireManager() : 0)
+  return salairesParPaie(etat) + (managerPaieLesSalaires(etat) ? salaireManager() : 0)
 }
 
 // Le manager paie (avec l'argent du joueur, 23/10) d'abord son propre salaire, puis les mineurs du moins cher au plus cher.
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
-  if (!managerActif(etat)) return
+  if (!managerPaieLesSalaires(etat)) return
   if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaireManager()) {
     etat.argent -= salaireManager()
     etat.stats.salairesPayes += salaireManager()
@@ -932,15 +961,18 @@ function avancerNavette(etat: EtatJeu, secondes: number): string[] {
 
 function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   const manager = etat.manager
-  if (!managerActif(etat) || manager.tempsPaye <= 0) return []
+  // (23/10) Endormi (ou arrêté), il ne fait rien : ni fatigue, ni salaire qui passe.
+  if (!managerPaieLesSalaires(etat)) return []
+  manager.fatigue = (manager.fatigue ?? 0) + secondes
+  if (managerEndormi(etat)) return ['💤 Ton manager s’est endormi : il ne paie plus les salaires. Réveille-le au Personnel !']
+  if (manager.tempsPaye <= 0) return []
   manager.tempsPaye = Math.max(0, manager.tempsPaye - secondes)
   if (manager.tempsPaye > 0) return []
   return ['💼 Ton manager n’est plus payé : tu n’as plus assez d’argent pour les salaires !']
 }
 
-// « managerPaie » : false quand le jeu est fermé depuis plus longtemps que ce que le manager
-// couvre (23/10, voir secondesManagerHorsLigne et avancerTemps).
-export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire, managerPaie = true): string[] {
+// (23/10) Jeu ouvert ou fermé, le manager paie tant qu'il est éveillé (voir la fatigue).
+export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
   if (etat.employes.length === 0 && !etat.manager.embauche && totalObjets(navette(etat).chargement) === 0) return []
   const messages: string[] = []
   let reste = secondes
@@ -948,7 +980,7 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
     // (23/10) On avance par petits morceaux, jusqu'au prochain arrêt de la caisse de
     // l'ascenseur : les mineurs creusent pendant qu'elle fait ses allers-retours.
     const pas = Math.min(reste, PAS_EMPLOYES, secondesAvantEvenementNavette(etat))
-    if (managerPaie) payerParManager(etat)
+    payerParManager(etat)
     for (const employe of etat.employes) messages.push(...travailler(etat, employe, pas, aleatoire))
     messages.push(...avancerNavette(etat, pas))
     messages.push(...travaillerManager(etat, pas))

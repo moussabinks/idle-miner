@@ -64,16 +64,17 @@ export function FenetreAbsence({ resume, onRecuperer }: Props) {
           {resume.absenceMax === null ? (
             <>
               ⏱️ Sans manager, tes mineurs s'arrêtent dès que leur salaire est fini. Embauche le <strong>manager au Personnel</strong> : il les paie
-              pendant 30 min jeu fermé, et plus en l'améliorant.
+              pendant 15 min, et plus en l'améliorant.
             </>
           ) : resume.managerAuMax ? (
             <>
-              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> (ton manager est au maximum).
+              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> : ton manager s'endort après (il est au maximum). Pense à le
+              réveiller au Personnel avant de partir.
             </>
           ) : (
             <>
-              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong>. Pour l'augmenter, améliore le <strong>manager</strong> au
-              bâtiment du <strong>Personnel</strong>.
+              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> : ton manager s'endort après. Réveille-le au Personnel avant de
+              partir ; pour qu'il tienne plus longtemps, améliore le <strong>manager</strong> au bâtiment du <strong>Personnel</strong>.
             </>
           )}
         </p>

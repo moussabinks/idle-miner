@@ -586,3 +586,74 @@
 @media (prefers-reduced-motion: reduce) {
   .payer-urgent { animation: none; }
 }
+
+/* (23/10) La fatigue du manager : une jauge qui passe du vert au rouge, puis violette quand il dort. */
+.fatigue-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.18);
+}
+
+.fatigue-haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.fatigue-haut strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.fatigue-piste {
+  position: relative;
+  height: 16px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 2px solid #3b2412;
+  background: #2b1a0c;
+}
+
+.fatigue-remplie {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(hsl(var(--teinte) 85% 62%), hsl(var(--teinte) 80% 42%));
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.35);
+  transition: width 0.4s linear;
+}
+
+/* Presque endormi : la jauge et le bouton palpitent. */
+.fatigue-epuise .fatigue-remplie {
+  animation: fatigue-palpite 0.9s ease-in-out infinite;
+}
+
+.fatigue-endormi .fatigue-remplie {
+  background: linear-gradient(#b48cff, #6a3fc9);
+  animation: fatigue-dort 2.4s ease-in-out infinite;
+}
+
+.fatigue-endormi .fatigue-haut span {
+  color: #c9a8ff;
+}
+
+.fatigue-bouton {
+  align-self: flex-start;
+}
+
+.fatigue-bouton-urgent {
+  animation: bouton-respire 1s ease-in-out infinite;
+}
+
+@keyframes fatigue-palpite {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+
+@keyframes fatigue-dort {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}

@@ -43,7 +43,11 @@ import {
   indemnites,
   licencier,
   basculerManager,
+  fatigueManager,
   managerActif,
+  managerEndormi,
+  managerPaieLesSalaires,
+  reveillerManager,
   managerAuTravail,
   managerDebloque,
   maxEmployes,
@@ -53,7 +57,8 @@ import {
   ameliorerManager,
   peutAmeliorerManager,
   prochainNiveauManager,
-  secondesManagerHorsLigne,
+  secondesAvantSommeil,
+  secondesEveilManager,
   nbDuRole,
   nbDansSacEmploye,
   nbSansSalaire,
@@ -167,6 +172,31 @@ function TitreChef({ role, titre, children }: { role: 'manager' | 'recruteur'; t
   )
 }
 
+// (23/10) La jauge de fatigue du manager : elle se remplit pendant qu'il travaille, en passant du
+// vert au rouge ; pleine, il s'endort (violet, 💤). « ☕ Réveiller » la vide.
+function JaugeFatigue({ etat, jouer }: Props) {
+  const fatigue = fatigueManager(etat)
+  const endormi = managerEndormi(etat)
+  // La couleur suit la fatigue : vert (120°) → jaune → orange → rouge (0°).
+  const teinte = Math.round(120 * (1 - fatigue))
+  const niveau = endormi ? 'endormi' : fatigue > 0.8 ? 'epuise' : fatigue > 0.5 ? 'fatigue' : 'frais'
+  return (
+    <div className={`fatigue-manager fatigue-${niveau}`}>
+      <div className="fatigue-haut">
+        <span>{endormi ? '💤 Il dort : il ne paie plus personne !' : fatigue > 0.8 ? '🥱 Il tombe de sommeil…' : fatigue > 0.5 ? '😪 Il fatigue' : '😃 En forme'}</span>
+        <strong>{endormi ? 'Endormi' : `encore ${duree(secondesAvantSommeil(etat))}`}</strong>
+      </div>
+      <div className="fatigue-piste" title="Sa fatigue : pleine, il s'endort">
+        <div className="fatigue-remplie" style={{ width: `${Math.round(fatigue * 100)}%`, ['--teinte' as string]: teinte }} />
+      </div>
+      <button className={`bouton bouton-petit bouton-acheter fatigue-bouton ${fatigue > 0.8 ? 'fatigue-bouton-urgent' : ''}`} onClick={() => jouer(reveillerManager)} disabled={fatigue === 0}>
+        ☕ Réveiller
+      </button>
+      <span className="discret">Il reste éveillé {duree(secondesEveilManager(etat))}, jeu ouvert ou fermé : réveille-le avant de partir. Pour qu'il tienne plus longtemps, améliore-le.</span>
+    </div>
+  )
+}
+
 // Le manager (niveau 3 de la mine) : il paie les salaires avec ton argent (23/10).
 function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
@@ -200,13 +230,14 @@ function Manager({ etat, jouer }: Props) {
   const depenses = depensesParPaie(etat)
   const prochainManager = prochainNiveauManager(etat)
   const actif = managerActif(etat)
-  const vide = actif && (!managerAuTravail(etat) || nbSansSalaire(etat) > 0)
+  const endormi = managerEndormi(etat)
+  const vide = actif && !endormi && (!managerAuTravail(etat) || nbSansSalaire(etat) > 0)
   // (23/10) Plus de trésorerie : il se sert dans ton argent, toutes les 5 minutes.
   const pasAssez = etat.argent < depenses
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
       <TitreChef role="manager" titre="💼 Manager">
-        <span className={`badge ${!actif || vide ? '' : 'badge-vert'}`}>{!actif ? '⏸ Arrêté' : managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
+        <span className={`badge ${!actif || vide || endormi ? '' : 'badge-vert'}`}>{!actif ? '⏸ Arrêté' : endormi ? '💤 Endormi' : managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
       </TitreChef>
       {/* (23/10) C'est une option : on l'arrête et on le remet au travail quand on veut. */}
       <button className={`interrupteur-trajet ${actif ? 'allume' : ''}`} role="switch" aria-checked={actif} onClick={() => jouer(basculerManager)}>
@@ -214,7 +245,10 @@ function Manager({ etat, jouer }: Props) {
         {actif ? 'Il paie les salaires tout seul' : 'Arrêté : tu paies toi-même'}
       </button>
       {!actif && <span className="discret">Arrêté, il ne paie personne et tu ne lui dois rien. Tu paies tes employés toi-même, dans l'onglet Employés.</span>}
-      {actif && (
+      {/* (23/10) La fatigue : il ne reste éveillé qu'un temps (15 min au niveau 1, jeu ouvert ou
+          fermé). Endormi, il ne paie plus personne : on le réveille avec le bouton. */}
+      {actif && <JaugeFatigue etat={etat} jouer={jouer} />}
+      {actif && !endormi && (
         <>
           <div className="tresorerie">
             <span>Une paie de toute l'équipe</span>
@@ -229,14 +263,12 @@ function Manager({ etat, jouer }: Props) {
           </span>
         </>
       )}
-      {/* (23/10) Jeu fermé, il ne paie que pendant un temps : on l'allonge en l'améliorant. */}
-      <span className="discret">🌙 Quand le jeu est fermé, il paie les salaires avec ton argent pendant <strong>{duree(secondesManagerHorsLigne(etat))}</strong> (après, tes employés attendent ton retour).</span>
       <Amelioration
         etat={etat}
-        actuel={`🌙 ${duree(secondesManagerHorsLigne(etat))} jeu fermé`}
+        actuel={`☕ Éveillé ${duree(secondesEveilManager(etat))}`}
         niveau={(etat.manager.niveau ?? 0) + 1}
         niveauMax={NIVEAUX_MANAGER.length}
-        suivant={prochainManager && { cout: prochainManager.cout, texte: `⬆ ${duree(prochainManager.minutesHorsLigne * 60)} jeu fermé` }}
+        suivant={prochainManager && { cout: prochainManager.cout, texte: `⬆ Éveillé ${duree(prochainManager.minutesEveil * 60)}` }}
         verrou={verrou(etat, 'tempsManager', (etat.manager.niveau ?? 0) + 1)}
         possible={peutAmeliorerManager(etat)}
         onAmeliorer={() => jouer(ameliorerManager)}
@@ -380,7 +412,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         )}
       </div>
       {/* (23/10) Le payer, lui seul (sans manager) : jusqu'à 5 minutes payées. */}
-      {!managerActif(etat) && coutSalaireEmploye(employe) > 0 && (
+      {!managerPaieLesSalaires(etat) && coutSalaireEmploye(employe) > 0 && (
         <button
           className={`bouton bouton-petit bouton-payer payer-employe ${employe.tempsPaye <= 0 ? 'payer-urgent' : ''}`}
           disabled={!peutPayerEmploye(etat, index)}
@@ -541,7 +573,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   }
 
   const sansSalaire = nbSansSalaire(etat)
-  const managerVide = managerActif(etat) && !managerAuTravail(etat)
+  const managerVide = managerEndormi(etat) || (managerActif(etat) && !managerAuTravail(etat))
   return (
     <div className="liste-cartes">
       {/* Trois onglets (27/10) : les employés (et les salaires), recruter, les chefs. */}
@@ -563,7 +595,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           </button>
         </div>
       )}
-      {onglet === 'equipe' && etat.employes.length > 0 && !managerActif(etat) && <Salaires etat={etat} jouer={jouer} />}
+      {onglet === 'equipe' && etat.employes.length > 0 && !managerPaieLesSalaires(etat) && <Salaires etat={etat} jouer={jouer} />}
       {/* (23/10) Tous les employés, chacun sa carte avec ses infos et ses stats (plus de fiche à
           ouvrir), rangés par métier : les mineurs, puis les pousseurs, chacun sous son titre. */}
       {onglet === 'equipe' &&

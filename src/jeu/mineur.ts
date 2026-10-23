@@ -166,7 +166,8 @@ export type Navette = {
 export type Manager = {
   embauche: boolean
   tempsPaye: number
-  niveau?: number // (23/10) index dans NIVEAUX_MANAGER : combien de temps il paie, jeu fermé (absent : 0)
+  niveau?: number // (23/10) index dans NIVEAUX_MANAGER : combien de temps il reste éveillé (absent : 0)
+  fatigue?: number // (23/10) les secondes passées éveillé depuis son dernier réveil (absent : 0)
   actif?: boolean // (23/10) on peut l'arrêter : il ne paie plus personne (absent : il travaille)
 }
 

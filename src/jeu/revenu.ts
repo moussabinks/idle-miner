@@ -9,7 +9,7 @@
 // minerais fait varier le vrai gain.
 
 import { SECONDES_PAR_PAIE } from './donnees'
-import { blocsParSecondeEmploye, managerActif, managerAuTravail, salaireEmploye, salaireManager } from './employes'
+import { blocsParSecondeEmploye, managerAuTravail, managerPaieLesSalaires, salaireEmploye, salaireManager } from './employes'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitMine, type EtatJeu, type Employe } from './mineur'
@@ -82,7 +82,7 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
     { id: 'salaires-mineurs', icone: '⛏️', nom: 'Salaires des mineurs', detail: `${mineurs.length} mineur${mineurs.length > 1 ? 's' : ''}`, parMinute: paie(mineurs) },
     { id: 'salaires-pousseurs', icone: '🛤️', nom: 'Salaires des pousseurs', detail: `${pousseurs.length} pousseur${pousseurs.length > 1 ? 's' : ''}`, parMinute: paie(pousseurs) },
   ]
-  if (managerActif(etat)) depenses.push({ id: 'manager', icone: '💼', nom: 'Salaire du manager', detail: 'il paie tout le monde', parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
+  if (managerPaieLesSalaires(etat)) depenses.push({ id: 'manager', icone: '💼', nom: 'Salaire du manager', detail: 'il paie tout le monde', parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
   const totalGains = gains.reduce((t, l) => t + l.parMinute, 0)
   const totalDepenses = depenses.reduce((t, l) => t + l.parMinute, 0)
   return { gains, depenses, totalGains, totalDepenses, net: totalGains - totalDepenses }
