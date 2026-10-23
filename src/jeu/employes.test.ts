@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { niveauJoueur } from './niveaux'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
@@ -354,7 +355,7 @@ describe('un mineur embauché (23/10)', () => {
 })
 
 describe('remplacer un mineur avec le recruteur (23/10)', () => {
-  it('une nouvelle recrue prend sa place, avec sa pioche, pour le quart du prix d’une place', () => {
+  it('une nouvelle recrue prend sa place, avec sa pioche, selon le niveau du joueur', () => {
     const etat = partie()
     etat.niveauMine = 4
     etat.xp = 1_000_000
@@ -366,7 +367,9 @@ describe('remplacer un mineur avec le recruteur (23/10)', () => {
     const ancien = etat.employes[0].nom
     const argentAvant = etat.argent
     const prix = prixRemplacement(etat)
-    expect(prix).toBe(Math.round((PRIX_EMBAUCHE[1] * 0.25) / 10) * 10)
+    // (23/10) au moins 400 $ × niveau du joueur² (ici bien plus que le quart d'une place)
+    expect(prix).toBe(Math.round((400 * niveauJoueur(etat) ** 2) / 100) * 100)
+    expect(prix).toBeGreaterThan(PRIX_EMBAUCHE[1] * 0.25)
     remplacerMineur(etat, 0, hasard())
     expect(etat.employes).toHaveLength(2)
     expect(etat.employes[0].nom).not.toBe(ancien)

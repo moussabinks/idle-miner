@@ -32,6 +32,7 @@ import {
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PART_REMPLACEMENT,
+  PRIX_REMPLACEMENT_PAR_NIVEAU,
   PRIX_EMBAUCHE,
   PRIX_EMBAUCHE_POUSSEUR,
   PRIX_MANAGER,
@@ -50,7 +51,7 @@ import {
   type IdRarete,
   type Rarete,
 } from './donnees'
-import { debloque, niveauAtteint } from './niveaux'
+import { debloque, niveauAtteint, niveauJoueur } from './niveaux'
 import { tirerBloc } from './mine'
 import {
   ajouterA,
@@ -587,8 +588,11 @@ const NOMS_TRAJETS: Record<IdLiaison, string> = {
 // rareté) prend sa place, avec sa pioche, là où il était. Bien moins cher que licencier puis
 // réembaucher (le prix de la dernière place, plus les indemnités) : on peut tenter sa chance pour
 // un mineur rare.
+// (23/10) Le prix monte avec le niveau du joueur : au moins 400 $ × niveau².
 export function prixRemplacement(etat: EtatJeu): number {
-  return arrondiPrix(prixDeBase(Math.max(0, nbDuRole(etat, 'mineur') - 1)) * PART_REMPLACEMENT)
+  const parPlace = prixDeBase(Math.max(0, nbDuRole(etat, 'mineur') - 1)) * PART_REMPLACEMENT
+  const parNiveau = PRIX_REMPLACEMENT_PAR_NIVEAU * niveauJoueur(etat) ** 2
+  return arrondiPrix(Math.max(parPlace, parNiveau))
 }
 
 export function peutRemplacer(etat: EtatJeu, index: number): boolean {
