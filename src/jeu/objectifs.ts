@@ -51,7 +51,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? 'Construire l’ascenseur' : `Ascenseur niveau ${ascenseur.niveau}`, cout: ascenseur.cout })
   }
   const wagonnet = prochainNiveauWagonnet(etat)
-  if (wagonnet && etat.trajets.length > 0 && debloque(etat, 'wagonnet', etat.niveauWagonnets + 1)) achats.push({ stand: 'puits', nom: `Wagonnets de ${wagonnet.capacite.toLocaleString('fr-FR')} places`, cout: wagonnet.cout })
+  if (wagonnet && etat.trajets.length > 0 && debloque(etat, 'wagonnet', etat.niveauWagonnets + 1)) achats.push({ stand: 'puits', nom: `Wagonnets des rails (tous les trajets) : ${wagonnet.capacite.toLocaleString('fr-FR')} places`, cout: wagonnet.cout })
 
   const prixSac = prixProchainSac(etat)
   if (prixSac !== null && pose('bazar') && debloque(etat, 'sacs', etat.niveauSac + 1)) achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })

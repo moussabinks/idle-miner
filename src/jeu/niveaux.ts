@@ -130,7 +130,7 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
     ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()}`],
     ['tempsManager', (i) => `💼 Manager : éveillé ${dureeTexte(NIVEAUX_MANAGER[i].minutesEveil)}`],
-    ['wagonnet', (i) => `🚃 Wagonnets de ${NIVEAUX_WAGONNET[i].capacite} places`],
+    ['wagonnet', (i) => `🚃 Wagonnets des rails (tous les trajets) : ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
     ['chariot', (i) => `🛒 Chariot de la foreuse : ${NIVEAUX_CHARIOT[i].capacite.toLocaleString('fr-FR')} places`],

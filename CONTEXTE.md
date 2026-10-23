@@ -228,4 +228,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (34)** : l'XP suit le prix : tout ce qu'on achète rapporte 1 XP par 80 $ (argent + minerais), en plus des XP fixes ; l'argent gagné rapporte 1 XP par 200 $. Plus de bonus fixe des wagonnets (remplacé). Une vieille partie reçoit l'XP de ses achats passés : un joueur coincé au niveau 12 « maxé » repart. Un joueur qui clique reste en avance, un joueur AFK avance quand même.
 - **2026-10-23 (35)** : remplacer un mineur coûte bien plus : au moins 400 $ × (niveau du joueur)² (67 600 $ au niveau 13, avant ~3 800 $).
 - **2026-10-23 (36)** : remplacer un mineur : 200 $ × niveau² (moitié moins), ou le quart de la dernière place possible, le même quel que soit le nombre de mineurs. La fenêtre des rails ne parle plus d'électricité ; le boost du générateur (« ⚡ Boost : + 30 % ») est affiché en grand dans son onglet Rayon et amélioration. Le cercle du rayon n'est visible que quand le panneau du générateur est ouvert (ou qu'on le pose).
+- **2026-10-23 (37)** : la tâche et le message d'amélioration des wagonnets disent « Wagonnets des rails (tous les trajets) : *X* places ».
 
