@@ -573,3 +573,16 @@
 .icone-metier {
   margin-right: 4px;
 }
+
+/* (23/10) Payer un seul employé, sur sa carte. Rouge et qui respire s'il n'est plus payé. */
+.payer-employe {
+  justify-self: start;
+}
+
+.payer-urgent {
+  animation: alerte-respire 1.2s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payer-urgent { animation: none; }
+}

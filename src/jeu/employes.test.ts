@@ -7,6 +7,9 @@ import {
   caseQuai,
   cheminEmploye,
   alerteSalaires,
+  coutSalaireEmploye,
+  payerEmploye,
+  peutPayerEmploye,
   ameliorerManager,
   secondesManagerHorsLigne,
   ameliorerEmploye,
@@ -333,5 +336,23 @@ describe('le manager, jeu fermé (23/10)', () => {
     expect(ferme.manager.tempsPaye).toBe(0)
     expect(ameliorerManager(etat)[0]).toContain('1 h')
     expect(secondesManagerHorsLigne(etat)).toBe(60 * 60)
+  })
+})
+
+describe('payer un seul employé (23/10)', () => {
+  it('il est complété jusqu’à 5 minutes, les autres non', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    for (const e of etat.employes) e.tempsPaye = 0
+    const argentAvant = etat.argent
+    expect(coutSalaireEmploye(etat.employes[0])).toBe(SALAIRES[0])
+    payerEmploye(etat, 0)
+    expect(etat.employes[0].tempsPaye).toBe(SECONDES_PAR_PAIE)
+    expect(etat.employes[1].tempsPaye).toBe(0)
+    expect(etat.argent).toBe(argentAvant - SALAIRES[0])
+    // Déjà payé pour 5 minutes : rien à payer.
+    expect(peutPayerEmploye(etat, 0)).toBe(false)
   })
 })

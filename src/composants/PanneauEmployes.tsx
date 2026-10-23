@@ -47,6 +47,9 @@ import {
   managerAuTravail,
   managerDebloque,
   maxEmployes,
+  coutSalaireEmploye,
+  payerEmploye,
+  peutPayerEmploye,
   ameliorerManager,
   peutAmeliorerManager,
   prochainNiveauManager,
@@ -140,9 +143,10 @@ function Salaires({ etat, jouer }: Props) {
           disabled={!peutPayerSalaires(etat, SECONDES_PAR_PAIE)}
           onClick={() => jouer((e) => payerSalaires(e, SECONDES_PAR_PAIE))}
         >
-          Payer · {argent(cout10)}
+          Payer tout le monde · {argent(cout10)}
         </button>
       </div>
+      <span className="discret">💡 Ou paie chacun sur sa carte, juste en dessous.</span>
       {sansSalaire > 0 && (
         <span className="texte-alerte">
           {sansSalaire === 1 ? '😠 Un mineur attend son salaire : il ne creuse plus !' : `😠 ${sansSalaire} mineurs attendent leur salaire : ils ne creusent plus !`}
@@ -411,6 +415,17 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
           />
         )}
       </div>
+      {/* (23/10) Le payer, lui seul (sans manager) : jusqu'à 5 minutes payées. */}
+      {!etat.manager.embauche && coutSalaireEmploye(employe) > 0 && (
+        <button
+          className={`bouton bouton-petit bouton-payer payer-employe ${employe.tempsPaye <= 0 ? 'payer-urgent' : ''}`}
+          disabled={!peutPayerEmploye(etat, index)}
+          onClick={() => jouer((e) => payerEmploye(e, index))}
+          title={`Payer ${employe.nom} jusqu'à 5 minutes de travail`}
+        >
+          💵 Payer {employe.nom} · {argent(coutSalaireEmploye(employe))}
+        </button>
+      )}
       {/* Sa pioche : seulement s'il reste une amélioration (au niveau max, rien à montrer). */}
       {!pousseur && coutPioche !== null && prochaine && gain && (
       <>
