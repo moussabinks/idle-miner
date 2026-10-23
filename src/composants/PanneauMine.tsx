@@ -121,7 +121,8 @@ function BlocACliquer({
     setCombo(suite)
     comboRef.current = suite
     if (PALIERS_COMBO.includes(suite)) {
-      sons.combo(PALIERS_COMBO.indexOf(suite))
+      // (23/10) Plus d'arpège du combo : seulement le son du bonus qui démarre.
+      sons.bonus(PALIERS_COMBO.indexOf(suite))
       onPalier(suite)
     }
     // Sans clic pendant un moment, le combo retombe (et devient peut-être le record).

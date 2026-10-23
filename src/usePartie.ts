@@ -43,7 +43,7 @@ function jouerSons(evenements: Evenement[]): void {
         sons.casse(BLOCS[evenement.bloc].dur)
         if (evenement.rare) sons.rare()
         else if (BLOCS[evenement.bloc].minerai) sons.minerai()
-        if (evenement.nombre > 1) sons.pieces(2)
+        if (evenement.nombre > 1) sons.fortune()
         break
       case 'vente':
         sons.vente(evenement.montant)
