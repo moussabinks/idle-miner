@@ -111,7 +111,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. Depuis le 30/10, une fenêtre « Bon retour, mineur ! » le résume (`absence.ts`). |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (10 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur (23/10 : plus de trésorerie à remplir). Jeu fermé, il paie seulement pendant un temps (30 min, puis jusqu'à 8 h en l'améliorant). |
+| **Manager** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (10 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur (23/10 : plus de trésorerie à remplir). C'est une option : un interrupteur l'arrête ou le remet au travail. Jeu fermé, il paie seulement pendant un temps (30 min, puis jusqu'à 8 h en l'améliorant). |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |

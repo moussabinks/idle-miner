@@ -157,6 +157,7 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 - Avant : carte verrouillée « 🔒 Manager · niveau 3 de la mine », puis « 🔒 Manager · au niveau 9 » tant que le joueur n'a pas le niveau 9 (23/10 ; avant : mine niveau 4 et joueur niveau 11).
 - **Embauche : 10 000 $** (`PRIX_MANAGER`, 23/10 ; avant 35 000 $), ses 5 premières minutes comprises.
 - **Son salaire : 400 $ toutes les 5 minutes** (`SALAIRE_MANAGER`), pris dans l'argent du joueur.
+- **C'est une option** (23/10) : un interrupteur (rouge / vert, comme celui des trajets) sur sa carte l'arrête ou le remet au travail (`basculerManager`, `managerActif`). Arrêté (badge « ⏸ Arrêté »), il ne paie personne et on ne lui doit rien (son temps payé ne bouge plus) : on paie ses employés soi-même, comme avant lui (carte « 💵 Salaires » et boutons « Payer » de retour), y compris jeu fermé.
 - **Plus de trésorerie** (23/10) : avant, on remplissait une cagnotte pour lui ; maintenant il se sert directement dans l'argent du joueur. Une vieille partie récupère ce qu'il restait dans la trésorerie.
 - Sa carte (onglet **Chefs**) montre le prix d'une paie de toute l'équipe (manager compris) et prévient si l'argent ne suffit pas pour la prochaine. Badge « Au travail » ou « 😠 Pas payé ».
 
