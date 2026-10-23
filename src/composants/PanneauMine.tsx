@@ -366,7 +366,7 @@ function GainsNiveau({ etat }: { etat: EtatJeu }) {
         ⚙️ La mine sort {court(g.debitAvant * 60)} → <strong>{court(g.debitApres * 60)} blocs/min</strong> toute seule <span className="gain-pourcent">{enPlus(g.debitAvant, g.debitApres)}</span>
       </li>
       <li>
-        👷 <strong>+{g.mineursEnPlus} mineurs</strong> à embaucher au Personnel
+        👷 <strong>+{g.mineursEnPlus} mineur{g.mineursEnPlus > 1 ? 's' : ''}</strong> à embaucher au Personnel
       </li>
       {batimentsDebloques.length > 0 && (
         <li className="gain-fort">
