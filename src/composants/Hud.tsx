@@ -10,7 +10,7 @@
 
 import { infoNiveauMine } from '../jeu/mine'
 import { railsAlimentes } from '../jeu/wagonnet'
-import { managerActif, nbSansSalaire, tempsPayeMin } from '../jeu/employes'
+import { managerEndormi, managerPaieLesSalaires, nbSansSalaire, secondesAvantSommeil, tempsPayeMin } from '../jeu/employes'
 import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
 import { progressionNiveau, prochainDeblocage } from '../jeu/niveaux'
 import { revenuParSeconde } from '../jeu/revenu'
@@ -142,7 +142,7 @@ export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
       </div>
 
       {(etat.employes.length > 0 || railsAlimentes(etat)) && (
-        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : managerActif(etat) ? 'Tes employés : le manager paie leurs salaires' : `Tes employés : prochain salaire à payer dans ${minutesSecondes(tempsPaye)}`}>
+        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 || managerEndormi(etat) ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : managerEndormi(etat) ? 'Ton manager dort : réveille-le au Personnel' : managerPaieLesSalaires(etat) ? `Tes employés : le manager paie leurs salaires (il s'endort dans ${minutesSecondes(secondesAvantSommeil(etat))})` : `Tes employés : prochain salaire à payer dans ${minutesSecondes(tempsPaye)}`}>
           {etat.employes.length > 0 && (
             <span>
               {sansSalaire > 0 ? '😠' : '👷'}
@@ -152,9 +152,9 @@ export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
           {/* (23/10) Dans combien de temps il faut payer (le premier qui n'aura plus de salaire). Avec
               le manager, c'est lui qui paie : « 💼 auto ». */}
           {etat.employes.length > 0 && (
-            <span className={`minuteur-salaires ${sansSalaire > 0 ? 'minuteur-paie' : tempsPaye < 60 ? 'minuteur-bientot' : ''}`}>
-              {managerActif(etat) ? '💼' : sansSalaire > 0 ? '💵' : '⏳'}
-              <strong>{managerActif(etat) ? 'auto' : sansSalaire > 0 ? 'Payer !' : minutesSecondes(tempsPaye)}</strong>
+            <span className={`minuteur-salaires ${sansSalaire > 0 || managerEndormi(etat) ? 'minuteur-paie' : (managerPaieLesSalaires(etat) ? secondesAvantSommeil(etat) : tempsPaye) < 60 ? 'minuteur-bientot' : ''}`}>
+              {managerEndormi(etat) ? '💤' : managerPaieLesSalaires(etat) ? '💼' : sansSalaire > 0 ? '💵' : '⏳'}
+              <strong>{managerEndormi(etat) ? 'Réveille !' : managerPaieLesSalaires(etat) ? minutesSecondes(secondesAvantSommeil(etat)) : sansSalaire > 0 ? 'Payer !' : minutesSecondes(tempsPaye)}</strong>
             </span>
           )}
           {railsAlimentes(etat) && <span className="eclair-actif">⚡</span>}

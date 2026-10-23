@@ -11,7 +11,10 @@ import {
   payerEmploye,
   peutPayerEmploye,
   ameliorerManager,
-  secondesManagerHorsLigne,
+  fatigueManager,
+  managerEndormi,
+  reveillerManager,
+  secondesEveilManager,
   ameliorerEmploye,
   ameliorerRecruteur,
   avancerEmployes,
@@ -347,26 +350,30 @@ describe('un mineur embauché (23/10)', () => {
   })
 })
 
-describe('le manager, jeu fermé (23/10)', () => {
-  it('il paie 30 minutes, puis plus personne ; amélioré, il paie plus longtemps', () => {
+describe('la fatigue du manager (23/10)', () => {
+  it('il paie 15 minutes puis s’endort (jeu ouvert ou fermé) ; réveillé, il reprend ; amélioré, il tient 30 min', () => {
     const etat = partie()
     etat.niveauMine = 4
     etat.xp = 1_000_000
     embaucher(etat, hasard())
     embaucherManager(etat)
-    expect(secondesManagerHorsLigne(etat)).toBe(30 * 60)
-    // Jeu ouvert pendant 2 h, il paie tout le temps ; jeu fermé, seulement les 30 premières minutes.
-    const ouvert = structuredClone(etat)
-    for (let i = 0; i < 240; i++) {
-      ouvert.coffre.contenu = {}
-      avancerTemps(ouvert, 30, hasard())
-    }
+    expect(secondesEveilManager(etat)).toBe(15 * 60)
+    // 2 h d'un coup (jeu fermé) : il paie au début, puis s'endort.
     const ferme = structuredClone(etat)
-    avancerTemps(ferme, 2 * 3600, hasard(), true)
-    expect(ferme.stats.salairesPayes).toBeLessThan(ouvert.stats.salairesPayes / 2)
-    expect(ferme.manager.tempsPaye).toBe(0)
-    expect(ameliorerManager(etat)[0]).toContain('1 h')
-    expect(secondesManagerHorsLigne(etat)).toBe(60 * 60)
+    const messages = avancerTemps(ferme, 2 * 3600, hasard())
+    expect(managerEndormi(ferme)).toBe(true)
+    expect(messages.some((m) => m.includes('endormi'))).toBe(true)
+    expect(peutPayerEmploye(ferme, 0)).toBe(true) // endormi : on paie soi-même
+    const payes = ferme.stats.salairesPayes
+    avancerTemps(ferme, 600, hasard())
+    expect(ferme.stats.salairesPayes).toBe(payes) // il dort : plus rien
+    reveillerManager(ferme)
+    expect(fatigueManager(ferme)).toBe(0)
+    ferme.employes[0].tempsPaye = 0
+    avancerTemps(ferme, 30, hasard())
+    expect(ferme.stats.salairesPayes).toBeGreaterThan(payes)
+    expect(ameliorerManager(etat)[0]).toContain('30 min')
+    expect(secondesEveilManager(etat)).toBe(30 * 60)
   })
 })
 
