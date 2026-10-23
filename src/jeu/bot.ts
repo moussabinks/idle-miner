@@ -215,7 +215,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     const prix = prixEmbauche(etat)
     if (estPose(etat, 'employes') && prix !== null && etat.argent >= prix + marge()) embaucher(etat, aleatoire)
     for (let i = 0; i < etat.employes.length; i++) {
-      const cout = coutAmeliorationEmploye(etat.employes[i])
+      const cout = coutAmeliorationEmploye(etat, etat.employes[i])
       // (23/10 : il n'améliore pas les pousseurs, son wagonnet suit sans)
       if (etat.employes[i].role === 'pousseur') continue
       if (cout && etat.argent >= (cout.argent ?? 0) + marge() && peutPayer(etat, cout)) ameliorerEmploye(etat, i)
@@ -252,7 +252,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     const coffreSeRemplit = nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.7
     const indexPousseur = etat.employes.findIndex((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
     const pousseurMarche = indexPousseur >= 0 ? etat.employes[indexPousseur] : null
-    const coutChariot = pousseurMarche ? coutChariotPousseur(pousseurMarche) : null
+    const coutChariot = pousseurMarche ? coutChariotPousseur(etat, pousseurMarche) : null
     if (pousseurMarche && coutChariot && peutAgrandirChariot(etat, pousseurMarche) && gardeLaMine(coutChariot) && (coffreSeRemplit || etat.argent >= (coutChariot.argent ?? 0) * 2)) agrandirChariot(etat, indexPousseur)
     const prixSac = prixProchainSac(etat)
     if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)

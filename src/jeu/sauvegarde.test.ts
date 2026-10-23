@@ -82,10 +82,10 @@ describe('sauvegarde', () => {
     const mineur = etat.employes[0]
     const pousseur = { ...mineur, role: 'pousseur' as const, trajet: 'mine-marche' as const }
     const stockage = fauxStockage()
-    // ancienne taille 70 places (niveau 2), pousseur « Expert » (×2) : 140 places → chariot de 115
+    // ancienne taille 70 places (niveau 2), pousseur « Expert » (×2) : 140 places → chariot de 110 ; ×1 : 70 → 58
     sauvegarder(stockage, '1', { ...etat, version: 27, niveauWagonnets: 2, employes: [mineur, { ...pousseur, niveau: 3 }, { ...pousseur, nom: 'Zoé', niveau: 0 }] })
     const relue = charger(stockage, '1')!
-    expect(relue.employes.map((e) => e.chariot)).toEqual([undefined, 4, 2])
+    expect(relue.employes.map((e) => e.chariot)).toEqual([undefined, 5, 3])
     expect(relue.employes[1].niveau).toBe(3) // son niveau devient sa vitesse
   })
 
