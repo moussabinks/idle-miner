@@ -45,6 +45,7 @@ describe('les goulots : ascenseur et wagonnet', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.argent = 1_000_000
     etat.ascenseur.niveau = 0 // (une vieille partie, à l'échelle)
+    etat.niveauMine = 2 // (2 mineurs possibles)
     embaucher(etat, aleatoireAvecGraine(2))
     embaucher(etat, aleatoireAvecGraine(3))
     const lent = analyseAscenseur(etat)

@@ -44,27 +44,27 @@ function partie(argent = 1_000_000): EtatJeu {
 const hasard = () => aleatoireAvecGraine(11)
 
 describe('les mineurs employés', () => {
-  it('2 mineurs au niveau 1 de la mine, puis 2 de plus par niveau ; les pousseurs à part (23/10)', () => {
+  it('1 mineur par niveau de la mine ; les pousseurs à part (23/10)', () => {
     const etat = partie()
-    expect(maxEmployes(etat)).toBe(2)
-    embaucher(etat, hasard())
+    expect(maxEmployes(etat)).toBe(1)
     embaucher(etat, hasard())
     expect(prixEmbauche(etat)).toBeNull()
     expect(embaucher(etat, hasard())).toEqual([])
-    expect(etat.employes).toHaveLength(2)
+    expect(etat.employes).toHaveLength(1)
     // un pousseur reste possible : il ne compte pas dans les mineurs
     expect(prixEmbauche(etat, 'pousseur')).toBe(500)
     etat.niveauMine = 3
-    expect(maxEmployes(etat)).toBe(6)
+    expect(maxEmployes(etat)).toBe(3)
   })
 
-  it('le premier coûte 50 $, puis le prix monte', () => {
+  it('le premier coûte 500 $, puis le prix monte', () => {
     const etat = partie()
+    etat.niveauMine = 2
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[0])
     embaucher(etat, hasard())
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[1])
     embaucher(etat, hasard())
-    expect(prixEmbauche(etat)).toBeNull() // 2 mineurs au niveau 1 de la mine
+    expect(prixEmbauche(etat)).toBeNull() // 2 mineurs au niveau 2 de la mine
     expect(etat.argent).toBe(1_000_000 - PRIX_EMBAUCHE.slice(0, 2).reduce((t, p) => t + p, 0))
   })
 
@@ -91,6 +91,7 @@ describe('les mineurs employés', () => {
   it('l’ascenseur lui fait remonter plus de blocs par seconde quand il ne suit pas', () => {
     const etat = partie()
     etat.ascenseur.niveau = 0 // (à l'échelle : la caisse remonte peu)
+    etat.niveauMine = 3
     for (let i = 0; i < 3; i++) embaucher(etat, hasard())
     const avant = blocsParSecondeEmploye(etat, etat.employes[0])
     expect(avant).toBeLessThan(vitesseEmploye(etat.employes[0]))
@@ -175,8 +176,9 @@ describe('les mineurs employés', () => {
 
   it('mineurs et pousseurs ont chacun leurs prix : le 1er pousseur coûte 500 $ (23/10)', () => {
     const etat = partie()
+    etat.niveauMine = 2
     embaucher(etat, hasard())
-    expect(prixEmbauche(etat)).toBe(2000)
+    expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[1])
     expect(prixEmbauche(etat, 'pousseur')).toBe(500)
   })
 
@@ -211,7 +213,7 @@ describe('les salaires', () => {
   it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
     const etat = partie()
     etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
-    etat.niveauMine = 2 // (4 mineurs possibles)
+    etat.niveauMine = 3 // (3 mineurs possibles)
     embaucher(etat, hasard())
     embaucher(etat, hasard())
     embaucher(etat, hasard())

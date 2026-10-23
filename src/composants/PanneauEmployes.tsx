@@ -634,7 +634,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           </div>
           {prix === null ? (
             <span className="discret">
-              Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 2 de plus.
+              Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 1 de plus.
               {avecRecruteur && ' Licencie un mineur pour tenter ta chance avec un autre !'}
             </span>
           ) : (

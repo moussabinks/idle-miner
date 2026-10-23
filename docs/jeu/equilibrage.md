@@ -223,8 +223,8 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 
 ### Équipe, embauche, licenciement
 
-- **Nombre max de mineurs** (`maxEmployes`, 23/10) = `EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU × (niveau de la mine − 1)` = 2 + 2 × (N − 1) : **2, 4, 6, 8, 10**. Les pousseurs ne comptent pas (un par trajet au plus, `maxPousseurs`). (Avant : 4 à 12 employés, pousseurs compris.)
-- **Prix de la n-ième embauche** (`PRIX_EMBAUCHE`, 30/10 : bien plus raides) : 80, 400, 1 500, 5 000, 15 000, 40 000, 100 000, 250 000, 600 000, 1 500 000 $, puis × 2,2 à chaque fois (`HAUSSE_APRES_LISTE`) : 3 300 000 $ (11e), 7 260 000 $ (12e). (29/10 : 100, 300, 800, 2 000... 240 000 $, puis × 1,6.) Arrondi à la dizaine sous 1 000 $, à la centaine au-dessus. Le prix ne dépend que de la taille actuelle de l'équipe.
+- **Nombre max de mineurs** (`maxEmployes`, 23/10) = `EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU × (niveau de la mine − 1)` = 1 + (N − 1) : **1, 2, 3, 4, 5** (d'abord 2, 4, 6, 8, 10). Les pousseurs ne comptent pas (un par trajet au plus, `maxPousseurs`). (Avant : 4 à 12 employés, pousseurs compris.)
+- **Prix de la n-ième embauche d'un mineur** (`PRIX_EMBAUCHE`, 23/10 : avec 1 mineur par niveau, chaque place vaut plus) : **500, 3 500, 15 000, 45 000, 130 000 $** (puis 300 000 $… et × 2,2 au-delà de la liste). Les **pousseurs** ont leur liste (`PRIX_EMBAUCHE_POUSSEUR`) : 500, 2 000, 6 000, 15 000 $.
 - **Indemnités** (`indemnites`) = 40 % (`PART_INDEMNITES`) du prix de base de la dernière place : 30 $ pour 1 mineur, 2 000 $ pour 4, 100 000 $ pour 8, 2 904 000 $ pour 12.
 
 ### Travail
@@ -409,7 +409,7 @@ Pour mémoire, le 29/10 (avant l'économie plus dure du 30/10) : niveau 2 en 26,
 | Repère | Valeur | Source |
 |---|---|---|
 | Niveau 2 de la mine | **15 à 40 min** (médiane) ; mesuré : 20 min | `bot.test.ts` |
-| Niveau 5 de la mine | **6 h à 9 h** (médiane) ; mesuré : 7 h 23 (23/10, 5e ; 7 h 48 avant que l'ascenseur charge plus vite ; 7 h 03 avant la hausse des salaires et la limite de 2 mineurs ; 8 h 29 le 30/10) | `bot.test.ts` |
+| Niveau 5 de la mine | **6 h à 9 h** (médiane) ; mesuré : 6 h 37 (23/10, 1 mineur par niveau ; 7 h 23 juste avant ; 7 h 48 avant que l'ascenseur charge plus vite ; 7 h 03 avant la hausse des salaires et la limite de 2 mineurs ; 8 h 29 le 30/10) | `bot.test.ts` |
 | Rails mine → marché | moins de 10 min | `bot.test.ts` |
 | Rails électriques | moins de 1 h 30 | `bot.test.ts` |
 | Niveau 5 / niveau 10 du joueur | après 8 min / après 1 h (médianes) ; 16 min / 1 h 23 | `bot.test.ts` |

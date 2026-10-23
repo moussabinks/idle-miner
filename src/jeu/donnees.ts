@@ -220,16 +220,19 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 // Les mineurs employés (dès le début, au bâtiment Personnel)
 // ---------------------------------------------------------------------------
 
-// Combien de mineurs on peut employer : 2 au niveau 1 de la mine, puis 2 de plus par niveau
-// (23/10 : avant, 4 au niveau 1, pousseurs compris). Les pousseurs ne comptent pas : on en
-// embauche au plus un par trajet de wagonnet.
-export const EMPLOYES_NIVEAU_1 = 2
-export const EMPLOYES_PAR_NIVEAU = 2
+// Combien de mineurs on peut employer : 1 par niveau de la mine (23/10 : 1 au niveau 1, 5 au
+// niveau 5 ; d'abord 2 puis 2 de plus par niveau, et avant, 4 au niveau 1, pousseurs compris).
+// Les pousseurs ne comptent pas : on en embauche au plus un par trajet de wagonnet.
+export const EMPLOYES_NIVEAU_1 = 1
+export const EMPLOYES_PAR_NIVEAU = 1
 // Le prix de la 1re, 2e, 3e... embauche (il dépend seulement du nombre de mineurs qu'on a).
 // Au-delà de la liste, chaque embauche coûte 2,2 fois la précédente. (30/10 : les prix montent
 // bien plus vite d'une embauche à l'autre, pour qu'il faille farmer. 23/10 : le 1er à 500 $, le
-// 2e à 2 000 $... et ce sont deux listes à part : mineurs, et pousseurs.)
-export const PRIX_EMBAUCHE = [500, 2000, 6000, 15000, 35000, 80000, 180000, 400000, 900000, 2000000]
+// 2e à 2 000 $... et ce sont deux listes à part : mineurs, et pousseurs. 23/10 bis : avec 1 mineur
+// par niveau de la mine, chaque place vaut plus : 500, 3 500, 15 000, 45 000, 130 000 $.)
+export const PRIX_EMBAUCHE = [500, 3500, 15000, 45000, 130000, 300000, 700000, 1500000, 3000000, 6000000]
+// Les pousseurs : au plus un par trajet (4), leurs prix d'avant.
+export const PRIX_EMBAUCHE_POUSSEUR = [500, 2000, 6000, 15000]
 export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4

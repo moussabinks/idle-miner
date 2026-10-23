@@ -31,6 +31,7 @@ import {
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PRIX_EMBAUCHE,
+  PRIX_EMBAUCHE_POUSSEUR,
   PRIX_MANAGER,
   RARETES,
   SALAIRE_MANAGER,
@@ -81,8 +82,8 @@ const PAS_EMPLOYES = 30
 // Les mineurs payés en même temps repartent du Personnel l'un après l'autre, à cet écart (en s).
 const ECART_DEPART = 0.7
 
-// Combien de mineurs on peut employer (23/10) : 2 au niveau 1 de la mine, puis 2 de plus par
-// niveau. Les pousseurs ne comptent pas.
+// Combien de mineurs on peut employer (23/10) : 1 par niveau de la mine. Les pousseurs ne
+// comptent pas.
 export function maxEmployes(etat: EtatJeu): number {
   return EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU * (etat.niveauMine - 1)
 }
@@ -97,10 +98,13 @@ export function nbDuRole(etat: EtatJeu, role: RoleEmploye): number {
 }
 
 // Le prix de base de la n-ième embauche (n = 0 pour la première).
-function prixDeBase(n: number): number {
-  const dernier = PRIX_EMBAUCHE.length - 1
-  if (n <= dernier) return PRIX_EMBAUCHE[n]
-  return PRIX_EMBAUCHE[dernier] * HAUSSE_APRES_LISTE ** (n - dernier)
+// (23/10) Chaque métier a sa liste : les mineurs (1 de plus par niveau de mine, donc plus chers),
+// et les pousseurs (au plus un par trajet).
+function prixDeBase(n: number, role: RoleEmploye = 'mineur'): number {
+  const liste = role === 'pousseur' ? PRIX_EMBAUCHE_POUSSEUR : PRIX_EMBAUCHE
+  const dernier = liste.length - 1
+  if (n <= dernier) return liste[n]
+  return liste[dernier] * HAUSSE_APRES_LISTE ** (n - dernier)
 }
 
 // Des prix faciles à lire : à la dizaine sous 1 000 $, à la centaine au-dessus.
@@ -115,12 +119,12 @@ function arrondiPrix(prix: number): number {
 export function prixEmbauche(etat: EtatJeu, role: RoleEmploye = 'mineur'): number | null {
   const nombre = nbDuRole(etat, role)
   if (nombre >= (role === 'mineur' ? maxEmployes(etat) : maxPousseurs())) return null
-  return arrondiPrix(prixDeBase(nombre))
+  return arrondiPrix(prixDeBase(nombre, role))
 }
 
 // Les indemnités d'un licenciement : 40 % du prix de la dernière place de son métier.
 export function indemnites(etat: EtatJeu, role: RoleEmploye = 'mineur'): number {
-  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.filter((e) => e.role === role).length - 1)) * PART_INDEMNITES)
+  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.filter((e) => e.role === role).length - 1), role) * PART_INDEMNITES)
 }
 
 export function rareteDe(employe: Employe): Rarete {

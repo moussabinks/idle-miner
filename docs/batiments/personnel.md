@@ -31,8 +31,8 @@ Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur 
 
 ### 1. Embaucher un mineur (« 👷 Embaucher », ou « 🎲 Recruter » avec le recruteur)
 
-- **Nombre de mineurs** (23/10) : **2 au niveau 1 de la mine, puis 2 de plus par niveau** (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `maxEmployes`) : 2, 4, 6, 8, puis **10** au niveau 5. Les **pousseurs ne comptent pas** : au plus un par trajet de wagonnet (4, `maxPousseurs`). Le badge affiche « *mineurs* / max ». Complet : « Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 2 de plus. » (avant le 23/10 : 4 employés au niveau 1, pousseurs compris.)
-- **Le prix dépend seulement du nombre d'employés qu'on a en ce moment** (mineurs et pousseurs, `PRIX_EMBAUCHE`). Au-delà de la liste, chaque embauche coûte **2,2 fois** la précédente (`HAUSSE_APRES_LISTE`, 30/10 ; avant, 60 % de plus). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus.
+- **Nombre de mineurs** (23/10) : **1 par niveau de la mine** (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `maxEmployes`) : 1, 2, 3, 4, puis **5** au niveau 5 (d'abord 2 puis 2 de plus par niveau). Les **pousseurs ne comptent pas** : au plus un par trajet de wagonnet (4, `maxPousseurs`). Le badge affiche « *mineurs* / max ». Complet : « Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 1 de plus. » (avant le 23/10 : 4 employés au niveau 1, pousseurs compris.)
+- **Le prix dépend seulement du nombre d'employés de ce métier qu'on a en ce moment** : mineurs **500, 3 500, 15 000, 45 000, 130 000 $** (`PRIX_EMBAUCHE`, 23/10 : 1 mineur par niveau de la mine, chaque place vaut plus), pousseurs 500, 2 000, 6 000, 15 000 $ (`PRIX_EMBAUCHE_POUSSEUR`). Au-delà de la liste, chaque embauche coûte **2,2 fois** la précédente (`HAUSSE_APRES_LISTE`, 30/10 ; avant, 60 % de plus). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus.
 
 | Embauche | 1re | 2e | 3e | 4e | 5e | 6e | 7e | 8e | 9e | 10e | 11e | 12e |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|

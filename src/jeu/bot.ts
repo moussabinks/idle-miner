@@ -31,10 +31,11 @@ import {
   salairesParPaie,
   tempsPayeMin,
 } from './employes'
-import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, remplirForeuse } from './foreuse'
+import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
 import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, remplirGenerateur } from './generateur'
 import {
   acheterPioche,
+  disponible,
   acheterSac,
   agrandirCoffre,
   ameliorerAscenseur,
@@ -163,6 +164,18 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     allersRetours += 1
   }
 
+  // (23/10) Les améliorations « en plus » (foreuse, chariot, générateur) ne prennent pas les
+  // minerais mis de côté pour descendre au niveau suivant de la mine (avec 1 mineur de plus par
+  // niveau seulement, le fer arrive moins vite : sinon, il restait bloqué au niveau 2).
+  function gardeLaMine(cout: Cout | null | undefined): boolean {
+    const niveau = prochainNiveauMine(etat)
+    if (!cout || !niveau) return true
+    return Object.entries(cout.materiaux).every(([bloc, nombre]) => {
+      const pourLaMine = niveau.cout.materiaux[bloc as IdBloc] ?? 0
+      return pourLaMine === 0 || disponible(etat, bloc as IdBloc) - (nombre ?? 0) >= pourLaMine
+    })
+  }
+
   function acheterSiPossible(): void {
     for (const { id, x, y } of PLAN_DU_BOT) if (peutConstruire(etat, id)) construireBatiment(etat, id, x, y)
 
@@ -212,23 +225,23 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
       if (etat.generateur.carburant < 120) remplirGenerateur(etat, 10)
       if (puisageDisponible(etat) && !etat.generateur.puiseDansLeCoffre) basculerPuisage(etat)
       const prochain = prochainNiveauGenerateur(etat)
-      if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 2 && peutPayer(etat, prochain.cout)) ameliorerGenerateur(etat)
+      if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 2 && peutPayer(etat, prochain.cout) && gardeLaMine(prochain.cout)) ameliorerGenerateur(etat)
     }
 
     // La foreuse : du charbon (son chariot part au marché avec le coffre, voir allerVendre).
     if (estPose(etat, 'foreuse')) {
       if (etat.foreuse.carburant < 60) remplirForeuse(etat, 10)
-      if (peutAmeliorerForage(etat) && etat.argent > 3000) ameliorerForage(etat)
-      if (peutAmeliorerChariot(etat) && etat.argent > 3000) ameliorerChariot(etat)
+      if (peutAmeliorerForage(etat) && etat.argent > 3000 && gardeLaMine(prochainNiveauForage(etat)?.cout)) ameliorerForage(etat)
+      if (peutAmeliorerChariot(etat) && etat.argent > 3000 && gardeLaMine(prochainNiveauChariot(etat)?.cout)) ameliorerChariot(etat)
     }
 
     // Les améliorations de la mine, avec une marge (l'argent sert d'abord aux niveaux).
     const ascenseur = prochainNiveauAscenseur(etat)
-    if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout)) ameliorerAscenseur(etat)
+    if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout) && gardeLaMine(ascenseur.cout)) ameliorerAscenseur(etat)
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
     const wagonnet = prochainNiveauWagonnet(etat)
-    if (wagonnet && etat.trajets.length > 0 && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout)) ameliorerWagonnet(etat)
+    if (wagonnet && etat.trajets.length > 0 && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout) && gardeLaMine(wagonnet.cout)) ameliorerWagonnet(etat)
     const prixSac = prixProchainSac(etat)
     if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }
