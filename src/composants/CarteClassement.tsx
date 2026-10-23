@@ -1,5 +1,6 @@
 // Le classement des joueurs (leaderboard), sur l'écran d'accueil.
-// (23/10) Un seul classement : l'argent gagné (le meilleur des mondes du joueur). Le niveau de la
+// (23/10) Un seul classement : l'argent en poche (le meilleur des mondes du joueur, mis à jour
+// toutes les 5 minutes). Le niveau de la
 // mine est affiché à côté de chacun, mais il ne compte pas. Tout le monde peut le voir ; pour y
 // apparaître, il faut un compte (le score part avec la sauvegarde en ligne).
 // En haut, un podium pour les 3 premiers ; en bas, la place du joueur et celui qu'il doit
@@ -10,7 +11,8 @@ import { niveauMineAffiche, type LigneClassement } from '../jeu/classement'
 import { lireClassement, placeDuScore } from '../enLigne'
 import type { Joueur } from '../enLigne'
 
-const NB_LIGNES = 50
+// (23/10) Tous les joueurs inscrits (le podium, puis la liste en dessous, qui défile).
+const NB_LIGNES = 1000
 const MEDAILLES = ['🥇', '🥈', '🥉']
 
 // « 1 250 $ », « 3,5 k$ », « 2,45 M$ » : court, pour que tout tienne sur une ligne.
@@ -32,7 +34,7 @@ function Niveau({ ligne }: { ligne: LigneClassement }) {
 type Props = {
   joueur: Joueur | null
   dernierEnvoi: number | null // l'heure du dernier envoi du score ; quand elle change, on relit le classement
-  monArgent: number // le meilleur argent gagné dans les mondes de ce navigateur
+  monArgent: number // le plus d'argent en poche dans les mondes de ce navigateur
   onSeConnecter: () => void // « Crée un compte » : montre le formulaire du compte
 }
 
@@ -115,14 +117,14 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
   }
 
   // En bas : ta place, et qui dépasser.
-  // (sans compte ni argent gagné, pas encore de place)
+  // (sans compte ni argent, pas encore de place)
   const rang = place && (joueur || monArgent > 0) ? place.devant + 1 : null
   const ecart = place?.suivant ? place.suivant.argent - monArgent + 1 : 0
   return (
     <section className="carte carte-classement">
       <div className="classement-haut">
         <h2>🏆 Classement</h2>
-        <span className="classement-critere">💰 Argent gagné</span>
+        <span className="classement-critere" title="L'argent en poche du meilleur monde de chaque joueur, mis à jour toutes les 5 minutes">💰 Argent en poche</span>
         <button className="lien" onClick={() => setActualisation((n) => n + 1)} aria-label="Actualiser le classement">
           🔄
         </button>

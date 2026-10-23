@@ -42,7 +42,9 @@ import {
   RARETES,
   SALAIRE_MANAGER,
   SALAIRES,
-  SALAIRES_POUSSEUR,
+  SALAIRE_POUSSEUR_BASE,
+  SALAIRE_POUSSEUR_PAR_CHARIOT,
+  SALAIRE_POUSSEUR_PAR_VITESSE,
   SECONDES_AVANT_PAIE_MANAGER,
   SECONDES_FORGE_EMPLOYE,
   SECONDES_PAR_PAIE,
@@ -301,8 +303,12 @@ export function agrandirChariot(etat: EtatJeu, index: number): string[] {
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche et sa rareté.
 export function salaireEmploye(employe: Employe): number {
-  const liste = employe.role === 'pousseur' ? SALAIRES_POUSSEUR : SALAIRES
-  return Math.round(liste[Math.min(employe.niveau, liste.length - 1)] * rareteDe(employe).salaire)
+  // (23/10) Un pousseur : selon sa vitesse ET la taille de son chariot.
+  const base =
+    employe.role === 'pousseur'
+      ? SALAIRE_POUSSEUR_BASE + SALAIRE_POUSSEUR_PAR_VITESSE * employe.niveau + SALAIRE_POUSSEUR_PAR_CHARIOT * (employe.chariot ?? 0)
+      : SALAIRES[Math.min(employe.niveau, SALAIRES.length - 1)]
+  return Math.round(base * rareteDe(employe).salaire)
 }
 
 // Sans manager, on paie au plus 5 minutes à la fois.

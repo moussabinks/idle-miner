@@ -389,9 +389,12 @@ export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
 // joueur − 1)) : × 1,36 au niveau 4, × 2,44 au niveau 13. Plus on avance, plus elles coûtent, pour
 // qu'elles restent à la hauteur de la production.
 export const PRIX_POUSSEUR_PAR_NIVEAU = 0.12
-// Le salaire d'un pousseur toutes les 5 minutes, selon son niveau (il ne creuse pas : moins cher
-// qu'un mineur avec la même pioche).
-export const SALAIRES_POUSSEUR = [220, 300, 420, 600, 850]
+// (23/10) Le salaire d'un pousseur toutes les 5 minutes : une base, plus un peu pour chaque niveau
+// de vitesse et chaque niveau de chariot (× sa rareté) : 400 $ au départ, jusqu'à 2 600 $ au
+// maximum. Avant : 220 à 850 $ selon son niveau seulement, presque rien.
+export const SALAIRE_POUSSEUR_BASE = 400
+export const SALAIRE_POUSSEUR_PAR_VITESSE = 250
+export const SALAIRE_POUSSEUR_PAR_CHARIOT = 200
 
 // Les trajets des wagonnets (24/10) : le joueur choisit lui-même où va chaque wagonnet, sur les
 // rails qu'il a posés. Un trajet relie un bâtiment de départ à un bâtiment d'arrivée (un seul

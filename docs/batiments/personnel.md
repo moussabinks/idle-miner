@@ -102,13 +102,13 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 - **🏃 Sa vitesse** (`NIVEAUX_POUSSEUR`, en argent) : il pousse son wagonnet plus vite.
 
-| Niveau | Nom | Vitesse | Prix (× niveau du joueur) | Niveau du joueur | Salaire / 5 min |
+| Niveau | Nom | Vitesse | Prix (× niveau du joueur) | Niveau du joueur | Salaire / 5 min (sans le chariot) |
 |---|---|---:|---:|---:|---:|
-| 1 | Débutant | × 1 | (de base) | — | 220 $ |
-| 2 | Costaud | × 1,15 | 4 000 $ | 5 | 300 $ |
-| 3 | Robuste | × 1,3 | 15 000 $ | 8 | 420 $ |
-| 4 | Expert | × 1,5 | 45 000 $ | 11 | 600 $ |
-| 5 | Champion | × 1,75 | 120 000 $ | 14 | 850 $ |
+| 1 | Débutant | × 1 | (de base) | — | 400 $ |
+| 2 | Costaud | × 1,15 | 4 000 $ | 5 | 650 $ |
+| 3 | Robuste | × 1,3 | 15 000 $ | 8 | 900 $ |
+| 4 | Expert | × 1,5 | 45 000 $ | 11 | 1 150 $ |
+| 5 | Champion | × 1,75 | 120 000 $ | 14 | 1 400 $ |
 
 - **🛒 Son chariot** (`NIVEAUX_CHARIOT_POUSSEUR`, argent **et fer** ; `agrandirChariot`) : les places de son wagonnet. C'est la seule façon d'agrandir un wagonnet (plus de « taille des wagonnets » pour tous les trajets). Le joueur qui pousse lui-même a le premier chariot (20 places).
 
@@ -124,6 +124,7 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 (Avant, le 23/10 au matin : vitesse × 1,2 à × 2,1 pour 1 000 à 60 000 $, chariot 35 à 220 places pour 1 000 $ + 30 fer à 90 000 $ + 400 fer, sans tenir compte du niveau du joueur.)
 
+- **Son salaire** (23/10, `SALAIRE_POUSSEUR_BASE`…) : **400 $** toutes les 5 minutes, **+ 250 $** par niveau de vitesse et **+ 200 $** par niveau de chariot (× sa rareté) : jusqu'à 2 600 $. Avant : 220 à 850 $ selon son seul niveau, presque rien.
 - **Ses arrêts** (charger au départ, décharger ou vendre à l'arrivée) durent **toujours 1 s** (`SECONDES_CHARGEMENT_WAGONNET`).
 - **Il ne suit pas ?** Dans le panneau du bâtiment de départ (la Mine, la Foreuse), une alerte « 🛒 Le chariot de *Nom* est trop petit : il emporte *X* bloc/s, la mine en sort *Y* tout seule · agrandis son chariot au Personnel », avec un bouton **🛒 Personnel** (`AlerteChariot.tsx`, `analyseWagonnet` et `chariotTropPetit` dans `production.ts`). Le calcul ne compte que ce que le bâtiment sort **tout seul** : la mine elle-même plus ce que les mineurs creusent et que l'ascenseur remonte (pas les clics du joueur), ou ce que fore la foreuse.
 - **Son dessin** : il utilise encore les images des mineurs, avec leur pioche. Pour la lui retirer, il faut des images de pousseur sans pioche (la pioche est peinte dans l'image ; l'effacer automatiquement n'est pas propre).

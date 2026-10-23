@@ -14,13 +14,14 @@ function fauxStockage(): Stockage {
 }
 
 describe('classement', () => {
-  it('prend le meilleur niveau de mine et le plus d’argent gagné parmi les mondes', () => {
+  it('prend le meilleur niveau de mine et le plus d’argent en poche parmi les mondes (23/10)', () => {
     const stockage = fauxStockage()
     const avance = creerPartie(aleatoireAvecGraine(1))
     avance.niveauMine = 3
-    avance.stats.argentGagne = 500
+    avance.argent = 500
+    avance.stats.argentGagne = 1_000_000 // l'argent gagné en tout ne compte plus
     const riche = creerPartie(aleatoireAvecGraine(2))
-    riche.stats.argentGagne = 90_000.7
+    riche.argent = 90_000.7
     creerMonde(stockage, 'Avancé', avance)
     creerMonde(stockage, 'Riche', riche)
 
@@ -39,8 +40,8 @@ describe('classement à l’argent (23/10)', () => {
     expect(niveauMineAffiche({ prestige: 0, argent: 0 })).toBeNull()
   })
 
-  it('le meilleur argent gagné des mondes (les mondes illisibles comptent pour 0)', () => {
-    expect(meilleurArgent([{ stats: { argentGagne: 120.7 } }, null, { stats: { argentGagne: 80 } }])).toBe(120)
+  it('le plus d’argent en poche des mondes (les mondes illisibles comptent pour 0)', () => {
+    expect(meilleurArgent([{ argent: 120.7 }, null, { argent: 80 }])).toBe(120)
     expect(meilleurArgent([])).toBe(0)
   })
 })
