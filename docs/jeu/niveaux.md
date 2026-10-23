@@ -70,16 +70,16 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 | 3 | 🎒 **Bazar** ; 🛤️ **les rails et les wagonnets** ; 🎒 sac de 64 places |
 | 4 | ⛏️ **Mine niveau 2** (Veine de redstone) ; ⛏️ pioche en fer ; 👷 pioche en pierre pour les mineurs |
 | 5 | ⚙️ **Foreuse** (30/10 : avant le générateur) ; 📦 coffre de 600 places ; 🎒 sac de 128 places ; 🛗 ascenseur niveau 2 |
-| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 400 places |
+| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 160 places |
 | 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or |
 | 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 ; ⚡ générateur rayon 20 |
-| 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 800 |
+| 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 240 |
 | 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
-| 11 | 🎩 **le recruteur** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 1 600 ; 💼 manager 1 h hors ligne |
+| 11 | 🎩 **le recruteur** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 360 ; 💼 manager 1 h hors ligne |
 | 12 | 🎩 recruteur niveau 2 ; 💼 manager 2 h hors ligne ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 600 places |
 | 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 5 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 ; 💼 manager 4 h hors ligne |
-| 14 | 💼 manager 8 h hors ligne ; 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 3 000 |
-| 15 | 🎒 sac de 2 048 places ; 🛗 ascenseur niveau 6 ; ⚡ générateur rayon 40 ; ⚙️ forage 3,6 ; 🛒 chariot de 6 000 ; 🎩 recruteur niveau 4 |
+| 14 | 💼 manager 8 h hors ligne ; 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 520 |
+| 15 | 🎒 sac de 2 048 places ; 🛗 ascenseur niveau 6 ; ⚡ générateur rayon 40 ; ⚙️ forage 3,6 ; 🛒 chariot de 720 ; 🎩 recruteur niveau 4 |
 | 16 à 30 | rien de nouveau pour l'instant : tout est débloqué au niveau 15 |
 
 Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
@@ -97,7 +97,7 @@ Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
 | Taille des wagonnets (100, 250, 600) | 6, 9, 12 |
 | Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
 | Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |
-| Chariot de la foreuse (400 → 6 000) | 6, 9, 11, 14, 15 |
+| Chariot de la foreuse (160 → 720) | 6, 9, 11, 14, 15 |
 | Recruteur (niveaux 1 à 4) | 11, 12, 13, 15 (23/10 ; avant : 9, 11, 13, 15) |
 | Manager | 9 (23/10 ; avant : 11), puis son temps hors ligne : 11, 12, 13, 14 |
 

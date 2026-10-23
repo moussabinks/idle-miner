@@ -51,14 +51,16 @@ Tout le forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude (ava
 
 | Niveau | Capacité | Coût (29/10) | Niveau du joueur (30/10) | Plein en (forage du même niveau, sans électricité) |
 |---|---:|---|---:|---|
-| 1 | 200 | (de base) | — | ~7 min (400 s) |
-| 2 | 400 | 2 500 $ + 40 fer | 6 (avant 7) | ~8 min (500 s) |
-| 3 | 800 | 7 500 $ + 80 fer + 25 redstone | 9 | ~11 min |
-| 4 | 1 600 | 20 000 $ + 150 fer + 70 redstone | 11 | ~15 min |
-| 5 | 3 000 | 50 000 $ + 130 redstone + 40 or | 14 | ~19 min |
-| 6 | 6 000 | 120 000 $ + 90 or + 20 émeraude | 15 | ~28 min |
+| 1 | 100 | (de base) | — | ~3 min 20 (200 s) |
+| 2 | 160 | 2 500 $ + 40 fer | 6 (avant 7) | ~3 min 20 |
+| 3 | 240 | 7 500 $ + 80 fer + 25 redstone | 9 | ~3 min 20 |
+| 4 | 360 | 20 000 $ + 150 fer + 70 redstone | 11 | ~3 min 20 |
+| 5 | 520 | 50 000 $ + 130 redstone + 40 or | 14 | ~3 min 20 |
+| 6 | 720 | 120 000 $ + 90 or + 20 émeraude | 15 | ~3 min 20 |
 
-Tout le chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude (avant le 29/10 : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude). Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 400 places · plein en 8 min »). Message : « 🛒 Chariot de la foreuse plus grand : *N* places. »
+(23/10) Le chariot est **petit** : à forage et chariot du même niveau, il est plein en 3 min 20 (avant : 200 à 6 000 places, de 7 à 28 min, il n'était jamais plein). Il faut donc le vider souvent (wagonnet Foreuse → Marché) et l'agrandir quand on améliore le forage, sinon il bloque la foreuse.
+
+Tout le chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude (avant le 29/10 : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude). Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 100 places · plein en 3 min »). Message : « 🛒 Chariot de la foreuse plus grand : *N* places. »
 
 ### 6. Les wagonnets (24/10)
 
