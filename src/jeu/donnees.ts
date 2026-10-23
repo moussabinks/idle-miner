@@ -301,17 +301,17 @@ export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> 
 
 // --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec la trésorerie ---
 export const NIVEAU_MINE_MANAGER = 3
-export const PRIX_MANAGER = 35000
+export const PRIX_MANAGER = 10000 // (23/10 ; avant 35 000 $)
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
 // (23/10) Jeu fermé, le manager ne paie les salaires que pendant un temps (30 minutes au départ) :
 // l'améliorer l'allonge petit à petit. Jeu ouvert, il paie toujours.
 export const NIVEAUX_MANAGER: { minutesHorsLigne: number; cout: Cout }[] = [
   { minutesHorsLigne: 30, cout: { materiaux: {} } },
-  { minutesHorsLigne: 60, cout: { argent: 20000, materiaux: {} } },
-  { minutesHorsLigne: 120, cout: { argent: 50000, materiaux: {} } },
-  { minutesHorsLigne: 240, cout: { argent: 120000, materiaux: {} } },
-  { minutesHorsLigne: 480, cout: { argent: 300000, materiaux: {} } },
+  { minutesHorsLigne: 60, cout: { argent: 6000, materiaux: {} } },
+  { minutesHorsLigne: 120, cout: { argent: 15000, materiaux: {} } },
+  { minutesHorsLigne: 240, cout: { argent: 35000, materiaux: {} } },
+  { minutesHorsLigne: 480, cout: { argent: 85000, materiaux: {} } },
 ]
 
 // ---------------------------------------------------------------------------
