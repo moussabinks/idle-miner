@@ -269,7 +269,7 @@ export function ameliorerWagonnet(etat: EtatJeu): string[] {
   if (prochain === null || !debloque(etat, 'wagonnet', etat.niveauWagonnets + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.niveauWagonnets += 1
-  return [`🛒 Wagonnets plus grands : ${prochain.capacite} places.`]
+  return [`🚃 Wagonnets des rails plus grands (tous les trajets) : ${prochain.capacite} places.`]
 }
 
 // ---------------------------------------------------------------------------
