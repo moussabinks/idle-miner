@@ -17,6 +17,7 @@ import {
   reveillerManager,
   secondesEveilManager,
   ameliorerEmploye,
+  peutAmeliorerEmploye,
   ameliorerRecruteur,
   avancerEmployes,
   blocsParSecondeEmploye,
@@ -27,6 +28,7 @@ import {
   embaucher,
   basculerManager,
   embaucherManager,
+  verrouMinePioche,
   peutRemplacer,
   prixRemplacement,
   remplacerMineur,
@@ -351,6 +353,22 @@ describe('un mineur embauché (23/10)', () => {
     const paye = etat.employes[0].tempsPaye
     avancerEmployes(etat, 60, hasard())
     expect(etat.employes[0].tempsPaye).toBe(paye)
+  })
+})
+
+describe('la pioche des mineurs suit la mine (23/10)', () => {
+  it('pas de pioche en diamant avant la mine de diamant', () => {
+    const etat = partie()
+    etat.xp = 1_000_000
+    etat.niveauMine = 4
+    embaucher(etat, hasard())
+    etat.employes[0].niveau = 4 // émeraude : la prochaine est le diamant
+    expect(verrouMinePioche(etat, etat.employes[0])).toBe('🕳️ Mine niveau 5')
+    expect(peutAmeliorerEmploye(etat, etat.employes[0])).toBe(false)
+    expect(ameliorerEmploye(etat, 0)).toEqual([])
+    etat.niveauMine = 5
+    expect(verrouMinePioche(etat, etat.employes[0])).toBeNull()
+    expect(peutAmeliorerEmploye(etat, etat.employes[0])).toBe(true)
   })
 })
 
