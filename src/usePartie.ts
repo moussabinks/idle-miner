@@ -174,7 +174,7 @@ export function usePartie(idMonde: string) {
   const recupererAbsence = useCallback(() => {
     if (resumeAbsence && resumeAbsence.ventesWagonnets > 0) {
       afficherGain(resumeAbsence.ventesWagonnets, true)
-      sons.vente(resumeAbsence.ventesWagonnets)
+      sons.venteMarche(resumeAbsence.ventesWagonnets)
       setNbVentes((n) => n + 1)
     } else sons.succes()
     setResumeAbsence(null)

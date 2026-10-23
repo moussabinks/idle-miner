@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BLOCS, LISTE_BLOCS, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_MINE, NIVEAU_MINE_MAX, PIOCHES } from './donnees'
+import { BLOCS, LISTE_BLOCS, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_MINE, NIVEAU_MINE_MAX, PIOCHES } from './donnees'
 
 describe('les données du jeu', () => {
   it('7 blocs : plus de lapis ni de netherite', () => {
@@ -36,5 +36,22 @@ describe('les données du jeu', () => {
       expect(niveau.cout.materiaux).toEqual({})
       expect(niveau.cout.argent).toBeGreaterThan(0)
     }
+  })
+
+  // (23/10 bis) L'ascenseur doit suivre les mineurs : avant, son niveau 4 sur 6 suffisait même à
+  // la fin du jeu.
+  it("l'ascenseur a 10 niveaux, de plus en plus chers, et son débit suit les mineurs", () => {
+    const debit = (n: (typeof NIVEAUX_ASCENSEUR)[number]) => n.capacite / (2 * n.secondesTrajet + n.secondesChargement + n.secondesVidage)
+    expect(NIVEAUX_ASCENSEUR).toHaveLength(10)
+    NIVEAUX_ASCENSEUR.forEach((n, i) => {
+      expect(n.niveau).toBe(i + 1)
+      if (i === 0) return
+      expect(debit(n)).toBeGreaterThan(debit(NIVEAUX_ASCENSEUR[i - 1]) * 1.3)
+      expect(n.cout.argent ?? 0).toBeGreaterThan(NIVEAUX_ASCENSEUR[i - 1].cout.argent ?? 0)
+    })
+    // 5 mineurs communs avec une pioche en diamant : le niveau 4 ne suit plus du tout.
+    const cinqMineursDiamant = 5 * NIVEAUX_EMPLOYE[NIVEAUX_EMPLOYE.length - 1].vitesse
+    expect(debit(NIVEAUX_ASCENSEUR[3])).toBeLessThan(cinqMineursDiamant / 1.5)
+    expect(debit(NIVEAUX_ASCENSEUR[9])).toBeGreaterThan(cinqMineursDiamant * 3)
   })
 })

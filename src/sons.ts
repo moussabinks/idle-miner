@@ -1,5 +1,6 @@
 // Les bruitages du jeu, fabriqués directement par le navigateur (Web Audio) :
-// pas de fichier son à charger. Chaque son est un petit mélange de « notes »
+// presque pas de fichier son à charger (23/10 : seul le « cha-ching » du marché est un vrai
+// enregistrement, `public/sons/cash.mp3`). Chaque son est un petit mélange de « notes »
 // (un oscillateur dont le volume retombe) et de « bruit » (un souffle filtré,
 // pour les coups de pioche et les éboulements).
 //
@@ -132,6 +133,51 @@ function bruit(debut: number, duree: number, options: OptionsBruit = {}) {
   source.stop(t + duree + 0.02)
 }
 
+// (23/10) Le « cha-ching » du marché : un vrai enregistrement (`public/sons/cash.mp3`, coupé
+// autour du bruit de la caisse). Il est chargé une seule fois, au premier son du jeu ; en
+// attendant (ou sans réseau), c'est la caisse fabriquée (sons.vente) qui sonne.
+const FICHIER_CASH = '/sons/cash.mp3'
+let tamponCash: AudioBuffer | null = null
+let chargementCash: Promise<void> | null = null
+let dernierCash = 0 // l'heure du dernier « cha-ching » (pour ne pas en empiler dix d'un coup)
+
+function chargerCash(ctx: AudioContext): void {
+  if (chargementCash) return
+  chargementCash = fetch(FICHIER_CASH)
+    .then((reponse) => reponse.arrayBuffer())
+    .then((octets) => ctx.decodeAudioData(octets))
+    .then((tampon) => {
+      tamponCash = tampon
+    })
+    .catch(() => {
+      chargementCash = null // on réessaiera la prochaine fois
+    })
+}
+
+// On le charge dès le premier clic du joueur, pour qu'il soit prêt à la première vente.
+quandLeSonEstPermis(() => {
+  const ctx = contexteAudio()
+  if (ctx) chargerCash(ctx)
+})
+
+// Joue le « cha-ching ». Renvoie faux s'il n'est pas encore chargé.
+function jouerCash(volume: number): boolean {
+  const ctx = audio()
+  if (!ctx || !sortie) return true // son coupé : rien à jouer
+  chargerCash(ctx)
+  if (!tamponCash) return false
+  // Plusieurs wagonnets qui vendent en même temps : un seul « cha-ching ».
+  if (ctx.currentTime - dernierCash < 0.4) return true
+  dernierCash = ctx.currentTime
+  const source = ctx.createBufferSource()
+  source.buffer = tamponCash
+  const gain = ctx.createGain()
+  gain.gain.value = volume
+  source.connect(gain).connect(sortie)
+  source.start()
+  return true
+}
+
 // La série de minerais (pour la note qui monte) : une gamme pentatonique, toujours jolie.
 const GAMME_SERIE = [1047, 1175, 1319, 1568, 1760, 2093, 2349, 2637]
 let serieMinerais = 0
@@ -256,14 +302,12 @@ export const sons = {
     sons.pieces(2, 0.14)
   },
 
-  // Un wagonnet vend son chargement au marché (27/10) : la cloche du marché, « ka-ching ! » et
-  // une cascade de pièces, d'autant plus longue que la vente est grosse.
+  // Un wagonnet vend son chargement au marché (27/10) : le « cha-ching » enregistré (23/10, il
+  // remplace la cloche et la cascade de pièces), un peu plus fort pour les grosses ventes.
   venteMarche(montant: number) {
-    note(1568, 0, 0.5, { type: 'sine', volume: 0.1 })
-    note(2093, 0.08, 0.5, { type: 'sine', volume: 0.08 })
+    if (jouerCash(montant >= 1000 ? 1 : 0.8)) return
+    // Pas encore chargé : la caisse fabriquée, comme avant.
     sons.vente(montant)
-    // Une petite fanfare qui monte pour les grosses ventes.
-    if (montant >= 1000) [1047, 1319, 1568, 2093].forEach((f, i) => note(f, 0.3 + i * 0.07, 0.25, { type: 'triangle', volume: 0.07 }))
   },
 
   // Un achat : « pop » puis deux notes qui montent.

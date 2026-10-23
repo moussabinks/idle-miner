@@ -91,10 +91,10 @@ Elle n'apparaît pas si le jeu est déjà installé, ou si le navigateur ne sait
 
 - En haut : « 🏆 Classement », l'étiquette dorée « 💰 Argent en poche » (23/10 bis : l'argent actuel du portefeuille, mis à jour toutes les 5 minutes), et 🔄 pour le relire.
 - Un **podium** pour les 3 premiers : le 1er au milieu, sur la plus haute marche dorée qui brille, avec 🥇 et une 👑 qui se dandine ; 🥈 à gauche (marche argentée), 🥉 à droite (marche bronze). Pseudo, argent en or (« 2,45 M$ »), 🕳️ niveau. Les marches montent en rebondissant.
-- Puis **tous les joueurs inscrits** (jusqu'à 1 000, 23/10 bis ; avant les 50 premiers) (« 4 Rayan 🕳️ 3 150 k$ »), qui défilent dans le panneau. La ligne du joueur connecté est verte.
+- Puis **les 7 suivants** (le top 10 en tout, 23/10 ter ; avant, jusqu'à 1 000 joueurs) (« 4 Rayan 🕳️ 3 150 k$ »). La ligne du joueur connecté est verte.
 - **En bas, ta place** (toujours visible) : « #7 · Toi · 12 k$ » et « 🔥 Encore **3 k$** pour dépasser **Jade** » (vert). Sans compte, un bandeau doré qui respire : « Avec 12 k$, tu serais 7e ! » (le meilleur argent gagné des mondes de ce navigateur) et le bouton **Entrer**, qui ouvre le formulaire du compte. Le 1er : « 👑 Tu es le numéro 1 ! ».
 - Messages : « Chargement du classement… », « Personne n'est encore classé : à toi d'être le premier ! », « Impossible de charger le classement. Vérifie ta connexion. » (rouge).
-- Il se relit avec 🔄 et après chaque envoi de la sauvegarde.
+- Il se relit avec 🔄, après chaque envoi de la sauvegarde, et tout seul toutes les 5 minutes (23/10 ter).
 
 ### 2.7 La version
 

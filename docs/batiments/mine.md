@@ -144,16 +144,22 @@ Total : 64 750 $ + 50 pierre + 300 fer + 60 redstone + 120 or (29/10 : 35 400 $ 
 
 Il ne transporte que les **mineurs employés** (le joueur ne descend plus) : en fait, la caisse de leur sac. Un trajet = une montée ou une descente. Depuis le 30/10, **la mine a son ascenseur de niveau 1 dès le début** (`creerPartie` ; une vieille partie le reçoit à la conversion v25). L'**échelle** (**10 s** par trajet, `SECONDES_ECHELLE`) ne servait qu'avant.
 
-| Niveau | Un trajet | Prix (30/10) | Niveau du joueur |
-|---|---:|---|---:|
-| 1 | 6 s | (dès le début ; avant : 400 $ + 20 fer, niveau 4) | — |
-| 2 | 4 s | 1 500 $ + 50 fer + 10 redstone | 5 |
-| 3 | 2,8 s | 7 000 $ + 120 fer + 40 redstone | 8 |
-| 4 | 2 s | 25 000 $ + 200 fer + 100 redstone | 10 |
-| 5 | 1,4 s | 80 000 $ + 200 redstone + 60 or | 13 |
-| 6 | 1 s | 250 000 $ + 150 or + 30 émeraude | 15 |
+(23/10 bis) **10 niveaux** au lieu de 6 : avant, le niveau 4 sur 6 suffisait même à la fin du jeu (mine au maximum, mineurs presque au maximum). Maintenant, chaque niveau remonte environ **1,5 fois plus** que le précédent, pour suivre ce que creusent les mineurs (1 par niveau de la mine, pioche et rareté de plus en plus fortes) : avec une mine au maximum et de bons mineurs (6 à 15 blocs/s), il faut le niveau 7 à 9 ; avec des légendaires et des mythiques, le 10. Une partie en cours garde son numéro de niveau (son niveau 4 remonte donc moins qu'avant).
 
-Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, niveau 1 compris : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude).
+| Niveau | Un trajet | Prix (23/10 bis) | Niveau du joueur |
+|---|---:|---|---:|
+| 1 | 6 s | (dès le début) | — |
+| 2 | 5 s | 1 200 $ + 40 fer | 3 |
+| 3 | 4,2 s | 4 000 $ + 80 fer + 15 redstone | 5 |
+| 4 | 3,6 s | 10 000 $ + 140 fer + 50 redstone | 7 |
+| 5 | 3 s | 22 000 $ + 200 fer + 100 redstone + 20 or | 9 |
+| 6 | 2,5 s | 45 000 $ + 160 redstone + 50 or | 10 |
+| 7 | 2,1 s | 90 000 $ + 220 redstone + 90 or + 10 émeraude | 11 |
+| 8 | 1,8 s | 170 000 $ + 140 or + 35 émeraude | 13 |
+| 9 | 1,5 s | 320 000 $ + 200 or + 70 émeraude + 10 diamant | 14 |
+| 10 | 1,25 s | 600 000 $ + 120 émeraude + 35 diamant | 15 |
+
+Total : 1 282 200 $ + 460 fer + 545 redstone + 640 or + 235 émeraude + 45 diamant (avant le 23/10 bis : 363 500 $, 6 niveaux).
 
 ### La taille des wagonnets
 
@@ -197,19 +203,25 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 ### L'ascenseur et l'échelle
 
 - Il ne sert qu'aux **mineurs employés**. Depuis le 23/10, **sa caisse fait des allers-retours sans cesse** tant qu'un mineur travaille au fond, pleine ou pas : elle descend, se charge au fond en prenant les sacs des mineurs (**1 s** au niveau 1), remonte, se vide dans le coffre (**2 s** au niveau 1), et repart. Depuis le 23/10, **chaque niveau de l'ascenseur raccourcit aussi le chargement et le vidage** (`secondesChargementAscenseur`, `secondesVidageAscenseur`). Les mineurs restent au fond (ils ne remontent que s'ils ne sont plus payés). Coffre plein : elle attend en haut, pleine.
-- **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + 1 + 2) :
+- **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + chargement + vidage) :
 
 | Niveau | Trajet | Charge / vide | Caisse | Remonte au plus | Prix |
 |---|---:|---:|---:|---:|---|
 | 1 (au départ) | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | — |
-| 2 | 4 s | 0,8 s / 1,6 s | 25 | 2,5 bloc/s | 1 500 $ + 50 fer + 10 redstone |
-| 3 | 2,8 s | 0,6 s / 1,2 s | 40 | 5,4 bloc/s | 7 000 $ + 120 fer + 40 redstone |
-| 4 | 2 s | 0,5 s / 0,9 s | 60 | 11,1 bloc/s | 25 000 $ + 200 fer + 100 redstone |
-| 5 | 1,4 s | 0,4 s / 0,7 s | 90 | 23,4 bloc/s | 80 000 $ + 200 redstone + 60 or |
-| 6 | 1 s | 0,3 s / 0,5 s | 130 | 46 bloc/s | 250 000 $ + 150 or + 30 émeraude |
+| 2 | 5 s | 0,9 s / 1,8 s | 20 | 1,6 bloc/s | 1 200 $ + 40 fer |
+| 3 | 4,2 s | 0,8 s / 1,6 s | 26 | 2,4 bloc/s | 4 000 $ + 80 fer + 15 redstone |
+| 4 | 3,6 s | 0,7 s / 1,4 s | 33 | 3,5 bloc/s | 10 000 $ + 140 fer + 50 redstone |
+| 5 | 3 s | 0,6 s / 1,2 s | 42 | 5,4 bloc/s | 22 000 $ + 200 fer + 100 redstone + 20 or |
+| 6 | 2,5 s | 0,5 s / 1 s | 52 | 8 bloc/s | 45 000 $ + 160 redstone + 50 or |
+| 7 | 2,1 s | 0,45 s / 0,9 s | 64 | 11,5 bloc/s | 90 000 $ + 220 redstone + 90 or + 10 émeraude |
+| 8 | 1,8 s | 0,4 s / 0,8 s | 78 | 16,3 bloc/s | 170 000 $ + 140 or + 35 émeraude |
+| 9 | 1,5 s | 0,35 s / 0,7 s | 95 | 23,5 bloc/s | 320 000 $ + 200 or + 70 émeraude + 10 diamant |
+| 10 | 1,25 s | 0,3 s / 0,6 s | 115 | 33,8 bloc/s | 600 000 $ + 120 émeraude + 35 diamant |
+
+(Sous l'électricité du générateur, les trajets sont plus courts : il remonte encore plus.)
 
 - Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse : depuis le 23/10, une alerte **🛗 Ascenseur trop petit** qui respire, avec un bouton « ⬆️ Améliorer », est aussi dans l'**onglet ⛏️ Creuser** (pastille « ! » sur l'onglet) ; le panneau de la mine affiche « ⚠️ Ascenseur trop petit : tes mineurs creusent *x* bloc/s, la caisse en remonte *y* » (seulement si le niveau suivant rapporte au moins 10 %). Voir [personnel.md](personnel.md).
-- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur. Son niveau 2 demande le niveau 5 du joueur (30/10 ; avant, sa ligne affiche « 🔒 … · au niveau 5 »).
+- L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur. Son niveau 2 demande le niveau 3 du joueur (23/10 bis ; avant, le niveau 5), puis 5, 7, 9, 10, 11, 13, 14 et 15 (sa ligne affiche « 🔒 … · au niveau N »).
 
 ### Descendre d'un niveau
 
