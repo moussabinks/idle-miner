@@ -210,13 +210,23 @@ export function batimentProcheDe(village: Village, x: number, y: number, marge: 
 // (en comptant la vraie longueur des pas, 1 tout droit et 1,41 en diagonale) : la première case
 // du tour du bâtiment qu'on atteint est la plus proche à pied. Si aucune n'est atteignable, on
 // prend celle de la porte (caseAcces).
+// (23/10) Seulement **devant** le bâtiment : ses deux côtés du bas de l'écran (x = b.x + t, ou
+// y = b.y + t), jamais derrière, où le bâtiment cacherait le joueur, même si on a touché
+// derrière lui. S'il n'y a aucune place devant, on prend le tour complet.
 export function caseAccesProche(village: Village, b: BatimentPose, depuis: { x: number; y: number }): Case {
+  return caseAutourProche(village, b, depuis, true) ?? caseAutourProche(village, b, depuis, false) ?? caseAcces(village, b)
+}
+
+function caseAutourProche(village: Village, b: BatimentPose, depuis: { x: number; y: number }, devantSeulement: boolean): Case | null {
   const t = BATIMENTS[b.id].taille
   const bloquees = casesBloquees(village)
   const dans = (c: Case) => c.x >= 0 && c.y >= 0 && c.x < TAILLE_GRILLE && c.y < TAILLE_GRILLE
   const libre = (c: Case) => dans(c) && !bloquees.has(cleCase(c.x, c.y))
-  // Une case du tour extérieur du bâtiment (à un bloc de son bord, coins compris).
-  const autour = (c: Case) => c.x >= b.x - 1 && c.x <= b.x + t && c.y >= b.y - 1 && c.y <= b.y + t && !(c.x >= b.x && c.x < b.x + t && c.y >= b.y && c.y < b.y + t)
+  // Une case du tour extérieur du bâtiment (à un bloc de son bord, coins compris)... et, si on le
+  // demande, seulement sur ses deux côtés de devant.
+  const autourComplet = (c: Case) => c.x >= b.x - 1 && c.x <= b.x + t && c.y >= b.y - 1 && c.y <= b.y + t && !(c.x >= b.x && c.x < b.x + t && c.y >= b.y && c.y < b.y + t)
+  const devant = (c: Case) => (c.x === b.x + t && c.y >= b.y && c.y <= b.y + t) || (c.y === b.y + t && c.x >= b.x && c.x <= b.x + t)
+  const autour = (c: Case) => autourComplet(c) && (!devantSeulement || devant(c))
   const depart = { x: Math.floor(depuis.x), y: Math.floor(depuis.y) }
   if (autour(depart) && libre(depart)) return depart
 
@@ -251,7 +261,7 @@ export function caseAccesProche(village: Village, b: BatimentPose, depuis: { x: 
       }
     }
   }
-  return caseAcces(village, b)
+  return null
 }
 
 // Un petit cache : le village change rarement, mais les mineurs demandent leur chemin souvent.
