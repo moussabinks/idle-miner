@@ -424,6 +424,23 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     }
   }, [])
 
+  // (23/10) Un niveau gagné ferme tout ce qui est ouvert (panneau du bâtiment, menus, fenêtres) :
+  // le joueur regarde la fête du niveau, même s'il était en train de cliquer sur la mine.
+  // (on compare pendant le rendu, comme pour la fête elle-même)
+  const niveauFete = feteNiveau?.apres ?? null
+  const [niveauMenusFermes, setNiveauMenusFermes] = useState<number | null>(null)
+  if (niveauFete !== null && niveauFete !== niveauMenusFermes) {
+    setNiveauMenusFermes(niveauFete)
+    setPanneauFerme(true)
+    setMenuConstruction(false)
+    setAideOuverte(false)
+    setReglagesOuverts(false)
+    setSuccesOuverts(false)
+    setStatsOuvertes(false)
+    setBilanOuvert(false)
+    fermerTrajets()
+  }
+
   function ouvrirConstruction() {
     setModifier(false)
     annulerEdition()

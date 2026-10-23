@@ -21,6 +21,9 @@ const DEBUT_COMPTEUR = 650
 const PAS_COMPTEUR = 260
 // Entre deux lignes de la liste des déblocages (ms).
 const PAS_LISTE = 230
+// (23/10) On ne peut pas la fermer pendant la première seconde (ms) : un joueur qui clique vite
+// sur la mine la fermait sans la voir.
+const DELAI_AVANT_FERMER = 1000
 
 // « ⛏️ Mine niveau 2 : Veine de redstone » → l'icône, puis le texte.
 function couper(chose: string): { icone: string; texte: string } {
@@ -33,6 +36,7 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
   const choses = Array.from({ length: niveau - avant }, (_, i) => deblocagesDuNiveau(avant + 1 + i)).flat()
   const [affiche, setAffiche] = useState(avant)
   const [lignes, setLignes] = useState(0)
+  const [peutFermer, setPeutFermer] = useState(false)
   const [confettis] = useState(() => tirerConfettis(46, ['#ffd84a', '#ffffff', '#ff9d2e', '#9cf08f', '#7fd3ff', '#c792ff']))
   const finCompteur = DEBUT_COMPTEUR + (niveau - avant) * PAS_COMPTEUR
 
@@ -65,9 +69,18 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
     return () => minuteurs.forEach((m) => clearTimeout(m))
   }, [choses.length, finCompteur])
 
+  // Au bout d'une seconde, on peut la fermer (en touchant à côté ou avec le bouton).
+  useEffect(() => {
+    const minuteur = window.setTimeout(() => setPeutFermer(true), DELAI_AVANT_FERMER)
+    return () => clearTimeout(minuteur)
+  }, [])
+  function fermer() {
+    if (peutFermer) onFermer()
+  }
+
   const arrive = affiche === niveau
   return (
-    <div className="voile voile-devant fete-niveau" role="dialog" aria-modal="true" aria-labelledby="titre-fete-niveau" onClick={onFermer}>
+    <div className="voile voile-devant fete-niveau" role="dialog" aria-modal="true" aria-labelledby="titre-fete-niveau" onClick={fermer}>
       <section className="carte fete-niveau-carte" onClick={(e) => e.stopPropagation()}>
         {/* Les rayons qui tournent derrière l'étoile, et les confettis qui éclatent. */}
         <span className={`fete-rayons ${arrive ? 'fete-rayons-on' : ''}`} aria-hidden="true" />
@@ -127,7 +140,7 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
             {prochain.choses.length > 2 ? '…' : ''}
           </p>
         )}
-        <button className="bouton bouton-vendre tuto-gros-bouton fete-bouton" onClick={onFermer} autoFocus>
+        <button className={`bouton bouton-vendre tuto-gros-bouton fete-bouton ${peutFermer ? '' : 'fete-bouton-attente'}`} onClick={fermer} aria-disabled={!peutFermer}>
           🎉 Génial !
         </button>
       </section>
