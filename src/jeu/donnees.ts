@@ -137,8 +137,20 @@ export const PIOCHES: Pioche[] = [
     reparation: { argent: 150, materiaux: { or: 5 } },
     couleur: '#f4c518',
   },
+  // (23/10) La pioche en émeraude, avec la mine d'émeraude (niveau 4 de la mine, niveau 10 du
+  // joueur) : entre l'or et le diamant. Chaque pioche double un minerai un peu plus souvent.
   {
     niveau: 3,
+    nom: 'Émeraude',
+    emoji: '💚',
+    doublement: 0.38,
+    durabilite: 750,
+    cout: { argent: 9000, materiaux: { emeraude: 25 } },
+    reparation: { argent: 300, materiaux: { emeraude: 4 } },
+    couleur: '#2ee07a',
+  },
+  {
+    niveau: 4,
     nom: 'Diamant',
     emoji: '💎',
     doublement: 0.45,
@@ -616,7 +628,7 @@ export const NIVEAU_JOUEUR_POUR = {
   rails: 3, // poser des rails (et donc créer des trajets de wagonnets)
   mine: [1, 4, 7, 10, 13], // NIVEAUX_MINE
   coffre: [1, 2, 5, 8, 12], // NIVEAUX_COFFRE
-  pioches: [1, 4, 7, 12], // PIOCHES
+  pioches: [1, 4, 7, 10, 12], // PIOCHES (23/10 : l'émeraude au niveau 10, avec la mine d'émeraude)
   sacs: [1, 3, 5, 8, 11, 14, 15], // SACS
   ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
   equipement: [1, 4, 6, 9, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs)

@@ -209,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))
+    const convertie = convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -326,5 +326,17 @@ export function convertirVersion24(donnees: unknown): unknown {
   if (typeof donnees !== 'object' || donnees === null) return donnees
   const ancienne = donnees as EtatJeu
   if (ancienne.version !== 24 || typeof ancienne.ascenseur !== 'object' || ancienne.ascenseur === null) return donnees
-  return { ...ancienne, version: VERSION_ETAT, ascenseur: { ...ancienne.ascenseur, niveau: Math.max(1, ancienne.ascenseur.niveau) } }
+  return { ...ancienne, version: 25, ascenseur: { ...ancienne.ascenseur, niveau: Math.max(1, ancienne.ascenseur.niveau) } }
+}
+
+// Version 25 → 26 (23/10) : la pioche en émeraude arrive entre l'or (2) et le diamant, qui passe
+// du niveau 3 au niveau 4. Une pioche en diamant reste donc une pioche en diamant.
+export function convertirVersion25(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 25 || typeof ancienne.pioches !== 'object' || ancienne.pioches === null) return donnees
+  const decaler = (niveau: number) => (niveau >= 3 ? niveau + 1 : niveau)
+  const pioches: Record<number, number> = {}
+  for (const [niveau, usure] of Object.entries(ancienne.pioches)) pioches[decaler(Number(niveau))] = usure
+  return { ...ancienne, version: VERSION_ETAT, pioches, niveauPioche: decaler(ancienne.niveauPioche), meilleure: decaler(ancienne.meilleure) }
 }

@@ -106,12 +106,13 @@ Total pour aller au niveau 5 : **122 900 $ + 165 fer + 180 redstone + 170 or + 4
 | Pierre | 10 % | 150 | 10 $ + 20 pierre (offerte, pas rachetable dans l'interface) | — | 5 $ + 10 pierre |
 | Fer | 20 % | 300 | 400 $ + 20 fer (29/10 : 500 $ + 40 fer) | 4 | 30 $ + 5 fer |
 | Or | 30 % | 500 | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| Émeraude (23/10) | 38 % | 750 | 9 000 $ + 25 émeraude | 10 | 300 $ + 4 émeraude |
 | Diamant | 45 % | 1 000 | 20 000 $ + 20 diamant | 12 | 600 $ + 3 diamant |
 
 - **Doublement** (`chanceDoublement`) : un minerai cassé en cliquant donne 2 au lieu d'1 si `aleatoire() < doublement`. 0 avec une pioche cassée. Seulement pour les clics. Un bonus de combo ajoute sa « fortune » (au plus 100 %), même avec une pioche cassée.
 - **Usure** : +1 à chaque bloc cassé avec une pioche pas cassée. Cassée quand l'usure atteint la durabilité ; elle ne s'use plus ensuite.
 - **Réparation** (`coutReparation`) : `part = min(1, usure / durabilité)` ; argent = `max(1, arrondi au-dessus(réparation.argent × part))`, chaque minerai = `max(1, arrondi au-dessus(n × part))`.
-- **Coût de la pioche par clic** (réparer quand elle casse) : pierre 5 $ + 10 pierre / 150 clics ; fer 30 $ + 5 fer / 300 ; or 150 $ + 5 or / 500 ; diamant 600 $ + 3 diamants / 1 000. Une pioche en diamant coûte donc environ 0,9 $ par clic (avec les diamants à 100 $), pour un gain moyen de 28,5 $ par clic au niveau 5.
+- **Coût de la pioche par clic** (réparer quand elle casse) : pierre 5 $ + 10 pierre / 150 clics ; fer 30 $ + 5 fer / 300 ; or 150 $ + 5 or / 500 ; émeraude 300 $ + 4 émeraude / 750 ; diamant 600 $ + 3 diamants / 1 000. Une pioche en diamant coûte donc environ 0,9 $ par clic (avec les diamants à 100 $), pour un gain moyen de 28,5 $ par clic au niveau 5.
 
 ### Les bonus de combo (30/10)
 

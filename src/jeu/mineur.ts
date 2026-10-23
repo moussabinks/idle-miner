@@ -217,7 +217,7 @@ export type EtatJeu = {
 // Version 24 (29/10) : le niveau du joueur (une partie de la version 23 reçoit l'XP de ce qu'elle a déjà).
 // Version 25 (30/10) : l'ascenseur est dans la mine dès le début, les bonus de combo, le résumé
 // de l'absence (une partie de la version 24 reçoit l'ascenseur de niveau 1).
-export const VERSION_ETAT = 25
+export const VERSION_ETAT = 26
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------

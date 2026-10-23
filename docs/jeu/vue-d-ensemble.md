@@ -99,7 +99,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Débit (de la mine)** | Les blocs que la mine sort toute seule : 0,2 à 0,4 par seconde selon le niveau. |
 | **Décoration** | Fleurs, buissons, rochers, lanternes, arbres… Elles ne s'achètent plus depuis le 27/10 ; leurs dessins ornent seulement la plage et l'écran d'accueil. |
 | **Découverte** | Le manager (niveau 3) et le recruteur (niveau 4) : une bulle ✨ saute au-dessus du Personnel jusqu'à ce qu'on y passe. |
-| **Doublement** | La chance qu'un clic donne 2 minerais au lieu d'1 : 10 % (pioche en pierre) à 45 % (diamant). Jamais pour la pierre, ni pour la mine toute seule, les mineurs ou la foreuse. |
+| **Doublement** | La chance qu'un clic donne 2 minerais au lieu d'1 : 10 % (pioche en pierre) à 45 % (diamant ; 38 % pour l’émeraude, 23/10). Jamais pour la pierre, ni pour la mine toute seule, les mineurs ou la foreuse. |
 | **Durabilité / usure** | Chaque pioche tient un nombre de clics (150 à 1 000) ; chaque bloc cassé lui retire 1 point. À 0, elle est cassée. |
 | **Échelle** | Le chemin des mineurs sans ascenseur : 10 s par montée ou descente (seulement dans les vieilles parties : depuis le 30/10, l'ascenseur est là dès le début). |
 | **Électricité** | Ce que donne le générateur dans son rayon : rails électriques (les wagonnets roulent tout seuls) et foreuse boostée. |

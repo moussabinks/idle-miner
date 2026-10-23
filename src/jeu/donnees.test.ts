@@ -8,7 +8,7 @@ describe('les données du jeu', () => {
   })
 
   it('les pioches doublent de plus en plus souvent, et durent de plus en plus longtemps', () => {
-    expect(PIOCHES.map((p) => p.doublement)).toEqual([0.1, 0.2, 0.3, 0.45])
+    expect(PIOCHES.map((p) => p.doublement)).toEqual([0.1, 0.2, 0.3, 0.38, 0.45])
     PIOCHES.forEach((p, i) => {
       expect(p.niveau).toBe(i)
       if (i > 0) expect(p.durabilite).toBeGreaterThan(PIOCHES[i - 1].durabilite)
