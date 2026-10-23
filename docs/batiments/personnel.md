@@ -63,7 +63,8 @@ Chaque amélioration donne une meilleure pioche : il creuse plus vite, et son sa
 | 2 | Pierre | 0,6 bloc/s | 15 | 500 $ | 4 | 450 $ |
 | 3 | Fer | 0,75 bloc/s | 20 | 3 000 $ | 6 | 850 $ |
 | 4 | Or | 0,95 bloc/s | 30 | 15 000 $ | 9 | 1 400 $ |
-| 5 | Diamant | 1,2 bloc/s | 45 | 60 000 $ | 12 | 2 200 $ |
+| 5 | Émeraude (23/10) | 1,07 bloc/s | 38 | 32 000 $ | 10 | 1 750 $ |
+| 6 | Diamant | 1,2 bloc/s | 45 | 60 000 $ | 12 | 2 200 $ |
 
 Le 23/10, le premier mineur creuse **0,5 bloc/s** (avant 0,22) et ne remonte plus : il creuse sans s'arrêter, c'est l'ascenseur qui fait les allers-retours. Pour garder le même rythme de partie (niveau 5 de la mine en 7 h 48 pour le bot, médiane), les pioches suivantes montent moins (0,6 à 1,2 au lieu de 0,32 à 1) et les salaires suivent à peu près la pioche (220 à 2 200 $ depuis le 23/10 bis, un peu plus chers ; d'abord 150 à 1 600 $ ; le 30/10, 90 à 2 400 $) : une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-et-léchelle)). Sans le niveau du joueur, la carte affiche « 🔒 … ⭐ *N* requis » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
 

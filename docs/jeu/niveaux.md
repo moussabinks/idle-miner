@@ -74,7 +74,7 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 | 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or |
 | 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 ; ⚡ générateur rayon 20 |
 | 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 240 |
-| 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 💚 pioche en émeraude (23/10) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
+| 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 💚 pioche en émeraude, pour toi et (👷) pour les mineurs (23/10) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
 | 11 | 🎩 **le recruteur** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 360 ; 💼 manager 1 h hors ligne |
 | 12 | 🎩 recruteur niveau 2 ; 💼 manager 2 h hors ligne ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 600 places |
 | 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 5 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 ; 💼 manager 4 h hors ligne |
@@ -93,7 +93,7 @@ Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
 | Pioches (fer, or, émeraude, diamant) | 4, 7, 10, 12 |
 | Sacs (64 → 2 048) | 3, 5, 8, 11, 14, 15 |
 | Ascenseur (niveaux 2 à 6) | 5, 8, 10, 13, 15 (le niveau 1 est dans la mine dès le début, 30/10) |
-| Pioche des mineurs (pierre, fer, or, diamant) | 4, 6, 9, 12 |
+| Pioche des mineurs (pierre, fer, or, émeraude, diamant) | 4, 6, 9, 10, 12 |
 | Taille des wagonnets (100, 250, 600) | 6, 9, 12 |
 | Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
 | Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |

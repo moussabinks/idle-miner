@@ -259,14 +259,14 @@ export const NOMS_EMPLOYES = [
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
 ]
 
-// Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, diamant) :
+// Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, émeraude, diamant) :
 // environ 35 % de ce qu'il fait sortir de la mine (28/10 : paie toutes les 5 minutes, et plus
 // chère ; avant, 25 % toutes les 10 minutes, c'était trop peu).
 export const SECONDES_PAR_PAIE = 5 * 60
 // (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir. 23/10 : les mineurs ne remontent
 // plus et creusent bien plus : le salaire suit à peu près sa pioche, pour qu'une meilleure pioche
 // rapporte toujours plus qu'elle ne coûte en salaire.)
-export const SALAIRES = [220, 450, 850, 1400, 2200]
+export const SALAIRES = [220, 450, 850, 1400, 1750, 2200] // (23/10 : 1 750 $ pour l'émeraude)
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite. Son sac est le tas
 // qu'il remplit au fond de la mine en attendant que la caisse de l'ascenseur passe le prendre
@@ -278,6 +278,8 @@ export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout:
   { nom: 'Pierre', vitesse: 0.6, sac: 15, cout: { argent: 500, materiaux: {} } },
   { nom: 'Fer', vitesse: 0.75, sac: 20, cout: { argent: 3000, materiaux: {} } },
   { nom: 'Or', vitesse: 0.95, sac: 30, cout: { argent: 15000, materiaux: {} } },
+  // (23/10) La pioche en émeraude, entre l'or et le diamant (avec la pioche du joueur, niveau 10).
+  { nom: 'Émeraude', vitesse: 1.07, sac: 38, cout: { argent: 32000, materiaux: {} } },
   { nom: 'Diamant', vitesse: 1.2, sac: 45, cout: { argent: 60000, materiaux: {} } },
 ]
 
@@ -634,7 +636,7 @@ export const NIVEAU_JOUEUR_POUR = {
   pioches: [1, 4, 7, 10, 12], // PIOCHES (23/10 : l'émeraude au niveau 10, avec la mine d'émeraude)
   sacs: [1, 3, 5, 8, 11, 14, 15], // SACS
   ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
-  equipement: [1, 4, 6, 9, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs)
+  equipement: [1, 4, 6, 9, 10, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs ; 23/10 : l'émeraude au niveau 10)
   pousseur: [1, 5, 8, 11, 14], // NIVEAUX_POUSSEUR (23/10)
   wagonnet: [1, 6, 9, 12], // NIVEAUX_WAGONNET
   generateur: [1, 8, 10, 13, 15], // NIVEAUX_GENERATEUR

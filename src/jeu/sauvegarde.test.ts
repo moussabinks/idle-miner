@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { VERSION_ETAT, cliquerMine, creerPartie } from './mineur'
 import { niveauJoueur } from './niveaux'
+import { embaucher } from './employes'
+import { partieDeTest } from './partieDeTest'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
@@ -52,6 +54,25 @@ describe('sauvegarde', () => {
     expect(relue?.pioches).toEqual({ 0: 5, 2: 10, 4: 40 })
     expect(relue?.niveauPioche).toBe(4)
     expect(relue?.meilleure).toBe(4)
+  })
+
+  it('(23/10) un mineur avec la pioche en diamant (version 26) la garde : l’émeraude s’intercale', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    etat.argent = 10_000
+    embaucher(etat, aleatoireAvecGraine(2))
+    const stockage = fauxStockage()
+    const mineur = etat.employes[0]
+    expect(mineur.role).toBe('mineur')
+    sauvegarder(stockage, '1', {
+      ...etat,
+      version: 26,
+      employes: [
+        { ...mineur, niveau: 4 },
+        { ...mineur, niveau: 3 },
+        { ...mineur, role: 'pousseur' as const, niveau: 4 },
+      ],
+    })
+    expect(charger(stockage, '1')?.employes.map((e) => e.niveau)).toEqual([5, 3, 4])
   })
 
   it('(23/10) l’argent d’une ancienne trésorerie revient au joueur', () => {

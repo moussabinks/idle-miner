@@ -238,6 +238,7 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 | Pierre | 0,6 | 15 | 500 $ | 4 | 450 $ |
 | Fer | 0,75 | 20 | 3 000 $ | 6 | 850 $ |
 | Or | 0,95 | 30 | 15 000 $ | 9 | 1 400 $ |
+| Émeraude (23/10) | 1,07 | 38 | 32 000 $ | 10 | 1 750 $ |
 | Diamant | 1,2 | 45 | 60 000 $ | 12 | 2 200 $ |
 
 (30/10 : 0,22 à 1 bloc/s, salaires de 90 à 2 400 $, et le mineur remontait lui-même son sac.)
