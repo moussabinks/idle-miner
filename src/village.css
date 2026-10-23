@@ -1790,12 +1790,13 @@ g.grille-construction {
 
 .jauge-pleine {
   border-color: #ffd84a;
-  animation: jauge-pleine 0.9s ease-in-out infinite;
+  animation: jauge-pleine 2.2s ease-in-out infinite;
 }
 
+/* (23/10) Plus calme : elle grossit à peine, lentement (avant : +12 % deux fois par seconde). */
 @keyframes jauge-pleine {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.12); }
+  50% { transform: translate(-50%, -50%) scale(1.03); }
 }
 
 .jauge-coffre-texte {
@@ -2818,4 +2819,18 @@ g.grille-construction {
 @keyframes nouveau-bulle { to { transform: translateY(-3px) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) {
   .eclat-embauche-rayons, .eclat-embauche i, .eclat-embauche-texte, .perso-nouveau::before, .perso-nouveau::after, .bulle-nouveau-mineur { animation: none; }
+}
+
+/* (23/10) Coffre plein, panneau de la mine ouvert : le bouton « Tout mettre dans le sac » est mis
+   en avant, doucement (moins fort qu'au tutoriel) : un liseré doré qui respire. */
+.bouton-sac-urgent {
+  position: relative;
+  box-shadow: 0 0 0 2px #ffd84a, 0 0 12px rgb(255 214 90 / 0.65);
+  animation: sac-urgent 1.8s ease-in-out infinite;
+}
+@keyframes sac-urgent {
+  50% { scale: 1.04; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bouton-sac-urgent { animation: none; }
 }

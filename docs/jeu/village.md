@@ -226,3 +226,6 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 ### Toucher un bâtiment (23/10)
 
 Le joueur va toujours **devant** le bâtiment touché (ses deux côtés du bas de l'écran), par le plus court chemin depuis là où il est, puis son panneau s'ouvre. Même si on touche derrière le bâtiment (son toit, ou l'herbe juste derrière, dans la « zone de clic » de 1,6 case), il ne va jamais derrière, où le bâtiment le cacherait (`caseAccesProche` dans `village.ts`). S'il n'y a aucune place devant, il prend la plus proche autour.
+
+Exception (23/10) : **la mine**, très grande, on s'y arrête du côté le plus proche, même derrière. Un **pousseur** embauché marche tout droit, par le plus court chemin, jusqu'à sa case de quai, à côté du premier rail de son trajet (`caseQuai`, `cheminEmploye` dans `employes.ts`).
+

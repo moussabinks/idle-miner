@@ -18,7 +18,7 @@ describe('revenu par seconde', () => {
 
   it('un mineur rapporte plus que son salaire', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    etat.argent = 100
+    etat.argent = 500
     embaucher(etat, aleatoireAvecGraine(2))
     const mineur = etat.employes[0]
     expect(revenuBrutEmploye(etat, mineur) * SECONDES_PAR_PAIE).toBeGreaterThan(salaireEmploye(mineur))
@@ -27,7 +27,7 @@ describe('revenu par seconde', () => {
 
   it('un pousseur ne creuse pas', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    etat.argent = 100
+    etat.argent = 500
     embaucher(etat, aleatoireAvecGraine(2))
     etat.employes[0].role = 'pousseur'
     expect(revenuBrutEmploye(etat, etat.employes[0])).toBe(0)

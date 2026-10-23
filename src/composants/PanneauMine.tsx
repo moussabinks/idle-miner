@@ -13,7 +13,7 @@
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
 import { useEffect, useRef, useState } from 'react'
-import { BATIMENTS, BLOCS, BONUS_COMBO, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, BONUS_COMBO, NIVEAU_JOUEUR_POUR, NIVEAUX_COFFRE, NIVEAUX_MINE, NIVEAU_MINE_MAX, type IdBloc } from '../jeu/donnees'
 import { chancesDesBlocs, gainsNiveauSuivant, infoNiveauMine } from '../jeu/mine'
 import {
   prochainNiveauAscenseur,
@@ -40,14 +40,14 @@ import { iconeActiviteEmploye, rareteDe } from '../jeu/employes'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import { trajetDe } from '../jeu/wagonnet'
 import type { Eclat, Trouvaille } from '../usePartie'
-import { Amelioration } from './Amelioration'
+import { Amelioration, BadgeXp } from './Amelioration'
 import { AmeliorationAscenseur } from './Ascenseur'
 import type { PropsPanneau } from './Panneaux'
 import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
 import { StockMinerais } from './StockMinerais'
 import { sons } from '../sons'
-import { verrou } from '../jeu/niveaux'
+import { niveauAtteint, niveauPourBatiment, verrou } from '../jeu/niveaux'
 
 type Props = PropsPanneau & {
   eclats: Eclat[]
@@ -345,9 +345,14 @@ const court = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 
 const enPlus = (avant: number, apres: number) => (avant <= 0 ? 'nouveau !' : `+${Math.round((apres / avant - 1) * 100)} %`)
 
 // Ce que rapporte le niveau suivant de la mine (27/10), en liste bien lisible.
-function GainsNiveau({ niveauActuel }: { niveauActuel: number }) {
-  const g = gainsNiveauSuivant(niveauActuel)
+// (23/10) Seulement ce qui est vrai et utile : le nouveau minerai, la mine qui sort plus de blocs,
+// les mineurs en plus. Plus de « un bloc vaut en moyenne... », et un bâtiment (ou le recruteur,
+// le manager) n'est annoncé que si le niveau du joueur le permet déjà (sinon, il ne se débloque
+// pas en descendant).
+function GainsNiveau({ etat }: { etat: EtatJeu }) {
+  const g = gainsNiveauSuivant(etat.niveauMine)
   if (!g) return null
+  const batimentsDebloques = g.batiments.filter((id) => niveauAtteint(etat, niveauPourBatiment(id)))
   return (
     <ul className="gains-niveau">
       {g.nouveaux.map((bloc) => (
@@ -356,25 +361,22 @@ function GainsNiveau({ niveauActuel }: { niveauActuel: number }) {
         </li>
       ))}
       <li>
-        💰 Un bloc vaut en moyenne {court(g.valeurAvant)} → <strong>{court(g.valeurApres)} $</strong> <span className="gain-pourcent">{enPlus(g.valeurAvant, g.valeurApres)}</span>
-      </li>
-      <li>
         ⚙️ La mine sort {court(g.debitAvant * 60)} → <strong>{court(g.debitApres * 60)} blocs/min</strong> toute seule <span className="gain-pourcent">{enPlus(g.debitAvant, g.debitApres)}</span>
       </li>
       <li>
         👷 <strong>+{g.mineursEnPlus} mineurs</strong> à embaucher au Personnel
       </li>
-      {g.batiments.length > 0 && (
+      {batimentsDebloques.length > 0 && (
         <li className="gain-fort">
-          🏗️ Débloque : <strong>{g.batiments.map((id) => BATIMENTS[id].nom).join(', ')}</strong>
+          🏗️ Débloque : <strong>{batimentsDebloques.map((id) => BATIMENTS[id].nom).join(', ')}</strong>
         </li>
       )}
-      {g.recruteur && (
+      {g.recruteur && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.recruteur[0]) && (
         <li className="gain-fort">
           🎲 Débloque le <strong>recruteur</strong> (mineurs rares)
         </li>
       )}
-      {g.manager && (
+      {g.manager && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.manager) && (
         <li className="gain-fort">
           💼 Débloque le <strong>manager</strong> (il paie les salaires)
         </li>
@@ -388,17 +390,15 @@ function ProchainNiveau({ etat, onVoir }: { etat: EtatJeu; onVoir: () => void })
   const g = gainsNiveauSuivant(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   if (!g || !prochain) return null
-  const possible = peutPayer(etat, prochain.cout)
+  const bloque = verrou(etat, 'mine', etat.niveauMine)
+  const possible = bloque === null && peutPayer(etat, prochain.cout)
   return (
     <button className={`rappel-niveau ${possible ? 'rappel-possible' : ''}`} onClick={onVoir}>
       <span className="rappel-niveau-titre">
-        ⬇ Niveau {g.niveau.niveau} : <strong>{g.niveau.nom}</strong>
+        ⬇ Mine niveau {g.niveau.niveau} : <strong>{g.niveau.nom}</strong>
       </span>
-      <span className="rappel-niveau-gains">
-        {g.nouveaux.map((bloc) => `+${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`).join(' ')} · valeur {enPlus(g.valeurAvant, g.valeurApres)}
-        {g.batiments.length > 0 && ` · 🏗️ ${g.batiments.map((id) => BATIMENTS[id].nom).join(', ')}`}
-      </span>
-      <span className="rappel-niveau-action">{possible ? '💰 Achetable !' : 'Voir ›'}</span>
+      <span className="rappel-niveau-gains">{g.nouveaux.map((bloc) => `+${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`).join(' ')}</span>
+      <span className="rappel-niveau-action">{bloque ? <BadgeXp texte={bloque} /> : possible ? '💰 Achetable !' : 'Voir ›'}</span>
     </button>
   )
 }
@@ -496,7 +496,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
             {prochain ? (
               <>
                 <span className="nom-niveau-suivant">{prochain.nom}</span>
-                <GainsNiveau niveauActuel={etat.niveauMine} />
+                <GainsNiveau etat={etat} />
                 <details className="plus-d-infos">
                   <summary>Les chances de chaque minerai</summary>
                   <span className="discret">
@@ -518,7 +518,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
               actuel={`Niveau ${etat.niveauMine} · ${niveau.nom}`}
               niveau={etat.niveauMine}
               niveauMax={NIVEAUX_MINE.length}
-              suivant={prochain && { cout: prochain.cout, texte: `⬇ Descendre au niveau ${prochain.niveau}` }}
+              suivant={prochain && { cout: prochain.cout, texte: `⬇ Descendre : mine niveau ${prochain.niveau}` }}
               verrou={verrou(etat, 'mine', etat.niveauMine)}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer((e) => descendreNiveauMine(e, aleatoireNavigateur))}

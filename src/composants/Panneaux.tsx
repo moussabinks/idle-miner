@@ -63,7 +63,7 @@ import { batimentPose } from '../jeu/village'
 import { liaisonsDepuis, ligneDe, trajetElectrique } from '../jeu/wagonnet'
 import { PanneauTrajets } from './PanneauTrajets'
 import type { Action } from '../usePartie'
-import { Achat, Amelioration } from './Amelioration'
+import { Achat, Amelioration, BadgeXp } from './Amelioration'
 import { Barre } from './Barre'
 import { lotChoisi, type Choix } from '../choix'
 import { Jauges } from './Jauges'
@@ -230,7 +230,7 @@ function CartePioche({ etat, jouer, pioche }: PropsPanneau & { pioche: (typeof P
       {/* (29/10) La pioche suivante se débloque avec le niveau du joueur. */}
       {prochaine && verrou(etat, 'pioches', pioche.niveau) !== null ? (
         <span className="amelioration-verrou">
-          🔒 Pioche en {pioche.nom} · {verrou(etat, 'pioches', pioche.niveau)}
+          🔒 Pioche en {pioche.nom} <BadgeXp texte={verrou(etat, 'pioches', pioche.niveau) ?? ''} />
         </span>
       ) : (prochaine || pioche.niveau > 0) && (
         <Achat

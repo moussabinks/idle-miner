@@ -62,7 +62,7 @@ describe('le niveau du joueur (29/10)', () => {
     expect(peutConstruire(etat, 'employes')).toBe(false)
     expect(peutPoserSol(etat, 'rail', 30, 36)).toBe(false)
     expect(descendreNiveauMine(etat, aleatoireAvecGraine(2))).toEqual([])
-    expect(verrou(etat, 'mine', 1)).toBe(`au niveau ${NIVEAU_JOUEUR_POUR.mine[1]}`)
+    expect(verrou(etat, 'mine', 1)).toBe(`⭐ ${NIVEAU_JOUEUR_POUR.mine[1]}`)
 
     auNiveau(etat, NIVEAU_JOUEUR_POUR.batiments.employes)
     expect(peutConstruire(etat, 'employes')).toBe(true)

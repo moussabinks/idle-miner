@@ -103,7 +103,13 @@ export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite,
         })}
       </div>
       <div className="boutons">
-        <button className="bouton bouton-sac" data-tuto={tutoSac ? 'sac' : undefined} disabled={total === 0 || placeSac === 0} onClick={() => jouer((e) => prendre(e))}>
+        {/* (23/10) Plein : le bouton est mis en avant (doucement), pour qu'on sache quoi faire. */}
+        <button
+          className={`bouton bouton-sac ${plein && placeSac > 0 ? 'bouton-sac-urgent' : ''}`}
+          data-tuto={tutoSac ? 'sac' : undefined}
+          disabled={total === 0 || placeSac === 0}
+          onClick={() => jouer((e) => prendre(e))}
+        >
           🎒 Tout mettre dans le sac ({Math.min(total, placeSac)})
         </button>
       </div>

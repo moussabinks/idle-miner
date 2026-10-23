@@ -195,3 +195,8 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 - `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : un personnage posé sur la grille, sa place devant un bâtiment (`devant`), sa marche le long d'un chemin (`surLeChemin`, `orienter`).
 - `public/images/batiments/employes.webp` : le dessin du bâtiment ; `employes-miroir.webp` : le même avec l'enseigne retournée, pour le bâtiment en miroir (fabriqué par `outils/batiments/textes_miroir.py`, choisi par `imageBatiment` dans `src/composants/iso.ts`) ; `public/images/personnages/manager.webp`, `recruteur.webp` : les portraits du panneau.
 - `src/personnel.css` : les cartes, l'animation d'embauche et les portraits (`.portrait-chef`) ; `src/interface.css` : la carte d'embauche d'un pousseur (`.carte-pousseur`, `.choix-batiments`, `.choix-trajet`, `.titre-equipe`) ; `src/village.css` : les personnages du village (`.perso-village`, `.perso-colere`, `.perso-poste`), le trajet qui brille (`.case-trajet`, `.emprise-trajet`) et l'arrivée d'un nouveau mineur (30/10 : `.eclat-embauche`, `.perso-nouveau`, `.bulle-nouveau-mineur`).
+
+## Prix des embauches (23/10)
+
+Mineurs et pousseurs ont **chacun leur liste** (`PRIX_EMBAUCHE`) : 500 $, 2 000 $, 6 000 $, 15 000 $, 35 000 $, 80 000 $, 180 000 $, 400 000 $, 900 000 $, 2 000 000 $, puis ×2,2 à chaque fois. Le 1er pousseur coûte donc 500 $, même si on a déjà des mineurs. Les indemnités (40 %) suivent la liste du métier de celui qu'on licencie.
+

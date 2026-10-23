@@ -362,6 +362,12 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   function ouvrirConstruction() {
     setModifier(false)
     annulerEdition()
+    // (23/10) Le menu Bâtiments ferme ce qui était ouvert : le panneau du bâtiment, l'aide, les
+    // réglages, la fenêtre des trajets.
+    setPanneauFerme(true)
+    setAideOuverte(false)
+    setReglagesOuverts(false)
+    fermerTrajets()
     setMenuConstruction(true)
     jouer(marquerBatimentsVus)
   }

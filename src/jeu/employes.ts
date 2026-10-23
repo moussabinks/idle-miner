@@ -34,6 +34,7 @@ import {
   SECONDES_FORGE_EMPLOYE,
   SECONDES_PAR_PAIE,
   SECONDES_VIDAGE_EMPLOYE,
+  VITESSE_MARCHE,
   type Cout,
   type IdBatiment,
   type IdBloc,
@@ -43,8 +44,8 @@ import {
 } from './donnees'
 import { debloque, niveauAtteint } from './niveaux'
 import { tirerBloc } from './mine'
-import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe } from './mineur'
-import { batimentPose, secondesAPied } from './village'
+import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
+import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, secondesAPied, trouverChemin, type Case } from './village'
 import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
@@ -77,14 +78,16 @@ function arrondiPrix(prix: number): number {
 }
 
 // Le prix de la prochaine embauche (null si l'équipe est complète).
-export function prixEmbauche(etat: EtatJeu): number | null {
+// (23/10) Les mineurs et les pousseurs ont chacun leurs prix : le 1er mineur coûte 500 $, et le
+// 1er pousseur aussi, même si on a déjà des mineurs.
+export function prixEmbauche(etat: EtatJeu, role: RoleEmploye = 'mineur'): number | null {
   if (etat.employes.length >= maxEmployes(etat)) return null
-  return arrondiPrix(prixDeBase(etat.employes.length))
+  return arrondiPrix(prixDeBase(etat.employes.filter((e) => e.role === role).length))
 }
 
-// Les indemnités d'un licenciement : 40 % du prix de la dernière place de l'équipe.
-export function indemnites(etat: EtatJeu): number {
-  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.length - 1)) * PART_INDEMNITES)
+// Les indemnités d'un licenciement : 40 % du prix de la dernière place de son métier.
+export function indemnites(etat: EtatJeu, role: RoleEmploye = 'mineur'): number {
+  return arrondiPrix(prixDeBase(Math.max(0, etat.employes.filter((e) => e.role === role).length - 1)) * PART_INDEMNITES)
 }
 
 export function rareteDe(employe: Employe): Rarete {
@@ -115,6 +118,49 @@ export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBat
   return secondesAPied(etat.village, de, vers)
 }
 
+// La case où un pousseur attend son wagonnet (23/10) : à côté du premier rail de son trajet,
+// sur le bord de la voie (une case libre). null si le trajet n'a pas de rails.
+export function caseQuai(etat: EtatJeu, liaison: IdLiaison): Case | null {
+  const ligne = ligneDe(etat, liaison)
+  if (!ligne) return null
+  const a = ligne[0]
+  const b = ligne[1] ?? a
+  const sens = { x: b.x - a.x, y: b.y - a.y }
+  const cote = sens.x === 0 && sens.y === 0 ? { x: 1, y: 0 } : { x: -sens.y, y: sens.x }
+  const voulue = { x: Math.floor(a.x + 0.5 + cote.x * 1.3), y: Math.floor(a.y + 0.5 + cote.y * 1.3) }
+  if (!caseBloquee(etat.village, voulue.x, voulue.y)) return voulue
+  for (let rayon = 1; rayon < 6; rayon++) {
+    for (let dx = -rayon; dx <= rayon; dx++) {
+      for (let dy = -rayon; dy <= rayon; dy++) {
+        if (!caseBloquee(etat.village, voulue.x + dx, voulue.y + dy)) return { x: voulue.x + dx, y: voulue.y + dy }
+      }
+    }
+  }
+  return voulue
+}
+
+// Le chemin à pied d'un employé qui marche (23/10) : d'un bâtiment à l'autre, sauf un pousseur
+// qui va à son wagonnet : il va tout droit à son quai, par le plus court chemin (avant, il
+// allait jusqu'à la porte du bâtiment de départ, puis faisait demi-tour).
+export function cheminEmploye(etat: EtatJeu, employe: Employe): Case[] | null {
+  const village = etat.village
+  if (employe.role === 'pousseur' && employe.trajet && employe.lieu === LIAISONS[employe.trajet].depart) {
+    const quai = caseQuai(etat, employe.trajet)
+    const de = batimentPose(village, employe.depuis)
+    if (quai && de) {
+      const depart = caseAcces(village, de)
+      return trouverChemin(village, depart, quai) ?? [depart, quai]
+    }
+  }
+  return cheminEntre(village, employe.depuis, employe.lieu)
+}
+
+// Le temps de marche de l'employé, sur son chemin.
+function secondesMarcheDe(etat: EtatJeu, employe: Employe): number {
+  const chemin = cheminEmploye(etat, employe)
+  return chemin ? longueurChemin(chemin) / VITESSE_MARCHE : 0
+}
+
 // Combien de secondes avant qu'il ait fini son étape en cours.
 export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): number {
   switch (employe.etape) {
@@ -128,7 +174,7 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
     case 'forge':
       return Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression)
     case 'marche':
-      return Math.max(0, secondesMarcheEmploye(etat, employe.depuis, employe.lieu) - employe.progression)
+      return Math.max(0, secondesMarcheDe(etat, employe) - employe.progression)
     default:
       return 0
   }
@@ -362,14 +408,14 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 
 // Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
 export function peutEmbaucherPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
-  const prix = prixEmbauche(etat)
+  const prix = prixEmbauche(etat, 'pousseur')
   return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null
 }
 
 // Embauche un pousseur pour un trajet (26/10). Le trajet est créé s'il n'existe pas encore. Il
 // part du Personnel vers le départ du trajet, et y attend son wagonnet.
 export function embaucherPousseur(etat: EtatJeu, aleatoire: Aleatoire, liaison: IdLiaison): string[] {
-  const prix = prixEmbauche(etat)
+  const prix = prixEmbauche(etat, 'pousseur')
   if (prix === null || !peutEmbaucherPousseur(etat, liaison)) return []
   etat.argent -= prix
   if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
@@ -405,7 +451,7 @@ const NOMS_TRAJETS: Record<IdLiaison, string> = {
 
 export function licencier(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
-  const prix = indemnites(etat)
+  const prix = employe ? indemnites(etat, employe.role) : 0
   if (!employe || etat.argent < prix || employe.etape === 'pousse') return []
   etat.argent -= prix
   etat.employes.splice(index, 1)
@@ -579,7 +625,7 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       }
     } else {
       // Une marche dans le village, d'un bâtiment à un autre.
-      const duree = secondesMarcheEmploye(etat, employe.depuis, employe.lieu)
+      const duree = secondesMarcheDe(etat, employe)
       temps = Math.min(reste, Math.max(0, duree - employe.progression))
       employe.progression += temps
       if (employe.progression >= duree - 1e-9) {

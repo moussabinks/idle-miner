@@ -219,8 +219,9 @@ export const EMPLOYES_NIVEAU_1 = 4
 export const EMPLOYES_PAR_NIVEAU = 2
 // Le prix de la 1re, 2e, 3e... embauche (il dépend seulement du nombre de mineurs qu'on a).
 // Au-delà de la liste, chaque embauche coûte 2,2 fois la précédente. (30/10 : les prix montent
-// bien plus vite d'une embauche à l'autre, pour qu'il faille farmer.)
-export const PRIX_EMBAUCHE = [80, 400, 1500, 5000, 15000, 40000, 100000, 250000, 600000, 1500000]
+// bien plus vite d'une embauche à l'autre, pour qu'il faille farmer. 23/10 : le 1er à 500 $, le
+// 2e à 2 000 $... et ce sont deux listes à part : mineurs, et pousseurs.)
+export const PRIX_EMBAUCHE = [500, 2000, 6000, 15000, 35000, 80000, 180000, 400000, 900000, 2000000]
 export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4

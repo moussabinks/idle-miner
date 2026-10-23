@@ -403,8 +403,9 @@ export function activerBonusCombo(etat: EtatJeu, palier: number): string[] {
   const bonus = BONUS_COMBO.find((b) => b.palier === palier)
   if (!bonus) return []
   etat.bonus = { palier, fin: etat.stats.tempsDeJeu + bonus.secondes }
-  const effets = [bonus.fortune > 0 ? `+${Math.round(bonus.fortune * 100)} % de fortune` : '', bonus.blocs > 1 ? `${bonus.blocs} blocs par clic` : ''].filter(Boolean).join(', ')
-  return [`${bonus.emoji} Combo ×${palier} : ${bonus.nom} ! ${effets} pendant ${bonus.secondes} s`]
+  // (23/10) Pas de message au milieu de l'écran : l'étiquette du bonus, au-dessus du bloc de la
+  // mine, suffit (il y avait trop de messages).
+  return []
 }
 
 // La chance de doubler un minerai en cliquant (0 avec une pioche cassée, sauf bonus de combo).

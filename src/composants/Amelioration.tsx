@@ -47,12 +47,22 @@ export function Amelioration({
         <span className="amelioration-max">✔ Niveau max</span>
       ) : verrou !== null ? (
         <span className="amelioration-verrou">
-          🔒 {suivant.texte} · {verrou}
+          🔒 {suivant.texte} <BadgeXp texte={verrou} />
         </span>
       ) : (
         <Achat etat={etat} cout={suivant.cout} texte={suivant.texte} possible={possible} onAcheter={onAmeliorer} genre={genre} />
       )}
     </div>
+  )
+}
+
+// (23/10) Le niveau du joueur qu'il faut, en pastille violette avec l'étoile, comme dans la
+// barre du haut : « ⭐ 4 requis ». On ne le confond plus avec le niveau de la mine.
+export function BadgeXp({ texte }: { texte: string }) {
+  return (
+    <span className="badge-xp" title={`Il faut atteindre le niveau ${texte.replace('⭐ ', '')} (l’étoile en haut à gauche) : gagne de l’XP en jouant`}>
+      {texte} requis
+    </span>
   )
 }
 
