@@ -359,25 +359,33 @@ export const SECONDES_CHARGEMENT_WAGONNET = 1
 //   - son CHARIOT (NIVEAUX_CHARIOT_POUSSEUR, argent et fer, de plus en plus cher) : son wagonnet
 //     porte plus. Il n'y a plus de « taille des wagonnets » pour tous les trajets.
 export type NiveauPousseur = { nom: string; vitesse: number; cout: Cout }
+// (23/10, bis) Bien plus cher, et × le niveau du joueur (voir PRIX_POUSSEUR_PAR_NIVEAU) : sinon on
+// achetait tout tout de suite et les chariots n'étaient jamais pleins.
 export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
   { nom: 'Débutant', vitesse: 1, cout: { materiaux: {} } },
-  { nom: 'Costaud', vitesse: 1.2, cout: { argent: 1000, materiaux: {} } },
-  { nom: 'Robuste', vitesse: 1.45, cout: { argent: 5000, materiaux: {} } },
-  { nom: 'Expert', vitesse: 1.75, cout: { argent: 20000, materiaux: {} } },
-  { nom: 'Champion', vitesse: 2.1, cout: { argent: 60000, materiaux: {} } },
+  { nom: 'Costaud', vitesse: 1.15, cout: { argent: 4000, materiaux: {} } },
+  { nom: 'Robuste', vitesse: 1.3, cout: { argent: 15000, materiaux: {} } },
+  { nom: 'Expert', vitesse: 1.5, cout: { argent: 45000, materiaux: {} } },
+  { nom: 'Champion', vitesse: 1.75, cout: { argent: 120000, materiaux: {} } },
 ]
 // Les places du chariot d'un pousseur (à peu près ce que la mine et ses mineurs sortent pendant un
 // aller-retour d'environ 15 s : il suit tout juste, il faut l'agrandir quand on produit plus).
 // Sans pousseur (le joueur pousse), c'est le premier : 20 places.
+// (23/10, bis) Des marches plus petites et bien plus chères (× le niveau du joueur) : le chariot doit
+// rester tout juste à la hauteur de ce que sortent la mine ou la foreuse.
 export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
   { places: 20, cout: { materiaux: {} } },
-  { places: 35, cout: { argent: 1000, materiaux: { fer: 30 } } },
-  { places: 55, cout: { argent: 3000, materiaux: { fer: 60 } } },
-  { places: 80, cout: { argent: 8000, materiaux: { fer: 100 } } },
-  { places: 115, cout: { argent: 20000, materiaux: { fer: 160 } } },
-  { places: 160, cout: { argent: 45000, materiaux: { fer: 250 } } },
-  { places: 220, cout: { argent: 90000, materiaux: { fer: 400 } } },
+  { places: 30, cout: { argent: 3000, materiaux: { fer: 60 } } },
+  { places: 42, cout: { argent: 9000, materiaux: { fer: 120 } } },
+  { places: 58, cout: { argent: 22000, materiaux: { fer: 200 } } },
+  { places: 80, cout: { argent: 50000, materiaux: { fer: 320 } } },
+  { places: 110, cout: { argent: 110000, materiaux: { fer: 480 } } },
+  { places: 150, cout: { argent: 220000, materiaux: { fer: 700 } } },
 ]
+// (23/10, bis) Les améliorations des pousseurs (vitesse et chariot) coûtent × (1 + 0,12 × (niveau du
+// joueur − 1)) : × 1,36 au niveau 4, × 2,44 au niveau 13. Plus on avance, plus elles coûtent, pour
+// qu'elles restent à la hauteur de la production.
+export const PRIX_POUSSEUR_PAR_NIVEAU = 0.12
 // Le salaire d'un pousseur toutes les 5 minutes, selon son niveau (il ne creuse pas : moins cher
 // qu'un mineur avec la même pioche).
 export const SALAIRES_POUSSEUR = [220, 300, 420, 600, 850]

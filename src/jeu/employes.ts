@@ -33,6 +33,7 @@ import {
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PART_REMPLACEMENT,
+  PRIX_POUSSEUR_PAR_NIVEAU,
   PRIX_REMPLACEMENT_PAR_NIVEAU,
   PRIX_EMBAUCHE,
   PRIX_EMBAUCHE_POUSSEUR,
@@ -238,31 +239,47 @@ export function gainAmeliorationEmploye(employe: Employe): { avant: number; apre
 
 // Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
 // un pousseur (il pousse son wagonnet plus vite ; son chariot, c'est coutChariotPousseur).
-export function coutAmeliorationEmploye(employe: Employe): Cout | null {
-  const liste = employe.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE
-  return liste[employe.niveau + 1]?.cout ?? null
+export function coutAmeliorationEmploye(etat: EtatJeu, employe: Employe): Cout | null {
+  if (employe.role === 'pousseur') {
+    const cout = NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout
+    return cout ? coutSelonNiveau(etat, cout) : null
+  }
+  return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
+}
+
+// (23/10, bis) Les améliorations d'un pousseur coûtent plus cher à mesure que le joueur monte de
+// niveau (voir PRIX_POUSSEUR_PAR_NIVEAU), argent et minerais.
+export function multiplicateurPrixPousseur(etat: EtatJeu): number {
+  return 1 + PRIX_POUSSEUR_PAR_NIVEAU * Math.max(0, niveauJoueur(etat) - 1)
+}
+
+function coutSelonNiveau(etat: EtatJeu, cout: Cout): Cout {
+  const k = multiplicateurPrixPousseur(etat)
+  const materiaux = Object.fromEntries(Object.entries(cout.materiaux).map(([bloc, n]) => [bloc, Math.round((n ?? 0) * k)]))
+  return { argent: cout.argent === undefined ? undefined : arrondiPrix(cout.argent * k), materiaux }
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
-  const cout = coutAmeliorationEmploye(employe)
+  const cout = coutAmeliorationEmploye(etat, employe)
   return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
 // (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer, de plus en plus cher).
-export function coutChariotPousseur(employe: Employe): Cout | null {
+export function coutChariotPousseur(etat: EtatJeu, employe: Employe): Cout | null {
   if (employe.role !== 'pousseur') return null
-  return NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout ?? null
+  const cout = NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout
+  return cout ? coutSelonNiveau(etat, cout) : null
 }
 
 export function peutAgrandirChariot(etat: EtatJeu, employe: Employe): boolean {
-  const cout = coutChariotPousseur(employe)
+  const cout = coutChariotPousseur(etat, employe)
   return cout !== null && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1) && peutPayer(etat, cout)
 }
 
 export function agrandirChariot(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
   if (!employe) return []
-  const cout = coutChariotPousseur(employe)
+  const cout = coutChariotPousseur(etat, employe)
   if (cout === null || !peutAgrandirChariot(etat, employe)) return []
   payer(etat, cout)
   employe.chariot = (employe.chariot ?? 0) + 1
@@ -646,7 +663,7 @@ export function licencier(etat: EtatJeu, index: number): string[] {
 export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   const employe = etat.employes[index]
   if (!employe) return []
-  const cout = coutAmeliorationEmploye(employe)
+  const cout = coutAmeliorationEmploye(etat, employe)
   if (cout === null || !peutAmeliorerEmploye(etat, employe)) return []
   payer(etat, cout)
   employe.niveau += 1

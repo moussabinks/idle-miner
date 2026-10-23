@@ -169,7 +169,7 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
 | `reserveMinutes` (`NIVEAUX_GENERATEUR`, 23/10) | 5, 7, 10, 13, 16 min de redstone : la réserve du générateur (à la main et par le wagonnet Mine → Générateur) |
 
-`NIVEAUX_CHARIOT_POUSSEUR` (23/10, le chariot de chaque pousseur, au Personnel ; remplace `NIVEAUX_WAGONNET`, la taille de tous les wagonnets) : 20 → 35 → 55 → 80 → 115 → 160 → 220 places, de 1 000 $ + 30 fer à 90 000 $ + 400 fer (niveaux 4, 6, 8, 10, 12, 14 du joueur). `NIVEAUX_POUSSEUR` (sa vitesse) : × 1, 1,2, 1,45, 1,75, 2,1.
+`NIVEAUX_CHARIOT_POUSSEUR` (23/10, le chariot de chaque pousseur, au Personnel ; remplace `NIVEAUX_WAGONNET`) : 20 → 30 → 42 → 58 → 80 → 110 → 150 places, de 3 000 $ + 60 fer à 220 000 $ + 700 fer (niveaux 4, 6, 8, 10, 12, 14 du joueur). `NIVEAUX_POUSSEUR` (sa vitesse) : × 1, 1,15, 1,3, 1,5, 1,75 (4 000 à 120 000 $). Les deux coûtent × (1 + 0,12 × (niveau du joueur − 1)) (`PRIX_POUSSEUR_PAR_NIVEAU`, 23/10 bis).
 
 - **Trajets** (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, un wagonnet chacun, créés gratuitement par le joueur.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).

@@ -70,11 +70,11 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     const prix = prixEmbauche(etat)
     if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
-      const cout = coutAmeliorationEmploye(employe)
+      const cout = coutAmeliorationEmploye(etat, employe)
       if (cout && employe.role === 'mineur' && debloque(etat, 'equipement', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
       if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Vitesse de ${employe.nom} : pousseur ${NIVEAUX_POUSSEUR[employe.niveau + 1].nom.toLowerCase()}`, cout })
       // (23/10) le chariot de chaque pousseur
-      const coutChariot = coutChariotPousseur(employe)
+      const coutChariot = coutChariotPousseur(etat, employe)
       if (coutChariot && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)) achats.push({ stand: 'employes', nom: `Chariot de ${employe.nom} : ${NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1].places} places`, cout: coutChariot })
     }
     const recruteur = prochainNiveauRecruteur(etat)

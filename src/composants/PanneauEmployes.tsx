@@ -336,7 +336,7 @@ const blocsParS = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigi
 
 function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: Props & { employe: Employe; index: number; onLicencier: () => void; onRemplacer: () => void }) {
   const rarete = rareteDe(employe)
-  const coutPioche = coutAmeliorationEmploye(employe)
+  const coutPioche = coutAmeliorationEmploye(etat, employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
   const gain = gainAmeliorationEmploye(employe)
   // Ce que valent en moyenne les blocs qu'il remonte en 5 minutes.
@@ -348,7 +348,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
   const niveauPousseurSuivant = pousseur ? (NIVEAUX_POUSSEUR[employe.niveau + 1] ?? null) : null
   const placesAvant = placesChariot(employe)
   const chariotSuivant = pousseur ? (NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1] ?? null) : null
-  const coutChariot = coutChariotPousseur(employe)
+  const coutChariot = coutChariotPousseur(etat, employe)
 
   return (
     <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete} ${employe.tempsPaye > 0 ? '' : 'carte-employe-alerte'}`}>
