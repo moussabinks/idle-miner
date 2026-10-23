@@ -274,6 +274,21 @@ describe('les trajets des wagonnets', () => {
     expect(trajetDe(etat, 'mine-generateur')?.etape).toBe('aller')
     expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ pierre: 10 }) // la redstone va au générateur
   })
+
+  it('sans pousseur vers le générateur, la redstone part au marché (23/10)', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    etat.village.batiments.push({ id: 'generateur', x: 35, y: 37, miroir: false })
+    etat.inventaire = { fer: 12 }
+    for (let x = 31; x <= 34; x++) poserSol(etat, 'rail', x, 38)
+    creerTrajet(etat, 'mine-marche')
+    creerTrajet(etat, 'mine-generateur') // le trajet existe, mais personne ne le pousse
+    ajouterPousseur(etat, 'mine-marche')
+    etat.generateur.carburant = 100
+    etat.coffre.contenu = { redstone: 10, pierre: 10 }
+    avancerWagonnets(etat, 0.1)
+    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ redstone: 10, pierre: 10 })
+  })
 })
 
 describe('pas de boucle dans les rails', () => {

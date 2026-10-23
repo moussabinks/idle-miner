@@ -226,6 +226,11 @@ export function pousseurDuTrajet(etat: EtatJeu, liaison: IdLiaison): Employe | n
   return etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison) ?? null
 }
 
+// Ce trajet roule tout seul : il existe, et un pousseur est embauché pour lui (23/10).
+export function trajetAutomatique(etat: EtatJeu, liaison: IdLiaison): boolean {
+  return trajetDe(etat, liaison) !== null && pousseurDuTrajet(etat, liaison) !== null
+}
+
 // Le niveau du pousseur de ce trajet (débutant s'il n'y en a pas).
 export function niveauPousseur(employe: Employe | null): NiveauPousseur {
   return NIVEAUX_POUSSEUR[Math.max(0, Math.min(employe?.niveau ?? 0, NIVEAUX_POUSSEUR.length - 1))]
@@ -340,8 +345,11 @@ function besoinRedstone(etat: EtatJeu): number {
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
   const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
   if (garde) return Infinity
-  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
-  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
+  // (23/10) On ne garde le charbon ou la redstone pour la foreuse ou le générateur que si leur
+  // wagonnet a un pousseur embauché : sinon, rien ne les emporterait, et ils restaient bloqués
+  // dans le coffre au lieu d'être vendus.
+  if (bloc === 'charbon' && trajetAutomatique(etat, 'mine-foreuse')) return besoinCharbon(etat)
+  if (bloc === 'redstone' && trajetAutomatique(etat, 'mine-generateur')) return besoinRedstone(etat)
   return 0
 }
 
