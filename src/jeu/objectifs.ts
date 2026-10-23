@@ -5,7 +5,7 @@
 
 import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment } from './donnees'
 import { batimentDebloque } from './batiments'
-import { coutAmeliorationEmploye, coutChariotPousseur, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
+import { coutAmeliorationEmploye, coutChariotPousseur, verrouMinePioche, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
 import { generateurPose, prochainNiveauGenerateur } from './generateur'
 import {
@@ -71,7 +71,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(etat, employe)
-      if (cout && employe.role === 'mineur' && debloque(etat, 'equipement', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
+      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null && debloque(etat, 'equipement', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
       if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Vitesse de ${employe.nom} : pousseur ${NIVEAUX_POUSSEUR[employe.niveau + 1].nom.toLowerCase()}`, cout })
       // (23/10) le chariot de chaque pousseur
       const coutChariot = coutChariotPousseur(etat, employe)

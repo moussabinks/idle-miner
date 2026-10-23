@@ -272,6 +272,9 @@ export const SECONDES_PAR_PAIE = 5 * 60
 // (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir. 23/10 : les mineurs ne remontent
 // plus et creusent bien plus : le salaire suit à peu près sa pioche, pour qu'une meilleure pioche
 // rapporte toujours plus qu'elle ne coûte en salaire.)
+// (23/10) Le niveau de la mine qu'il faut pour chaque pioche des mineurs (bois, pierre, fer, or,
+// émeraude, diamant) : pas de pioche en diamant avant la mine de diamant.
+export const NIVEAU_MINE_POUR_EQUIPEMENT = [1, 1, 1, 3, 4, 5]
 export const SALAIRES = [220, 450, 850, 1400, 1750, 2200] // (23/10 : 1 750 $ pour l'émeraude)
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite. Son sac est le tas

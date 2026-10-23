@@ -24,6 +24,7 @@ import {
   NIVEAUX_MANAGER,
   NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAUX_POUSSEUR,
+  NIVEAU_MINE_POUR_EQUIPEMENT,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
@@ -259,9 +260,17 @@ function coutSelonNiveau(etat: EtatJeu, cout: Cout): Cout {
   return { argent: cout.argent === undefined ? undefined : arrondiPrix(cout.argent * k), materiaux }
 }
 
+// (23/10) La prochaine pioche d'un mineur demande aussi un niveau de la mine (l'or au niveau 3,
+// l'émeraude au 4, le diamant au 5) : « 🔒 Mine niveau 5 », ou null si c'est bon.
+export function verrouMinePioche(etat: EtatJeu, employe: Employe): string | null {
+  if (employe.role !== 'mineur') return null
+  const requis = NIVEAU_MINE_POUR_EQUIPEMENT[employe.niveau + 1] ?? 1
+  return etat.niveauMine >= requis ? null : `🕳️ Mine niveau ${requis}`
+}
+
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   const cout = coutAmeliorationEmploye(etat, employe)
-  return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
+  return cout !== null && verrouMinePioche(etat, employe) === null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
 // (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer, de plus en plus cher).

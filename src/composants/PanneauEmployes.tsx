@@ -71,6 +71,7 @@ import {
   peutAmeliorerRecruteur,
   peutPayerSalaires,
   peutRemplacer,
+  verrouMinePioche,
   prixEmbauche,
   prixRemplacement,
   remplacerMineur,
@@ -460,7 +461,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
         suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
-        verrou={verrou(etat, 'equipement', employe.niveau + 1)}
+        verrou={verrouMinePioche(etat, employe) ?? verrou(etat, 'equipement', employe.niveau + 1)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
