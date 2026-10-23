@@ -128,6 +128,7 @@ Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même él
 
 ### 7. Le recruteur (niveau 4 de la mine)
 
+- **🔄 Remplacer** (23/10, `remplacerMineur`, `prixRemplacement`, `PART_REMPLACEMENT`) : avec le recruteur, chaque carte de mineur a un petit bouton arc-en-ciel « 🔄 Remplacer · *X* $ ». Une nouvelle recrue (nom et rareté tirés au hasard, avec les chances du recruteur) prend sa place, **avec sa pioche**, là où il était ; sa rareté est dévoilée en grand comme une embauche. Prix : **le quart** du prix de la dernière place des mineurs (par exemple 880 $ avec 2 mineurs), **sans indemnités**. Avant, pour tenter un mineur rare, il fallait licencier (indemnités) puis réembaucher au prix de la dernière place (le prix d'embauche dépend du nombre de mineurs qu'on a, pas de ceux qu'on a eus).
 - Avant : carte verrouillée « 🔒 Recruteur · niveau 4 de la mine », qui montre déjà les chances qu'il donnera. Depuis le 29/10, il faut aussi le **niveau 11 du joueur** pour l'embaucher (puis 12, 13 et 15 pour ses niveaux suivants ; avant le 23/10 : 9, 11, 13, 15) : sa ligne affiche alors « 🔒 … · au niveau *N* ».
 - On l'embauche (niveau 1) puis on l'améliore, **en argent seulement** (`NIVEAUX_RECRUTEUR`). Les chances de la prochaine embauche s'affichent en pastilles de couleur :
 

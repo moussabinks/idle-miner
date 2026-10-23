@@ -139,6 +139,19 @@
   animation: reflet-rarete 2.2s linear infinite;
 }
 
+/* (23/10) « 🔄 Remplacer » sur la carte d'un mineur : petit, à côté de « Licencier ». */
+.bouton-remplacer {
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.bouton-remplacer:disabled {
+  animation: none;
+  filter: grayscale(0.7);
+}
+
 /* --- L'animation d'embauche ---------------------------------------------------- */
 .revelation {
   z-index: 30;

@@ -66,7 +66,10 @@ import {
   peutAmeliorerEmploye,
   peutAmeliorerRecruteur,
   peutPayerSalaires,
+  peutRemplacer,
   prixEmbauche,
+  prixRemplacement,
+  remplacerMineur,
   prochainNiveauRecruteur,
   rareteDe,
   recruteurDebloque,
@@ -327,7 +330,7 @@ function Recruteur({ etat, jouer }: Props) {
 // « 0,5 », « 1,2 » : des blocs par seconde, lisibles.
 const blocsParS = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
 
-function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { employe: Employe; index: number; onLicencier: () => void }) {
+function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: Props & { employe: Employe; index: number; onLicencier: () => void; onRemplacer: () => void }) {
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
@@ -359,6 +362,18 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
             {iconeActiviteEmploye(employe)} {etape}
           </span>
         </strong>
+        {/* (23/10) Avec le recruteur : une nouvelle recrue prend sa place (même pioche), pour le quart
+            du prix d'une embauche. On tente sa chance pour un mineur rare ! */}
+        {!pousseur && etat.recruteur > 0 && (
+          <button
+            className="bouton bouton-petit bouton-recruter bouton-remplacer"
+            disabled={!peutRemplacer(etat, index)}
+            onClick={onRemplacer}
+            title="Une nouvelle recrue prend sa place, avec sa pioche : sa rareté est tirée au hasard"
+          >
+            🔄 Remplacer · {argent(prixRemplacement(etat))}
+          </button>
+        )}
         <button className="lien lien-licencier" disabled={employe.etape === 'pousse'} onClick={onLicencier} title="Licencier ce mineur">
           Licencier
         </button>
@@ -572,6 +587,14 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
     if (avecRecruteur && apres.employes.length > avant) setRecrue(apres.employes[apres.employes.length - 1])
   }
 
+  // (23/10) Remplacer un mineur : la nouvelle recrue est dévoilée en grand, comme une embauche.
+  function remplacer(index: number) {
+    const avant = etat.employes[index]?.nom
+    const apres = jouer((e) => remplacerMineur(e, index, aleatoireNavigateur))
+    const nouveau = apres.employes[index]
+    if (nouveau && nouveau.nom !== avant) setRecrue(nouveau)
+  }
+
   const sansSalaire = nbSansSalaire(etat)
   const managerVide = managerEndormi(etat) || (managerActif(etat) && !managerAuTravail(etat))
   return (
@@ -610,7 +633,15 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
               </h3>
               <div className="liste-employes">
                 {liste.map(({ employe, index }) => (
-                  <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
+                  <CarteMineur
+                    key={`${employe.nom}-${index}`}
+                    etat={etat}
+                    jouer={jouer}
+                    employe={employe}
+                    index={index}
+                    onLicencier={() => setALicencier(index)}
+                    onRemplacer={() => remplacer(index)}
+                  />
                 ))}
               </div>
             </section>

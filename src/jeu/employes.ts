@@ -31,6 +31,7 @@ import {
   LISTE_LIAISONS,
   NOMS_EMPLOYES,
   PART_INDEMNITES,
+  PART_REMPLACEMENT,
   PRIX_EMBAUCHE,
   PRIX_EMBAUCHE_POUSSEUR,
   PRIX_MANAGER,
@@ -580,6 +581,30 @@ const NOMS_TRAJETS: Record<IdLiaison, string> = {
   'mine-foreuse': 'de la mine à la foreuse',
   'mine-generateur': 'de la mine au générateur',
   'foreuse-marche': 'de la foreuse au marché',
+}
+
+// (23/10) Remplacer un mineur (avec le recruteur) : une nouvelle recrue tirée au hasard (nom et
+// rareté) prend sa place, avec sa pioche, là où il était. Bien moins cher que licencier puis
+// réembaucher (le prix de la dernière place, plus les indemnités) : on peut tenter sa chance pour
+// un mineur rare.
+export function prixRemplacement(etat: EtatJeu): number {
+  return arrondiPrix(prixDeBase(Math.max(0, nbDuRole(etat, 'mineur') - 1)) * PART_REMPLACEMENT)
+}
+
+export function peutRemplacer(etat: EtatJeu, index: number): boolean {
+  const employe = etat.employes[index]
+  return !!employe && employe.role === 'mineur' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
+}
+
+export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoire): string[] {
+  const ancien = etat.employes[index]
+  if (!ancien || !peutRemplacer(etat, index)) return []
+  etat.argent -= prixRemplacement(etat)
+  const nom = prenomAuHasard(etat, aleatoire)
+  const rarete = tirerRarete(etat, aleatoire)
+  etat.employes[index] = { ...ancien, nom, rarete, blocsCasses: 0 }
+  const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
+  return [`🔄 ${ancien.nom} est parti(e) : ${nom}${titre} prend sa place, avec sa pioche.`]
 }
 
 export function licencier(etat: EtatJeu, index: number): string[] {
