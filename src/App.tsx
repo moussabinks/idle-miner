@@ -23,6 +23,7 @@ import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { FenetreAbsence } from './composants/FenetreAbsence'
 import { FeteNiveau } from './composants/FeteNiveau'
+import { FenetreBilan } from './composants/FenetreBilan'
 import { niveauJoueur, prochainDeblocage } from './jeu/niveaux'
 import { FenetreRail } from './composants/FenetreRail'
 import { FenetreTrajet } from './composants/FenetreTrajet'
@@ -87,6 +88,8 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
+  // (23/10) Le bilan : ce qu'on gagne et ce qu'on paie par minute (en touchant l'argent, en haut).
+  const [bilanOuvert, setBilanOuvert] = useState(false)
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
   const [reglagesOuverts, setReglagesOuverts] = useState(false)
   const [aideOuverte, setAideOuverte] = useState(false)
@@ -731,7 +734,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {/* En haut à gauche (27/10) : la barre (argent, coffre, pioche, sac, mineurs), et dessous
             les petits boutons (stats, succès, aide, réglages). */}
         <div className="interface-haut">
-          <Hud etat={etat} nbVentes={nbVentes} />
+          <Hud etat={etat} nbVentes={nbVentes} onOuvrirBilan={() => setBilanOuvert(true)} />
           <nav className="boutons-coin" aria-label="Menu du jeu">
             <button className="bouton-coin" onClick={() => setStatsOuvertes(true)} title="Statistiques">
               <span aria-hidden="true">📊</span>
@@ -827,6 +830,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       )}
       {trajetsOuverts && trajetsOuverts.length === 0 && railTouche && <FenetreRail onDeplacer={deplacerRailTouche} onRetirer={retirerRailTouche} onFermer={fermerTrajets} />}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
+      {bilanOuvert && <FenetreBilan etat={etat} onFermer={() => setBilanOuvert(false)} />}
       {resumeAbsence && <FenetreAbsence resume={resumeAbsence} onRecuperer={recupererAbsence} />}
       {feteNiveau && !resumeAbsence && (
         <FeteNiveau avant={feteNiveau.avant} niveau={feteNiveau.apres} prochain={prochainDeblocage(etat)} onFermer={() => setFeteNiveau(null)} />
