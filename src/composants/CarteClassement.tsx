@@ -1,27 +1,51 @@
 // Le classement des joueurs (leaderboard), sur l'écran d'accueil.
-// Deux onglets : au niveau de la mine (gardé dans la colonne « prestige » du serveur) et à
-// l'argent gagné. Tout le monde peut le voir ;
-// pour y apparaître, il faut un compte (le score part avec la sauvegarde en ligne).
+// (23/10) Un seul classement : l'argent gagné (le meilleur des mondes du joueur). Le niveau de la
+// mine est affiché à côté de chacun, mais il ne compte pas. Tout le monde peut le voir ; pour y
+// apparaître, il faut un compte (le score part avec la sauvegarde en ligne).
+// En haut, un podium pour les 3 premiers ; en bas, la place du joueur et celui qu'il doit
+// dépasser (« encore 3 000 $ pour dépasser Jade »).
 
 import { useEffect, useState } from 'react'
-import type { LigneClassement, TriClassement } from '../jeu/classement'
-import { lireClassement } from '../enLigne'
+import { niveauMineAffiche, type LigneClassement } from '../jeu/classement'
+import { lireClassement, placeDuScore } from '../enLigne'
 import type { Joueur } from '../enLigne'
 
-const NB_LIGNES = 20
+const NB_LIGNES = 50
 const MEDAILLES = ['🥇', '🥈', '🥉']
 
-// dernierEnvoi : l'heure du dernier envoi du score du joueur ; quand elle change, on relit le classement.
-export function CarteClassement({ joueur, dernierEnvoi }: { joueur: Joueur | null; dernierEnvoi: number | null }) {
-  const [tri, setTri] = useState<TriClassement>('prestige')
+// « 1 250 $ », « 3,5 k$ », « 2,45 M$ » : court, pour que tout tienne sur une ligne.
+function dollars(n: number): string {
+  if (n < 10_000) return `${Math.floor(n).toLocaleString('fr-FR')} $`
+  if (n < 1_000_000) return `${(n / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k$`
+  return `${(n / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} M$`
+}
+
+function Niveau({ ligne }: { ligne: LigneClassement }) {
+  const niveau = niveauMineAffiche(ligne)
+  return niveau === null ? null : (
+    <span className="classement-mine" title="Le niveau de sa mine (il ne compte pas dans le classement)">
+      🕳️ {niveau}
+    </span>
+  )
+}
+
+type Props = {
+  joueur: Joueur | null
+  dernierEnvoi: number | null // l'heure du dernier envoi du score ; quand elle change, on relit le classement
+  monArgent: number // le meilleur argent gagné dans les mondes de ce navigateur
+  onSeConnecter: () => void // « Crée un compte » : montre le formulaire du compte
+}
+
+export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter }: Props) {
   const [lignes, setLignes] = useState<LigneClassement[] | null>(null) // null = en cours de chargement
   const [erreur, setErreur] = useState(false)
+  const [place, setPlace] = useState<{ devant: number; suivant: LigneClassement | null } | null>(null)
   // Change quand on clique sur « Actualiser » : le classement est relu.
   const [actualisation, setActualisation] = useState(0)
 
   useEffect(() => {
-    let annule = false // si on change d'onglet avant la réponse, on ignore l'ancienne
-    lireClassement(tri, NB_LIGNES)
+    let annule = false
+    lireClassement(NB_LIGNES)
       .then((resultat) => {
         if (annule) return
         setLignes(resultat)
@@ -30,56 +54,103 @@ export function CarteClassement({ joueur, dernierEnvoi }: { joueur: Joueur | nul
       .catch(() => {
         if (!annule) setErreur(true)
       })
+    // La place du joueur (même s'il n'est pas dans les 50 premiers, ou pas encore connecté).
+    placeDuScore(monArgent, joueur?.pseudo ?? null)
+      .then((resultat) => {
+        if (!annule) setPlace(resultat)
+      })
+      .catch(() => {
+        if (!annule) setPlace(null)
+      })
     return () => {
       annule = true
     }
-  }, [tri, actualisation, dernierEnvoi])
+  }, [actualisation, dernierEnvoi, monArgent, joueur])
 
-  function changerTri(nouveau: TriClassement) {
-    if (nouveau === tri) return
-    setLignes(null)
-    setTri(nouveau)
-  }
+  const estMoi = (ligne: LigneClassement) => joueur !== null && ligne.pseudo.toLowerCase() === joueur.pseudo.toLowerCase()
 
   let contenu
-  if (erreur) contenu = <p className="manque">Impossible de charger le classement. Vérifie ta connexion.</p>
-  else if (lignes === null) contenu = <p className="discret">Chargement du classement…</p>
-  else if (lignes.length === 0) contenu = <p className="discret">Personne n'est encore classé : à toi d'être le premier !</p>
-  else
+  if (erreur) contenu = <p className="manque classement-message">Impossible de charger le classement. Vérifie ta connexion.</p>
+  else if (lignes === null) contenu = <p className="discret classement-message">Chargement du classement…</p>
+  else if (lignes.length === 0) contenu = <p className="discret classement-message">Personne n'est encore classé : à toi d'être le premier !</p>
+  else {
+    const podium = lignes.slice(0, 3)
     contenu = (
-      <ol className="classement-liste">
-        {lignes.map((ligne, rang) => (
-          <li key={ligne.pseudo} className={joueur && ligne.pseudo.toLowerCase() === joueur.pseudo.toLowerCase() ? 'classement-moi' : ''}>
-            <span className="classement-rang">{MEDAILLES[rang] ?? `${rang + 1}.`}</span>
-            <span className="classement-pseudo">{ligne.pseudo}</span>
-            <span className={tri === 'prestige' ? 'classement-valeur' : 'classement-autre'}>🕳️ {ligne.prestige}</span>
-            <span className={tri === 'argent' ? 'classement-valeur' : 'classement-autre'}>💰 {ligne.argent.toLocaleString('fr-FR')} $</span>
-          </li>
-        ))}
-      </ol>
+      <>
+        {/* Le podium : le 2e à gauche, le 1er au milieu (plus haut, avec sa couronne), le 3e à droite. */}
+        <div className="podium">
+          {[1, 0, 2].map((rang) => {
+            const ligne = podium[rang]
+            if (!ligne) return <div key={rang} className={`podium-place podium-${rang + 1} podium-vide`} />
+            return (
+              <div key={ligne.pseudo} className={`podium-place podium-${rang + 1} ${estMoi(ligne) ? 'podium-moi' : ''}`} style={{ animationDelay: `${[200, 0, 350][rang]}ms` }}>
+                {rang === 0 && (
+                  <span className="podium-couronne" aria-hidden="true">
+                    👑
+                  </span>
+                )}
+                <span className="podium-medaille" aria-hidden="true">
+                  {MEDAILLES[rang]}
+                </span>
+                <strong className="podium-pseudo">{ligne.pseudo}</strong>
+                <span className="podium-argent">{dollars(ligne.argent)}</span>
+                <Niveau ligne={ligne} />
+                <span className="podium-socle">{rang + 1}</span>
+              </div>
+            )
+          })}
+        </div>
+        <ol className="classement-liste" start={4}>
+          {lignes.slice(3).map((ligne, i) => (
+            <li key={ligne.pseudo} className={estMoi(ligne) ? 'classement-moi' : ''} style={{ animationDelay: `${300 + i * 40}ms` }}>
+              <span className="classement-rang">{i + 4}</span>
+              <span className="classement-pseudo">{ligne.pseudo}</span>
+              <Niveau ligne={ligne} />
+              <span className="classement-valeur">{dollars(ligne.argent)}</span>
+            </li>
+          ))}
+        </ol>
+      </>
     )
+  }
 
+  // En bas : ta place, et qui dépasser.
+  // (sans compte ni argent gagné, pas encore de place)
+  const rang = place && (joueur || monArgent > 0) ? place.devant + 1 : null
+  const ecart = place?.suivant ? place.suivant.argent - monArgent + 1 : 0
   return (
     <section className="carte carte-classement">
       <div className="classement-haut">
         <h2>🏆 Classement</h2>
-        <nav className="onglets classement-onglets" role="tablist">
-          <button role="tab" aria-selected={tri === 'prestige'} className={`onglet ${tri === 'prestige' ? 'actif' : ''}`} onClick={() => changerTri('prestige')}>
-            🕳️ Niveau de mine
-          </button>
-          <button role="tab" aria-selected={tri === 'argent'} className={`onglet ${tri === 'argent' ? 'actif' : ''}`} onClick={() => changerTri('argent')}>
-            💰 Argent
-          </button>
-        </nav>
-        <button className="lien" onClick={() => setActualisation((n) => n + 1)}>
-          Actualiser
+        <span className="classement-critere">💰 Argent gagné</span>
+        <button className="lien" onClick={() => setActualisation((n) => n + 1)} aria-label="Actualiser le classement">
+          🔄
         </button>
       </div>
-      <p className="discret classement-explication">
-        {tri === 'prestige' ? 'Le plus bas niveau de mine atteint' : "Tout l'argent gagné dans la partie"} (le meilleur de tes
-        mondes).{joueur ? '' : ' Connecte-toi pour apparaître dans le classement.'}
-      </p>
-      {contenu}
+      <div className="classement-defile">{contenu}</div>
+
+      <div className={`classement-toi ${joueur ? '' : 'classement-toi-invite'}`}>
+        <span className="classement-toi-rang">{rang === null ? '?' : `#${rang}`}</span>
+        <span className="classement-toi-texte">
+          {joueur ? (
+            <strong>Toi · {dollars(monArgent)}</strong>
+          ) : (
+            <strong>{monArgent > 0 ? `Avec ${dollars(monArgent)}, tu serais ${rang ?? '?'}e !` : 'Joue pour entrer dans le classement !'}</strong>
+          )}
+          {place?.suivant ? (
+            <span>
+              🔥 Encore <b>{dollars(ecart)}</b> pour dépasser <b>{place.suivant.pseudo}</b>
+            </span>
+          ) : rang === 1 && monArgent > 0 ? (
+            <span>👑 Tu es le numéro 1 !</span>
+          ) : null}
+        </span>
+        {!joueur && (
+          <button className="bouton bouton-petit bouton-acheter" onClick={onSeConnecter}>
+            Entrer
+          </button>
+        )}
+      </div>
     </section>
   )
 }

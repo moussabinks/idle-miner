@@ -1,11 +1,14 @@
-// L'écran d'accueil : le logo, un petit village vivant (la même vue du ciel que dans le jeu),
-// le but du jeu en 4 cartes, et les mondes (jusqu'à 5 sauvegardes). On y crée, renomme,
-// duplique, supprime un monde, et on choisit sur lequel jouer. On peut aussi se connecter à son
-// compte pour retrouver ses mondes sur un autre appareil, et voir le classement.
+// L'écran d'accueil, en plein écran (23/10) : tout tient sans faire défiler.
+//   - au fond, le petit village vivant (la même vue du ciel que dans le jeu : l'aperçu du jeu) ;
+//   - à gauche : le logo, le gros bouton Jouer et les mondes (jusqu'à 5 sauvegardes : on y crée,
+//     renomme, duplique, supprime un monde, et on choisit sur lequel jouer) ;
+//   - au milieu, en bas : le jeu en 4 étapes ;
+//   - à droite : le compte (pour retrouver ses mondes sur un autre appareil) et le classement.
+// Sur téléphone, une barre d'onglets en bas : Jouer, Classement, Compte.
 
 import { useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import { LISTE_BATIMENTS, NIVEAU_MINE_MAX } from '../jeu/donnees'
+import { meilleurArgent } from '../jeu/classement'
 import { creerPartie } from '../jeu/mineur'
 import {
   NB_MONDES_MAX,
@@ -24,8 +27,12 @@ import { CarteCompte } from './CarteCompte'
 import { CarteInstallation } from './CarteInstallation'
 import { SceneAccueil } from './SceneAccueil'
 
-// Les couleurs des cartes des mondes (une par monde, pour les reconnaître d'un coup d'œil).
+// Les couleurs des mondes (une par monde, pour les reconnaître d'un coup d'œil).
 const COULEURS_MONDES = ['#f2b33d', '#4a8af0', '#22b5a3', '#e85aa8', '#9b6cf0']
+
+// La place des panneaux de gauche et de droite sur grand écran (en pixels, voir accueil.css) :
+// le village se met au milieu de ce qui reste.
+const MARGES_SCENE = { gauche: 400, droite: 420 }
 
 // « il y a 5 min », « il y a 3 h »...
 function depuis(date: number): string {
@@ -38,11 +45,19 @@ function depuis(date: number): string {
   return `il y a ${jours} jour${jours > 1 ? 's' : ''}`
 }
 
+// « 12 500 $ », « 3,5 k$ »
+function argentCourt(n: number): string {
+  const v = Math.floor(n)
+  if (v < 10_000) return `${v.toLocaleString('fr-FR')} $`
+  if (v < 1_000_000) return `${(v / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k$`
+  return `${(v / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} M$`
+}
+
 // ---------------------------------------------------------------------------
-// Une carte de monde
+// Un monde : une ligne (nom, niveau, argent, ▶), et ses réglages en la dépliant (⋯)
 // ---------------------------------------------------------------------------
 
-type PropsCarte = {
+type PropsMonde = {
   monde: InfoMonde
   dernier: boolean // le dernier monde joué
   peutDupliquer: boolean
@@ -51,7 +66,8 @@ type PropsCarte = {
   onChangement: () => void // pour rafraîchir la liste après une modification
 }
 
-function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangement }: PropsCarte) {
+function LigneMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangement }: PropsMonde) {
+  const [ouvert, setOuvert] = useState(false)
   const [edition, setEdition] = useState(false)
   const [nom, setNom] = useState(monde.nom)
   const etat = charger(window.localStorage, monde.id)
@@ -70,65 +86,72 @@ function CarteMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
   }
 
   return (
-    <article className="carte carte-monde" style={{ ['--couleur-monde' as string]: COULEURS_MONDES[monde.couleur] ?? COULEURS_MONDES[0] }}>
-      <div className="carte-monde-haut">
-        {edition ? (
-          <form
-            className="carte-monde-renommer"
-            onSubmit={(e) => {
-              e.preventDefault()
-              valider()
+    <li className={`ligne-monde ${dernier ? 'ligne-monde-dernier' : ''} ${ouvert ? 'ligne-monde-ouverte' : ''}`} style={{ ['--couleur-monde' as string]: COULEURS_MONDES[monde.couleur] ?? COULEURS_MONDES[0] }}>
+      <div className="ligne-monde-haut">
+        <span className="ligne-monde-pastille" aria-hidden="true">
+          🌍
+        </span>
+        <span className="ligne-monde-texte">
+          {edition ? (
+            <form
+              className="ligne-monde-renommer"
+              onSubmit={(e) => {
+                e.preventDefault()
+                valider()
+              }}
+            >
+              <input value={nom} maxLength={24} autoFocus onChange={(e) => setNom(e.target.value)} aria-label="Nom du monde" />
+              <button className="bouton bouton-petit bouton-ameliorer" type="submit">
+                OK
+              </button>
+            </form>
+          ) : (
+            <strong>{monde.nom}</strong>
+          )}
+          <span className="ligne-monde-infos">
+            {etat ? (
+              <>
+                <span>🕳️ {etat.niveauMine}</span>
+                <span>💵 {argentCourt(etat.argent)}</span>
+                <span>👷 {etat.employes.length}</span>
+              </>
+            ) : partieAncienne(window.localStorage, monde.id) ? (
+              <span>🏡 ancienne version : repart de zéro</span>
+            ) : (
+              <span>partie illisible : repart de zéro</span>
+            )}
+            <span className="ligne-monde-date">{depuis(monde.joueLe)}</span>
+          </span>
+        </span>
+        <button className="lien ligne-monde-plus" onClick={() => setOuvert(!ouvert)} aria-label="Réglages du monde" aria-expanded={ouvert}>
+          ⋯
+        </button>
+        <button className="bouton bouton-petit bouton-creuser ligne-monde-jouer" disabled={bloque} onClick={onJouer} aria-label={`Jouer à ${monde.nom}`}>
+          ▶
+        </button>
+      </div>
+      {ouvert && (
+        <div className="ligne-monde-actions">
+          <button className="bouton bouton-petit bouton-neutre" onClick={() => setEdition(!edition)}>
+            ✏️ Renommer
+          </button>
+          <button
+            className="bouton bouton-petit bouton-acheter"
+            disabled={!peutDupliquer}
+            title={peutDupliquer ? 'Faire une copie de ce monde' : `${NB_MONDES_MAX} mondes au maximum`}
+            onClick={() => {
+              dupliquerMonde(window.localStorage, monde.id)
+              onChangement()
             }}
           >
-            <input value={nom} maxLength={24} autoFocus onChange={(e) => setNom(e.target.value)} aria-label="Nom du monde" />
-            <button className="bouton bouton-petit bouton-ameliorer" type="submit">
-              OK
-            </button>
-          </form>
-        ) : (
-          <h3>🌍 {monde.nom}</h3>
-        )}
-        {dernier && <span className="badge">Dernière partie</span>}
-      </div>
-
-      {etat ? (
-        // Les chiffres du monde, sur un papier clair (comme la liste des tâches du jeu).
-        <ul className="carte-monde-infos">
-          <li>🕳️ Mine niveau {etat.niveauMine}</li>
-          <li>💵 {Math.floor(etat.argent).toLocaleString('fr-FR')} $</li>
-          <li>👷 {etat.employes.length} mineur{etat.employes.length > 1 ? 's' : ''}</li>
-          <li>⛏️ {etat.stats.blocsCasses.toLocaleString('fr-FR')} blocs</li>
-        </ul>
-      ) : partieAncienne(window.localStorage, monde.id) ? (
-        <p className="carte-monde-ancienne">🏡 Partie de l’ancienne version : elle repart de zéro avec la nouvelle mine automatique.</p>
-      ) : (
-        <p className="discret">Partie illisible : elle recommencera à zéro.</p>
+            📄 Dupliquer
+          </button>
+          <button className="bouton bouton-petit bouton-stop" onClick={supprimer}>
+            🗑️ Supprimer
+          </button>
+        </div>
       )}
-      <span className="discret">Joué {depuis(monde.joueLe)}</span>
-
-      <div className="boutons">
-        <button className="bouton bouton-creuser" disabled={bloque} onClick={onJouer}>
-          ▶ Jouer
-        </button>
-        <button className="bouton bouton-petit bouton-neutre" onClick={() => setEdition(!edition)}>
-          ✏️ Renommer
-        </button>
-        <button
-          className="bouton bouton-petit bouton-acheter"
-          disabled={!peutDupliquer}
-          title={peutDupliquer ? 'Faire une copie de ce monde' : `${NB_MONDES_MAX} mondes au maximum`}
-          onClick={() => {
-            dupliquerMonde(window.localStorage, monde.id)
-            onChangement()
-          }}
-        >
-          📄 Dupliquer
-        </button>
-        <button className="bouton bouton-petit bouton-stop" onClick={supprimer}>
-          🗑️
-        </button>
-      </div>
-    </article>
+    </li>
   )
 }
 
@@ -144,11 +167,16 @@ const ETAPES = [
   { image: '/images/batiments/generateur.webp', portrait: false, titre: 'Automatise', texte: 'Relie la mine au marché avec des rails, et électrifie-les avec le générateur : l’argent tombe tout seul !', couleur: '#e85aa8' },
 ]
 
+type OngletTelephone = 'jouer' | 'classement' | 'compte'
+
 export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: InfoMonde) => void }) {
   // Change à chaque modification : le composant se redessine et relit la liste des mondes.
   const [, setVersion] = useState(0)
   const mondes = listerMondes(window.localStorage)
   const [nouveauNom, setNouveauNom] = useState('')
+  const [nouveauOuvert, setNouveauOuvert] = useState(false)
+  // Sur téléphone, on voit un panneau à la fois (la barre d'onglets en bas).
+  const [onglet, setOnglet] = useState<OngletTelephone>('jouer')
   const place = mondes.length < NB_MONDES_MAX
   // Pendant un échange avec le compte, les mondes peuvent être remplacés : on attend.
   const bloque = compte.statut === 'chargement' || compte.statut === 'synchro'
@@ -158,153 +186,158 @@ export function Accueil({ compte, onJouer }: { compte: Compte; onJouer: (monde: 
     if (info) onJouer(info)
   }
 
-  // Le gros bouton du haut : reprendre le dernier monde joué, ou en créer un premier.
+  // Le gros bouton : reprendre le dernier monde joué, ou en créer un premier.
   const dernierMonde = mondes[0] ?? null
   const etatDernier = dernierMonde ? charger(window.localStorage, dernierMonde.id) : null
+  // Le meilleur argent gagné dans ces mondes : la place qu'on aurait au classement.
+  const monArgent = meilleurArgent(mondes.map((m) => charger(window.localStorage, m.id)))
+
+  // « Entrer » au classement : on montre le formulaire du compte, prêt à remplir.
+  function montrerCompte() {
+    setOnglet('compte')
+    window.setTimeout(() => document.querySelector<HTMLInputElement>('.carte-compte input')?.focus(), 50)
+  }
 
   return (
-    // Sur téléphone, un joueur qui a déjà des mondes les voit en premier (voir accueil.css).
-    <div className={`accueil ${mondes.length > 0 ? 'accueil-avec-mondes' : ''}`}>
-      <section className="heros">
-        {/* Le décor : un petit village vivant, vu du ciel comme dans le jeu. */}
-        <div className="heros-scene">
-          <SceneAccueil />
-        </div>
-        <div className="heros-voile" aria-hidden="true" />
+    <div className={`accueil menu-plein-ecran menu-onglet-${onglet}`}>
+      {/* Au fond : le petit village vivant, vu du ciel comme dans le jeu. */}
+      <div className="menu-scene">
+        <SceneAccueil marges={MARGES_SCENE} />
+      </div>
+      <div className="menu-voile" aria-hidden="true" />
 
-        <div className="heros-contenu">
-          <h1 className="logo" aria-label="Mega Digger">
-            <span className="logo-panneau">
-              <span className="logo-mots">
-                <span className="logo-mega">MEGA</span>
-                <span className="logo-digger">DIGGER</span>
-              </span>
+      {/* À gauche : le logo, Jouer, les mondes. */}
+      <aside className="menu-gauche menu-panneau-jouer">
+        <h1 className="logo" aria-label="Mega Digger">
+          <span className="logo-panneau">
+            <span className="logo-mots">
+              <span className="logo-mega">MEGA</span>
+              <span className="logo-digger">DIGGER</span>
             </span>
-            {/* Le hamster du joueur, sa pioche à la main, à côté du panneau. */}
-            <img className="logo-hamster" src="/images/personnages/sprites/joueur_droite.webp" alt="" aria-hidden="true" draggable={false} />
-          </h1>
-          <p className="heros-accroche">
-            Creuse. Construis. <strong>Deviens riche.</strong>
-          </p>
-          <p className="heros-description">
+          </span>
+          {/* Le hamster du joueur, sa pioche à la main, à côté du panneau. */}
+          <img className="logo-hamster" src="/images/personnages/sprites/joueur_droite.webp" alt="" aria-hidden="true" draggable={false} />
+        </h1>
+        <p className="heros-accroche">
+          Creuse. Construis. <strong>Deviens riche.</strong>
+        </p>
+
+        {dernierMonde ? (
+          <button className="bouton bouton-mega" disabled={bloque} onClick={() => onJouer(dernierMonde)}>
+            <span className="bouton-mega-titre">▶ Jouer</span>
+            <span className="bouton-mega-detail">
+              {dernierMonde.nom}
+              {etatDernier ? ` · 🕳️ niveau ${etatDernier.niveauMine} · ${argentCourt(etatDernier.argent)}` : ' · nouveau village'}
+            </span>
+          </button>
+        ) : (
+          <button className="bouton bouton-mega" disabled={bloque} onClick={creer}>
+            <span className="bouton-mega-titre">⛏️ Commencer</span>
+            <span className="bouton-mega-detail">Pépite te guide pas à pas</span>
+          </button>
+        )}
+
+        {/* Un nouveau joueur : le jeu en quelques mots. */}
+        {mondes.length === 0 && (
+          <p className="heros-description menu-description">
             Creuse ta mine jusqu’au <strong>cœur de diamant</strong>, bâtis ton village où tu veux dans la clairière, embauche des mineurs (rares,
             épiques… mythiques !) et relie tout avec des rails électriques.
           </p>
+        )}
 
-          <div className="heros-boutons">
-            {dernierMonde ? (
-              <button className="bouton bouton-mega" disabled={bloque} onClick={() => onJouer(dernierMonde)}>
-                <span className="bouton-mega-titre">▶ Jouer</span>
-                <span className="bouton-mega-detail">
-                  {dernierMonde.nom}
-                  {etatDernier ? ` · 🕳️ niveau ${etatDernier.niveauMine} · ${Math.floor(etatDernier.argent).toLocaleString('fr-FR')} $` : ' · nouveau village'}
-                </span>
-              </button>
+        {mondes.length > 0 && (
+          <section className="menu-mondes">
+            <h2 className="menu-titre">
+              🌍 Tes mondes <span>{mondes.length}/{NB_MONDES_MAX}</span>
+            </h2>
+            <ul className="liste-mondes">
+              {mondes.map((monde, index) => (
+                <LigneMonde
+                  // La version change quand les mondes du compte remplacent ceux du navigateur.
+                  key={`${compte.versionMondes}-${monde.id}`}
+                  monde={monde}
+                  dernier={index === 0}
+                  peutDupliquer={place}
+                  bloque={bloque}
+                  onJouer={() => onJouer(monde)}
+                  onChangement={() => setVersion((v) => v + 1)}
+                />
+              ))}
+            </ul>
+            {/* Un nouveau monde (s'il reste de la place) : un bouton, puis son nom. */}
+            {place ? (
+              nouveauOuvert ? (
+                <form
+                  className="nouveau-monde"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    creer()
+                  }}
+                >
+                  <input
+                    value={nouveauNom}
+                    maxLength={24}
+                    autoFocus
+                    placeholder={`Monde ${mondes.length + 1}`}
+                    onChange={(e) => setNouveauNom(e.target.value)}
+                    aria-label="Nom du nouveau monde"
+                  />
+                  <button className="bouton bouton-petit bouton-creuser" type="submit" disabled={bloque}>
+                    ⛏️ Créer
+                  </button>
+                </form>
+              ) : (
+                <button className="bouton bouton-petit bouton-acheter nouveau-monde-bouton" onClick={() => setNouveauOuvert(true)}>
+                  ✨ Nouveau monde
+                </button>
+              )
             ) : (
-              <button className="bouton bouton-mega" disabled={bloque} onClick={creer}>
-                <span className="bouton-mega-titre">⛏️ Commencer</span>
-                <span className="bouton-mega-detail">Pépite te guide pas à pas</span>
-              </button>
+              <p className="discret menu-note">{NB_MONDES_MAX} mondes au maximum : supprime-en un pour en créer un nouveau.</p>
             )}
-            <a className="bouton bouton-mondes" href="#mondes">
-              🌍 Mes mondes
-            </a>
-          </div>
+          </section>
+        )}
+        <CarteInstallation />
+      </aside>
 
-          {/* Trois chiffres, chacun sur sa médaille (comme les bulles du village). */}
-          <ul className="heros-chiffres">
-            <li>
-              <span className="chiffre-medaille" aria-hidden="true">
-                💎
-              </span>
-              <strong>{NIVEAU_MINE_MAX}</strong>
-              <span>niveaux de mine</span>
-            </li>
-            <li>
-              <span className="chiffre-medaille" aria-hidden="true">
-                ⚡
-              </span>
-              <strong>100 %</strong>
-              <span>automatique</span>
-            </li>
-            <li>
-              <span className="chiffre-medaille" aria-hidden="true">
-                🏗️
-              </span>
-              <strong>{LISTE_BATIMENTS.length}</strong>
-              <span>bâtiments à poser</span>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Comment jouer, en 4 cartes. */}
-      <ol className="etapes">
+      {/* Au milieu, en bas : le jeu en 4 étapes (sur le village). */}
+      <ol className="menu-etapes">
         {ETAPES.map((etape, i) => (
-          <li key={etape.titre} className="etape" style={{ ['--couleur-etape' as string]: etape.couleur }}>
-            <span className="etape-numero">{i + 1}</span>
-            <span className={`etape-image ${etape.portrait ? 'etape-portrait' : ''}`} aria-hidden="true">
-              <img src={etape.image} alt="" loading="lazy" draggable={false} />
+          <li key={etape.titre} className="menu-etape" style={{ ['--couleur-etape' as string]: etape.couleur, animationDelay: `${i * 120}ms` }} title={etape.texte}>
+            <span className={`menu-etape-image ${etape.portrait ? 'etape-portrait' : ''}`} aria-hidden="true">
+              <img src={etape.image} alt="" draggable={false} />
             </span>
-            <strong>{etape.titre}</strong>
-            <span className="discret">{etape.texte}</span>
+            <strong>
+              {i + 1}. {etape.titre}
+            </strong>
           </li>
         ))}
       </ol>
 
-      <section className="accueil-mondes" id="mondes">
-        <CarteInstallation />
-        <CarteCompte compte={compte} />
-        <h2 className="titre-section">
-          🌍 Tes mondes{' '}
-          <span className="discret">
-            ({mondes.length}/{NB_MONDES_MAX})
-          </span>
-        </h2>
-        <div className="grille-mondes">
-          {mondes.map((monde, index) => (
-            <CarteMonde
-              // La version change quand les mondes du compte remplacent ceux du navigateur.
-              key={`${compte.versionMondes}-${monde.id}`}
-              monde={monde}
-              dernier={index === 0}
-              peutDupliquer={place}
-              bloque={bloque}
-              onJouer={() => onJouer(monde)}
-              onChangement={() => setVersion((v) => v + 1)}
-            />
-          ))}
-
-          {/* Un nouveau monde (s'il reste de la place). */}
-          {place ? (
-            <form
-              className="carte carte-monde carte-nouveau-monde"
-              onSubmit={(e) => {
-                e.preventDefault()
-                creer()
-              }}
-            >
-              <img className="nouveau-monde-pepite" src="/images/personnages/sprites/mineur_commun_devant.webp" alt="" draggable={false} />
-              <h3>✨ Nouveau monde</h3>
-              <span className="nouveau-monde-texte">Une nouvelle partie depuis le début : Pépite te montre tout, pas à pas.</span>
-              <input
-                value={nouveauNom}
-                maxLength={24}
-                placeholder={`Monde ${mondes.length + 1}`}
-                onChange={(e) => setNouveauNom(e.target.value)}
-                aria-label="Nom du nouveau monde"
-              />
-              <button className="bouton bouton-creuser" type="submit" disabled={bloque}>
-                ⛏️ Créer et jouer
-              </button>
-            </form>
-          ) : (
-            <p className="discret">{NB_MONDES_MAX} mondes au maximum : supprime-en un pour en créer un nouveau.</p>
-          )}
+      {/* À droite : le compte, puis le classement. */}
+      <aside className="menu-droite">
+        <div className="menu-panneau-compte">
+          <CarteCompte compte={compte} />
         </div>
-      </section>
+        <div className="menu-panneau-classement">
+          <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} monArgent={monArgent} onSeConnecter={montrerCompte} />
+        </div>
+      </aside>
 
-      <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} />
+      {/* Sur téléphone : un onglet à la fois. */}
+      <nav className="menu-onglets" aria-label="Menu">
+        {(
+          [
+            ['jouer', '⛏️', 'Jouer'],
+            ['classement', '🏆', 'Classement'],
+            ['compte', '👤', 'Compte'],
+          ] as const
+        ).map(([id, icone, nom]) => (
+          <button key={id} className={onglet === id ? 'actif' : ''} onClick={() => setOnglet(id)} aria-pressed={onglet === id}>
+            <span aria-hidden="true">{icone}</span>
+            {nom}
+          </button>
+        ))}
+      </nav>
 
       {/* La version en ligne (commit et date du build) : pour vérifier que Vercel est à jour. */}
       <p className="accueil-version discret">Version {__VERSION_JEU__}</p>

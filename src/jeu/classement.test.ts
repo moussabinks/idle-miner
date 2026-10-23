@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { meilleurScore } from './classement'
+import { meilleurArgent, meilleurScore, niveauMineAffiche } from './classement'
 import { creerPartie } from './mineur'
 import { creerMonde, exporterTout, type Stockage } from './sauvegarde'
 
@@ -29,5 +29,18 @@ describe('classement', () => {
 
   it('donne 0 sans aucun monde', () => {
     expect(meilleurScore({})).toEqual({ prestige: 0, argent: 0 })
+  })
+})
+
+describe('classement à l’argent (23/10)', () => {
+  it('le niveau de mine affiché : rien pour un ancien prestige', () => {
+    expect(niveauMineAffiche({ prestige: 3, argent: 0 })).toBe(3)
+    expect(niveauMineAffiche({ prestige: 12, argent: 0 })).toBeNull()
+    expect(niveauMineAffiche({ prestige: 0, argent: 0 })).toBeNull()
+  })
+
+  it('le meilleur argent gagné des mondes (les mondes illisibles comptent pour 0)', () => {
+    expect(meilleurArgent([{ stats: { argentGagne: 120.7 } }, null, { stats: { argentGagne: 80 } }])).toBe(120)
+    expect(meilleurArgent([])).toBe(0)
   })
 })

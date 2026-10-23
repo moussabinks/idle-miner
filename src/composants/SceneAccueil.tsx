@@ -202,7 +202,9 @@ const SOL = (
   </svg>
 )
 
-export function SceneAccueil() {
+// (23/10) « marges » : la place prise par les panneaux du menu à gauche et à droite (en pixels) ;
+// le village se met au milieu de ce qui reste.
+export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: number } } = {}) {
   const boiteRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 450 })
   const temps = useTemps()
@@ -220,15 +222,17 @@ export function SceneAccueil() {
   // Dans une boîte large (ordinateur), le texte prend la moitié gauche : le village tient en
   // entier dans la moitié droite. Dans une boîte étroite (téléphone), on voit le milieu du
   // village, un peu plus gros, dans le haut de la boîte (le logo cache le bas).
-  const large = taille.l / taille.h > 1.5
-  const zoneTexte = large ? 0.5 : 0
-  const largeurLibre = taille.l * (1 - zoneTexte)
+  const large = marges ? taille.l > marges.gauche + marges.droite + 200 : taille.l / taille.h > 1.5
+  const margeGauche = marges ? marges.gauche : taille.l * 0.5
+  const margeDroite = marges ? marges.droite : 0
+  // (au moins 45 % de la largeur : sur un petit écran, le village passe un peu sous les panneaux)
+  const largeurLibre = large ? Math.max(taille.l - margeGauche - margeDroite, taille.l * 0.45) : taille.l
   const zoomVillage = large ? Math.min(largeurLibre / CADRE.l, taille.h / CADRE.h) : Math.min(taille.l / 560, taille.h / 440)
   // Le décor (la forêt) doit toujours remplir toute la boîte.
   const { x0, y0, x1, y1 } = LIMITES_TERRAIN
   const zoomMin = Math.max(taille.l / (x1 - x0), taille.h / (y1 - y0))
   const z = Math.max(zoomMin, zoomVillage)
-  const centreX = taille.l * zoneTexte + largeurLibre / 2
+  const centreX = large ? margeGauche + largeurLibre / 2 : taille.l / 2
   const centreY = large ? taille.h / 2 : taille.h * 0.4
   // Le point du monde qu'on met là : le milieu du village, ou le milieu de la mine sur téléphone.
   const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(35, 26)

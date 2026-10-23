@@ -1,11 +1,12 @@
-// Le classement des joueurs (leaderboard) : deux classements, au niveau de la mine et à
-// l'argent. Le score d'un joueur est le meilleur de ses mondes. L'argent classé est tout
-// l'argent gagné dans la partie (l'argent en poche baisse quand on achète).
+// Le classement des joueurs (leaderboard) : à l'argent gagné seulement (23/10 ; le niveau de la
+// mine est affiché à côté, mais ne compte pas). Le score d'un joueur est le meilleur de ses mondes.
+// L'argent classé est tout l'argent gagné dans la partie (l'argent en poche baisse quand on achète).
 // Le serveur garde le niveau de la mine dans sa colonne « prestige » (l'ancien classement) :
 // pas besoin de changer la table.
 //
 // Rien ici ne parle au réseau : c'est `src/enLigne.ts` qui lit et envoie les scores.
 
+import { NIVEAU_MINE_MAX } from './donnees'
 import { charger, mondesDeLaCopie, type SauvegardeComplete, type Stockage } from './sauvegarde'
 
 export type Score = { prestige: number; argent: number }
@@ -13,7 +14,16 @@ export type Score = { prestige: number; argent: number }
 // Une ligne du classement, telle que le serveur la renvoie.
 export type LigneClassement = Score & { pseudo: string }
 
-export type TriClassement = 'prestige' | 'argent'
+// (23/10) Le niveau de mine à afficher, ou null pour une vieille ligne (un ancien prestige, plus
+// grand que le dernier niveau de la mine).
+export function niveauMineAffiche(ligne: Score): number | null {
+  return ligne.prestige >= 1 && ligne.prestige <= NIVEAU_MINE_MAX ? ligne.prestige : null
+}
+
+// (23/10) Le meilleur argent gagné parmi des parties (pour « tu serais 7e »).
+export function meilleurArgent(etats: ({ stats: { argentGagne: number } } | null)[]): number {
+  return Math.max(0, ...etats.map((etat) => (etat ? Math.floor(etat.stats.argentGagne) : 0)))
+}
 
 // Un faux stockage en lecture seule, pour relire les parties d'une copie avec `charger`.
 function stockageDeLaCopie(copie: SauvegardeComplete): Stockage {
