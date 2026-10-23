@@ -201,17 +201,17 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ### L'ascenseur et l'échelle
 
-- Il ne sert qu'aux **mineurs employés**. Depuis le 23/10, **sa caisse fait des allers-retours sans cesse** tant qu'un mineur travaille au fond, pleine ou pas : elle descend, se charge **1 s** au fond (`SECONDES_CHARGEMENT_ASCENSEUR`) en prenant les sacs des mineurs, remonte, se vide dans le coffre en **2 s**, et repart. Les mineurs restent au fond (ils ne remontent que s'ils ne sont plus payés). Coffre plein : elle attend en haut, pleine.
+- Il ne sert qu'aux **mineurs employés**. Depuis le 23/10, **sa caisse fait des allers-retours sans cesse** tant qu'un mineur travaille au fond, pleine ou pas : elle descend, se charge au fond en prenant les sacs des mineurs (**1 s** au niveau 1), remonte, se vide dans le coffre (**2 s** au niveau 1), et repart. Depuis le 23/10, **chaque niveau de l'ascenseur raccourcit aussi le chargement et le vidage** (`secondesChargementAscenseur`, `secondesVidageAscenseur`). Les mineurs restent au fond (ils ne remontent que s'ils ne sont plus payés). Coffre plein : elle attend en haut, pleine.
 - **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + 1 + 2) :
 
-| Niveau | Trajet | Caisse | Remonte au plus | Prix |
-|---|---:|---:|---:|---|
-| 1 (au départ) | 6 s | 15 blocs | 1 bloc/s | — |
-| 2 | 4 s | 25 | 2,3 bloc/s | 1 500 $ + 50 fer + 10 redstone |
-| 3 | 2,8 s | 40 | 4,7 bloc/s | 7 000 $ + 120 fer + 40 redstone |
-| 4 | 2 s | 60 | 8,6 bloc/s | 25 000 $ + 200 fer + 100 redstone |
-| 5 | 1,4 s | 90 | 15,5 bloc/s | 80 000 $ + 200 redstone + 60 or |
-| 6 | 1 s | 130 | 26 bloc/s | 250 000 $ + 150 or + 30 émeraude |
+| Niveau | Trajet | Charge / vide | Caisse | Remonte au plus | Prix |
+|---|---:|---:|---:|---:|---|
+| 1 (au départ) | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | — |
+| 2 | 4 s | 0,8 s / 1,6 s | 25 | 2,5 bloc/s | 1 500 $ + 50 fer + 10 redstone |
+| 3 | 2,8 s | 0,6 s / 1,2 s | 40 | 5,4 bloc/s | 7 000 $ + 120 fer + 40 redstone |
+| 4 | 2 s | 0,5 s / 0,9 s | 60 | 11,1 bloc/s | 25 000 $ + 200 fer + 100 redstone |
+| 5 | 1,4 s | 0,4 s / 0,7 s | 90 | 23,4 bloc/s | 80 000 $ + 200 redstone + 60 or |
+| 6 | 1 s | 0,3 s / 0,5 s | 130 | 46 bloc/s | 250 000 $ + 150 or + 30 émeraude |
 
 - Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse : le panneau de la mine affiche « ⚠️ Ascenseur trop petit : tes mineurs creusent *x* bloc/s, la caisse en remonte *y* » (seulement si le niveau suivant rapporte au moins 10 %). Voir [personnel.md](personnel.md).
 - L'ascenseur n'est proposé dans les missions qu'une fois qu'on a au moins un mineur. Son niveau 2 demande le niveau 5 du joueur (30/10 ; avant, sa ligne affiche « 🔒 … · au niveau 5 »).

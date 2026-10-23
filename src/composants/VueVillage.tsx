@@ -7,10 +7,10 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, SECONDES_VIDAGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
-import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
+import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
 import { nombreAbrege } from '../nombres'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
@@ -914,8 +914,8 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
           x={dessus.x}
           y={dessus.y}
           texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? '📦 Coffre plein !' : `📦 Déchargement · ${charge}`}
-          part={caisse.progression / SECONDES_VIDAGE_EMPLOYE}
-          secondes={SECONDES_VIDAGE_EMPLOYE - caisse.progression}
+          part={caisse.progression / secondesVidageAscenseur(etat)}
+          secondes={secondesVidageAscenseur(etat) - caisse.progression}
         />
       )}
       {auTravail && (caisse.etape === 'monte' || caisse.etape === 'descend') && (

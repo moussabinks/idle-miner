@@ -12,6 +12,7 @@ import {
   aCharger,
   aUnPousseur,
   ameliorerWagonnet,
+  capaciteTrajet,
   capaciteWagonnet,
   distanceDepuisLeDepart,
   enRoute,
@@ -102,7 +103,7 @@ function Trajet({ etat, jouer, liaison, onReglerTrajet }: PropsPanneau & { liais
       )}
       <div className="boutons">
         <button className="bouton bouton-petit bouton-voyage" disabled={!peutPousser(etat, liaison)} onClick={() => jouer((e) => pousserTrajet(e, liaison))}>
-          🛤️ Pousser ({Math.min(capaciteWagonnet(etat), aPorter)} objets)
+          🛤️ Pousser ({Math.min(capaciteTrajet(etat, liaison), aPorter)} objets)
         </button>
         {/* La fenêtre des trajets : les objets à envoyer, l'aperçu des voyages (27/10). */}
         {onReglerTrajet && (

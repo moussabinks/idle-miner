@@ -534,9 +534,19 @@ export function capaciteAscenseur(etat: EtatJeu): number {
   return niveauAscenseur(etat)?.capacite ?? CAPACITE_ECHELLE
 }
 
+// (23/10) Le temps de charger la caisse au fond, et de la vider dans le coffre : plus rapides
+// quand on améliore l'ascenseur.
+export function secondesChargementAscenseur(etat: EtatJeu): number {
+  return niveauAscenseur(etat)?.secondesChargement ?? SECONDES_CHARGEMENT_ASCENSEUR
+}
+
+export function secondesVidageAscenseur(etat: EtatJeu): number {
+  return niveauAscenseur(etat)?.secondesVidage ?? SECONDES_VIDAGE_EMPLOYE
+}
+
 // La durée d'un aller-retour de la caisse (descendre, charger, remonter, vider).
 export function secondesAllerRetourAscenseur(etat: EtatJeu): number {
-  return 2 * secondesTrajetMineur(etat) + SECONDES_CHARGEMENT_ASCENSEUR + SECONDES_VIDAGE_EMPLOYE
+  return 2 * secondesTrajetMineur(etat) + secondesChargementAscenseur(etat) + secondesVidageAscenseur(etat)
 }
 
 // Combien de blocs par seconde l'ascenseur peut remonter au plus.
