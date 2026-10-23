@@ -460,16 +460,17 @@ export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[
   { vitesse: 3.6, reservoir: 54, cout: { argent: 150000, materiaux: { or: 100, emeraude: 25 } } },
 ]
 
-// (23/10) Petit : environ 3 min 20 de forage au même niveau de forage (sans électricité). Il se
-// remplit donc vite : il faut le vider souvent (wagonnet Foreuse → Marché) et l'agrandir quand la
-// foreuse fore plus vite. Avant : 200 à 6 000 places, jamais plein.
+// (23/10, bis) Tout petit : environ 50 secondes de forage au même niveau de forage (sans
+// électricité ; encore moins avec). Il se remplit donc vite : il faut le vider souvent (wagonnet
+// Foreuse → Marché) et l'agrandir à chaque fois que la foreuse fore plus vite, sinon elle s'arrête.
+// Plus cher aussi. Avant : 100 à 720 places (3 min 20), et encore avant 200 à 6 000, jamais plein.
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
-  { capacite: 100, cout: { materiaux: {} } },
-  { capacite: 160, cout: { argent: 2500, materiaux: { fer: 40 } } },
-  { capacite: 240, cout: { argent: 7500, materiaux: { fer: 80, redstone: 25 } } },
-  { capacite: 360, cout: { argent: 20000, materiaux: { fer: 150, redstone: 70 } } },
-  { capacite: 520, cout: { argent: 50000, materiaux: { redstone: 130, or: 40 } } },
-  { capacite: 720, cout: { argent: 120000, materiaux: { or: 90, emeraude: 20 } } },
+  { capacite: 25, cout: { materiaux: {} } },
+  { capacite: 40, cout: { argent: 5000, materiaux: { fer: 60 } } },
+  { capacite: 60, cout: { argent: 15000, materiaux: { fer: 120, redstone: 40 } } },
+  { capacite: 90, cout: { argent: 40000, materiaux: { fer: 200, redstone: 100 } } },
+  { capacite: 130, cout: { argent: 90000, materiaux: { redstone: 200, or: 60 } } },
+  { capacite: 180, cout: { argent: 200000, materiaux: { or: 120, emeraude: 30 } } },
 ]
 
 // ---------------------------------------------------------------------------

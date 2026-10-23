@@ -74,11 +74,11 @@ describe('la foreuse', () => {
   it('s’améliore (23/10 : plus de recharge automatique, le charbon arrive par les rails)', () => {
     const etat = partie()
     etat.argent = 20_000
-    etat.inventaire = { fer: 200, redstone: 100 }
+    etat.inventaire = { fer: 300, redstone: 100 }
     ameliorerForage(etat)
     ameliorerForage(etat)
     ameliorerChariot(etat)
     expect(vitesseForage(etat)).toBe(1.2)
-    expect(capaciteChariot(etat)).toBe(160)
+    expect(capaciteChariot(etat)).toBe(40)
   })
 })
