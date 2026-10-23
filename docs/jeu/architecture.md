@@ -114,10 +114,10 @@ Supprimé le 22/10 : `travail.ts` (et son test), qui découpait le minage du jou
 
 | Fichier | Rôle |
 |---|---|
-| `Accueil.tsx` | Écran d'accueil : logo, petit village vivant, 4 cartes « comment jouer », cartes des 5 mondes (niveau de mine, argent, mineurs, blocs ; prévient quand une partie d'avant la v21 repart de zéro), compte, installation, classement, version |
+| `Accueil.tsx` | Écran d'accueil en plein écran (23/10) : le village vivant en fond, à gauche Jouer et les mondes (une ligne chacun), au milieu les 4 étapes, à droite le compte et le classement ; sur téléphone, des onglets |
 | `SceneAccueil.tsx` | Le décor de l'accueil : un village tout fait (avec ses propres décorations, `DECORATIONS_SCENE`) avec des hamsters qui vont et viennent et un wagonnet (le même en 3D que dans le jeu) |
 | `CarteCompte.tsx` | Carte du compte |
-| `CarteClassement.tsx` | Classement (20 premiers), onglets Niveau de mine / Argent |
+| `CarteClassement.tsx` | Classement à l'argent gagné (23/10) : podium, 50 premiers, ta place et qui dépasser |
 | `CarteInstallation.tsx` | Carte « Installer l'application » |
 | `Hud.tsx` | Bandeau en haut à gauche (27/10), au-dessus des petits boutons : le niveau du joueur (29/10 : ⭐ et son badge violet, jauge d'XP, bulle d'aide avec ce que débloque le prochain niveau), argent et $/s, niveau de la mine et coffre, pioche (30/10 : jauge du vert au rouge, bandeau en alerte sous 15 %), sac, mineurs, ⚡, boutons 🔊 et 🎵 |
 | `Missions.tsx` | **Nouveau (27/10)** : les missions en haut à droite (la première en grand, barre de progression, bordure verte quand c'est faisable, ✔ barré et son de succès quand c'est accompli) ; remplace `ProchainObjectif.tsx` |
@@ -175,6 +175,7 @@ Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (
 |---|---|
 | `schema.sql` | Table `sauvegardes` (tous les mondes d'un joueur), droits, règles RLS, trigger de date |
 | `classement.sql` | Table `classement`, index, droits, règles RLS (pseudo du compte obligatoire), trigger qui garde le meilleur score. À lancer après `schema.sql` |
+| `classement-niveau-mine.sql` | **Nouveau (23/10)**, facultatif : le trigger ne garde le maximum que pour l'argent, et les anciens prestiges (plus de 5) repassent à 0 |
 | `classement-remise-a-zero.sql` | **Nouveau (26/10)** : `delete from public.classement;`, à lancer **une fois** pour effacer les anciens scores de prestige (le trigger garde le meilleur score : ils ne redescendraient jamais). Chaque joueur retrouve sa ligne à sa prochaine sauvegarde en ligne. Aucune table créée, RLS inchangées |
 
 Ces scripts se collent à la main dans le SQL Editor de Supabase. Les tables n'ont pas changé le 22/10 (le niveau de la mine passe dans la colonne `prestige`).

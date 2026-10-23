@@ -203,7 +203,7 @@ C'est le seul fichier qui parle à Supabase.
 | `telechargerMondes(joueur)` | Lit la ligne du joueur dans `sauvegardes` → `{ parties, envoyeeLe }` ou `null`. Lance une erreur si le serveur ne répond pas |
 | `envoyerMondes(joueur, parties)` | `upsert` de `{ joueur, parties, envoyee_le: Date.now() }`. Renvoie l'heure d'envoi |
 | `envoyerScore(joueur, score)` | `upsert` de `{ joueur, pseudo, prestige, argent }` dans `classement` |
-| `lireClassement(tri, nombre)` | Les `nombre` premiers, triés par `tri` décroissant puis l'autre critère décroissant. Seulement les lignes avec un vrai niveau de mine (`prestige` ≤ 5, `NIVEAU_MINE_MAX`) et mises à jour depuis le 22/10 (`modifie_le` ≥ `DEBUT_MINE_AUTOMATIQUE` = 2026-10-22) : voir 3.4. Lisible sans compte |
+| `lireClassement(nombre)` | (23/10) Les `nombre` premiers, triés par argent décroissant puis niveau de mine. `placeDuScore(argent, pseudo)` : combien de joueurs devant, et celui juste devant. Seulement les lignes avec un vrai niveau de mine (`prestige` ≤ 5, `NIVEAU_MINE_MAX`) et mises à jour depuis le 22/10 (`modifie_le` ≥ `DEBUT_MINE_AUTOMATIQUE` = 2026-10-22) : voir 3.4. Lisible sans compte |
 
 ### 2.4 Ce qui est envoyé : la copie de tous les mondes
 
@@ -278,12 +278,12 @@ Il n'y a **pas de fusion monde par monde** : c'est toujours l'ensemble des monde
 
 ### 3.3 L'affichage (`src/composants/CarteClassement.tsx`)
 
-- Sur l'écran d'accueil, sous les mondes. Visible par tout le monde, même sans compte.
-- Deux onglets : **🕳️ Niveau de mine** (tri par la colonne `prestige`, qui contient le niveau de la mine ; l'argent départage) et **💰 Argent** (tri par argent, le niveau départage). Explications : « Le plus bas niveau de mine atteint » et « Tout l'argent gagné dans la partie », « (le meilleur de tes mondes) ». Chaque ligne affiche « 🕳️ *n* » et « 💰 *n* $ ».
-- Les **20** premiers (`NB_LIGNES`). Médailles 🥇🥈🥉 pour les 3 premiers, puis « 4. », « 5. »...
-- La ligne du joueur connecté est mise en valeur (comparaison du pseudo sans tenir compte de la casse).
-- Rechargé au changement d'onglet, au clic sur « Actualiser », et quand l'heure du dernier envoi du compte change.
-- Messages : chargement, « Impossible de charger le classement. Vérifie ta connexion. », « Personne n'est encore classé : à toi d'être le premier ! », et « Connecte-toi pour apparaître dans le classement. » si pas de compte.
+- Sur l'écran d'accueil, à droite. Visible par tout le monde, même sans compte. Détails de l'écran : [interface.md](interface.md#26-le-classement-carteclassementtsx).
+- **Depuis le 23/10, seulement à l'argent gagné** (`lireClassement(nombre)` : tri par `argent`, puis `prestige` pour départager). Le niveau de mine est affiché à côté (`niveauMineAffiche` : rien pour une ligne avec un ancien prestige, plus de 5), mais ne compte pas. Plus d'onglet « Niveau de mine ».
+- Les **50** premiers (`NB_LIGNES`), en podium pour les 3 premiers. La ligne du joueur connecté est mise en valeur (pseudo comparé sans la casse).
+- **La place du joueur** (`placeDuScore(argent, pseudo)`, deux requêtes) : le nombre de joueurs qui ont gagné plus (`count` exact, sans le joueur lui-même), et celui qui est juste devant (le plus petit argent au-dessus). Le score utilisé est le meilleur argent gagné des mondes de ce navigateur (`meilleurArgent`), même sans compte (« tu serais 7e ! »).
+- **Plus de filtre sur la colonne `prestige`** (23/10) : avant, le jeu cachait les lignes avec `prestige` > 5 ; comme le serveur gardait le plus grand prestige, un joueur qui avait un ancien prestige restait caché pour toujours, et le classement pouvait ne montrer que soi-même. Il garde le filtre sur la date (`modifie_le` après le 22/10 : seulement les joueurs qui ont rejoué depuis la mine automatique).
+- Le script facultatif **`supabase/classement-niveau-mine.sql`** (23/10) : le trigger ne garde plus le maximum que pour l'argent (le niveau de mine prend la valeur envoyée), et les anciens prestiges sont remis à 0 sans toucher à la date des lignes.
 
 ### 3.4 Les anciens scores de prestige (26/10)
 

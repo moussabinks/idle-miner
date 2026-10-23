@@ -42,57 +42,25 @@ Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affich
 
 ## 2. L'écran d'accueil (`Accueil.tsx`)
 
-Dans le style des images du village (bois, or, lanternes). Derrière toute la page, un dégradé brun très sombre. Depuis le 27/10, l'accueil a **le look du jeu** : toutes les cartes (compte, mondes, classement, installer, « comment jouer ») sont des **panneaux de bois clair au gros contour brun** (comme la liste des tâches), qui se soulèvent au survol ; les titres de section sont des **rubans dorés** aux bouts fourchus ; les trois chiffres du bandeau sont des pastilles avec leur **médaille** (💎 5 niveaux de mine, ⚡ 100 % automatique, 🏗️ bâtiments à poser) ; les chiffres d'un monde sont sur un **papier crème** ; la carte « Nouveau monde » est un papier crème où **Pépite** passe la tête (« Pépite te montre tout, pas à pas ») ; les champs sont crème au bord brun. Le bouton « Commencer » dit « Pépite te guide pas à pas ». De haut en bas :
+**Depuis le 23/10, un menu en plein écran : tout tient sans faire défiler** (`.menu-plein-ecran` dans `src/accueil.css`). Avant, l'accueil était une colonne de 1 100 px au centre, à faire défiler, avec les bords gauche et droit vides.
 
-### 2.1 Le grand bandeau (« héros »)
+### 2.1 La mise en page
 
-Un cadre en bois sombre avec un filet doré. Le fond est un **petit village vivant** (`SceneAccueil.tsx`, voir [visuel-et-sons.md](visuel-et-sons.md#6-lécran-daccueil-accueilcss)) : la même vue du ciel que dans le jeu, avec la mine, les bâtiments (générateur compris), des décorations, des rails, des hamsters mineurs qui vont et viennent, un wagonnet qui fait la navette, le joueur devant la mine, le manager et le recruteur à leur poste. Ce n'est qu'un décor. Par-dessus :
+- **Au fond, tout l'écran** : le petit village vivant (`SceneAccueil`, la même vue du ciel que dans le jeu, avec ses hamsters et son wagonnet) : c'est l'aperçu du jeu. Il se cale au milieu de la place laissée par les deux panneaux (`marges`, 400 px à gauche et 420 px à droite) ; les bords sont un peu assombris.
+- **À gauche** (380 px) : le logo **MEGA DIGGER** sur son panneau de bois, « Creuse. Construis. **Deviens riche.** », le gros bouton doré **▶ Jouer** (le dernier monde joué : nom, 🕳️ niveau, argent) ou **⛏️ Commencer** (« Pépite te guide pas à pas ») pour un premier monde, puis **🌍 Tes mondes** (*n*/5). Un nouveau joueur voit à la place le jeu en quelques mots. Enfin, la carte « Installer » s'il y a lieu.
+- **Au milieu, en bas** : le jeu en 4 pastilles (1. Creuse, 2. Construis, 3. Embauche, 4. Automatise), avec leur dessin ; le texte complet en survol. Sur deux lignes sous 1 400 px de large.
+- **À droite** (400 px) : la carte du compte, puis le classement, qui prend toute la hauteur qui reste.
+- Les panneaux arrivent en glissant des côtés, les pastilles en sautant.
+- **Écran peu haut** (moins de 820 px) : logo et bouton plus petits. **Écran moyen** (moins de 1 180 px) : panneaux de 330 et 350 px.
+- **Téléphone** (moins de 900 px) : le village en fond, et **un panneau à la fois**, choisi avec une **barre d'onglets en bas** : ⛏️ **Jouer** (logo, Jouer, mondes), 🏆 **Classement**, 👤 **Compte**. L'onglet actif est doré.
 
-- le **logo** « MEGA / DIGGER » (police Luckiest Guy, lettres dorées) cloué sur un **panneau en bois**, avec le **hamster du joueur** à côté ;
-- l'accroche « Creuse. Construis. **Deviens riche.** » et le paragraphe « Creuse ta mine jusqu'au **cœur de diamant**, bâtis ton village où tu veux dans la clairière, embauche des mineurs (rares, épiques… mythiques !) et relie tout avec des rails électriques. » ;
-- le **gros bouton doré** :
-  - s'il existe au moins un monde : « ▶ Jouer » + détail « *nom* · 🕳️ niveau *N* · *argent* $ » (« *nom* · nouveau village » si sa partie ne se lit plus, par exemple une partie d'avant le 22/10) → reprend le **dernier monde joué** ;
-  - sinon : « ⛏️ Commencer / Ta clairière et ta mine t'attendent » → crée un monde nommé « Monde 1 » et lance la partie ;
-  - grisé pendant que le compte se charge ou se synchronise ;
-- un bouton en bois « 🌍 Mes mondes » qui fait défiler jusqu'à la section des mondes (`#mondes`) ;
-- trois gros chiffres : « 5 niveaux de mine » (`NIVEAU_MINE_MAX`), « ⚡ des rails électriques », « 6 bâtiments à poser » (`LISTE_BATIMENTS`).
+### 2.2 Les mondes (jusqu'à 5)
 
-### 2.2 « Comment jouer » : 4 cartes numérotées
-
-| N° | Image | Titre | Texte |
-|---|---|---|---|
-| 1 | portrait du mineur casqué | Creuse | Clique sur le bloc de la mine : charbon, fer, redstone, or, émeraudes, diamants… |
-| 2 | le dessin du forgeron | Construis | Pose le marché, la forge, le bazar… où tu veux dans la clairière, et relie-les par des rails. |
-| 3 | portrait du recruteur | Embauche | Des mineurs rares, épiques… mythiques creusent pour toi et remplissent le coffre de la mine. |
-| 4 | le dessin du générateur | Automatise | Relie la mine au marché avec des rails, et électrifie-les avec le générateur : l'argent tombe tout seul ! |
-
-Chaque carte est en bois sombre, avec une pièce dorée pour le numéro, une lueur et un titre de sa couleur (or, vert, bleu, rose), et se soulève au survol.
-
-### 2.3 La section des mondes (`#mondes`)
-
-Dans l'ordre :
-
-1. **Carte « Installer »** (`CarteInstallation.tsx`), voir [§ 2.5](#25-la-carte--installer--carteinstallationtsx).
-2. **Carte du compte** (`CarteCompte.tsx`), voir [§ 2.4](#24-la-carte-du-compte-cartecomptetsx).
-3. Le titre « 🌍 Tes mondes (*n*/5) ».
-4. La **grille des mondes** : une carte par monde (jusqu'à **5**), puis la carte « ✨ Nouveau monde ».
-
-**Une carte de monde** (`CarteMonde`) :
-
-- un liseré épais en haut et une lueur de la couleur du monde (5 couleurs : or `#f2b33d`, bleu `#4a8af0`, turquoise `#22b5a3`, rose `#e85aa8`, violet `#9b6cf0`) ;
-- le titre « 🌍 *nom* », et le badge « Dernière partie » sur le premier de la liste (le dernier joué) ;
-- 4 infos : 🕳️ Mine niveau *N*, 💵 argent, 👷 nombre de mineurs, ⛏️ blocs cassés. Pour une partie d'une ancienne version (`partieAncienne`, avant la version 21), un cadre doré en pointillés : « 🏡 Partie de l'ancienne version : elle repart de zéro avec la nouvelle mine automatique. » ; si la sauvegarde est illisible : « Partie illisible : elle recommencera à zéro. » ;
-- « Joué il y a … » (« à l'instant », « il y a 5 min », « il y a 3 h », « il y a 2 jours ») ;
-- les boutons :
-
-| Bouton | Couleur | Effet |
-|---|---|---|
-| ▶ Jouer | or | lance ce monde (grisé pendant une synchro du compte) |
-| ✏️ Renommer | gris | remplace le titre par un champ (24 caractères max) + bouton « OK » ; recliquer annule |
-| 📄 Dupliquer | bleu | copie le monde ; grisé s'il y a déjà 5 mondes |
-| 🗑️ | rouge | confirmation du navigateur « Supprimer le monde « … » ? Sa partie sera perdue pour toujours. » puis suppression |
-
-**La carte « ✨ Nouveau monde »** (bordure en pointillés) : un champ nom (24 caractères, « Monde *n+1* » par défaut) et « ⛏️ Créer et jouer » (Entrée marche aussi). Avec 5 mondes, elle est remplacée par « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
+- Une **ligne par monde** (`LigneMonde`), sur papier crème, avec un liseré de sa couleur : 🌍, le nom, puis 🕳️ niveau, 💵 argent, 👷 mineurs et « il y a 5 min ». À droite, **⋯** (déplie Renommer, Dupliquer, Supprimer) et **▶** (jouer ; celui du dernier monde joué respire).
+- Une partie d'une ancienne version : « 🏡 ancienne version : repart de zéro » ; illisible : « partie illisible : repart de zéro ».
+- **✨ Nouveau monde** (bleu) : un champ pour son nom et **⛏️ Créer** (on joue tout de suite). Avec 5 mondes : « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
+- La liste défile à l'intérieur de son panneau si elle ne tient pas.
+- Pendant la synchronisation du compte, les boutons Jouer sont grisés.
 
 ### 2.4 La carte du compte (`CarteCompte.tsx`)
 
@@ -119,19 +87,18 @@ Elle n'apparaît pas si le jeu est déjà installé, ou si le navigateur ne sait
 
 ### 2.6 Le classement (`CarteClassement.tsx`)
 
-Sous les mondes, visible par tout le monde (même sans compte) :
+À droite (ou dans l'onglet 🏆 sur téléphone), visible par tout le monde (même sans compte). **Depuis le 23/10, un seul classement : l'argent gagné** ; le niveau de la mine est affiché, mais il ne compte pas.
 
-- titre « 🏆 Classement », deux onglets **🕳️ Niveau de mine** / **💰 Argent**, lien **Actualiser** ;
-- l'explication : « Le plus bas niveau de mine atteint » ou « Tout l'argent gagné dans la partie ». Le niveau de la mine est gardé par le serveur dans sa colonne `prestige` (voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#3-le-classement)) ;
-- « (le meilleur de tes mondes) », et « Connecte-toi pour apparaître dans le classement. » si on n'est pas connecté ;
-- les **20 premiers** : 🥇 🥈 🥉 puis « 4. », « 5. »…, le pseudo, 🕳️ niveau et 💰 argent (la valeur triée en or, l'autre en gris ; sur téléphone seule la valeur triée reste) ;
-- la ligne du joueur connecté est entourée d'or ;
-- messages : « Chargement du classement… », « Personne n'est encore classé : à toi d'être le premier ! », « Impossible de charger le classement. Vérifie ta connexion. » (rouge) ;
-- il se relit quand on change d'onglet, sur « Actualiser », et après chaque envoi de la sauvegarde.
+- En haut : « 🏆 Classement », l'étiquette dorée « 💰 Argent gagné », et 🔄 pour le relire.
+- Un **podium** pour les 3 premiers : le 1er au milieu, sur la plus haute marche dorée qui brille, avec 🥇 et une 👑 qui se dandine ; 🥈 à gauche (marche argentée), 🥉 à droite (marche bronze). Pseudo, argent en or (« 2,45 M$ »), 🕳️ niveau. Les marches montent en rebondissant.
+- Puis les suivants jusqu'au **50e** (« 4 Rayan 🕳️ 3 150 k$ »), qui défilent dans le panneau. La ligne du joueur connecté est verte.
+- **En bas, ta place** (toujours visible) : « #7 · Toi · 12 k$ » et « 🔥 Encore **3 k$** pour dépasser **Jade** » (vert). Sans compte, un bandeau doré qui respire : « Avec 12 k$, tu serais 7e ! » (le meilleur argent gagné des mondes de ce navigateur) et le bouton **Entrer**, qui ouvre le formulaire du compte. Le 1er : « 👑 Tu es le numéro 1 ! ».
+- Messages : « Chargement du classement… », « Personne n'est encore classé : à toi d'être le premier ! », « Impossible de charger le classement. Vérifie ta connexion. » (rouge).
+- Il se relit avec 🔄 et après chaque envoi de la sauvegarde.
 
-### 2.7 Tout en bas
+### 2.7 La version
 
-« Version *commit* · *date du build* » (petite ligne grise), pour vérifier que Vercel est à jour.
+« Version *commit* · *date du build* » (toute petite, en bas au milieu ; cachée sur téléphone), pour vérifier que Vercel est à jour.
 
 ---
 

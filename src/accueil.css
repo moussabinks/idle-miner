@@ -1032,3 +1032,720 @@ body:has(.accueil) {
     font-size: 1rem;
   }
 }
+
+/* =========================================================================
+   (23/10) Le menu en plein écran : tout tient sans faire défiler. Le village vivant remplit
+   l'écran ; à gauche le logo, Jouer et les mondes ; à droite le compte et le classement ;
+   au milieu, en bas, le jeu en 4 étapes. Sur téléphone : un panneau à la fois (onglets en bas).
+   ========================================================================= */
+
+.accueil.menu-plein-ecran {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  margin: 0;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr) 400px;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    'gauche . droite'
+    'gauche etapes droite';
+  gap: 16px 20px;
+  overflow: hidden;
+}
+
+.menu-plein-ecran::before {
+  display: none;
+}
+
+.menu-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: #24401b;
+}
+
+/* Les bords plus sombres : les panneaux se lisent bien, le village brille au milieu. */
+.menu-voile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgb(18 10 3 / 0.88) 0, rgb(18 10 3 / 0.55) 400px, transparent 560px),
+    linear-gradient(270deg, rgb(18 10 3 / 0.88) 0, rgb(18 10 3 / 0.55) 420px, transparent 580px),
+    radial-gradient(ellipse at 50% 115%, rgb(0 0 0 / 0.5), transparent 55%);
+}
+
+/* --- À gauche : logo, Jouer, mondes -------------------------------------------------- */
+.menu-gauche {
+  grid-area: gauche;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  animation: menu-arrive-gauche 0.6s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.menu-gauche .logo {
+  align-self: flex-start;
+  margin: 4px 0 0 4px;
+}
+
+.menu-gauche .heros-accroche {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.menu-gauche .bouton-mega {
+  align-items: center;
+  width: 100%;
+  padding: 16px 20px 13px;
+}
+
+.menu-gauche .bouton-mega-titre {
+  font-size: 2rem;
+}
+
+.menu-mondes {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 3px solid #3b2412;
+  border-radius: 18px;
+  background: linear-gradient(rgb(122 82 48 / 0.94), rgb(90 58 30 / 0.94));
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.35), 0 6px 0 rgb(0 0 0 / 0.35);
+}
+
+.menu-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 1.05rem;
+  color: #ffe9a8;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.4);
+}
+
+.menu-titre span {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.3);
+  font-size: 0.8rem;
+  color: #f0dcb8;
+}
+
+.liste-mondes {
+  min-height: 0;
+  margin: 0;
+  padding: 0 2px 0 0;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ligne-monde {
+  border-radius: 12px;
+  border: 2px solid #3b2412;
+  border-left: 6px solid var(--couleur-monde);
+  background: #fff3d6;
+  color: #3b2412;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+  transition: translate 0.15s, box-shadow 0.15s;
+}
+
+.ligne-monde:hover {
+  translate: 3px 0;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25), -4px 0 14px color-mix(in srgb, var(--couleur-monde) 60%, transparent);
+}
+
+.ligne-monde-haut {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 8px;
+}
+
+.ligne-monde-pastille {
+  font-size: 1.3rem;
+}
+
+.ligne-monde-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ligne-monde-texte strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ligne-monde-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6b4a22;
+}
+
+.ligne-monde-date {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.ligne-monde-plus {
+  padding: 2px 6px;
+  font-size: 1.2rem;
+  color: #6b4a22;
+}
+
+.ligne-monde-jouer {
+  min-width: 42px;
+  font-size: 1.1rem;
+}
+
+.ligne-monde-dernier .ligne-monde-jouer {
+  animation: bouton-respire 1.6s ease-in-out infinite;
+}
+
+.ligne-monde-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.ligne-monde-renommer,
+.nouveau-monde {
+  display: flex;
+  gap: 6px;
+}
+
+.ligne-monde-renommer input,
+.nouveau-monde input {
+  flex: 1;
+  min-width: 0;
+}
+
+.nouveau-monde-bouton {
+  align-self: stretch;
+}
+
+/* (posé sur le village : un fond pour bien le lire) */
+.menu-description {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgb(18 10 3 / 0.7);
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.menu-gauche .carte-installation {
+  margin-top: auto;
+}
+
+/* --- Au milieu, en bas : le jeu en 4 étapes ------------------------------------------ */
+/* (sur le village : un peu plus serré) */
+.menu-etapes {
+  grid-area: etapes;
+  align-self: end;
+  justify-self: center;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-etape {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px 3px 3px;
+  border-radius: 999px;
+  border: 3px solid #3b2412;
+  white-space: nowrap;
+  background: linear-gradient(color-mix(in srgb, var(--couleur-etape) 30%, #7a5230), #5a3a1e);
+  box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.3), 0 4px 0 rgb(0 0 0 / 0.35);
+  color: #fff3d6;
+  font-size: 0.82rem;
+  animation: menu-etape-arrive 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.menu-etape strong {
+  color: var(--couleur-etape);
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.5);
+  filter: brightness(1.25);
+}
+
+.menu-etape-image {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+
+.menu-etape-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.menu-etape-image.etape-portrait img {
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+
+@keyframes menu-etape-arrive {
+  from { opacity: 0; translate: 0 30px; }
+}
+
+/* --- À droite : compte et classement ----------------------------------------------- */
+.menu-droite {
+  grid-area: droite;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: menu-arrive-droite 0.6s 0.1s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.menu-panneau-classement {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.menu-droite .carte {
+  margin: 0;
+}
+
+.menu-droite .carte-compte {
+  padding: 12px 14px;
+}
+
+.menu-droite .carte-compte-formulaire {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.menu-droite .carte-compte-texte {
+  grid-column: 1 / -1;
+}
+
+.menu-droite .carte-compte input,
+.menu-droite .carte-compte .bouton {
+  width: 100%;
+  min-width: 0;
+}
+
+.menu-droite .carte-compte-erreur {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+}
+
+@keyframes menu-arrive-gauche {
+  from { opacity: 0; translate: -60px 0; }
+}
+
+@keyframes menu-arrive-droite {
+  from { opacity: 0; translate: 60px 0; }
+}
+
+/* --- Le classement : podium, liste, et ta place en bas ----------------------------- */
+.menu-plein-ecran .carte-classement {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.menu-plein-ecran .classement-haut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-plein-ecran .classement-haut h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.classement-critere {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: linear-gradient(#fff0a0, #ffc21f 55%, #e0960e);
+  border: 2px solid #3b2412;
+  color: #3b2412;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.menu-plein-ecran .classement-haut .lien {
+  margin-left: auto;
+  font-size: 1.1rem;
+}
+
+.classement-defile {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.classement-message {
+  margin: 20px 0;
+  text-align: center;
+}
+
+/* Le podium : trois marches, la plus haute au milieu. */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: 6px;
+  margin: 18px 0 10px;
+}
+
+.podium-place {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  text-align: center;
+  animation: podium-monte 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.podium-medaille {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.podium-1 .podium-medaille {
+  font-size: 2.2rem;
+}
+
+.podium-couronne {
+  position: absolute;
+  top: -20px;
+  font-size: 1.2rem;
+  animation: couronne-danse 1.8s ease-in-out infinite;
+}
+
+.podium-pseudo {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+}
+
+.podium-argent {
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.5);
+}
+
+.podium-socle {
+  width: 100%;
+  margin-top: 4px;
+  border-radius: 8px 8px 4px 4px;
+  border: 2px solid #3b2412;
+  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-size: 1.3rem;
+  color: #3b2412;
+  box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.45), 0 3px 0 rgb(0 0 0 / 0.35);
+}
+
+.podium-1 .podium-socle {
+  height: 54px;
+  padding-top: 10px;
+  background:
+    linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.6) 45%, transparent 60%) 0 0 / 250% 100%,
+    linear-gradient(#fff0a0, #ffc21f 55%, #e0960e);
+  animation: logo-reflet 3s ease-in-out infinite;
+}
+
+.podium-2 .podium-socle {
+  height: 40px;
+  padding-top: 6px;
+  background: linear-gradient(#ffffff, #c9d3dc 55%, #8e9aa6);
+}
+
+.podium-3 .podium-socle {
+  height: 30px;
+  padding-top: 2px;
+  background: linear-gradient(#ffd7a8, #d58b4a 55%, #9b5a26);
+}
+
+.podium-moi .podium-pseudo {
+  color: #9cf08f;
+}
+
+@keyframes podium-monte {
+  from { opacity: 0; translate: 0 40px; }
+}
+
+@keyframes couronne-danse {
+  0%, 100% { rotate: -10deg; translate: 0 0; }
+  50% { rotate: 10deg; translate: 0 -4px; }
+}
+
+.classement-mine {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.25);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f0dcb8;
+}
+
+.menu-plein-ecran .classement-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-plein-ecran .classement-liste li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: #fff3d6;
+  color: #3b2412;
+  border: 2px solid #3b2412;
+  animation: podium-monte 0.4s ease-out both;
+}
+
+.menu-plein-ecran .classement-liste li.classement-moi {
+  background: #d9ffc9;
+  outline: 3px solid #6fd35a;
+}
+
+.menu-plein-ecran .classement-rang {
+  font-weight: 900;
+  color: #8a5a14;
+}
+
+.menu-plein-ecran .classement-liste .classement-mine {
+  background: rgb(59 36 18 / 0.12);
+  color: #6b4a22;
+}
+
+.menu-plein-ecran .classement-valeur {
+  font-weight: 900;
+  color: #3b2412;
+}
+
+/* Ta place, collée en bas du classement : qui dépasser. */
+.classement-toi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 3px solid #3b2412;
+  background: linear-gradient(#9cf08f, #4fb43e);
+  color: #183a10;
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 4px 0 rgb(0 0 0 / 0.35);
+}
+
+.classement-toi-invite {
+  background: linear-gradient(#fff0a0, #ffc21f 55%, #e0960e);
+  color: #3b2412;
+  animation: bouton-respire 2s ease-in-out infinite;
+}
+
+.classement-toi-rang {
+  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.classement-toi-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+/* La version, toute petite, en bas au milieu. */
+.menu-plein-ecran .accueil-version {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  font-size: 0.65rem;
+  opacity: 0.5;
+}
+
+/* Les onglets (seulement sur téléphone). */
+.menu-onglets {
+  display: none;
+}
+
+/* Écran pas très haut (portable) : un logo plus petit. */
+@media (max-height: 820px) and (min-width: 901px) {
+  .menu-gauche .logo {
+    zoom: 0.8;
+  }
+
+  .menu-gauche .bouton-mega-titre {
+    font-size: 1.6rem;
+  }
+
+  .menu-gauche .bouton-mega {
+    padding: 10px 16px 9px;
+  }
+
+  .menu-gauche {
+    gap: 10px;
+  }
+
+  .podium {
+    margin-top: 14px;
+  }
+}
+
+/* Écran moyen : panneaux plus étroits. */
+/* (et les 4 étapes sur deux lignes) */
+@media (max-width: 1400px) and (min-width: 901px) {
+  .menu-etapes {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 901px) {
+  .accueil.menu-plein-ecran {
+    grid-template-columns: 330px minmax(0, 1fr) 350px;
+  }
+
+  .menu-etapes {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+/* --- Téléphone et tablette en hauteur : un panneau à la fois ------------------------ */
+@media (max-width: 900px) {
+  .accueil.menu-plein-ecran {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      'panneau'
+      'onglets';
+    gap: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .menu-voile {
+    background: linear-gradient(rgb(18 10 3 / 0.15), rgb(18 10 3 / 0.8) 55%, rgb(18 10 3 / 0.95));
+  }
+
+  .menu-gauche,
+  .menu-droite {
+    grid-area: panneau;
+    justify-content: flex-end;
+  }
+
+  .menu-etapes {
+    display: none;
+  }
+
+  .menu-gauche .logo {
+    align-self: center;
+    zoom: 0.85;
+  }
+
+  .menu-gauche .heros-accroche {
+    text-align: center;
+  }
+
+  /* Un panneau à la fois, selon l'onglet. */
+  .menu-onglet-jouer .menu-droite,
+  .menu-onglet-classement .menu-gauche,
+  .menu-onglet-compte .menu-gauche,
+  .menu-onglet-classement .menu-panneau-compte,
+  .menu-onglet-compte .menu-panneau-classement {
+    display: none;
+  }
+
+  .menu-onglet-compte .menu-droite {
+    justify-content: center;
+  }
+
+  .menu-onglets {
+    grid-area: onglets;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 5px;
+    border-radius: 18px;
+    border: 3px solid #3b2412;
+    background: linear-gradient(#7a5230, #5a3a1e);
+    box-shadow: 0 -4px 14px rgb(0 0 0 / 0.4);
+  }
+
+  .menu-onglets button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #f0dcb8;
+    font: inherit;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .menu-onglets button span {
+    font-size: 1.4rem;
+  }
+
+  .menu-onglets button.actif {
+    background: linear-gradient(#fff0a0, #ffc21f 55%, #e0960e);
+    color: #3b2412;
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 3px 0 rgb(0 0 0 / 0.3);
+  }
+
+  .menu-plein-ecran .accueil-version {
+    display: none;
+  }
+}

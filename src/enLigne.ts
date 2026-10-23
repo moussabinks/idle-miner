@@ -6,10 +6,9 @@
 // Si Supabase ne répond pas, le jeu marche quand même : tout reste dans le navigateur.
 
 import { createClient } from '@supabase/supabase-js'
-import type { LigneClassement, Score, TriClassement } from './jeu/classement'
+import type { LigneClassement, Score } from './jeu/classement'
 import { emailDuPseudo, type SauvegardeEnLigne } from './jeu/compte'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
-import { NIVEAU_MINE_MAX } from './jeu/donnees'
 
 // L'adresse du projet et sa clé « publishable ». Cette clé est faite pour être publique
 // (elle est de toute façon visible dans le navigateur) : ce sont les règles de la base qui
@@ -91,25 +90,40 @@ export async function envoyerScore(joueur: Joueur, score: Score): Promise<void> 
   if (error) throw new Error(error.message)
 }
 
-// Les meilleurs joueurs, au niveau de la mine (colonne « prestige » ; l'argent départage) ou à
-// l'argent (le niveau de la mine départage).
-// Lisible même sans compte.
-// Le jour de la mine automatique : les scores d'avant ne comptent plus.
+// (23/10) Le classement se fait seulement à l'argent gagné (le niveau de la mine est affiché, mais
+// ne compte pas ; il départage seulement deux joueurs à égalité). Lisible même sans compte.
+// Les scores d'avant la mine automatique (le 22/10) ne comptent plus : seulement les joueurs qui ont
+// rejoué depuis.
 const DEBUT_MINE_AUTOMATIQUE = '2026-10-22T00:00:00Z'
 
-export async function lireClassement(tri: TriClassement, nombre: number): Promise<LigneClassement[]> {
-  const autre: TriClassement = tri === 'prestige' ? 'argent' : 'prestige'
+// (23/10) Plus de filtre sur la colonne « prestige » : un joueur qui avait un ancien prestige (plus
+// de 5) y restait bloqué (le serveur garde le meilleur), et il disparaissait du classement. Son
+// niveau de mine n'est simplement pas affiché (voir niveauMineAffiche dans classement.ts).
+export async function lireClassement(nombre: number): Promise<LigneClassement[]> {
   const { data, error } = await supabase
     .from('classement')
     .select('pseudo, prestige, argent')
-    // Les anciens scores (le prestige d'avant la mine automatique, le 22/10) ne comptent plus :
-    // seulement les lignes mises à jour depuis, avec un vrai niveau de mine (1 à 5). Pour les
-    // effacer pour de bon : supprimer les lignes (voir supabase/classement-remise-a-zero.sql).
-    .lte('prestige', NIVEAU_MINE_MAX)
     .gte('modifie_le', DEBUT_MINE_AUTOMATIQUE)
-    .order(tri, { ascending: false })
-    .order(autre, { ascending: false })
+    .order('argent', { ascending: false })
+    .order('prestige', { ascending: false })
     .limit(nombre)
   if (error) throw new Error(error.message)
   return data.map((ligne) => ({ pseudo: String(ligne.pseudo), prestige: Number(ligne.prestige), argent: Number(ligne.argent) }))
+}
+
+// (23/10) La place qu'aurait ce score : combien de joueurs ont gagné plus d'argent, et celui qui
+// est juste devant (à dépasser). « pseudo » : le joueur lui-même, qu'on ne compte pas.
+export async function placeDuScore(argent: number, pseudo: string | null): Promise<{ devant: number; suivant: LigneClassement | null }> {
+  let compte = supabase.from('classement').select('pseudo', { count: 'exact', head: true }).gte('modifie_le', DEBUT_MINE_AUTOMATIQUE).gt('argent', argent)
+  if (pseudo) compte = compte.neq('pseudo', pseudo)
+  let juste = supabase.from('classement').select('pseudo, prestige, argent').gte('modifie_le', DEBUT_MINE_AUTOMATIQUE).gt('argent', argent)
+  if (pseudo) juste = juste.neq('pseudo', pseudo)
+  const [nombre, suivant] = await Promise.all([compte, juste.order('argent', { ascending: true }).limit(1)])
+  if (nombre.error) throw new Error(nombre.error.message)
+  if (suivant.error) throw new Error(suivant.error.message)
+  const ligne = suivant.data[0]
+  return {
+    devant: nombre.count ?? 0,
+    suivant: ligne ? { pseudo: String(ligne.pseudo), prestige: Number(ligne.prestige), argent: Number(ligne.argent) } : null,
+  }
 }
