@@ -44,6 +44,14 @@ describe('sauvegarde', () => {
     expect(charger(stockage, '1')).toEqual(etat)
   })
 
+  it('(23/10) l’argent d’une ancienne trésorerie revient au joueur', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    const stockage = fauxStockage()
+    sauvegarder(stockage, '1', { ...etat, tresorerie: 1234 } as typeof etat)
+    expect(charger(stockage, '1')?.argent).toBe(etat.argent + 1234)
+    expect(charger(stockage, '1')).not.toHaveProperty('tresorerie')
+  })
+
   it("renvoie null s'il n'y a rien ou si la sauvegarde est abîmée", () => {
     const stockage = fauxStockage()
     expect(charger(stockage, '1')).toBeNull()

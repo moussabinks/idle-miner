@@ -162,7 +162,7 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 
 | Bulle | Bâtiment | Quand | Sorte (couleur) |
 |---|---|---|---|
-| 😠 | Personnel | des mineurs attendent leur salaire (ou la trésorerie du manager est vide) | alerte (rouge) |
+| 😠 | Personnel | des mineurs attendent leur salaire (ou, avec le manager, il n'y a plus assez d'argent) | alerte (rouge) |
 | 🚧 | les deux bâtiments d'un trajet | les rails de ce trajet sont coupés : son wagonnet attend (« Rails coupés ») | alerte |
 | 🛤️ | Personnel | des pousseurs n'ont plus de trajet en service (« Sans trajet ») | alerte |
 | 🛒 | Foreuse | le chariot est plein | alerte |

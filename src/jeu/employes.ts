@@ -9,7 +9,7 @@
 // mineurs, eux, ne font que creuser et remonter leur sac dans le coffre de la mine.
 // On leur paie un salaire toutes les 5 minutes (sans manager, 5 minutes à la fois) : sans
 // salaire, un mineur va attendre, mécontent, devant le Personnel.
-// Au niveau 3 de la mine, le manager paie les salaires avec la trésorerie ; au niveau 4, le
+// Au niveau 3 de la mine, le manager paie les salaires avec l'argent du joueur ; au niveau 4, le
 // recruteur trouve des mineurs plus ou moins rares (un mineur mythique creuse 5 fois plus).
 // Quand on améliore sa pioche, un mineur va d'abord la chercher à la forge.
 
@@ -324,13 +324,13 @@ export function payerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_P
 
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
-  if (etat.manager.embauche && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Trésorerie vide : personne n’est payé !'
+  if (etat.manager.embauche && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Plus assez d’argent : personne n’est payé !'
   if (sansSalaire > 0) return sansSalaire === 1 ? '😠 1 mineur attend son salaire !' : `😠 ${sansSalaire} mineurs attendent leur salaire !`
   return null
 }
 
 // ---------------------------------------------------------------------------
-// Le manager (niveau 3 de la mine) et la trésorerie
+// Le manager (niveau 3 de la mine) : il paie les salaires avec l'argent du joueur (23/10)
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
@@ -372,39 +372,19 @@ export function embaucherManager(etat: EtatJeu): string[] {
   if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
   etat.argent -= PRIX_MANAGER
   etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0 }
-  return ['💼 Manager embauché ! Mets de l’argent dans la trésorerie : il paiera les salaires tout seul.']
-}
-
-export function deposerTresorerie(etat: EtatJeu, montant: number): string[] {
-  const mis = Math.floor(Math.min(montant, etat.argent))
-  if (!etat.manager.embauche || mis <= 0) return []
-  etat.argent -= mis
-  etat.tresorerie += mis
-  return [`💼 +${mis.toLocaleString('fr-FR')} $ dans la trésorerie.`]
-}
-
-export function retirerTresorerie(etat: EtatJeu, montant: number): string[] {
-  const pris = Math.floor(Math.min(montant, etat.tresorerie))
-  if (pris <= 0) return []
-  etat.tresorerie -= pris
-  etat.argent += pris
-  return [`💼 ${pris.toLocaleString('fr-FR')} $ repris de la trésorerie.`]
+  return ['💼 Manager embauché ! Il paiera les salaires tout seul, avec ton argent.']
 }
 
 export function depensesParPaie(etat: EtatJeu): number {
   return salairesParPaie(etat) + (etat.manager.embauche ? salaireManager() : 0)
 }
 
-export function manquePourUnePaie(etat: EtatJeu): number {
-  return Math.max(0, depensesParPaie(etat) - etat.tresorerie)
-}
-
-// Le manager paie d'abord son propre salaire, puis les mineurs du moins cher au plus cher.
+// Le manager paie (avec l'argent du joueur, 23/10) d'abord son propre salaire, puis les mineurs du moins cher au plus cher.
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
   if (!manager.embauche) return
-  if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.tresorerie >= salaireManager()) {
-    etat.tresorerie -= salaireManager()
+  if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaireManager()) {
+    etat.argent -= salaireManager()
     etat.stats.salairesPayes += salaireManager()
     manager.tempsPaye += SECONDES_PAR_PAIE
   }
@@ -412,8 +392,8 @@ function payerParManager(etat: EtatJeu): void {
   const parSalaire = [...etat.employes].sort((a, b) => salaireEmploye(a) - salaireEmploye(b))
   for (const employe of parSalaire) {
     const salaire = salaireEmploye(employe)
-    if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.tresorerie >= salaire) {
-      etat.tresorerie -= salaire
+    if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaire) {
+      etat.argent -= salaire
       etat.stats.salairesPayes += salaire
       employe.tempsPaye += SECONDES_PAR_PAIE
     }
@@ -943,7 +923,7 @@ function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   if (!manager.embauche || manager.tempsPaye <= 0) return []
   manager.tempsPaye = Math.max(0, manager.tempsPaye - secondes)
   if (manager.tempsPaye > 0) return []
-  return ['💼 Ton manager n’est plus payé : la trésorerie est vide ! Remplis-la au Personnel.']
+  return ['💼 Ton manager n’est plus payé : tu n’as plus assez d’argent pour les salaires !']
 }
 
 // « managerPaie » : false quand le jeu est fermé depuis plus longtemps que ce que le manager

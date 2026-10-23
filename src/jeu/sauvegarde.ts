@@ -213,7 +213,9 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
-    const { tenue: _tenue, tenuesAchetees: _tenuesAchetees, ...etat } = convertie as EtatJeu & { tenue?: unknown; tenuesAchetees?: unknown }
+    const { tenue: _tenue, tenuesAchetees: _tenuesAchetees, tresorerie, ...etat } = convertie as EtatJeu & { tenue?: unknown; tenuesAchetees?: unknown; tresorerie?: number }
+    // (23/10) Plus de trésorerie : le manager paie avec l'argent du joueur. Ce qui y restait revient dans sa poche.
+    if (typeof tresorerie === 'number' && tresorerie > 0) etat.argent += tresorerie
     const { decorations: _decorations, prochainNumero: _prochainNumero, ...village } = etat.village as typeof etat.village & { decorations?: unknown; prochainNumero?: unknown }
     return { ...etat, village, succes: etat.succes.filter((id) => id !== 'paysagiste') }
   } catch {
@@ -301,7 +303,6 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     Array.isArray(etat.employes) &&
     typeof etat.recruteur === 'number' &&
     typeof etat.manager === 'object' &&
-    typeof etat.tresorerie === 'number' &&
     Array.isArray(etat.decouvertes) &&
     typeof etat.village === 'object' &&
     Array.isArray(etat.village?.batiments) &&

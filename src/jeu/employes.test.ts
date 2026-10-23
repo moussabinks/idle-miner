@@ -20,7 +20,6 @@ import {
   changerTrajet,
   embaucherPousseur,
   coutSalaires,
-  deposerTresorerie,
   embaucher,
   embaucherManager,
   indemnites,
@@ -29,7 +28,6 @@ import {
   payerSalaires,
   peutPayerSalaires,
   prixEmbauche,
-  retirerTresorerie,
   salaireEmploye,
   tailleSacEmploye,
   tirerRarete,
@@ -266,19 +264,30 @@ describe('le recruteur (niveau 4 de la mine)', () => {
 })
 
 describe('le manager (niveau 3 de la mine)', () => {
-  it('paie les salaires tout seul avec la trésorerie', () => {
+  it('paie les salaires tout seul avec l’argent du joueur (23/10)', () => {
     const etat = partie()
     embaucher(etat, hasard())
     expect(embaucherManager(etat)).toEqual([])
     etat.niveauMine = 3
     embaucherManager(etat)
     expect(etat.argent).toBe(1_000_000 - 500 - PRIX_MANAGER)
-    deposerTresorerie(etat, 10_000)
+    const avant = etat.argent
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)
-    expect(etat.tresorerie).toBeLessThan(10_000 - 2 * SALAIRE_MANAGER)
-    retirerTresorerie(etat, etat.tresorerie)
-    expect(etat.tresorerie).toBe(0)
+    expect(etat.argent).toBeLessThan(avant - 2 * SALAIRE_MANAGER)
+  })
+
+  it('sans argent, plus personne n’est payé', () => {
+    const etat = partie()
+    etat.niveauMine = 3
+    embaucher(etat, hasard())
+    embaucherManager(etat)
+    etat.argent = 0
+    const payes = etat.stats.salairesPayes
+    avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
+    expect(etat.manager.tempsPaye).toBe(0)
+    expect(etat.stats.salairesPayes).toBe(payes)
+    expect(etat.argent).toBe(0)
   })
 })
 
@@ -323,7 +332,6 @@ describe('le manager, jeu fermé (23/10)', () => {
     etat.xp = 1_000_000
     embaucher(etat, hasard())
     embaucherManager(etat)
-    deposerTresorerie(etat, 500_000)
     expect(secondesManagerHorsLigne(etat)).toBe(30 * 60)
     // Jeu ouvert pendant 2 h, il paie tout le temps ; jeu fermé, seulement les 30 premières minutes.
     const ouvert = structuredClone(etat)

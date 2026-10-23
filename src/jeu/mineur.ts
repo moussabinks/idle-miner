@@ -162,7 +162,8 @@ export type Navette = {
   chargement: Inventaire // les blocs dans la caisse
 }
 
-// Le manager (niveau 3 de la mine) : il paie les salaires tout seul, avec la trésorerie.
+// Le manager (niveau 3 de la mine) : il paie les salaires tout seul, avec l'argent du joueur
+// (23/10 : plus de trésorerie à remplir).
 export type Manager = {
   embauche: boolean
   tempsPaye: number
@@ -190,7 +191,6 @@ export type EtatJeu = {
   employes: Employe[]
   recruteur: number // 0 = pas embauché
   manager: Manager
-  tresorerie: number
   foreuse: Foreuse
   generateur: Generateur
   niveauWagonnets: number // la taille des wagonnets (index dans NIVEAUX_WAGONNET), pour tous les trajets
@@ -257,7 +257,6 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     employes: [],
     recruteur: 0,
     manager: { embauche: false, tempsPaye: 0 },
-    tresorerie: 0,
     foreuse: nouvelleForeuse(),
     generateur: nouveauGenerateur(),
     niveauWagonnets: 0,

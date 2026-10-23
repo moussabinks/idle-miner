@@ -76,8 +76,8 @@ Pendant ce temps, la **mine toute seule**, les **mineurs employés** (tant qu'on
 |---|---|---|---|---|---|---|---|---|
 | **1** | Galerie de surface | pierre, charbon, fer | (départ) | — | rien (on creuse à la main, 27/10) | 4 | Marché (gratuit), Forgeron, Personnel, Bazar, rails (selon le niveau du joueur) | 0 min |
 | **2** | Veine de redstone | redstone | 900 $ + 45 fer | 4 | 15 blocs/min | 6 | **Foreuse**, **Générateur** | ~21 min |
-| **3** | Filon d'or | or | 7 000 $ + 120 fer + 60 redstone | 7 | 18 blocs/min | 8 | **Recruteur** (rareté des mineurs) | ~1 h 50 |
-| **4** | Grotte aux émeraudes | émeraude | 25 000 $ + 120 redstone + 60 or | 10 | 21 blocs/min | 10 | **Manager** et trésorerie | ~4 h 20 |
+| **3** | Filon d'or | or | 7 000 $ + 120 fer + 60 redstone | 7 | 18 blocs/min | 8 | **Manager** (paie les salaires) | ~1 h 50 |
+| **4** | Grotte aux émeraudes | émeraude | 25 000 $ + 120 redstone + 60 or | 10 | 21 blocs/min | 10 | **Recruteur** (rareté des mineurs) | ~4 h 20 |
 | **5** | Cœur de diamant | diamant | 90 000 $ + 110 or + 40 émeraude | 13 | 24 blocs/min | 12 | le diamant (dernier niveau) | ~8 h 30 |
 
 Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 15 à 40 minutes (depuis le 29/10), niveau 5 en 6 h à 9 h (depuis le 30/10 : il faut farmer ; 4 h à 7 h le 29/10, 1 h à 2 h 30 avant). Le joueur arrive au niveau 5 vers 16 minutes et au niveau 10 vers 1 h 23 ; tout est débloqué au niveau 15 (vers 4 h 15). Le détail niveau par niveau est dans [niveaux.md](niveaux.md).
@@ -111,7 +111,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. Depuis le 30/10, une fenêtre « Bon retour, mineur ! » le résume (`absence.ts`). |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (10 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
+| **Manager** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (10 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur (23/10 : plus de trésorerie à remplir). Jeu fermé, il paie seulement pendant un temps (30 min, puis jusqu'à 8 h en l'améliorant). |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
@@ -137,7 +137,6 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Stand** | L'ancien nom des bâtiments (le code l'emploie encore, par exemple `IdStand` dans `objectifs.ts`). |
 | **Succès** | 21 accomplissements (`succes.ts`). |
 | **Trajet** | Un wagonnet entre deux bâtiments, créé par le joueur (bulle « 🛤️ Automatiser » sur les rails) : Mine → Marché, Mine → Foreuse, Mine → Générateur ou Foreuse → Marché. Un wagonnet par trajet. |
-| **Trésorerie** | La cagnotte du manager, qu'on remplit au Personnel. |
 | **Village** | La clairière vue du ciel, où tout se passe. Voir [village.md](village.md). |
 | **Wagonnet** | Le chariot qui roule sur les rails, un par trajet : il charge au départ (40 à 600 places, la même taille pour tous), livre à l'arrivée (vend, ou apporte charbon ou redstone) et revient. Poussé par toi (3 cases/s) ou par un mineur (2,5 cases/s), ou électrique (8 à 24 cases/s). |
 | **XP** | (29/10) Les points d'expérience du joueur : 1 par bloc cassé en cliquant, 40 par bâtiment, 3 par case de rails, 30 par trajet, 25 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, 3 par voyage de wagonnet. Une chose ne rapporte qu'une fois. |
@@ -156,7 +155,7 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 ### Les exceptions décidées
 
 - ✅ **La foreuse** (16/10, au niveau 2 de la mine depuis le 22/10) : elle fore seule tant qu'on lui donne du charbon. **Une seule** foreuse.
-- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, au niveau 2 du joueur depuis le 29/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **manager** paie les salaires seul avec la trésorerie ; au niveau 4, le **recruteur** leur donne une rareté (inversés le 23/10).
+- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, au niveau 2 du joueur depuis le 29/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **manager** paie les salaires seul avec l'argent du joueur ; au niveau 4, le **recruteur** leur donne une rareté (inversés le 23/10).
 - ✅ **La mine qui sort des blocs toute seule** et le **wagonnet électrique** (22/10 ; plusieurs trajets choisis par le joueur depuis le 24/10) : c'est le cœur de la mine automatique.
 
 ### Les principes

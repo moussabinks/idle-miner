@@ -16,8 +16,6 @@ import {
   ameliorerEmploye,
   ameliorerRecruteur,
   coutAmeliorationEmploye,
-  deposerTresorerie,
-  depensesParPaie,
   embaucher,
   embaucherPousseur,
   peutEmbaucherPousseur,
@@ -200,7 +198,6 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (!etat.manager.embauche && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
       payerSalaires(etat, SECONDES_PAR_PAIE)
     }
-    if (etat.manager.embauche && etat.tresorerie < depensesParPaie(etat) * 2) deposerTresorerie(etat, Math.max(0, etat.argent - 500))
 
     // Il garde toujours de quoi payer une paie d'avance.
     const marge = () => salairesParPaie(etat) + 20
