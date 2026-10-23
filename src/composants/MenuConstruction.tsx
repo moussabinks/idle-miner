@@ -10,6 +10,7 @@ import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, type Ty
 import { disponible, type EtatJeu } from '../jeu/mineur'
 import { niveauPourBatiment, railsDebloques, verrouNiveau } from '../jeu/niveaux'
 import { IMAGES_BATIMENTS } from './iso'
+import { BadgeXp } from './Amelioration'
 
 type Props = {
   etat: EtatJeu
@@ -64,7 +65,7 @@ function CarteBatiment({ etat, id, nouveau, onPoser }: { etat: EtatJeu; id: IdBa
           <span className="ok">✔ Construit</span>
         ) : !debloque ? (
           <span className="construction-verrou">
-            🔒 {verrouNiveau(etat, niveauPourBatiment(id)) !== null ? `Niveau ${niveauPourBatiment(id)}` : `Mine niveau ${info.niveauMine}`}
+            🔒 {verrouNiveau(etat, niveauPourBatiment(id)) !== null ? <BadgeXp texte={`⭐ ${niveauPourBatiment(id)}`} /> : `Mine niveau ${info.niveauMine}`}
           </span>
         ) : (
           <>
@@ -116,7 +117,9 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
                   </button>
                 </>
               ) : (
-                <span className="construction-verrou">🔒 Niveau {NIVEAU_JOUEUR_POUR.rails}</span>
+                <span className="construction-verrou">
+                  🔒 <BadgeXp texte={`⭐ ${NIVEAU_JOUEUR_POUR.rails}`} />
+                </span>
               )}
             </div>
           </article>

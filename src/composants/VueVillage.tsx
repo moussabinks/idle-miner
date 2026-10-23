@@ -11,6 +11,7 @@ import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_W
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
+import { caseQuai, cheminEmploye } from '../jeu/employes'
 import { nombreAbrege } from '../nombres'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
@@ -20,7 +21,6 @@ import {
   cleCase,
   MARGE_CLIC_BATIMENT,
   bordsDeVoie,
-  cheminEntre,
   lireCle,
   longueurChemin,
   occupation,
@@ -502,7 +502,8 @@ export function VueVillage({
       // Payé, il attend son tour pour partir, à sa place devant le Personnel.
       position = devant(personnel, 2 + enAttente++, 1.6)
     } else if (mineur.etape === 'marche') {
-      const chemin = cheminEntre(village, mineur.depuis, mineur.lieu)
+      // (un pousseur qui va à son wagonnet marche tout droit jusqu'à son quai : cheminEmploye)
+      const chemin = cheminEmploye(etat, mineur)
       if (chemin) {
         const point = surLeChemin(chemin, Math.max(0, Math.min(longueurChemin(chemin), mineur.progression * VITESSE_MARCHE)))
         position = point
@@ -517,13 +518,14 @@ export function VueVillage({
     } else if (mineur.etape === 'quai') {
       // Il attend son wagonnet à côté du début des rails de son trajet (au bord de la voie).
       const ligneQuai = mineur.trajet ? ligneDe(etat, mineur.trajet) : null
+      const quai = mineur.trajet ? caseQuai(etat, mineur.trajet) : null
       const maison = batimentPose(village, mineur.trajet ? LIAISONS[mineur.trajet].depart : 'puits')
-      if (ligneQuai) {
+      if (ligneQuai && quai) {
+        // (23/10) Au milieu de sa case de quai : là où son chemin s'arrête (pas de petit saut).
         const a = ligneQuai[0]
         const b = ligneQuai[1] ?? a
         const sens = { x: b.x - a.x, y: b.y - a.y }
-        const cote = sens.x === 0 && sens.y === 0 ? { x: 1, y: 0 } : { x: -sens.y, y: sens.x }
-        position = { x: a.x + 0.5 + cote.x * 1.3 + sens.x * 0.6 * auQuai, y: a.y + 0.5 + cote.y * 1.3 + sens.y * 0.6 * auQuai++ }
+        position = { x: quai.x + 0.5 + sens.x * 0.6 * auQuai, y: quai.y + 0.5 + sens.y * 0.6 * auQuai++ }
       } else if (maison) {
         position = devant(maison, 3 + auQuai++, 1.2)
       }

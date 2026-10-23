@@ -541,3 +541,11 @@ Autres styles : `bouton-petit` (version compacte des panneaux), `bouton-rond` (l
 - **Voile plus léger** (0,28 au lieu de 0,55), et **aucun voile** quand la flèche montre un bâtiment de la carte : on voit le hamster faire le trajet. Les grandes fenêtres (bienvenue, fin) sont aussi moins sombres.
 - **Forgeron** : on commence la partie avec **10 $** d'argent de poche, de quoi le payer après la première vente. Avec assez de pierre mais pas assez d'argent, le tutoriel dit d'arrêter de creuser et d'aller vendre le charbon et le fer (en gardant la pierre).
 
+### Clarté (23/10)
+
+- **Cadenas** : le niveau du joueur qu'il faut s'affiche en pastille violette avec l'étoile de la barre du haut, « ⭐ 4 requis » (`BadgeXp` dans `Amelioration.tsx`), partout : améliorations, menu Bâtiments, pioches, manager, rappel du niveau de la mine. Le niveau de la mine s'écrit « mine niveau 2 ».
+- **Coffre plein**, panneau de la mine ouvert : « Tout mettre dans le sac » a un liseré doré qui respire doucement (`.bouton-sac-urgent`) ; la jauge au-dessus de la mine pulse à peine (+3 % en 2,2 s).
+- **Bonus de combo** : seulement l'étiquette au-dessus du bloc (plus de message au milieu de l'écran).
+- **Menu Bâtiments** : il ferme le panneau du bâtiment ouvert, l'aide, les réglages et la fenêtre des trajets.
+- **Niveau suivant de la mine** : seulement le nouveau minerai, le débit de la mine et les mineurs en plus ; un bâtiment (ou le recruteur, le manager) n'est annoncé que si le niveau du joueur le permet déjà.
+

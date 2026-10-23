@@ -4,6 +4,8 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
 import {
   activiteEmploye,
+  caseQuai,
+  cheminEmploye,
   alerteSalaires,
   ameliorerEmploye,
   ameliorerRecruteur,
@@ -133,14 +135,21 @@ describe('les mineurs employés', () => {
     expect(etat.employes[0].etape).toBe('quai')
   })
 
+  it('mineurs et pousseurs ont chacun leurs prix : le 1er pousseur coûte 500 $ (23/10)', () => {
+    const etat = partie()
+    embaucher(etat, hasard())
+    expect(prixEmbauche(etat)).toBe(2000)
+    expect(prixEmbauche(etat, 'pousseur')).toBe(500)
+  })
+
   it('licencier coûte des indemnités', () => {
     const etat = partie(1000)
     embaucher(etat, hasard())
     const prix = indemnites(etat)
-    expect(prix).toBe(30) // 40 % de 80 $ (à la dizaine)
+    expect(prix).toBe(200) // 40 % de 500 $
     licencier(etat, 0)
     expect(etat.employes).toEqual([])
-    expect(etat.argent).toBe(1000 - 80 - 30)
+    expect(etat.argent).toBe(1000 - 500 - 200)
   })
 })
 
@@ -214,12 +223,24 @@ describe('le manager (niveau 4 de la mine)', () => {
     expect(embaucherManager(etat)).toEqual([])
     etat.niveauMine = 4
     embaucherManager(etat)
-    expect(etat.argent).toBe(1_000_000 - 80 - PRIX_MANAGER)
+    expect(etat.argent).toBe(1_000_000 - 500 - PRIX_MANAGER)
     deposerTresorerie(etat, 10_000)
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)
     expect(etat.tresorerie).toBeLessThan(10_000 - 2 * SALAIRE_MANAGER)
     retirerTresorerie(etat, etat.tresorerie)
     expect(etat.tresorerie).toBe(0)
+  })
+})
+
+describe('le pousseur va droit à son wagonnet (23/10)', () => {
+  it('son chemin part du Personnel et finit sur sa case de quai, à côté du premier rail', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'marche', x: 28, y: 38, miroir: false }, { id: 'employes', x: 19, y: 31, miroir: false })
+    for (let y = 35; y <= 37; y++) etat.village.rails.push(`30,${y}`)
+    embaucherPousseur(etat, hasard(), 'mine-marche')
+    const pousseur = etat.employes[0]
+    const chemin = cheminEmploye(etat, pousseur)
+    expect(chemin?.at(-1)).toEqual(caseQuai(etat, 'mine-marche'))
   })
 })

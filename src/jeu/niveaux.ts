@@ -80,9 +80,10 @@ export function debloque(etat: EtatJeu, chose: ChoseANiveaux, index: number): bo
   return niveauAtteint(etat, niveauRequis(chose, index))
 }
 
-// Le texte du cadenas (« au niveau 7 ») ou null si c'est débloqué.
+// Le texte du cadenas (« ⭐ 7 » : le niveau du joueur qu'il faut, avec l'étoile de la barre du
+// haut, pour ne pas le confondre avec le niveau de la mine, 23/10) ou null si c'est débloqué.
 export function verrouNiveau(etat: EtatJeu, requis: number): string | null {
-  return niveauAtteint(etat, requis) ? null : `au niveau ${requis}`
+  return niveauAtteint(etat, requis) ? null : `⭐ ${requis}`
 }
 
 export function verrou(etat: EtatJeu, chose: ChoseANiveaux, index: number): string | null {

@@ -2015,3 +2015,21 @@
 @media (prefers-reduced-motion: reduce) {
   .tuto-quetes-fleche { animation: none; }
 }
+
+/* (23/10) Le niveau du joueur qu'il faut : une pastille violette avec l'étoile (comme la barre
+   du haut), pour ne pas le confondre avec le niveau de la mine. */
+.badge-xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a974ff, #6a2fc9);
+  border: 1.5px solid #e5d4ff;
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.8em;
+  white-space: nowrap;
+  vertical-align: middle;
+}

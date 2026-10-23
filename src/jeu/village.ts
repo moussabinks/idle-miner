@@ -213,7 +213,9 @@ export function batimentProcheDe(village: Village, x: number, y: number, marge: 
 // (23/10) Seulement **devant** le bâtiment : ses deux côtés du bas de l'écran (x = b.x + t, ou
 // y = b.y + t), jamais derrière, où le bâtiment cacherait le joueur, même si on a touché
 // derrière lui. S'il n'y a aucune place devant, on prend le tour complet.
+// (23/10) Sauf pour la mine : elle est grande, on s'arrête du côté le plus proche, même derrière.
 export function caseAccesProche(village: Village, b: BatimentPose, depuis: { x: number; y: number }): Case {
+  if (b.id === 'puits') return caseAutourProche(village, b, depuis, false) ?? caseAcces(village, b)
   return caseAutourProche(village, b, depuis, true) ?? caseAutourProche(village, b, depuis, false) ?? caseAcces(village, b)
 }
 

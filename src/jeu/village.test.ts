@@ -113,14 +113,20 @@ describe('marcher dans le village', () => {
 
   it('toucher un bâtiment mène toujours devant lui, jamais derrière (23/10)', () => {
     const etat = partie()
+    etat.village.batiments.push({ id: 'marche', x: 40, y: 28, miroir: false })
+    const marche = batimentPose(etat.village, 'marche')!
+    // Le joueur est derrière le marché (en haut de l'écran) : il en fait le tour pour s'arrêter
+    // devant (côté x = 45 ou y = 33), où on le voit.
+    const c = caseAccesProche(etat.village, marche, { x: 42.5, y: 24.5 })
+    expect(c.x === 45 || c.y === 33).toBe(true)
+    expect(distanceAuBatiment(marche, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
+  })
+
+  it('sauf la mine : on s’arrête du côté le plus proche, même derrière (23/10)', () => {
+    const etat = partie()
     const mine = batimentPose(etat.village, 'puits')!
-    // Le joueur est derrière la mine (en haut de l'écran) : il en fait le tour pour s'arrêter
-    // devant (côté x = 35 ou y = 35), où on le voit.
-    const c = caseAccesProche(etat.village, mine, { x: 30.5, y: 20.5 })
-    expect(c.x === 35 || c.y === 35).toBe(true)
-    expect(distanceAuBatiment(mine, c.x + 0.5, c.y + 0.5)).toBeLessThan(RAYON_BATIMENT)
-    // Devant, il s'arrête là où il arrive (pas de détour jusqu'à la porte).
-    expect(caseAccesProche(etat.village, mine, { x: 36.5, y: 27.5 })).toEqual({ x: 35, y: 27 })
+    // Le joueur est en haut de la mine : il n'a pas à en faire le tour.
+    expect(caseAccesProche(etat.village, mine, { x: 30.5, y: 20.5 })).toEqual({ x: 30, y: 24 })
   })
 
   it('va à la place de devant la plus proche à pied, en contournant les autres (27/10, 23/10)', () => {

@@ -68,7 +68,7 @@ import { batimentPose } from '../jeu/village'
 import { forcePousseur, ligneDe, trajetDe } from '../jeu/wagonnet'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
-import { Achat, Amelioration } from './Amelioration'
+import { Achat, Amelioration, BadgeXp } from './Amelioration'
 import { Barre } from './Barre'
 import { Confirmation } from './Confirmation'
 import { OngletsPanneau } from './OngletsPanneau'
@@ -161,7 +161,7 @@ function Manager({ etat, jouer }: Props) {
     return (
       <div className="ligne-achat verrouille">
         <strong>
-          🔒 Manager · {etat.niveauMine < NIVEAU_MINE_MANAGER ? `niveau ${NIVEAU_MINE_MANAGER} de la mine` : `au niveau ${NIVEAU_JOUEUR_POUR.manager}`}
+          🔒 Manager · {etat.niveauMine < NIVEAU_MINE_MANAGER ? `mine niveau ${NIVEAU_MINE_MANAGER}` : <BadgeXp texte={`⭐ ${NIVEAU_JOUEUR_POUR.manager}`} />}
         </strong>
         <span className="discret">Il paiera tous les salaires tout seul, avec l'argent que tu mets dans une cagnotte (la trésorerie).</span>
       </div>
@@ -260,7 +260,7 @@ function Recruteur({ etat, jouer }: Props) {
   if (!recruteurDebloque(etat)) {
     return (
       <div className="ligne-achat verrouille">
-        <strong>🔒 Recruteur · niveau {NIVEAU_MINE_RECRUTEUR} de la mine</strong>
+        <strong>🔒 Recruteur · mine niveau {NIVEAU_MINE_RECRUTEUR}</strong>
         <span className="discret">
           Pour l'instant, tous tes mineurs sont communs. Le recruteur trouvera des mineurs rares, épiques, légendaires... et même mythiques,
           qui rapportent jusqu'à 5 fois plus !
@@ -456,7 +456,7 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
     onApercuTrajet?.(avecRails ? choisie : null)
   }, [choisie, avecRails, onApercuTrajet])
   useEffect(() => () => onApercuTrajet?.(null), [onApercuTrajet])
-  const prix = prixEmbauche(etat)
+  const prix = prixEmbauche(etat, 'pousseur')
   if (trajets.length === 0) return null
   return (
     <div className="ligne-achat carte-pousseur">
@@ -619,7 +619,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
         <Confirmation
           titre={`Licencier ${etat.employes[aLicencier].nom} ?`}
           texteConfirmer="Licencier"
-          possible={etat.argent >= indemnites(etat)}
+          possible={etat.argent >= indemnites(etat, etat.employes[aLicencier].role)}
           onConfirmer={() => {
             jouer((e) => licencier(e, aLicencier))
             setALicencier(null)
@@ -631,8 +631,10 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
             {etat.employes[aLicencier].nom} ({rareteDe(etat.employes[aLicencier]).nom.toLowerCase()}) part avec son équipement.
           </p>
           <p>
-            Indemnités : <strong>{argent(indemnites(etat))}</strong>
-            {etat.argent < indemnites(etat) && <span className="texte-alerte"> (il te manque {argent(indemnites(etat) - etat.argent)})</span>}
+            Indemnités : <strong>{argent(indemnites(etat, etat.employes[aLicencier].role))}</strong>
+            {etat.argent < indemnites(etat, etat.employes[aLicencier].role) && (
+              <span className="texte-alerte"> (il te manque {argent(indemnites(etat, etat.employes[aLicencier].role) - etat.argent)})</span>
+            )}
           </p>
         </Confirmation>
       )}
