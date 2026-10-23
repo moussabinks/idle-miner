@@ -180,6 +180,30 @@ export function envoyerObjet(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc, en
   return []
 }
 
+// ---------------------------------------------------------------------------
+// Ce que le wagonnet du marché fait de chaque minerai du coffre (23/10)
+// ---------------------------------------------------------------------------
+
+// Trois choix, au panneau de la mine : tout vendre, en garder un nombre fixe dans le coffre (le
+// wagonnet emporte le reste), ou tout garder.
+export type ChoixWagonnet = 'vendre' | 'garder' | 'tout-garder'
+
+export function choixWagonnet(etat: EtatJeu, bloc: IdBloc): { choix: ChoixWagonnet; nombre: number } {
+  if (!objetEnvoye(etat, 'mine-marche', bloc)) return { choix: 'tout-garder', nombre: 0 }
+  const nombre = etat.coffre.garder?.[bloc] ?? 0
+  return nombre > 0 ? { choix: 'garder', nombre } : { choix: 'vendre', nombre: 0 }
+}
+
+export function reglerWagonnet(etat: EtatJeu, bloc: IdBloc, choix: ChoixWagonnet, nombre = 0): string[] {
+  if (!trajetDe(etat, 'mine-marche')) return []
+  envoyerObjet(etat, 'mine-marche', bloc, choix !== 'tout-garder')
+  const garder = (etat.coffre.garder ??= {})
+  const n = Math.max(0, Math.floor(nombre))
+  if (choix === 'garder' && n > 0) garder[bloc] = n
+  else delete garder[bloc]
+  return []
+}
+
 // Les trajets qui passent par cette case de rails (on la touche pour les régler).
 export function liaisonsSurLaCase(etat: EtatJeu, x: number, y: number): IdLiaison[] {
   return LISTE_LIAISONS.filter((id) => ligneDe(etat, id)?.some((c) => c.x === x && c.y === y) ?? false)
@@ -348,9 +372,11 @@ function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): numb
   // (23/10) On ne garde le charbon ou la redstone pour la foreuse ou le générateur que si leur
   // wagonnet a un pousseur embauché : sinon, rien ne les emporterait, et ils restaient bloqués
   // dans le coffre au lieu d'être vendus.
-  if (bloc === 'charbon' && trajetAutomatique(etat, 'mine-foreuse')) return besoinCharbon(etat)
-  if (bloc === 'redstone' && trajetAutomatique(etat, 'mine-generateur')) return besoinRedstone(etat)
-  return 0
+  // (23/10) « Garder 40 » : ce nombre-là reste toujours dans le coffre, le wagonnet prend le reste.
+  const fixe = etat.coffre.garder?.[bloc] ?? 0
+  if (bloc === 'charbon' && trajetAutomatique(etat, 'mine-foreuse')) return Math.max(fixe, besoinCharbon(etat))
+  if (bloc === 'redstone' && trajetAutomatique(etat, 'mine-generateur')) return Math.max(fixe, besoinRedstone(etat))
+  return fixe
 }
 
 // Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).

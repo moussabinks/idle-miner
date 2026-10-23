@@ -12,6 +12,8 @@ import {
   avancerWagonnets,
   forcePousseur,
   capaciteTrajet,
+  choixWagonnet,
+  reglerWagonnet,
   capaciteWagonnet,
   secondesArret,
   creerTrajet,
@@ -389,5 +391,21 @@ describe('l’aperçu d’un trajet, dans la fenêtre des rails (27/10)', () => 
     reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
     // (l'or n'est pas un minerai du niveau 1 : il reste gardé)
     expect(etat.nonAVendre).toEqual(['or'])
+  })
+})
+
+describe('garder un nombre fixe dans le coffre (23/10)', () => {
+  it('le wagonnet du marché prend seulement ce qu’il y a en plus', () => {
+    const etat = partieAvecTrajet()
+    etat.coffre.contenu = { fer: 60, pierre: 10 }
+    reglerWagonnet(etat, 'fer', 'garder', 40)
+    expect(choixWagonnet(etat, 'fer')).toEqual({ choix: 'garder', nombre: 40 })
+    expect(aCharger(etat, 'mine-marche')).toBe(30) // 20 fer + 10 pierre
+    reglerWagonnet(etat, 'fer', 'tout-garder')
+    expect(choixWagonnet(etat, 'fer').choix).toBe('tout-garder')
+    expect(aCharger(etat, 'mine-marche')).toBe(10)
+    reglerWagonnet(etat, 'fer', 'vendre')
+    expect(choixWagonnet(etat, 'fer')).toEqual({ choix: 'vendre', nombre: 0 })
+    expect(aCharger(etat, 'mine-marche')).toBe(70)
   })
 })

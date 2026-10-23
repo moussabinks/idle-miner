@@ -2550,3 +2550,351 @@
 @media (prefers-reduced-motion: reduce) {
   .fenetre-bilan, .bilan-mascotte, .bilan-net, .bilan-colonne li, .bilan-barre i { animation: none; }
 }
+
+/* --- La mine, refaite pour être le cœur du jeu (23/10) -----------------------------------
+   Le panneau de la mine est le plus grand ; le bloc est énorme, avec la barre de combo, quatre
+   compteurs et la pioche dessous. */
+@media (min-width: 1100px) {
+  .jeu.plein-ecran.panneau-mine-xl {
+    --largeur-panneau: 560px;
+  }
+}
+
+.plein-ecran .zone-bloc-mine.zone-bloc-geante {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+.bloc-mine-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bloc-a-casser {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.35);
+  color: #ffe9a8;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.bloc-a-casser-plein {
+  background: #c0392b;
+  color: #fff;
+}
+
+.plein-ecran .zone-bloc-geante .bloc-mine {
+  align-self: center;
+  width: 190px;
+  height: 190px;
+}
+
+@media (max-width: 860px) {
+  .plein-ecran .zone-bloc-geante .bloc-mine {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+.zone-bloc-geante .bonus-combo {
+  align-self: center;
+}
+
+/* La barre de combo : elle se remplit vers le prochain bonus. */
+.barre-combo {
+  position: relative;
+  height: 22px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6);
+  overflow: hidden;
+}
+
+.barre-combo-piste i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff9d2e, #ffd84a);
+  transition: width 0.15s ease-out;
+}
+
+.barre-combo-active .barre-combo-piste i {
+  background: linear-gradient(90deg, #ff5a1f, #ffb02e, #ffe066);
+  box-shadow: 0 0 12px rgb(255 160 40 / 0.9);
+}
+
+.barre-combo-texte {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  white-space: nowrap;
+}
+
+/* Les quatre compteurs. */
+.compteurs-mine {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.compteur-mine {
+  display: grid;
+  justify-items: center;
+  padding: 4px 2px;
+  border-radius: 12px;
+  border: 2px solid rgb(255 214 90 / 0.35);
+  background: linear-gradient(rgb(255 214 90 / 0.14), rgb(0 0 0 / 0.25));
+  line-height: 1.1;
+}
+
+.compteur-mine b {
+  font-size: 1.05rem;
+}
+
+.compteur-mine strong {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.5);
+}
+
+.compteur-mine small {
+  font-size: 0.62rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.compteur-saute {
+  animation: compteur-saute 0.25s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.compteur-record {
+  border-color: #ffd84a;
+  box-shadow: 0 0 12px rgb(255 214 90 / 0.7);
+}
+
+@keyframes compteur-saute {
+  from { transform: scale(1.35); color: #fff; }
+}
+
+/* La pioche cassée (23/10) : elle rougit, clignote, et tremble à chaque clic. */
+.pioche-cassee {
+  animation: pioche-secousse 0.4s ease-out, pioche-cassee-pulse 0.9s ease-in-out 0.4s infinite;
+}
+
+.pioche-cassee .jauge-pioche-barre {
+  box-shadow: 0 0 0 2px #ff3a1a, 0 0 16px rgb(255 50 20 / 0.9);
+}
+
+.pioche-cassee .jauge-pioche-icone {
+  animation: pioche-icone-boum 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+@keyframes pioche-secousse {
+  0%, 100% { translate: 0 0; }
+  20% { translate: -6px 0; }
+  40% { translate: 5px 0; }
+  60% { translate: -4px 0; }
+  80% { translate: 2px 0; }
+}
+
+@keyframes pioche-cassee-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.4); }
+}
+
+@keyframes pioche-icone-boum {
+  from { transform: scale(1.8) rotate(-20deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pioche-cassee, .pioche-cassee .jauge-pioche-icone, .compteur-saute { animation: none; }
+}
+
+/* La pastille du wagonnet (23/10) : ce qu'il fait d'un minerai du coffre. */
+.pastille-wagonnet {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--couleur-pastille);
+  background: color-mix(in srgb, var(--couleur-pastille) 30%, rgb(0 0 0 / 0.3));
+  color: #fff;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pastille-vendre { --couleur-pastille: #3fa34d; }
+.pastille-garder { --couleur-pastille: #e0a01c; }
+.pastille-tout-garder { --couleur-pastille: #8a6a3a; }
+
+.pastille-wagonnet:hover,
+.pastille-ouverte {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+
+.pastille-fleche {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* L'encart qui s'ouvre sous la ligne : trois gros choix. */
+.encart-wagonnet {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 6px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 2px solid #ffd25a;
+  background: rgb(30 20 10 / 0.9);
+  animation: encart-ouvre 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.encart-titre {
+  font-weight: 900;
+  color: #ffe9a8;
+}
+
+.encart-choix {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 6px;
+}
+
+.encart-option {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  border: 2px solid rgb(255 255 255 / 0.18);
+  background: rgb(255 255 255 / 0.06);
+  color: #fff3d6;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+}
+
+.encart-option b {
+  font-size: 1.3rem;
+}
+
+.option-vendre.option-active { border-color: #3fa34d; background: rgb(63 163 77 / 0.35); }
+.option-garder.option-active { border-color: #e0a01c; background: rgb(224 160 28 / 0.3); }
+.option-tout-garder.option-active { border-color: #b08850; background: rgb(138 106 58 / 0.45); }
+
+.option-garder {
+  cursor: default;
+}
+
+.option-garder-titre {
+  display: grid;
+  justify-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.option-garder small {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+.compteur-garde {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compteur-garde button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #e0a01c;
+  background: rgb(0 0 0 / 0.35);
+  color: #ffe066;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.compteur-garde button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.compteur-garde strong {
+  min-width: 34px;
+  font-size: 1.15rem;
+  color: #ffe066;
+}
+
+.encart-exemple {
+  font-size: 0.75rem;
+  color: #d9c9ad;
+}
+
+.encart-ok {
+  justify-self: end;
+}
+
+@keyframes encart-ouvre {
+  from { transform: scaleY(0.6); opacity: 0; }
+}
+
+@media (max-width: 420px) {
+  .encart-choix { grid-template-columns: 1fr; }
+}
+
+/* (23/10) Sur téléphone, le coffre garde le nom du minerai lisible : le curseur « Prendre » se
+   cache (le bouton 🎒 reste), et la pastille du wagonnet rétrécit. */
+.table-coffre {
+  grid-template-columns: minmax(70px, 1fr) auto auto auto;
+}
+
+.table-coffre.sans-wagonnet {
+  grid-template-columns: minmax(70px, 1fr) auto auto;
+}
+
+@media (max-width: 480px) {
+  .prendre-coffre input[type='range'],
+  .prendre-coffre .prendre-compteur {
+    display: none;
+  }
+
+  .pastille-wagonnet {
+    padding: 2px 6px;
+    font-size: 0.68rem;
+  }
+}
+
+.bloc-mine:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.bandeau-pioche-cassee {
+  animation: pioche-secousse 0.4s ease-out, bandeau-alerte 1s ease-in-out 0.4s infinite;
+}

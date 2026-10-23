@@ -111,8 +111,10 @@ export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
         </span>
       </div>
 
+      {/* (23/10) Cassée : la case tremble à chaque clic (la clé change), pour prévenir. */}
       <div
-        className={`info-bandeau ${cassee || durabiliteRestante(etat) < pioche.durabilite * 0.15 ? 'bandeau-alerte' : ''}`}
+        key={cassee ? etat.stats.blocsCasses * 2 + etat.clics : 'pioche'}
+        className={`info-bandeau ${cassee || durabiliteRestante(etat) < pioche.durabilite * 0.15 ? 'bandeau-alerte' : ''} ${cassee ? 'bandeau-pioche-cassee' : ''}`}
         title={cassee ? `Pioche en ${pioche.nom} cassée : 2 clics par bloc, fais-la réparer au forgeron` : `Pioche en ${pioche.nom} : ${Math.round(pioche.doublement * 100)} % de doubler un minerai`}
       >
         <span className="bandeau-icone">{cassee ? '💥' : '⛏️'}</span>
