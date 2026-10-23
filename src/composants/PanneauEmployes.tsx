@@ -443,18 +443,18 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
           💵 Payer {employe.nom} · {argent(coutSalaireEmploye(employe))}
         </button>
       )}
-      {/* Sa pioche : seulement s'il reste une amélioration (au niveau max, rien à montrer). */}
-      {!pousseur && coutPioche !== null && prochaine && gain && (
+      {/* Sa pioche. (23/10) Au niveau max, l'échelle reste, toute remplie, avec « ✔ Niveau max ». */}
+      {!pousseur && (
       <>
       {/* (23/10) Ce que change la nouvelle pioche, en grand : ses blocs par seconde, avant → après. */}
-      <div className="gain-pioche" aria-label={`Nouvelle pioche : ${blocsParS(gain.avant)} puis ${blocsParS(gain.apres)} blocs par seconde`}>
+      {coutPioche !== null && prochaine && gain && <div className="gain-pioche" aria-label={`Nouvelle pioche : ${blocsParS(gain.avant)} puis ${blocsParS(gain.apres)} blocs par seconde`}>
         <span className="gain-pioche-avant">{blocsParS(gain.avant)}</span>
         <span className="gain-pioche-fleche" aria-hidden="true">
           ➜
         </span>
         <span className="gain-pioche-apres">{blocsParS(gain.apres)}</span>
         <span className="gain-pioche-unite">bloc/s</span>
-      </div>
+      </div>}
       <Amelioration
         etat={etat}
         actuel={`⛏️ Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
@@ -469,25 +469,25 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
       )}
       {/* (23/10) Les deux améliorations d'un pousseur : sa vitesse (argent) et son chariot (argent
           et fer, de plus en plus cher). Ses arrêts durent toujours 1 s. */}
-      {pousseur && niveauPousseurSuivant && (
+      {pousseur && (
         <Amelioration
           etat={etat}
           actuel={`🏃 Vitesse ×${niveauPousseurActuel.vitesse.toLocaleString('fr-FR')} (${niveauPousseurActuel.nom.toLowerCase()})`}
           niveau={employe.niveau + 1}
           niveauMax={NIVEAUX_POUSSEUR.length}
-          suivant={coutPioche !== null ? { cout: coutPioche, texte: `⬆ Vitesse ×${niveauPousseurSuivant.vitesse.toLocaleString('fr-FR')}` } : null}
+          suivant={coutPioche !== null && niveauPousseurSuivant ? { cout: coutPioche, texte: `⬆ Vitesse ×${niveauPousseurSuivant.vitesse.toLocaleString('fr-FR')}` } : null}
           verrou={verrou(etat, 'pousseur', employe.niveau + 1)}
           possible={peutAmeliorerEmploye(etat, employe)}
           onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
         />
       )}
-      {pousseur && chariotSuivant && (
+      {pousseur && (
         <Amelioration
           etat={etat}
           actuel={`🛒 Chariot de ${placesAvant} places`}
           niveau={(employe.chariot ?? 0) + 1}
           niveauMax={NIVEAUX_CHARIOT_POUSSEUR.length}
-          suivant={coutChariot !== null ? { cout: coutChariot, texte: `⬆ ${chariotSuivant.places} places` } : null}
+          suivant={coutChariot !== null && chariotSuivant ? { cout: coutChariot, texte: `⬆ ${chariotSuivant.places} places` } : null}
           verrou={verrou(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)}
           possible={peutAgrandirChariot(etat, employe)}
           onAmeliorer={() => jouer((e) => agrandirChariot(e, index))}
