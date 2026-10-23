@@ -2259,6 +2259,28 @@
   margin-top: 4px;
 }
 
+/* (23/10) La première seconde, le bouton attend : il se remplit, puis on peut fermer. */
+.fete-bouton-attente {
+  filter: saturate(0.4) brightness(0.85);
+  cursor: default;
+}
+
+.fete-bouton-attente::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.8);
+  animation: fete-bouton-remplir 1s linear forwards;
+}
+
+@keyframes fete-bouton-remplir {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
 .fete-confettis {
   position: absolute;
   top: 120px;

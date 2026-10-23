@@ -213,4 +213,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (19)** : **plus de trésorerie** : le manager paie les salaires tout seul avec l'argent du joueur (plus rien à prépayer). Jeu fermé, il se sert aussi dans l'argent, pendant le temps de son niveau ; rentable ou pas, tant pis ou tant mieux. Une vieille partie récupère l'argent qui restait dans la trésorerie.
 - **2026-10-23 (20)** : le manager est une **option** : un interrupteur sur sa carte l'arrête ou le remet au travail. Arrêté, il ne paie personne, on ne lui doit rien, et on paie ses employés soi-même.
 - **2026-10-23 (21)** : foreuse et générateur moins forts sans pousseur : le réservoir de la foreuse tient **5 min au niveau 1** (15 charbons), puis 7, 9, 12, 15, 18 min ; le générateur a une **réserve** de 5, 7, 10, 13, 16 min selon son niveau (à la main comme par les rails). Le **puisage** du générateur dans le coffre est retiré : il faut un pousseur pour ne jamais s'arrêter.
+- **2026-10-23 (22)** : passer un niveau ferme tous les panneaux et menus ouverts, et la fête du niveau ne peut pas être fermée pendant 1 s (bouton grisé qui se remplit).
 
