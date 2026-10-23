@@ -35,7 +35,7 @@
 
 Une petite liste qui dit où on en est :
 
-- **🛤️ Rails** : « pas encore de trajet de wagonnet », ou une ligne par trajet (« Mine → Marché : … ») : « ✔ électrique, le wagonnet roule tout seul ! », « dans le rayon, mais le générateur ne donne pas de courant », « ✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon) », ou « rails coupés ».
+- **🛤️ Rails** : « pas encore de trajet de wagonnet », ou une ligne par trajet (« Mine → Marché : … ») : « ✔ électrique : son pousseur va plus vite ! » (23/10), « dans le rayon, mais le générateur ne donne pas de courant », « ✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon) », ou « rails coupés ».
 - **⚙️ Foreuse** : « pas encore construite », « ✔ boostée ! », « dans le rayon, mais sans courant », ou « ✖ hors du rayon ».
 
 ### ⬆ Améliorer

@@ -16,8 +16,8 @@
 //   - le joueur peut le pousser (bouton dans le panneau du départ) : il fait l'aller-retour avec lui ;
 //   - un trajet automatique a toujours son pousseur (27/10 : un employé embauché au Personnel
 //     pour ce trajet, un par trajet). Il le pousse dès qu'il a quelque chose à porter ;
-//   - si toutes les cases du trajet sont dans le rayon du générateur allumé, le wagonnet roule
-//     tout seul, bien plus vite, mais il faut toujours son pousseur (il le lance du quai).
+//   - si toutes les cases du trajet sont dans le rayon du générateur allumé, son pousseur le
+//     pousse plus vite (+ 30 % à + 75 %, 23/10 : il ne « lance » plus le wagonnet).
 
 import {
   BLOCS,
@@ -289,7 +289,7 @@ export function joueurPousse(etat: EtatJeu): boolean {
   return trajetDuJoueur(etat) !== null
 }
 
-// Toutes les cases de ce trajet sont électriques : son wagonnet roule tout seul.
+// Toutes les cases de ce trajet sont électriques : son pousseur le pousse plus vite.
 export function trajetElectrique(etat: EtatJeu, liaison: IdLiaison): boolean {
   if (!generateurEnMarche(etat)) return false
   const ligne = ligneDe(etat, liaison)

@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 import { BATIMENTS, BLOCS, LIAISONS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import type { EtatJeu, Inventaire } from '../jeu/mineur'
 import { charbonMaxForeuse } from '../jeu/foreuse'
-import { reserveMaxGenerateur } from '../jeu/generateur'
+import { multiplicateurGenerateur, reserveMaxGenerateur, texteBonusGenerateur } from '../jeu/generateur'
 import { apercuTrajet, exclusAffiches, objetFixe, objetsAuChoix, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
 import { IMAGES_BATIMENTS } from './iso'
 import { BoutonsRail } from './FenetreRail'
@@ -232,9 +232,9 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
             {/* Qui le fait rouler (27/10 : un pousseur par trajet automatique). */}
             <p className={`moteur-trajet moteur-${apercu.moteur}`}>
               {apercu.moteur === 'electricite'
-                ? `⚡ Électrique : ${pousseur?.nom} le lance, il roule tout seul, bien plus vite.`
+                ? `⚡ Rails électriques : ${pousseur?.nom} le pousse ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} plus vite.`
                 : apercu.moteur === 'pousseur'
-                  ? `👷 ${pousseur?.nom} le pousse. Dans le rayon du générateur, il irait bien plus vite.`
+                  ? `👷 ${pousseur?.nom} le pousse.`
                   : '👷 Pas de pousseur : embauche-le au Personnel pour que ce trajet roule tout seul (sinon, pousse-le toi-même).'}
             </p>
           </>

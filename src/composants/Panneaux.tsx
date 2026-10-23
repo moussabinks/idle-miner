@@ -481,7 +481,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
                     {!ligne
                       ? 'rails coupés.'
                       : trajetElectrique(etat, t.liaison)
-                        ? '✔ électrique, le wagonnet roule tout seul !'
+                        ? '✔ électrique : son pousseur va plus vite !'
                         : casesDansLeRayon(etat, ligne)
                           ? 'dans le rayon, mais le générateur ne donne pas de courant.'
                           : '✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}

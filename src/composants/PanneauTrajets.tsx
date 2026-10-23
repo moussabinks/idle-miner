@@ -95,7 +95,7 @@ function Trajet({ etat, jouer, liaison, onReglerTrajet }: PropsPanneau & { liais
             : aPorter === 0
               ? 'Au quai : rien à porter pour l’instant.'
               : electrique
-                ? 'Son pousseur le lance : il roule tout seul ⚡.'
+                ? 'Son pousseur va le pousser, plus vite grâce aux rails électriques ⚡.'
                 : 'Son pousseur va le pousser.'}
       </span>
       {enRoute(trajet) && (
