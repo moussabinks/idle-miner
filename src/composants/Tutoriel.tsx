@@ -180,7 +180,7 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
       }
     }
     case 'bravo':
-      return { titre: '', texte: '', pourquoi: '', geste: 'Ta liste de tâches', cible: '.missions' }
+      return { titre: '', texte: '', pourquoi: '', geste: 'Tes quêtes conseillées', cible: '.missions' }
   }
 }
 
@@ -312,11 +312,20 @@ function Felicitations({ onSuivant }: { onSuivant: () => void }) {
         <Confettis />
         <img className="tuto-grande-pepite" src={PEPITE} alt="" draggable={false} />
         <h2 id="tuto-bravo-titre" className="tuto-grande-titre">
-          Bravo, tu as compris !
+          Tutoriel terminé !
         </h2>
         <p className="tuto-grande-texte">
-          Tu sais <strong>creuser</strong>, <strong>vendre</strong> et <strong>construire</strong>. Maintenant, c’est à toi ! Tes idées de la suite sont dans ta <strong>liste de tâches</strong>, en haut à droite :
+          Tu sais <strong>creuser</strong>, <strong>vendre</strong> et <strong>construire</strong>. À partir de maintenant, <strong>tu es libre</strong> : plus rien n’est obligatoire.
         </p>
+        {/* (23/10) Les quêtes conseillées : une flèche montre la liste en haut à droite. */}
+        <div className="tuto-quetes">
+          <span className="tuto-quetes-fleche" aria-hidden="true">
+            ↗
+          </span>
+          <span>
+            Des <strong>quêtes conseillées</strong> t’attendent <strong>en haut à droite</strong> (encadrées en doré). Suis-les si tu veux, <strong>dans l’ordre que tu veux</strong>, ou fais à ta façon !
+          </span>
+        </div>
         <ul className="tuto-suite">
           <li>⭐ Tout ce que tu fais rapporte de l’XP : monte de niveau (en haut à gauche)</li>
           <li>🔓 Chaque niveau débloque des bâtiments et des améliorations</li>
@@ -388,7 +397,7 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
       {c.cible && (
         <div
           ref={calque}
-          className={`tuto-cible ${suivi.visible ? '' : 'tuto-cible-cachee'} ${surBatiment ? 'tuto-sur-batiment' : ''} ${suivi.dessous ? 'tuto-cible-dessous' : ''}`}
+          className={`tuto-cible ${suivi.visible ? '' : 'tuto-cible-cachee'} ${surBatiment ? 'tuto-sur-batiment' : ''} ${suivi.dessous ? 'tuto-cible-dessous' : ''} ${etape === 'bravo' ? 'tuto-cible-fin' : ''}`}
           aria-hidden="true"
         >
           {/* Le voile sombre autour de la cible (immobile), puis l'anneau doré qui pulse. */}

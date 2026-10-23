@@ -1970,3 +1970,41 @@
     margin-left: 0;
   }
 }
+
+/* (23/10) La fin du tutoriel : la liste des quêtes, en haut à droite, est entourée d'or et
+   montrée par la flèche, par-dessus le voile de la grande fenêtre (sans assombrir deux fois). */
+.tuto-cible.tuto-cible-fin {
+  z-index: 61;
+}
+.tuto-cible-fin .tuto-trou {
+  display: none;
+}
+.tuto-quetes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 3px solid #ffd21f;
+  background: rgb(255 214 60 / 0.18);
+  text-align: left;
+  font-size: 0.95rem;
+}
+.tuto-quetes-fleche {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #e89a00;
+  animation: tuto-quetes-fleche 0.8s ease-in-out infinite alternate;
+}
+@keyframes tuto-quetes-fleche {
+  to { translate: 6px -6px; }
+}
+@media (min-width: 861px) {
+  /* la grande fenêtre se met un peu à gauche : la liste des quêtes reste bien visible */
+  .tuto-voile-leger .tuto-grande {
+    margin-right: 380px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tuto-quetes-fleche { animation: none; }
+}
