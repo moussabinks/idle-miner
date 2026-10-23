@@ -233,4 +233,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (39)** : Romain et Dodo rejoignent les noms des mineurs.
 - **2026-10-23 (40)** : améliorations des pousseurs bien plus chères et selon le niveau du joueur (× 1 + 0,12 × (niveau − 1)) : vitesse × 1,15 à × 1,75 (4 000 à 120 000 $), chariot 20 → 150 places en petites marches (3 000 $ + 60 fer à 220 000 $ + 700 fer). Sauvegarde : le chariot donné aux vieilles parties suit les nouvelles marches.
 - **2026-10-23 (41)** : bug corrigé : la pioche des mineurs demande le niveau de la mine (or 3, émeraude 4, diamant 5) ; on ne peut plus acheter le diamant avant la mine de diamant.
+- **2026-10-23 (42)** : chariot de la foreuse tout petit : 25, 40, 60, 90, 130, 180 places (plein en ~50 s au même niveau que le forage) et environ deux fois plus cher (5 000 $ + 60 fer à 200 000 $ + 120 or + 30 émeraude).
 
