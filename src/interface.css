@@ -1917,6 +1917,22 @@
   animation: absence-ligne 0.4s both;
 }
 .absence-icone { font-size: 1.3rem; }
+/* (23/10) Le temps d'absence que couvre le manager. */
+.absence-limite {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.2);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+/* Absent plus longtemps que ça : en orange, pour donner envie d'améliorer le manager. */
+.absence-limite-depassee {
+  background: rgb(255 140 40 / 0.2);
+  outline: 2px solid #ff9d2e;
+}
+
 .absence-ventes {
   display: grid;
   justify-items: center;

@@ -1,6 +1,7 @@
 // La fenêtre du retour (30/10) : quand on revient sur son monde, ce qui s'est passé pendant
 // l'absence (le jeu a continué de tourner, au plus 8 h) : ce que les mineurs et la mine ont
-// creusé... (23/10) En grand : ce que les pousseurs ont vendu au marché avec leurs wagonnets
+// creusé... (23/10 : plus les voyages des wagonnets ni le coffre ; en bas, le temps d'absence
+// que couvre le manager, et comment l'allonger) (23/10) En grand : ce que les pousseurs ont vendu au marché avec leurs wagonnets
 // (l'argent est déjà dans la caisse : plus de bouton « Tout récupérer », juste « Continuer »).
 // Aucune règle du jeu ici : le résumé est calculé par src/jeu/absence.ts.
 
@@ -26,8 +27,6 @@ export function FenetreAbsence({ resume, onRecuperer }: Props) {
     resume.blocsMineurs > 0 && { icone: '👷', texte: 'Tes mineurs ont creusé', valeur: `${nombre(resume.blocsMineurs)} blocs` },
     resume.blocsMine > 0 && { icone: '⛏️', texte: 'La mine a sorti toute seule', valeur: `${nombre(resume.blocsMine)} blocs` },
     resume.blocsForeuse > 0 && { icone: '⚙️', texte: 'La foreuse a foré', valeur: `${nombre(resume.blocsForeuse)} blocs` },
-    resume.voyages > 0 && { icone: '🚃', texte: 'Les wagonnets ont fait', valeur: `${nombre(resume.voyages)} voyages` },
-    resume.coffre > 0 && { icone: '📦', texte: 'En plus dans le coffre', valeur: `${nombre(resume.coffre)} blocs` },
   ].filter((l): l is { icone: string; texte: string; valeur: string } => Boolean(l))
   return (
     <div className="voile voile-devant" role="dialog" aria-modal="true" aria-labelledby="titre-absence">
@@ -59,6 +58,25 @@ export function FenetreAbsence({ resume, onRecuperer }: Props) {
             😠 {resume.sansSalaire === 1 ? 'Un mineur attend son salaire' : `${resume.sansSalaire} mineurs attendent leur salaire`} : ils se sont arrêtés. Paie-les au Personnel !
           </p>
         )}
+        {/* (23/10) Combien de temps le jeu tourne jeu fermé : le manager paie les salaires pendant
+            un temps (30 min au départ), qu'on allonge en l'améliorant au Personnel. */}
+        <p className={`absence-limite ${resume.absenceMax !== null && resume.secondes > resume.absenceMax ? 'absence-limite-depassee' : ''}`}>
+          {resume.absenceMax === null ? (
+            <>
+              ⏱️ Sans manager, tes mineurs s'arrêtent dès que leur salaire est fini. Embauche le <strong>manager au Personnel</strong> : il les paie
+              pendant 30 min jeu fermé, et plus en l'améliorant.
+            </>
+          ) : resume.managerAuMax ? (
+            <>
+              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> (ton manager est au maximum).
+            </>
+          ) : (
+            <>
+              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong>. Pour l'augmenter, améliore le <strong>manager</strong> au
+              bâtiment du <strong>Personnel</strong>.
+            </>
+          )}
+        </p>
         <button className="bouton bouton-vendre tuto-gros-bouton" onClick={onRecuperer} autoFocus>
           ▶ Continuer
         </button>

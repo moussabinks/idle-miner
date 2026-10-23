@@ -6,7 +6,7 @@
 import type { EtatJeu } from './mineur'
 import { nbDansCoffre } from './mineur'
 import { nbDansChariot } from './foreuse'
-import { nbSansSalaire } from './employes'
+import { managerActif, nbSansSalaire, prochainNiveauManager, secondesManagerHorsLigne } from './employes'
 
 export type ResumeAbsence = {
   secondes: number // le temps passé
@@ -18,6 +18,10 @@ export type ResumeAbsence = {
   ventesWagonnets: number // (23/10) ce que les wagonnets ont vendu au marché
   voyages: number // les voyages des wagonnets
   sansSalaire: number // les mineurs qui attendent leur salaire au retour
+  // (23/10) Le temps d'absence que couvre le manager (il paie les salaires jeu fermé), en
+  // secondes ; null sans manager (ou s'il est arrêté). « managerAuMax » : plus d'amélioration.
+  absenceMax: number | null
+  managerAuMax: boolean
 }
 
 // Ce qu'on retient de la partie avant de rattraper le temps.
@@ -48,6 +52,8 @@ export function resumerAbsence(avant: PhotoPartie, etat: EtatJeu, secondes: numb
     voyages: etat.stats.voyagesWagonnet - avant.voyages,
     ventesWagonnets: Math.max(0, Math.round(etat.stats.argentWagonnet - avant.ventesWagonnets)),
     sansSalaire: nbSansSalaire(etat),
+    absenceMax: managerActif(etat) ? secondesManagerHorsLigne(etat) : null,
+    managerAuMax: prochainNiveauManager(etat) === null,
   }
   const rien = resume.blocsMineurs + resume.blocsMine + resume.blocsForeuse + resume.argent + resume.voyages <= 0
   return rien && resume.sansSalaire === 0 ? null : resume
