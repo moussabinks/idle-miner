@@ -46,3 +46,44 @@ export function revenuParSeconde(etat: EtatJeu): Revenu {
   const foreuse = foreuseEnMarche(etat) ? vitesseForage(etat) * valeurMoyenneBloc(etat.niveauMine) : 0
   return { mine, mineurs, foreuse, total: mine + mineurs + foreuse }
 }
+
+// ---------------------------------------------------------------------------
+// Le bilan par minute (23/10) : ce que la partie gagne, ce qu'elle paie, et si elle est rentable
+// ---------------------------------------------------------------------------
+
+export type LigneBilan = { id: string; icone: string; nom: string; detail: string; parMinute: number }
+
+export type Bilan = {
+  gains: LigneBilan[] // ce qui sort de la mine (à vendre), par source
+  depenses: LigneBilan[] // les salaires, par métier
+  totalGains: number
+  totalDepenses: number
+  net: number // gains − dépenses, par minute
+}
+
+// Le bilan en ce moment, en $ par minute (des moyennes : les minerais sont tirés au hasard).
+// Les salaires comptent tous les employés, payés ou pas : c'est ce qu'il faut leur payer.
+export function bilanParMinute(etat: EtatJeu): Bilan {
+  const plein = coffrePlein(etat)
+  const valeur = valeurMoyenneBloc(etat.niveauMine)
+  const mineurs = etat.employes.filter((e) => e.role === 'mineur')
+  const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
+  const auTravail = mineurs.filter((m) => m.tempsPaye > 0)
+  const brutMineurs = plein ? 0 : auTravail.reduce((total, m) => total + revenuBrutEmploye(etat, m), 0)
+  const mine = plein ? 0 : debitMine(etat) * valeur
+  const foreuse = foreuseEnMarche(etat) ? vitesseForage(etat) * valeur : 0
+  const gains: LigneBilan[] = [
+    { id: 'mine', icone: '⛏️', nom: 'La mine', detail: plein ? 'coffre plein : elle s’arrête !' : 'elle creuse toute seule', parMinute: mine * 60 },
+    { id: 'mineurs', icone: '👷', nom: 'Les mineurs', detail: `${auTravail.length} au travail sur ${mineurs.length}`, parMinute: brutMineurs * 60 },
+    { id: 'foreuse', icone: '⚙️', nom: 'La foreuse', detail: foreuseEnMarche(etat) ? 'elle fore' : 'à l’arrêt', parMinute: foreuse * 60 },
+  ]
+  const paie = (liste: Employe[]) => liste.reduce((total, e) => total + salaireEmploye(e), 0) / (SECONDES_PAR_PAIE / 60)
+  const depenses: LigneBilan[] = [
+    { id: 'salaires-mineurs', icone: '⛏️', nom: 'Salaires des mineurs', detail: `${mineurs.length} mineur${mineurs.length > 1 ? 's' : ''}`, parMinute: paie(mineurs) },
+    { id: 'salaires-pousseurs', icone: '🛤️', nom: 'Salaires des pousseurs', detail: `${pousseurs.length} pousseur${pousseurs.length > 1 ? 's' : ''}`, parMinute: paie(pousseurs) },
+  ]
+  if (etat.manager.embauche) depenses.push({ id: 'manager', icone: '💼', nom: 'Salaire du manager', detail: 'il paie tout le monde', parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
+  const totalGains = gains.reduce((t, l) => t + l.parMinute, 0)
+  const totalDepenses = depenses.reduce((t, l) => t + l.parMinute, 0)
+  return { gains, depenses, totalGains, totalDepenses, net: totalGains - totalDepenses }
+}

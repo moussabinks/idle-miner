@@ -190,6 +190,8 @@ Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 p
 | **🎒 Sac** | « *n*/*taille* » et une jauge bleue | sac plein |
 | **👷 / ⚡** (si on a des mineurs ou des rails électriques) | « 👷 *n* » (« 😠 » si quelqu'un n'est pas payé), « ⚡ » qui brille si au moins un trajet est électrique | mineurs sans salaire |
 
+**Le bilan** (23/10, `FenetreBilan.tsx`, règles dans `bilanParMinute` de `src/jeu/revenu.ts`) : la case **💵 Argent** est un **bouton** (avec « › ») ; la toucher ouvre **💰 Mon bilan** : en moyenne, chaque minute, en ce moment. En grand, le **solde par minute** (« +3 $/min ») avec une **mascotte** qui se balance et un verdict coloré : 🤑 **Rentable !** (vert), 🙂 **Tout juste rentable** (jaune, moins d'un quart des gains restent), 😬 **Tu perds de l'argent** (rouge), 😴 **Rien ne tourne**. Dessous, une jauge « *N* % de tes gains partent en salaires », puis deux colonnes de barres qui se remplissent : **Ce que tu gagnes** (vert : ⛏️ la mine, 👷 les mineurs « *n* au travail sur *m* », ⚙️ la foreuse) et **Ce que tu paies** (rouge : salaires des mineurs, des pousseurs, du manager). En bas, un conseil (« une meilleure pioche ferait la différence »…) et une note : les gains sont la valeur des blocs, à vendre ; les clics ne comptent pas. Les chiffres bougent en direct.
+
 Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 9](visuel-et-sons.md#9-les-boutons--et-).
 
 ---

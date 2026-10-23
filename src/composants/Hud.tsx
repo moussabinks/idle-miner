@@ -19,6 +19,7 @@ import { useCompteur } from '../useCompteur'
 type Props = {
   etat: EtatJeu
   nbVentes: number // change à chaque vente, pour faire sauter le compteur d'argent
+  onOuvrirBilan?: () => void // (23/10) toucher l'argent ouvre le bilan (gains et salaires par minute)
 }
 
 // « 0,8/s », « 12/s », « 1 250/s ».
@@ -47,7 +48,7 @@ function JaugeMini({ valeur, max, couleur, teinte }: { valeur: number; max: numb
   )
 }
 
-export function Hud({ etat, nbVentes }: Props) {
+export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
   const plein = sacPlein(etat)
   const coffreRempli = coffrePlein(etat)
   const pioche = piocheEnMain(etat)
@@ -76,9 +77,12 @@ export function Hud({ etat, nbVentes }: Props) {
         </span>
       </div>
 
-      <div
-        className="info-bandeau bandeau-argent"
-        title={`Ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}
+      {/* (23/10) Un bouton : le toucher ouvre le bilan (ce qu'on gagne et ce qu'on paie). */}
+      <button
+        type="button"
+        className="info-bandeau bandeau-argent bandeau-bouton"
+        onClick={onOuvrirBilan}
+        title={`Touche pour voir ton bilan · ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}
       >
         <span className="bandeau-icone">💵</span>
         <span className="bandeau-valeurs">
@@ -87,7 +91,10 @@ export function Hud({ etat, nbVentes }: Props) {
           </strong>
           <small className={revenu.total > 0 ? 'revenu-positif' : 'revenu-nul'}>{texteRevenu(revenu.total)}</small>
         </span>
-      </div>
+        <span className="bandeau-loupe" aria-hidden="true">
+          ›
+        </span>
+      </button>
 
       <div
         className={`info-bandeau ${coffreRempli ? 'bandeau-alerte' : ''}`}
