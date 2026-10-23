@@ -26,10 +26,10 @@
 
 - Un badge : **Allumé** (vert), **Éteint**, ou **Plus de redstone**.
 - « Rayon : *N* cases (le cercle jaune sur la carte). Tout ce qui est dedans va **+ *B* %** plus vite : l’ascenseur de la mine, les wagonnets (leurs rails entiers dans le cercle) et la foreuse. » (23/10)
-- Une barre rouge : la redstone qui reste, en minutes.
+- Une barre rouge : la redstone qui reste, en minutes, face à sa **réserve** (23/10 : « Redstone : 3 min / 5 min »).
 - « 1 redstone = 30 s · tu en as *N* (sac + coffre) », puis les boutons **+1**, **+10** et **Tout** (anthracite, comme le charbon de la foreuse). La redstone se prend d'abord dans le **sac**, puis dans le **coffre de la mine**. Sans redstone : « 🔴 Il te faut de la redstone (niveau 2 de la mine). »
 - **⏸ Éteindre / ▶ Allumer** (gris) : éteint, le générateur **garde sa redstone** et ne la brûle pas (mais il ne donne plus de courant).
-- **Le puisage** (à partir du **niveau 2** du générateur) : une case à cocher « Il se sert tout seul dans le coffre de la mine (en gardant 5 minutes d'avance) ». Avant : « 🔒 Au niveau 2, il se servira tout seul en redstone dans le coffre de la mine. »
+- « 🛤️ Pour qu'il ne s'arrête jamais, embauche un pousseur sur le trajet Mine → Générateur : il apporte la redstone du coffre. La réserve grandit à chaque niveau. » (23/10 : le **puisage** dans le coffre est retiré, il contournait les pousseurs.)
 
 ### 🔌 Ce qu'il alimente
 
@@ -40,19 +40,19 @@ Une petite liste qui dit où on en est :
 
 ### ⬆ Améliorer
 
-Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon** et le **bonus de vitesse** (`NIVEAUX_GENERATEUR`, champ `bonus`) :
+Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon**, le **bonus de vitesse** (`NIVEAUX_GENERATEUR`, champ `bonus`) et la **réserve** de redstone (23/10, champ `reserveMinutes`) :
 
-| Niveau | Rayon | Bonus de vitesse (23/10) | Pousseur électrique | Coût (29/10) | Niveau du joueur (30/10) |
-|---|---:|---:|---:|---|---:|
-| 1 | 15 cases | + 30 % | 3,25 cases/s | (le prix du bâtiment) | 6 |
-| 2 | 20 cases | + 40 % | 3,5 cases/s | 7 500 $ + 120 fer + 60 redstone | 8 |
-| 3 | 26 cases | + 50 % | 3,75 cases/s | 20 000 $ + 220 fer + 120 redstone | 10 |
-| 4 | 33 cases | + 60 % | 4 cases/s | 50 000 $ + 350 fer + 220 redstone | 13 |
-| 5 | 40 cases | + 75 % | 4,4 cases/s | 120 000 $ + 550 fer + 420 redstone | 15 |
+| Niveau | Rayon | Bonus de vitesse (23/10) | Réserve (23/10) | Pousseur électrique | Coût (29/10) | Niveau du joueur (30/10) |
+|---|---:|---:|---:|---:|---|---:|
+| 1 | 15 cases | + 30 % | 5 min (10 redstones) | 3,25 cases/s | (le prix du bâtiment) | 6 |
+| 2 | 20 cases | + 40 % | 7 min | 3,5 cases/s | 7 500 $ + 120 fer + 60 redstone | 8 |
+| 3 | 26 cases | + 50 % | 10 min | 3,75 cases/s | 20 000 $ + 220 fer + 120 redstone | 10 |
+| 4 | 33 cases | + 60 % | 13 min | 4 cases/s | 50 000 $ + 350 fer + 220 redstone | 13 |
+| 5 | 40 cases | + 75 % | 16 min | 4,4 cases/s | 120 000 $ + 550 fer + 420 redstone | 15 |
 
 (Avant le 23/10 : une « puissance » de × 1 à × 3, le wagonnet électrique roulait tout seul à 8 à 24 cases/s et la foreuse allait × 1,5 à × 2,5 : c'était trop fort.)
 
-Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 : 81 000 $ + 880 fer + 570 redstone). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon. »
+Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 : 81 000 $ + 880 fer + 570 redstone). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
 
 ## Règles et comportement
 
@@ -61,9 +61,10 @@ Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 
 - **1 redstone = 30 secondes de courant** (`SECONDES_PAR_REDSTONE`), soit **2 redstone par minute** et **120 par heure**, quel que soit le niveau.
 - Le générateur ne brûle sa redstone que s'il est **posé et allumé**. Il donne du courant tant qu'il en reste (`generateurEnMarche`).
 - Quand il n'en a plus : « ⚡ Le générateur n'a plus de redstone : les rails ne sont plus électriques. »
-- **Le puisage** (niveau 2 et plus, case cochée) : quand sa réserve passe **sous 5 minutes** (`RESERVE_GENERATEUR_AUTO` = 300 s), il prend dans le **coffre de la mine** juste ce qu'il faut pour remonter à 5 minutes (au plus 10 redstone d'un coup), jamais dans le sac. Il ne vide donc jamais le coffre d'un coup. Ça marche aussi jeu fermé.
-- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, la bulle « 🛤️ Automatiser » sur les rails crée le trajet. Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à une réserve de **30 minutes** (60 redstones, `RESERVE_GENERATEUR_WAGONNET` = 1 800 s). Le wagonnet du marché laisse alors cette redstone dans le coffre, **mais seulement si ce trajet a un pousseur embauché** (23/10, `trajetAutomatique`) : sans pousseur, rien ne l'emporterait, alors elle part au marché avec le reste. Voir [mine.md](mine.md#les-wagonnets).
-- Astuce : la redstone sort de la mine dès le niveau 2 (10 % des blocs), puis 12 % aux niveaux suivants. Avec le puisage, la mine nourrit toute seule son générateur.
+- **La réserve** (23/10, `reserveMaxGenerateur`) : il garde au plus **5 minutes** de redstone au niveau 1 (10 redstones), puis 7, 10, 13 et 16 minutes. À la main (« ⚡ La réserve du générateur est pleine. ») comme par les rails, on ne peut pas mettre plus. Avant, on pouvait le remplir sans limite (et le wagonnet jusqu'à 30 min) : sans pousseur, c'était trop fort.
+- **Plus de puisage** (23/10) : il ne se sert plus tout seul dans le coffre de la mine. Sa redstone arrive par les rails (un pousseur sur Mine → Générateur) ou à la main.
+- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, la bulle « 🛤️ Automatiser » sur les rails crée le trajet. Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à **sa réserve** (23/10 : 5 à 16 min selon son niveau, `placeRedstoneGenerateur`, `livrerRedstone` ; ce qui ne rentre pas reste dans le wagonnet). Le wagonnet du marché laisse alors cette redstone dans le coffre, **mais seulement si ce trajet a un pousseur embauché** (23/10, `trajetAutomatique`) : sans pousseur, rien ne l'emporterait, alors elle part au marché avec le reste. Voir [mine.md](mine.md#les-wagonnets).
+- Astuce : la redstone sort de la mine dès le niveau 2 (10 % des blocs), puis 12 % aux niveaux suivants. Avec un pousseur sur Mine → Générateur, la mine nourrit toute seule son générateur.
 
 ### Le rayon
 
@@ -90,17 +91,17 @@ Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerate
 - **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine et le niveau 6 du joueur (30/10), puis « Générateur : rayon *N* cases » (amélioration) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
 - **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
 - **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
-- **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, coche le puisage dès le niveau 2, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 1 h 30** de jeu (29/10 ; 40 minutes avant les prix relevés ; mesuré le 30/10 : 55 minutes en médiane).
+- **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, et l'améliore quand il a deux fois le prix. Repère des tests : les rails sont électriques en **moins de 1 h 30** de jeu (29/10 ; 40 minutes avant les prix relevés ; mesuré le 30/10 : 55 minutes en médiane).
 - **Événements et sons** : un niveau de plus joue la petite fanfare d'amélioration ; chaque vente d'un wagonnet au marché fait tinter 3 pièces discrètes.
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.generateur`), `SECONDES_PAR_REDSTONE`, `NIVEAUX_GENERATEUR` (rayon, puissance, coût), `NIVEAU_GENERATEUR_AUTO`, `RESERVE_GENERATEUR_AUTO`, `VITESSE_RAILS`, `BONUS_ELECTRIQUE_FOREUSE`.
-- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `casesDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `foreuseAlimentee`), actions (`remplirGenerateur`, `basculerGenerateur`, `basculerPuisage`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
-- `src/jeu/generateur.test.ts` : les tests (rayon, rails électriques, redstone, puisage, foreuse boostée).
+- `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.generateur`), `SECONDES_PAR_REDSTONE`, `NIVEAUX_GENERATEUR` (rayon, bonus, réserve, coût), `VITESSE_RAILS`, `BONUS_ELECTRIQUE_FOREUSE`.
+- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `casesDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `foreuseAlimentee`), actions (`remplirGenerateur`, `basculerGenerateur`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
+- `src/jeu/generateur.test.ts` : les tests (rayon, rails électriques, redstone, réserve, foreuse boostée).
 - `src/jeu/wagonnet.ts` : les trajets électriques (`trajetElectrique`, `railsAlimentes`), le wagonnet qui part tout seul et sa vitesse électrique ; le trajet Mine → Générateur qui lui apporte la redstone.
 - `src/jeu/foreuse.ts` : la vitesse de forage boostée (`vitesseForage`).
-- `src/jeu/mineur.ts` : le type `Generateur` (`niveau`, `carburant`, `allume`, `puiseDansLeCoffre`) dans `EtatJeu`.
+- `src/jeu/mineur.ts` : le type `Generateur` (`niveau`, `carburant`, `allume`) dans `EtatJeu`.
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : les bulles 🔴 et 🚧, les missions, le succès Électricien.
 - `src/composants/Panneaux.tsx` : `PanneauGenerateur`.
 - `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), les wagonnets électriques ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.

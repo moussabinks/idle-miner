@@ -107,8 +107,8 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 | Trajet | Ce que fait le wagonnet |
 |---|---|
 | 💰 Mine → Marché | emporte le coffre de la mine (les plus chers d'abord) et le vend. Il laisse les objets « gardés », et le charbon et la redstone dont les deux trajets suivants ont besoin. |
-| 🔥 Mine → Foreuse | dès que le réservoir de la foreuse n'est plus plein, emporte tout le charbon du coffre : il remplit le réservoir (40 à 250 charbons selon le niveau de forage), le surplus va dans le chariot (28/10). |
-| 🔴 Mine → Générateur | apporte la redstone du coffre, jusqu'à une réserve de 60 redstones (`RESERVE_GENERATEUR_WAGONNET` = 1 800 s). |
+| 🔥 Mine → Foreuse | dès que le réservoir de la foreuse n'est plus plein, emporte tout le charbon du coffre : il remplit le réservoir (15 à 54 charbons selon le niveau de forage, 5 à 18 min, 23/10), le surplus va dans le chariot (28/10). |
+| 🔴 Mine → Générateur | apporte la redstone du coffre, jusqu'à sa réserve (5 à 16 min selon son niveau, 23/10). |
 | 🛒 Foreuse → Marché | vend ce qui est coché dans le chariot de la foreuse. |
 
 - **Les zones jaunes** (27/10) : dès qu'on choisit « 🛤️ Poser des rails » (menu 🏗️ Bâtiments), ou qu'on déplace un rail, les bâtiments qu'on peut relier (mine, marché, foreuse, générateur, `BATIMENTS_DES_RAILS`) sont entourés d'une **ligne jaune qui brille**, tout pile sur le bord de leur emprise (5 × 5 ou 10 × 10). Les rails partent de là : une case de rails collée à cette ligne touche le bâtiment.

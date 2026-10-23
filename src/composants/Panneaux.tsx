@@ -5,7 +5,7 @@
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
 import { StockMinerais } from './StockMinerais'
-import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
@@ -28,14 +28,13 @@ import {
 import {
   ameliorerGenerateur,
   basculerGenerateur,
-  basculerPuisage,
   batimentDansLeRayon,
   foreuseAlimentee,
   generateurEnMarche,
   prochainNiveauGenerateur,
   multiplicateurGenerateur,
   texteBonusGenerateur,
-  puisageDisponible,
+  reserveMaxGenerateur,
   casesDansLeRayon,
   rayonGenerateur,
   remplirGenerateur,
@@ -381,10 +380,10 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
             <strong>⚙️ Vitesse de forage</strong>
             <Amelioration
               etat={etat}
-              actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité · réservoir ${charbonMaxForeuse(etat)} charbons`}
+              actuel={`${NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse.toLocaleString('fr-FR')} bloc/s sans électricité · réservoir ${charbonMaxForeuse(etat)} charbons (${minutes(charbonMaxForeuse(etat) * SECONDES_PAR_CHARBON)})`}
               niveau={foreuse.niveauVitesse + 1}
               niveauMax={NIVEAUX_FORAGE.length}
-              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s · ${forage.reservoir} charbons` }}
+              suivant={forage && { cout: forage.cout, texte: `⬆ ${forage.vitesse} bloc/s · ${forage.reservoir} charbons (${minutes(forage.reservoir * SECONDES_PAR_CHARBON)})` }}
               verrou={verrou(etat, 'forage', foreuse.niveauVitesse + 1)}
               possible={peutAmeliorerForage(etat)}
               onAmeliorer={() => jouer(ameliorerForage)}
@@ -440,10 +439,11 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
           <span className="discret">
             Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte). Tout ce qui est dedans va <strong>{texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)}</strong> plus vite : l’ascenseur de la mine, les wagonnets (leurs rails entiers dans le cercle) et la foreuse.
           </span>
+          {/* (23/10) La réserve est petite (5 min au niveau 1) : sans pousseur, il faut revenir souvent. */}
           <Barre
             valeur={g.carburant}
-            max={Math.max(g.carburant, 10 * SECONDES_PAR_REDSTONE)}
-            texte={`Redstone : ${minutes(g.carburant)}`}
+            max={Math.max(g.carburant, reserveMaxGenerateur(etat))}
+            texte={`Redstone : ${minutes(g.carburant)} / ${minutes(reserveMaxGenerateur(etat))}`}
             couleur="rouge"
           />
           <div className="boutons">
@@ -461,14 +461,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
               {g.allume ? '⏸ Éteindre' : '▶ Allumer'}
             </Bouton>
           </div>
-          {puisageDisponible(etat) ? (
-            <label className="case-option">
-              <input type="checkbox" checked={g.puiseDansLeCoffre} onChange={() => jouer(basculerPuisage)} />
-              Il se sert tout seul dans le coffre de la mine (en gardant 5 minutes d'avance)
-            </label>
-          ) : (
-            <span className="discret">🔒 Au niveau {NIVEAU_GENERATEUR_AUTO + 1}, il se servira tout seul en redstone dans le coffre de la mine.</span>
-          )}
+          <span className="discret">🛤️ Pour qu’il ne s’arrête jamais, embauche un pousseur sur le trajet Mine → Générateur : il apporte la redstone du coffre. La réserve grandit à chaque niveau.</span>
         </div>
       )}
 
@@ -512,10 +505,10 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
             <strong>⬆ Améliorer</strong>
             <Amelioration
               etat={etat}
-              actuel={`Rayon ${rayonGenerateur(etat)} cases · ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} de vitesse`}
+              actuel={`Rayon ${rayonGenerateur(etat)} cases · ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} de vitesse · réserve ${minutes(reserveMaxGenerateur(etat))}`}
               niveau={g.niveau + 1}
               niveauMax={NIVEAUX_GENERATEUR.length}
-              suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ${texteBonusGenerateur(prochain.bonus)}` }}
+              suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ${texteBonusGenerateur(prochain.bonus)} · réserve ${prochain.reserveMinutes} min` }}
               verrou={verrou(etat, 'generateur', g.niveau + 1)}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer(ameliorerGenerateur)}

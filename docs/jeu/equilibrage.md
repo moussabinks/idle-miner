@@ -166,7 +166,7 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s |
 | (électrique, 23/10) | la vitesse du pousseur × 1,3 à 1,75 (`VITESSE_RAILS` est retiré : le wagonnet ne roule plus tout seul) |
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
-| `RESERVE_GENERATEUR_WAGONNET` | 1 800 s de redstone (60 redstones) : le wagonnet Mine → Générateur remplit jusque-là |
+| `reserveMinutes` (`NIVEAUX_GENERATEUR`, 23/10) | 5, 7, 10, 13, 16 min de redstone : la réserve du générateur (à la main et par le wagonnet Mine → Générateur) |
 
 `NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`, 29/10) : 40 → **100** (1 200 $ + 60 fer, niveau 6 du joueur) → **250** (6 000 $ + 150 fer + 40 redstone, niveau 9) → **600** places (25 000 $ + 80 or, niveau 12). Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
 
@@ -198,7 +198,7 @@ Améliorations (niveaux 2 à 5) : 197 500 $ + 1 240 fer + 820 redstone.
 - **Consommation** : 1 redstone = 30 s, soit 2 par minute, **120 par heure**, quel que soit le niveau.
 - **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`. Un trajet est électrique quand toutes ses cases sont dedans **et** que le générateur est allumé avec de la redstone (chaque trajet compte à part).
 - **Foreuse** : vitesse × `multiplicateurGenerateur` (1,3 à 1,75).
-- **Puisage** (`NIVEAU_GENERATEUR_AUTO` = index 1, donc le 2e niveau) : sous 300 s de réserve (`RESERVE_GENERATEUR_AUTO`), il prend dans le coffre `arrondi au-dessus((300 − réserve) ÷ 30)` redstone (au plus ce qu'il y a).
+- **Réserve** (23/10) : 5, 7, 10, 13, 16 min selon le niveau. Le **puisage** dans le coffre est retiré : sans pousseur, le générateur (et la foreuse, réservoir de 5 à 18 min) ne tournait que trop longtemps tout seul.
 - La redstone que demande le générateur (2 / min) est petite à côté de ce que sort la mine : au niveau 2, la mine seule sort 0,25 × 10 % = 1,5 redstone par minute, et les clics et les mineurs bien plus.
 
 ## La foreuse
@@ -365,7 +365,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md) (29/10). En bref :
 - **Le village** : il pose ses bâtiments à des places fixes autour de la mine (`PLAN_DU_BOT`) : le **marché** en (28, 38), juste sous la mine, puis le **forgeron** (36, 24), le **Personnel** (19, 31), le **bazar** (19, 25), le **générateur** (35, 37, contre la ligne) et la **foreuse** (36, 31). Il pose **3 cases de rails** (30, 35 à 37) entre la mine et le marché dès qu'elles sont débloquées (niveau 3 du joueur) et qu'il a le fer (9 fer), puis y envoie aussitôt un wagonnet (trajet Mine → Marché).
 - **Vendre à pied** : tant que le wagonnet ne roule pas (ni pousseur, ni électricité), il va vendre quand le coffre est à moitié plein : il met le coffre dans son sac (sauf sa réserve), marche jusqu'au marché, vend tout et revient (`2 × distance ÷ 5` secondes de jeu en plus).
 - **Ce qu'il garde** (`reserve`, `reglerGarde`) : les minerais du prochain bâtiment, de la prochaine pioche, de la réparation, du prochain niveau de mine, du prochain coffre, des rails et de 20 redstone pour le générateur. Il les met dans `nonAVendre` (le wagonnet les laisse) tant qu'il n'en a pas 1,5 fois assez et que le coffre est à moins de 80 %.
-- **Les achats** : réparer dès que la pioche casse ; pioche suivante ; niveau de mine dès qu'il peut ; payer les salaires dès que quelqu'un a moins d'une minute payée ; embaucher et améliorer les mineurs en gardant une paie d'avance ; recruteur dès qu'il peut ; manager à partir de 15 000 $ (il paie avec l'argent du bot) ; **un pousseur** embauché pour Mine → Marché dès qu'il a ce trajet et un mineur (licencié une fois les rails électriques). Un pousseur pousse à 2,5 cases/s × `forcePousseur` (1 + (rendement − 1) ÷ 2 selon sa rareté) ; générateur rempli de 10 redstone sous 2 minutes de réserve, puisage coché dès le niveau 2, amélioré à 2 fois son prix ; foreuse remplie de 10 charbons sous 1 minute, chariot vendu à moitié plein, améliorée au-dessus de 3 000 $ ; ascenseur (à partir de 2 mineurs), coffre, taille des wagonnets (à 2 fois son prix) et sac (à 3 fois son prix).
+- **Les achats** : réparer dès que la pioche casse ; pioche suivante ; niveau de mine dès qu'il peut ; payer les salaires dès que quelqu'un a moins d'une minute payée ; embaucher et améliorer les mineurs en gardant une paie d'avance ; recruteur dès qu'il peut ; manager à partir de 15 000 $ (il paie avec l'argent du bot) ; **un pousseur** embauché pour Mine → Marché dès qu'il a ce trajet et un mineur (licencié une fois les rails électriques). Un pousseur pousse à 2,5 cases/s × `forcePousseur` (1 + (rendement − 1) ÷ 2 selon sa rareté) ; générateur rempli de 10 redstone sous 2 minutes de réserve (23/10 : plus de puisage), amélioré à 2 fois son prix ; foreuse remplie de 10 charbons sous 1 minute, chariot vendu à moitié plein, améliorée au-dessus de 3 000 $ ; ascenseur (à partir de 2 mineurs), coffre, taille des wagonnets (à 2 fois son prix) et sac (à 3 fois son prix).
 - Les achats se font **sans compter la marche** (on suppose qu'il passe devant en allant vendre).
 
 ### Ce que vérifie `bot.test.ts`

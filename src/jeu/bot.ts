@@ -31,7 +31,7 @@ import {
   managerActif,
 } from './employes'
 import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
-import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, remplirGenerateur } from './generateur'
+import { ameliorerGenerateur, prochainNiveauGenerateur, remplirGenerateur } from './generateur'
 import {
   acheterPioche,
   disponible,
@@ -218,10 +218,9 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (trajetDe(etat, 'mine-marche') && pousseurs.length === 0 && etat.employes.length >= 1 && peutEmbaucherPousseur(etat, 'mine-marche')) {
       embaucherPousseur(etat, aleatoire, 'mine-marche')
     }
-    // Le générateur : il le remplit de redstone, puis le laisse se servir dans le coffre.
+    // Le générateur : il le remplit de redstone (23/10 : il ne se sert plus dans le coffre).
     if (estPose(etat, 'generateur')) {
       if (etat.generateur.carburant < 120) remplirGenerateur(etat, 10)
-      if (puisageDisponible(etat) && !etat.generateur.puiseDansLeCoffre) basculerPuisage(etat)
       const prochain = prochainNiveauGenerateur(etat)
       if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 2 && peutPayer(etat, prochain.cout) && gardeLaMine(prochain.cout)) ameliorerGenerateur(etat)
     }

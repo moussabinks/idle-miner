@@ -124,7 +124,6 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Porte** | L'entrée d'un bâtiment, sur sa face avant gauche ou droite. Le joueur peut ouvrir un bâtiment de n'importe quel côté. |
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
 | **Bonus du générateur** | (23/10, avant « puissance ») + 30 % à + 75 % de vitesse pour l'ascenseur, les wagonnets et la foreuse dans son rayon. |
-| **Puisage** | Option du générateur (dès son niveau 2) : il prend tout seul la redstone dans le coffre de la mine, en gardant 5 minutes d'avance. |
 | **Quai** | Le départ d'un trajet (la mine ou la foreuse) : le wagonnet y attend. Chaque pousseur attend au début des rails de son trajet, devant le bâtiment de départ. |
 | **Rails** | 3 fer la case, à partir du niveau 3 du joueur (menu Bâtiments) : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Jamais de boucle. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |

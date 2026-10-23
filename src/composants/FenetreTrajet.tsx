@@ -12,9 +12,10 @@
 // appelle reglerTrajet / apercuTrajet (src/jeu/wagonnet.ts).
 
 import { useEffect, useState } from 'react'
-import { BATIMENTS, BLOCS, LIAISONS, RESERVE_GENERATEUR_WAGONNET, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import type { EtatJeu, Inventaire } from '../jeu/mineur'
 import { charbonMaxForeuse } from '../jeu/foreuse'
+import { reserveMaxGenerateur } from '../jeu/generateur'
 import { apercuTrajet, exclusAffiches, objetFixe, objetsAuChoix, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
 import { IMAGES_BATIMENTS } from './iso'
 import { BoutonsRail } from './FenetreRail'
@@ -60,7 +61,7 @@ function DessinTrajet({ liaison, actif }: { liaison: IdLiaison; actif: boolean }
 function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
   const foreuse = liaison === 'mine-foreuse'
   const bloc = foreuse ? 'charbon' : 'redstone'
-  const max = foreuse ? charbonMaxForeuse(etat) : RESERVE_GENERATEUR_WAGONNET / SECONDES_PAR_REDSTONE
+  const max = foreuse ? charbonMaxForeuse(etat) : reserveMaxGenerateur(etat) / SECONDES_PAR_REDSTONE
   const actuel = Math.min(max, Math.floor(foreuse ? etat.foreuse.carburant / SECONDES_PAR_CHARBON : etat.generateur.carburant / SECONDES_PAR_REDSTONE))
   return (
     <div className="tuile-fixe">

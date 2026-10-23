@@ -175,7 +175,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **Tout ce qui sort de la mine y va** : tes clics, les blocs que la mine sort toute seule, et les sacs des mineurs employés (la foreuse a son propre chariot). Il ne contient que des blocs.
 - **Coffre plein = tout s'arrête** : le bloc ne se clique plus, la mine ne sort plus rien, et les mineurs qui remontent **attendent** devant le coffre, leur sac plein (« 📦 attend : le coffre de la mine est plein ! »), en continuant d'être payés. Le « $/s » du bandeau tombe à 0 (ou en dessous, à cause des salaires).
 - **On paie aussi avec le coffre** : partout dans le jeu, les minerais d'un achat se prennent **d'abord dans le sac**, **puis dans le coffre** (`disponible`, `payer`). Pas besoin de porter le fer jusqu'au forgeron.
-- Il ne se vide que de trois façons : 🎒 Mettre dans le sac, les wagonnets (vers le marché, la foreuse, le générateur), et le générateur qui se sert en redstone (à partir de son niveau 2).
+- Il ne se vide que de trois façons : 🎒 Mettre dans le sac, les wagonnets (vers le marché, la foreuse, le générateur), (23/10 : le générateur ne s'y sert plus tout seul).
 
 ### La mine toute seule
 
@@ -189,8 +189,8 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
 - **Ce qu'il emporte au départ**, jusqu'à sa capacité :
   - **vers le marché** : le coffre, **les objets les plus chers d'abord**, **sauf les objets gardés** (`nonAVendre`) et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets existent). Au marché, il vend tout (« 🛤️ Le wagonnet a tout vendu au marché : +*X* $ » quand c'est toi qui pousses) ;
-  - **vers la foreuse** : dès que son réservoir n'est plus plein, tout le charbon du coffre ; le réservoir se remplit (40 à 250 charbons selon son niveau de forage) et le surplus va dans son chariot (28/10) ;
-  - **vers le générateur** : la redstone du coffre, jusqu'à lui faire **60 redstones** de réserve (`RESERVE_GENERATEUR_WAGONNET` = 1 800 s).
+  - **vers la foreuse** : dès que son réservoir n'est plus plein, tout le charbon du coffre ; le réservoir se remplit (15 à 54 charbons selon son niveau de forage, 23/10) et le surplus va dans son chariot (28/10) ;
+  - **vers le générateur** : la redstone du coffre, jusqu'à remplir sa réserve (5 à 16 min selon son niveau, 23/10).
   - Puis il revient au quai. S'il n'a rien à porter, il reste au quai.
 - **Qui le fait avancer** (il ne part jamais tout seul sans eux) :
   - **toi**, avec « Pousser » (un wagonnet à la fois) ;
@@ -233,7 +233,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 
 ## Fichiers du code
 
-- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `BONUS_COMBO` (30/10), `NIVEAUX_WAGONNET`, `COUT_RAIL`, les trajets (`LIAISONS`, `RESERVE_FOREUSE_WAGONNET`, `RESERVE_GENERATEUR_WAGONNET`), les vitesses des wagonnets et `SECONDES_CHARGEMENT_WAGONNET`.
+- `src/jeu/donnees.ts` : `BATIMENTS.puits`, `BLOCS`, `NIVEAUX_MINE`, `NIVEAUX_COFFRE`, `NIVEAUX_ASCENSEUR`, `SECONDES_ECHELLE`, `BONUS_COMBO` (30/10), `NIVEAUX_WAGONNET`, `COUT_RAIL`, les trajets (`LIAISONS`, `RESERVE_FOREUSE_WAGONNET`), les vitesses des wagonnets et `SECONDES_CHARGEMENT_WAGONNET`.
 - `src/jeu/mine.ts` : tirer un bloc selon le niveau (`tirerBloc`), les chances (`chancesDesBlocs`), la valeur moyenne d'un bloc (`valeurMoyenneBloc`).
 - `src/jeu/mineur.ts` : le coffre (`capaciteCoffre`, `rangerDansCoffre`, `prendreDuCoffre`, `agrandirCoffre`), payer avec le sac puis le coffre (`disponible`, `payer`), le clic (`cliquerMine`), les bonus de combo (`activerBonusCombo`, `bonusActif`, `secondesBonus`, 30/10), la mine toute seule (`avancerMine`, `debitMine`), les niveaux (`descendreNiveauMine`) et l'ascenseur (`ameliorerAscenseur`, `secondesTrajetMineur`).
 - `src/jeu/wagonnet.ts` : les trajets (`ligneDe`, `creerTrajet`, `supprimerTrajet`), le chargement, la vitesse (`trajetElectrique`), pousser (`pousserTrajet`), agrandir (`ameliorerWagonnet`), le temps qui passe (`avancerWagonnets`).

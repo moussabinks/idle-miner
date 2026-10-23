@@ -7,8 +7,8 @@
 // pinçant. Elle suit le joueur quand il marche.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_WAGONNET, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
-import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
+import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
@@ -706,7 +706,7 @@ export function VueVillage({
   const pGenerateur = auDessus('generateur')
   if (pGenerateur && generateurEnMarche(etat)) {
     bulles.push(
-      <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte="⚡ Courant" part={etat.generateur.carburant / RESERVE_GENERATEUR_WAGONNET} secondes={etat.generateur.carburant} />,
+      <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte="⚡ Courant" part={etat.generateur.carburant / reserveMaxGenerateur(etat)} secondes={etat.generateur.carburant} />,
     )
   }
 

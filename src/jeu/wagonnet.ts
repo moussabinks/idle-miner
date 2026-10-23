@@ -26,9 +26,7 @@ import {
   NIVEAUX_POUSSEUR,
   NIVEAUX_WAGONNET,
   RARETES,
-  RESERVE_GENERATEUR_WAGONNET,
   SECONDES_CHARGEMENT_WAGONNET,
-  SECONDES_PAR_REDSTONE,
   VITESSE_POUSSE_JOUEUR,
   VITESSE_POUSSE_MINEUR,
   type IdBatiment,
@@ -39,7 +37,7 @@ import {
 } from './donnees'
 import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
-import { casesDansLeRayon, generateurEnMarche, multiplicateurGenerateur } from './generateur'
+import { casesDansLeRayon, generateurEnMarche, livrerRedstone, multiplicateurGenerateur, placeRedstoneGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
 import { debloque } from './niveaux'
@@ -358,7 +356,7 @@ function besoinCharbon(etat: EtatJeu): number {
 }
 
 function besoinRedstone(etat: EtatJeu): number {
-  return Math.max(0, Math.ceil((RESERVE_GENERATEUR_WAGONNET - etat.generateur.carburant) / SECONDES_PAR_REDSTONE))
+  return placeRedstoneGenerateur(etat)
 }
 
 // Ce que le wagonnet du marché laisse dans le coffre : les objets « gardés » au marché (le fer
@@ -436,7 +434,11 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
     const reste = livrerCharbon(etat, chargement.charbon ?? 0)
     if (reste > 0) trajet.chargement = { charbon: reste }
   }
-  if (trajet.liaison === 'mine-generateur') etat.generateur.carburant += (chargement.redstone ?? 0) * SECONDES_PAR_REDSTONE
+  if (trajet.liaison === 'mine-generateur') {
+    // La réserve se remplit ; ce qui ne rentre pas repart avec le wagonnet.
+    const reste = livrerRedstone(etat, chargement.redstone ?? 0)
+    if (reste > 0) trajet.chargement = { redstone: reste }
+  }
   return trajet.pousseur === 'joueur' ? [`🛤️ Livré : ${totalObjets(chargement)} ${trajet.liaison === 'mine-foreuse' ? 'charbon' : 'redstone'}.`] : []
 }
 

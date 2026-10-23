@@ -7,12 +7,12 @@ import {
   ameliorerGenerateur,
   avancerGenerateur,
   basculerGenerateur,
-  basculerPuisage,
   caseDansLeRayon,
   foreuseAlimentee,
   generateurEnMarche,
   rayonGenerateur,
   remplirGenerateur,
+  reserveMaxGenerateur,
 } from './generateur'
 import { nouveauTrajet, type EtatJeu } from './mineur'
 import { railsAlimentes } from './wagonnet'
@@ -78,17 +78,21 @@ describe('le générateur', () => {
     expect(foreuseAlimentee(etat)).toBe(true)
   })
 
-  it('amélioré, il a un plus grand rayon et peut se servir dans le coffre', () => {
+  it('(23/10) sa réserve : 5 minutes au niveau 1, plus grande une fois amélioré, et il ne se sert plus dans le coffre', () => {
     const etat = partie()
+    etat.inventaire = { redstone: 100 }
+    remplirGenerateur(etat, Infinity)
+    expect(etat.generateur.carburant).toBe(5 * 60)
+    expect(etat.inventaire.redstone).toBe(90)
+    expect(remplirGenerateur(etat, 1)[0]).toContain('pleine')
+    // Il ne prend rien dans le coffre tout seul.
+    etat.coffre.contenu = { redstone: 50 }
+    avancerGenerateur(etat, 60)
+    expect(etat.coffre.contenu.redstone).toBe(50)
     etat.argent = 7500
     etat.inventaire = { fer: 120, redstone: 60 }
-    expect(basculerPuisage(etat)).toEqual([]) // pas au niveau 1
     ameliorerGenerateur(etat)
     expect(rayonGenerateur(etat)).toBe(20)
-    basculerPuisage(etat)
-    etat.coffre.contenu = { redstone: 50 }
-    avancerGenerateur(etat, 1)
-    expect(etat.coffre.contenu.redstone).toBe(40) // 10 redstone = 5 minutes d'avance
-    expect(etat.generateur.carburant).toBe(10 * SECONDES_PAR_REDSTONE - 1)
+    expect(reserveMaxGenerateur(etat)).toBe(7 * 60)
   })
 })
