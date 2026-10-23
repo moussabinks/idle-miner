@@ -129,7 +129,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. Dessiné en pointillés jaunes sur la carte. |
 | **Recharge automatique** | (retirée le 23/10) La foreuse brûlait le charbon qu'elle fore ; maintenant, son charbon arrive par les rails. |
-| **Recruteur** | Débloqué au niveau 4 de la mine et au niveau 11 du joueur (4 niveaux, de 10 000 à 100 000 $) : donne une rareté aux mineurs embauchés. |
+| **Recruteur** | Débloqué au niveau 4 de la mine et au niveau 11 du joueur (4 niveaux, de 30 000 à 350 000 $) : donne une rareté aux mineurs embauchés. |
 | **Rendement** | Le multiplicateur de rareté d'un mineur (vitesse de creusage et taille du sac). |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau en haut à gauche (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |
 | **Sac (à dos)** | Ce que le joueur porte du coffre (ou du chariot) jusqu'au marché : 32 à 2 048 places (7 tailles au Bazar). |

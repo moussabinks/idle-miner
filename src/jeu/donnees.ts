@@ -304,11 +304,12 @@ export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendair
 
 // --- Le recruteur (niveau 4 de la mine, avant le 23/10 : niveau 3) ---
 export const NIVEAU_MINE_RECRUTEUR = 4
+// (23/10) Plus cher : 30 000 $ pour l'embaucher (avant 10 000 $), puis 75 000, 160 000 et 350 000 $.
 export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
-  { cout: { argent: 10000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
-  { cout: { argent: 25000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
-  { cout: { argent: 50000, materiaux: {} }, chances: { commun: 55, rare: 23.5, epique: 12.5, legendaire: 7, mythique: 2 } },
-  { cout: { argent: 100000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
+  { cout: { argent: 30000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
+  { cout: { argent: 75000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
+  { cout: { argent: 160000, materiaux: {} }, chances: { commun: 55, rare: 23.5, epique: 12.5, legendaire: 7, mythique: 2 } },
+  { cout: { argent: 350000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
 ]
 
 // --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec l'argent du joueur (23/10 : plus de trésorerie) ---
@@ -318,12 +319,14 @@ export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
 // (23/10) Jeu fermé, le manager ne paie les salaires que pendant un temps (30 minutes au départ) :
 // l'améliorer l'allonge petit à petit. Jeu ouvert, il paie toujours.
+// (23/10) Ses améliorations coûtent bien plus que son embauche (10 000 $) : 30 000, 70 000,
+// 160 000 et 350 000 $ (avant 6 000 à 85 000 $).
 export const NIVEAUX_MANAGER: { minutesHorsLigne: number; cout: Cout }[] = [
   { minutesHorsLigne: 30, cout: { materiaux: {} } },
-  { minutesHorsLigne: 60, cout: { argent: 6000, materiaux: {} } },
-  { minutesHorsLigne: 120, cout: { argent: 15000, materiaux: {} } },
-  { minutesHorsLigne: 240, cout: { argent: 35000, materiaux: {} } },
-  { minutesHorsLigne: 480, cout: { argent: 85000, materiaux: {} } },
+  { minutesHorsLigne: 60, cout: { argent: 30000, materiaux: {} } },
+  { minutesHorsLigne: 120, cout: { argent: 70000, materiaux: {} } },
+  { minutesHorsLigne: 240, cout: { argent: 160000, materiaux: {} } },
+  { minutesHorsLigne: 480, cout: { argent: 350000, materiaux: {} } },
 ]
 
 // ---------------------------------------------------------------------------

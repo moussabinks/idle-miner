@@ -132,12 +132,12 @@ Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même él
 
 | Niveau | Coût (29/10) | Niveau du joueur | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---|---|---|---|---|---|---|
-| 1 (embauche) | 10 000 $ | 9 | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 25 000 $ | 11 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
-| 3 | 50 000 $ | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
-| 4 | 100 000 $ | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
+| 1 (embauche) | 30 000 $ | 11 | 65 % | 20 % | 10 % | 4 % | 1 % |
+| 2 | 75 000 $ | 12 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
+| 3 | 160 000 $ | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
+| 4 | 350 000 $ | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
 
-Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 000 $).
+Total : 615 000 $ (23/10 ; avant 10 000, 25 000, 50 000 et 100 000 $, soit 185 000 $ ; avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 000 $).
 
 - **Les raretés** (`RARETES`) :
 
@@ -170,7 +170,7 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 - **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : il arrête de creuser et **attend la caisse au fond** (la caisse emporte quand même son sac), **remonte dedans**, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (**2,5 cases par seconde** depuis le 27/10, avant 4 ; `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet. **Plusieurs mineurs payés en même temps repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) ; ceux qui attendent encore leur tour restent à leur place devant le Personnel.
 - **Un mineur n'attend jamais au quai** : s'il y en a un (une vieille partie), il redescend aussitôt creuser.
 - **Le manager paie tout seul** : dès qu'il reste **moins d'une minute** payée (`SECONDES_AVANT_PAIE_MANAGER = 60`), il paie 5 minutes de plus **avec l'argent du joueur** (23/10 : plus de trésorerie), **d'abord lui-même**, puis les mineurs **du moins cher au plus cher** (s'il n'y a pas assez, le plus de mineurs possible continuent). **S'il n'est pas payé, il ne paie plus personne** (« 💼 Ton manager n'est plus payé : tu n'as plus assez d'argent pour les salaires ! »). Le travail avance par morceaux de 30 secondes, pour que le manager ait le temps de payer entre deux morceaux après une longue absence.
-- **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec l'argent du joueur (rentable ou pas : tant pis, ou tant mieux), mais **seulement pendant un temps** (23/10, `NIVEAUX_MANAGER`, `secondesManagerHorsLigne`) : **30 min** au départ, puis 1 h, 2 h, 4 h et 8 h en l'améliorant (6 000, 15 000, 35 000 et 85 000 $ depuis le 23/10 ; avant 20 000, 50 000, 120 000 et 300 000 $ ; niveaux 11 à 14 du joueur ; carte du manager : « 🌙 Quand le jeu est fermé, il paie les salaires pendant 30 min »). Jeu ouvert, il paie toujours. Au retour, la fenêtre « Bon retour, mineur ! » (30/10, `FenetreAbsence.tsx`) dit combien de blocs **tes mineurs ont creusé** et combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».
+- **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec l'argent du joueur (rentable ou pas : tant pis, ou tant mieux), mais **seulement pendant un temps** (23/10, `NIVEAUX_MANAGER`, `secondesManagerHorsLigne`) : **30 min** au départ, puis 1 h, 2 h, 4 h et 8 h en l'améliorant (30 000, 70 000, 160 000 et 350 000 $ depuis le 23/10 ; avant 6 000 à 85 000 $ ; niveaux 11 à 14 du joueur ; carte du manager : « 🌙 Quand le jeu est fermé, il paie les salaires pendant 30 min »). Jeu ouvert, il paie toujours. Au retour, la fenêtre « Bon retour, mineur ! » (30/10, `FenetreAbsence.tsx`) dit combien de blocs **tes mineurs ont creusé** et combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».
 
 ## Lien avec le reste du jeu
 
