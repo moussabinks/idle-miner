@@ -165,7 +165,7 @@ Supprimés le 22/10 : `VueMonde.tsx` (la mine en coupe 2D) et `Inventaire.tsx` (
 | `sw.js` | Service worker : cache `idle-miner-v21` (30/10) (les images du village sont rangées dès l'installation) ; page réseau d'abord, `/assets/` cache d'abord, autres fichiers cache puis mise à jour ; ne touche jamais aux requêtes vers Supabase |
 | `favicon.svg`, `icones/*.png` | Icônes de l'onglet et de l'application |
 | `images/village/arbres/arbre01.webp` … `arbre12.webp` | Les 12 arbres de la forêt |
-| `images/batiments/*.webp` | Les images des bâtiments (bazar, employes et `employes-miroir` pour le Personnel retourné, foreuse, forgeron, generateur, marche, mine avec `mine-cabine` et `mine-devant`), des rails (carte du menu), et de l'enchanteur et de l'arbre de prestige (plus utilisées, gardées pour plus tard) |
+| `images/batiments/*.webp` | Les images des bâtiments (bazar, employes et `employes-miroir` pour le Personnel retourné, foreuse, forgeron, generateur, marche, mine avec `mine-devant`, et les 5 caisses de l'ascenseur `caisse-ascenseur-0` à `-4`), des rails (carte du menu), et de l'enchanteur et de l'arbre de prestige (plus utilisées, gardées pour plus tard) |
 | `images/rails/*.webp`, `images/sol/*.webp` | Les tuiles du talus (`talus_*`) et les images de la voie en 3D (`voie_*` : une par forme de case, dont les butoirs `voie_fin_n`, `_e`, `_s`, `_o` et `voie_seul_ns` du 26/10), les textures d'herbe et de sable |
 | `images/personnages/*.webp`, `images/personnages/sprites/*.webp` | Les portraits (accueil, Personnel) et les images des personnages |
 

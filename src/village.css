@@ -2651,32 +2651,6 @@ g.grille-construction {
   }
 }
 
-/* --- La caisse de minerais de l'ascenseur (28/10) ----------------------------------------
-   Avec de l'or, des émeraudes ou des diamants, une lueur dorée respire derrière le tas, et des
-   étincelles en sautent : on a envie de la voir arriver. */
-.lueur-caisse {
-  opacity: 0.35;
-  filter: blur(10px);
-  animation: lueur-caisse 1.4s ease-in-out infinite;
-}
-
-.etincelle-caisse {
-  transform-box: fill-box;
-  transform-origin: center;
-  filter: drop-shadow(0 0 4px #ffd84a);
-  animation: etincelle-caisse 1.8s ease-in-out infinite;
-}
-
-@keyframes lueur-caisse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes etincelle-caisse {
-  0%, 100% { opacity: 0; scale: 0.3; rotate: 0deg; }
-  50% { opacity: 1; scale: 1.2; rotate: 45deg; }
-}
-
 /* Les bonus de combo (30/10) : une étiquette dorée au-dessus du bloc, avec le temps qui reste. */
 .zone-bloc-mine { position: relative; }
 .bonus-combo {

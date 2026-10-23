@@ -12,8 +12,6 @@ import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
 import { ImageFigee } from './ImageFigee'
 import { TasDeRochers } from './Rochers'
-import { Minerai } from './Wagonnet3D'
-import { minerais } from './minerais'
 import { cleCase, DIRECTION, lireCle, raccordsRail, viragesDoux, type Case, type VirageDoux, type Village } from '../jeu/village'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
@@ -275,114 +273,44 @@ type PropsEvolutionMine = {
 // ce qu'elle porte (le sac du mineur, pour les couleurs des minerais).
 export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>> }
 
-// Les minerais précieux font briller la caisse.
-const PRECIEUX: IdBloc[] = ['or', 'emeraude', 'diamant']
-
-// Où sont posés les minerais du tas, au-dessus de la caisse (en pixels de la caisse, avant
-// l'échelle) : la rangée du fond, le haut du tas, puis la rangée du devant (dessinée par-dessus).
-const TAS_CAISSE: [number, number, number][] = [
-  [-34, -66, 16], [-11, -69, 17], [12, -68, 16], [34, -65, 15],
-  [-22, -80, 16], [1, -84, 18], [23, -79, 15],
-  [-8, -94, 15],
-  [-38, -62, 14], [-17, -64, 15], [4, -62, 16], [25, -64, 15], [44, -61, 13],
-]
-// (les 8 premiers sont derrière le bord de la caisse, les 5 derniers débordent par-dessus)
-const DERRIERE_LE_BORD = 8
-
-// La caisse de minerais (28/10, refaite), dans les pixels de l'image de la mine, posée sur (x, y) :
-// une caisse en planches avec des coins dorés (comme les bâtiments), et un tas des mêmes
-// minerais à facettes que dans les wagonnets. Avec de l'or, des émeraudes ou des diamants, elle
-// brille et des étincelles sautent du tas.
-function CaisseMinerais({ x, y, pleine, contenu = {} }: { x: number; y: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>> }) {
-  const liste = pleine ? minerais(Object.keys(contenu).length > 0 ? contenu : { pierre: 3, charbon: 1, fer: 1 }) : []
-  const precieuse = pleine && PRECIEUX.some((bloc) => (contenu[bloc] ?? 0) > 0)
-  return (
-    <g className={`caisse-minerais ${precieuse ? 'caisse-precieuse' : ''}`} transform={`translate(${x} ${y}) scale(1.5)`}>
-      {/* Une lueur dorée derrière le tas quand il y a du précieux. */}
-      {precieuse && <ellipse className="lueur-caisse" cx="0" cy="-72" rx="60" ry="34" fill="#ffd84a" />}
-      {/* Le tas de minerais, du fond vers le devant. */}
-      {liste.length > 0 &&
-        TAS_CAISSE.slice(0, DERRIERE_LE_BORD).map(([mx, my, t], i) => <Minerai key={i} x={mx} y={my} t={t} bloc={liste[(i * 5) % liste.length]} variante={i} />)}
-      {/* La caisse : le dessus du bord (clair), la face avant en trois planches, deux cerclages. */}
-      <path d="M-50 -56 L50 -56 L46 0 L-46 0 Z" fill="#9a5e2c" stroke="#3b2412" strokeWidth="5" strokeLinejoin="round" />
-      <path d="M-48 -38 L48 -38 M-47 -19 L47 -19" stroke="#6e3f1b" strokeWidth="3" />
-      <path d="M-40 -50 L-12 -50 M6 -31 L36 -31 M-34 -12 L-6 -12" stroke="#c4834a" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-      <rect x="-53" y="-62" width="106" height="12" rx="4" fill="#d39250" stroke="#3b2412" strokeWidth="4" />
-      <rect x="-26" y="-58" width="9" height="58" fill="#7d7f86" stroke="#3b2412" strokeWidth="3" />
-      <rect x="17" y="-58" width="9" height="58" fill="#7d7f86" stroke="#3b2412" strokeWidth="3" />
-      {/* Le devant du tas, qui déborde un peu par-dessus le bord. */}
-      {liste.length > 0 &&
-        TAS_CAISSE.slice(DERRIERE_LE_BORD).map(([mx, my, t], i) => {
-          const k = i + DERRIERE_LE_BORD
-          return <Minerai key={k} x={mx} y={my} t={t} bloc={liste[(k * 5) % liste.length]} variante={k} />
-        })}
-      {/* Les coins dorés, avec leurs rivets. */}
-      {[-1, 1].map((cote) => (
-        <g key={cote}>
-          <path d={`M${cote * 53} -62 L${cote * 37} -62 L${cote * 37} -50 L${cote * 41} -46 L${cote * 41} -44 L${cote * 51} -44 Z`} fill="#f2c14a" stroke="#3b2412" strokeWidth="3" strokeLinejoin="round" />
-          <path d={`M${cote * 47} 0 L${cote * 33} 0 L${cote * 33} -8 L${cote * 46} -12 Z`} fill="#f2c14a" stroke="#3b2412" strokeWidth="3" strokeLinejoin="round" />
-          <circle cx={cote * 45} cy={-53} r="2.2" fill="#fff3c0" />
-          <circle cx={cote * 40} cy={-4} r="2" fill="#fff3c0" />
-        </g>
-      ))}
-      {/* Des étincelles qui sautent du tas. */}
-      {precieuse &&
-        [
-          [-36, -96, 0],
-          [32, -100, 0.6],
-          [6, -112, 1.2],
-        ].map(([ex, ey, retard], i) => (
-          <path
-            key={i}
-            className="etincelle-caisse"
-            style={{ animationDelay: `${retard}s` }}
-            d={`M${ex} ${ey - 9} L${ex + 3} ${ey - 3} L${ex + 9} ${ey} L${ex + 3} ${ey + 3} L${ex} ${ey + 9} L${ex - 3} ${ey + 3} L${ex - 9} ${ey} L${ex - 3} ${ey - 3} Z`}
-            fill="#fff6b0"
-          />
-        ))}
-    </g>
-  )
+// La caisse de l'ascenseur (23/10, dessins de l'équipe, « caisse-ascenseur-design ») : vide
+// quand elle redescend, pleine des minerais du niveau de la mine quand elle remonte.
+//   0 : vide ; 1 : pierre, charbon, fer ; 2 : + redstone ; 3 : + or et émeraude ; 4 : + diamant.
+const IMAGES_CAISSE = [0, 1, 2, 3, 4].map((n) => `/images/batiments/caisse-ascenseur-${n}.webp`)
+// Le dessin plein selon le niveau de la mine (niveaux 2 et 3 : celui à la redstone).
+const CAISSE_DU_NIVEAU = [1, 1, 2, 2, 3, 4]
+function imageCaisse(pleine: boolean, niveauMine: number): string {
+  return IMAGES_CAISSE[pleine ? CAISSE_DU_NIVEAU[Math.max(1, Math.min(5, niveauMine))] : 0]
 }
+// Où est posée la caisse dans l'image de la mine (en pixels de mine.webp), à la hauteur de
+// référence (décalage 0) : à la place de l'ancienne cabine.
+const CAISSE = { x: 507, y: 494, largeur: 265, hauteur: 258 }
 
-// Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) :
-// la cabine (posée en haut du puits), et le devant (la barrière et le sol de devant), dessiné
-// par-dessus la cabine quand elle descend.
-const IMAGE_CABINE = '/images/batiments/mine-cabine.webp'
+// Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) : le
+// devant (la barrière et le sol de devant), dessiné par-dessus la caisse quand elle descend.
 const IMAGE_DEVANT_MINE = '/images/batiments/mine-devant.webp'
 
 // Les points utiles de l'image de la mine, en pixels de l'image.
 const POINTS_MINE = {
   // où les deux câbles sortent du treuil, et où ils s'accrochent à la cabine (dans son image)
   treuil: [[632, 264], [732, 253]] as [number, number][],
-  accroches: [[634, 476], [744, 530]] as [number, number][],
+  accroches: [[643, 499], [740, 569]] as [number, number][],
   // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la cabine ne se
   // voit qu'au-dessus de ce bord (en dessous, elle est dans le puits, cachée par la terre)
   bordDuPuits: [[440, 588], [500, 611], [600, 652], [700, 624], [780, 596], [840, 560]] as [number, number][],
   // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
   panneau: [250, 470] as [number, number],
-  // où se tient un passager, au milieu du plancher de la cabine posée en haut (avant décalage)
-  plancher: [640, 640] as [number, number],
 }
 
-// De combien de pixels de l'image la cabine descend : au repos, son plancher est au ras du sol
-// (au bord du puits) ; tout en bas, elle a disparu dans le puits. Sans ascenseur, les câbles
-// pendent au fond.
-const CABINE_EN_HAUT = -150
+// De combien de pixels de l'image la caisse se décale : tout en haut, elle pend sous le treuil
+// (23/10 : plus haut qu'avant, comme sur le dessin de l'équipe) ; tout en bas, elle a disparu
+// dans le puits. Sans ascenseur (vieilles parties), les câbles pendent au fond.
+const CABINE_EN_HAUT = -190
 const CABINE_EN_BAS = 200
 const CABLES_SANS_ASCENSEUR = 240
 
-// Ce qui est au-dessus du bord de devant de la cabine (ses deux parois de devant), quand elle est
-// décalée de « decalage » : les passagers ne se voient que là.
-function bordCabine(decalage: number): string {
-  const bord = [[900, 530], [772, 530], [640, 594], [507, 527], [400, 527]]
-  return [[400, -1000], [900, -1000], ...bord].map(([x, y]) => `${x},${y + (y > 0 ? decalage : 0)}`).join(' ')
-}
-
 // La zone où la cabine se voit : tout ce qui est au-dessus du bord du puits.
 const ZONE_CABINE = [[440, 0], [840, 0], ...POINTS_MINE.bordDuPuits.slice().reverse()].map(([x, y]) => `${x},${y}`).join(' ')
-
-// Au plus 2 caisses dessinées à la fois.
-const PASSAGERS_MAX = 2
 
 export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCabine, passagers = [] }: PropsEvolutionMine) {
   const calage = CALAGES.puits
@@ -391,19 +319,18 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
   const panneau = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.panneau)
   // Un identifiant à part pour chaque mine dessinée (l'écran d'accueil en dessine une aussi).
   const idZone = `zone-cabine-${x}-${y}`
-  // Les caisses : avec l'ascenseur, une caisse pleine dans la cabine quand elle remonte un sac (à
-  // peu près à sa hauteur) ; sans ascenseur, les caisses pleines pendent au bout du câble du
-  // treuil. Elles disparaissent sous le bord du puits.
-  const dansLaCabine = (ascenseur ? passagers.filter((p) => p.pleine && Math.abs(p.f - f) < 0.2).slice(0, 1) : passagers.filter((p) => p.pleine)).slice(0, PASSAGERS_MAX)
+  // La caisse est pleine quand elle remonte le sac d'un mineur (à peu près à sa hauteur, ou en
+  // haut pendant qu'il le vide), vide quand elle redescend.
+  const pleine = passagers.some((p) => p.pleine && Math.abs(p.f - f) < 0.2)
   return (
     <g className="evolution-mine">
-      {/* Les câbles, la cabine et le devant, posés comme l'image de la mine (miroir compris). */}
+      {/* Les câbles, la caisse et le devant, posés comme l'image de la mine (miroir compris). */}
       <g transform={transformationSprite(calage, x, y, 10, miroir)}>
         <clipPath id={idZone}>
           <polygon points={ZONE_CABINE} />
         </clipPath>
         <g clipPath={`url(#${idZone})`}>
-          {/* Les câbles tombent du treuil jusqu'aux crochets de la cabine. Leurs torons défilent
+          {/* Les câbles tombent du treuil jusqu'aux coins de la caisse. Leurs torons défilent
               quand elle bouge : on voit le câble s'enrouler ou se dérouler. */}
           {POINTS_MINE.treuil.map(([tx, ty], i) => {
             const [ax, ay] = POINTS_MINE.accroches[i]
@@ -415,20 +342,8 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
               </g>
             )
           })}
-          {ascenseur && <image href={IMAGE_CABINE} x="0" y={decalage} width={calage.largeur} height={calage.hauteur} />}
-          {/* Les caisses, par-dessus la cabine mais coupées sous son bord de devant : on ne voit que
-              leur haut, comme si elles étaient posées dedans. */}
-          <clipPath id={`${idZone}-dans`}>
-            <polygon points={ascenseur ? bordCabine(decalage) : ZONE_CABINE} />
-          </clipPath>
-          <g clipPath={`url(#${idZone}-dans)`}>
-            {dansLaCabine.map((p, i) => {
-              const hauteur = ascenseur ? decalage : CABINE_EN_HAUT + (CABINE_EN_BAS - CABINE_EN_HAUT) * p.f
-              const x = POINTS_MINE.plancher[0] + (i - (dansLaCabine.length - 1) / 2) * 160
-              // (posée un peu haut : on la voit bien dépasser des parois de la cabine)
-              return <CaisseMinerais key={i} x={x} y={POINTS_MINE.plancher[1] - 40 + hauteur} pleine={p.pleine} contenu={p.contenu} />
-            })}
-          </g>
+          {/* La caisse (23/10, dessin de l'équipe), avec les minerais du niveau de la mine. */}
+          {ascenseur && <image href={imageCaisse(pleine, niveau)} x={CAISSE.x} y={CAISSE.y + decalage} width={CAISSE.largeur} height={CAISSE.hauteur} />}
         </g>
         <image href={IMAGE_DEVANT_MINE} x="0" y="0" width={calage.largeur} height={calage.hauteur} />
       </g>

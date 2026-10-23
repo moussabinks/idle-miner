@@ -861,7 +861,7 @@ export function VueVillage({
 function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: number; miroir: boolean }) {
   const passagers = passagersAscenseur(etat)
   const duree = secondesTrajetMineur(etat)
-  // La hauteur où la cabine doit aller : celle du passager le plus proche d'elle, sinon en haut.
+  // La hauteur où la caisse doit aller : celle du passager le plus proche d'elle, sinon tout en bas.
   const [hauteur, setHauteur] = useState(0)
   const hauteurRef = useRef(0)
   // (les hauteurs des passagers, mises à jour après chaque rendu, lues à chaque image)
@@ -878,7 +878,8 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
       avant = maintenant
       const ici = hauteurRef.current
       const liste = cibles.current
-      const cible = liste.length === 0 ? 0 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
+      // (23/10) Sans caisse à porter, elle redescend doucement dans le puits, jusqu'à disparaître.
+      const cible = liste.length === 0 ? 1 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
       // Un peu plus vite que les mineurs, pour rattraper celui qu'elle va chercher.
       const pas = (1.6 / Math.max(0.5, duree)) * secondes
       const suivante = Math.abs(cible - ici) <= pas ? cible : ici + Math.sign(cible - ici) * pas
