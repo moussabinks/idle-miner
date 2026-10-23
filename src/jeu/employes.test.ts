@@ -26,6 +26,9 @@ import {
   embaucher,
   basculerManager,
   embaucherManager,
+  peutRemplacer,
+  prixRemplacement,
+  remplacerMineur,
   managerActif,
   indemnites,
   licencier,
@@ -347,6 +350,28 @@ describe('un mineur embauché (23/10)', () => {
     const paye = etat.employes[0].tempsPaye
     avancerEmployes(etat, 60, hasard())
     expect(etat.employes[0].tempsPaye).toBe(paye)
+  })
+})
+
+describe('remplacer un mineur avec le recruteur (23/10)', () => {
+  it('une nouvelle recrue prend sa place, avec sa pioche, pour le quart du prix d’une place', () => {
+    const etat = partie()
+    etat.niveauMine = 4
+    etat.xp = 1_000_000
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    expect(peutRemplacer(etat, 0)).toBe(false) // pas encore de recruteur
+    ameliorerRecruteur(etat)
+    etat.employes[0].niveau = 2
+    const ancien = etat.employes[0].nom
+    const argentAvant = etat.argent
+    const prix = prixRemplacement(etat)
+    expect(prix).toBe(Math.round((PRIX_EMBAUCHE[1] * 0.25) / 10) * 10)
+    remplacerMineur(etat, 0, hasard())
+    expect(etat.employes).toHaveLength(2)
+    expect(etat.employes[0].nom).not.toBe(ancien)
+    expect(etat.employes[0].niveau).toBe(2)
+    expect(etat.argent).toBe(argentAvant - prix)
   })
 })
 

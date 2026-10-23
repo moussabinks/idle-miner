@@ -248,6 +248,9 @@ export const PRIX_EMBAUCHE_POUSSEUR = [500, 2000, 6000, 15000]
 export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4
+// (23/10) Remplacer un mineur avec le recruteur (une nouvelle recrue, même pioche, même place) :
+// le quart du prix de la dernière place des mineurs, sans indemnités.
+export const PART_REMPLACEMENT = 0.25
 // Le temps passé à vider son sac dans le coffre (ou à vendre au marché).
 export const SECONDES_VIDAGE_EMPLOYE = 2
 // (23/10) Le temps de charger la caisse de l'ascenseur au fond de la mine.
