@@ -41,7 +41,7 @@ describe('la production de la mine', () => {
 })
 
 describe('les goulots : ascenseur et wagonnet', () => {
-  it("sans ascenseur, les mineurs perdent beaucoup de temps à l'échelle : l'améliorer rapporte", () => {
+  it("sans ascenseur, la caisse à l'échelle ne suit pas les mineurs : l'améliorer rapporte", () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.argent = 1_000_000
     etat.ascenseur.niveau = 0 // (une vieille partie, à l'échelle)
@@ -52,7 +52,7 @@ describe('les goulots : ascenseur et wagonnet', () => {
     expect(lent.gainProchainNiveau).toBeGreaterThan(0)
     etat.ascenseur.niveau = NIVEAUX_ASCENSEUR.length // niveau max
     const rapide = analyseAscenseur(etat)
-    expect(rapide.partDansLePuits).toBeLessThan(lent.partDansLePuits)
+    expect(rapide.debit).toBeGreaterThan(lent.debit)
     expect(rapide.gainProchainNiveau).toBeNull()
     expect(rapide.tropLent).toBe(false)
   })

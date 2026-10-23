@@ -217,7 +217,7 @@ function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: OngletMine)
       {aMineurs && ascenseur.tropLent && (
         <div className="goulot goulot-alerte">
           <span>
-            ⚠️ <strong>Ascenseur trop lent</strong> : tes mineurs attendent leur caisse au lieu de creuser
+            ⚠️ <strong>Ascenseur trop petit</strong> : tes mineurs creusent {parSeconde(ascenseur.creuse)} bloc/s, la caisse en remonte {parSeconde(ascenseur.debit)}
             {ascenseur.gainProchainNiveau !== null && ` · améliore-le : +${parSeconde(ascenseur.gainProchainNiveau)} bloc/s`}
           </span>
           <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('ameliorer')}>
@@ -556,11 +556,11 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
 
           <div className="ligne-achat">
             <strong>🛗 Ascenseur</strong>
-            <span className="discret">La caisse de minerais de tes mineurs remonte (et redescend) plus vite.</span>
-            {/* Est-ce utile de l'améliorer ? La part du temps perdue dans le puits (27/10). */}
+            <span className="discret">Sa caisse fait des allers-retours sans cesse et remonte ce que creusent tes mineurs : plus grande et plus rapide, elle en remonte plus.</span>
+            {/* Est-ce utile de l'améliorer ? Les mineurs creusent-ils plus qu'elle ne remonte (23/10) ? */}
             {etat.employes.some((e) => e.role === 'mineur') && puits.tropLent && (
               <span className="texte-alerte">
-                ⚠️ Trop lent : tes mineurs attendent leur caisse au lieu de creuser
+                ⚠️ Trop petit : tes mineurs creusent {parSeconde(puits.creuse)} bloc/s, la caisse en remonte {parSeconde(puits.debit)}
                 {puits.gainProchainNiveau !== null && ` · niveau suivant : +${parSeconde(puits.gainProchainNiveau)} bloc/s`}.
               </span>
             )}

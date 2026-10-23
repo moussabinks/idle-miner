@@ -104,7 +104,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Échelle** | Le chemin des mineurs sans ascenseur : 10 s par montée ou descente (seulement dans les vieilles parties : depuis le 30/10, l'ascenseur est là dès le début). |
 | **Électricité** | Ce que donne le générateur dans son rayon : rails électriques (les wagonnets roulent tout seuls) et foreuse boostée. |
 | **Emprise** | Les cases qu'occupe un bâtiment. |
-| **Employé** | Un hamster embauché au Personnel, tant qu'on paie son salaire. Deux métiers : le **mineur** creuse, remonte, vide son sac dans le coffre de la mine et redescend ; le **pousseur** (26/10) pousse le wagonnet d'un seul trajet, choisi à l'embauche. |
+| **Employé** | Un hamster embauché au Personnel, tant qu'on paie son salaire. Deux métiers : le **mineur** creuse au fond de la mine, et la caisse de l'ascenseur remonte ses blocs dans le coffre (23/10 : il ne remonte que s'il n'est plus payé) ; le **pousseur** (26/10) pousse le wagonnet d'un seul trajet, choisi à l'embauche. |
 | **Foreuse** | Machine du niveau 2 : au charbon, elle fore seule dans son chariot, plus vite dans le rayon du générateur. Une seule foreuse, 6 niveaux de forage et de chariot. |
 | **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et électrifie un cercle autour de lui (15 à 40 cases). 5 niveaux (rayon et puissance). |
 | **Hamster** | Tous les personnages : le joueur, les mineurs (casque de la couleur de leur rareté), le manager, le recruteur. Ce sont des images découpées dans les planches de l'équipe (vues de devant, derrière, gauche, droite). |

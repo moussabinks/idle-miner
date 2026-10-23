@@ -195,7 +195,7 @@ describe('les mineurs employés au village', () => {
     return etat
   }
 
-  it('creuse, remonte et vide son sac dans le coffre de la mine', () => {
+  it('descend, creuse, et la caisse de l’ascenseur remonte ses blocs dans le coffre', () => {
     const etat = avecPersonnel()
     const mineur = etat.employes[0]
     const etapes = new Set<string>()
@@ -204,7 +204,8 @@ describe('les mineurs employés au village', () => {
       etapes.add(mineur.etape)
     }
     expect(nbDansCoffre(etat)).toBeGreaterThan(0)
-    expect([...etapes]).toEqual(expect.arrayContaining(['descend', 'creuse', 'monte', 'vide']))
+    expect([...etapes]).toEqual(expect.arrayContaining(['descend', 'creuse']))
+    expect(etapes.has('monte')).toBe(false)
     expect(etat.stats.blocsMineurs).toBeGreaterThan(0)
   })
 

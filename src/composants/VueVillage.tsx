@@ -11,7 +11,7 @@ import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, RESERVE_GENERATEUR_W
 import { centreGenerateur, generateurEnMarche, rayonGenerateur } from '../jeu/generateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, type EtatJeu, type Employe } from '../jeu/mineur'
-import { caseQuai, cheminEmploye } from '../jeu/employes'
+import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
 import { nombreAbrege } from '../nombres'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
@@ -511,6 +511,10 @@ export function VueVillage({
         marche = true
       }
       colere = mineur.tempsPaye <= 0
+    } else if (mineur.role === 'mineur' && mineur.etape === 'descend' && !mineur.enCabine) {
+      // (23/10) Arrivé à la mine, il attend la caisse de l'ascenseur au bout de son chemin.
+      const chemin = cheminEmploye(etat, mineur)
+      if (chemin) position = surLeChemin(chemin, longueurChemin(chemin))
     } else if (mineur.etape === 'forge' && mineur.lieu === 'forgeron') {
       // (une vieille partie : il était allé chercher sa pioche lui-même)
       const b = batimentPose(village, 'forgeron')
@@ -856,22 +860,20 @@ export function VueVillage({
   )
 }
 
-// Ce qui bouge sur la mine (27/10) : la cabine de l'ascenseur, ses passagers, et la mini-jauge
-// quand un mineur vide son sac dans le coffre. La cabine a sa propre position, qui avance à
-// vitesse limitée vers le mineur le plus proche (ou remonte en haut quand personne ne bouge) :
-// elle fait des allers-retours, sans jamais sauter d'un bout à l'autre du puits.
+// Ce qui bouge sur la mine (27/10) : la caisse de l'ascenseur, ses passagers, et une mini-jauge
+// de ce qu'elle fait. (23/10) La caisse fait des allers-retours sans cesse (avancerNavette) : on
+// la dessine là où elle est, en glissant doucement d'une image à l'autre.
 function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: number; miroir: boolean }) {
-  const passagers = passagersAscenseur(etat)
+  const caisse = lireNavette(etat)
+  const cible = hauteurNavette(etat)
   const duree = secondesTrajetMineur(etat)
-  // La hauteur où la caisse doit aller : celle du passager le plus proche d'elle, sinon en haut.
-  const [hauteur, setHauteur] = useState(0)
-  const hauteurRef = useRef(0)
-  // (les hauteurs des passagers, mises à jour après chaque rendu, lues à chaque image)
-  const cibles = useRef<number[]>([])
-  const cleCibles = passagers.map((p) => p.f.toFixed(3)).join(',')
+  const [hauteur, setHauteur] = useState(cible)
+  const hauteurRef = useRef(cible)
+  // (la hauteur voulue, mise à jour après chaque rendu, lue à chaque image)
+  const cibleRef = useRef(cible)
   useEffect(() => {
-    cibles.current = cleCibles ? cleCibles.split(',').map(Number) : []
-  }, [cleCibles])
+    cibleRef.current = cible
+  }, [cible])
   useEffect(() => {
     let image = 0
     let avant = performance.now()
@@ -879,12 +881,10 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
       const secondes = Math.min(0.1, (maintenant - avant) / 1000)
       avant = maintenant
       const ici = hauteurRef.current
-      const liste = cibles.current
-      // Sans rien à porter, elle attend vide en haut, au bord du puits (23/10).
-      const cible = liste.length === 0 ? 0 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
-      // Un peu plus vite que les mineurs, pour rattraper celui qu'elle va chercher.
+      const voulue = cibleRef.current
+      // Un peu plus vite que la caisse, pour la rattraper sans jamais sauter.
       const pas = (1.6 / Math.max(0.5, duree)) * secondes
-      const suivante = Math.abs(cible - ici) <= pas ? cible : ici + Math.sign(cible - ici) * pas
+      const suivante = Math.abs(voulue - ici) <= pas ? voulue : ici + Math.sign(voulue - ici) * pas
       if (Math.abs(suivante - ici) > 1e-4) {
         hauteurRef.current = suivante
         setHauteur(suivante)
@@ -895,10 +895,13 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
     return () => cancelAnimationFrame(image)
   }, [duree])
 
-  // Ce qui se passe dans le puits, en mini-jauge au-dessus de la cabine : un mineur qui vide son
-  // sac dans le coffre, sinon celui qui remonte (ou descend) depuis le plus longtemps.
-  const videur = etat.employes.filter((m) => m.etape === 'vide').sort((a, b) => b.progression - a.progression)[0]
-  const voyageur = etat.employes.filter((m) => m.etape === 'monte' || m.etape === 'descend').sort((a, b) => b.progression - a.progression)[0]
+  // Dans la caisse : ses blocs, et le mineur qui descend (il arrive) ou remonte (pas payé).
+  const passager = passagersNavette(etat)[0]
+  const charge = Object.values(caisse.chargement).reduce((t, n) => t + (n ?? 0), 0)
+  const passagers: PassagerAscenseur[] = [{ f: cible, pleine: charge > 0, contenu: caisse.chargement, mineur: passager?.rarete }]
+  // La mini-jauge : seulement quand la caisse travaille (des mineurs au fond).
+  const auTravail = mineursDansLaMine(etat) > 0 || charge > 0
+  const enHaut = caisse.etape === 'haut'
   const calage = CALAGES.puits
   const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
   return (
@@ -906,47 +909,31 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
       <BoiteSvg x={x} y={y} taille={10} hauteur={130} style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
         <DessinEvolutionMine x={x} y={y} miroir={miroir} niveau={etat.niveauMine} ascenseur={etat.ascenseur.niveau > 0} hauteurCabine={hauteur} passagers={passagers} />
       </BoiteSvg>
-      {videur && (
+      {auTravail && enHaut && charge > 0 && (
         <MiniJauge
           x={dessus.x}
           y={dessus.y}
-          texte="📦 Déchargement"
-          part={videur.progression / SECONDES_VIDAGE_EMPLOYE}
-          secondes={SECONDES_VIDAGE_EMPLOYE - videur.progression}
+          texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? '📦 Coffre plein !' : `📦 Déchargement · ${charge}`}
+          part={caisse.progression / SECONDES_VIDAGE_EMPLOYE}
+          secondes={SECONDES_VIDAGE_EMPLOYE - caisse.progression}
         />
       )}
-      {!videur && voyageur && (
+      {auTravail && (caisse.etape === 'monte' || caisse.etape === 'descend') && (
         <MiniJauge
           x={dessus.x}
           y={dessus.y}
-          texte={voyageur.etape === 'monte' ? '⬆️ Remontée du sac' : '⬇️ Descente'}
-          part={voyageur.progression / duree}
-          secondes={duree - voyageur.progression}
+          texte={caisse.etape === 'monte' ? `⬆️ Remontée · ${charge} bloc${charge > 1 ? 's' : ''}` : '⬇️ Descente'}
+          part={caisse.progression / duree}
+          secondes={duree - caisse.progression}
         />
       )}
     </>
   )
 }
 
-// Les mineurs qui descendent dans le puits ou en remontent (dans la cabine, ou sur l'échelle).
-function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
-  // (30/10) Pendant qu'un mineur vide son sac, sa caisse pleine reste en haut, dans la cabine :
-  // l'ascenseur ne « disparaît » plus pendant le déchargement.
-  return etat.employes
-    .filter((m) => m.etape === 'monte' || m.etape === 'descend' || (m.role === 'mineur' && m.etape === 'vide'))
-    .map((m) => {
-      if (m.etape === 'vide') return { f: 0, pleine: true, contenu: m.sac }
-      const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
-      // (23/10) Un mineur qui arrive du village descend lui-même, debout dans la caisse.
-      if (m.etape === 'descend' && m.enCabine) return { f, pleine: false, mineur: m.rarete }
-      // (le sac remonte dans une caisse pleine ; la caisse redescend vide)
-      return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte', contenu: m.sac }
-    })
-}
-
 // Combien de mineurs travaillent dans la mine en ce moment (pour la jauge du coffre).
 function mineursDansLaMine(etat: EtatJeu): number {
-  return etat.employes.filter((m) => m.role === 'mineur' && ['descend', 'creuse', 'monte', 'vide'].includes(m.etape)).length
+  return etat.employes.filter((m) => m.role === 'mineur' && ['creuse', 'forge', 'monte', 'vide'].includes(m.etape)).length
 }
 
 // Le cercle du rayon du générateur, vu du ciel (une ellipse : la grille est en losange).
