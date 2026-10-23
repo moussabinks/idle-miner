@@ -24,6 +24,7 @@ export type EtatInterface = {
   batimentOuvert: IdBatiment | null // le panneau ouvert
   menuConstruction: boolean
   posePrevue: IdBatiment | null // le bâtiment qu'on est en train de placer
+  poseChoisie: boolean // (23/10) le joueur a touché la carte : la place du bâtiment est choisie
 }
 
 type Props = {
@@ -75,14 +76,24 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
             cible: batiment('puits'),
           }
     case 'marche':
+      // (23/10) En deux temps : d'abord toucher la carte (rien n'est assombri, aucune flèche sur le
+      // bouton), puis, une fois la place choisie, le bouton « Construire ici » est mis en avant.
       if (ui.posePrevue === 'marche')
-        return {
-          titre: 'Choisis sa place',
-          texte: 'Touche la carte pour placer le marché où tu veux, puis valide.',
-          pourquoi: 'Près de la mine, c’est moins de chemin à faire.',
-          geste: 'Valide !',
-          cible: '[data-tuto="construire-ici"]',
-        }
+        return ui.poseChoisie
+          ? {
+              titre: 'Valide sa place',
+              texte: 'Ça te plaît ? Touche « Construire ici ». (Tu peux encore toucher la carte pour le déplacer.)',
+              pourquoi: 'Près de la mine, c’est moins de chemin à faire.',
+              geste: 'Valide !',
+              cible: '[data-tuto="construire-ici"]',
+            }
+          : {
+              titre: 'Choisis sa place',
+              texte: 'Touche la carte, là où tu veux poser le marché.',
+              pourquoi: 'Près de la mine, c’est moins de chemin à faire.',
+              geste: '',
+              cible: null,
+            }
       if (ui.menuConstruction)
         return {
           titre: 'Pose le marché',
@@ -147,22 +158,34 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
           geste: 'Creuse !',
           cible: ui.batimentOuvert === 'puits' ? '[data-tuto="bloc"]' : batiment('puits'),
         }
+      // Assez de pierre, mais pas assez d'argent : on arrête de creuser, on va vendre le reste.
       if (manque && !ui.menuConstruction && ui.posePrevue !== 'forgeron')
         return {
-          titre: `Gagne ${cout.argent ?? 0} $ : ${Math.floor(etat.argent)} / ${cout.argent ?? 0}`,
-          texte: nbDansSac(etat) > 0 ? 'Va vendre ton sac au marché (garde ta pierre !).' : 'Mets du charbon et du fer dans ton sac (garde la pierre), puis vends-les au marché.',
+          titre: `Assez de pierre ! Gagne ${cout.argent ?? 0} $ : ${Math.floor(etat.argent)} / ${cout.argent ?? 0}`,
+          texte:
+            nbDansSac(etat) > 0
+              ? 'Arrête de creuser : va vendre ton sac au marché (garde ta pierre !).'
+              : 'Arrête de creuser : mets le charbon et le fer dans ton sac (garde la pierre), puis vends-les au marché.',
           pourquoi: 'Il te manque un peu d’argent pour le forgeron.',
           geste: 'Touche ici !',
-          cible: nbDansSac(etat) > 0 ? batiment('marche') : batiment('puits'),
+          cible: nbDansSac(etat) > 0 ? batiment('marche') : ui.batimentOuvert === 'puits' ? '[data-tuto="sac"]' : batiment('puits'),
         }
       if (ui.posePrevue === 'forgeron')
-        return {
-          titre: 'Choisis sa place',
-          texte: 'Touche la carte pour placer le forgeron, puis valide.',
-          pourquoi: 'Tu pourras toujours le déplacer plus tard.',
-          geste: 'Valide !',
-          cible: '[data-tuto="construire-ici"]',
-        }
+        return ui.poseChoisie
+          ? {
+              titre: 'Valide sa place',
+              texte: 'Touche « Construire ici ». (Tu peux encore toucher la carte pour le déplacer.)',
+              pourquoi: 'Tu pourras toujours le déplacer plus tard.',
+              geste: 'Valide !',
+              cible: '[data-tuto="construire-ici"]',
+            }
+          : {
+              titre: 'Choisis sa place',
+              texte: 'Touche la carte, là où tu veux poser le forgeron.',
+              pourquoi: 'Tu pourras toujours le déplacer plus tard.',
+              geste: '',
+              cible: null,
+            }
       if (ui.menuConstruction)
         return {
           titre: 'Pose le forgeron',

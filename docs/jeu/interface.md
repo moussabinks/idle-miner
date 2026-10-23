@@ -534,3 +534,10 @@ Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/ind
 Les anciennes classes `bouton-creuser-x10`, `bouton-enchanter`, `bouton-prestige` et `bouton-ascenseur` restent dans `index.css` mais ne servent plus.
 
 Autres styles : `bouton-petit` (version compacte des panneaux), `bouton-rond` (les gros boutons ronds du bas), `bouton-mega` (le gros bouton doré de l'accueil), `bouton-mondes`, `bouton-fermer` (le ✖ rond des panneaux), `bouton-coin` (les boutons du coin), `hud-bouton` (🔊, 🎵), `lien` (texte souligné : Licencier, Plus tard, Se déconnecter, Actualiser), `onglet` (classement), et le **bloc de la mine** (`bloc-mine`), un bouton sans fond dessiné comme un bloc. Le focus clavier est entouré d'un trait doré.
+
+### Le tutoriel, plus clair (23/10)
+
+- **Poser un bâtiment en deux temps** (marché, forgeron) : d'abord « Choisis sa place : touche la carte » (rien n'est assombri, pas de flèche sur le bouton) ; une fois la carte touchée, « Valide sa place » met en avant le bouton « Construire ici ».
+- **Voile plus léger** (0,28 au lieu de 0,55), et **aucun voile** quand la flèche montre un bâtiment de la carte : on voit le hamster faire le trajet. Les grandes fenêtres (bienvenue, fin) sont aussi moins sombres.
+- **Forgeron** : on commence la partie avec **10 $** d'argent de poche, de quoi le payer après la première vente. Avec assez de pierre mais pas assez d'argent, le tutoriel dit d'arrêter de creuser et d'aller vendre le charbon et le fer (en gardant la pierre).
+
