@@ -107,6 +107,27 @@
   margin-left: 3px;
 }
 
+/* (23/10) Le minuteur des salaires, à côté du nombre d'employés. */
+.minuteur-salaires {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Moins d'une minute : il passe à l'orange et bat doucement. */
+.minuteur-bientot {
+  color: #ffb340;
+  animation: minuteur-bientot 1s ease-in-out infinite;
+}
+
+@keyframes minuteur-bientot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Quelqu'un n'est plus payé : en rouge. */
+.minuteur-paie {
+  color: #ff7a6a;
+}
+
 .eclair-actif {
   animation: eclair 1.2s ease-in-out infinite;
 }
