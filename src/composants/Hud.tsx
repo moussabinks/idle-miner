@@ -10,7 +10,7 @@
 
 import { infoNiveauMine } from '../jeu/mine'
 import { railsAlimentes } from '../jeu/wagonnet'
-import { nbSansSalaire } from '../jeu/employes'
+import { nbSansSalaire, tempsPayeMin } from '../jeu/employes'
 import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
 import { progressionNiveau, prochainDeblocage } from '../jeu/niveaux'
 import { revenuParSeconde } from '../jeu/revenu'
@@ -36,6 +36,12 @@ function nombreCourt(n: number): string {
   return `${(valeur / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} M`
 }
 
+// « 4:05 » : un temps en minutes et secondes.
+function minutesSecondes(secondes: number): string {
+  const s = Math.max(0, Math.ceil(secondes))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
 // Une petite jauge sous une valeur.
 // « teinte » (30/10, la pioche) : la couleur va du rouge (0) au vert (120) selon ce qu'il reste.
 function JaugeMini({ valeur, max, couleur, teinte }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' | 'violet'; teinte?: number }) {
@@ -56,6 +62,7 @@ export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
   const niveau = infoNiveauMine(etat.niveauMine)
   const revenu = revenuParSeconde(etat)
   const sansSalaire = nbSansSalaire(etat)
+  const tempsPaye = tempsPayeMin(etat)
   // Le compteur d'argent défile jusqu'à la nouvelle somme (plus satisfaisant qu'un saut).
   const argentAffiche = useCompteur(Math.floor(etat.argent))
 
@@ -135,11 +142,19 @@ export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
       </div>
 
       {(etat.employes.length > 0 || railsAlimentes(etat)) && (
-        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : 'Tes mineurs, et ⚡ si les rails sont électriques'}>
+        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : etat.manager.embauche ? 'Tes employés : le manager paie leurs salaires' : `Tes employés : prochain salaire à payer dans ${minutesSecondes(tempsPaye)}`}>
           {etat.employes.length > 0 && (
             <span>
               {sansSalaire > 0 ? '😠' : '👷'}
               <strong>{etat.employes.length}</strong>
+            </span>
+          )}
+          {/* (23/10) Dans combien de temps il faut payer (le premier qui n'aura plus de salaire). Avec
+              le manager, c'est lui qui paie : « 💼 auto ». */}
+          {etat.employes.length > 0 && (
+            <span className={`minuteur-salaires ${sansSalaire > 0 ? 'minuteur-paie' : tempsPaye < 60 ? 'minuteur-bientot' : ''}`}>
+              {etat.manager.embauche ? '💼' : sansSalaire > 0 ? '💵' : '⏳'}
+              <strong>{etat.manager.embauche ? 'auto' : sansSalaire > 0 ? 'Payer !' : minutesSecondes(tempsPaye)}</strong>
             </span>
           )}
           {railsAlimentes(etat) && <span className="eclair-actif">⚡</span>}
