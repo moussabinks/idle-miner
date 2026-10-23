@@ -330,7 +330,6 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
       jouer={jouer}
       titre="📦 Coffre"
       nomStock="coffre"
-      stock="coffre"
       contenu={etat.coffre.contenu}
       capacite={capaciteCoffre(etat)}
       textePlein={`Plein (${nbDansCoffre(etat)}) : la mine s’arrête !`}
@@ -443,14 +442,16 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
     (ascenseurSuivant !== null && verrou(etat, 'ascenseur', etat.ascenseur.niveau) === null && peutPayer(etat, ascenseurSuivant.cout))
   // Un goulot (ascenseur trop lent, wagonnet saturé) : une pastille « ! » sur l'onglet Production.
   const wagonnetMarche = analyseWagonnet(etat)
-  const goulot = (etat.employes.some((e) => e.role === 'mineur') && puits.tropLent) || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
+  // (23/10) L'ascenseur trop petit : une alerte bien visible aussi dans l'onglet principal.
+  const ascenseurTropPetit = etat.employes.some((e) => e.role === 'mineur') && puits.tropLent
+  const goulot = ascenseurTropPetit || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
   return (
     <div className="liste-cartes panneau-mine-aere">
       {/* Cinq onglets (27/10), pour que tout tienne sans défiler : creuser (le bloc et le
           coffre), la production, les wagonnets, le niveau de la mine, les améliorations. */}
       <OngletsPanneau
         onglets={[
-          { id: 'creuser', titre: '⛏️ Creuser', pastille: coffrePlein(etat) ? '!' : null },
+          { id: 'creuser', titre: '⛏️ Creuser', pastille: coffrePlein(etat) || ascenseurTropPetit ? '!' : null },
           { id: 'ameliorer', titre: '⬆️ Améliorer', pastille: ameliorable ? '+' : null },
           { id: 'wagonnets', titre: etat.trajets.length > 0 ? `🚃 Wagons (${etat.trajets.length})` : '🚃 Wagons' },
           { id: 'production', titre: '📊 Prod.', pastille: goulot ? '!' : null },
@@ -469,6 +470,17 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
               💵 Payer
             </button>
           )}
+        </div>
+      )}
+      {onglet === 'creuser' && ascenseurTropPetit && (
+        <div className="goulot goulot-alerte alerte-ascenseur-mine" role="status">
+          <span>
+            🛗 <strong>Ascenseur trop petit</strong> : tes mineurs creusent {parSeconde(puits.creuse)} bloc/s, la caisse n’en remonte que {parSeconde(puits.debit)}
+            {puits.gainProchainNiveau !== null && ` · améliore-le : +${parSeconde(puits.gainProchainNiveau)} bloc/s`}.
+          </span>
+          <button className="bouton bouton-petit bouton-ameliorer" onClick={() => setOnglet('ameliorer')}>
+            ⬆️ Améliorer
+          </button>
         </div>
       )}
       {onglet === 'creuser' && (

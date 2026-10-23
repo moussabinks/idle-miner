@@ -20,6 +20,7 @@ import {
   HAUSSE_APRES_LISTE,
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
+  NIVEAUX_MANAGER,
   NIVEAUX_POUSSEUR,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
@@ -316,10 +317,33 @@ export function salaireManager(): number {
   return SALAIRE_MANAGER
 }
 
+// (23/10) Jeu fermé, il ne paie que pendant ce temps (en secondes) : 30 min au départ.
+export function secondesManagerHorsLigne(etat: EtatJeu): number {
+  return NIVEAUX_MANAGER[Math.min(etat.manager.niveau ?? 0, NIVEAUX_MANAGER.length - 1)].minutesHorsLigne * 60
+}
+
+export function prochainNiveauManager(etat: EtatJeu) {
+  return NIVEAUX_MANAGER[(etat.manager.niveau ?? 0) + 1] ?? null
+}
+
+export function peutAmeliorerManager(etat: EtatJeu): boolean {
+  const prochain = prochainNiveauManager(etat)
+  return etat.manager.embauche && prochain !== null && debloque(etat, 'tempsManager', (etat.manager.niveau ?? 0) + 1) && peutPayer(etat, prochain.cout)
+}
+
+export function ameliorerManager(etat: EtatJeu): string[] {
+  const prochain = prochainNiveauManager(etat)
+  if (!prochain || !peutAmeliorerManager(etat)) return []
+  payer(etat, prochain.cout)
+  etat.manager.niveau = (etat.manager.niveau ?? 0) + 1
+  const m = prochain.minutesHorsLigne
+  return [`💼 Ton manager paie maintenant les salaires ${m < 60 ? `${m} min` : `${m / 60} h`} quand le jeu est fermé.`]
+}
+
 export function embaucherManager(etat: EtatJeu): string[] {
   if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
   etat.argent -= PRIX_MANAGER
-  etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE }
+  etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0 }
   return ['💼 Manager embauché ! Mets de l’argent dans la trésorerie : il paiera les salaires tout seul.']
 }
 
@@ -894,7 +918,9 @@ function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   return ['💼 Ton manager n’est plus payé : la trésorerie est vide ! Remplis-la au Personnel.']
 }
 
-export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
+// « managerPaie » : false quand le jeu est fermé depuis plus longtemps que ce que le manager
+// couvre (23/10, voir secondesManagerHorsLigne et avancerTemps).
+export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire, managerPaie = true): string[] {
   if (etat.employes.length === 0 && !etat.manager.embauche && totalObjets(navette(etat).chargement) === 0) return []
   const messages: string[] = []
   let reste = secondes
@@ -902,7 +928,7 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
     // (23/10) On avance par petits morceaux, jusqu'au prochain arrêt de la caisse de
     // l'ascenseur : les mineurs creusent pendant qu'elle fait ses allers-retours.
     const pas = Math.min(reste, PAS_EMPLOYES, secondesAvantEvenementNavette(etat))
-    payerParManager(etat)
+    if (managerPaie) payerParManager(etat)
     for (const employe of etat.employes) messages.push(...travailler(etat, employe, pas, aleatoire))
     messages.push(...avancerNavette(etat, pas))
     messages.push(...travaillerManager(etat, pas))

@@ -22,6 +22,8 @@ import { PanneauBazar, PanneauForeuse, PanneauGenerateur, PanneauMarche, Panneau
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { FenetreAbsence } from './composants/FenetreAbsence'
+import { FeteNiveau } from './composants/FeteNiveau'
+import { niveauJoueur, prochainDeblocage } from './jeu/niveaux'
 import { FenetreRail } from './composants/FenetreRail'
 import { FenetreTrajet } from './composants/FenetreTrajet'
 import { Tutoriel } from './composants/Tutoriel'
@@ -73,6 +75,16 @@ const FLECHES: Record<string, DirectionFleche> = { ArrowUp: 'haut', ArrowDown: '
 // Le jeu, dans le monde (la sauvegarde) choisi sur l'écran d'accueil.
 function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) {
   const { etat, toasts, gains, eclats, trouvailles, nbVentes, jouer, cliquer, recommencer, resumeAbsence, recupererAbsence } = usePartie(monde.id)
+
+  // (23/10) La fête du niveau : dès que le joueur passe un niveau, une grande fenêtre (FeteNiveau).
+  // (on compare pendant le rendu, comme le conseille React)
+  const niveauActuel = niveauJoueur(etat)
+  const [niveauVu, setNiveauVu] = useState(niveauActuel)
+  const [feteNiveau, setFeteNiveau] = useState<{ avant: number; apres: number } | null>(null)
+  if (niveauActuel !== niveauVu) {
+    setNiveauVu(niveauActuel)
+    if (niveauActuel > niveauVu) setFeteNiveau((f) => ({ avant: f?.avant ?? niveauVu, apres: niveauActuel }))
+  }
   const [succesOuverts, setSuccesOuverts] = useState(false)
   const [statsOuvertes, setStatsOuvertes] = useState(false)
   // Le petit menu ⚙️ (changer de monde, recommencer) et l'aide ❔ du village.
@@ -816,6 +828,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       {trajetsOuverts && trajetsOuverts.length === 0 && railTouche && <FenetreRail onDeplacer={deplacerRailTouche} onRetirer={retirerRailTouche} onFermer={fermerTrajets} />}
       {statsOuvertes && <FenetreStatistiques etat={etat} onFermer={() => setStatsOuvertes(false)} />}
       {resumeAbsence && <FenetreAbsence resume={resumeAbsence} onRecuperer={recupererAbsence} />}
+      {feteNiveau && !resumeAbsence && (
+        <FeteNiveau avant={feteNiveau.avant} niveau={feteNiveau.apres} prochain={prochainDeblocage(etat)} onFermer={() => setFeteNiveau(null)} />
+      )}
     </div>
   )
 }

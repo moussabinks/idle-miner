@@ -393,7 +393,7 @@ Toutes sur un **voile noir** qui couvre l'écran.
 | Confirmation | licenciement (Personnel) | ✔/✖, **Échap**, ou clic à côté (= annuler) |
 | Trajets d'un rail (`FenetreTrajet`) | toucher un rail d'un trajet, la bulle « 🛤️ Automatiser », ou (30/10) des rails qui viennent de relier deux bâtiments | ✔ Valider, ✖ Annuler, Échap, clic à côté ; depuis le 30/10, quand on a touché un rail, en bas « Ce rail : ✏️ Déplacer ce rail / 🗑️ Retirer (+3 🔩 fer) » |
 | Rail seul (`FenetreRail`, 30/10) | toucher un rail qui ne relie encore rien | « ✏️ Déplacer ce rail » (il devient un fantôme à reposer), « 🗑️ Retirer (+3 🔩 fer) », ✖, Échap ou clic à côté |
-| **Bon retour, mineur !** (`FenetreAbsence`, 30/10) | à l'ouverture d'un monde, après plus de 30 s d'absence s'il s'est passé quelque chose | le gros bouton **💰 Tout récupérer !** (animation et son d'une vente) |
+| **Bon retour, mineur !** (`FenetreAbsence`, 30/10) | à l'ouverture d'un monde, après plus de 30 s d'absence s'il s'est passé quelque chose | (23/10) en grand, **🛤️ Tes pousseurs ont vendu au marché : +*X* $** (l'argent des wagonnets pendant l'absence, `ventesWagonnets`), puis **▶ Continuer** (animation et son d'une vente). L'ancien bouton « 💰 Tout récupérer ! » est retiré : l'argent est déjà dans la caisse |
 | Boîtes du navigateur (`window.confirm`) | Recommencer à zéro, supprimer un monde, choix des mondes à la connexion | OK / Annuler |
 
 L'écran de victoire, la fête du prestige et l'arbre de prestige n'existent plus (archivés dans `archives/prestige/`).

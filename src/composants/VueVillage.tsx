@@ -935,15 +935,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
           secondes={secondesVidageAscenseur(etat) - caisse.progression}
         />
       )}
-      {auTravail && (caisse.etape === 'monte' || caisse.etape === 'descend') && (
-        <MiniJauge
-          x={dessus.x}
-          y={dessus.y}
-          texte={caisse.etape === 'monte' ? `⬆️ Remontée · ${charge} bloc${charge > 1 ? 's' : ''}` : '⬇️ Descente'}
-          part={caisse.progression / duree}
-          secondes={duree - caisse.progression}
-        />
-      )}
+      {/* (23/10 : plus de jauge « Montée » / « Descente » : seulement le déchargement) */}
     </>
   )
 }

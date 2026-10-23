@@ -1,6 +1,6 @@
 # ⚡ Générateur
 
-> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **électrifie** tout ce qui est dans son **rayon**. Si tous les rails d'un trajet de wagonnet sont dans ce rayon, ce wagonnet **roule tout seul** : c'est le revenu passif du jeu. Elle rend aussi la foreuse plus rapide.
+> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **accélère** tout ce qui est dans son **rayon** (23/10, de + 30 % à + 75 % selon son niveau) : **l'ascenseur de la mine** (si la mine est dans le rayon), **les wagonnets** (si tous les rails d'un trajet sont dans le rayon, son pousseur le pousse plus vite) et **la foreuse**. Un bon plus, pas un turbo.
 
 ## Où et quand
 
@@ -25,7 +25,7 @@
 ### ⚡ Courant
 
 - Un badge : **Allumé** (vert), **Éteint**, ou **Plus de redstone**.
-- « Rayon : *N* cases (le cercle jaune sur la carte) · puissance ×*P* ».
+- « Rayon : *N* cases (le cercle jaune sur la carte). Tout ce qui est dedans va **+ *B* %** plus vite : l’ascenseur de la mine, les wagonnets (leurs rails entiers dans le cercle) et la foreuse. » (23/10)
 - Une barre rouge : la redstone qui reste, en minutes.
 - « 1 redstone = 30 s · tu en as *N* (sac + coffre) », puis les boutons **+1**, **+10** et **Tout** (anthracite, comme le charbon de la foreuse). La redstone se prend d'abord dans le **sac**, puis dans le **coffre de la mine**. Sans redstone : « 🔴 Il te faut de la redstone (niveau 2 de la mine). »
 - **⏸ Éteindre / ▶ Allumer** (gris) : éteint, le générateur **garde sa redstone** et ne la brûle pas (mais il ne donne plus de courant).
@@ -40,17 +40,19 @@ Une petite liste qui dit où on en est :
 
 ### ⬆ Améliorer
 
-Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon** et augmente la **puissance** (`NIVEAUX_GENERATEUR`) :
+Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon** et le **bonus de vitesse** (`NIVEAUX_GENERATEUR`, champ `bonus`) :
 
-| Niveau | Rayon | Puissance | Wagonnet électrique | Foreuse boostée | Coût (29/10) | Niveau du joueur (30/10) |
-|---|---:|---:|---:|---:|---|---:|
-| 1 | 15 cases | ×1 | 8 cases/s | ×1,5 | (le prix du bâtiment) | 6 (avant 5) |
-| 2 | 20 cases | ×1,3 | 10,4 cases/s | ×1,65 | 7 500 $ + 120 fer + 60 redstone | 8 (avant 7) |
-| 3 | 26 cases | ×1,7 | 13,6 cases/s | ×1,85 | 20 000 $ + 220 fer + 120 redstone | 10 |
-| 4 | 33 cases | ×2,2 | 17,6 cases/s | ×2,1 | 50 000 $ + 350 fer + 220 redstone | 13 |
-| 5 | 40 cases | ×3 | 24 cases/s | ×2,5 | 120 000 $ + 550 fer + 420 redstone | 15 |
+| Niveau | Rayon | Bonus de vitesse (23/10) | Pousseur électrique | Coût (29/10) | Niveau du joueur (30/10) |
+|---|---:|---:|---:|---|---:|
+| 1 | 15 cases | + 30 % | 3,25 cases/s | (le prix du bâtiment) | 6 |
+| 2 | 20 cases | + 40 % | 3,5 cases/s | 7 500 $ + 120 fer + 60 redstone | 8 |
+| 3 | 26 cases | + 50 % | 3,75 cases/s | 20 000 $ + 220 fer + 120 redstone | 10 |
+| 4 | 33 cases | + 60 % | 4 cases/s | 50 000 $ + 350 fer + 220 redstone | 13 |
+| 5 | 40 cases | + 75 % | 4,4 cases/s | 120 000 $ + 550 fer + 420 redstone | 15 |
 
-Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 : 81 000 $ + 880 fer + 570 redstone). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, puissance ×*P*. »
+(Avant le 23/10 : une « puissance » de × 1 à × 3, le wagonnet électrique roulait tout seul à 8 à 24 cases/s et la foreuse allait × 1,5 à × 2,5 : c'était trop fort.)
+
+Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 : 81 000 $ + 880 fer + 570 redstone). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon. »
 
 ## Règles et comportement
 
@@ -72,10 +74,11 @@ Total des améliorations : 197 500 $ + 1 240 fer + 820 redstone (avant le 29/10 
 
 ### Ce que fait l'électricité
 
-- **Les wagonnets** (trajets électriques, `trajetElectrique`) : un wagonnet part **tout seul** dès qu'il a quelque chose à porter, sans joueur ni pousseur. Il roule à **8 cases/s × la puissance** (contre 3 cases/s poussé par toi et 2,5 par un pousseur). S'il perd le courant en route, il finit son trajet tout doucement, sur sa lancée (1,25 case/s). Voir [mine.md](mine.md#les-wagonnets).
-- **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore **× (1 + 0,5 × puissance)** plus vite (`BONUS_ELECTRIQUE_FOREUSE`), sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
-- Rien d'autre n'est électrique pour l'instant (ni la mine, ni les mineurs).
-- Quand un trajet est électrique, le wagonnet **roule tout seul, bien plus vite**, mais il faut **toujours son pousseur** (27/10 : un pousseur par trajet automatique) : il reste au quai et lance le wagonnet. Sans pousseur payé, rien ne part.
+Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerateur` = 1 + bonus) :
+
+- **Les wagonnets** (trajets électriques, `trajetElectrique`) : **son pousseur le pousse toujours** (il ne reste plus au quai), mais plus vite : 2,5 cases/s × sa rareté × le multiplicateur. Sans pousseur payé, rien ne part. (Avant le 23/10 : le wagonnet roulait tout seul à 8 à 24 cases/s, bien trop vite, et le pousseur restait immobile au quai.)
+- **L'ascenseur de la mine** (la mine dans le rayon, `ascenseurAlimente`) : ses trajets sont plus courts (`secondesTrajetMineur` ÷ le multiplicateur), donc il remonte plus de blocs.
+- **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore × le multiplicateur, sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
 
 ### Bien le placer
 

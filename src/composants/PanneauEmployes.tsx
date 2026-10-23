@@ -11,6 +11,7 @@ import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
   NIVEAUX_POUSSEUR,
+  NIVEAUX_MANAGER,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
@@ -46,6 +47,10 @@ import {
   managerAuTravail,
   managerDebloque,
   maxEmployes,
+  ameliorerManager,
+  peutAmeliorerManager,
+  prochainNiveauManager,
+  secondesManagerHorsLigne,
   nbDuRole,
   nbDansSacEmploye,
   nbSansSalaire,
@@ -191,6 +196,7 @@ function Manager({ etat, jouer }: Props) {
   }
   const depenses = depensesParPaie(etat)
   const manque = manquePourUnePaie(etat)
+  const prochainManager = prochainNiveauManager(etat)
   const vide = !managerAuTravail(etat) || nbSansSalaire(etat) > 0
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
@@ -225,6 +231,18 @@ function Manager({ etat, jouer }: Props) {
           ? '💼 La trésorerie est vide : remets de l’argent, sinon personne n’est payé !'
           : `La trésorerie tient environ ${duree((etat.tresorerie / depenses) * SECONDES_PAR_PAIE)}.`}
       </span>
+      {/* (23/10) Jeu fermé, il ne paie que pendant un temps : on l'allonge en l'améliorant. */}
+      <span className="discret">🌙 Quand le jeu est fermé, il paie les salaires pendant <strong>{duree(secondesManagerHorsLigne(etat))}</strong> (après, tes employés attendent ton retour).</span>
+      <Amelioration
+        etat={etat}
+        actuel={`🌙 ${duree(secondesManagerHorsLigne(etat))} jeu fermé`}
+        niveau={(etat.manager.niveau ?? 0) + 1}
+        niveauMax={NIVEAUX_MANAGER.length}
+        suivant={prochainManager && { cout: prochainManager.cout, texte: `⬆ ${duree(prochainManager.minutesHorsLigne * 60)} jeu fermé` }}
+        verrou={verrou(etat, 'tempsManager', (etat.manager.niveau ?? 0) + 1)}
+        possible={peutAmeliorerManager(etat)}
+        onAmeliorer={() => jouer(ameliorerManager)}
+      />
       <div className="boutons">
         <button
           className="bouton bouton-petit bouton-payer"
@@ -328,6 +346,10 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
     <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete} ${employe.tempsPaye > 0 ? '' : 'carte-employe-alerte'}`}>
       <div className="ligne-titre">
         <strong className="nom-employe">
+          {/* (23/10) l'icône de son métier, devant son nom */}
+          <span className="icone-metier" aria-label={pousseur ? 'Pousseur' : 'Mineur'}>
+            {pousseur ? '🛤️' : '⛏️'}
+          </span>
           {employe.nom}
           <span className={`pastille-rarete rarete-${employe.rarete}`}>
             {rarete.nom}
@@ -564,20 +586,43 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
       )}
       {onglet === 'equipe' && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
       {/* (23/10) Tous les employés, chacun sa carte avec ses infos et ses stats (plus de fiche à
-          ouvrir) : les mineurs, puis les pousseurs. */}
-      {onglet === 'equipe' && etat.employes.length > 0 && (
-        <div className="liste-employes">
-          {etat.employes
-            .map((employe, index) => ({ employe, index }))
-            .sort((a, b) => (a.employe.role === b.employe.role ? 0 : a.employe.role === 'mineur' ? -1 : 1))
-            .map(({ employe, index }) => (
-              <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
-            ))}
-        </div>
-      )}
+          ouvrir), rangés par métier : les mineurs, puis les pousseurs, chacun sous son titre. */}
+      {onglet === 'equipe' &&
+        (['mineur', 'pousseur'] as const).map((role) => {
+          const liste = etat.employes.map((employe, index) => ({ employe, index })).filter(({ employe }) => employe.role === role)
+          if (liste.length === 0) return null
+          return (
+            <section key={role} className={`categorie-employes categorie-${role}`}>
+              <h3 className="titre-categorie">
+                {role === 'mineur' ? `⛏️ Mineurs (${liste.length} / ${max})` : `🛤️ Pousseurs (${liste.length})`}
+                <span className="discret">{role === 'mineur' ? 'ils creusent au fond de la mine' : 'ils poussent les wagonnets, un par trajet'}</span>
+              </h3>
+              <div className="liste-employes">
+                {liste.map(({ employe, index }) => (
+                  <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
+                ))}
+              </div>
+            </section>
+          )
+        })}
 
-      {onglet === 'chefs' && <Manager etat={etat} jouer={jouer} />}
-      {onglet === 'chefs' && <Recruteur etat={etat} jouer={jouer} />}
+      {/* (23/10) Les chefs, chacun sous son titre, comme les employés. */}
+      {onglet === 'chefs' && (
+        <section className="categorie-employes">
+          <h3 className="titre-categorie">
+            💼 Manager <span className="discret">il paie les salaires avec la trésorerie</span>
+          </h3>
+          <Manager etat={etat} jouer={jouer} />
+        </section>
+      )}
+      {onglet === 'chefs' && (
+        <section className="categorie-employes">
+          <h3 className="titre-categorie">
+            🎩 Recruteur <span className="discret">il trouve des mineurs rares</span>
+          </h3>
+          <Recruteur etat={etat} jouer={jouer} />
+        </section>
+      )}
 
       {onglet === 'recruter' && (
         <div className={`ligne-achat ${avecRecruteur ? 'carte-recrutement' : ''}`}>

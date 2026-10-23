@@ -1,6 +1,7 @@
 // Ce qui s'est passé pendant que le jeu était fermé (30/10). Le jeu continue de tourner (au plus
 // 8 h) : la mine sort ses blocs, les mineurs payés creusent, les wagonnets vendent, la foreuse
-// fore. Au retour, une fenêtre résume tout, avec un bouton « Tout récupérer ».
+// fore. Au retour, une fenêtre résume tout. (23/10) Le chiffre en grand : ce que les pousseurs
+// ont vendu au marché avec leurs wagonnets.
 
 import type { EtatJeu } from './mineur'
 import { nbDansCoffre } from './mineur'
@@ -14,12 +15,13 @@ export type ResumeAbsence = {
   blocsForeuse: number // ce que la foreuse a foré
   coffre: number // les blocs en plus dans le coffre de la mine
   argent: number // l'argent gagné (wagonnets)
+  ventesWagonnets: number // (23/10) ce que les wagonnets ont vendu au marché
   voyages: number // les voyages des wagonnets
   sansSalaire: number // les mineurs qui attendent leur salaire au retour
 }
 
 // Ce qu'on retient de la partie avant de rattraper le temps.
-export type PhotoPartie = { blocsMineurs: number; blocsMine: number; blocsForeuse: number; coffre: number; chariot: number; argent: number; voyages: number }
+export type PhotoPartie = { blocsMineurs: number; blocsMine: number; blocsForeuse: number; coffre: number; chariot: number; argent: number; voyages: number; ventesWagonnets: number }
 
 export function photoPartie(etat: EtatJeu): PhotoPartie {
   return {
@@ -30,6 +32,7 @@ export function photoPartie(etat: EtatJeu): PhotoPartie {
     chariot: nbDansChariot(etat),
     argent: etat.argent,
     voyages: etat.stats.voyagesWagonnet,
+    ventesWagonnets: etat.stats.argentWagonnet,
   }
 }
 
@@ -43,6 +46,7 @@ export function resumerAbsence(avant: PhotoPartie, etat: EtatJeu, secondes: numb
     coffre: nbDansCoffre(etat) - avant.coffre,
     argent: Math.max(0, Math.round(etat.argent - avant.argent)),
     voyages: etat.stats.voyagesWagonnet - avant.voyages,
+    ventesWagonnets: Math.max(0, Math.round(etat.stats.argentWagonnet - avant.ventesWagonnets)),
     sansSalaire: nbSansSalaire(etat),
   }
   const rien = resume.blocsMineurs + resume.blocsMine + resume.blocsForeuse + resume.argent + resume.voyages <= 0

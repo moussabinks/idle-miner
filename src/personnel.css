@@ -546,3 +546,30 @@
   flex: 1;
   font-size: 0.75rem;
 }
+
+/* (23/10) Les employés rangés par métier (Mineurs, Pousseurs) et les chefs, sous un titre. */
+.categorie-employes {
+  display: grid;
+  gap: 6px;
+}
+
+.titre-categorie {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 6px 0 0;
+  padding-bottom: 3px;
+  border-bottom: 2px solid rgb(255 210 90 / 0.35);
+  font-size: 0.95rem;
+  color: #ffe19a;
+}
+
+.titre-categorie .discret {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.icone-metier {
+  margin-right: 4px;
+}

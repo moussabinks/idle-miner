@@ -1,6 +1,7 @@
 // La fenêtre du retour (30/10) : quand on revient sur son monde, ce qui s'est passé pendant
 // l'absence (le jeu a continué de tourner, au plus 8 h) : ce que les mineurs et la mine ont
-// creusé, ce que les wagonnets ont gagné... et un gros bouton « Tout récupérer ».
+// creusé... (23/10) En grand : ce que les pousseurs ont vendu au marché avec leurs wagonnets
+// (l'argent est déjà dans la caisse : plus de bouton « Tout récupérer », juste « Continuer »).
 // Aucune règle du jeu ici : le résumé est calculé par src/jeu/absence.ts.
 
 import type { ResumeAbsence } from '../jeu/absence'
@@ -45,18 +46,21 @@ export function FenetreAbsence({ resume, onRecuperer }: Props) {
             </li>
           ))}
         </ul>
-        {resume.argent > 0 && (
+        {/* Le chiffre le plus attirant, en grand : ce que les pousseurs ont vendu au marché. */}
+        <div className="absence-ventes">
+          <span className="absence-ventes-titre">🛤️ Tes pousseurs ont vendu au marché</span>
           <div className="absence-argent">
-            <span aria-hidden="true">💰</span> +{nombre(resume.argent)} $
+            <span aria-hidden="true">💰</span> +{nombre(resume.ventesWagonnets)} $
           </div>
-        )}
+          {resume.ventesWagonnets === 0 && <span className="discret">Relie la mine au marché et embauche un pousseur : il vendra pour toi, même jeu fermé.</span>}
+        </div>
         {resume.sansSalaire > 0 && (
           <p className="texte-alerte">
             😠 {resume.sansSalaire === 1 ? 'Un mineur attend son salaire' : `${resume.sansSalaire} mineurs attendent leur salaire`} : ils se sont arrêtés. Paie-les au Personnel !
           </p>
         )}
         <button className="bouton bouton-vendre tuto-gros-bouton" onClick={onRecuperer} autoFocus>
-          💰 Tout récupérer !
+          ▶ Continuer
         </button>
       </section>
     </div>

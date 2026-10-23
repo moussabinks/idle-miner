@@ -16,6 +16,7 @@ import {
   NIVEAUX_EMPLOYE,
   NIVEAUX_FORAGE,
   NIVEAUX_GENERATEUR,
+  NIVEAUX_MANAGER,
   NIVEAUX_MINE,
   NIVEAUX_POUSSEUR,
   NIVEAUX_WAGONNET,
@@ -64,7 +65,7 @@ export function progressionNiveau(etat: EtatJeu): { niveau: number; xp: number; 
 
 // Les choses qui se débloquent par niveau, avec un tableau (case i : le niveau qu'il faut pour
 // en acheter le niveau i).
-export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'wagonnet' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
+export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'tempsManager' | 'wagonnet' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
 
 // Le niveau du joueur qu'il faut pour acheter le niveau « index » de cette chose.
 export function niveauRequis(chose: ChoseANiveaux, index: number): number {
@@ -99,6 +100,11 @@ export function railsDebloques(etat: EtatJeu): boolean {
   return niveauAtteint(etat, NIVEAU_JOUEUR_POUR.rails)
 }
 
+// « 30 min », « 2 h »
+function dureeTexte(minutes: number): string {
+  return minutes < 60 ? `${minutes} min` : `${minutes / 60} h`
+}
+
 // Tout ce qui se débloque à un niveau donné, en mots (pour la fête du passage de niveau, et
 // pour dire au joueur ce qui l'attend).
 export function deblocagesDuNiveau(niveau: number): string[] {
@@ -116,6 +122,7 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['ascenseur', (i) => (i === 0 ? '🛗 L’ascenseur' : `🛗 Ascenseur niveau ${NIVEAUX_ASCENSEUR[i].niveau}`)],
     ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
     ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()}`],
+    ['tempsManager', (i) => `💼 Manager : il paie ${dureeTexte(NIVEAUX_MANAGER[i].minutesHorsLigne)} jeu fermé`],
     ['wagonnet', (i) => `🚃 Wagonnets de ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
@@ -167,6 +174,7 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
       etat.generateur.niveau +
       etat.recruteur +
       (etat.manager.embauche ? 1 : 0) +
+      (etat.manager.niveau ?? 0) +
       etat.employes.reduce((total, e) => total + e.niveau, 0),
     niveauMine: etat.niveauMine,
     voyage: etat.stats.voyagesWagonnet,
@@ -224,6 +232,7 @@ export function niveauPourCeQuOnA(etat: EtatJeu): number {
   pour('chariot', etat.foreuse.niveauChariot)
   if (etat.recruteur > 0) niveaux.push(niveauRequis('recruteur', etat.recruteur - 1))
   if (etat.manager.embauche) niveaux.push(NIVEAU_JOUEUR_POUR.manager)
+  pour('tempsManager', etat.manager.niveau ?? 0)
   return Math.max(...niveaux)
 }
 

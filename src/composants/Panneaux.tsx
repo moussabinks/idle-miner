@@ -5,11 +5,10 @@
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
 import { StockMinerais } from './StockMinerais'
-import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, NIVEAU_RECHARGE_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, PIOCHES, SACS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
-  basculerRechargeAuto,
   capaciteChariot,
   chariotPlein,
   foreuseEnMarche,
@@ -19,7 +18,6 @@ import {
   prendreDuChariot,
   prochainNiveauChariot,
   prochainNiveauForage,
-  rechargeAutoDisponible,
   remplirForeuse,
   secondesDeCharbon,
   charbonMaxForeuse,
@@ -35,7 +33,8 @@ import {
   foreuseAlimentee,
   generateurEnMarche,
   prochainNiveauGenerateur,
-  puissanceGenerateur,
+  multiplicateurGenerateur,
+  texteBonusGenerateur,
   puisageDisponible,
   casesDansLeRayon,
   rayonGenerateur,
@@ -355,14 +354,7 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
               Tout
             </Bouton>
           </div>
-          {rechargeAutoDisponible(etat) ? (
-            <label className="case-option">
-              <input type="checkbox" checked={foreuse.rechargeAuto} onChange={() => jouer(basculerRechargeAuto)} />
-              Recharge automatique : elle brûle le charbon qu'elle remonte (en gardant une minute d'avance)
-            </label>
-          ) : (
-            <span className="discret">🔒 Recharge automatique au charbon : débloquée au niveau {NIVEAU_RECHARGE_AUTO + 1} de forage.</span>
-          )}
+          <span className="discret">🛤️ Pour qu'elle ne s'arrête jamais : relie-la à la mine par des rails et envoie-lui le charbon en wagonnet.</span>
           {!foreuseAlimentee(etat) && <span className="discret">⚡ Dans le rayon du générateur allumé, elle fore plus vite.</span>}
         </div>
       )}
@@ -375,7 +367,6 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
           jouer={jouer}
           titre="🛒 Chariot"
           nomStock="chariot"
-          stock="chariot"
           contenu={foreuse.chariot}
           capacite={capaciteChariot(etat)}
           textePlein={`Plein (${nbDansChariot(etat)}) : la foreuse s’arrête !`}
@@ -447,7 +438,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
             <span className={`badge ${enMarche ? 'badge-vert' : ''}`}>{enMarche ? 'Allumé' : !g.allume ? 'Éteint' : 'Plus de redstone'}</span>
           </div>
           <span className="discret">
-            Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte) · puissance ×{puissanceGenerateur(etat)}
+            Rayon : {rayonGenerateur(etat)} cases (le cercle jaune sur la carte). Tout ce qui est dedans va <strong>{texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)}</strong> plus vite : l’ascenseur de la mine, les wagonnets (leurs rails entiers dans le cercle) et la foreuse.
           </span>
           <Barre
             valeur={g.carburant}
@@ -521,10 +512,10 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
             <strong>⬆ Améliorer</strong>
             <Amelioration
               etat={etat}
-              actuel={`Rayon ${rayonGenerateur(etat)} cases · puissance ×${puissanceGenerateur(etat)}`}
+              actuel={`Rayon ${rayonGenerateur(etat)} cases · ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} de vitesse`}
               niveau={g.niveau + 1}
               niveauMax={NIVEAUX_GENERATEUR.length}
-              suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ×${prochain.puissance}` }}
+              suivant={prochain && { cout: prochain.cout, texte: `⬆ Rayon ${prochain.rayon} · ${texteBonusGenerateur(prochain.bonus)}` }}
               verrou={verrou(etat, 'generateur', g.niveau + 1)}
               possible={prochain !== null && peutPayer(etat, prochain.cout)}
               onAmeliorer={() => jouer(ameliorerGenerateur)}
