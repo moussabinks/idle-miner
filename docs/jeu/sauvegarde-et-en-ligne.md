@@ -69,7 +69,7 @@ Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienn
 
 ### 1.5 La version de l'état (la remise à zéro du 22/10, les conversions du 24/10, du 26/10, du 29/10 et du 30/10)
 
-`VERSION_ETAT = 27` (dans `src/jeu/mineur.ts`, depuis le 23/10 : **la pioche en émeraude des mineurs** ; 26 le 23/10 aussi, **la pioche en émeraude** du joueur ; 25 le 30/10 : **l'ascenseur dès le début**, les bonus de combo, le résumé de l'absence ; 24 le 29/10, **le niveau du joueur** ; 23 le 26/10, les pousseurs embauchés pour un trajet ; 22 le 24/10, les trajets des wagonnets ; 21 le 22/10, **la mine automatique** (`VERSION_MINE_AUTOMATIQUE`) ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version actuelle (27)** avec tous les champs attendus ; sinon il renvoie `null`. Avant, il passe la partie dans les conversions, l'une après l'autre : `convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))))` (une partie v21 devient v22, puis v23, v24, v25, v26 et v27).
+`VERSION_ETAT = 28` (dans `src/jeu/mineur.ts`, depuis le 23/10 : **le chariot de chaque pousseur** ; 27 le 23/10 aussi, la pioche en émeraude des mineurs ; 26 le 23/10 aussi, **la pioche en émeraude** du joueur ; 25 le 30/10 : **l'ascenseur dès le début**, les bonus de combo, le résumé de l'absence ; 24 le 29/10, **le niveau du joueur** ; 23 le 26/10, les pousseurs embauchés pour un trajet ; 22 le 24/10, les trajets des wagonnets ; 21 le 22/10, **la mine automatique** (`VERSION_MINE_AUTOMATIQUE`) ; 20 le 22/10 au matin, le réservoir ; 19 le 21/10, la clairière de 60 × 60 cases ; 18 le 20/10, le village vu du ciel). Chaque partie sauvegardée porte son champ `version`. À la lecture, `charger` vérifie avec `estUnEtatValide()` qu'elle est **exactement à la version actuelle (28)** avec tous les champs attendus ; sinon il renvoie `null`. Avant, il passe la partie dans les conversions, l'une après l'autre : `convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))` (une partie v21 devient v22, puis v23, v24, v25, v26, v27 et v28).
 
 **La conversion 21 → 22** (24/10, `convertirVersion21` dans `sauvegarde.ts`) : l'ancien wagonnet unique (`wagonnet`) est retiré. Sa taille devient `niveauWagonnets` (gardée pour tous les wagonnets). Si les rails reliaient la mine au marché, la partie reçoit le trajet Mine → Marché (`trajets`), sinon aucun trajet. Les mineurs qui poussaient le wagonnet retournent au quai. La partie passe en version 22 (puis la conversion suivante la passe en 23). Un test de `sauvegarde.test.ts` le vérifie.
 
@@ -81,7 +81,9 @@ Au premier `listerMondes` (quand `idle-miner-mondes` n'existe pas), si l'ancienn
 
 **La conversion 25 → 26** (23/10, `convertirVersion25`) : la **pioche en émeraude** arrive au niveau 3, entre l'or et le diamant, qui passe du niveau 3 au niveau 4. Les clés de `pioches`, `niveauPioche` et `meilleure` à 3 ou plus avancent de 1 : une pioche en diamant reste en diamant (avec son usure). La conversion 25 → 26 met maintenant `version: 26`.
 
-**La conversion 26 → 27** (23/10, `convertirVersion26`) : les **mineurs** ont aussi une pioche en émeraude, au niveau 4 de `NIVEAUX_EMPLOYE`, entre l'or et le diamant (qui passe de 4 à 5). Un mineur à 4 ou plus avance de 1 ; un pousseur ne bouge pas (son `niveau` est celui de `NIVEAUX_POUSSEUR`). Les tests de `sauvegarde.test.ts` attendent `VERSION_ETAT`.
+**La conversion 26 → 27** (23/10, `convertirVersion26`) : les **mineurs** ont aussi une pioche en émeraude, au niveau 4 de `NIVEAUX_EMPLOYE`, entre l'or et le diamant (qui passe de 4 à 5). Un mineur à 4 ou plus avance de 1 ; un pousseur ne bouge pas (son `niveau` est celui de `NIVEAUX_POUSSEUR`). La conversion 26 → 27 met maintenant `version: 27`.
+
+**La conversion 27 → 28** (23/10, `convertirVersion27`) : plus de taille des wagonnets pour tous les trajets (`niveauWagonnets` reste dans la partie mais ne sert plus) ; chaque pousseur reçoit le plus grand chariot (`chariot`, `NIVEAUX_CHARIOT_POUSSEUR`) qui ne dépasse pas ce que portait son wagonnet (l'ancienne taille 20/40/70/120 × l'ancien bonus de son niveau ×1 à ×2,5). Son `niveau` devient sa vitesse. Les tests de `sauvegarde.test.ts` attendent `VERSION_ETAT`.
 
 **Avant la version 21, pas de migration** : avec la mine automatique (plus de prestige, de profondeur, de vue en coupe, de réservoir ni de convois), **toutes les parties d'avant repartent de zéro**, village compris (décidé le 22/10 ; l'ancienne migration 18 → 19 a été retirée). Une partie d'une version plus ancienne n'est plus lue : à l'ouverture du monde, `usePartie.ts` crée une partie neuve (`creerPartie`) qui remplace l'ancienne à la première sauvegarde. Le monde lui-même (nom, couleur, place dans la liste) est gardé, et l'accueil le signale avant (`partieAncienne`, voir 1.3). Un test de `sauvegarde.test.ts` vérifie qu'une partie de la version 20 ou moins repart de zéro.
 
@@ -117,7 +119,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 | `tresorerie` | nombre | Argent mis de côté pour les salaires |
 | `foreuse` | objet `Foreuse` | La foreuse |
 | `generateur` | objet `Generateur` | Le générateur |
-| `niveauWagonnets` | nombre | La taille des wagonnets (index dans `NIVEAUX_WAGONNET`), pour tous les trajets |
+| `niveauWagonnets` | nombre | (plus utilisé depuis le 23/10) L'ancienne taille des wagonnets, pour tous les trajets |
 | `trajets` | liste de `Trajet` | Les trajets de wagonnets créés par le joueur (vide au début) |
 | `succes` | liste de textes | Identifiants des succès débloqués |
 | `stats` | `Statistiques` | Statistiques de la partie |
@@ -141,7 +143,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Statistiques`** : `blocsCasses`, `blocsMine`, `argentGagne`, `argentForeuse`, `argentWagonnet`, `blocsParType`, `blocsForeuse`, `blocsMineurs`, `diamantsTrouves`, `salairesPayes`, `tempsDeJeu`, `voyagesWagonnet` (voir [mine-et-minage.md](mine-et-minage.md#9-les-statistiques-srcjeustatistiquests-fenêtre-)).
 
-`estUnEtatValide()` vérifie : `version === 27` (`VERSION_ETAT`), `xp` (nombre, 29/10), et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes` et `village` (avec sa liste `batiments`). Depuis le 27/10, `tenue` et `tenuesAchetees` ne sont plus demandés.
+`estUnEtatValide()` vérifie : `version === 28` (`VERSION_ETAT`), `xp` (nombre, 29/10), et la présence/le type de `argent`, `niveauMine`, `coffre`, `pioches`, `inventaire`, `stats`, `succes`, `nonAVendre`, `ascenseur`, `foreuse`, `generateur`, `niveauWagonnets` (nombre), `trajets` (liste), `employes`, `recruteur`, `manager`, `tresorerie`, `decouvertes` et `village` (avec sa liste `batiments`). Depuis le 27/10, `tenue` et `tenuesAchetees` ne sont plus demandés.
 
 ### 1.7 Quand le jeu sauvegarde (`src/usePartie.ts`)
 

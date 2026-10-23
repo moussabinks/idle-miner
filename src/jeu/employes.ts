@@ -22,6 +22,7 @@ import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
   NIVEAUX_MANAGER,
+  NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAUX_POUSSEUR,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
@@ -235,8 +236,8 @@ export function gainAmeliorationEmploye(employe: Employe): { avant: number; apre
   return { avant: vitesseEmploye(employe), apres: vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) }
 }
 
-// Le prix de son prochain niveau : une pioche pour un mineur, un niveau de pousseur (23/10) pour
-// un pousseur (son wagonnet porte plus, et il charge, décharge et vend plus vite).
+// Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
+// un pousseur (il pousse son wagonnet plus vite ; son chariot, c'est coutChariotPousseur).
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
   const liste = employe.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE
   return liste[employe.niveau + 1]?.cout ?? null
@@ -245,6 +246,27 @@ export function coutAmeliorationEmploye(employe: Employe): Cout | null {
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   const cout = coutAmeliorationEmploye(employe)
   return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
+}
+
+// (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer, de plus en plus cher).
+export function coutChariotPousseur(employe: Employe): Cout | null {
+  if (employe.role !== 'pousseur') return null
+  return NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout ?? null
+}
+
+export function peutAgrandirChariot(etat: EtatJeu, employe: Employe): boolean {
+  const cout = coutChariotPousseur(employe)
+  return cout !== null && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1) && peutPayer(etat, cout)
+}
+
+export function agrandirChariot(etat: EtatJeu, index: number): string[] {
+  const employe = etat.employes[index]
+  if (!employe) return []
+  const cout = coutChariotPousseur(employe)
+  if (cout === null || !peutAgrandirChariot(etat, employe)) return []
+  payer(etat, cout)
+  employe.chariot = (employe.chariot ?? 0) + 1
+  return [`🛒 Le chariot de ${employe.nom} porte maintenant ${NIVEAUX_CHARIOT_POUSSEUR[employe.chariot].places} places.`]
 }
 
 // ---------------------------------------------------------------------------
@@ -630,7 +652,7 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   employe.niveau += 1
   if (employe.role === 'pousseur') {
     const niveau = NIVEAUX_POUSSEUR[employe.niveau]
-    return [`🛤️ ${employe.nom} est maintenant pousseur ${niveau.nom.toLowerCase()} : son wagonnet porte ×${niveau.places.toLocaleString('fr-FR')}, arrêts de ${niveau.secondesArret.toLocaleString('fr-FR')} s.`]
+    return [`🛤️ ${employe.nom} est maintenant pousseur ${niveau.nom.toLowerCase()} : il pousse ×${niveau.vitesse.toLocaleString('fr-FR')} plus vite.`]
   }
   if (batimentPose(etat.village, 'forgeron')) {
     employe.forgeEnAttente = true

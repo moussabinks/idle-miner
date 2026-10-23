@@ -13,11 +13,14 @@ import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
 import { BATIMENTS, PIOCHES, SECONDES_PAR_PAIE, VITESSE_JOUEUR, type Cout, type IdBatiment, type IdBloc } from './donnees'
 import { construireBatiment, estPose, peutConstruire, peutPoserSol, poserSol } from './batiments'
 import {
+  agrandirChariot,
   ameliorerEmploye,
   ameliorerRecruteur,
   coutAmeliorationEmploye,
+  coutChariotPousseur,
   embaucher,
   embaucherPousseur,
+  peutAgrandirChariot,
   peutEmbaucherPousseur,
   embaucherManager,
   managerDebloque,
@@ -64,7 +67,7 @@ import { niveauJoueur } from './niveaux'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
 import { distanceEntre, railsMineMarche } from './village'
-import { ameliorerWagonnet, creerTrajet, peutCreerTrajet, prochainNiveauWagonnet, railsAlimentes, trajetDe } from './wagonnet'
+import { creerTrajet, peutCreerTrajet, railsAlimentes, trajetDe } from './wagonnet'
 
 // Où le bot pose ses bâtiments autour de la mine (posée en 25,25 et large de 10 cases).
 const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
@@ -244,10 +247,13 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout) && gardeLaMine(ascenseur.cout)) ameliorerAscenseur(etat)
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
-    const wagonnet = prochainNiveauWagonnet(etat)
-    // (23/10) Les wagonnets sont petits : quand le coffre se remplit, il les agrandit tout de suite.
+    // (23/10) Le chariot du pousseur du marché est petit : quand le coffre se remplit, il l'agrandit
+    // tout de suite (au Personnel), sinon quand il a deux fois son prix.
     const coffreSeRemplit = nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.7
-    if (wagonnet && etat.trajets.length > 0 && peutPayer(etat, wagonnet.cout) && gardeLaMine(wagonnet.cout) && (coffreSeRemplit || etat.argent >= (wagonnet.cout.argent ?? 0) * 2)) ameliorerWagonnet(etat)
+    const indexPousseur = etat.employes.findIndex((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
+    const pousseurMarche = indexPousseur >= 0 ? etat.employes[indexPousseur] : null
+    const coutChariot = pousseurMarche ? coutChariotPousseur(pousseurMarche) : null
+    if (pousseurMarche && coutChariot && peutAgrandirChariot(etat, pousseurMarche) && gardeLaMine(coutChariot) && (coffreSeRemplit || etat.argent >= (coutChariot.argent ?? 0) * 2)) agrandirChariot(etat, indexPousseur)
     const prixSac = prixProchainSac(etat)
     if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }

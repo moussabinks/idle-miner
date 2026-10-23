@@ -85,7 +85,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 - **Trajet créé** : où en est son wagonnet (« Au quai : rien à porter pour l’instant. », « Il part tout seul. », « Son pousseur va le pousser. », « Au quai. Pousse-le, ou embauche un pousseur pour ce trajet au Personnel. », « En route vers le marché, poussé par toi / *prénom* / l'électricité ⚡ », « Revient à la mine »), avec une barre pendant le trajet et un badge **⚡ Électrique** si tout le trajet l'est.
   - **🛤️ Pousser (*n* objets)** (bouton bois) : le hamster du joueur **fait l'aller-retour avec le wagonnet** : il le pousse jusqu'à l'arrivée, puis le ramène au quai. Pendant ce temps, on ne peut pas marcher ailleurs (le bouton ⛏️ Mine devient « Wagonnet… », les flèches et les touchers sur la carte ne font rien) et aucun panneau n'est ouvert. On ne pousse qu'un wagonnet à la fois. Grisé si le wagonnet est déjà en route ou s'il n'y a rien à porter.
   - **✖ Arrêter** (rouge) : supprime le trajet (son chargement retourne dans le coffre, les rails restent).
-- Dès qu'il y a un trajet : la ligne d'amélioration **🛒 Taille des wagonnets**, qui vaut pour **tous** les wagonnets (même ceux qui partent de la foreuse). Un wagonnet déjà chargé garde son chargement : la nouvelle taille compte à son prochain départ.
+- (23/10) Plus de « 🛒 Taille des wagonnets » ici : le chariot de chaque pousseur s'agrandit au Personnel.
 
 ### ⬇ Descendre au niveau suivant (en haut de l'onglet Améliorer)
 
@@ -155,18 +155,9 @@ Il ne transporte que les **mineurs employés** (le joueur ne descend plus) : en 
 
 Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, niveau 1 compris : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude).
 
-### La taille des wagonnets (`NIVEAUX_WAGONNET`)
+### La taille des wagonnets
 
-| Niveau | Places | Prix (29/10) | Niveau du joueur |
-|---|---:|---|---:|
-| 1 | 20 | (départ) | — |
-| 2 | 40 | 1 200 $ + 60 fer | 6 |
-| 3 | 70 | 6 000 $ + 150 fer + 40 redstone | 9 |
-| 4 | 120 | 25 000 $ + 80 or | 12 |
-
-(23/10) Bien plus petits qu'avant (40, 100, 250, 600) : à peu près ce que la mine et les mineurs sortent pendant un aller-retour (1 à 3 blocs/s au début, 5 à 8 vers la fin, pour un aller-retour d'environ 15 s). Le wagonnet suit donc tout juste la production : l'agrandir, améliorer son pousseur (places ×1,25 à ×2,5, arrêts plus courts) et électrifier les rails sert vraiment. Trop petit, le coffre se remplit. Quand il ne peut pas tout prendre, il prend **un peu de chaque objet** selon ce qu'il y en a, et les places qui restent aux plus chers (`repartir` dans `wagonnet.ts`) : la pierre part aussi, au lieu de rester et de remplir le coffre.
-
-Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
+(23/10) Plus d'amélioration ici : chaque pousseur a **son chariot**, qu'on agrandit au Personnel (voir [personnel.md](personnel.md)). Avant, une « taille des wagonnets » (20 à 120 places, à la Mine) valait pour tous les trajets. Quand un wagonnet ne peut pas tout prendre, il prend **un peu de chaque objet** selon ce qu'il y en a, et les places qui restent aux plus chers (`repartir` dans `wagonnet.ts`). Si le chariot du pousseur du marché ne suit pas ce que la mine sort toute seule, une alerte le dit dans le panneau (onglets Creuser et Production).
 
 Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : **3 cases/s** poussé par toi, **2,5 cases/s** par un pousseur, **8 cases/s × la puissance du générateur** avec l'électricité (8 à 24 cases/s). Charger au départ et vider à l'arrivée prennent **2 s** chacun (`SECONDES_CHARGEMENT_WAGONNET`).
 

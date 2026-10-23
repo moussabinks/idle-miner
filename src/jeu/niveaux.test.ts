@@ -20,19 +20,18 @@ describe('le niveau du joueur (29/10)', () => {
     expect(niveauDeXp(xpTotalePourNiveau(10))).toBe(10)
   })
 
-  it('chaque bloc cassé à la main rapporte 1 XP', () => {
+  it('(23/10) 3 blocs cassés à la main rapportent 1 XP', () => {
     const hasard = aleatoireAvecGraine(1)
     const etat = creerPartie(hasard)
     for (let i = 0; i < 12; i++) cliquerMine(etat, hasard)
     mettreAJourXp(etat)
-    expect(etat.xp).toBe(12)
-    expect(progressionNiveau(etat)).toEqual({ niveau: 1, xp: 12, pourSuivant: 60 })
+    expect(etat.xp).toBe(4)
+    expect(progressionNiveau(etat)).toEqual({ niveau: 1, xp: 4, pourSuivant: 60 })
   })
 
   it('construire rapporte de l’XP, et on gagne un niveau avec un message', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    etat.stats.blocsCasses = 20 // 20 XP
-    construireBatiment(etat, 'marche', 28, 38) // + 40 XP
+    construireBatiment(etat, 'marche', 28, 38) // + 70 XP (23/10)
     const messages = mettreAJourXp(etat)
     expect(niveauJoueur(etat)).toBe(2)
     expect(messages[0]).toContain('Niveau 2')
@@ -84,30 +83,31 @@ describe('l’XP selon le prix (23/10)', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     mettreAJourXp(etat)
     const depart = etat.xp
-    etat.niveauWagonnets = 1
+    etat.coffre.niveau = 1
     mettreAJourXp(etat)
     const petit = etat.xp - depart
-    etat.niveauWagonnets = 3
+    etat.coffre.niveau = 4
     mettreAJourXp(etat)
     const gros = etat.xp - depart - petit
     expect(petit).toBeGreaterThan(30)
     expect(gros).toBeGreaterThan(petit * 5)
   })
 
-  it('l’argent gagné rapporte un peu d’XP, même sans cliquer', () => {
+  it('(23/10) rester AFK ne rapporte pas d’XP : ni l’argent gagné, ni les voyages des wagonnets', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     mettreAJourXp(etat)
     const depart = etat.xp
-    etat.stats.argentGagne += 20_000
+    etat.stats.argentGagne += 1_000_000
+    etat.stats.voyagesWagonnet += 500
     mettreAJourXp(etat)
-    expect(etat.xp - depart).toBe(100)
+    expect(etat.xp).toBe(depart)
   })
 
   it('une vieille partie reçoit l’XP de ce qu’elle avait déjà acheté', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     mettreAJourXp(etat)
-    etat.niveauWagonnets = 3
     etat.coffre.niveau = 3
+    etat.niveauSac = 3
     const records = { ...etat.recordsXp }
     delete records.investi
     etat.recordsXp = records

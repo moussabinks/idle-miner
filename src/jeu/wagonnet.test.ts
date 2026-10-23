@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
-import { ameliorerEmploye, embaucher, embaucherPousseur, peutEmbaucherPousseur } from './employes'
-import { NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON } from './donnees'
+import { agrandirChariot, ameliorerEmploye, embaucher, embaucherPousseur, peutEmbaucherPousseur } from './employes'
+import { NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON } from './donnees'
 import { type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
@@ -14,7 +14,6 @@ import {
   capaciteTrajet,
   choixWagonnet,
   reglerWagonnet,
-  capaciteWagonnet,
   secondesArret,
   creerTrajet,
   joueurPousse,
@@ -103,7 +102,7 @@ describe('les trajets des wagonnets', () => {
     etat.coffre.contenu = { fer: 10, pierre: 50 }
     pousserTrajet(etat, 'mine-marche')
     expect(joueurPousse(etat)).toBe(true)
-    expect(capaciteWagonnet(etat)).toBe(20)
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(20) // (23/10) sans pousseur : le premier chariot
     // (23/10) 20 places pour 60 objets : un peu de chaque (4 fer, 16 pierres), pas tout le fer d'abord.
     expect(etat.coffre.contenu).toEqual({ fer: 6, pierre: 34 })
     const messages = allerRetour(etat, 'mine-marche')
@@ -153,17 +152,23 @@ describe('les trajets des wagonnets', () => {
     expect(forcePousseur('mythique')).toBe(3)
   })
 
-  it('un pousseur amélioré : wagonnet plus grand, arrêts plus courts (23/10)', () => {
+  it('un pousseur a deux améliorations : sa vitesse et son chariot ; ses arrêts durent 1 s (23/10)', () => {
     const etat = partieAvecTrajet()
     ajouterPousseur(etat, 'mine-marche')
-    const places = capaciteTrajet(etat, 'mine-marche')
-    expect(places).toBe(capaciteWagonnet(etat))
-    expect(secondesArret(etat, 'mine-marche')).toBe(NIVEAUX_POUSSEUR[0].secondesArret)
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[0].places)
+    expect(secondesArret(etat, 'mine-marche')).toBe(1)
     etat.argent = 100_000
     etat.xp = 1_000_000
+    etat.inventaire = { fer: 100 }
+    const trajet = trajetDe(etat, 'mine-marche')!
+    const vitesseAvant = vitesseTrajet(etat, trajet, etat.employes[0].nom)
     expect(ameliorerEmploye(etat, 0)[0]).toContain('costaud')
-    expect(capaciteTrajet(etat, 'mine-marche')).toBe(Math.round(capaciteWagonnet(etat) * NIVEAUX_POUSSEUR[1].places))
-    expect(secondesArret(etat, 'mine-marche')).toBeLessThan(NIVEAUX_POUSSEUR[0].secondesArret)
+    expect(vitesseTrajet(etat, trajet, etat.employes[0].nom)).toBeCloseTo(vitesseAvant * NIVEAUX_POUSSEUR[1].vitesse)
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[0].places) // la vitesse ne change pas le chariot
+    expect(agrandirChariot(etat, 0)[0]).toContain(String(NIVEAUX_CHARIOT_POUSSEUR[1].places))
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[1].places)
+    expect(etat.inventaire.fer ?? 0).toBe(100 - (NIVEAUX_CHARIOT_POUSSEUR[1].cout.materiaux.fer ?? 0))
+    expect(secondesArret(etat, 'mine-marche')).toBe(1)
   })
 
   it('un seul pousseur par trajet (23/10)', () => {

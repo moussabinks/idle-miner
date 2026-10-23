@@ -10,6 +10,7 @@ import { aleatoireNavigateur } from '../jeu/aleatoire'
 import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
+  NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAUX_POUSSEUR,
   NIVEAUX_MANAGER,
   NIVEAUX_RECRUTEUR,
@@ -26,10 +27,12 @@ import {
 } from '../jeu/donnees'
 import {
   activiteEmploye,
+  agrandirChariot,
   ameliorerEmploye,
   ameliorerRecruteur,
   chancesRecrutement,
   coutAmeliorationEmploye,
+  coutChariotPousseur,
   coutSalaires,
   depensesParPaie,
   embaucher,
@@ -63,6 +66,7 @@ import {
   nbDansSacEmploye,
   nbSansSalaire,
   payerSalaires,
+  peutAgrandirChariot,
   peutAmeliorerEmploye,
   peutAmeliorerRecruteur,
   peutPayerSalaires,
@@ -83,7 +87,7 @@ import {
 } from '../jeu/employes'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { batimentPose } from '../jeu/village'
-import { capaciteWagonnet, forcePousseur, ligneDe, trajetDe } from '../jeu/wagonnet'
+import { forcePousseur, ligneDe, placesChariot, trajetDe } from '../jeu/wagonnet'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration, BadgeXp } from './Amelioration'
@@ -339,11 +343,12 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
   const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
   const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' || employe.etape === 'creuse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
   const pousseur = employe.role === 'pousseur'
-  // (23/10) Pour un pousseur : son niveau, le suivant, et les places de son wagonnet avant / après.
+  // (23/10) Pour un pousseur, deux améliorations : sa vitesse, et son chariot (les places de son wagonnet).
   const niveauPousseurActuel = NIVEAUX_POUSSEUR[Math.min(employe.niveau, NIVEAUX_POUSSEUR.length - 1)]
   const niveauPousseurSuivant = pousseur ? (NIVEAUX_POUSSEUR[employe.niveau + 1] ?? null) : null
-  const placesAvant = Math.round(capaciteWagonnet(etat) * niveauPousseurActuel.places)
-  const placesApres = niveauPousseurSuivant ? Math.round(capaciteWagonnet(etat) * niveauPousseurSuivant.places) : placesAvant
+  const placesAvant = placesChariot(employe)
+  const chariotSuivant = pousseur ? (NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1] ?? null) : null
+  const coutChariot = coutChariotPousseur(employe)
 
   return (
     <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete} ${employe.tempsPaye > 0 ? '' : 'carte-employe-alerte'}`}>
@@ -381,7 +386,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
       {pousseur ? (
         <div className="module-ligne">
           <span className="discret">
-            🛤️ Pousse le wagonnet {employe.trajet ? <strong>{nomTrajet(employe.trajet)}</strong> : 'de… (aucun trajet)'} · {placesAvant} places · arrêts de {secondes(niveauPousseurActuel.secondesArret)} · salaire {argent(salaireEmploye(employe))} / 5 min
+            🛤️ Pousse le wagonnet {employe.trajet ? <strong>{nomTrajet(employe.trajet)}</strong> : 'de… (aucun trajet)'} · 🛒 {placesAvant} places · vitesse ×{niveauPousseurActuel.vitesse.toLocaleString('fr-FR')} · salaire {argent(salaireEmploye(employe))} / 5 min
           </span>
           <select
             className="choix-trajet"
@@ -461,41 +466,36 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier, onRemplacer }: 
       />
       </>
       )}
-      {/* (23/10) Le niveau d'un pousseur : son wagonnet porte plus, et ses arrêts (charger,
-          décharger, vendre) sont plus courts. Avant ➜ après, en grand, comme la pioche. */}
+      {/* (23/10) Les deux améliorations d'un pousseur : sa vitesse (argent) et son chariot (argent
+          et fer, de plus en plus cher). Ses arrêts durent toujours 1 s. */}
       {pousseur && niveauPousseurSuivant && (
-        <>
-          <div className="gain-pioche" aria-label={`Niveau suivant : ${placesAvant} puis ${placesApres} places, arrêts de ${secondes(niveauPousseurActuel.secondesArret)} puis ${secondes(niveauPousseurSuivant.secondesArret)}`}>
-            <span className="gain-pioche-avant">{placesAvant}</span>
-            <span className="gain-pioche-fleche" aria-hidden="true">
-              ➜
-            </span>
-            <span className="gain-pioche-apres">{placesApres}</span>
-            <span className="gain-pioche-unite">places</span>
-            <span className="gain-pioche-avant">⏱ {secondes(niveauPousseurActuel.secondesArret)}</span>
-            <span className="gain-pioche-fleche" aria-hidden="true">
-              ➜
-            </span>
-            <span className="gain-pioche-apres">{secondes(niveauPousseurSuivant.secondesArret)}</span>
-          </div>
-          <Amelioration
-            etat={etat}
-            actuel={`🛤️ Pousseur ${niveauPousseurActuel.nom.toLowerCase()}`}
-            niveau={employe.niveau + 1}
-            niveauMax={NIVEAUX_POUSSEUR.length}
-            suivant={coutPioche !== null ? { cout: coutPioche, texte: `⬆ Pousseur ${niveauPousseurSuivant.nom.toLowerCase()}` } : null}
-            verrou={verrou(etat, 'pousseur', employe.niveau + 1)}
-            possible={peutAmeliorerEmploye(etat, employe)}
-            onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
-          />
-        </>
+        <Amelioration
+          etat={etat}
+          actuel={`🏃 Vitesse ×${niveauPousseurActuel.vitesse.toLocaleString('fr-FR')} (${niveauPousseurActuel.nom.toLowerCase()})`}
+          niveau={employe.niveau + 1}
+          niveauMax={NIVEAUX_POUSSEUR.length}
+          suivant={coutPioche !== null ? { cout: coutPioche, texte: `⬆ Vitesse ×${niveauPousseurSuivant.vitesse.toLocaleString('fr-FR')}` } : null}
+          verrou={verrou(etat, 'pousseur', employe.niveau + 1)}
+          possible={peutAmeliorerEmploye(etat, employe)}
+          onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
+        />
+      )}
+      {pousseur && chariotSuivant && (
+        <Amelioration
+          etat={etat}
+          actuel={`🛒 Chariot de ${placesAvant} places`}
+          niveau={(employe.chariot ?? 0) + 1}
+          niveauMax={NIVEAUX_CHARIOT_POUSSEUR.length}
+          suivant={coutChariot !== null ? { cout: coutChariot, texte: `⬆ ${chariotSuivant.places} places` } : null}
+          verrou={verrou(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)}
+          possible={peutAgrandirChariot(etat, employe)}
+          onAmeliorer={() => jouer((e) => agrandirChariot(e, index))}
+        />
       )}
     </div>
   )
 }
 
-// « 1,6 s »
-const secondes = (n: number) => `${n.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} s`
 
 // L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
 // trajet brille sur la carte (s'il y a des rails), puis on confirme.

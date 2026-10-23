@@ -21,15 +21,15 @@ import {
   NIVEAUX_MINE,
   NIVEAUX_POUSSEUR,
   NIVEAUX_RECRUTEUR,
-  NIVEAUX_WAGONNET,
+  NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAU_JOUEUR_MAX,
   NIVEAU_JOUEUR_POUR,
   PIOCHES,
   PRIX_MANAGER,
   SACS,
   XP_PAR,
-  ARGENT_PAR_XP,
   VALEUR_PAR_XP,
+  BLOCS_PAR_XP,
   xpPourPasser,
   type Cout,
   type IdBatiment,
@@ -72,7 +72,7 @@ export function progressionNiveau(etat: EtatJeu): { niveau: number; xp: number; 
 
 // Les choses qui se débloquent par niveau, avec un tableau (case i : le niveau qu'il faut pour
 // en acheter le niveau i).
-export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'tempsManager' | 'wagonnet' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
+export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'chariotPousseur' | 'tempsManager' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
 
 // Le niveau du joueur qu'il faut pour acheter le niveau « index » de cette chose.
 export function niveauRequis(chose: ChoseANiveaux, index: number): number {
@@ -128,9 +128,9 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['sacs', (i) => `🎒 Sac de ${SACS[i].taille.toLocaleString('fr-FR')} places`],
     ['ascenseur', (i) => (i === 0 ? '🛗 L’ascenseur' : `🛗 Ascenseur niveau ${NIVEAUX_ASCENSEUR[i].niveau}`)],
     ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
-    ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()}`],
+    ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()} (vitesse ×${NIVEAUX_POUSSEUR[i].vitesse.toLocaleString('fr-FR')})`],
+    ['chariotPousseur', (i) => `🛒 Chariot des pousseurs : ${NIVEAUX_CHARIOT_POUSSEUR[i].places} places`],
     ['tempsManager', (i) => `💼 Manager : éveillé ${dureeTexte(NIVEAUX_MANAGER[i].minutesEveil)}`],
-    ['wagonnet', (i) => `🚃 Wagonnets des rails (tous les trajets) : ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
     ['chariot', (i) => `🛒 Chariot de la foreuse : ${NIVEAUX_CHARIOT[i].capacite.toLocaleString('fr-FR')} places`],
@@ -183,13 +183,15 @@ export function valeurInvestie(etat: EtatJeu): number {
   total += valeurNiveaux(PIOCHES, etat.meilleure)
   total += SACS.slice(1, etat.niveauSac + 1).reduce((somme, sac) => somme + sac.prix, 0)
   total += valeurNiveaux(NIVEAUX_ASCENSEUR, etat.ascenseur.niveau - 1)
-  total += valeurNiveaux(NIVEAUX_WAGONNET, etat.niveauWagonnets)
   total += valeurNiveaux(NIVEAUX_FORAGE, etat.foreuse.niveauVitesse)
   total += valeurNiveaux(NIVEAUX_CHARIOT, etat.foreuse.niveauChariot)
   total += valeurNiveaux(NIVEAUX_GENERATEUR, etat.generateur.niveau)
   for (let i = 0; i < etat.recruteur; i++) total += valeurCout(NIVEAUX_RECRUTEUR[i].cout)
   if (etat.manager.embauche) total += PRIX_MANAGER + valeurNiveaux(NIVEAUX_MANAGER, etat.manager.niveau ?? 0)
-  for (const e of etat.employes) total += valeurNiveaux(e.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE, e.niveau)
+  for (const e of etat.employes) {
+    total += valeurNiveaux(e.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE, e.niveau)
+    if (e.role === 'pousseur') total += valeurNiveaux(NIVEAUX_CHARIOT_POUSSEUR, e.chariot ?? 0)
+  }
   return total
 }
 
@@ -198,7 +200,7 @@ type Compteur = keyof typeof XP_PAR
 
 function compteurs(etat: EtatJeu): Record<Compteur, number> {
   return {
-    bloc: etat.stats.blocsCasses,
+    clics: Math.floor(etat.stats.blocsCasses / BLOCS_PAR_XP),
     batiment: etat.village.batiments.length,
     rail: etat.village.rails.length,
     trajet: etat.trajets.length,
@@ -209,20 +211,17 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
       etat.meilleure +
       etat.niveauSac +
       etat.ascenseur.niveau +
-      etat.niveauWagonnets +
       etat.foreuse.niveauVitesse +
       etat.foreuse.niveauChariot +
       etat.generateur.niveau +
       etat.recruteur +
       (etat.manager.embauche ? 1 : 0) +
       (etat.manager.niveau ?? 0) +
-      etat.employes.reduce((total, e) => total + e.niveau, 0),
+      etat.employes.reduce((total, e) => total + e.niveau + (e.chariot ?? 0), 0),
     niveauMine: etat.niveauMine,
-    voyage: etat.stats.voyagesWagonnet,
-    // (23/10) ce qu'on a acheté, selon le prix (plus c'est cher, plus ça rapporte)
+    // (23/10) ce qu'on a acheté, selon le prix (plus c'est cher, plus ça rapporte). Plus d'XP pour
+    // ce qui se fait tout seul (voyages des wagonnets, argent gagné) : rester AFK ne rapporte rien.
     investi: Math.floor(valeurInvestie(etat) / VALEUR_PAR_XP),
-    // (23/10) l'argent gagné (ventes) : un peu d'XP, même sans cliquer (moins qu'en jouant)
-    gains: Math.floor(etat.stats.argentGagne / ARGENT_PAR_XP),
   }
 }
 
@@ -273,8 +272,10 @@ export function niveauPourCeQuOnA(etat: EtatJeu): number {
   pour('pioches', etat.meilleure)
   pour('sacs', etat.niveauSac)
   if (etat.ascenseur.niveau > 0) niveaux.push(niveauRequis('ascenseur', etat.ascenseur.niveau - 1))
-  for (const e of etat.employes) pour(e.role === 'pousseur' ? 'pousseur' : 'equipement', e.niveau)
-  pour('wagonnet', etat.niveauWagonnets)
+  for (const e of etat.employes) {
+    pour(e.role === 'pousseur' ? 'pousseur' : 'equipement', e.niveau)
+    if (e.role === 'pousseur') pour('chariotPousseur', e.chariot ?? 0)
+  }
   pour('generateur', etat.generateur.niveau)
   pour('forage', etat.foreuse.niveauVitesse)
   pour('chariot', etat.foreuse.niveauChariot)

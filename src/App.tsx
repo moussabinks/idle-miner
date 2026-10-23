@@ -535,7 +535,14 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {batimentActif === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}
-        {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} />}
+        {batimentActif === 'foreuse' && (
+          <PanneauForeuse
+            etat={etat}
+            jouer={jouer}
+            onReglerTrajet={setTrajetsOuverts}
+            onAllerAuPersonnel={batimentPose(etat.village, 'employes') ? () => allerAuBatiment('employes') : undefined}
+          />
+        )}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
         {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
       </section>

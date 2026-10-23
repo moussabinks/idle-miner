@@ -24,7 +24,7 @@ import {
   LIAISONS,
   LISTE_LIAISONS,
   NIVEAUX_POUSSEUR,
-  NIVEAUX_WAGONNET,
+  NIVEAUX_CHARIOT_POUSSEUR,
   RARETES,
   SECONDES_CHARGEMENT_WAGONNET,
   VITESSE_POUSSE_JOUEUR,
@@ -38,9 +38,8 @@ import {
 import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, livrerRedstone, multiplicateurGenerateur, placeRedstoneGenerateur } from './generateur'
-import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
+import { ajouterA, encaisser, nouveauTrajet, parPrix, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
-import { debloque } from './niveaux'
 
 // ---------------------------------------------------------------------------
 // Les lignes de rails et les trajets
@@ -148,7 +147,7 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
   const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
-  const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
+  const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * niveauPousseur(pousseur).vitesse * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
   const secondes = secondesAllerRetour(etat, liaison, vitesse)
   return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
@@ -221,18 +220,6 @@ export function supprimerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// La taille des wagonnets (pour tous les trajets)
-// ---------------------------------------------------------------------------
-
-export function capaciteWagonnet(etat: EtatJeu): number {
-  return NIVEAUX_WAGONNET[Math.min(etat.niveauWagonnets, NIVEAUX_WAGONNET.length - 1)].capacite
-}
-
-export function prochainNiveauWagonnet(etat: EtatJeu) {
-  return NIVEAUX_WAGONNET[etat.niveauWagonnets + 1] ?? null
-}
-
-// ---------------------------------------------------------------------------
 // Le pousseur d'un trajet et son niveau (23/10)
 // ---------------------------------------------------------------------------
 
@@ -251,25 +238,20 @@ export function niveauPousseur(employe: Employe | null): NiveauPousseur {
   return NIVEAUX_POUSSEUR[Math.max(0, Math.min(employe?.niveau ?? 0, NIVEAUX_POUSSEUR.length - 1))]
 }
 
-// Combien de places a le wagonnet de ce trajet : la taille des wagonnets × le bonus de son pousseur.
+// (23/10) Les places du chariot d'un pousseur (le premier niveau sans pousseur).
+export function placesChariot(employe: Employe | null): number {
+  const niveau = Math.max(0, Math.min(employe?.chariot ?? 0, NIVEAUX_CHARIOT_POUSSEUR.length - 1))
+  return NIVEAUX_CHARIOT_POUSSEUR[niveau].places
+}
+
+// Combien de places a le wagonnet de ce trajet : le chariot de son pousseur (23/10).
 export function capaciteTrajet(etat: EtatJeu, liaison: IdLiaison): number {
-  return Math.round(capaciteWagonnet(etat) * niveauPousseur(pousseurDuTrajet(etat, liaison)).places)
+  return placesChariot(pousseurDuTrajet(etat, liaison))
 }
 
-// Le temps de chaque arrêt (charger au départ, décharger ou vendre à l'arrivée) : plus court avec
-// un pousseur amélioré.
-export function secondesArret(etat: EtatJeu, liaison: IdLiaison): number {
-  const pousseur = pousseurDuTrajet(etat, liaison)
-  return pousseur ? niveauPousseur(pousseur).secondesArret : SECONDES_CHARGEMENT_WAGONNET
-}
-
-// Les wagonnets déjà chargés gardent leur chargement : la nouvelle taille compte au prochain départ.
-export function ameliorerWagonnet(etat: EtatJeu): string[] {
-  const prochain = prochainNiveauWagonnet(etat)
-  if (prochain === null || !debloque(etat, 'wagonnet', etat.niveauWagonnets + 1) || !peutPayer(etat, prochain.cout)) return []
-  payer(etat, prochain.cout)
-  etat.niveauWagonnets += 1
-  return [`🚃 Wagonnets des rails plus grands (tous les trajets) : ${prochain.capacite} places.`]
+// Le temps de chaque arrêt (charger au départ, décharger ou vendre à l'arrivée) : toujours 1 s (23/10).
+export function secondesArret(_etat: EtatJeu, _liaison: IdLiaison): number {
+  return SECONDES_CHARGEMENT_WAGONNET
 }
 
 // ---------------------------------------------------------------------------
@@ -310,9 +292,10 @@ export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.p
   const bonus = trajetElectrique(etat, trajet.liaison) ? multiplicateurGenerateur(etat) : 1
   // (« electricite » : une vieille partie, un wagonnet parti tout seul ; il finit son voyage)
   if (pousseur === 'electricite') return VITESSE_POUSSE_MINEUR * bonus
-  // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard).
+  // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard), et un
+  // pousseur amélioré aussi (23/10 : sa vitesse).
   const employe = etat.employes.find((e) => e.nom === pousseur)
-  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) : 1) * bonus
+  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) * niveauPousseur(employe).vitesse : 1) * bonus
 }
 
 // Combien de fois plus vite pousse un pousseur, selon sa rareté : la moitié du bonus d'un
