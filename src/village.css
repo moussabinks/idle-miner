@@ -2946,3 +2946,20 @@ g.grille-construction {
 .fleches-rail .bouton.fleche-active {
   box-shadow: 0 0 0 3px #ffd25a;
 }
+
+/* (23/10) Pendant qu'on pose des rails, les bâtiments deviennent presque invisibles : on voit le
+   sol et les rails dessous. Leur contour au sol reste (doré pour ceux qu'on peut relier, blanc pour
+   les autres). Pas de transition : une opacité qui s'anime mettrait les images à part (flou). */
+.batiments-transparents .sprite-batiment,
+.batiments-transparents .dessus-batiment {
+  opacity: 0.12;
+}
+
+.contour-batiment-rails {
+  fill: rgb(255 255 255 / 0.12);
+  stroke: rgb(255 255 255 / 0.9);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 6;
+  pointer-events: none;
+}
