@@ -798,8 +798,7 @@ export function VueVillage({
         const b = batimentPose(village, batimentActif)
         return b ? <polygon className="emprise-active" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} /> : null
       })()}
-      {/* Le rayon du générateur : quand on le regarde (ou qu'on le pose), et en tout petit
-          quand il donne du courant. */}
+      {/* Le rayon du générateur : seulement quand son panneau est ouvert, ou qu'on le pose (23/10). */}
       <RayonGenerateur etat={etat} batimentActif={batimentActif} fantome={fantome} />
       {fantome && <LosangeEmprise x={fantome.x} y={fantome.y} taille={tailleFantome(fantome)} libre={fantomeLibre} />}
       {fantome?.type === 'sol' && fantome.sol === 'chemin' && <CaseChemin x={fantome.x} y={fantome.y} />}
@@ -960,7 +959,8 @@ function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; bati
   if (!centre) return null
   const enVue = place || batimentActif === 'generateur'
   const allume = generateurEnMarche(etat)
-  if (!enVue && !allume) return null
+  // (23/10) Plus de cercle en permanence quand il donne du courant : seulement en le regardant.
+  if (!enVue) return null
   const r = rayonGenerateur(etat)
   const points = Array.from({ length: 64 }, (_, i) => {
     const angle = (i / 64) * 2 * Math.PI

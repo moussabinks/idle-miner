@@ -12,8 +12,9 @@
 - **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse. »
 - **Le rayon sur la carte** : un **cercle en pointillés jaunes** autour du générateur (une ellipse à l'écran, car la grille est en losange) :
   - bien visible (plus épais, et les pointillés tournent) quand on est devant le générateur, ou pendant qu'on le pose (on voit alors le rayon autour du fantôme, pratique pour bien le placer) ;
-  - en tout petit, discret, le reste du temps, tant qu'il donne du courant ;
-  - gris quand il ne donne pas de courant (éteint ou sans redstone) ; caché s'il ne donne pas de courant et qu'on ne le regarde pas.
+  - gris quand il ne donne pas de courant (éteint ou sans redstone) ;
+  - **caché le reste du temps** (23/10 : avant, il restait affiché en petit tant qu'il donnait du courant).
+- **Le boost** (23/10) : dans l'onglet **🔌 Rayon et amélioration**, en grand et en or : « ⚡ Boost : + *B* % de vitesse », et ce qu'il accélère dans son rayon (ascenseur, wagonnets et pousseurs, foreuse). Chaque ligne de « Ce qu'il alimente » dit aussi « ✔ + *B* % de vitesse ! ». La fenêtre des rails, elle, ne parle plus d'électricité : c'est automatique dès que les rails sont dans le rayon.
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔴 « Plus de redstone ! »** (alerte rouge) quand il est **allumé** mais n'a plus de redstone ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet de wagonnet qui part d'ici ou y arrive n'a plus de rails complets (un rail enlevé, un bâtiment déplacé) : « Rails coupés entre … : le wagonnet attend. Repose les rails ! ». La bulle est sur les deux bâtiments du trajet ;

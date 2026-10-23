@@ -588,9 +588,10 @@ const NOMS_TRAJETS: Record<IdLiaison, string> = {
 // rareté) prend sa place, avec sa pioche, là où il était. Bien moins cher que licencier puis
 // réembaucher (le prix de la dernière place, plus les indemnités) : on peut tenter sa chance pour
 // un mineur rare.
-// (23/10) Le prix monte avec le niveau du joueur : au moins 400 $ × niveau².
+// (23/10) Le prix monte avec le niveau du joueur (au moins 200 $ × niveau²), et il ne dépend pas
+// du nombre de mineurs qu'on a : il se cale sur la dernière place qu'on PEUT avoir (maxEmployes).
 export function prixRemplacement(etat: EtatJeu): number {
-  const parPlace = prixDeBase(Math.max(0, nbDuRole(etat, 'mineur') - 1)) * PART_REMPLACEMENT
+  const parPlace = prixDeBase(Math.max(0, maxEmployes(etat) - 1)) * PART_REMPLACEMENT
   const parNiveau = PRIX_REMPLACEMENT_PAR_NIVEAU * niveauJoueur(etat) ** 2
   return arrondiPrix(Math.max(parPlace, parNiveau))
 }

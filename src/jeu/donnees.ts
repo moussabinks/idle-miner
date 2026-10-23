@@ -251,9 +251,9 @@ export const PART_INDEMNITES = 0.4
 // (23/10) Remplacer un mineur avec le recruteur (une nouvelle recrue, même pioche, même place) :
 // le quart du prix de la dernière place des mineurs, sans indemnités.
 export const PART_REMPLACEMENT = 0.25
-// (23/10) Et au moins 400 $ × (niveau du joueur)² : 48 400 $ au niveau 11 (le recruteur),
-// 67 600 $ au niveau 13, 90 000 $ au niveau 15. Avant, ça ne coûtait presque rien.
-export const PRIX_REMPLACEMENT_PAR_NIVEAU = 400
+// (23/10) Et au moins 200 $ × (niveau du joueur)² : 24 200 $ au niveau 11 (le recruteur),
+// 33 800 $ au niveau 13, 45 000 $ au niveau 15. Avant, ça ne coûtait presque rien.
+export const PRIX_REMPLACEMENT_PAR_NIVEAU = 200
 // Le temps passé à vider son sac dans le coffre (ou à vendre au marché).
 export const SECONDES_VIDAGE_EMPLOYE = 2
 // (23/10) Le temps de charger la caisse de l'ascenseur au fond de la mine.
