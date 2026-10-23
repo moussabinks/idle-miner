@@ -626,10 +626,15 @@ export const XP_PAR = {
   amelioration: 30, // un niveau de n'importe quelle amélioration (coffre, pioche, sac, ascenseur...)
   niveauMine: 150, // descendre la mine d'un niveau
   voyage: 3, // un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas)
-  // (23/10) En plus des 30 d'une amélioration : agrandir les wagonnets ou améliorer un pousseur
-  // rapporte 90 de plus (120 en tout), pour donner envie d'automatiser.
-  wagonnet: 90,
+  // (23/10) Ce qu'on achète rapporte aussi selon son prix (1 XP par VALEUR_PAR_XP dollars : une
+  // grosse amélioration en rapporte bien plus qu'une petite), et l'argent gagné un peu (1 XP par
+  // ARGENT_PAR_XP dollars). Un joueur qui clique avance plus vite (1 XP par bloc), un joueur qui
+  // laisse tourner avance quand même.
+  investi: 1,
+  gains: 1,
 }
+export const VALEUR_PAR_XP = 80
+export const ARGENT_PAR_XP = 200
 
 // L'XP qu'il faut pour passer du niveau n au niveau n + 1 : de plus en plus.
 // 60 pour passer au niveau 2, 210 pour le 3, 430 pour le 4... environ 13 000 pour le 21.

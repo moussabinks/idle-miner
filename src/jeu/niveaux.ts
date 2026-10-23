@@ -10,6 +10,7 @@
 
 import {
   BATIMENTS,
+  BLOCS,
   NIVEAUX_ASCENSEUR,
   NIVEAUX_CHARIOT,
   NIVEAUX_COFFRE,
@@ -19,14 +20,20 @@ import {
   NIVEAUX_MANAGER,
   NIVEAUX_MINE,
   NIVEAUX_POUSSEUR,
+  NIVEAUX_RECRUTEUR,
   NIVEAUX_WAGONNET,
   NIVEAU_JOUEUR_MAX,
   NIVEAU_JOUEUR_POUR,
   PIOCHES,
+  PRIX_MANAGER,
   SACS,
   XP_PAR,
+  ARGENT_PAR_XP,
+  VALEUR_PAR_XP,
   xpPourPasser,
+  type Cout,
   type IdBatiment,
+  type IdBloc,
 } from './donnees'
 import type { EtatJeu } from './mineur'
 
@@ -152,6 +159,40 @@ export function prochainDeblocage(etat: EtatJeu): { niveau: number; choses: stri
 // Gagner de l'XP
 // ---------------------------------------------------------------------------
 
+// (23/10) Ce que vaut un prix, en dollars : l'argent, plus les minerais à leur prix au marché.
+function valeurCout(cout: Cout): number {
+  return (cout.argent ?? 0) + Object.entries(cout.materiaux).reduce((total, [bloc, nombre]) => total + (nombre ?? 0) * BLOCS[bloc as IdBloc].prix, 0)
+}
+
+// La somme des prix des niveaux 1 à n d'une liste d'améliorations (le niveau 0, on l'a au départ).
+function valeurNiveaux(liste: { cout: Cout }[], jusqua: number): number {
+  let total = 0
+  for (let i = 1; i <= Math.min(jusqua, liste.length - 1); i++) total += valeurCout(liste[i].cout)
+  return total
+}
+
+// (23/10) Tout ce qu'on a acheté (bâtiments, niveaux de la mine, améliorations, pioches des
+// employés, chefs), en dollars. Une amélioration rapporte de l'XP selon son prix : plus elle
+// est chère (donc plus on avance), plus elle en rapporte. On n'est ainsi presque jamais bloqué
+// faute d'XP : chaque niveau débloque des achats qui rapportent de quoi approcher le suivant.
+export function valeurInvestie(etat: EtatJeu): number {
+  let total = 0
+  for (const b of etat.village.batiments) total += valeurCout(BATIMENTS[b.id].cout)
+  total += valeurNiveaux(NIVEAUX_MINE, etat.niveauMine - 1)
+  total += valeurNiveaux(NIVEAUX_COFFRE, etat.coffre.niveau)
+  total += valeurNiveaux(PIOCHES, etat.meilleure)
+  total += SACS.slice(1, etat.niveauSac + 1).reduce((somme, sac) => somme + sac.prix, 0)
+  total += valeurNiveaux(NIVEAUX_ASCENSEUR, etat.ascenseur.niveau - 1)
+  total += valeurNiveaux(NIVEAUX_WAGONNET, etat.niveauWagonnets)
+  total += valeurNiveaux(NIVEAUX_FORAGE, etat.foreuse.niveauVitesse)
+  total += valeurNiveaux(NIVEAUX_CHARIOT, etat.foreuse.niveauChariot)
+  total += valeurNiveaux(NIVEAUX_GENERATEUR, etat.generateur.niveau)
+  for (let i = 0; i < etat.recruteur; i++) total += valeurCout(NIVEAUX_RECRUTEUR[i].cout)
+  if (etat.manager.embauche) total += PRIX_MANAGER + valeurNiveaux(NIVEAUX_MANAGER, etat.manager.niveau ?? 0)
+  for (const e of etat.employes) total += valeurNiveaux(e.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE, e.niveau)
+  return total
+}
+
 // Les compteurs de la partie qui rapportent de l'XP.
 type Compteur = keyof typeof XP_PAR
 
@@ -178,8 +219,10 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
       etat.employes.reduce((total, e) => total + e.niveau, 0),
     niveauMine: etat.niveauMine,
     voyage: etat.stats.voyagesWagonnet,
-    // (23/10) les wagonnets agrandis et les pousseurs améliorés (un bonus en plus d'« amelioration »)
-    wagonnet: etat.niveauWagonnets + etat.employes.reduce((total, e) => total + (e.role === 'pousseur' ? e.niveau : 0), 0),
+    // (23/10) ce qu'on a acheté, selon le prix (plus c'est cher, plus ça rapporte)
+    investi: Math.floor(valeurInvestie(etat) / VALEUR_PAR_XP),
+    // (23/10) l'argent gagné (ventes) : un peu d'XP, même sans cliquer (moins qu'en jouant)
+    gains: Math.floor(etat.stats.argentGagne / ARGENT_PAR_XP),
   }
 }
 
@@ -194,7 +237,10 @@ export function mettreAJourXp(etat: EtatJeu): string[] {
   const avant = niveauJoueur(etat)
   const actuels = compteurs(etat)
   for (const cle of Object.keys(actuels) as Compteur[]) {
-    const record = etat.recordsXp[cle] ?? actuels[cle]
+    // (23/10) Une partie d'avant l'XP « selon le prix » reçoit l'XP de tout ce qu'elle a déjà
+    // acheté (un joueur qui avait tout acheté était bloqué). Les autres nouveaux compteurs partent
+    // de ce qu'elle a.
+    const record = etat.recordsXp[cle] ?? (cle === 'investi' ? 0 : actuels[cle])
     if (actuels[cle] > record) {
       etat.xp = (etat.xp ?? 0) + (actuels[cle] - record) * XP_PAR[cle]
       etat.recordsXp[cle] = actuels[cle]

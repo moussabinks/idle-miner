@@ -78,3 +78,41 @@ describe('le niveau du joueur (29/10)', () => {
     for (let n = 2; n <= 15; n++) expect(deblocagesDuNiveau(n).length, `niveau ${n}`).toBeGreaterThan(0)
   })
 })
+
+describe('l’XP selon le prix (23/10)', () => {
+  it('une amélioration chère rapporte plus qu’une petite', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    mettreAJourXp(etat)
+    const depart = etat.xp
+    etat.niveauWagonnets = 1
+    mettreAJourXp(etat)
+    const petit = etat.xp - depart
+    etat.niveauWagonnets = 3
+    mettreAJourXp(etat)
+    const gros = etat.xp - depart - petit
+    expect(petit).toBeGreaterThan(30)
+    expect(gros).toBeGreaterThan(petit * 5)
+  })
+
+  it('l’argent gagné rapporte un peu d’XP, même sans cliquer', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    mettreAJourXp(etat)
+    const depart = etat.xp
+    etat.stats.argentGagne += 20_000
+    mettreAJourXp(etat)
+    expect(etat.xp - depart).toBe(100)
+  })
+
+  it('une vieille partie reçoit l’XP de ce qu’elle avait déjà acheté', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    mettreAJourXp(etat)
+    etat.niveauWagonnets = 3
+    etat.coffre.niveau = 3
+    const records = { ...etat.recordsXp }
+    delete records.investi
+    etat.recordsXp = records
+    const avant = etat.xp
+    mettreAJourXp(etat)
+    expect(etat.xp - avant).toBeGreaterThan(200)
+  })
+})
