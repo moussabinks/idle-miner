@@ -25,6 +25,7 @@ import {
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   LIAISONS,
+  LISTE_LIAISONS,
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PRIX_EMBAUCHE,
@@ -74,12 +75,22 @@ const PAS_EMPLOYES = 30
 // Informations
 // ---------------------------------------------------------------------------
 
-// 4 mineurs au niveau 1 de la mine, puis 2 de plus par niveau.
 // Les mineurs payés en même temps repartent du Personnel l'un après l'autre, à cet écart (en s).
 const ECART_DEPART = 0.7
 
+// Combien de mineurs on peut employer (23/10) : 2 au niveau 1 de la mine, puis 2 de plus par
+// niveau. Les pousseurs ne comptent pas.
 export function maxEmployes(etat: EtatJeu): number {
   return EMPLOYES_NIVEAU_1 + EMPLOYES_PAR_NIVEAU * (etat.niveauMine - 1)
+}
+
+// Au plus un pousseur par trajet de wagonnet.
+export function maxPousseurs(): number {
+  return LISTE_LIAISONS.length
+}
+
+export function nbDuRole(etat: EtatJeu, role: RoleEmploye): number {
+  return etat.employes.filter((e) => e.role === role).length
 }
 
 // Le prix de base de la n-ième embauche (n = 0 pour la première).
@@ -95,12 +106,13 @@ function arrondiPrix(prix: number): number {
   return Math.round(prix / 100) * 100
 }
 
-// Le prix de la prochaine embauche (null si l'équipe est complète).
+// Le prix de la prochaine embauche (null s'il y a déjà assez de mineurs, ou de pousseurs).
 // (23/10) Les mineurs et les pousseurs ont chacun leurs prix : le 1er mineur coûte 500 $, et le
 // 1er pousseur aussi, même si on a déjà des mineurs.
 export function prixEmbauche(etat: EtatJeu, role: RoleEmploye = 'mineur'): number | null {
-  if (etat.employes.length >= maxEmployes(etat)) return null
-  return arrondiPrix(prixDeBase(etat.employes.filter((e) => e.role === role).length))
+  const nombre = nbDuRole(etat, role)
+  if (nombre >= (role === 'mineur' ? maxEmployes(etat) : maxPousseurs())) return null
+  return arrondiPrix(prixDeBase(nombre))
 }
 
 // Les indemnités d'un licenciement : 40 % du prix de la dernière place de son métier.

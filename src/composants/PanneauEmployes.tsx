@@ -44,6 +44,7 @@ import {
   managerAuTravail,
   managerDebloque,
   maxEmployes,
+  nbDuRole,
   nbDansSacEmploye,
   nbSansSalaire,
   payerSalaires,
@@ -456,7 +457,7 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
           <span className="texte-alerte">Pas de rails entre ces deux bâtiments : pose-les d'abord (menu Bâtiments).</span>
         ))}
       {prix === null ? (
-        <span className="discret">Ton équipe est complète.</span>
+        <span className="discret">Tu as déjà un pousseur pour chaque trajet.</span>
       ) : (
         <Achat
           etat={etat}
@@ -539,12 +540,12 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           <div className="ligne-titre">
             <strong>{avecRecruteur ? '🎲 Recruter un mineur' : '👷 Embaucher un mineur'}</strong>
             <span className="badge">
-              {etat.employes.length} / {max}
+              {nbDuRole(etat, 'mineur')} / {max}
             </span>
           </div>
           {prix === null ? (
             <span className="discret">
-              Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus.
+              Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 2 de plus.
               {avecRecruteur && ' Licencie un mineur pour tenter ta chance avec un autre !'}
             </span>
           ) : (

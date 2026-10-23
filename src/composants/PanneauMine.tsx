@@ -330,6 +330,7 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
       jouer={jouer}
       titre="📦 Coffre"
       nomStock="coffre"
+      stock="coffre"
       contenu={etat.coffre.contenu}
       capacite={capaciteCoffre(etat)}
       textePlein={`Plein (${nbDansCoffre(etat)}) : la mine s’arrête !`}

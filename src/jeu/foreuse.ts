@@ -15,7 +15,7 @@ import {
 } from './donnees'
 import { foreuseAlimentee, puissanceGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, quantiteEnPlus, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
 import { batimentPose } from './village'
 import { debloque } from './niveaux'
 
@@ -149,7 +149,9 @@ export function basculerRechargeAuto(etat: EtatJeu): string[] {
 // objet (sans lot, tout), les plus chers d'abord, tant qu'il y a de la place dans le sac.
 export function prendreDuChariot(etat: EtatJeu, lot?: Inventaire): string[] {
   let pris = 0
-  for (const [bloc, nombre] of parPrix(etat.foreuse.chariot)) {
+  for (const [bloc, tout] of parPrix(etat.foreuse.chariot)) {
+    // (23/10) on laisse dans le chariot ce que le joueur veut garder
+    const nombre = quantiteEnPlus(etat, 'chariot', bloc, tout)
     const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
     const aPrendre = Math.min(voulu, placeLibre(etat))
     if (aPrendre <= 0) continue

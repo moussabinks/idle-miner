@@ -375,6 +375,7 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
           jouer={jouer}
           titre="🛒 Chariot"
           nomStock="chariot"
+          stock="chariot"
           contenu={foreuse.chariot}
           capacite={capaciteChariot(etat)}
           textePlein={`Plein (${nbDansChariot(etat)}) : la foreuse s’arrête !`}

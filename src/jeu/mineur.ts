@@ -78,6 +78,9 @@ export function nouvellesStatistiques(): Statistiques {
 export type Coffre = {
   niveau: number // index dans NIVEAUX_COFFRE
   contenu: Inventaire
+  // (23/10) Combien en garder de chaque minerai : le wagonnet du marché et le bouton 🎒 ne
+  // prennent que ce qu'il y a en plus. Absent : on ne garde rien.
+  garder?: Inventaire
 }
 
 // La foreuse (niveau 2 de la mine) : un bâtiment qui creuse tout seul avec du charbon.
@@ -90,6 +93,7 @@ export type Foreuse = {
   chariot: Inventaire // ce que la foreuse a remonté
   nonCoches: IdBloc[] // les objets du chariot décochés (ni vendus, ni mis dans le sac)
   rechargeAuto: boolean // elle brûle le charbon qu'elle fore (au 3e niveau de forage)
+  garder?: Inventaire // (23/10) combien en garder dans le chariot, comme pour le coffre
 }
 
 // Le générateur (niveau 2 de la mine) : il brûle de la redstone et électrifie son rayon.
@@ -558,11 +562,39 @@ export function ameliorerAscenseur(etat: EtatJeu): string[] {
 
 // Met dans le sac ce qui est dans le coffre : le lot choisi, ou tout, les objets les plus chers
 // d'abord, tant qu'il y a de la place.
+// ---------------------------------------------------------------------------
+// Ce qu'on garde dans le coffre (ou le chariot de la foreuse), 23/10
+// ---------------------------------------------------------------------------
+
+// Le joueur règle, minerai par minerai, combien il veut en garder (par exemple 40 fer pour ses
+// rails) : le wagonnet vers le marché et le bouton 🎒 ne prennent que ce qu'il y a en plus.
+export type Stock = 'coffre' | 'chariot'
+
+export function quantiteAGarder(etat: EtatJeu, stock: Stock, bloc: IdBloc): number {
+  const reglage = stock === 'coffre' ? etat.coffre.garder : etat.foreuse.garder
+  return reglage?.[bloc] ?? 0
+}
+
+// Ce qu'on peut prendre de ce minerai (ce qu'il y a, moins ce qu'on garde).
+export function quantiteEnPlus(etat: EtatJeu, stock: Stock, bloc: IdBloc, nombre: number): number {
+  return Math.max(0, nombre - quantiteAGarder(etat, stock, bloc))
+}
+
+export function reglerGarde(etat: EtatJeu, stock: Stock, bloc: IdBloc, nombre: number): string[] {
+  const n = Math.max(0, Math.floor(nombre))
+  const reglage = stock === 'coffre' ? (etat.coffre.garder ??= {}) : (etat.foreuse.garder ??= {})
+  if (n > 0) reglage[bloc] = n
+  else delete reglage[bloc]
+  return []
+}
+
 export function prendreDuCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
   let place = placeLibre(etat)
   if (place <= 0) return ['🎒 Ton sac est plein : va d’abord vendre au marché.']
   let pris = 0
-  for (const [bloc, nombre] of parPrix(etat.coffre.contenu)) {
+  for (const [bloc, tout] of parPrix(etat.coffre.contenu)) {
+    // (23/10) on laisse dans le coffre ce que le joueur veut garder
+    const nombre = quantiteEnPlus(etat, 'coffre', bloc, tout)
     const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
     const n = Math.min(voulu, place)
     if (n <= 0) continue

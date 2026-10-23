@@ -30,7 +30,7 @@ import {
   tirerRarete,
   vitesseEmploye,
 } from './employes'
-import { nbDansCoffre, type EtatJeu } from './mineur'
+import { nbDansCoffre, prendreDuCoffre, quantiteAGarder, reglerGarde, type EtatJeu } from './mineur'
 
 function partie(argent = 1_000_000): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
@@ -41,11 +41,18 @@ function partie(argent = 1_000_000): EtatJeu {
 const hasard = () => aleatoireAvecGraine(11)
 
 describe('les mineurs employés', () => {
-  it('4 au niveau 1 de la mine, puis 2 de plus par niveau', () => {
+  it('2 mineurs au niveau 1 de la mine, puis 2 de plus par niveau ; les pousseurs à part (23/10)', () => {
     const etat = partie()
-    expect(maxEmployes(etat)).toBe(4)
+    expect(maxEmployes(etat)).toBe(2)
+    embaucher(etat, hasard())
+    embaucher(etat, hasard())
+    expect(prixEmbauche(etat)).toBeNull()
+    expect(embaucher(etat, hasard())).toEqual([])
+    expect(etat.employes).toHaveLength(2)
+    // un pousseur reste possible : il ne compte pas dans les mineurs
+    expect(prixEmbauche(etat, 'pousseur')).toBe(500)
     etat.niveauMine = 3
-    expect(maxEmployes(etat)).toBe(8)
+    expect(maxEmployes(etat)).toBe(6)
   })
 
   it('le premier coûte 50 $, puis le prix monte', () => {
@@ -53,9 +60,9 @@ describe('les mineurs employés', () => {
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[0])
     embaucher(etat, hasard())
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[1])
-    for (let i = 0; i < 3; i++) embaucher(etat, hasard())
-    expect(prixEmbauche(etat)).toBeNull() // équipe complète
-    expect(etat.argent).toBe(1_000_000 - PRIX_EMBAUCHE.slice(0, 4).reduce((t, p) => t + p, 0))
+    embaucher(etat, hasard())
+    expect(prixEmbauche(etat)).toBeNull() // 2 mineurs au niveau 1 de la mine
+    expect(etat.argent).toBe(1_000_000 - PRIX_EMBAUCHE.slice(0, 2).reduce((t, p) => t + p, 0))
   })
 
   it('creuse au fond sans remonter : la caisse fait des allers-retours, même pas pleine (23/10)', () => {
@@ -201,6 +208,7 @@ describe('les salaires', () => {
   it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
     const etat = partie()
     etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.niveauMine = 2 // (4 mineurs possibles)
     embaucher(etat, hasard())
     embaucher(etat, hasard())
     embaucher(etat, hasard())
@@ -296,5 +304,25 @@ describe('un mineur embauché (23/10)', () => {
     const paye = etat.employes[0].tempsPaye
     avancerEmployes(etat, 60, hasard())
     expect(etat.employes[0].tempsPaye).toBe(paye)
+  })
+})
+
+describe('garder des minerais dans le coffre (23/10)', () => {
+  it('le sac ne prend que ce qu’il y a en plus de ce qu’on garde', () => {
+    const etat = partie()
+    etat.coffre.contenu = { fer: 60 }
+    etat.inventaire = {}
+    reglerGarde(etat, 'coffre', 'fer', 40)
+    expect(quantiteAGarder(etat, 'coffre', 'fer')).toBe(40)
+    prendreDuCoffre(etat)
+    expect(etat.coffre.contenu.fer).toBe(40)
+    expect(etat.inventaire.fer).toBe(20)
+    // De nouveau 60 fer : on en reprend 20, il en reste toujours 40.
+    etat.coffre.contenu.fer = 60
+    etat.inventaire = {}
+    prendreDuCoffre(etat, { fer: 999 })
+    expect(etat.coffre.contenu.fer).toBe(40)
+    reglerGarde(etat, 'coffre', 'fer', 0)
+    expect(etat.coffre.garder).toEqual({})
   })
 })
