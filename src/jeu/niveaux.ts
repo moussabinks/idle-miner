@@ -126,7 +126,7 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['wagonnet', (i) => `🚃 Wagonnets de ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
-    ['chariot', (i) => `🛒 Chariot de ${NIVEAUX_CHARIOT[i].capacite.toLocaleString('fr-FR')} places`],
+    ['chariot', (i) => `🛒 Chariot de la foreuse : ${NIVEAUX_CHARIOT[i].capacite.toLocaleString('fr-FR')} places`],
     ['recruteur', (i) => (i === 0 ? '🎩 Le recruteur' : `🎩 Recruteur niveau ${i + 1}`)],
   ]
   for (const [chose, nom] of parNiveau) {

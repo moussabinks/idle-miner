@@ -128,7 +128,7 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   if (prochain === null || !peutAmeliorerChariot(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauChariot += 1
-  return [`🛒 Chariot plus grand : ${prochain.capacite} places.`]
+  return [`🛒 Chariot de la foreuse plus grand : ${prochain.capacite} places.`]
 }
 
 // Le chariot ne se vend plus sur place (27/10) : on met ce qu'on veut dans son sac (comme le
