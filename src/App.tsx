@@ -689,7 +689,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
       {etapeTuto !== null && (
         <Tutoriel
           etat={etat}
-          ui={{ batimentOuvert: batimentActif, menuConstruction, posePrevue: fantome?.type === 'batiment' ? fantome.id : null }}
+          ui={{ batimentOuvert: batimentActif, menuConstruction, posePrevue: fantome?.type === 'batiment' ? fantome.id : null, poseChoisie: fantomeFixe }}
           onSuivant={() => jouer(etapeSuivante)}
           onPasser={() => jouer(passerTutoriel)}
         />

@@ -215,7 +215,7 @@ export function nouveauTrajet(liaison: IdLiaison): Trajet {
 export function creerPartie(aleatoire: Aleatoire): EtatJeu {
   const etat: EtatJeu = {
     version: VERSION_ETAT,
-    argent: 0,
+    argent: 10, // (23/10) un peu d'argent de poche : au tutoriel, de quoi payer le forgeron
     inventaire: {},
     nonAVendre: [],
     niveauSac: 0,

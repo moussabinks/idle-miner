@@ -9,6 +9,8 @@ describe('le tutoriel (27/10, forgeron le 29/10)', () => {
     const hasard = aleatoireAvecGraine(1)
     const etat = creerPartie(hasard)
     expect(etapeTutoriel(etat)).toBe('bonjour')
+    // (23/10) un peu d'argent de poche au départ : de quoi payer le forgeron à la fin
+    expect(etat.argent).toBe(10)
     // Sans le bouton, on ne passe pas le bonjour.
     avancerTutoriel(etat)
     expect(etapeTutoriel(etat)).toBe('bonjour')

@@ -10,5 +10,6 @@ import { xpTotalePourNiveau } from './niveaux'
 export function partieDeTest(aleatoire: Aleatoire): EtatJeu {
   const etat = creerPartie(aleatoire)
   etat.xp = xpTotalePourNiveau(NIVEAU_JOUEUR_MAX)
+  etat.argent = 0 // (sans l'argent de poche du départ : les tests comptent depuis 0 $)
   return etat
 }
