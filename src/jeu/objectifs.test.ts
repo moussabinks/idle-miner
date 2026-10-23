@@ -54,7 +54,12 @@ describe('les missions (en haut à droite)', () => {
     etat.coffre.contenu = { pierre: 12 }
     // (le Personnel vient avant le Bazar dans le menu : 150 $ et 30 pierre)
     const personnel = missions(etat).find((m) => m.id === 'construire-employes')
-    expect(personnel).toMatchObject({ stand: 'puits', progression: { valeur: 12, max: 30 } })
+    // (23/10) tout ce qu'il faut, dès le début : l'argent et la pierre, chacun avec sa jauge
+    expect(personnel).toMatchObject({ stand: 'puits', texte: 'Construis : Personnel' })
+    expect(personnel?.elements).toEqual([
+      { icone: '💵', nom: '$', valeur: 150, max: 150 },
+      { icone: expect.any(String), nom: 'pierre', valeur: 12, max: 30 },
+    ])
     etat.coffre.contenu = { pierre: 60 }
     expect(missions(etat).find((m) => m.id === 'construire-employes')).toMatchObject({ construction: true, pret: true })
   })

@@ -19,6 +19,9 @@ export type Mission = {
   icone: string
   texte: string // « Récupère 25 pierre pour le Bazar »
   progression: { valeur: number; max: number; icone: string } | null // « 🪨 12 / 25 »
+  // (23/10) Tout ce qu'il faut pour un achat (l'argent et chaque minerai), dès le début, chacun
+  // avec sa jauge : la mission ne change plus de texte quand on a l'argent puis le fer.
+  elements: Element[] | null
   stand: IdBatiment | null // où aller quand on la touche (null : rien de précis)
   construction: boolean // la toucher ouvre le menu Bâtiments
   pret: boolean // on peut la faire tout de suite
@@ -28,8 +31,23 @@ const NOMBRE_MAX = 3
 // Au tout début : combien de blocs casser avant d'aller les vendre.
 const BLOCS_DEBUT = 10
 
+export type Element = { icone: string; nom: string; valeur: number; max: number }
+
 function mission(id: string, icone: string, texte: string, options: Partial<Mission> = {}): Mission {
-  return { id, icone, texte, progression: null, stand: null, construction: false, pret: false, ...options }
+  return { id, icone, texte, progression: null, elements: null, stand: null, construction: false, pret: false, ...options }
+}
+
+// Tout ce que demande un coût : l'argent d'abord, puis chaque minerai, avec ce qu'on a déjà.
+function elementsDuCout(etat: EtatJeu, cout: Cout): Element[] {
+  const liste: Element[] = []
+  const prix = cout.argent ?? 0
+  if (prix > 0) liste.push({ icone: '💵', nom: '$', valeur: Math.floor(Math.min(etat.argent, prix)), max: prix })
+  for (const [id, nombre] of Object.entries(cout.materiaux)) {
+    const bloc = id as IdBloc
+    const besoin = nombre ?? 0
+    if (besoin > 0) liste.push({ icone: BLOCS[bloc].emoji, nom: BLOCS[bloc].nom.toLowerCase(), valeur: Math.min(disponible(etat, bloc), besoin), max: besoin })
+  }
+  return liste
 }
 
 // Ce qu'il manque pour payer un coût : d'abord l'argent, puis chaque minerai.
@@ -47,13 +65,15 @@ function ceQuiManque(etat: EtatJeu, cout: Cout): { icone: string; nom: string; v
 
 // Une mission pour obtenir quelque chose qui coûte : « Gagne 60 $ pour X », « Récupère 25
 // pierre pour X », ou, quand tout est là, la chose elle-même (prête).
+// (23/10) Le texte ne change plus en chemin (avant : « Gagne 150 $ », puis « Récupère 30
+// pierre ») : la liste de tout ce qu'il faut est là dès le début, chaque élément avec sa jauge.
 function missionAchat(etat: EtatJeu, id: string, icone: string, nom: string, cout: Cout, options: Partial<Mission>): Mission {
+  const elements = elementsDuCout(etat, cout)
   const manque = ceQuiManque(etat, cout)
-  if (!manque) return mission(id, icone, nom, { ...options, pret: true })
-  const texte = manque.nom === '$' ? `Gagne ${manque.max.toLocaleString('fr-FR')} $ : ${nom.toLowerCase()}` : `Récupère ${manque.max} ${manque.nom} : ${nom.toLowerCase()}`
-  // Il manque des minerais : ils sortent de la mine.
+  if (!manque) return mission(id, icone, nom, { ...options, elements, pret: true })
+  // Ce qu'il manque d'abord : l'argent au marché, les minerais à la mine.
   const ou = manque.nom === '$' ? (batimentPose(etat.village, 'marche') ? 'marche' : null) : 'puits'
-  return mission(id, icone, texte, { ...options, construction: false, stand: ou, progression: { valeur: manque.valeur, max: manque.max, icone: manque.icone } })
+  return mission(id, icone, nom, { ...options, construction: false, stand: ou, elements })
 }
 
 // Les urgences : ce qui bloque la production.

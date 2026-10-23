@@ -58,10 +58,15 @@ export function StockMinerais({ etat, jouer, titre, nomStock, stock, contenu, ca
           const envoye = wagonnet && objetEnvoye(etat, liaison, bloc)
           return (
             <div key={bloc} className={`ligne-coffre ${nombre === 0 ? 'ligne-vide' : ''}`}>
-              <span className="nom-coffre" title={`${BLOCS[bloc].prix} $ pièce`}>
+              <span className="nom-coffre" title={`${BLOCS[bloc].nom} · ${BLOCS[bloc].prix} $ pièce${reserve[bloc] ? ` · ${reserve[bloc]}` : ''}`}>
                 <span aria-hidden="true">{BLOCS[bloc].emoji}</span> {BLOCS[bloc].nom}
                 <small className="discret"> {BLOCS[bloc].prix} $</small>
-                {reserve[bloc] && <small className="reserve-coffre">{reserve[bloc]}</small>}
+                {/* (23/10) juste l'icône (🔥, ⚡), le détail en bulle : tout tient sur une ligne */}
+                {reserve[bloc] && (
+                  <small className="reserve-coffre" title={reserve[bloc]}>
+                    {[...(reserve[bloc] ?? '')][0]}
+                  </small>
+                )}
               </span>
               <strong className="nombre">{nombre.toLocaleString('fr-FR')}</strong>
               {wagonnet && (

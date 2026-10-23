@@ -84,6 +84,23 @@ export function Missions({ etat, onAllerAuStand, onConstruire, compact }: Props)
             </span>
             <span className="mission-corps">
               <span className="mission-texte">{m.texte}</span>
+              {/* (23/10) Tout ce qu'il faut pour l'achat, une ligne et une jauge par élément. */}
+              {m.elements && (
+                <span className="mission-elements">
+                  {m.elements.map((el) => (
+                    <span key={el.nom} className={`mission-progression ${el.valeur >= el.max ? 'element-fait' : ''}`}>
+                      <span className="mission-piste" aria-hidden="true">
+                        <i style={{ width: `${Math.min(100, (el.valeur / Math.max(1, el.max)) * 100)}%` }} />
+                      </span>
+                      <span className="mission-compte">
+                        {el.valeur >= el.max ? '✔' : el.icone} {nombreAbrege(el.valeur)}/{nombreAbrege(el.max)}
+                        {el.nom !== '$' && ` ${el.nom}`}
+                        {el.nom === '$' && ' $'}
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              )}
               {m.progression && (
                 <span className="mission-progression">
                   <span className="mission-piste" aria-hidden="true">

@@ -502,12 +502,14 @@ function codeDeVoie(r: Raccords): string {
 
 // Tous les rails du village : le talus de toutes les cases d'abord, puis la voie en 3D. Les
 // virages doux (sur trois cases) remplacent le dessin de leurs trois cases.
-export function RailsDuVillage({ village }: { village: Village }) {
-  const virages = viragesDoux(village).map((v) => ({ v, ...carreDuVirage(v) }))
+// « seulement » : ne dessiner que ces cases (l'aperçu d'un rail à poser, 23/10), raccordées à
+// leurs voisines comme les autres.
+export function RailsDuVillage({ village, seulement }: { village: Village; seulement?: string[] }) {
+  const virages = seulement ? [] : viragesDoux(village).map((v) => ({ v, ...carreDuVirage(v) }))
   const dansUnVirage = new Set(virages.flatMap(({ v }) => [v.coin, ...v.bras.map((c) => ({ x: v.coin.x + DIRECTION[c].x, y: v.coin.y + DIRECTION[c].y }))].map((c) => cleCase(c.x, c.y))))
   const talus: { cle: string; transform: string; image: string; quarts: number }[] = []
   const voie: { cle: string; profondeur: number; image: string; x: number; y: number; cadre: typeof CADRE_VOIE }[] = []
-  for (const cle of village.rails) {
+  for (const cle of seulement ?? village.rails) {
     if (dansUnVirage.has(cle)) continue
     const c = lireCle(cle)
     const raccords = raccordsRail(village, c.x, c.y)
