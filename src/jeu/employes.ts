@@ -180,6 +180,19 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
   }
 }
 
+// Ce que rapporte sa prochaine pioche (23/10) : ses blocs par seconde (trajets compris) avant et
+// après, et la taille de son sac. null s'il a déjà la meilleure pioche (ou si c'est un pousseur).
+export function gainAmeliorationEmploye(etat: EtatJeu, employe: Employe): { avant: number; apres: number; sacAvant: number; sacApres: number } | null {
+  if (employe.role === 'pousseur' || !NIVEAUX_EMPLOYE[employe.niveau + 1]) return null
+  const ameliore = { ...employe, niveau: employe.niveau + 1 }
+  return {
+    avant: blocsParSecondeEmploye(etat, employe),
+    apres: blocsParSecondeEmploye(etat, ameliore),
+    sacAvant: tailleSacEmploye(employe),
+    sacApres: tailleSacEmploye(ameliore),
+  }
+}
+
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
@@ -387,23 +400,27 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   etat.argent -= prix
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
+  // (23/10) Il sort du Personnel et marche jusqu'à la mine, puis il y descend dans la caisse
+  // de l'ascenseur (avant, il apparaissait directement au fond de la mine).
+  const personnel = batimentPose(etat.village, 'employes') !== null
   etat.employes.push({
     nom,
     rarete,
     niveau: 0,
     role: 'mineur',
     trajet: null,
-    etape: 'descend',
+    etape: personnel ? 'marche' : 'descend',
     progression: 0,
     sac: {},
     blocsCasses: 0,
     tempsPaye: SECONDES_PAR_PAIE,
     lieu: 'puits',
-    depuis: 'puits',
+    depuis: personnel ? 'employes' : 'puits',
     forgeEnAttente: false,
+    enCabine: true,
   })
   const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
-  return [`👷 ${nom}${titre} est embauché(e) ! Il descend creuser.`]
+  return [`👷 ${nom}${titre} est embauché(e) ! Il part à la mine.`]
 }
 
 // Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
@@ -523,6 +540,8 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
     return []
   }
   employe.etape = employe.role === 'pousseur' ? 'quai' : 'descend'
+  // (il arrive à pied : c'est lui qui descend, dans la caisse)
+  if (employe.etape === 'descend') employe.enCabine = true
   return []
 }
 
@@ -590,6 +609,7 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         employe.progression = 0
         if (employe.etape === 'descend') employe.etape = 'creuse'
         else employe.etape = 'vide'
+        employe.enCabine = false
         continue
       }
     } else if (employe.etape === 'vide') {
@@ -603,8 +623,8 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
           retirerDe(employe.sac, bloc, range)
         }
         if (nbDansSacEmploye(employe) > 0) {
-          // Le coffre est plein : il attend, sans rien faire, qu'on le vide.
-          employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+          // Le coffre est plein : il attend, sans rien faire, qu'on le vide. (23/10) Ce temps
+          // d'attente n'use plus son salaire : il ne perd pas les minutes qu'on lui a payées.
           if (placeCoffre(etat) === 0) break
           continue
         }

@@ -244,3 +244,25 @@ describe('le pousseur va droit à son wagonnet (23/10)', () => {
     expect(chemin?.at(-1)).toEqual(caseQuai(etat, 'mine-marche'))
   })
 })
+
+describe('un mineur embauché (23/10)', () => {
+  it('sort du Personnel, marche jusqu’à la mine et y descend lui-même dans la caisse', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    embaucher(etat, hasard())
+    const mineur = etat.employes[0]
+    expect(mineur).toMatchObject({ etape: 'marche', depuis: 'employes', lieu: 'puits', enCabine: true })
+    avancerEmployes(etat, 30, hasard())
+    expect(['descend', 'creuse']).toContain(mineur.etape)
+  })
+
+  it('coffre plein : il attend sans user son salaire', () => {
+    const etat = partie()
+    embaucher(etat, hasard())
+    etat.coffre.contenu = { pierre: 100 }
+    avancerEmployes(etat, 200, hasard())
+    const paye = etat.employes[0].tempsPaye
+    avancerEmployes(etat, 60, hasard())
+    expect(etat.employes[0].tempsPaye).toBe(paye)
+  })
+})

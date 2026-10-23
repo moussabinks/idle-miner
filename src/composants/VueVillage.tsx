@@ -863,7 +863,7 @@ export function VueVillage({
 function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: number; miroir: boolean }) {
   const passagers = passagersAscenseur(etat)
   const duree = secondesTrajetMineur(etat)
-  // La hauteur où la caisse doit aller : celle du passager le plus proche d'elle, sinon tout en bas.
+  // La hauteur où la caisse doit aller : celle du passager le plus proche d'elle, sinon en haut.
   const [hauteur, setHauteur] = useState(0)
   const hauteurRef = useRef(0)
   // (les hauteurs des passagers, mises à jour après chaque rendu, lues à chaque image)
@@ -880,8 +880,8 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
       avant = maintenant
       const ici = hauteurRef.current
       const liste = cibles.current
-      // (23/10) Sans caisse à porter, elle redescend doucement dans le puits, jusqu'à disparaître.
-      const cible = liste.length === 0 ? 1 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
+      // Sans rien à porter, elle attend vide en haut, au bord du puits (23/10).
+      const cible = liste.length === 0 ? 0 : liste.reduce((meilleure, f) => (Math.abs(f - ici) < Math.abs(meilleure - ici) ? f : meilleure), liste[0])
       // Un peu plus vite que les mineurs, pour rattraper celui qu'elle va chercher.
       const pas = (1.6 / Math.max(0.5, duree)) * secondes
       const suivante = Math.abs(cible - ici) <= pas ? cible : ici + Math.sign(cible - ici) * pas
@@ -937,6 +937,8 @@ function passagersAscenseur(etat: EtatJeu): PassagerAscenseur[] {
     .map((m) => {
       if (m.etape === 'vide') return { f: 0, pleine: true, contenu: m.sac }
       const f = Math.max(0, Math.min(1, m.progression / secondesTrajetMineur(etat)))
+      // (23/10) Un mineur qui arrive du village descend lui-même, debout dans la caisse.
+      if (m.etape === 'descend' && m.enCabine) return { f, pleine: false, mineur: m.rarete }
       // (le sac remonte dans une caisse pleine ; la caisse redescend vide)
       return { f: m.etape === 'descend' ? f : 1 - f, pleine: m.etape === 'monte', contenu: m.sac }
     })

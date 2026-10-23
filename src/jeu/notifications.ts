@@ -30,7 +30,11 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
 
   // Les urgences.
   const salaires = alerteSalaires(etat)
-  if (salaires) ajouter('employes', { icone: '😠', texte: salaires, court: 'Salaires !', sorte: 'alerte' })
+  if (salaires) {
+    ajouter('employes', { icone: '😠', texte: salaires, court: 'Salaires !', sorte: 'alerte' })
+    // (23/10) Aussi au-dessus de la mine : c'est là qu'on voit que les mineurs ne creusent plus.
+    ajouter('puits', { icone: '😠', texte: `${salaires} Paie-les au Personnel.`, court: 'Payer !', sorte: 'alerte' })
+  }
   // Un trajet dont les rails sont coupés (un rail enlevé, un bâtiment déplacé) : son wagonnet
   // attend au quai. La bulle est sur ses deux bâtiments.
   for (const t of etat.trajets) {

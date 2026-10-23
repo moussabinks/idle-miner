@@ -34,6 +34,7 @@ import {
   manquePourUnePaie,
   embaucher,
   blocsParSecondeEmploye,
+  gainAmeliorationEmploye,
   changerTrajet,
   embaucherPousseur,
   peutEmbaucherPousseur,
@@ -301,10 +302,14 @@ function Recruteur({ etat, jouer }: Props) {
 //   - deux petites jauges côte à côte : le temps payé et le sac ;
 //   - l'amélioration de son équipement (prix et bouton).
 // Le détail complet (activité, ce qu'il t'a rapporté...) est dans l'infobulle.
+// « 0,22 », « 1,5 » : des blocs par seconde, lisibles.
+const blocsParS = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
+
 function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { employe: Employe; index: number; onLicencier: () => void }) {
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
+  const gain = gainAmeliorationEmploye(etat, employe)
   // Ce que valent en moyenne les blocs qu'il remonte en 5 minutes.
   const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
   const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
@@ -371,17 +376,24 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         )}
       </div>
       {/* Sa pioche : seulement s'il reste une amélioration (au niveau max, rien à montrer). */}
-      {!pousseur && coutPioche !== null && prochaine && (
+      {!pousseur && coutPioche !== null && prochaine && gain && (
+      <>
+      {/* (23/10) À quoi sert la nouvelle pioche : il casse plus de blocs par seconde, et porte plus. */}
+      <span className="discret">
+        ⛏️ Une meilleure pioche : il creuse plus vite et porte plus. {blocsParS(gain.avant)} → <strong>{blocsParS(gain.apres)} bloc/s</strong>{' '}
+        <span className="gain-pourcent">+{Math.round((gain.apres / Math.max(0.0001, gain.avant) - 1) * 100)} %</span> · sac {gain.sacAvant} → {gain.sacApres}
+      </span>
       <Amelioration
         etat={etat}
-        actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
+        actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} · ${blocsParS(gain.avant)} bloc/s`}
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
-        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ ${prochaine.nom}` } : null}
+        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom} : ${blocsParS(gain.apres)} bloc/s` } : null}
         verrou={verrou(etat, 'equipement', employe.niveau + 1)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
+      </>
       )}
     </div>
   )
@@ -395,6 +407,7 @@ function LigneEmploye({ etat, jouer, employe, index, onOuvrir }: Props & { emplo
   const pousseur = employe.role === 'pousseur'
   const coutPioche = pousseur ? null : coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
+  const gain = pousseur ? null : gainAmeliorationEmploye(etat, employe)
   const paye = employe.tempsPaye > 0
   return (
     <div
@@ -420,17 +433,18 @@ function LigneEmploye({ etat, jouer, employe, index, onOuvrir }: Props & { emplo
         <i style={{ width: `${Math.round(Math.min(1, employe.tempsPaye / SECONDES_PAR_PAIE) * 100)}%` }} />
         <span>{paye ? duree(employe.tempsPaye) : '😠'}</span>
       </span>
-      {coutPioche && prochaine ? (
+      {coutPioche && prochaine && gain ? (
+        // (23/10) Le bouton dit ce qu'on gagne : « ⛏️ +0,07/s · 500 $ ».
         <button
           className="bouton bouton-petit bouton-ameliorer ligne-employe-pioche"
           disabled={!peutAmeliorerEmploye(etat, employe)}
-          title={`Pioche en ${prochaine.nom} : ${argent(coutPioche.argent ?? 0)}`}
+          title={`Pioche en ${prochaine.nom} pour ${employe.nom} : il creuse ${blocsParS(gain.avant)} → ${blocsParS(gain.apres)} bloc/s, sac ${gain.sacAvant} → ${gain.sacApres}. Prix : ${argent(coutPioche.argent ?? 0)}`}
           onClick={(e) => {
             e.stopPropagation()
             jouer((x) => ameliorerEmploye(x, index))
           }}
         >
-          ⬆ {argent(coutPioche.argent ?? 0)}
+          ⛏️ +{blocsParS(gain.apres - gain.avant)}/s · {argent(coutPioche.argent ?? 0)}
         </button>
       ) : (
         <span className="ligne-employe-suite" aria-hidden="true">

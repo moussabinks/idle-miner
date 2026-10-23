@@ -6,7 +6,8 @@
 
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
-import { TAILLE_GRILLE, type IdBloc, type IdDecoration } from '../jeu/donnees'
+import { TAILLE_GRILLE, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
+import { ECHELLE_SPRITE, spritePerso } from './sprites'
 import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 import { nuance } from './couleurs'
 import { Boule, OmbreAuSol } from './Relief'
@@ -271,7 +272,7 @@ type PropsEvolutionMine = {
 // dans une caisse en bois pleine de minerais, puis la caisse vide redescend. Où elle en est
 // (0 = en haut, 1 = tout en bas), si elle est pleine (elle monte) ou vide (elle redescend), et
 // ce qu'elle porte (le sac du mineur, pour les couleurs des minerais).
-export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>> }
+export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<Record<IdBloc, number>>; mineur?: IdRarete }
 
 // La caisse de l'ascenseur (23/10, dessins de l'équipe, « caisse-ascenseur-design ») : vide
 // quand elle redescend, pleine des minerais du niveau de la mine quand elle remonte.
@@ -285,6 +286,13 @@ function imageCaisse(pleine: boolean, niveauMine: number): string {
 // Où est posée la caisse dans l'image de la mine (en pixels de mine.webp), à la hauteur de
 // référence (décalage 0) : à la place de l'ancienne cabine.
 const CAISSE = { x: 507, y: 494, largeur: 265, hauteur: 258 }
+// Où se tient un mineur dans la caisse (ses pieds, au milieu du fond), et le bord de devant de
+// la caisse (ses deux planches du haut) : il n'est visible qu'au-dessus.
+const PIED_DANS_LA_CAISSE = { x: 640, y: 640 }
+function bordCaisse(decalage: number): string {
+  const bord = [[900, 581], [765, 581], [643, 647], [514, 581], [400, 581]]
+  return [[400, -1000], [900, -1000], ...bord].map(([x, y]) => `${x},${y + (y > 0 ? decalage : 0)}`).join(' ')
+}
 
 // Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) : le
 // devant (la barrière et le sol de devant), dessiné par-dessus la caisse quand elle descend.
@@ -322,6 +330,14 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
   // La caisse est pleine quand elle remonte le sac d'un mineur (à peu près à sa hauteur, ou en
   // haut pendant qu'il le vide), vide quand elle redescend.
   const pleine = passagers.some((p) => p.pleine && Math.abs(p.f - f) < 0.2)
+  // (23/10) Un mineur qui descend lui-même (il arrive du village) : on le voit debout dans la caisse.
+  const passagerMineur = ascenseur ? passagers.find((p) => p.mineur && Math.abs(p.f - f) < 0.2)?.mineur : undefined
+  const sprite = passagerMineur ? spritePerso(passagerMineur, 'devant') : null
+  // Sa taille dans l'image de la mine : la mine (CALAGES.puits) est dessinée à une autre échelle
+  // que le monde ; un mineur y fait la même taille qu'au village.
+  // (l'image de la mine couvre ses 10 cases d'un coin à l'autre : de calage.gauche à calage.droite)
+  const pixelsParMonde = (calage.droite.x - calage.gauche.x) / (10 * 2 * DEMI_LARGEUR)
+  const echelleMineur = ECHELLE_SPRITE * pixelsParMonde
   return (
     <g className="evolution-mine">
       {/* Les câbles, la caisse et le devant, posés comme l'image de la mine (miroir compris). */}
@@ -344,6 +360,22 @@ export function DessinEvolutionMine({ x, y, miroir, niveau, ascenseur, hauteurCa
           })}
           {/* La caisse (23/10, dessin de l'équipe), avec les minerais du niveau de la mine. */}
           {ascenseur && <image href={imageCaisse(pleine, niveau)} x={CAISSE.x} y={CAISSE.y + decalage} width={CAISSE.largeur} height={CAISSE.hauteur} />}
+          {/* Le mineur dans la caisse, coupé sous le bord de devant (on voit le haut de son corps). */}
+          {sprite && (
+            <>
+              <clipPath id={`${idZone}-mineur`}>
+                <polygon points={bordCaisse(decalage)} />
+              </clipPath>
+              <image
+                href={sprite.fichier}
+                clipPath={`url(#${idZone}-mineur)`}
+                x={PIED_DANS_LA_CAISSE.x - sprite.calage.pied.x * echelleMineur}
+                y={PIED_DANS_LA_CAISSE.y + decalage - sprite.calage.pied.y * echelleMineur}
+                width={sprite.calage.largeur * echelleMineur}
+                height={sprite.calage.hauteur * echelleMineur}
+              />
+            </>
+          )}
         </g>
         <image href={IMAGE_DEVANT_MINE} x="0" y="0" width={calage.largeur} height={calage.hauteur} />
       </g>
