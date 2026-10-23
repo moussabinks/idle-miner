@@ -38,7 +38,7 @@ import {
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
-import { trajetDe } from '../jeu/wagonnet'
+import { trajetAutomatique } from '../jeu/wagonnet'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { Amelioration, BadgeXp } from './Amelioration'
 import { AmeliorationAscenseur } from './Ascenseur'
@@ -321,8 +321,9 @@ function Chances({ niveau }: { niveau: number }) {
 function CoffreMine({ etat, jouer }: PropsPanneau) {
   // Ce que les autres wagonnets prennent d'abord dans le coffre.
   const reserve: Partial<Record<IdBloc, string>> = {
-    ...(trajetDe(etat, 'mine-foreuse') ? { charbon: '🔥 foreuse d’abord' } : {}),
-    ...(trajetDe(etat, 'mine-generateur') ? { redstone: '⚡ générateur d’abord' } : {}),
+    // (23/10 : seulement si ce wagonnet a son pousseur ; sans lui, tout part au marché)
+    ...(trajetAutomatique(etat, 'mine-foreuse') ? { charbon: '🔥 foreuse d’abord' } : {}),
+    ...(trajetAutomatique(etat, 'mine-generateur') ? { redstone: '⚡ générateur d’abord' } : {}),
   }
   return (
     <StockMinerais
