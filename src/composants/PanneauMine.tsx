@@ -539,36 +539,42 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
           )}
         </div>
       )}
-      {onglet === 'creuser' && ascenseurTropPetit && (
-        <div className="goulot goulot-alerte alerte-ascenseur-mine" role="status">
-          <span>
-            🛗 <strong>Ascenseur trop petit</strong> : tes mineurs creusent {parSeconde(puits.creuse)} bloc/s, la caisse n’en remonte que {parSeconde(puits.debit)}
-            {puits.gainProchainNiveau !== null && ` · améliore-le : +${parSeconde(puits.gainProchainNiveau)} bloc/s`}.
-          </span>
-          <button className="bouton bouton-petit bouton-ameliorer" onClick={() => setOnglet('ameliorer')}>
-            ⬆️ Améliorer
-          </button>
-        </div>
-      )}
+      {/* (23/10) Deux colonnes sur grand écran : à gauche le bloc et ses compteurs, à droite le
+          coffre et le reste. Tout tient sans défiler. Sur téléphone, l'un sous l'autre. */}
       {onglet === 'creuser' && (
-        <>
-          <BlocACliquer
-            etat={etat}
-            eclats={eclats}
-            trouvailles={trouvailles}
-            onCliquer={cliquer}
-            onPalier={(palier) => jouer((e) => activerBonusCombo(e, palier))}
-            onFinCombo={(combo) => jouer((e) => noterCombo(e, combo))}
-            clicsParSeconde={clicsParSeconde}
-            valeurSession={valeurSession}
-          />
-          <CoffreMine etat={etat} jouer={jouer} />
-          {/* (30/10) Un raccourci bien visible vers les améliorations de la mine. */}
-          <button className={`raccourci-ameliorer ${ameliorable ? 'raccourci-possible' : ''}`} onClick={() => setOnglet('ameliorer')}>
-            ⬆️ Agrandir le coffre, l’ascenseur, descendre la mine {ameliorable ? '· 💰 Achetable !' : '›'}
-          </button>
-          <ProchainNiveau etat={etat} onVoir={() => setOnglet('ameliorer')} />
-        </>
+        <div className="mine-deux-colonnes">
+          <div className="mine-gauche">
+            <BlocACliquer
+              etat={etat}
+              eclats={eclats}
+              trouvailles={trouvailles}
+              onCliquer={cliquer}
+              onPalier={(palier) => jouer((e) => activerBonusCombo(e, palier))}
+              onFinCombo={(combo) => jouer((e) => noterCombo(e, combo))}
+              clicsParSeconde={clicsParSeconde}
+              valeurSession={valeurSession}
+            />
+          </div>
+          <div className="mine-droite">
+            {ascenseurTropPetit && (
+              <div className="goulot goulot-alerte alerte-ascenseur-mine" role="status">
+                <span>
+                  🛗 <strong>Ascenseur trop petit</strong> : tes mineurs creusent {parSeconde(puits.creuse)} bloc/s, la caisse n’en remonte que {parSeconde(puits.debit)}
+                  {puits.gainProchainNiveau !== null && ` · améliore-le : +${parSeconde(puits.gainProchainNiveau)} bloc/s`}.
+                </span>
+                <button className="bouton bouton-petit bouton-ameliorer" onClick={() => setOnglet('ameliorer')}>
+                  ⬆️ Améliorer
+                </button>
+              </div>
+            )}
+            <CoffreMine etat={etat} jouer={jouer} />
+            {/* (30/10) Un raccourci bien visible vers les améliorations de la mine. */}
+            <button className={`raccourci-ameliorer ${ameliorable ? 'raccourci-possible' : ''}`} onClick={() => setOnglet('ameliorer')}>
+              ⬆️ Agrandir le coffre, l’ascenseur, descendre la mine {ameliorable ? '· 💰 Achetable !' : '›'}
+            </button>
+            <ProchainNiveau etat={etat} onVoir={() => setOnglet('ameliorer')} />
+          </div>
+        </div>
       )}
 
       {onglet === 'production' && (
@@ -581,7 +587,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
       {onglet === 'wagonnets' && <PanneauTrajets etat={etat} jouer={jouer} depart="puits" onReglerTrajet={onReglerTrajet} />}
 
       {onglet === 'ameliorer' && (
-        <>
+        <div className="mine-ameliorer">
           {/* Descendre d'un niveau (27/10) : la grande carte, avec tout ce qu'on y gagne. */}
           <div className={`ligne-achat carte-niveau-mine ${prochain && peutPayer(etat, prochain.cout) ? 'niveau-achetable' : ''}`}>
             <div className="ligne-titre">
@@ -648,7 +654,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
             )}
             <AmeliorationAscenseur etat={etat} jouer={jouer} />
           </div>
-        </>
+        </div>
       )}
     </div>
   )
