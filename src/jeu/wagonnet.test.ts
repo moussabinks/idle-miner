@@ -224,14 +224,14 @@ describe('les trajets des wagonnets', () => {
     expect(ligneDe(etat, 'mine-foreuse')).toHaveLength(3)
     creerTrajet(etat, 'mine-foreuse')
     creerTrajet(etat, 'mine-marche')
-    // Le réservoir (40 charbons au début) a encore de la place pour 30 : il emporte tout ce qu'il peut.
-    etat.foreuse.carburant = 10 * SECONDES_PAR_CHARBON
+    // Le réservoir (15 charbons au début, 23/10) a encore de la place pour 10 : il emporte tout ce qu'il peut.
+    etat.foreuse.carburant = 5 * SECONDES_PAR_CHARBON
     etat.coffre.contenu = { charbon: 200, fer: 5 }
     pousserTrajet(etat, 'mine-foreuse')
     expect(trajetDe(etat, 'mine-foreuse')?.chargement).toEqual({ charbon: 40 })
     allerRetour(etat, 'mine-foreuse')
     expect(etat.foreuse.carburant).toBe(NIVEAUX_FORAGE[0].reservoir * SECONDES_PAR_CHARBON)
-    expect(etat.foreuse.chariot).toEqual({ charbon: 10 })
+    expect(etat.foreuse.chariot).toEqual({ charbon: 30 })
     // Réservoir plein : il ne repart pas, et le wagonnet du marché peut vendre le charbon.
     expect(aCharger(etat, 'mine-foreuse')).toBe(0)
     etat.coffre.contenu = { charbon: 30 }
@@ -270,7 +270,7 @@ describe('les trajets des wagonnets', () => {
     ajouterPousseur(etat, 'mine-marche')
     ajouterPousseur(etat, 'mine-generateur')
     etat.generateur.carburant = 100
-    etat.coffre.contenu = { redstone: 10, pierre: 10 }
+    etat.coffre.contenu = { redstone: 6, pierre: 10 } // (23/10) 6 redstones remplissent la réserve de 5 min
     avancerWagonnets(etat, 0.1)
     expect(trajetDe(etat, 'mine-marche')?.etape).toBe('aller')
     expect(trajetDe(etat, 'mine-generateur')?.etape).toBe('aller')

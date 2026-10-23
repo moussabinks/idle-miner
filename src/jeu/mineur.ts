@@ -102,7 +102,6 @@ export type Generateur = {
   niveau: number // index dans NIVEAUX_GENERATEUR
   carburant: number // secondes de courant restantes
   allume: boolean // on peut l'éteindre pour garder sa redstone
-  puiseDansLeCoffre: boolean // il prend tout seul la redstone du coffre de la mine (à partir du niveau 2)
 }
 
 // Un trajet de wagonnet (24/10) : le joueur l'a créé entre deux bâtiments reliés par des rails
@@ -230,7 +229,7 @@ export function nouvelleForeuse(): Foreuse {
 }
 
 export function nouveauGenerateur(): Generateur {
-  return { niveau: 0, carburant: 0, allume: true, puiseDansLeCoffre: false }
+  return { niveau: 0, carburant: 0, allume: true }
 }
 
 export function nouveauTrajet(liaison: IdLiaison): Trajet {

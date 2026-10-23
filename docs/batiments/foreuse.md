@@ -21,7 +21,7 @@
 ### 1. La remplir de charbon (État)
 
 - Un badge donne l'état : **En marche**, **Chariot plein** ou **Plus de charbon**. On voit aussi sa vitesse (« 0,8 bloc(s) par seconde », avec « (⚡ boostée par le générateur) » si elle l'est) et le nombre de blocs forés.
-- **Le réservoir** (28/10) : la foreuse garde au plus un certain nombre de charbons, plus grand à chaque niveau de forage (`NIVEAUX_FORAGE[...].reservoir` : 40, 60, 90, 130, 180, 250). Une jauge dorée le montre : « Charbon : 12 / 40 (240 s) ».
+- **Le réservoir** (28/10) : la foreuse garde au plus un certain nombre de charbons, plus grand à chaque niveau de forage (`NIVEAUX_FORAGE[...].reservoir` : 15, 21, 27, 36, 45, 54, soit **5, 7, 9, 12, 15 et 18 minutes** ; 23/10, avant : 40 à 250, de 13 min à 1 h 23 : sans pousseur, c'était trop fort). Une jauge dorée le montre : « Charbon : 12 / 15 (240 s) ». La ligne d'amélioration affiche aussi la durée (« réservoir 15 charbons (5 min) »).
 - « 1 charbon = 20 s · tu en as *N* (sac + coffre) » (« · réservoir plein » s'il l'est) et les boutons **+1**, **+10** et **Tout** (anthracite) : on met du charbon **du sac, puis du coffre de la mine**, sans dépasser le réservoir (les boutons se grisent quand il n'y a plus de place). « 🔥 +*N* charbon dans la foreuse. » ou « 🔥 Le réservoir de la foreuse est plein. »
 - Si elle n'est pas boostée : « ⚡ Dans le rayon du générateur allumé, elle fore plus vite. »
 
@@ -36,14 +36,14 @@
 
 ### 4. Améliorer la vitesse de forage (6 niveaux, `NIVEAUX_FORAGE`)
 
-| Niveau | Vitesse (blocs/s, sans électricité) | Réservoir (charbons, 28/10) | Coût (29/10) | Niveau du joueur (30/10) |
+| Niveau | Vitesse (blocs/s, sans électricité) | Réservoir (charbons, 23/10) | Coût (29/10) | Niveau du joueur (30/10) |
 |---|---:|---:|---|---:|
-| 1 | 0,5 | 40 | (de base) | — |
-| 2 | 0,8 | 60 | 3 500 $ + 50 fer + 20 redstone | 6 (avant 7) |
-| 3 | 1,2 | 90 | 10 000 $ + 100 fer + 50 redstone | 9 |
-| 4 | 1,8 | 130 | 25 000 $ + 160 fer + 100 redstone | 11 |
-| 5 | 2,6 | 180 | 60 000 $ + 160 redstone + 50 or | 14 |
-| 6 | 3,6 | 250 | 150 000 $ + 100 or + 25 émeraude | 15 |
+| 1 | 0,5 | 15 (5 min) | (de base) | — |
+| 2 | 0,8 | 21 (7 min) | 3 500 $ + 50 fer + 20 redstone | 6 (avant 7) |
+| 3 | 1,2 | 27 (9 min) | 10 000 $ + 100 fer + 50 redstone | 9 |
+| 4 | 1,8 | 36 (12 min) | 25 000 $ + 160 fer + 100 redstone | 11 |
+| 5 | 2,6 | 45 (15 min) | 60 000 $ + 160 redstone + 50 or | 14 |
+| 6 | 3,6 | 54 (18 min) | 150 000 $ + 100 or + 25 émeraude | 15 |
 
 Tout le forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude (avant le 29/10 : 100 500 $ + 190 fer + 200 redstone + 90 or + 15 émeraude). Sans le niveau du joueur, la ligne affiche « 🔒 … · au niveau *N* ». Le panneau affiche « 0,5 bloc/s sans électricité · réservoir 40 charbons » et « ⬆ 0,8 bloc/s · 60 charbons ». Message : « ⚙️ Foreuse plus rapide : *N* blocs par seconde, *R* charbons de réservoir. »
 

@@ -127,7 +127,7 @@ L'état d'une partie est un objet composé uniquement de nombres, textes, listes
 
 **`Foreuse`** : `carburant` (secondes de forage restantes), `niveauVitesse` (index dans `NIVEAUX_FORAGE`), `progression` (0 à 1 du prochain bloc), `blocsFores`, `niveauChariot` (index dans `NIVEAUX_CHARIOT`), `chariot` (inventaire foré), `nonCoches` (objets décochés), `rechargeAuto`.
 
-**`Generateur`** : `niveau` (index dans `NIVEAUX_GENERATEUR`), `carburant` (secondes de courant restantes), `allume`, `puiseDansLeCoffre`.
+**`Generateur`** : `niveau` (index dans `NIVEAUX_GENERATEUR`), `carburant` (secondes de courant restantes), `allume` (23/10 : plus de `puiseDansLeCoffre`, ignoré dans les vieilles parties).
 
 **`Trajet`** : `liaison` (`mine-marche`, `mine-foreuse`, `mine-generateur` ou `foreuse-marche`, un seul trajet par liaison), `etape` (`quai`, `aller`, `retour`), `distance` (cases déjà parcourues sur cette étape), `chargement` (inventaire), `pousseur` (`'joueur'`, `'electricite'`, le prénom de son pousseur, ou `null`).
 

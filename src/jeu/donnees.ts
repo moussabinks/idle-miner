@@ -364,9 +364,6 @@ export const LIAISONS: Record<IdLiaison, InfoLiaison> = {
 export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine-generateur', 'foreuse-marche']
 // Les bâtiments où les rails peuvent arriver (les départs et arrivées des trajets).
 export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
-// Le wagonnet de la redstone remplit le générateur jusqu'à cette réserve (en secondes de marche) :
-// 60 redstones. Celui du charbon remplit le réservoir de la foreuse (voir NIVEAUX_FORAGE).
-export const RESERVE_GENERATEUR_WAGONNET = 1800
 
 // La taille des wagonnets (au bâtiment Mine) : elle vaut pour tous les trajets.
 export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
@@ -388,17 +385,18 @@ export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
 //     wagonnet plus vite (il le pousse toujours : il ne roule plus tout seul) ;
 //   - la foreuse : elle fore plus vite.
 export const SECONDES_PAR_REDSTONE = 30
-export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; cout: Cout }[] = [
-  { rayon: 15, bonus: 0.3, cout: { materiaux: {} } },
-  { rayon: 20, bonus: 0.4, cout: { argent: 7500, materiaux: { fer: 120, redstone: 60 } } },
-  { rayon: 26, bonus: 0.5, cout: { argent: 20000, materiaux: { fer: 220, redstone: 120 } } },
-  { rayon: 33, bonus: 0.6, cout: { argent: 50000, materiaux: { fer: 350, redstone: 220 } } },
-  { rayon: 40, bonus: 0.75, cout: { argent: 120000, materiaux: { fer: 550, redstone: 420 } } },
+// (23/10) « reserveMinutes » : la redstone qu'il peut garder au plus, en minutes de marche (5 min
+// au niveau 1, puis un peu plus à chaque niveau). Sans pousseur sur Mine → Générateur, il faut
+// donc revenir le remplir souvent.
+export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; reserveMinutes: number; cout: Cout }[] = [
+  { rayon: 15, bonus: 0.3, reserveMinutes: 5, cout: { materiaux: {} } },
+  { rayon: 20, bonus: 0.4, reserveMinutes: 7, cout: { argent: 7500, materiaux: { fer: 120, redstone: 60 } } },
+  { rayon: 26, bonus: 0.5, reserveMinutes: 10, cout: { argent: 20000, materiaux: { fer: 220, redstone: 120 } } },
+  { rayon: 33, bonus: 0.6, reserveMinutes: 13, cout: { argent: 50000, materiaux: { fer: 350, redstone: 220 } } },
+  { rayon: 40, bonus: 0.75, reserveMinutes: 16, cout: { argent: 120000, materiaux: { fer: 550, redstone: 420 } } },
 ]
-// À partir de ce niveau (le 2e), le générateur peut puiser la redstone dans le coffre de la mine.
-export const NIVEAU_GENERATEUR_AUTO = 1
-// Il garde au plus 5 minutes de redstone d'avance quand il se sert dans le coffre.
-export const RESERVE_GENERATEUR_AUTO = 300
+// (23/10) Il ne se sert plus tout seul dans le coffre de la mine : sa redstone arrive par les
+// rails (un pousseur sur Mine → Générateur) ou à la main.
 
 // ---------------------------------------------------------------------------
 // La foreuse (niveau 2 de la mine) : au charbon, plus rapide sous électricité
@@ -408,13 +406,15 @@ export const SECONDES_PAR_CHARBON = 20
 
 // Chaque niveau de forage la rend plus rapide et agrandit son réservoir : le charbon qu'elle peut
 // garder au plus (28/10). Le wagonnet du charbon la remplit jusque-là, et met le reste dans son chariot.
+// (23/10) Petit : 15 charbons = 5 min au niveau 1, puis 7, 9, 12, 15 et 18 min (avant : 13 à 83 min).
+// Sans pousseur sur Mine → Foreuse, il faut donc revenir la remplir souvent.
 export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[] = [
-  { vitesse: 0.5, reservoir: 40, cout: { materiaux: {} } },
-  { vitesse: 0.8, reservoir: 60, cout: { argent: 3500, materiaux: { fer: 50, redstone: 20 } } },
-  { vitesse: 1.2, reservoir: 90, cout: { argent: 10000, materiaux: { fer: 100, redstone: 50 } } },
-  { vitesse: 1.8, reservoir: 130, cout: { argent: 25000, materiaux: { fer: 160, redstone: 100 } } },
-  { vitesse: 2.6, reservoir: 180, cout: { argent: 60000, materiaux: { redstone: 160, or: 50 } } },
-  { vitesse: 3.6, reservoir: 250, cout: { argent: 150000, materiaux: { or: 100, emeraude: 25 } } },
+  { vitesse: 0.5, reservoir: 15, cout: { materiaux: {} } },
+  { vitesse: 0.8, reservoir: 21, cout: { argent: 3500, materiaux: { fer: 50, redstone: 20 } } },
+  { vitesse: 1.2, reservoir: 27, cout: { argent: 10000, materiaux: { fer: 100, redstone: 50 } } },
+  { vitesse: 1.8, reservoir: 36, cout: { argent: 25000, materiaux: { fer: 160, redstone: 100 } } },
+  { vitesse: 2.6, reservoir: 45, cout: { argent: 60000, materiaux: { redstone: 160, or: 50 } } },
+  { vitesse: 3.6, reservoir: 54, cout: { argent: 150000, materiaux: { or: 100, emeraude: 25 } } },
 ]
 
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [

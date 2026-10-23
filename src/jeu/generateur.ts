@@ -5,11 +5,11 @@
 //   - les rails : si toutes les cases d'un trajet sont dans le rayon, son pousseur pousse le
 //     wagonnet plus vite (voir wagonnet.ts) ;
 //   - la foreuse : elle fore plus vite.
-// On le remplit de redstone (de son sac ou du coffre de la mine). À partir du niveau 2, il peut
-// se servir tout seul dans le coffre de la mine.
+// On le remplit de redstone (de son sac ou du coffre de la mine), à la main ou par les rails, jusqu'à
+// sa réserve (23/10 : 5 minutes au niveau 1, un peu plus à chaque niveau).
 
-import { BATIMENTS, NIVEAUX_GENERATEUR, NIVEAU_GENERATEUR_AUTO, RESERVE_GENERATEUR_AUTO, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
-import { disponible, payer, payerMateriaux, peutPayer, retirerDe, type EtatJeu } from './mineur'
+import { BATIMENTS, NIVEAUX_GENERATEUR, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
+import { disponible, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
 import { batimentPose, type BatimentPose, type Case } from './village'
 import { debloque } from './niveaux'
 
@@ -28,6 +28,23 @@ export function rayonGenerateur(etat: EtatJeu): number {
 // Combien de fois plus vite va ce qui est dans le rayon (1,3 au niveau 1 : + 30 %).
 export function multiplicateurGenerateur(etat: EtatJeu): number {
   return 1 + infoGenerateur(etat).bonus
+}
+
+// (23/10) La réserve : la redstone qu'il peut garder au plus, en secondes de marche.
+export function reserveMaxGenerateur(etat: EtatJeu): number {
+  return infoGenerateur(etat).reserveMinutes * 60
+}
+
+// Combien de redstones manquent pour remplir la réserve.
+export function placeRedstoneGenerateur(etat: EtatJeu): number {
+  return Math.max(0, Math.floor((reserveMaxGenerateur(etat) - etat.generateur.carburant) / SECONDES_PAR_REDSTONE))
+}
+
+// La redstone arrivée par les rails : elle remplit la réserve. Rend ce qui n'a pas trouvé de place.
+export function livrerRedstone(etat: EtatJeu, nombre: number): number {
+  const mis = Math.min(nombre, placeRedstoneGenerateur(etat))
+  etat.generateur.carburant += mis * SECONDES_PAR_REDSTONE
+  return nombre - mis
 }
 
 // « + 30 % »
@@ -84,8 +101,8 @@ export function ascenseurAlimente(etat: EtatJeu): boolean {
 // Met de la redstone (du sac, puis du coffre) dans le générateur. nombre = Infinity : tout.
 export function remplirGenerateur(etat: EtatJeu, nombre: number): string[] {
   if (!generateurPose(etat)) return []
-  const mis = Math.min(nombre, disponible(etat, 'redstone'))
-  if (mis <= 0) return ['🔴 Il te faut de la redstone (niveau 2 de la mine).']
+  const mis = Math.min(nombre, disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
+  if (mis <= 0) return placeRedstoneGenerateur(etat) === 0 && disponible(etat, 'redstone') > 0 ? ['⚡ La réserve du générateur est pleine.'] : ['🔴 Il te faut de la redstone (niveau 2 de la mine).']
   payerMateriaux(etat, { redstone: mis })
   etat.generateur.carburant += mis * SECONDES_PAR_REDSTONE
   return [`⚡ +${mis} redstone dans le générateur.`]
@@ -97,16 +114,6 @@ export function basculerGenerateur(etat: EtatJeu): string[] {
   return [etat.generateur.allume ? '⚡ Générateur allumé.' : '⚡ Générateur éteint : il garde sa redstone.']
 }
 
-export function puisageDisponible(etat: EtatJeu): boolean {
-  return etat.generateur.niveau >= NIVEAU_GENERATEUR_AUTO
-}
-
-export function basculerPuisage(etat: EtatJeu): string[] {
-  if (!puisageDisponible(etat)) return []
-  etat.generateur.puiseDansLeCoffre = !etat.generateur.puiseDansLeCoffre
-  return []
-}
-
 export function prochainNiveauGenerateur(etat: EtatJeu) {
   return NIVEAUX_GENERATEUR[etat.generateur.niveau + 1] ?? null
 }
@@ -116,7 +123,7 @@ export function ameliorerGenerateur(etat: EtatJeu): string[] {
   if (!generateurPose(etat) || prochain === null || !debloque(etat, 'generateur', etat.generateur.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.generateur.niveau += 1
-  return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, ${texteBonusGenerateur(prochain.bonus)} de vitesse dans son rayon.`]
+  return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, ${texteBonusGenerateur(prochain.bonus)} de vitesse dans son rayon, ${prochain.reserveMinutes} min de réserve.`]
 }
 
 // ---------------------------------------------------------------------------
@@ -126,15 +133,6 @@ export function ameliorerGenerateur(etat: EtatJeu): string[] {
 export function avancerGenerateur(etat: EtatJeu, secondes: number): string[] {
   const g = etat.generateur
   if (!generateurPose(etat) || !g.allume) return []
-  // Il se sert dans le coffre quand sa réserve baisse (sans tout prendre d'un coup).
-  if (g.puiseDansLeCoffre && puisageDisponible(etat) && g.carburant < RESERVE_GENERATEUR_AUTO) {
-    const voulu = Math.ceil((RESERVE_GENERATEUR_AUTO - g.carburant) / SECONDES_PAR_REDSTONE)
-    const pris = Math.min(voulu, etat.coffre.contenu.redstone ?? 0)
-    if (pris > 0) {
-      retirerDe(etat.coffre.contenu, 'redstone', pris)
-      g.carburant += pris * SECONDES_PAR_REDSTONE
-    }
-  }
   if (g.carburant <= 0) return []
   g.carburant = Math.max(0, g.carburant - secondes)
   if (g.carburant === 0) return ['⚡ Le générateur n’a plus de redstone : les rails ne sont plus électriques.']
