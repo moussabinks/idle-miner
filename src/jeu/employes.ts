@@ -1,6 +1,8 @@
 // Les mineurs employés (dès le début, au bâtiment Personnel, 22/10).
-// Un mineur creuse lentement au fond de la mine, remonte quand son sac est plein, le vide dans
-// le coffre de la mine, puis redescend. L'ascenseur raccourcit ses trajets.
+// Un mineur creuse au fond de la mine et pose ce qu'il casse dans son sac (le tas à côté de
+// lui). Il ne remonte pas (23/10) : c'est la caisse de l'ascenseur qui fait des allers-retours
+// sans cesse, prend les sacs au fond et les vide dans le coffre. Il ne remonte au village, dans
+// la caisse, que s'il n'est plus payé.
 // Les pousseurs (26/10) sont un autre métier : on les embauche pour UN trajet (par exemple Mine →
 // Marché). Ils attendent leur wagonnet au quai, devant le bâtiment de départ de ce trajet, et le
 // poussent dès qu'il a quelque chose à porter (voir wagonnet.ts). Électrique, plus besoin. Les
@@ -32,6 +34,7 @@ import {
   SALAIRES,
   SECONDES_AVANT_PAIE_MANAGER,
   SECONDES_FORGE_EMPLOYE,
+  SECONDES_CHARGEMENT_ASCENSEUR,
   SECONDES_PAR_PAIE,
   SECONDES_VIDAGE_EMPLOYE,
   VITESSE_MARCHE,
@@ -44,7 +47,22 @@ import {
 } from './donnees'
 import { debloque, niveauAtteint } from './niveaux'
 import { tirerBloc } from './mine'
-import { ajouterA, payer, retirerDe, peutPayer, placeCoffre, rangerDansCoffre, secondesTrajetMineur, totalObjets, type EtatJeu, type Employe, type RoleEmploye } from './mineur'
+import {
+  ajouterA,
+  capaciteAscenseur,
+  debitAscenseur,
+  payer,
+  retirerDe,
+  peutPayer,
+  placeCoffre,
+  rangerDansCoffre,
+  secondesTrajetMineur,
+  totalObjets,
+  type EtatJeu,
+  type Employe,
+  type Navette,
+  type RoleEmploye,
+} from './mineur'
 import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, secondesAPied, trouverChemin, type Case } from './village'
 import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
 
@@ -107,11 +125,21 @@ export function vitesseEmploye(employe: Employe): number {
   return NIVEAUX_EMPLOYE[employe.niveau].vitesse * rareteDe(employe).rendement
 }
 
-// Ce qu'un mineur fait sortir de la mine en moyenne, par seconde (creusage et trajets compris).
+// Ce que creusent par seconde tous les mineurs payés.
+export function vitesseMineurs(etat: EtatJeu): number {
+  return etat.employes.filter((e) => e.role === 'mineur' && e.tempsPaye > 0).reduce((total, e) => total + vitesseEmploye(e), 0)
+}
+
+// La part de ce que creusent les mineurs que l'ascenseur arrive à remonter (1 : tout).
+export function partRemontee(etat: EtatJeu): number {
+  const creuse = vitesseMineurs(etat)
+  return creuse <= 0 ? 1 : Math.min(1, debitAscenseur(etat) / creuse)
+}
+
+// Ce qu'un mineur fait sortir de la mine en moyenne, par seconde : ce qu'il creuse, si
+// l'ascenseur suit (sinon, sa part de ce que l'ascenseur remonte).
 export function blocsParSecondeEmploye(etat: EtatJeu, employe: Employe): number {
-  const sac = tailleSacEmploye(employe)
-  const cycle = sac / vitesseEmploye(employe) + 2 * secondesTrajetMineur(etat) + SECONDES_VIDAGE_EMPLOYE
-  return sac / cycle
+  return vitesseEmploye(employe) * partRemontee(etat)
 }
 
 export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBatiment): number {
@@ -168,9 +196,7 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
       return Math.max(0, (tailleSacEmploye(employe) - nbDansSacEmploye(employe) - employe.progression) / vitesseEmploye(employe))
     case 'monte':
     case 'descend':
-      return Math.max(0, secondesTrajetMineur(etat) - employe.progression)
-    case 'vide':
-      return Math.max(0, SECONDES_VIDAGE_EMPLOYE - employe.progression)
+      return employe.enCabine ? secondesRestantesNavette(etat) : 0
     case 'forge':
       return Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression)
     case 'marche':
@@ -180,17 +206,11 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
   }
 }
 
-// Ce que rapporte sa prochaine pioche (23/10) : ses blocs par seconde (trajets compris) avant et
-// après, et la taille de son sac. null s'il a déjà la meilleure pioche (ou si c'est un pousseur).
-export function gainAmeliorationEmploye(etat: EtatJeu, employe: Employe): { avant: number; apres: number; sacAvant: number; sacApres: number } | null {
+// Ce que rapporte sa prochaine pioche (23/10) : ce qu'il creuse par seconde, avant et après.
+// null s'il a déjà la meilleure pioche (ou si c'est un pousseur).
+export function gainAmeliorationEmploye(employe: Employe): { avant: number; apres: number } | null {
   if (employe.role === 'pousseur' || !NIVEAUX_EMPLOYE[employe.niveau + 1]) return null
-  const ameliore = { ...employe, niveau: employe.niveau + 1 }
-  return {
-    avant: blocsParSecondeEmploye(etat, employe),
-    apres: blocsParSecondeEmploye(etat, ameliore),
-    sacAvant: tailleSacEmploye(employe),
-    sacApres: tailleSacEmploye(ameliore),
-  }
+  return { avant: vitesseEmploye(employe), apres: vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) }
 }
 
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
@@ -401,7 +421,8 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
   // (23/10) Il sort du Personnel et marche jusqu'à la mine, puis il y descend dans la caisse
-  // de l'ascenseur (avant, il apparaissait directement au fond de la mine).
+  // de l'ascenseur (avant, il apparaissait directement au fond de la mine). Il attend la caisse
+  // en haut (enCabine : false), et monte dedans quand elle est là.
   const personnel = batimentPose(etat.village, 'employes') !== null
   etat.employes.push({
     nom,
@@ -417,7 +438,7 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     lieu: 'puits',
     depuis: personnel ? 'employes' : 'puits',
     forgeEnAttente: false,
-    enCabine: true,
+    enCabine: false,
   })
   const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
   return [`👷 ${nom}${titre} est embauché(e) ! Il part à la mine.`]
@@ -540,9 +561,16 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
     return []
   }
   employe.etape = employe.role === 'pousseur' ? 'quai' : 'descend'
-  // (il arrive à pied : c'est lui qui descend, dans la caisse)
-  if (employe.etape === 'descend') employe.enCabine = true
+  // (il arrive à pied : il attend la caisse en haut, puis descend dedans)
+  if (employe.etape === 'descend') employe.enCabine = false
   return []
+}
+
+// Un mineur est-il au fond de la mine (en train de creuser, d'attendre sa pioche, ou d'attendre
+// la caisse pour remonter) ?
+function auFond(employe: Employe): boolean {
+  if (employe.role !== 'mineur') return false
+  return employe.etape === 'creuse' || employe.etape === 'forge' || (employe.etape === 'monte' && !employe.enCabine)
 }
 
 function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire: Aleatoire): string[] {
@@ -550,15 +578,39 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
   let reste = secondes
   let etapes = 0
   while (reste > 1e-9 && etapes++ < 1000) {
-    // Plus de salaire : il arrête de creuser et remonte (il vide quand même son sac).
-    if (employe.tempsPaye <= 0 && (employe.etape === 'creuse' || employe.etape === 'descend')) {
-      employe.etape = 'monte'
+    // (une vieille partie : le mineur vidait lui-même son sac en haut) Il est au fond.
+    if (employe.etape === 'vide') {
+      employe.etape = 'creuse'
       employe.progression = 0
+    }
+    // Plus de salaire : il arrête de creuser et attend la caisse pour remonter au village.
+    if (employe.tempsPaye <= 0 && (employe.etape === 'creuse' || employe.etape === 'forge')) {
+      employe.etape = 'monte'
+      employe.enCabine = false
+      employe.progression = 0
+    }
+    // Payé de nouveau pendant qu'il attendait la caisse au fond : il se remet à creuser.
+    if (employe.etape === 'monte' && !employe.enCabine && employe.tempsPaye > 0) {
+      employe.etape = 'creuse'
+      employe.progression = 0
+    }
+    // Plus payé pendant qu'il attendait la caisse en haut : il ne descend pas.
+    if (employe.etape === 'descend' && !employe.enCabine && employe.tempsPaye <= 0) {
+      messages.push(...suite(etat, employe, 'puits'))
+      continue
+    }
+    // Dans la caisse, ou en train de l'attendre : c'est l'ascenseur qui décide (avancerNavette).
+    // (le temps de la descente compte dans son travail payé)
+    if (employe.etape === 'monte' || employe.etape === 'descend') {
+      if (employe.etape === 'descend' && employe.enCabine) employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+      break
     }
     // Un mineur n'attend jamais au quai (une vieille partie) : il redescend creuser.
     if (employe.etape === 'quai' && employe.role !== 'pousseur') {
       employe.etape = 'descend'
+      employe.enCabine = false
       employe.progression = 0
+      continue
     }
     // Au quai, mais pas de payé, ou pas au bon quai (son trajet a changé) : il s'en va.
     if (employe.etape === 'quai' && (employe.tempsPaye <= 0 || employe.lieu !== maisonDe(etat, employe))) {
@@ -585,8 +637,24 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
 
     let temps: number
     if (employe.etape === 'creuse') {
+      // Sa nouvelle pioche (27/10) : il attend au fond que le forgeron la fasse ; elle lui
+      // descend par l'ascenseur.
+      if (employe.forgeEnAttente) {
+        if (batimentPose(etat.village, 'forgeron')) {
+          employe.etape = 'forge'
+          employe.progression = 0
+          continue
+        }
+        employe.forgeEnAttente = false
+      }
       const vitesse = vitesseEmploye(employe)
       const place = tailleSacEmploye(employe) - nbDansSacEmploye(employe)
+      // Son sac est plein : il attend que la caisse passe le prendre. (23/10) Si c'est parce que
+      // le coffre de la mine est plein, ce temps d'attente n'use pas son salaire.
+      if (place <= 0) {
+        if (placeCoffre(etat) > 0) employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+        break
+      }
       temps = Math.min(reste, employe.tempsPaye, Math.max(0, (place - employe.progression) / vitesse))
       employe.progression += temps * vitesse
       while (employe.progression >= 1 && nbDansSacEmploye(employe) < tailleSacEmploye(employe)) {
@@ -595,44 +663,7 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         employe.blocsCasses += 1
         etat.stats.blocsMineurs += 1
       }
-      if (nbDansSacEmploye(employe) >= tailleSacEmploye(employe)) {
-        employe.etape = 'monte'
-        employe.progression = 0
-      }
-    } else if (employe.etape === 'monte' || employe.etape === 'descend') {
-      const duree = secondesTrajetMineur(etat)
-      temps = Math.min(reste, Math.max(0, duree - employe.progression))
-      employe.progression += temps
-      if (employe.progression >= duree - 1e-9) {
-        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
-        reste -= temps
-        employe.progression = 0
-        if (employe.etape === 'descend') employe.etape = 'creuse'
-        else employe.etape = 'vide'
-        employe.enCabine = false
-        continue
-      }
-    } else if (employe.etape === 'vide') {
-      // Il vide son sac dans le coffre (s'il est plein, il attend qu'il y ait de la place).
-      temps = Math.min(reste, Math.max(0, SECONDES_VIDAGE_EMPLOYE - employe.progression))
-      employe.progression += temps
-      if (employe.progression >= SECONDES_VIDAGE_EMPLOYE - 1e-9) {
-        for (const [id, nombre] of Object.entries(employe.sac)) {
-          const bloc = id as IdBloc
-          const range = rangerDansCoffre(etat, bloc, nombre ?? 0)
-          retirerDe(employe.sac, bloc, range)
-        }
-        if (nbDansSacEmploye(employe) > 0) {
-          // Le coffre est plein : il attend, sans rien faire, qu'on le vide. (23/10) Ce temps
-          // d'attente n'use plus son salaire : il ne perd pas les minutes qu'on lui a payées.
-          if (placeCoffre(etat) === 0) break
-          continue
-        }
-        employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
-        reste -= temps
-        messages.push(...suite(etat, employe, 'puits'))
-        continue
-      }
+      if (temps <= 1e-9) break
     } else if (employe.etape === 'forge') {
       temps = Math.min(reste, Math.max(0, SECONDES_FORGE_EMPLOYE - employe.progression))
       employe.progression += temps
@@ -640,7 +671,12 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         employe.tempsPaye = Math.max(0, employe.tempsPaye - temps)
         reste -= temps
         employe.forgeEnAttente = false
-        messages.push(...suite(etat, employe, employe.lieu))
+        // (une vieille partie : il était allé à la forge du village)
+        if (employe.lieu === 'forgeron') messages.push(...suite(etat, employe, 'forgeron'))
+        else {
+          employe.etape = 'creuse'
+          employe.progression = 0
+        }
         continue
       }
     } else {
@@ -661,6 +697,169 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
   return messages
 }
 
+// ---------------------------------------------------------------------------
+// La caisse de l'ascenseur (23/10)
+// ---------------------------------------------------------------------------
+
+// La caisse : elle est créée au premier besoin (une vieille partie n'en a pas). Les mineurs d'une
+// vieille partie qui montaient ou descendaient avec leur sac sont remis au fond de la mine.
+export function navette(etat: EtatJeu): Navette {
+  if (!etat.ascenseur.navette) {
+    etat.ascenseur.navette = { etape: 'haut', progression: 0, chargement: {} }
+    for (const e of etat.employes) {
+      if (e.role !== 'mineur') continue
+      if (e.etape === 'monte' || e.etape === 'descend' || e.etape === 'vide') {
+        e.etape = e.tempsPaye > 0 ? 'creuse' : 'monte'
+        e.enCabine = false
+        e.progression = 0
+      }
+    }
+  }
+  return etat.ascenseur.navette
+}
+
+// Pour l'affichage : la caisse, sans rien changer à la partie (en haut et vide si elle n'existe
+// pas encore).
+export function lireNavette(etat: EtatJeu): Navette {
+  return etat.ascenseur.navette ?? { etape: 'haut', progression: 0, chargement: {} }
+}
+
+// La caisse a-t-elle du travail ? Tant qu'un mineur est au fond (ou attend en haut pour
+// descendre), elle fait ses allers-retours, pleine ou pas. Sinon, elle attend vide en haut.
+function navetteOccupee(etat: EtatJeu, caisse: Navette): boolean {
+  if (totalObjets(caisse.chargement) > 0) return true
+  return etat.employes.some((e) => e.role === 'mineur' && (auFond(e) || e.etape === 'descend' || (e.etape === 'monte' && e.enCabine)))
+}
+
+// La durée de l'étape en cours de la caisse.
+function dureeEtapeNavette(etat: EtatJeu, caisse: Navette): number {
+  switch (caisse.etape) {
+    case 'descend':
+    case 'monte':
+      return secondesTrajetMineur(etat)
+    case 'bas':
+      return SECONDES_CHARGEMENT_ASCENSEUR
+    default:
+      return totalObjets(caisse.chargement) > 0 ? SECONDES_VIDAGE_EMPLOYE : 0
+  }
+}
+
+// Le temps avant la fin de son étape (Infinity si elle attend en haut, sans travail).
+function secondesAvantEvenementNavette(etat: EtatJeu): number {
+  const caisse = navette(etat)
+  const duree = dureeEtapeNavette(etat, caisse)
+  // En haut, arrêtée : elle attend du travail (ou de la place dans le coffre). Elle repart dès
+  // qu'elle est vide et qu'un mineur est au fond.
+  if (caisse.etape === 'haut' && caisse.progression >= duree - 1e-9) {
+    return navetteOccupee(etat, caisse) && totalObjets(caisse.chargement) === 0 ? 0.05 : Infinity
+  }
+  return Math.max(0.05, duree - caisse.progression)
+}
+
+// Pour l'affichage : les secondes avant qu'elle arrive au bout de son trajet.
+export function secondesRestantesNavette(etat: EtatJeu): number {
+  const caisse = lireNavette(etat)
+  return Math.max(0, dureeEtapeNavette(etat, caisse) - caisse.progression)
+}
+
+// La hauteur de la caisse dans le puits : 0 en haut, 1 au fond.
+export function hauteurNavette(etat: EtatJeu): number {
+  const caisse = lireNavette(etat)
+  const f = Math.max(0, Math.min(1, caisse.progression / secondesTrajetMineur(etat)))
+  if (caisse.etape === 'descend') return f
+  if (caisse.etape === 'monte') return 1 - f
+  return caisse.etape === 'bas' ? 1 : 0
+}
+
+// Les mineurs dans la caisse en ce moment.
+export function passagersNavette(etat: EtatJeu): Employe[] {
+  return etat.employes.filter((e) => e.role === 'mineur' && (e.etape === 'monte' || e.etape === 'descend') && e.enCabine)
+}
+
+// Au fond : la caisse prend les sacs des mineurs (jusqu'à être pleine), et ceux qui ne sont plus
+// payés montent dedans.
+function chargerNavette(etat: EtatJeu, caisse: Navette): void {
+  let place = capaciteAscenseur(etat) - totalObjets(caisse.chargement)
+  for (const e of etat.employes) {
+    if (!auFond(e)) continue
+    for (const [id, nombre] of Object.entries(e.sac)) {
+      const pris = Math.min(place, nombre ?? 0)
+      if (pris <= 0) continue
+      ajouterA(caisse.chargement, id as IdBloc, pris)
+      retirerDe(e.sac, id as IdBloc, pris)
+      place -= pris
+    }
+    if (e.etape === 'monte' && e.tempsPaye <= 0) {
+      e.enCabine = true
+      e.progression = 0
+    }
+  }
+}
+
+function avancerNavette(etat: EtatJeu, secondes: number): string[] {
+  const messages: string[] = []
+  const caisse = navette(etat)
+  let reste = secondes
+  let etapes = 0
+  while (reste > 1e-9 && etapes++ < 1000) {
+    if (caisse.etape === 'haut') {
+      const duree = dureeEtapeNavette(etat, caisse)
+      const temps = Math.min(reste, Math.max(0, duree - caisse.progression))
+      caisse.progression += temps
+      reste -= temps
+      if (caisse.progression < duree - 1e-9) break
+      // Elle se vide dans le coffre (s'il est plein, elle attend qu'il y ait de la place).
+      for (const [id, nombre] of Object.entries(caisse.chargement)) {
+        const range = rangerDansCoffre(etat, id as IdBloc, nombre ?? 0)
+        retirerDe(caisse.chargement, id as IdBloc, range)
+      }
+      if (totalObjets(caisse.chargement) > 0) break
+      if (!navetteOccupee(etat, caisse)) {
+        caisse.progression = duree
+        break
+      }
+      // Elle repart vers le fond, avec ceux qui attendaient pour descendre.
+      for (const e of etat.employes) {
+        if (e.role === 'mineur' && e.etape === 'descend' && !e.enCabine) {
+          e.enCabine = true
+          e.progression = 0
+        }
+      }
+      caisse.etape = 'descend'
+      caisse.progression = 0
+      continue
+    }
+    const duree = dureeEtapeNavette(etat, caisse)
+    const temps = Math.min(reste, Math.max(0, duree - caisse.progression))
+    caisse.progression += temps
+    reste -= temps
+    if (caisse.progression < duree - 1e-9) break
+    caisse.progression = 0
+    if (caisse.etape === 'descend') {
+      // Au fond : ceux qui sont descendus se mettent à creuser.
+      for (const e of passagersNavette(etat)) {
+        if (e.etape !== 'descend') continue
+        e.etape = 'creuse'
+        e.enCabine = false
+        e.progression = 0
+      }
+      caisse.etape = 'bas'
+    } else if (caisse.etape === 'bas') {
+      chargerNavette(etat, caisse)
+      caisse.etape = 'monte'
+    } else {
+      // En haut : ceux qui ne sont plus payés sortent et vont au Personnel.
+      for (const e of passagersNavette(etat)) {
+        if (e.etape !== 'monte') continue
+        e.enCabine = false
+        messages.push(...suite(etat, e, 'puits'))
+      }
+      caisse.etape = 'haut'
+    }
+  }
+  return messages
+}
+
 function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   const manager = etat.manager
   if (!manager.embauche || manager.tempsPaye <= 0) return []
@@ -670,13 +869,16 @@ function travaillerManager(etat: EtatJeu, secondes: number): string[] {
 }
 
 export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
-  if (etat.employes.length === 0 && !etat.manager.embauche) return []
+  if (etat.employes.length === 0 && !etat.manager.embauche && totalObjets(navette(etat).chargement) === 0) return []
   const messages: string[] = []
   let reste = secondes
   while (reste > 1e-9) {
-    const pas = Math.min(reste, PAS_EMPLOYES)
+    // (23/10) On avance par petits morceaux, jusqu'au prochain arrêt de la caisse de
+    // l'ascenseur : les mineurs creusent pendant qu'elle fait ses allers-retours.
+    const pas = Math.min(reste, PAS_EMPLOYES, secondesAvantEvenementNavette(etat))
     payerParManager(etat)
     for (const employe of etat.employes) messages.push(...travailler(etat, employe, pas, aleatoire))
+    messages.push(...avancerNavette(etat, pas))
     messages.push(...travaillerManager(etat, pas))
     reste -= pas
   }
@@ -700,13 +902,16 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
     case 'attend':
       return '😠 attend son salaire devant le Personnel'
     case 'creuse':
-      return `⛏️ creuse au fond (sac plein dans ${secondes} s)`
+      if (nbDansSacEmploye(employe) >= tailleSacEmploye(employe)) {
+        return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : '🎒 sac plein : attend la caisse de l’ascenseur'
+      }
+      return '⛏️ creuse au fond de la mine'
     case 'monte':
-      return employe.tempsPaye <= 0 ? `😠 plus payé : remonte au village (${secondes} s)` : `⏫ son sac remonte dans la caisse (${secondes} s)`
+      return employe.enCabine ? `😠 plus payé : remonte au village dans la caisse (${secondes} s)` : '😠 plus payé : attend la caisse pour remonter'
     case 'vide':
-      return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : `📦 la caisse se vide dans le coffre (${secondes} s)`
+      return '⛏️ creuse au fond de la mine'
     case 'descend':
-      return `⏬ la caisse lui redescend (${secondes} s)`
+      return employe.enCabine ? `⏬ descend dans la mine (${secondes} s)` : '⏳ attend la caisse en haut de la mine'
     case 'quai':
       return employe.trajet && !trajetDe(etat, employe.trajet) ? '🛤️ attend : son trajet est arrêté' : '🛤️ attend son wagonnet au quai'
     case 'pousse':
@@ -720,6 +925,6 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
 
 export function iconeActiviteEmploye(employe: Employe): string {
   if (employe.etape === 'attend' || ((employe.etape === 'monte' || employe.etape === 'marche') && employe.tempsPaye <= 0)) return '😠'
-  const icones: Record<string, string> = { creuse: '⛏️', monte: '⏫', vide: '📦', descend: '⏬', quai: '🛤️', pousse: '🛤️', forge: '🔨', marche: '🚶' }
+  const icones: Record<string, string> = { creuse: '⛏️', monte: '⏫', vide: '⛏️', descend: '⏬', quai: '🛤️', pousse: '🛤️', forge: '🔨', marche: '🚶' }
   return icones[employe.etape] ?? '⛏️'
 }

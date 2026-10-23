@@ -21,11 +21,11 @@
 
 Depuis le 27/10, le panneau est rangé en **trois onglets** (`OngletsPanneau`) et n'a plus de long paragraphe d'introduction :
 
-- **👷 Équipe (*n*)** : les salaires sur une ligne (sans manager : le total, le temps payé, « Payer · *prix* »), puis **toute l'équipe, une ligne par employé** (27/10, pour que rien ne défile) : le bord de la couleur de sa rareté, ce qu'il fait, son nom, son rendement (ou l'arrivée de son trajet pour un pousseur), une petite barre de salaire payé, et le bouton de sa prochaine pioche (« ⬆ *prix* »). Les mineurs d'abord, puis les pousseurs. **Toucher une ligne ouvre sa fiche** (la carte complète : rareté, rendement, salaire, sac, pioche, Licencier, trajet d'un pousseur), avec **← Équipe** pour revenir. Pastille « ! » si quelqu'un n'est pas payé. Sans personne : « Personne pour l'instant » et un bouton **➕ Recruter un mineur** qui ouvre l'onglet Recruter ;
+- **👷 Employés (*n*)** (renommé le 23/10, avant « Équipe ») : les salaires sur une ligne (sans manager : le total, le temps payé, « Payer · *prix* »), puis **la carte complète de chaque employé** (23/10 : plus de fiche à ouvrir, tout est visible directement) : les mineurs d'abord, puis les pousseurs. Pastille « ! » si quelqu'un n'est pas payé. Sans personne : « Personne pour l'instant » et un bouton **➕ Recruter un mineur** qui ouvre l'onglet Recruter ;
 - **➕ Recruter** : **👷 Embaucher un mineur** (ou **🎲 Recruter**) et **🛤️ Embaucher un pousseur**. Pastille « + » quand on peut payer une embauche ;
 - **💼 Chefs** : le **manager** (et la trésorerie) et le **recruteur**. Pastille « ! » si le manager n'a plus de trésorerie.
 
-Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur **Équipe**.
+Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur **Employés**.
 
 **Deux métiers** (26/10) : les **mineurs** ne font que creuser et remonter leur sac dans le coffre de la mine. Les **pousseurs** ne creusent jamais : ils poussent le wagonnet d'un seul trajet. On ne passe plus de l'un à l'autre (l'ancien bouton « 🛤️ Pousser le wagonnet / ⛏️ Creuser » est retiré).
 
@@ -47,31 +47,27 @@ Le 30/10, le premier mineur est un peu moins cher, mais les prix **montent bien 
 
 ### 2. La carte d'un employé
 
-Une carte compacte par employé (encore raccourcie le 27/10), pour voir toute l'équipe d'un coup :
+Une carte par employé, directement dans l'onglet Employés (23/10 : avant, une ligne qu'il fallait toucher pour ouvrir sa fiche) :
 
-- son **prénom**, sa **rareté** (avec « ×*N* » si elle n'est pas commune), l'icône de ce qu'il fait et le temps restant (⛏️ creuse, ⏫ remonte, 📦 vide son sac, ⏬ redescend, 🛤️ au quai ou pousse, 🔨 à la forge, 🚶 marche, 😠 pas payé), et le lien **Licencier** ;
-- **un mineur** : « ⛏️ *x* bloc/s · salaire *y* / 5 min » (ce que ses blocs valent par 5 minutes est dans l'info-bulle), deux petites jauges (**⏳ temps payé**, vert ou rouge « 😠 Plus payé », et **🎒 sac**) et la ligne d'amélioration de sa **pioche**, **seulement s'il reste une amélioration** (au niveau max, rien n'est montré) ;
-- **un pousseur** : « 🛤️ Pousse le wagonnet **Mine → Marché** · salaire *Y* $ », une liste pour **changer son trajet** (seulement les trajets qui ont leurs rails), et la jauge **⏳ temps payé**. Pas de sac ni de pioche : il ne creuse pas.
-
-L'infobulle donne son activité en entier, sa vitesse en creusant et le nombre de blocs qu'il a cassés.
+- son **prénom**, sa **rareté** (avec « ×*N* » si elle n'est pas commune), l'icône de ce qu'il fait (⛏️ creuse, ⏬ descend, ⏫ remonte, 🛤️ au quai ou pousse, 🔨 attend sa pioche, 🚶 marche, 😠 pas payé), et le lien **Licencier** ;
+- **un mineur** : « ⛏️ **0,5 bloc/s** · salaire *y* / 5 min · rapporte ≈ *z* / 5 min », ce qu'il fait en ce moment (« creuse au fond de la mine · *n* blocs cassés », « 🎒 sac plein : attend la caisse de l'ascenseur »…), deux petites jauges (**⏳ temps payé**, vert ou rouge « 😠 Plus payé », et **🎒 sac**) et **sa prochaine pioche**, seulement s'il en reste une : en grand, **« 0,5 ➜ 0,6 bloc/s »** (ce qu'il creuse avant et après, sans pourcentage), puis « ⛏️ Pioche en Bois » et le bouton « ⬆ Pioche en Pierre » avec son prix ;
+- **un pousseur** : « 🛤️ Pousse le wagonnet **Mine → Marché** · salaire *Y* $ », une liste pour **changer son trajet** (seulement les trajets qui ont leurs rails), ce qu'il fait, et la jauge **⏳ temps payé**. Pas de sac ni de pioche : il ne creuse pas.
 
 ### 3. Améliorer la pioche d'un mineur (pas des pousseurs)
 
-Chaque amélioration donne une meilleure pioche (il creuse plus vite) **et** un plus grand sac (moins d'allers-retours). Payé **en argent seulement** (`NIVEAUX_EMPLOYE`). Ces pioches ne s'usent pas.
+Chaque amélioration donne une meilleure pioche : il creuse plus vite, et son sac (le tas où il pose ses blocs au fond, en attendant la caisse de l'ascenseur) est plus grand. Payé **en argent seulement** (`NIVEAUX_EMPLOYE`). Ces pioches ne s'usent pas.
 
-| Niveau | Pioche | Vitesse en creusant | Sac | Coût (30/10) | Niveau du joueur | Salaire / 5 min (30/10) | Blocs par minute (ascenseur niveau 1, au départ) | Blocs par minute (ascenseur niveau 6) |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| 1 | Bois | 0,22 bloc/s | 10 | (de base) | — | 90 $ | ~10,1 | ~12,1 |
-| 2 | Pierre | 0,32 bloc/s | 15 | 500 $ | 4 | 220 $ | ~14,8 | ~17,7 |
-| 3 | Fer | 0,48 bloc/s | 20 | 3 000 $ | 6 | 500 $ | ~21,6 | ~26,3 |
-| 4 | Or | 0,7 bloc/s | 30 | 15 000 $ | 9 | 1 100 $ | ~31,7 | ~38,4 |
-| 5 | Diamant | 1 bloc/s | 45 | 60 000 $ | 12 | 2 400 $ | ~45,8 | ~55,1 |
+| Niveau | Pioche | Creuse (23/10) | Sac | Coût | Niveau du joueur | Salaire / 5 min (23/10) |
+|---|---|---:|---:|---:|---:|---:|
+| 1 | Bois | 0,5 bloc/s | 10 | (de base) | — | 150 $ |
+| 2 | Pierre | 0,6 bloc/s | 15 | 500 $ | 4 | 320 $ |
+| 3 | Fer | 0,75 bloc/s | 20 | 3 000 $ | 6 | 600 $ |
+| 4 | Or | 0,95 bloc/s | 30 | 15 000 $ | 9 | 1 000 $ |
+| 5 | Diamant | 1,2 bloc/s | 45 | 60 000 $ | 12 | 1 600 $ |
 
-Un mineur équipé jusqu'au diamant coûte 78 500 $ de pioches (30/10 ; 29/10 : 400, 1 500, 6 000 et 22 000 $, soit 29 900 $, avec des vitesses de 0,15 à 0,9 bloc/s et des salaires de 35 à 770 $ ; avant le 29/10 : 12 250 $). Le mineur en bois creuse plus vite depuis le 30/10 (0,22 au lieu de 0,15). Sans le niveau du joueur, la fiche du mineur affiche « 🔒 … · au niveau *N* » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
+Le 23/10, le premier mineur creuse **0,5 bloc/s** (avant 0,22) et ne remonte plus : il creuse sans s'arrêter, c'est l'ascenseur qui fait les allers-retours. Pour garder le même rythme de partie (niveau 5 de la mine en 6 h 30 à 7 h 30 pour le bot), les pioches suivantes montent moins (0,6 à 1,2 au lieu de 0,32 à 1) et les salaires suivent à peu près la pioche (150 à 1 600 $ au lieu de 90 à 2 400 $) : une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-et-léchelle)). Sans le niveau du joueur, la carte affiche « 🔒 … ⭐ *N* requis » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
 
-(Pour un mineur commun, trajets compris. Depuis le 30/10, les salaires sont **bien plus chers** : environ 40 % de ce qu'il fait sortir de la mine, et plus au début (un mineur en bois au niveau 1 de la mine coûte environ 60 % de ce qu'il sort) ; payés toutes les 5 minutes depuis le 28/10.)
-
-- **Sa pioche lui descend par l'ascenseur** (27/10) : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite ; à la fin de son tour, le mineur attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse (« ⛏️ Le forgeron fait une pioche en … pour *X* : elle lui descendra par l'ascenseur. »). Il ne remonte plus au village pour ça : **un mineur ne remonte que s'il n'est plus payé** (il va alors attendre devant le Personnel). Sans forgeron, il l'a directement. Une pioche ne s'achète pas pour un pousseur (il ne creuse pas).
+- **Sa pioche lui descend par l'ascenseur** (27/10) : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite ; le mineur attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse (« ⛏️ Le forgeron fait une pioche en … pour *X* : elle lui descendra par l'ascenseur. »). Il ne remonte plus au village pour ça : **un mineur ne remonte que s'il n'est plus payé** (il va alors attendre devant le Personnel). Sans forgeron, il l'a directement. Une pioche ne s'achète pas pour un pousseur (il ne creuse pas).
 
 ### 4. Les pousseurs
 
@@ -152,11 +148,11 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 
 ## Règles et comportement
 
-- **Le travail d'un mineur**, en boucle (`travailler` dans `employes.ts`) : il **descend** dans la mine, **creuse** jusqu'à ce que son sac soit plein, **remonte**, **vide son sac dans le coffre de la mine** (2 s, `SECONDES_VIDAGE_EMPLOYE`), puis redescend. Il ne creuse pas pendant les trajets.
-- **Ses trajets** : avec l'**ascenseur** (au panneau de la mine, là dès le début depuis le 30/10), une montée ou une descente dure de 6 s (niveau 1) à 1 s (niveau 6). L'**échelle** (**10 s**, `SECONDES_ECHELLE`) ne servait que sans ascenseur, dans les vieilles parties.
+- **Le travail d'un mineur** (`travailler` dans `employes.ts`, refait le 23/10) : arrivé à la mine, il **attend la caisse de l'ascenseur en haut** et descend dedans ; au fond, il **creuse sans s'arrêter** et pose ses blocs dans son sac. **La caisse de l'ascenseur fait des allers-retours sans cesse** (`avancerNavette`), même pas pleine : au fond, elle prend les sacs (jusqu'à sa capacité), remonte et se vide dans le coffre de la mine. Sac plein (l'ascenseur ne suit pas) : il attend la caisse. **Il ne remonte jamais avec ses blocs** : on ne voit un mineur dans la caisse que quand il descend (il arrive) ou quand il remonte parce qu'il n'est plus payé.
+- **L'ascenseur** : de 6 s le trajet et 15 blocs par voyage (niveau 1, là dès le début) à 1 s et 130 blocs (niveau 6). Voir [mine.md](mine.md#lascenseur-et-léchelle). L'**échelle** (**10 s**, 20 blocs) ne sert que sans ascenseur, dans les vieilles parties.
 - **Ce qu'il trouve** : des blocs tirés au hasard selon le **niveau de la mine** (les mêmes chances que la mine). Il ne double jamais ses minerais.
-- **Coffre plein** : il attend devant, son sac plein, sans rien faire (« 📦 attend : le coffre de la mine est plein ! »), en continuant d'être payé. Il vide dès qu'il y a de la place.
-- **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : s'il creusait ou descendait, il remonte ; en haut, il vide quand même son sac, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (**2,5 cases par seconde** depuis le 27/10, avant 4 ; `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet. **Plusieurs mineurs payés en même temps repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) ; ceux qui attendent encore leur tour restent à leur place devant le Personnel.
+- **Coffre plein** : la caisse attend en haut, pleine, et le mineur remplit son sac puis attend (« 📦 attend : le coffre de la mine est plein ! »), **sans user son salaire**. Tout repart dès qu'il y a de la place.
+- **Le temps payé s'écoule pendant tout son travail** (trajets, attente au quai et poussée compris). Quand il n'est plus payé : il arrête de creuser et **attend la caisse au fond** (la caisse emporte quand même son sac), **remonte dedans**, puis **marche jusqu'au Personnel et attend devant**, mécontent, avec une bulle 😠 (« 😠 *X* n'est plus payé(e) : il va attendre son salaire devant le Personnel. »). Un pousseur au quai fait pareil. Sans bâtiment Personnel posé, il attend là où il est. Dès qu'on le paie, il repart à pied (**2,5 cases par seconde** depuis le 27/10, avant 4 ; `VITESSE_MARCHE`) : un mineur vers la mine, un pousseur vers le quai de son trajet. **Plusieurs mineurs payés en même temps repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) ; ceux qui attendent encore leur tour restent à leur place devant le Personnel.
 - **Un mineur n'attend jamais au quai** : s'il y en a un (une vieille partie), il redescend aussitôt creuser.
 - **Le manager paie tout seul** : dès qu'il reste **moins d'une minute** payée (`SECONDES_AVANT_PAIE_MANAGER = 60`), il paie 5 minutes de plus avec la trésorerie, **d'abord lui-même**, puis les mineurs **du moins cher au plus cher** (s'il n'y a pas assez, le plus de mineurs possible continuent). **S'il n'est pas payé, il ne paie plus personne** (« 💼 Ton manager n'est plus payé : la trésorerie est vide ! Remplis-la au Personnel. »). Le travail avance par morceaux de 30 secondes, pour que le manager ait le temps de payer entre deux morceaux après une longue absence.
 - **Hors ligne** : les mineurs **continuent de travailler** pendant que le jeu est fermé (rattrapage de **8 heures au plus**), tant qu'ils sont payés ; le manager continue aussi de payer avec la trésorerie. Au retour, la fenêtre « Bon retour, mineur ! » (30/10, `FenetreAbsence.tsx`) dit combien de blocs **tes mineurs ont creusé** et combien de blocs de plus sont dans le coffre et, s'il y a lieu, « 😠 *N* mineurs attendent leur salaire ».

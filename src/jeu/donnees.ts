@@ -198,16 +198,18 @@ export const SECONDES_ECHELLE = 10
 export type NiveauAscenseur = {
   niveau: number
   cout: Cout
-  secondesTrajet: number // le temps d'un trajet (montée ou descente) d'un mineur
+  secondesTrajet: number // le temps d'un trajet (montée ou descente) de la caisse
+  capacite: number // (23/10) combien de blocs la caisse remonte à chaque voyage (petite au début :
+  // avec plus de 2 mineurs, il faut améliorer l'ascenseur)
 }
 
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6 }, // déjà dans la mine au départ
-  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4 },
-  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8 },
-  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2 },
-  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4 },
-  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1 },
+  { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6, capacite: 15 }, // déjà dans la mine au départ
+  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4, capacite: 25 },
+  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8, capacite: 40 },
+  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2, capacite: 60 },
+  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4, capacite: 90 },
+  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1, capacite: 130 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -227,6 +229,10 @@ export const HAUSSE_APRES_LISTE = 2.2
 export const PART_INDEMNITES = 0.4
 // Le temps passé à vider son sac dans le coffre (ou à vendre au marché).
 export const SECONDES_VIDAGE_EMPLOYE = 2
+// (23/10) Le temps de charger la caisse de l'ascenseur au fond de la mine.
+export const SECONDES_CHARGEMENT_ASCENSEUR = 1
+// La caisse d'une vieille partie sans ascenseur (à l'échelle).
+export const CAPACITE_ECHELLE = 20
 export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
@@ -236,18 +242,22 @@ export const NOMS_EMPLOYES = [
 // environ 35 % de ce qu'il fait sortir de la mine (28/10 : paie toutes les 5 minutes, et plus
 // chère ; avant, 25 % toutes les 10 minutes, c'était trop peu).
 export const SECONDES_PAR_PAIE = 5 * 60
-// (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir.)
-export const SALAIRES = [90, 220, 500, 1100, 2400]
+// (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir. 23/10 : les mineurs ne remontent
+// plus et creusent bien plus : le salaire suit à peu près sa pioche, pour qu'une meilleure pioche
+// rapporte toujours plus qu'elle ne coûte en salaire.)
+export const SALAIRES = [150, 320, 600, 1000, 1600]
 
-// L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite, et un plus grand
-// sac lui fait faire moins d'allers-retours. Payé en argent seulement.
+// L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite. Son sac est le tas
+// qu'il remplit au fond de la mine en attendant que la caisse de l'ascenseur passe le prendre
+// (23/10) : plein, il attend la caisse. Payé en argent seulement.
 export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout: Cout }[] = [
-  // (30/10 : le mineur en bois creuse plus vite : 0,22 au lieu de 0,15)
-  { nom: 'Bois', vitesse: 0.22, sac: 10, cout: { materiaux: {} } },
-  { nom: 'Pierre', vitesse: 0.32, sac: 15, cout: { argent: 500, materiaux: {} } },
-  { nom: 'Fer', vitesse: 0.48, sac: 20, cout: { argent: 3000, materiaux: {} } },
-  { nom: 'Or', vitesse: 0.7, sac: 30, cout: { argent: 15000, materiaux: {} } },
-  { nom: 'Diamant', vitesse: 1, sac: 45, cout: { argent: 60000, materiaux: {} } },
+  // (23/10 : le mineur en bois creuse 0,5 bloc/s, et il ne remonte plus : c'est l'ascenseur qui
+  // fait les allers-retours)
+  { nom: 'Bois', vitesse: 0.5, sac: 10, cout: { materiaux: {} } },
+  { nom: 'Pierre', vitesse: 0.6, sac: 15, cout: { argent: 500, materiaux: {} } },
+  { nom: 'Fer', vitesse: 0.75, sac: 20, cout: { argent: 3000, materiaux: {} } },
+  { nom: 'Or', vitesse: 0.95, sac: 30, cout: { argent: 15000, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 1.2, sac: 45, cout: { argent: 60000, materiaux: {} } },
 ]
 
 // --- La rareté des mineurs (avec le recruteur, dès le niveau 3 de la mine) ---

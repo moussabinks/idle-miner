@@ -4,7 +4,7 @@
 // qui en sort va dans le coffre de la mine :
 //   - la mine sort toute seule quelques blocs par seconde (le vieux treuil) ;
 //   - le joueur, devant la mine, clique sur le bloc : chaque clic casse un bloc ;
-//   - les mineurs employés creusent et remontent leur sac (voir employes.ts) ;
+//   - les mineurs employés creusent, et la caisse de l'ascenseur remonte leurs blocs (voir employes.ts) ;
 //   - la foreuse a son propre chariot (voir foreuse.ts).
 // Le joueur prend ce qui est dans le coffre, le porte au marché et le vend. Avec des rails de la
 // mine au marché, le wagonnet porte le coffre au marché (voir wagonnet.ts) : poussé par le
@@ -24,6 +24,9 @@ import {
   PIOCHES,
   SACS,
   SECONDES_ECHELLE,
+  SECONDES_CHARGEMENT_ASCENSEUR,
+  SECONDES_VIDAGE_EMPLOYE,
+  CAPACITE_ECHELLE,
   type BonusCombo,
   type Cout,
   type IdBloc,
@@ -113,8 +116,9 @@ export type Trajet = {
 }
 
 // Ce que fait un mineur employé :
-//   - un mineur : il creuse au fond (« creuse »), remonte (« monte »), vide son sac dans le
-//     coffre (« vide »), redescend (« descend ») ;
+//   - un mineur (23/10) : il descend dans la caisse de l'ascenseur (« descend »), creuse au fond
+//     (« creuse »), et ne remonte dans la caisse (« monte ») que s'il n'est plus payé. (« vide » :
+//     seulement dans les vieilles parties, quand il vidait lui-même son sac) ;
 //   - un pousseur (embauché pour un trajet, 26/10) : il attend son wagonnet au quai, devant le
 //     bâtiment de départ de son trajet (« quai »), et le pousse jusqu'à l'arrivée et
 //     retour (« pousse ») ;
@@ -137,9 +141,20 @@ export type Employe = {
   lieu: IdBatiment // où il est (ou vers où il marche)
   depuis: IdBatiment // d'où il part
   forgeEnAttente: boolean // il doit passer à la forge chercher sa nouvelle pioche
-  // (23/10) Il arrive à pied du village : il descend lui-même dans la caisse de l'ascenseur (on
-  // le voit dedans). Sinon, c'est seulement la caisse vide qui redescend.
+  // (23/10) Il est dans la caisse de l'ascenseur (on le voit dedans) : il arrive du village et
+  // descend, ou il n'est plus payé et remonte. En « descend » ou « monte » sans être dans la
+  // caisse, il l'attend (en haut pour descendre, au fond pour remonter).
   enCabine?: boolean
+}
+
+// La caisse de l'ascenseur (23/10) : elle fait des allers-retours sans cesse tant que des
+// mineurs travaillent au fond, pleine ou pas. En haut, elle se vide dans le coffre ; au fond,
+// elle prend ce que les mineurs ont creusé. Les mineurs, eux, restent au fond.
+export type EtapeNavette = 'haut' | 'descend' | 'bas' | 'monte'
+export type Navette = {
+  etape: EtapeNavette
+  progression: number // les secondes passées dans cette étape
+  chargement: Inventaire // les blocs dans la caisse
 }
 
 // Le manager (niveau 4 de la mine) : il paie les salaires tout seul, avec la trésorerie.
@@ -165,7 +180,7 @@ export type EtatJeu = {
   pioches: Record<number, number> // pioches possédées : niveau -> usure (clics déjà donnés)
   niveauPioche: number // la pioche en main
   meilleure: number // la meilleure pioche débloquée
-  ascenseur: { niveau: number } // 0 = pas d'ascenseur (les mineurs prennent l'échelle)
+  ascenseur: { niveau: number; navette?: Navette } // 0 = pas d'ascenseur (une vieille partie : l'échelle)
   employes: Employe[]
   recruteur: number // 0 = pas embauché
   manager: Manager
@@ -231,7 +246,8 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     pioches: { 0: 0 }, // la pioche en pierre est offerte
     niveauPioche: 0,
     meilleure: 0,
-    ascenseur: { niveau: 1 }, // (30/10) la mine a son ascenseur dès le début
+    // (30/10) la mine a son ascenseur dès le début ; (23/10) sa caisse attend vide en haut
+    ascenseur: { niveau: 1, navette: { etape: 'haut', progression: 0, chargement: {} } },
     employes: [],
     recruteur: 0,
     manager: { embauche: false, tempsPaye: 0 },
@@ -507,6 +523,21 @@ export function prochainNiveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
 // Le temps d'un trajet (montée ou descente) d'un mineur : à l'échelle, ou en ascenseur.
 export function secondesTrajetMineur(etat: EtatJeu): number {
   return niveauAscenseur(etat)?.secondesTrajet ?? SECONDES_ECHELLE
+}
+
+// (23/10) Combien de blocs la caisse de l'ascenseur remonte à chaque voyage.
+export function capaciteAscenseur(etat: EtatJeu): number {
+  return niveauAscenseur(etat)?.capacite ?? CAPACITE_ECHELLE
+}
+
+// La durée d'un aller-retour de la caisse (descendre, charger, remonter, vider).
+export function secondesAllerRetourAscenseur(etat: EtatJeu): number {
+  return 2 * secondesTrajetMineur(etat) + SECONDES_CHARGEMENT_ASCENSEUR + SECONDES_VIDAGE_EMPLOYE
+}
+
+// Combien de blocs par seconde l'ascenseur peut remonter au plus.
+export function debitAscenseur(etat: EtatJeu): number {
+  return capaciteAscenseur(etat) / secondesAllerRetourAscenseur(etat)
 }
 
 export function ameliorerAscenseur(etat: EtatJeu): string[] {

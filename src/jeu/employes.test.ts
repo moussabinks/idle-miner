@@ -30,7 +30,7 @@ import {
   tirerRarete,
   vitesseEmploye,
 } from './employes'
-import { ameliorerAscenseur, nbDansCoffre, type EtatJeu } from './mineur'
+import { nbDansCoffre, type EtatJeu } from './mineur'
 
 function partie(argent = 1_000_000): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
@@ -58,36 +58,64 @@ describe('les mineurs employés', () => {
     expect(etat.argent).toBe(1_000_000 - PRIX_EMBAUCHE.slice(0, 4).reduce((t, p) => t + p, 0))
   })
 
-  it('creuse lentement, remonte son sac et le vide dans le coffre', () => {
+  it('creuse au fond sans remonter : la caisse fait des allers-retours, même pas pleine (23/10)', () => {
     const etat = partie()
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
-    expect(vitesseEmploye(mineur)).toBe(NIVEAUX_EMPLOYE[0].vitesse)
+    expect(vitesseEmploye(mineur)).toBe(0.5)
     expect(tailleSacEmploye(mineur)).toBe(NIVEAUX_EMPLOYE[0].sac)
-    // Descente (6 s, l'ascenseur du départ), creusage (10 blocs à 0,22 par seconde), montée (6 s), vidage (2 s).
-    avancerEmployes(etat, 6 + 10 / 0.22 + 6 + 2 + 0.5, hasard())
-    expect(nbDansCoffre(etat)).toBe(10)
-    expect(activiteEmploye(etat, mineur)).toContain('redescend')
+    const etapes = new Set<string>()
+    for (let i = 0; i < 120; i++) {
+      avancerEmployes(etat, 0.5, hasard())
+      etapes.add(mineur.etape)
+    }
+    // En 60 s à 0,5 bloc/s, il a creusé une trentaine de blocs : la caisse en a déjà remonté
+    // plusieurs fois, sans attendre d'être pleine (30 places).
+    expect(nbDansCoffre(etat)).toBeGreaterThan(10)
+    expect(etat.stats.blocsMineurs).toBeLessThanOrEqual(30)
+    expect(etapes.has('monte')).toBe(false)
+    expect(etapes.has('vide')).toBe(false)
+    expect(mineur.etape).toBe('creuse')
   })
 
-  it('l’ascenseur lui fait remonter plus de blocs par seconde', () => {
+  it('l’ascenseur lui fait remonter plus de blocs par seconde quand il ne suit pas', () => {
     const etat = partie()
-    embaucher(etat, hasard())
+    etat.ascenseur.niveau = 0 // (à l'échelle : la caisse remonte peu)
+    for (let i = 0; i < 3; i++) embaucher(etat, hasard())
     const avant = blocsParSecondeEmploye(etat, etat.employes[0])
-    etat.inventaire = { fer: 50, redstone: 10 }
-    ameliorerAscenseur(etat)
+    expect(avant).toBeLessThan(vitesseEmploye(etat.employes[0]))
+    etat.ascenseur.niveau = 1
     expect(blocsParSecondeEmploye(etat, etat.employes[0])).toBeGreaterThan(avant)
   })
 
-  it('coffre plein : il attend devant, sans perdre son sac', () => {
+  it('coffre plein : il remplit son sac au fond et attend, la caisse reste en haut', () => {
     const etat = partie()
     embaucher(etat, hasard())
     etat.coffre.contenu = { pierre: 100 }
     avancerEmployes(etat, 200, hasard())
     const mineur = etat.employes[0]
-    expect(mineur.etape).toBe('vide')
+    expect(mineur.etape).toBe('creuse')
     expect(activiteEmploye(etat, mineur)).toContain('plein')
     expect(Object.values(mineur.sac).reduce((t, n) => t + (n ?? 0), 0)).toBe(10)
+    expect(etat.ascenseur.navette?.etape).toBe('haut')
+  })
+
+  it('pas payé : il attend la caisse au fond et remonte dedans, puis va au Personnel', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    embaucher(etat, hasard())
+    const mineur = etat.employes[0]
+    avancerEmployes(etat, 40, hasard())
+    expect(mineur.etape).toBe('creuse')
+    mineur.tempsPaye = 0
+    const vus = new Set<string>()
+    for (let i = 0; i < 80; i++) {
+      avancerEmployes(etat, 0.5, hasard())
+      vus.add(`${mineur.etape}${mineur.enCabine ? '-caisse' : ''}`)
+    }
+    expect(vus.has('monte')).toBe(true)
+    expect(vus.has('monte-caisse')).toBe(true)
+    expect(mineur.lieu).toBe('employes')
   })
 
   it('une meilleure pioche : il creuse plus vite et porte plus', () => {
@@ -158,7 +186,11 @@ describe('les salaires', () => {
     const etat = partie()
     embaucher(etat, hasard())
     expect(peutPayerSalaires(etat, SECONDES_PAR_PAIE)).toBe(false) // déjà payé pour 5 minutes
-    avancerEmployes(etat, SECONDES_PAR_PAIE + 5, hasard())
+    // (on vide le coffre de la mine au fur et à mesure : plein, il attendrait sans user son salaire)
+    for (let i = 0; i < 31; i++) {
+      etat.coffre.contenu = {}
+      avancerEmployes(etat, 10, hasard())
+    }
     expect(alerteSalaires(etat)).toContain('attend son salaire')
     expect(coutSalaires(etat, SECONDES_PAR_PAIE)).toBe(SALAIRES[0])
     payerSalaires(etat, SECONDES_PAR_PAIE)
@@ -251,7 +283,7 @@ describe('un mineur embauché (23/10)', () => {
     etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
-    expect(mineur).toMatchObject({ etape: 'marche', depuis: 'employes', lieu: 'puits', enCabine: true })
+    expect(mineur).toMatchObject({ etape: 'marche', depuis: 'employes', lieu: 'puits' })
     avancerEmployes(etat, 30, hasard())
     expect(['descend', 'creuse']).toContain(mineur.etape)
   })

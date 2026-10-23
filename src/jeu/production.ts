@@ -3,10 +3,9 @@
 // ça rapporte à peu près ; et les goulots (l'ascenseur, le wagonnet du marché suivent-ils ?).
 // Ce sont des moyennes : les vrais blocs sont tirés au hasard.
 
-import { SECONDES_VIDAGE_EMPLOYE } from './donnees'
-import { blocsParSecondeEmploye, tailleSacEmploye, vitesseEmploye } from './employes'
+import { blocsParSecondeEmploye, vitesseMineurs } from './employes'
 import { valeurMoyenneBloc } from './mine'
-import { coffrePlein, debitMine, prochainNiveauAscenseur, secondesTrajetMineur, type EtatJeu, type Employe } from './mineur'
+import { coffrePlein, debitAscenseur, debitMine, prochainNiveauAscenseur, type EtatJeu, type Employe } from './mineur'
 import { capaciteWagonnet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
 
 export type ProductionMineur = {
@@ -45,42 +44,33 @@ export function production(etat: EtatJeu): Production {
 // Les goulots (27/10) : l'ascenseur et le wagonnet suivent-ils la production ?
 // ---------------------------------------------------------------------------
 
-// L'ascenseur : chaque mineur fait des allers-retours (creuser, remonter, vider, redescendre).
-// Le temps passé dans le puits est du temps où il ne creuse pas. On calcule la part de leur
-// temps perdue dans le puits, et ce que rapporterait le niveau suivant de l'ascenseur.
+// L'ascenseur (23/10) : sa caisse fait des allers-retours sans cesse et remonte au plus
+// « capacité / durée d'un aller-retour » blocs par seconde. Si les mineurs creusent plus que ça,
+// leurs sacs se remplissent au fond et ils attendent la caisse au lieu de creuser.
 export type AnalyseAscenseur = {
-  partDansLePuits: number // 0 à 1 : la part du temps des mineurs passée à monter et descendre
+  debit: number // blocs par seconde que l'ascenseur peut remonter au plus
+  creuse: number // blocs par seconde que creusent les mineurs payés
+  remplissage: number // 0 à 1 (ou plus) : la part de la caisse que les mineurs remplissent
   gainProchainNiveau: number | null // blocs/s de plus avec le niveau suivant (null : niveau max)
-  tropLent: boolean // les mineurs perdent beaucoup de temps : l'améliorer vaut le coup
+  tropLent: boolean // les mineurs attendent la caisse : l'améliorer vaut le coup
 }
-
-// Au-delà de cette part du temps dans le puits, on prévient que l'ascenseur est trop lent.
-export const PART_PUITS_TROP_LENTE = 0.2
 
 // Le niveau suivant de l'ascenseur doit rapporter au moins cette part de ce que sortent les
 // mineurs (10 %) pour qu'on le conseille.
 const GAIN_ASCENSEUR_UTILE = 0.1
 
 export function analyseAscenseur(etat: EtatJeu): AnalyseAscenseur {
-  const mineurs = etat.employes.filter((e) => e.role === 'mineur')
-  if (mineurs.length === 0) return { partDansLePuits: 0, gainProchainNiveau: null, tropLent: false }
-  const trajet = secondesTrajetMineur(etat)
-  const part =
-    mineurs.reduce((total, m) => {
-      const sac = tailleSacEmploye(m)
-      const cycle = sac / vitesseEmploye(m) + 2 * trajet + SECONDES_VIDAGE_EMPLOYE
-      return total + (2 * trajet) / cycle
-    }, 0) / mineurs.length
+  const creuse = vitesseMineurs(etat)
+  const debit = debitAscenseur(etat)
   const prochain = prochainNiveauAscenseur(etat)
   let gain: number | null = null
   if (prochain) {
     const avecProchain = { ...etat, ascenseur: { ...etat.ascenseur, niveau: prochain.niveau } }
-    gain = mineurs.reduce((total, m) => total + blocsParSecondeEmploye(avecProchain, m) - blocsParSecondeEmploye(etat, m), 0)
+    gain = Math.min(creuse, debitAscenseur(avecProchain)) - Math.min(creuse, debit)
   }
   // (30/10) Pas d'alerte pour un gain minuscule (« +0,01 bloc/s ») : il faut que ça vaille le coup.
-  const totalMineurs = mineurs.reduce((total, m) => total + blocsParSecondeEmploye(etat, m), 0)
-  const gainUtile = gain !== null && gain >= GAIN_ASCENSEUR_UTILE * totalMineurs
-  return { partDansLePuits: part, gainProchainNiveau: gain, tropLent: prochain !== null && part > PART_PUITS_TROP_LENTE && gainUtile }
+  const gainUtile = gain !== null && gain >= GAIN_ASCENSEUR_UTILE * Math.min(creuse, debit)
+  return { debit, creuse, remplissage: debit > 0 ? creuse / debit : 0, gainProchainNiveau: gain, tropLent: prochain !== null && creuse > debit && gainUtile }
 }
 
 // Le wagonnet Mine → Marché : combien de blocs par seconde il peut emporter au plus (sa

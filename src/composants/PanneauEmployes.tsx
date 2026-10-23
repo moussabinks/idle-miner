@@ -1,5 +1,5 @@
-// Le stand Personnel : on embauche des mineurs qui creusent tout seuls et remontent leur sac
-// dans le coffre de la mine, et (26/10) des pousseurs, chacun pour un trajet de wagonnet : on
+// Le stand Personnel : on embauche des mineurs qui creusent tout seuls au fond de la mine (la
+// caisse de l'ascenseur remonte ce qu'ils cassent dans le coffre de la mine), et (26/10) des pousseurs, chacun pour un trajet de wagonnet : on
 // choisit son départ et son arrivée, et le trajet brille sur la carte avant qu'on confirme.
 // On leur paie un salaire toutes les 5 minutes (ou c'est le manager qui s'en charge, au
 // niveau 4 de la mine). Au niveau 3, le recruteur trouve des mineurs plus ou moins rares :
@@ -33,7 +33,6 @@ import {
   depensesParPaie,
   manquePourUnePaie,
   embaucher,
-  blocsParSecondeEmploye,
   gainAmeliorationEmploye,
   changerTrajet,
   embaucherPousseur,
@@ -298,26 +297,26 @@ function Recruteur({ etat, jouer }: Props) {
 // La carte d'un mineur, compacte pour voir toute l'équipe d'un coup d'œil :
 //   - son nom, sa rareté, ce qu'il fait (icône + temps restant) et « Licencier » ;
 //   - pour un pousseur : son trajet (on peut le changer) ;
-//   - ce qu'il rapporte et son salaire, sur une ligne ;
+//   - ce qu'il creuse, son salaire et ce qu'il rapporte, sur une ligne ;
+//   - ce qu'il fait en ce moment ;
 //   - deux petites jauges côte à côte : le temps payé et le sac ;
-//   - l'amélioration de son équipement (prix et bouton).
-// Le détail complet (activité, ce qu'il t'a rapporté...) est dans l'infobulle.
-// « 0,22 », « 1,5 » : des blocs par seconde, lisibles.
+//   - sa prochaine pioche : ses blocs par seconde avant ➜ après, et le bouton.
+// (23/10) Tout est sur la carte, directement dans l'onglet Employés : plus de fiche à ouvrir.
+// « 0,5 », « 1,2 » : des blocs par seconde, lisibles.
 const blocsParS = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
 
 function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { employe: Employe; index: number; onLicencier: () => void }) {
   const rarete = rareteDe(employe)
   const coutPioche = coutAmeliorationEmploye(employe)
   const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
-  const gain = gainAmeliorationEmploye(etat, employe)
+  const gain = gainAmeliorationEmploye(employe)
   // Ce que valent en moyenne les blocs qu'il remonte en 5 minutes.
   const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
-  const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
-  const detail = `${activiteEmploye(etat, employe)} · ${vitesseEmploye(employe).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} bloc/s en creusant · ${employe.blocsCasses.toLocaleString('fr-FR')} blocs cassés`
+  const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' || employe.etape === 'creuse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
   const pousseur = employe.role === 'pousseur'
 
   return (
-    <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete}`} title={detail}>
+    <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete} ${employe.tempsPaye > 0 ? '' : 'carte-employe-alerte'}`}>
       <div className="ligne-titre">
         <strong className="nom-employe">
           {employe.nom}
@@ -353,12 +352,16 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         </div>
       ) : (
         <div className="module-ligne">
-          {/* Court (27/10) : son rendement et son salaire ; le détail est dans l'info-bulle. */}
-          <span className="discret" title={`Ses blocs valent environ ${argent(rapporte)} toutes les 5 minutes`}>
-            ⛏️ {blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} bloc/s · salaire {argent(salaireEmploye(employe))} / 5 min
+          {/* (23/10) Tout est visible sur sa carte : ce qu'il creuse, son salaire, ce qu'il fait. */}
+          <span className="discret">
+            ⛏️ <strong>{blocsParS(vitesseEmploye(employe))} bloc/s</strong> · salaire {argent(salaireEmploye(employe))} / 5 min · rapporte ≈ {argent(rapporte)} / 5 min
           </span>
         </div>
       )}
+      <span className="discret activite-employe">
+        {activiteEmploye(etat, employe)}
+        {!pousseur && ` · ${employe.blocsCasses.toLocaleString('fr-FR')} blocs cassés`}
+      </span>
       <div className="jauges-employe">
         <Barre
           valeur={employe.tempsPaye}
@@ -378,78 +381,26 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
       {/* Sa pioche : seulement s'il reste une amélioration (au niveau max, rien à montrer). */}
       {!pousseur && coutPioche !== null && prochaine && gain && (
       <>
-      {/* (23/10) À quoi sert la nouvelle pioche : il casse plus de blocs par seconde, et porte plus. */}
-      <span className="discret">
-        ⛏️ Une meilleure pioche : il creuse plus vite et porte plus. {blocsParS(gain.avant)} → <strong>{blocsParS(gain.apres)} bloc/s</strong>{' '}
-        <span className="gain-pourcent">+{Math.round((gain.apres / Math.max(0.0001, gain.avant) - 1) * 100)} %</span> · sac {gain.sacAvant} → {gain.sacApres}
-      </span>
+      {/* (23/10) Ce que change la nouvelle pioche, en grand : ses blocs par seconde, avant → après. */}
+      <div className="gain-pioche" aria-label={`Nouvelle pioche : ${blocsParS(gain.avant)} puis ${blocsParS(gain.apres)} blocs par seconde`}>
+        <span className="gain-pioche-avant">{blocsParS(gain.avant)}</span>
+        <span className="gain-pioche-fleche" aria-hidden="true">
+          ➜
+        </span>
+        <span className="gain-pioche-apres">{blocsParS(gain.apres)}</span>
+        <span className="gain-pioche-unite">bloc/s</span>
+      </div>
       <Amelioration
         etat={etat}
-        actuel={`Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} · ${blocsParS(gain.avant)} bloc/s`}
+        actuel={`⛏️ Pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}`}
         niveau={employe.niveau + 1}
         niveauMax={NIVEAUX_EMPLOYE.length}
-        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom} : ${blocsParS(gain.apres)} bloc/s` } : null}
+        suivant={coutPioche !== null && prochaine ? { cout: coutPioche, texte: `⬆ Pioche en ${prochaine.nom}` } : null}
         verrou={verrou(etat, 'equipement', employe.niveau + 1)}
         possible={peutAmeliorerEmploye(etat, employe)}
         onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
       />
       </>
-      )}
-    </div>
-  )
-}
-
-// Un employé en une seule ligne (27/10), pour que toute l'équipe tienne sans défiler : sa
-// rareté (la couleur du bord), ce qu'il fait, son nom, son rendement (ou son trajet), son
-// salaire payé (une petite barre) et le bouton de sa prochaine pioche. Le toucher ouvre sa fiche.
-function LigneEmploye({ etat, jouer, employe, index, onOuvrir }: Props & { employe: Employe; index: number; onOuvrir: () => void }) {
-  const rarete = rareteDe(employe)
-  const pousseur = employe.role === 'pousseur'
-  const coutPioche = pousseur ? null : coutAmeliorationEmploye(employe)
-  const prochaine = NIVEAUX_EMPLOYE[employe.niveau + 1]
-  const gain = pousseur ? null : gainAmeliorationEmploye(etat, employe)
-  const paye = employe.tempsPaye > 0
-  return (
-    <div
-      className={`ligne-employe rarete-${employe.rarete} ${paye ? '' : 'ligne-employe-alerte'}`}
-      role="button"
-      tabIndex={0}
-      title={`${employe.nom} · ${rarete.nom} · ${activiteEmploye(etat, employe)} · toucher pour sa fiche`}
-      onClick={onOuvrir}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOuvrir()}
-    >
-      <span className="ligne-employe-icone" aria-hidden="true">
-        {iconeActiviteEmploye(employe)}
-      </span>
-      <span className="ligne-employe-nom">{employe.nom}</span>
-      <span className="ligne-employe-stat">
-        {pousseur
-          ? employe.trajet
-            ? `🛤️ ${BATIMENTS[LIAISONS[employe.trajet].arrivee].nom}`
-            : '🛤️ —'
-          : `${blocsParSecondeEmploye(etat, employe).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}/s`}
-      </span>
-      <span className="ligne-employe-paye" title={paye ? `Payé encore ${duree(employe.tempsPaye)}` : 'Plus payé : il ne travaille plus'}>
-        <i style={{ width: `${Math.round(Math.min(1, employe.tempsPaye / SECONDES_PAR_PAIE) * 100)}%` }} />
-        <span>{paye ? duree(employe.tempsPaye) : '😠'}</span>
-      </span>
-      {coutPioche && prochaine && gain ? (
-        // (23/10) Le bouton dit ce qu'on gagne : « ⛏️ +0,07/s · 500 $ ».
-        <button
-          className="bouton bouton-petit bouton-ameliorer ligne-employe-pioche"
-          disabled={!peutAmeliorerEmploye(etat, employe)}
-          title={`Pioche en ${prochaine.nom} pour ${employe.nom} : il creuse ${blocsParS(gain.avant)} → ${blocsParS(gain.apres)} bloc/s, sac ${gain.sacAvant} → ${gain.sacApres}. Prix : ${argent(coutPioche.argent ?? 0)}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            jouer((x) => ameliorerEmploye(x, index))
-          }}
-        >
-          ⛏️ +{blocsParS(gain.apres - gain.avant)}/s · {argent(coutPioche.argent ?? 0)}
-        </button>
-      ) : (
-        <span className="ligne-employe-suite" aria-hidden="true">
-          ›
-        </span>
       )}
     </div>
   )
@@ -533,9 +484,6 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   const [aLicencier, setALicencier] = useState<number | null>(null)
 
   const [onglet, setOnglet] = useState<'equipe' | 'recruter' | 'chefs'>(etat.employes.length === 0 ? 'recruter' : 'equipe')
-  // L'employé dont on regarde la fiche (null : la liste de l'équipe).
-  const [fiche, setFiche] = useState<number | null>(null)
-  const employeFiche = fiche !== null ? (etat.employes[fiche] ?? null) : null
   const prix = prixEmbauche(etat)
   const max = maxEmployes(etat)
   const avecRecruteur = etat.recruteur > 0
@@ -550,10 +498,10 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   const managerVide = etat.manager.embauche && !managerAuTravail(etat)
   return (
     <div className="liste-cartes">
-      {/* Trois onglets (27/10) : l'équipe (et les salaires), recruter, les chefs. */}
+      {/* Trois onglets (27/10) : les employés (et les salaires), recruter, les chefs. */}
       <OngletsPanneau
         onglets={[
-          { id: 'equipe', titre: `👷 Équipe (${etat.employes.length})`, pastille: sansSalaire > 0 ? '!' : null },
+          { id: 'equipe', titre: `👷 Employés (${etat.employes.length})`, pastille: sansSalaire > 0 ? '!' : null },
           { id: 'recruter', titre: '➕ Recruter', pastille: prix !== null && etat.argent >= prix ? '+' : null },
           { id: 'chefs', titre: '💼 Chefs', pastille: managerVide ? '!' : null },
         ]}
@@ -569,24 +517,16 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           </button>
         </div>
       )}
-      {/* La fiche d'un employé (on revient à la liste avec « ← Équipe »). */}
-      {onglet === 'equipe' && employeFiche && fiche !== null && (
-        <>
-          <button className="bouton bouton-petit bouton-neutre retour-equipe" onClick={() => setFiche(null)}>
-            ← Équipe
-          </button>
-          <CarteMineur etat={etat} jouer={jouer} employe={employeFiche} index={fiche} onLicencier={() => setALicencier(fiche)} />
-        </>
-      )}
-      {onglet === 'equipe' && !employeFiche && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
-      {/* Toute l'équipe, une ligne chacun : les mineurs, puis les pousseurs. */}
-      {onglet === 'equipe' && !employeFiche && etat.employes.length > 0 && (
+      {onglet === 'equipe' && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
+      {/* (23/10) Tous les employés, chacun sa carte avec ses infos et ses stats (plus de fiche à
+          ouvrir) : les mineurs, puis les pousseurs. */}
+      {onglet === 'equipe' && etat.employes.length > 0 && (
         <div className="liste-employes">
           {etat.employes
             .map((employe, index) => ({ employe, index }))
             .sort((a, b) => (a.employe.role === b.employe.role ? 0 : a.employe.role === 'mineur' ? -1 : 1))
             .map(({ employe, index }) => (
-              <LigneEmploye key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onOuvrir={() => setFiche(index)} />
+              <CarteMineur key={`${employe.nom}-${index}`} etat={etat} jouer={jouer} employe={employe} index={index} onLicencier={() => setALicencier(index)} />
             ))}
         </div>
       )}
@@ -637,7 +577,6 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           onConfirmer={() => {
             jouer((e) => licencier(e, aLicencier))
             setALicencier(null)
-            setFiche(null)
           }}
           onAnnuler={() => setALicencier(null)}
         >

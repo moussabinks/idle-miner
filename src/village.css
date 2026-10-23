@@ -193,6 +193,19 @@
   pointer-events: none;
 }
 
+/* (23/10) Le flou des bâtiments : quand un personnage animé (marche, respiration...) passe
+   derrière un bâtiment, le navigateur mettait l'image du bâtiment à part (une « couche » à
+   elle), dessinée moins nettement : le forgeron devenait flou au hasard. Les animations des
+   personnages passent donc par ces variables (--p-x, --p-y, --p-r, --p-sx, --p-sy, --p-o) au
+   lieu de translate / rotate / scale / opacity : le navigateur les dessine avec le reste de la
+   carte, sans jamais séparer les bâtiments. */
+@property --p-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --p-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --p-r { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --p-sx { syntax: '<number>'; inherits: false; initial-value: 1; }
+@property --p-sy { syntax: '<number>'; inherits: false; initial-value: 1; }
+@property --p-o { syntax: '<number>'; inherits: false; initial-value: 1; }
+
 .perso-ombre {
   position: absolute;
   left: -13px;
@@ -205,12 +218,14 @@
 
 /* Pendant un saut, l'ombre rétrécit et pâlit (il s'éloigne du sol). */
 .perso-ombre.saute {
+  transform: scale(var(--p-sx), var(--p-sy));
+  opacity: var(--p-o);
   animation: ombre-saut 0.5s cubic-bezier(0.3, 0.7, 0.5, 1);
 }
 
 @keyframes ombre-saut {
-  0%, 100% { scale: 1; opacity: 1; }
-  45% { scale: 0.55; opacity: 0.5; }
+  0%, 100% { --p-sx: 1; --p-sy: 1; --p-o: 1; }
+  45% { --p-sx: 0.55; --p-sy: 0.55; --p-o: 0.5; }
 }
 
 .perso-saut,
@@ -221,13 +236,19 @@
   top: 0;
 }
 
+.perso-saut,
+.perso-corps {
+  transform: translate(var(--p-x), var(--p-y)) rotate(var(--p-r)) scale(var(--p-sx), var(--p-sy));
+}
+
 /* Le personnage penche un peu vers où il va quand il marche (--sens : 1 à droite, -1 à gauche). */
 .perso-penche {
-  transition: rotate 0.25s ease;
+  transform: rotate(var(--p-r));
+  transition: --p-r 0.25s ease;
 }
 
 .perso-marche .perso-penche {
-  rotate: calc(var(--sens, 1) * 4deg);
+  --p-r: calc(var(--sens, 1) * 4deg);
 }
 
 .image-perso {
@@ -256,12 +277,14 @@
   border-radius: 50%;
   border: 2px dashed rgb(255 224 110 / 0.95);
   box-shadow: 0 0 6px rgb(255 214 90 / 0.6), inset 0 0 4px rgb(255 214 90 / 0.5);
+  transform: scale(var(--p-sx), var(--p-sy));
+  opacity: var(--p-o);
   animation: anneau-heros 2.4s linear infinite;
 }
 
 @keyframes anneau-heros {
-  0%, 100% { opacity: 0.65; scale: 1; }
-  50% { opacity: 1; scale: 1.08; }
+  0%, 100% { --p-o: 0.65; --p-sx: 1; --p-sy: 1; }
+  50% { --p-o: 1; --p-sx: 1.08; --p-sy: 1.08; }
 }
 
 /* La poussière sous ses pieds quand il marche : deux petits nuages qui partent en arrière. */
@@ -273,6 +296,8 @@
   height: 5px;
   border-radius: 50%;
   background: rgb(240 230 200 / 0.75);
+  transform: translate(var(--p-x), var(--p-y)) scale(var(--p-sx), var(--p-sy));
+  opacity: var(--p-o);
   animation: poussiere 0.68s ease-out infinite;
 }
 
@@ -281,8 +306,8 @@
 }
 
 @keyframes poussiere {
-  0% { translate: 0 0; scale: 0.4; opacity: 0.9; }
-  100% { translate: calc(var(--sens, 1) * -12px) -5px; scale: 1.6; opacity: 0; }
+  0% { --p-x: 0px; --p-y: 0px; --p-sx: 0.4; --p-sy: 0.4; --p-o: 0.9; }
+  100% { --p-x: calc(var(--sens, 1) * -12px); --p-y: -5px; --p-sx: 1.6; --p-sy: 1.6; --p-o: 0; }
 }
 
 .perso-saut.saute {
@@ -290,12 +315,12 @@
 }
 
 @keyframes saut {
-  0% { translate: 0 0; scale: 1.12 0.86; }
-  15% { scale: 0.92 1.1; }
-  45% { translate: 0 -26px; scale: 1 1; }
-  80% { translate: 0 0; scale: 1 1; }
-  90% { scale: 1.14 0.86; }
-  100% { translate: 0 0; scale: 1 1; }
+  0% { --p-y: 0px; --p-sx: 1.12; --p-sy: 0.86; }
+  15% { --p-sx: 0.92; --p-sy: 1.1; }
+  45% { --p-y: -26px; --p-sx: 1; --p-sy: 1; }
+  80% { --p-y: 0px; --p-sx: 1; --p-sy: 1; }
+  90% { --p-sx: 1.14; --p-sy: 0.86; }
+  100% { --p-y: 0px; --p-sx: 1; --p-sy: 1; }
 }
 
 /* En marchant : un pas toutes les 0,34 s. À chaque pas, il s'écrase un peu en touchant le sol
@@ -305,13 +330,13 @@
 }
 
 @keyframes pas {
-  0% { translate: 0 0; rotate: -3deg; scale: 1.06 0.94; }
-  12% { translate: 0 -3px; scale: 0.97 1.04; }
-  25% { translate: 0 -4.5px; rotate: 0deg; scale: 1 1.02; }
-  50% { translate: 0 0; rotate: 3deg; scale: 1.06 0.94; }
-  62% { translate: 0 -3px; scale: 0.97 1.04; }
-  75% { translate: 0 -4.5px; rotate: 0deg; scale: 1 1.02; }
-  100% { translate: 0 0; rotate: -3deg; scale: 1.06 0.94; }
+  0% { --p-y: 0px; --p-r: -3deg; --p-sx: 1.06; --p-sy: 0.94; }
+  12% { --p-y: -3px; --p-sx: 0.97; --p-sy: 1.04; }
+  25% { --p-y: -4.5px; --p-r: 0deg; --p-sx: 1; --p-sy: 1.02; }
+  50% { --p-y: 0px; --p-r: 3deg; --p-sx: 1.06; --p-sy: 0.94; }
+  62% { --p-y: -3px; --p-sx: 0.97; --p-sy: 1.04; }
+  75% { --p-y: -4.5px; --p-r: 0deg; --p-sx: 1; --p-sy: 1.02; }
+  100% { --p-y: 0px; --p-r: -3deg; --p-sx: 1.06; --p-sy: 0.94; }
 }
 
 /* Un pousseur derrière son wagonnet (27/10) : il marche bien plus stable, penché en avant,
@@ -321,12 +346,12 @@
 }
 
 .perso-pousseur.perso-marche .perso-penche {
-  rotate: calc(var(--sens, 1) * 6deg);
+  --p-r: calc(var(--sens, 1) * 6deg);
 }
 
 @keyframes pas-pousseur {
-  0%, 50%, 100% { translate: 0 0; rotate: -1deg; scale: 1.015 0.985; }
-  25%, 75% { translate: 0 -1px; rotate: 1deg; scale: 1 1; }
+  0%, 50%, 100% { --p-y: 0px; --p-r: -1deg; --p-sx: 1.015; --p-sy: 0.985; }
+  25%, 75% { --p-y: -1px; --p-r: 1deg; --p-sx: 1; --p-sy: 1; }
 }
 
 /* Au repos : il respire doucement. */
@@ -335,8 +360,8 @@
 }
 
 @keyframes respire {
-  0%, 100% { scale: 1 1; }
-  50% { scale: 1.025 0.975; }
+  0%, 100% { --p-sx: 1; --p-sy: 1; }
+  50% { --p-sx: 1.025; --p-sy: 0.975; }
 }
 
 .etiquette-perso {
@@ -365,17 +390,22 @@
 }
 
 @keyframes tape-du-pied {
-  from { rotate: -4deg; }
-  to { rotate: 4deg; }
+  from { --p-r: -4deg; }
+  to { --p-r: 4deg; }
 }
 
 .bulle-colere-village {
   position: absolute;
   left: 0;
   bottom: 58px;
-  translate: -50% 0;
+  transform: translate(-50%, var(--p-y));
   font-size: 11px;
-  animation: bulle-saute 0.8s ease-in-out infinite alternate;
+  animation: colere-saute 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes colere-saute {
+  from { --p-y: 0px; }
+  to { --p-y: -7px; }
 }
 
 /* Le manager et le recruteur à leur poste : ils se balancent tranquillement. */
@@ -1790,13 +1820,14 @@ g.grille-construction {
 
 .jauge-pleine {
   border-color: #ffd84a;
+  transform: translate(-50%, -50%) scale(var(--p-sx));
   animation: jauge-pleine 2.2s ease-in-out infinite;
 }
 
 /* (23/10) Plus calme : elle grossit à peine, lentement (avant : +12 % deux fois par seconde). */
 @keyframes jauge-pleine {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.03); }
+  0%, 100% { --p-sx: 1; }
+  50% { --p-sx: 1.03; }
 }
 
 .jauge-coffre-texte {
@@ -2785,6 +2816,8 @@ g.grille-construction {
   border-radius: 50%;
   border: 3px solid #ffd84a;
   box-shadow: 0 0 14px #ffd84a, inset 0 0 10px #ffd84a;
+  transform: scale(var(--p-sx));
+  opacity: var(--p-o);
   animation: nouveau-halo 0.8s ease-in-out infinite;
   pointer-events: none;
 }
@@ -2796,6 +2829,8 @@ g.grille-construction {
   color: #ffe066;
   font-size: 0.8rem;
   text-shadow: 0 0 6px #fff3a0;
+  transform: translateY(var(--p-y));
+  opacity: var(--p-o);
   animation: nouveau-etincelles 0.9s linear infinite;
   pointer-events: none;
 }
@@ -2809,14 +2844,16 @@ g.grille-construction {
   font-size: 0.7rem;
   font-weight: 900;
   white-space: nowrap;
+  transform: translateY(var(--p-y)) scale(var(--p-sx));
   animation: nouveau-bulle 0.6s ease-in-out infinite alternate;
 }
-@keyframes nouveau-halo { 50% { transform: scale(1.25); opacity: 0.6; } }
+/* (23/10 : par les variables --p-…, comme les personnages, pour ne pas rendre les bâtiments flous) */
+@keyframes nouveau-halo { 50% { --p-sx: 1.25; --p-o: 0.6; } }
 @keyframes nouveau-etincelles {
-  0% { transform: translateY(0); opacity: 1; }
-  100% { transform: translateY(-14px); opacity: 0; }
+  0% { --p-y: 0px; --p-o: 1; }
+  100% { --p-y: -14px; --p-o: 0; }
 }
-@keyframes nouveau-bulle { to { transform: translateY(-3px) scale(1.06); } }
+@keyframes nouveau-bulle { to { --p-y: -3px; --p-sx: 1.06; } }
 @media (prefers-reduced-motion: reduce) {
   .eclat-embauche-rayons, .eclat-embauche i, .eclat-embauche-texte, .perso-nouveau::before, .perso-nouveau::after, .bulle-nouveau-mineur { animation: none; }
 }

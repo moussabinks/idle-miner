@@ -14,7 +14,7 @@ Ce qui a disparu le 22/10 : la **vue de la mine en coupe** (2D), la profondeur e
 - **Tout ce qui sort de la mine va dans son coffre** (100 places au début, 4 000 au plus) :
   1. **tes clics** sur le gros bloc du panneau (un bloc par clic) ;
   2. **la mine toute seule** (0,2 à 0,4 bloc par seconde) ;
-  3. **les mineurs employés**, qui remontent leur sac et le vident dans le coffre.
+  3. **les mineurs employés**, qui creusent au fond : la caisse de l'ascenseur fait des allers-retours sans cesse et vide leurs blocs dans le coffre (23/10).
 - La **foreuse** a son propre chariot (elle ne remplit pas le coffre).
 - **Coffre plein = tout s'arrête** (clics, mine, mineurs) : il faut le vider. Trois façons : le mettre dans son sac et aller le vendre au marché à pied, les **wagonnets** (un trajet Mine → Marché, et aussi Mine → Foreuse pour le charbon et Mine → Générateur pour la redstone, poussés ou électriques), et le générateur qui se sert en redstone.
 
