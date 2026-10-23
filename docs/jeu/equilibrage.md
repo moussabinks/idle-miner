@@ -262,18 +262,18 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 
 ### Recruteur (`NIVEAUX_RECRUTEUR`, niveau 4 de la mine)
 
-| Niveau | Prix (29/10) | Niv. joueur | Commun | Rare | Épique | Légendaire | Mythique |
+| Niveau | Prix (23/10) | Niv. joueur | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 10 000 $ | 9 | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 25 000 $ | 11 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
-| 3 | 50 000 $ | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
-| 4 | 100 000 $ | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
+| 1 | 30 000 $ (avant 10 000) | 11 | 65 % | 20 % | 10 % | 4 % | 1 % |
+| 2 | 75 000 $ (avant 25 000) | 12 | 60 % | 22 % | 11 % | 5,5 % | 1,5 % |
+| 3 | 160 000 $ (avant 50 000) | 13 | 55 % | 23,5 % | 12,5 % | 7 % | 2 % |
+| 4 | 350 000 $ (avant 100 000) | 15 | 50 % | 25 % | 14 % | 8,5 % | 2,5 % |
 
 Sans recruteur, 100 % de communs. Le tirage part du plus rare (`tirerRarete`).
 
 ### Manager (niveau 3 de la mine)
 
-`PRIX_MANAGER` = 10 000 $ (23/10 ; avant 35 000 $, et encore avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que l’argent du joueur suffit (23/10 : plus de trésorerie).
+`PRIX_MANAGER` = 10 000 $ (23/10 ; avant 35 000 $, et encore avant 15 000 $, et il faut aussi le niveau 11 du joueur), `SALAIRE_MANAGER` = 400 $ / 5 min. Ses améliorations (temps payé jeu fermé : 1 h, 2 h, 4 h, 8 h) : 30 000, 70 000, 160 000 et 350 000 $ (23/10 ; avant 6 000 à 85 000 $, moins cher que son embauche). Il paie 5 minutes de plus à chacun (lui d'abord, puis les mineurs du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), tant que l’argent du joueur suffit (23/10 : plus de trésorerie).
 
 ## Le village
 
