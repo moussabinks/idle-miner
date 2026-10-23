@@ -25,7 +25,7 @@ Le village est une **clairière de 60 × 60 cases** vue du ciel (à 45°, comme 
 | ⛏️ Mine (bloc à cliquer, coffre, niveaux, ascenseur, trajets des wagonnets) | 10 × 10 | face avant gauche | — (posée au milieu dès le début) | dès le début | [mine.md](mine.md) |
 | 💰 Marché | 5 × 5 | face avant gauche | **gratuit** | dès le début (niveau 1) | [marche.md](marche.md) |
 | ⚒️ Forgeron | 5 × 5 | face avant droite | 20 $ + 10 pierre (30/10) | dès le début (niveau 1) | [forgeron.md](forgeron.md) |
-| 👷 Personnel | 5 × 5 | face avant droite | 150 $ + 30 pierre (30/10) | niveau 2 du joueur (recruteur : niveau 9 du joueur et niveau 3 de la mine ; manager : niveau 11 et niveau 4 de la mine) | [personnel.md](personnel.md) |
+| 👷 Personnel | 5 × 5 | face avant droite | 150 $ + 30 pierre (30/10) | niveau 2 du joueur (manager : niveau 9 du joueur et niveau 3 de la mine ; recruteur : niveau 11 et niveau 4 de la mine) | [personnel.md](personnel.md) |
 | 🎒 Bazar | 5 × 5 | face avant droite | 200 $ + 40 pierre (30/10) | niveau 3 du joueur | [bazar.md](bazar.md) |
 | ⚙️ Foreuse | 5 × 5 | face avant gauche | 3 000 $ + 120 pierre + 60 fer | niveau 5 du joueur (30/10 ; avant 6) et niveau 2 de la mine | [foreuse.md](foreuse.md) |
 | ⚡ Générateur | 5 × 5 | face avant droite | 4 000 $ + 100 fer + 40 redstone | niveau 6 du joueur (30/10 ; avant 5) et niveau 2 de la mine | [generateur.md](generateur.md) |

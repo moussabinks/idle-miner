@@ -89,7 +89,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 
 ### ⬇ Descendre au niveau suivant (en haut de l'onglet Améliorer)
 
-- Une **grande carte** (bord doré, verte et lumineuse quand on peut la payer) : « ⬇ Descendre au niveau *N* », le nom du niveau en grand, puis **ce qu'on y gagne** (`gainsNiveauSuivant` dans `mine.ts`, `GainsNiveau`) : ✨ le nouveau minerai et son prix, 💰 la valeur moyenne d'un bloc (avant → après, « +51 % »), ⚙️ les blocs par minute que la mine sort toute seule, 👷 +2 mineurs, 🏗️ les bâtiments débloqués (foreuse et générateur au niveau 2), 🎲 le recruteur (niveau 3), 💼 le manager (niveau 4).
+- Une **grande carte** (bord doré, verte et lumineuse quand on peut la payer) : « ⬇ Descendre au niveau *N* », le nom du niveau en grand, puis **ce qu'on y gagne** (`gainsNiveauSuivant` dans `mine.ts`, `GainsNiveau`) : ✨ le nouveau minerai et son prix, 💰 la valeur moyenne d'un bloc (avant → après, « +51 % »), ⚙️ les blocs par minute que la mine sort toute seule, 👷 +2 mineurs, 🏗️ les bâtiments débloqués (foreuse et générateur au niveau 2), 💼 le manager (niveau 3), 🎲 le recruteur (niveau 4).
 - Les chances de chaque bloc (maintenant et au niveau suivant) sont rangées dans « Les chances de chaque minerai ».
 - La ligne d'amélioration et le bouton **⬇ Descendre au niveau *N*** avec son prix. Message : « ⛏️ La mine descend au niveau 3 : Filon d'or ! » Au niveau 5 : « 🏆 Mine au plus profond ».
 

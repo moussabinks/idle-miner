@@ -1,4 +1,4 @@
-// L'animation d'embauche avec le recruteur (niveau 3 de la mine) : la carte du nouveau mineur tremble
+// L'animation d'embauche avec le recruteur (niveau 4 de la mine) : la carte du nouveau mineur tremble
 // pendant que les couleurs des raretés défilent (le suspense, 1,6 s), puis elle se retourne :
 // sa rareté apparaît en grand, avec des rayons, des confettis et des étincelles. Plus il est
 // rare, plus c'est la fête ! Un clic pendant le suspense dévoile tout de suite la carte.

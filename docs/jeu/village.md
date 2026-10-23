@@ -171,7 +171,7 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | 🔧 | Forgeron | la pioche est cassée | alerte |
 | 🎒 | Marché | le sac est plein | alerte |
 | 📦 | Mine | le coffre est plein | alerte |
-| ✨ | Personnel | le recruteur (niveau 3) ou le manager (niveau 4) vient de se débloquer, pas encore vu | nouveau (bleu) |
+| ✨ | Personnel | le manager (niveau 3) ou le recruteur (niveau 4) vient de se débloquer, pas encore vu | nouveau (bleu) |
 | 💰 | le bâtiment concerné | une amélioration est achetable (**seulement pendant le tutoriel** depuis le 30/10 : sinon il y aurait presque toujours une bulle, et la liste des tâches propose déjà les achats) | achat (vert) |
 
 La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la mine, les bulles sont un peu plus haut (128 px), pour passer au-dessus de la jauge du coffre (§ 9).

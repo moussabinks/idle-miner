@@ -162,7 +162,7 @@ export type Navette = {
   chargement: Inventaire // les blocs dans la caisse
 }
 
-// Le manager (niveau 4 de la mine) : il paie les salaires tout seul, avec la trésorerie.
+// Le manager (niveau 3 de la mine) : il paie les salaires tout seul, avec la trésorerie.
 export type Manager = {
   embauche: boolean
   tempsPaye: number

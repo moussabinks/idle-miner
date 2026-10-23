@@ -269,7 +269,7 @@ export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout:
   { nom: 'Diamant', vitesse: 1.2, sac: 45, cout: { argent: 60000, materiaux: {} } },
 ]
 
-// --- La rareté des mineurs (avec le recruteur, dès le niveau 3 de la mine) ---
+// --- La rareté des mineurs (avec le recruteur, dès le niveau 4 de la mine) ---
 export type IdRarete = 'commun' | 'rare' | 'epique' | 'legendaire' | 'mythique'
 
 export type Rarete = {
@@ -290,8 +290,8 @@ export const RARETES: Record<IdRarete, Rarete> = {
 
 export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendaire', 'mythique']
 
-// --- Le recruteur (niveau 3 de la mine) ---
-export const NIVEAU_MINE_RECRUTEUR = 3
+// --- Le recruteur (niveau 4 de la mine, avant le 23/10 : niveau 3) ---
+export const NIVEAU_MINE_RECRUTEUR = 4
 export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
   { cout: { argent: 10000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
   { cout: { argent: 25000, materiaux: {} }, chances: { commun: 60, rare: 22, epique: 11, legendaire: 5.5, mythique: 1.5 } },
@@ -299,8 +299,8 @@ export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> 
   { cout: { argent: 100000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
 ]
 
-// --- Le manager (niveau 4 de la mine) : il paie les salaires avec la trésorerie ---
-export const NIVEAU_MINE_MANAGER = 4
+// --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec la trésorerie ---
+export const NIVEAU_MINE_MANAGER = 3
 export const PRIX_MANAGER = 35000
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
@@ -622,7 +622,7 @@ export const NIVEAU_JOUEUR_POUR = {
   generateur: [1, 8, 10, 13, 15], // NIVEAUX_GENERATEUR
   forage: [1, 6, 9, 11, 14, 15], // NIVEAUX_FORAGE
   chariot: [1, 6, 9, 11, 14, 15], // NIVEAUX_CHARIOT
-  recruteur: [9, 11, 13, 15], // NIVEAUX_RECRUTEUR
-  manager: 11,
-  tempsManager: [11, 12, 13, 14, 15], // NIVEAUX_MANAGER (23/10)
+  recruteur: [11, 12, 13, 15], // NIVEAUX_RECRUTEUR (23/10 : après le manager, avec la mine niveau 4)
+  manager: 9, // (23/10 : avant le recruteur, avec la mine niveau 3)
+  tempsManager: [9, 11, 12, 13, 14], // NIVEAUX_MANAGER (23/10)
 }

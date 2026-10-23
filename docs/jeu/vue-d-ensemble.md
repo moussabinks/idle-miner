@@ -27,7 +27,7 @@
 | [mine.md](../batiments/mine.md) | ⛏️ Mine : bloc à cliquer, coffre, 5 niveaux, ascenseur des mineurs, trajets des wagonnets qui en partent, taille des wagonnets | dès le début (posée au milieu) |
 | [marche.md](../batiments/marche.md) | 💰 Marché : vente des blocs, arrivée des wagonnets de la mine et de la foreuse | dès le début (gratuit) |
 | [forgeron.md](../batiments/forgeron.md) | ⚒️ Forgeron : pioches, doublement, réparation | dès le début |
-| [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, pousseurs, salaires, recruteur, manager | niveau 2 du joueur (recruteur : niveau 9 et mine niveau 3 ; manager : niveau 11 et mine niveau 4) |
+| [personnel.md](../batiments/personnel.md) | 👷 Personnel : mineurs employés, pousseurs, salaires, recruteur, manager | niveau 2 du joueur (manager : niveau 9 et mine niveau 3 ; recruteur : niveau 11 et mine niveau 4) |
 | [bazar.md](../batiments/bazar.md) | 🎒 Bazar : sacs à dos | niveau 3 du joueur |
 | [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui fore seule | niveau 5 du joueur et mine niveau 2 (30/10) |
 | [generateur.md](../batiments/generateur.md) | ⚡ Générateur : redstone, rayon électrique, trajets électriques | niveau 6 du joueur et mine niveau 2 (30/10) |
@@ -98,7 +98,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Combo** | Les clics rapides sur le bloc de la mine (moins de 0,9 s entre deux) : « 🔥 ×*N* », un bloc qui brille et un son aux paliers (27/10). Depuis le 30/10, chaque palier (10, 25, 50, 100, 200, 500) donne un **bonus de combo** de quelques secondes : plus de chance de doubler (« fortune »), puis 2, 3 ou 5 blocs par clic (`BONUS_COMBO`). |
 | **Débit (de la mine)** | Les blocs que la mine sort toute seule : 0,2 à 0,4 par seconde selon le niveau. |
 | **Décoration** | Fleurs, buissons, rochers, lanternes, arbres… Elles ne s'achètent plus depuis le 27/10 ; leurs dessins ornent seulement la plage et l'écran d'accueil. |
-| **Découverte** | Le recruteur (niveau 3) et le manager (niveau 4) : une bulle ✨ saute au-dessus du Personnel jusqu'à ce qu'on y passe. |
+| **Découverte** | Le manager (niveau 3) et le recruteur (niveau 4) : une bulle ✨ saute au-dessus du Personnel jusqu'à ce qu'on y passe. |
 | **Doublement** | La chance qu'un clic donne 2 minerais au lieu d'1 : 10 % (pioche en pierre) à 45 % (diamant). Jamais pour la pierre, ni pour la mine toute seule, les mineurs ou la foreuse. |
 | **Durabilité / usure** | Chaque pioche tient un nombre de clics (150 à 1 000) ; chaque bloc cassé lui retire 1 point. À 0, elle est cassée. |
 | **Échelle** | Le chemin des mineurs sans ascenseur : 10 s par montée ou descente (seulement dans les vieilles parties : depuis le 30/10, l'ascenseur est là dès le début). |
@@ -111,7 +111,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. Depuis le 30/10, une fenêtre « Bon retour, mineur ! » le résume (`absence.ts`). |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
 | **Ligne (de rails)** | Une suite de rails continue (cases voisines par un côté) entre deux bâtiments (une case collée à chacun). Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 4 de la mine et au niveau 11 du joueur (35 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
+| **Manager** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (35 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul avec la trésorerie. |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Miroir** | Un bâtiment retourné gauche-droite (menu Modifier) : la porte change de côté. Ses écritures restent lisibles (le Personnel a une image à part pour ça). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
@@ -130,7 +130,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. Dessiné en pointillés jaunes sur la carte. |
 | **Recharge automatique** | (retirée le 23/10) La foreuse brûlait le charbon qu'elle fore ; maintenant, son charbon arrive par les rails. |
-| **Recruteur** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (4 niveaux, de 10 000 à 100 000 $) : donne une rareté aux mineurs embauchés. |
+| **Recruteur** | Débloqué au niveau 4 de la mine et au niveau 11 du joueur (4 niveaux, de 10 000 à 100 000 $) : donne une rareté aux mineurs embauchés. |
 | **Rendement** | Le multiplicateur de rareté d'un mineur (vitesse de creusage et taille du sac). |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau en haut à gauche (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |
 | **Sac (à dos)** | Ce que le joueur porte du coffre (ou du chariot) jusqu'au marché : 32 à 2 048 places (7 tailles au Bazar). |
@@ -156,7 +156,7 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 ### Les exceptions décidées
 
 - ✅ **La foreuse** (16/10, au niveau 2 de la mine depuis le 22/10) : elle fore seule tant qu'on lui donne du charbon. **Une seule** foreuse.
-- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, au niveau 2 du joueur depuis le 29/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **recruteur** leur donne une rareté ; au niveau 4, le **manager** paie les salaires seul avec la trésorerie.
+- ✅ **Les mineurs employés** (19/10, dès le début depuis le 22/10, au niveau 2 du joueur depuis le 29/10, bâtiment Personnel) : ils creusent et remplissent le coffre de la mine ; on paie leur embauche, leurs pioches et un **salaire toutes les 5 minutes** (sinon ils attendent au Personnel). Un mineur peut **pousser les wagonnets**. Au niveau 3 de la mine, le **manager** paie les salaires seul avec la trésorerie ; au niveau 4, le **recruteur** leur donne une rareté (inversés le 23/10).
 - ✅ **La mine qui sort des blocs toute seule** et le **wagonnet électrique** (22/10 ; plusieurs trajets choisis par le joueur depuis le 24/10) : c'est le cœur de la mine automatique.
 
 ### Les principes

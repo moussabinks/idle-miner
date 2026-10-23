@@ -242,12 +242,13 @@ describe('les salaires', () => {
   })
 })
 
-describe('le recruteur (niveau 3 de la mine)', () => {
+describe('le recruteur (niveau 4 de la mine)', () => {
   it('donne une rareté aux nouveaux mineurs', () => {
     const etat = partie()
-    expect(ameliorerRecruteur(etat)).toEqual([]) // pas avant le niveau 3
-    expect(chancesRecrutement(etat).commun).toBe(100)
     etat.niveauMine = 3
+    expect(ameliorerRecruteur(etat)).toEqual([]) // pas avant le niveau 4
+    expect(chancesRecrutement(etat).commun).toBe(100)
+    etat.niveauMine = 4
     ameliorerRecruteur(etat)
     expect(etat.recruteur).toBe(1)
     const tirages = Array.from({ length: 500 }, (_, i) => tirerRarete(etat, aleatoireAvecGraine(i)))
@@ -264,12 +265,12 @@ describe('le recruteur (niveau 3 de la mine)', () => {
   })
 })
 
-describe('le manager (niveau 4 de la mine)', () => {
+describe('le manager (niveau 3 de la mine)', () => {
   it('paie les salaires tout seul avec la trésorerie', () => {
     const etat = partie()
     embaucher(etat, hasard())
     expect(embaucherManager(etat)).toEqual([])
-    etat.niveauMine = 4
+    etat.niveauMine = 3
     embaucherManager(etat)
     expect(etat.argent).toBe(1_000_000 - 500 - PRIX_MANAGER)
     deposerTresorerie(etat, 10_000)
