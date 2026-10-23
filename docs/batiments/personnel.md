@@ -76,11 +76,11 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 **L'embaucher** (carte « 🛤️ Embaucher un pousseur », bordée d'or, `EmbauchePousseur`) :
 
 1. « Il pousse le wagonnet d'un seul trajet. Coche son trajet : »
-2. **La liste des trajets** (28/10, à la place des boutons Départ puis Arrivée) : une ligne à cocher (bouton rond) par trajet dont les deux bâtiments sont construits, par exemple « ⛏️ Mine → 💰 Marché », avec son état à droite : **Libre** (vert), **2 pousseurs** (déjà pris), ou **Pas de rails** (rouge, la ligne est pâlie). La ligne cochée devient dorée. Si un seul trajet a des rails, il est déjà coché.
+2. **La liste des trajets** (28/10, à la place des boutons Départ puis Arrivée) : une ligne à cocher (bouton rond) par trajet dont les deux bâtiments sont construits, par exemple « ⛏️ Mine → 💰 Marché », avec son état à droite : **Libre** (vert), **✔ *Nom*** (23/10 : il a déjà son pousseur, la ligne est pâlie et ne se coche pas : **un seul pousseur par trajet**), ou **Pas de rails** (rouge, la ligne est pâlie). La ligne cochée devient dorée. Si un seul trajet libre a des rails, il est déjà coché.
 3. **Le trajet brille sur la carte** : ses rails s'allument en vague dorée, et ses deux bâtiments sont entourés d'un pointillé doré qui tourne. « ✨ Le trajet Mine → Marché brille sur la carte. » (et « Son wagonnet sera créé avec l'embauche. » si le trajet n'existe pas encore). Sans rails entre les deux : « Pas de rails entre ces deux bâtiments : pose-les d'abord (menu Bâtiments). » La surbrillance s'éteint quand on ferme le panneau.
-4. **🛤️ Embaucher pour ce trajet** (arc-en-ciel, comme 🎲 Recruter) : **même prix qu'un mineur** (le tableau ci-dessus), ses 5 premières minutes comprises. « 🛤️ *X* est embauché(e) : il va pousser le wagonnet de la mine au marché. » Équipe complète : « Ton équipe est complète. »
+4. **🛤️ Embaucher pour ce trajet** (arc-en-ciel, comme 🎲 Recruter) : **même prix qu'un mineur** (le tableau ci-dessus), ses 5 premières minutes comprises. « 🛤️ *X* est embauché(e) : il va pousser le wagonnet de la mine au marché. » Tous les trajets ont leur pousseur : « Chaque trajet a déjà son pousseur (un seul par trajet). Améliore-les dans l’onglet Employés : leur wagonnet portera plus, et ils iront plus vite. »
 
-- Il faut **des rails entre les deux bâtiments** (`peutEmbaucherPousseur`). Si le trajet n'existe pas encore, il est **créé avec l'embauche** (comme « Envoyer un wagonnet vers… »).
+- Il faut **des rails entre les deux bâtiments** et **un trajet sans pousseur** (`peutEmbaucherPousseur`, `trajetPris`). Si le trajet n'existe pas encore, il est **créé avec l'embauche** (comme « Envoyer un wagonnet vers… »).
 - La carte n'apparaît que si au moins un trajet a ses deux bâtiments construits.
 - Avec le recruteur, sa rareté est tirée au hasard comme pour un mineur, **avec la même animation de révélation** (la carte tremble, puis se retourne : 🛤️, sa rareté, « Pousse ×*N* plus vite » et son trajet) ; le bouton devient « 🎲 Recruter pour ce trajet ». Un pousseur rare **pousse plus vite** : la moitié du bonus d'un mineur (`forcePousseur` = 1 + (rendement − 1) ÷ 2 : rare ×1,25, épique ×1,5, légendaire ×2, mythique ×3). Son salaire est aussi × la rareté. La pastille de rareté de sa carte affiche ce ×.
 
@@ -88,10 +88,22 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 
 - Il **marche du Personnel jusqu'au bâtiment de départ** de son trajet (`maisonDe`), puis **attend au quai**, au bord de la voie, à côté du début de ses rails. Sans Personnel posé, il est tout de suite au quai.
 - Dès que **son** wagonnet a quelque chose à porter et que son trajet n'est pas électrique, il le **pousse jusqu'à l'arrivée** (2,5 cases/s × sa rareté), puis le ramène et retourne au quai. Le pousseur d'un autre trajet ne bouge pas : avec plusieurs trajets à pousser, il faut **un pousseur par trajet**.
-- Il est **payé** comme les autres : **90 $ toutes les 5 minutes** (le salaire d'une pioche en bois, 30/10 ; avant 35 $) × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
-- **Changer son trajet** (la liste sur sa carte, `changerTrajet`) : « 🛤️ *X* va pousser le wagonnet de la mine à la foreuse. » S'il est en train de pousser, il finit d'abord son voyage, puis marche jusqu'au quai de son nouveau trajet (« va au quai de la foreuse »). Le nouveau trajet est créé s'il n'existe pas encore.
+- Il est **payé** toutes les 5 minutes selon son niveau (`SALAIRES_POUSSEUR`, 23/10) : 220, 300, 420, 600, 850 $ × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
+- **Changer son trajet** (la liste sur sa carte, `changerTrajet` ; un trajet qui a déjà son pousseur est grisé, « (déjà un pousseur) ») : « 🛤️ *X* va pousser le wagonnet de la mine à la foreuse. » S'il est en train de pousser, il finit d'abord son voyage, puis marche jusqu'au quai de son nouveau trajet (« va au quai de la foreuse »). Le nouveau trajet est créé s'il n'existe pas encore.
 - **Trajet arrêté** (✖ Arrêter au panneau du départ) : il attend au quai pour rien (« 🛤️ attend : son trajet est arrêté »), et la bulle **🛤️ Sans trajet** apparaît sur le Personnel : choisis-lui un autre trajet, ou licencie-le.
 - **Un pousseur par trajet automatique** (27/10) : sans pousseur payé, un wagonnet ne part pas tout seul, même sur des rails électriques (le joueur peut toujours le pousser lui-même). Sur un trajet électrique, le pousseur reste au quai et lance le wagonnet, qui roule seul et bien plus vite. Une bulle « Pousseur ? » sur le Personnel signale un trajet sans pousseur.
+
+**L'améliorer** (23/10, sur sa carte dans l'onglet Employés, `NIVEAUX_POUSSEUR`) : son wagonnet **porte plus** (× la taille des wagonnets) et ses **arrêts** (charger au départ, décharger ou vendre à l'arrivée, `secondesArret`) sont plus courts. En grand : « 40 ➜ 50 places · ⏱ 2 s ➜ 1,6 s », puis « 🛤️ Pousseur débutant » et le bouton.
+
+| Niveau | Nom | Places du wagonnet | Arrêts | Prix | Niveau du joueur | Salaire / 5 min |
+|---|---|---:|---:|---:|---:|---:|
+| 1 | Débutant | × 1 | 2 s | (de base) | — | 220 $ |
+| 2 | Costaud | × 1,25 | 1,6 s | 1 000 $ | 5 | 300 $ |
+| 3 | Robuste | × 1,5 | 1,2 s | 5 000 $ | 8 | 420 $ |
+| 4 | Expert | × 2 | 0,8 s | 20 000 $ | 11 | 600 $ |
+| 5 | Champion | × 2,5 | 0,5 s | 60 000 $ | 14 | 850 $ |
+
+Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même électrique ou quand tu le pousses toi-même. Chaque niveau rapporte de l'XP (comme une pioche).
 
 ### 5. Payer les salaires (« 💵 Payer », sans manager)
 

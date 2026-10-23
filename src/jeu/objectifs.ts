@@ -3,7 +3,7 @@
 //   - les stands où une amélioration est payable tout de suite (pastille « Achetable ! ») ;
 //   - les améliorations à proposer dans les missions (missions.ts).
 
-import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment } from './donnees'
+import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment } from './donnees'
 import { batimentDebloque } from './batiments'
 import { coutAmeliorationEmploye, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
@@ -74,6 +74,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(employe)
       if (cout && employe.role === 'mineur' && debloque(etat, 'equipement', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
+      if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `${employe.nom} pousseur ${NIVEAUX_POUSSEUR[employe.niveau + 1].nom.toLowerCase()}`, cout })
     }
     const recruteur = prochainNiveauRecruteur(etat)
     if (recruteurDebloque(etat) && recruteur && debloque(etat, 'recruteur', etat.recruteur)) {

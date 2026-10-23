@@ -9,7 +9,7 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v25'
+const CACHE = 'idle-miner-v26'
 // Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
 // village serait vide hors ligne. (21/10 : images en haute définition et arbres, d'où le cache v4.)
 const IMAGES_DU_VILLAGE = [

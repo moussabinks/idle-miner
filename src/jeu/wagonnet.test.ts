@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
-import { embaucher, embaucherPousseur } from './employes'
-import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
+import { ameliorerEmploye, embaucher, embaucherPousseur, peutEmbaucherPousseur } from './employes'
+import { NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON } from './donnees'
 import { reglerGarde, type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
@@ -11,7 +11,9 @@ import {
   aCharger,
   avancerWagonnets,
   forcePousseur,
+  capaciteTrajet,
   capaciteWagonnet,
+  secondesArret,
   creerTrajet,
   joueurPousse,
   ligneDe,
@@ -154,6 +156,29 @@ describe('les trajets des wagonnets', () => {
   it('un pousseur rare pousse plus vite (la moitié du bonus d’un mineur)', () => {
     expect(forcePousseur('commun')).toBe(1)
     expect(forcePousseur('mythique')).toBe(3)
+  })
+
+  it('un pousseur amélioré : wagonnet plus grand, arrêts plus courts (23/10)', () => {
+    const etat = partieAvecTrajet()
+    ajouterPousseur(etat, 'mine-marche')
+    const places = capaciteTrajet(etat, 'mine-marche')
+    expect(places).toBe(capaciteWagonnet(etat))
+    expect(secondesArret(etat, 'mine-marche')).toBe(NIVEAUX_POUSSEUR[0].secondesArret)
+    etat.argent = 100_000
+    etat.xp = 1_000_000
+    expect(ameliorerEmploye(etat, 0)[0]).toContain('costaud')
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(Math.round(capaciteWagonnet(etat) * NIVEAUX_POUSSEUR[1].places))
+    expect(secondesArret(etat, 'mine-marche')).toBeLessThan(NIVEAUX_POUSSEUR[0].secondesArret)
+  })
+
+  it('un seul pousseur par trajet (23/10)', () => {
+    const etat = partieAvecTrajet()
+    etat.argent = 100_000
+    expect(ligneDe(etat, 'mine-marche')).not.toBeNull()
+    expect(peutEmbaucherPousseur(etat, 'mine-marche')).toBe(true)
+    embaucherPousseur(etat, aleatoireAvecGraine(1), 'mine-marche')
+    expect(peutEmbaucherPousseur(etat, 'mine-marche')).toBe(false)
+    expect(embaucherPousseur(etat, aleatoireAvecGraine(2), 'mine-marche')).toEqual([])
   })
 
   it('électrique, il roule tout seul et bien plus vite', () => {

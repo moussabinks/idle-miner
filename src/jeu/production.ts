@@ -6,7 +6,7 @@
 import { blocsParSecondeEmploye, vitesseMineurs } from './employes'
 import { valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitAscenseur, debitMine, prochainNiveauAscenseur, type EtatJeu, type Employe } from './mineur'
-import { capaciteWagonnet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
+import { capaciteTrajet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
 
 export type ProductionMineur = {
   index: number // sa place dans etat.employes
@@ -92,7 +92,7 @@ export function analyseWagonnet(etat: EtatJeu): AnalyseWagonnet | null {
   const moteur = !pousseur ? 'personne' : trajetElectrique(etat, 'mine-marche') ? 'electricite' : 'pousseur'
   const vitesse = moteur === 'electricite' ? vitesseTrajet(etat, trajet, 'electricite') : pousseur ? vitesseTrajet(etat, trajet, pousseur.nom) : 0
   const duree = vitesse > 0 ? secondesAllerRetour(etat, 'mine-marche', vitesse) : 0
-  const debitMax = duree > 0 ? capaciteWagonnet(etat) / duree : 0
+  const debitMax = duree > 0 ? capaciteTrajet(etat, 'mine-marche') / duree : 0
   // (le coffre plein arrête la production : on compte ce que la mine sortirait sans s'arrêter)
   const apport = debitMine(etat) + etat.employes.filter((e) => e.role === 'mineur' && e.etape !== 'attend').reduce((t, m) => t + blocsParSecondeEmploye(etat, m), 0)
   return { moteur, secondesAllerRetour: duree, debitMax, apport, surplus: Math.max(0, apport - debitMax) }

@@ -199,17 +199,21 @@ export type NiveauAscenseur = {
   niveau: number
   cout: Cout
   secondesTrajet: number // le temps d'un trajet (montée ou descente) de la caisse
+  // (23/10) le temps de charger la caisse au fond, et de la vider dans le coffre : plus rapides
+  // à chaque niveau
+  secondesChargement: number
+  secondesVidage: number
   capacite: number // (23/10) combien de blocs la caisse remonte à chaque voyage (petite au début :
   // avec plus de 2 mineurs, il faut améliorer l'ascenseur)
 }
 
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
-  { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6, capacite: 15 }, // déjà dans la mine au départ
-  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4, capacite: 25 },
-  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8, capacite: 40 },
-  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2, capacite: 60 },
-  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4, capacite: 90 },
-  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1, capacite: 130 },
+  { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6, secondesChargement: 1, secondesVidage: 2, capacite: 15 }, // déjà dans la mine au départ
+  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4, secondesChargement: 0.8, secondesVidage: 1.6, capacite: 25 },
+  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 40 },
+  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2, secondesChargement: 0.5, secondesVidage: 0.9, capacite: 60 },
+  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4, secondesChargement: 0.4, secondesVidage: 0.7, capacite: 90 },
+  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1, secondesChargement: 0.3, secondesVidage: 0.5, capacite: 130 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -310,8 +314,23 @@ export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 export const VITESSE_POUSSE_JOUEUR = 3
 export const VITESSE_POUSSE_MINEUR = 2.5
 export const VITESSE_RAILS = 8 // le wagonnet électrique, à la puissance 1
-// Le temps pour charger le wagonnet au coffre, et pour le vider au marché.
+// Le temps pour charger le wagonnet au coffre, et pour le vider au marché (avec un pousseur
+// débutant, ou sans pousseur).
 export const SECONDES_CHARGEMENT_WAGONNET = 2
+
+// Les niveaux d'un pousseur (23/10), améliorés au Personnel : son wagonnet porte plus (× la
+// taille des wagonnets) et il charge, décharge et vend plus vite. Payé en argent.
+export type NiveauPousseur = { nom: string; places: number; secondesArret: number; cout: Cout }
+export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
+  { nom: 'Débutant', places: 1, secondesArret: 2, cout: { materiaux: {} } },
+  { nom: 'Costaud', places: 1.25, secondesArret: 1.6, cout: { argent: 1000, materiaux: {} } },
+  { nom: 'Robuste', places: 1.5, secondesArret: 1.2, cout: { argent: 5000, materiaux: {} } },
+  { nom: 'Expert', places: 2, secondesArret: 0.8, cout: { argent: 20000, materiaux: {} } },
+  { nom: 'Champion', places: 2.5, secondesArret: 0.5, cout: { argent: 60000, materiaux: {} } },
+]
+// Le salaire d'un pousseur toutes les 5 minutes, selon son niveau (il ne creuse pas : moins cher
+// qu'un mineur avec la même pioche).
+export const SALAIRES_POUSSEUR = [220, 300, 420, 600, 850]
 
 // Les trajets des wagonnets (24/10) : le joueur choisit lui-même où va chaque wagonnet, sur les
 // rails qu'il a posés. Un trajet relie un bâtiment de départ à un bâtiment d'arrivée (un seul
@@ -588,6 +607,7 @@ export const NIVEAU_JOUEUR_POUR = {
   sacs: [1, 3, 5, 8, 11, 14, 15], // SACS
   ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
   equipement: [1, 4, 6, 9, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs)
+  pousseur: [1, 5, 8, 11, 14], // NIVEAUX_POUSSEUR (23/10)
   wagonnet: [1, 6, 9, 12], // NIVEAUX_WAGONNET
   generateur: [1, 8, 10, 13, 15], // NIVEAUX_GENERATEUR
   forage: [1, 6, 9, 11, 14, 15], // NIVEAUX_FORAGE

@@ -20,6 +20,7 @@ import {
   HAUSSE_APRES_LISTE,
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
+  NIVEAUX_POUSSEUR,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
@@ -33,11 +34,10 @@ import {
   RARETES,
   SALAIRE_MANAGER,
   SALAIRES,
+  SALAIRES_POUSSEUR,
   SECONDES_AVANT_PAIE_MANAGER,
   SECONDES_FORGE_EMPLOYE,
-  SECONDES_CHARGEMENT_ASCENSEUR,
   SECONDES_PAR_PAIE,
-  SECONDES_VIDAGE_EMPLOYE,
   VITESSE_MARCHE,
   type Cout,
   type IdBatiment,
@@ -57,7 +57,9 @@ import {
   peutPayer,
   placeCoffre,
   rangerDansCoffre,
+  secondesChargementAscenseur,
   secondesTrajetMineur,
+  secondesVidageAscenseur,
   totalObjets,
   type EtatJeu,
   type Employe,
@@ -225,15 +227,16 @@ export function gainAmeliorationEmploye(employe: Employe): { avant: number; apre
   return { avant: vitesseEmploye(employe), apres: vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) }
 }
 
+// Le prix de son prochain niveau : une pioche pour un mineur, un niveau de pousseur (23/10) pour
+// un pousseur (son wagonnet porte plus, et il charge, décharge et vend plus vite).
 export function coutAmeliorationEmploye(employe: Employe): Cout | null {
-  return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
+  const liste = employe.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE
+  return liste[employe.niveau + 1]?.cout ?? null
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
-  // (un pousseur ne creuse pas : une pioche ne lui servirait à rien, et monterait son salaire)
-  if (employe.role === 'pousseur') return false
   const cout = coutAmeliorationEmploye(employe)
-  return cout !== null && debloque(etat, 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
+  return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +245,8 @@ export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche et sa rareté.
 export function salaireEmploye(employe: Employe): number {
-  return Math.round(SALAIRES[employe.niveau] * rareteDe(employe).salaire)
+  const liste = employe.role === 'pousseur' ? SALAIRES_POUSSEUR : SALAIRES
+  return Math.round(liste[Math.min(employe.niveau, liste.length - 1)] * rareteDe(employe).salaire)
 }
 
 // Sans manager, on paie au plus 5 minutes à la fois.
@@ -459,7 +463,13 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 // Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
 export function peutEmbaucherPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
   const prix = prixEmbauche(etat, 'pousseur')
-  return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null
+  // (23/10) Un seul pousseur par trajet : on n'en embauche pas un deuxième.
+  return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null && !trajetPris(etat, liaison)
+}
+
+// Ce trajet a-t-il déjà son pousseur ?
+export function trajetPris(etat: EtatJeu, liaison: IdLiaison): boolean {
+  return etat.employes.some((e) => e.role === 'pousseur' && e.trajet === liaison)
 }
 
 // Embauche un pousseur pour un trajet (26/10). Le trajet est créé s'il n'existe pas encore. Il
@@ -515,6 +525,10 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   if (cout === null || !peutAmeliorerEmploye(etat, employe)) return []
   payer(etat, cout)
   employe.niveau += 1
+  if (employe.role === 'pousseur') {
+    const niveau = NIVEAUX_POUSSEUR[employe.niveau]
+    return [`🛤️ ${employe.nom} est maintenant pousseur ${niveau.nom.toLowerCase()} : son wagonnet porte ×${niveau.places.toLocaleString('fr-FR')}, arrêts de ${niveau.secondesArret.toLocaleString('fr-FR')} s.`]
+  }
   if (batimentPose(etat.village, 'forgeron')) {
     employe.forgeEnAttente = true
     return [`⛏️ Le forgeron fait une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} pour ${employe.nom} : elle lui descendra par l'ascenseur.`]
@@ -526,7 +540,7 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
 // puis il va au quai de son nouveau trajet.
 export function changerTrajet(etat: EtatJeu, index: number, liaison: IdLiaison): string[] {
   const employe = etat.employes[index]
-  if (!employe || employe.role !== 'pousseur' || employe.trajet === liaison || ligneDe(etat, liaison) === null) return []
+  if (!employe || employe.role !== 'pousseur' || employe.trajet === liaison || ligneDe(etat, liaison) === null || trajetPris(etat, liaison)) return []
   if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
   employe.trajet = liaison
   return [`🛤️ ${employe.nom} va pousser le wagonnet ${NOMS_TRAJETS[liaison]}.`]
@@ -750,9 +764,9 @@ function dureeEtapeNavette(etat: EtatJeu, caisse: Navette): number {
     case 'monte':
       return secondesTrajetMineur(etat)
     case 'bas':
-      return SECONDES_CHARGEMENT_ASCENSEUR
+      return secondesChargementAscenseur(etat)
     default:
-      return totalObjets(caisse.chargement) > 0 ? SECONDES_VIDAGE_EMPLOYE : 0
+      return totalObjets(caisse.chargement) > 0 ? secondesVidageAscenseur(etat) : 0
   }
 }
 

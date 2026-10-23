@@ -195,6 +195,8 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (estPose(etat, 'employes') && prix !== null && etat.argent >= prix + marge()) embaucher(etat, aleatoire)
     for (let i = 0; i < etat.employes.length; i++) {
       const cout = coutAmeliorationEmploye(etat.employes[i])
+      // (23/10 : il n'améliore pas les pousseurs, son wagonnet suit sans)
+      if (etat.employes[i].role === 'pousseur') continue
       if (cout && etat.argent >= (cout.argent ?? 0) + marge() && peutPayer(etat, cout)) ameliorerEmploye(etat, i)
     }
     if (peutAmeliorerRecruteur(etat)) ameliorerRecruteur(etat)

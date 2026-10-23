@@ -8,9 +8,9 @@
 // dans le sens de la voie, d'un essieu à l'autre. On le dessine en 3D (Wagonnet3D.tsx).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { BLOCS, LIAISONS, RARETES, SECONDES_CHARGEMENT_WAGONNET, type IdBatiment } from '../jeu/donnees'
+import { BLOCS, LIAISONS, RARETES, type IdBatiment } from '../jeu/donnees'
 import { totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from '../jeu/mineur'
-import { capaciteWagonnet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
+import { capaciteTrajet, ligneDe, longueurTrajet, secondesArret, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
 import { MiniJauge, Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
@@ -179,7 +179,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const dx = retour ? -cap.dx : cap.dx
   const dy = retour ? -cap.dy : cap.dy
   // Plus il porte, plus il est rempli (le chargement est vidé à l'arrivée).
-  const remplissage = Math.min(1, totalObjets(w.chargement) / capaciteWagonnet(etat))
+  const remplissage = Math.min(1, totalObjets(w.chargement) / capaciteTrajet(etat, w.liaison))
   // Le pousseur, un peu derrière, le long de la voie (dans les virages aussi).
   const sPousseur = Math.max(0, Math.min(total, s + (retour ? RECUL_POUSSEUR : -RECUL_POUSSEUR)))
   const pousseurIci = surLaTrace(trace, sPousseur)
@@ -196,7 +196,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   return (
     <>
       {ventesVisibles}
-      {enPause && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / SECONDES_CHARGEMENT_WAGONNET} secondes={restePause} />}
+      {enPause && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / secondesArret(etat, w.liaison)} secondes={restePause} />}
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
         style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}

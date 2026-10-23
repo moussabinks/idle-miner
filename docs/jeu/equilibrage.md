@@ -39,7 +39,7 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 | `SECONDES_PAR_PAIE` | 300 s | une paie de mineur (5 minutes, depuis le 28/10) |
 | `SECONDES_PAR_CHARBON` | 20 s | un charbon dans la foreuse |
 | `SECONDES_PAR_REDSTONE` | 30 s | une redstone dans le générateur |
-| `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger un wagonnet au départ, puis le vider à l'arrivée |
+| `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger un wagonnet au départ, puis le vider à l'arrivée (sans pousseur, ou pousseur débutant ; 23/10 : 1,6 / 1,2 / 0,8 / 0,5 s avec un pousseur amélioré, `NIVEAUX_POUSSEUR`, qui porte aussi × 1,25 à × 2,5) |
 | `TAILLE_GRILLE` | 60 | la clairière fait 60 × 60 cases |
 | Horloge (`usePartie.ts`) | tic de 50 ms | à chaque image de l'écran quand le joueur pousse un wagonnet |
 | `PAS_MAX` (`temps.ts`) | 60 s | une longue durée avance par morceaux d'une minute |
@@ -146,14 +146,14 @@ Total : 422 350 $ (29/10 : 152 200 $ ; avant le 29/10 : 61 980 $). Le sac ne ser
 
 `NIVEAUX_ASCENSEUR` (au panneau de la mine, onglet « Améliorer »). Un trajet = une montée ou une descente de la caisse (`secondesTrajetMineur`). Depuis le 23/10, la caisse fait des allers-retours sans cesse et remonte au plus `capacite` blocs par voyage (`capaciteAscenseur`, `debitAscenseur`). Depuis le 30/10, **la mine a son ascenseur de niveau 1 dès le début** (`creerPartie`) ; l'échelle (10 s) ne servait qu'aux vieilles parties, que la sauvegarde v25 convertit.
 
-| Niveau | Trajet | Caisse (23/10) | Remonte au plus | Prix (30/10) | Niv. joueur |
-|---|---:|---:|---:|---|---:|
-| 1 | 6 s | 15 blocs | 1 bloc/s | (dans la mine dès le début) | — |
-| 2 | 4 s | 25 | 2,3 bloc/s | 1 500 $ + 50 fer + 10 redstone | 5 |
-| 3 | 2,8 s | 40 | 4,7 bloc/s | 7 000 $ + 120 fer + 40 redstone | 8 |
-| 4 | 2 s | 60 | 8,6 bloc/s | 25 000 $ + 200 fer + 100 redstone | 10 |
-| 5 | 1,4 s | 90 | 15,5 bloc/s | 80 000 $ + 200 redstone + 60 or | 13 |
-| 6 | 1 s | 130 | 26 bloc/s | 250 000 $ + 150 or + 30 émeraude | 15 |
+| Niveau | Trajet | Charge / vide (23/10) | Caisse (23/10) | Remonte au plus | Prix (30/10) | Niv. joueur |
+|---|---:|---:|---:|---:|---|---:|
+| 1 | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | (dans la mine dès le début) | — |
+| 2 | 4 s | 0,8 s / 1,6 s | 25 | 2,5 bloc/s | 1 500 $ + 50 fer + 10 redstone | 5 |
+| 3 | 2,8 s | 0,6 s / 1,2 s | 40 | 5,4 bloc/s | 7 000 $ + 120 fer + 40 redstone | 8 |
+| 4 | 2 s | 0,5 s / 0,9 s | 60 | 11,1 bloc/s | 25 000 $ + 200 fer + 100 redstone | 10 |
+| 5 | 1,4 s | 0,4 s / 0,7 s | 90 | 23,4 bloc/s | 80 000 $ + 200 redstone + 60 or | 13 |
+| 6 | 1 s | 0,3 s / 0,5 s | 130 | 46 bloc/s | 250 000 $ + 150 or + 30 émeraude | 15 |
 
 Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec le niveau 1 à 400 $ + 20 fer : 161 900 $ + 330 fer + 300 redstone + 140 or + 20 émeraude).
 
@@ -239,7 +239,7 @@ Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. To
 
 (30/10 : 0,22 à 1 bloc/s, salaires de 90 à 2 400 $, et le mineur remontait lui-même son sac.)
 
-- **Depuis le 23/10, les mineurs ne remontent plus** : ils creusent sans s'arrêter, et la **caisse de l'ascenseur** fait des allers-retours sans cesse (`avancerNavette`). Elle remonte au plus `capacité ÷ (2 × trajet + 1 s de chargement + 2 s de vidage)` blocs par seconde (`debitAscenseur`) : 15 blocs en 15 s au niveau 1 (1 bloc/s, donc 2 mineurs en bois), puis 25, 40, 60, 90 et 130 blocs (2,3 ; 4,7 ; 8,6 ; 15,5 ; 26 bloc/s).
+- **Depuis le 23/10, les mineurs ne remontent plus** : ils creusent sans s'arrêter, et la **caisse de l'ascenseur** fait des allers-retours sans cesse (`avancerNavette`). Elle remonte au plus `capacité ÷ (2 × trajet + chargement + vidage)` blocs par seconde (`debitAscenseur`) : 15 blocs en 15 s au niveau 1 (1 bloc/s, donc 2 mineurs en bois), puis 25, 40, 60, 90 et 130 blocs (2,5 ; 5,4 ; 11,1 ; 23,4 ; 46 bloc/s ; le chargement et le vidage raccourcissent à chaque niveau depuis le 23/10).
 - **Blocs par seconde d'un mineur** (`blocsParSecondeEmploye`) = ce qu'il creuse × `min(1, ce que remonte l'ascenseur ÷ ce que creusent tous les mineurs payés)` (`partRemontee`).
 - La rareté multiplie **la vitesse et le sac** par le même rendement (un mythique creuse 5 fois plus).
 - Salaire contre ce qu'il sort (mineur commun, ascenseur qui suit) : au niveau 1 de la mine, un mineur en bois sort environ 456 $ par 5 minutes pour 220 $ de salaire ; en diamant, environ 4 700 $ au niveau 4 de la mine pour 2 200 $. (23/10 bis : salaires relevés d'environ 40 %, avant 150 à 1 600 $.)
@@ -407,7 +407,7 @@ Pour mémoire, le 29/10 (avant l'économie plus dure du 30/10) : niveau 2 en 26,
 | Repère | Valeur | Source |
 |---|---|---|
 | Niveau 2 de la mine | **15 à 40 min** (médiane) ; mesuré : 20 min | `bot.test.ts` |
-| Niveau 5 de la mine | **6 h à 9 h** (médiane) ; mesuré : 7 h 48 (23/10 bis ; 7 h 03 avant la hausse des salaires et la limite de 2 mineurs ; 8 h 29 le 30/10) | `bot.test.ts` |
+| Niveau 5 de la mine | **6 h à 9 h** (médiane) ; mesuré : 7 h 23 (23/10, 5e ; 7 h 48 avant que l'ascenseur charge plus vite ; 7 h 03 avant la hausse des salaires et la limite de 2 mineurs ; 8 h 29 le 30/10) | `bot.test.ts` |
 | Rails mine → marché | moins de 10 min | `bot.test.ts` |
 | Rails électriques | moins de 1 h 30 | `bot.test.ts` |
 | Niveau 5 / niveau 10 du joueur | après 8 min / après 1 h (médianes) ; 16 min / 1 h 23 | `bot.test.ts` |

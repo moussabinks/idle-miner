@@ -17,6 +17,7 @@ import {
   NIVEAUX_FORAGE,
   NIVEAUX_GENERATEUR,
   NIVEAUX_MINE,
+  NIVEAUX_POUSSEUR,
   NIVEAUX_WAGONNET,
   NIVEAU_JOUEUR_MAX,
   NIVEAU_JOUEUR_POUR,
@@ -63,7 +64,7 @@ export function progressionNiveau(etat: EtatJeu): { niveau: number; xp: number; 
 
 // Les choses qui se débloquent par niveau, avec un tableau (case i : le niveau qu'il faut pour
 // en acheter le niveau i).
-export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'wagonnet' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
+export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'wagonnet' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
 
 // Le niveau du joueur qu'il faut pour acheter le niveau « index » de cette chose.
 export function niveauRequis(chose: ChoseANiveaux, index: number): number {
@@ -114,6 +115,7 @@ export function deblocagesDuNiveau(niveau: number): string[] {
     ['sacs', (i) => `🎒 Sac de ${SACS[i].taille.toLocaleString('fr-FR')} places`],
     ['ascenseur', (i) => (i === 0 ? '🛗 L’ascenseur' : `🛗 Ascenseur niveau ${NIVEAUX_ASCENSEUR[i].niveau}`)],
     ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
+    ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()}`],
     ['wagonnet', (i) => `🚃 Wagonnets de ${NIVEAUX_WAGONNET[i].capacite} places`],
     ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
     ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
@@ -215,7 +217,7 @@ export function niveauPourCeQuOnA(etat: EtatJeu): number {
   pour('pioches', etat.meilleure)
   pour('sacs', etat.niveauSac)
   if (etat.ascenseur.niveau > 0) niveaux.push(niveauRequis('ascenseur', etat.ascenseur.niveau - 1))
-  for (const e of etat.employes) pour('equipement', e.niveau)
+  for (const e of etat.employes) pour(e.role === 'pousseur' ? 'pousseur' : 'equipement', e.niveau)
   pour('wagonnet', etat.niveauWagonnets)
   pour('generateur', etat.generateur.niveau)
   pour('forage', etat.foreuse.niveauVitesse)

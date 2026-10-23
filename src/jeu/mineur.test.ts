@@ -21,7 +21,9 @@ import {
   prendreDuCoffre,
   reglerVente,
   reparer,
+  secondesChargementAscenseur,
   secondesTrajetMineur,
+  secondesVidageAscenseur,
   tailleSac,
   vendre,
   vendreLot,
@@ -202,6 +204,9 @@ describe('les améliorations de la mine', () => {
     ameliorerAscenseur(etat)
     expect(etat.ascenseur.niveau).toBe(2)
     expect(secondesTrajetMineur(etat)).toBe(4)
+    // (23/10) la caisse se charge et se vide plus vite à chaque niveau
+    expect(secondesChargementAscenseur(etat)).toBeLessThan(1)
+    expect(secondesVidageAscenseur(etat)).toBeLessThan(2)
   })
 })
 

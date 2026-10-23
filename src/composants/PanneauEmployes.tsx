@@ -10,6 +10,7 @@ import { aleatoireNavigateur } from '../jeu/aleatoire'
 import {
   LISTE_RARETES,
   NIVEAUX_EMPLOYE,
+  NIVEAUX_POUSSEUR,
   NIVEAUX_RECRUTEUR,
   NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
@@ -37,6 +38,7 @@ import {
   changerTrajet,
   embaucherPousseur,
   peutEmbaucherPousseur,
+  trajetPris,
   embaucherManager,
   iconeActiviteEmploye,
   indemnites,
@@ -66,7 +68,7 @@ import {
 } from '../jeu/employes'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { batimentPose } from '../jeu/village'
-import { forcePousseur, ligneDe, trajetDe } from '../jeu/wagonnet'
+import { capaciteWagonnet, forcePousseur, ligneDe, trajetDe } from '../jeu/wagonnet'
 import { revenuBrutEmploye } from '../jeu/revenu'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration, BadgeXp } from './Amelioration'
@@ -315,6 +317,11 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
   const rapporte = revenuBrutEmploye(etat, { ...employe, role: 'mineur' }) * SECONDES_PAR_PAIE
   const etape = employe.etape === 'attend' ? 'pas payé' : employe.etape === 'quai' || employe.etape === 'pousse' || employe.etape === 'creuse' ? '' : `${Math.ceil(secondesRestantesEmploye(etat, employe))} s`
   const pousseur = employe.role === 'pousseur'
+  // (23/10) Pour un pousseur : son niveau, le suivant, et les places de son wagonnet avant / après.
+  const niveauPousseurActuel = NIVEAUX_POUSSEUR[Math.min(employe.niveau, NIVEAUX_POUSSEUR.length - 1)]
+  const niveauPousseurSuivant = pousseur ? (NIVEAUX_POUSSEUR[employe.niveau + 1] ?? null) : null
+  const placesAvant = Math.round(capaciteWagonnet(etat) * niveauPousseurActuel.places)
+  const placesApres = niveauPousseurSuivant ? Math.round(capaciteWagonnet(etat) * niveauPousseurSuivant.places) : placesAvant
 
   return (
     <div className={`ligne-achat carte-employe carte-compacte rarete-${employe.rarete} ${employe.tempsPaye > 0 ? '' : 'carte-employe-alerte'}`}>
@@ -336,7 +343,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
       {pousseur ? (
         <div className="module-ligne">
           <span className="discret">
-            🛤️ Pousse le wagonnet {employe.trajet ? <strong>{nomTrajet(employe.trajet)}</strong> : 'de… (aucun trajet)'} · salaire {argent(salaireEmploye(employe))}
+            🛤️ Pousse le wagonnet {employe.trajet ? <strong>{nomTrajet(employe.trajet)}</strong> : 'de… (aucun trajet)'} · {placesAvant} places · arrêts de {secondes(niveauPousseurActuel.secondesArret)} · salaire {argent(salaireEmploye(employe))} / 5 min
           </span>
           <select
             className="choix-trajet"
@@ -345,8 +352,10 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
             title="Changer son trajet"
           >
             {LISTE_LIAISONS.filter((l) => l === employe.trajet || ligneDe(etat, l) !== null).map((l) => (
-              <option key={l} value={l}>
+              // (23/10) un trajet qui a déjà son pousseur ne se choisit pas
+              <option key={l} value={l} disabled={l !== employe.trajet && trajetPris(etat, l)}>
                 {nomTrajet(l)}
+                {l !== employe.trajet && trajetPris(etat, l) ? ' (déjà un pousseur)' : ''}
               </option>
             ))}
           </select>
@@ -403,9 +412,41 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
       />
       </>
       )}
+      {/* (23/10) Le niveau d'un pousseur : son wagonnet porte plus, et ses arrêts (charger,
+          décharger, vendre) sont plus courts. Avant ➜ après, en grand, comme la pioche. */}
+      {pousseur && niveauPousseurSuivant && (
+        <>
+          <div className="gain-pioche" aria-label={`Niveau suivant : ${placesAvant} puis ${placesApres} places, arrêts de ${secondes(niveauPousseurActuel.secondesArret)} puis ${secondes(niveauPousseurSuivant.secondesArret)}`}>
+            <span className="gain-pioche-avant">{placesAvant}</span>
+            <span className="gain-pioche-fleche" aria-hidden="true">
+              ➜
+            </span>
+            <span className="gain-pioche-apres">{placesApres}</span>
+            <span className="gain-pioche-unite">places</span>
+            <span className="gain-pioche-avant">⏱ {secondes(niveauPousseurActuel.secondesArret)}</span>
+            <span className="gain-pioche-fleche" aria-hidden="true">
+              ➜
+            </span>
+            <span className="gain-pioche-apres">{secondes(niveauPousseurSuivant.secondesArret)}</span>
+          </div>
+          <Amelioration
+            etat={etat}
+            actuel={`🛤️ Pousseur ${niveauPousseurActuel.nom.toLowerCase()}`}
+            niveau={employe.niveau + 1}
+            niveauMax={NIVEAUX_POUSSEUR.length}
+            suivant={coutPioche !== null ? { cout: coutPioche, texte: `⬆ Pousseur ${niveauPousseurSuivant.nom.toLowerCase()}` } : null}
+            verrou={verrou(etat, 'pousseur', employe.niveau + 1)}
+            possible={peutAmeliorerEmploye(etat, employe)}
+            onAmeliorer={() => jouer((e) => ameliorerEmploye(e, index))}
+          />
+        </>
+      )}
     </div>
   )
 }
+
+// « 1,6 s »
+const secondes = (n: number) => `${n.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} s`
 
 // L'embauche d'un pousseur (26/10) : on choisit le départ, puis l'arrivée de son trajet ; le
 // trajet brille sur la carte (s'il y a des rails), puis on confirme.
@@ -414,8 +455,10 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
   // on voit d'un coup d'œil lesquels ont des rails et combien de pousseurs ils ont déjà.
   const trajets = LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee))
   const avecDesRails = trajets.filter((l) => ligneDe(etat, l) !== null)
-  const [liaison, setLiaison] = useState<IdLiaison | null>(avecDesRails.length === 1 ? avecDesRails[0] : null)
-  const choisie = liaison && trajets.includes(liaison) ? liaison : null
+  // (23/10) Un seul pousseur par trajet : on propose seulement les trajets libres.
+  const libres = avecDesRails.filter((l) => !trajetPris(etat, l))
+  const [liaison, setLiaison] = useState<IdLiaison | null>(libres.length === 1 ? libres[0] : null)
+  const choisie = liaison && trajets.includes(liaison) && !trajetPris(etat, liaison) ? liaison : null
   const avecRails = choisie !== null && ligneDe(etat, choisie) !== null
   // Le trajet choisi brille sur la carte (et plus rien quand on ferme le panneau).
   useEffect(() => {
@@ -433,16 +476,16 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
       <div className="liste-trajets-pousseur" role="radiogroup">
         {trajets.map((l) => {
           const rails = ligneDe(etat, l) !== null
-          const pousseurs = etat.employes.filter((e) => e.role === 'pousseur' && e.trajet === l).length
+          const sonPousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === l)
           return (
-            <label key={l} className={`trajet-pousseur ${choisie === l ? 'choisi' : ''} ${rails ? '' : 'sans-rails'}`}>
-              <input type="radio" name="trajet-pousseur" checked={choisie === l} onChange={() => setLiaison(l)} />
+            <label key={l} className={`trajet-pousseur ${choisie === l ? 'choisi' : ''} ${rails && !sonPousseur ? '' : 'sans-rails'}`}>
+              <input type="radio" name="trajet-pousseur" checked={choisie === l} disabled={sonPousseur !== undefined} onChange={() => setLiaison(l)} />
               <span className="trajet-pousseur-nom">
                 {BATIMENTS[LIAISONS[l].depart].emoji} {BATIMENTS[LIAISONS[l].depart].nom} → {BATIMENTS[LIAISONS[l].arrivee].emoji}{' '}
                 {BATIMENTS[LIAISONS[l].arrivee].nom}
               </span>
-              <span className={`badge ${!rails ? 'badge-rouge' : pousseurs > 0 ? '' : 'badge-vert'}`}>
-                {!rails ? 'Pas de rails' : pousseurs > 0 ? `${pousseurs} pousseur${pousseurs > 1 ? 's' : ''}` : 'Libre'}
+              <span className={`badge ${sonPousseur ? '' : !rails ? 'badge-rouge' : 'badge-vert'}`}>
+                {sonPousseur ? `✔ ${sonPousseur.nom}` : !rails ? 'Pas de rails' : 'Libre'}
               </span>
             </label>
           )
@@ -456,8 +499,8 @@ function EmbauchePousseur({ etat, jouer, onApercuTrajet, onRecrue }: PropsPannea
         ) : (
           <span className="texte-alerte">Pas de rails entre ces deux bâtiments : pose-les d'abord (menu Bâtiments).</span>
         ))}
-      {prix === null ? (
-        <span className="discret">Tu as déjà un pousseur pour chaque trajet.</span>
+      {prix === null || trajets.every((l) => trajetPris(etat, l)) ? (
+        <span className="discret">Chaque trajet a déjà son pousseur (un seul par trajet). Améliore-les dans l’onglet Employés : leur wagonnet portera plus, et ils iront plus vite.</span>
       ) : (
         <Achat
           etat={etat}
