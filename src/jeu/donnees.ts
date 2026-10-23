@@ -216,8 +216,10 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
 // Les mineurs employés (dès le début, au bâtiment Personnel)
 // ---------------------------------------------------------------------------
 
-// Combien de mineurs on peut employer : 4 au niveau 1 de la mine, puis 2 de plus par niveau.
-export const EMPLOYES_NIVEAU_1 = 4
+// Combien de mineurs on peut employer : 2 au niveau 1 de la mine, puis 2 de plus par niveau
+// (23/10 : avant, 4 au niveau 1, pousseurs compris). Les pousseurs ne comptent pas : on en
+// embauche au plus un par trajet de wagonnet.
+export const EMPLOYES_NIVEAU_1 = 2
 export const EMPLOYES_PAR_NIVEAU = 2
 // Le prix de la 1re, 2e, 3e... embauche (il dépend seulement du nombre de mineurs qu'on a).
 // Au-delà de la liste, chaque embauche coûte 2,2 fois la précédente. (30/10 : les prix montent
@@ -245,7 +247,7 @@ export const SECONDES_PAR_PAIE = 5 * 60
 // (30/10 : bien plus cher, environ 40 % de ce qu'il fait sortir. 23/10 : les mineurs ne remontent
 // plus et creusent bien plus : le salaire suit à peu près sa pioche, pour qu'une meilleure pioche
 // rapporte toujours plus qu'elle ne coûte en salaire.)
-export const SALAIRES = [150, 320, 600, 1000, 1600]
+export const SALAIRES = [220, 450, 850, 1400, 2200]
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite. Son sac est le tas
 // qu'il remplit au fond de la mine en attendant que la caisse de l'ascenseur passe le prendre

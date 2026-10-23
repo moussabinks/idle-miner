@@ -39,7 +39,7 @@ import {
 import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
-import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
+import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, quantiteAGarder, quantiteEnPlus, retirerDe, totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
 import { debloque } from './niveaux'
 
@@ -309,9 +309,11 @@ function besoinRedstone(etat: EtatJeu): number {
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
   const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
   if (garde) return Infinity
-  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
-  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
-  return 0
+  // (23/10) ce que le joueur veut garder dans le coffre (« garder 40 fer »)
+  const voulu = quantiteAGarder(etat, 'coffre', bloc)
+  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return Math.max(voulu, besoinCharbon(etat))
+  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return Math.max(voulu, besoinRedstone(etat))
+  return voulu
 }
 
 // Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).
@@ -333,7 +335,10 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
     }
     case 'foreuse-marche': {
       const exclus = exclusAutres ?? exclusDe(etat, liaison)
-      return parPrix(etat.foreuse.chariot).filter(([bloc]) => !exclus.includes(bloc))
+      return parPrix(etat.foreuse.chariot)
+        .filter(([bloc]) => !exclus.includes(bloc))
+        .map(([bloc, nombre]): [IdBloc, number] => [bloc, quantiteEnPlus(etat, 'chariot', bloc, nombre)])
+        .filter(([, nombre]) => nombre > 0)
     }
   }
 }

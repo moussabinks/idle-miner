@@ -2156,7 +2156,8 @@ g.grille-construction {
 
 .bouton-sac-ligne {
   padding: 3px 8px;
-  min-width: 0;
+  min-width: 52px;
+  white-space: nowrap;
 }
 
 /* Le rappel du niveau suivant, sous le coffre : il brille quand on peut le payer. */
@@ -2722,7 +2723,8 @@ g.grille-construction {
 }
 @media (prefers-reduced-motion: reduce) { .bonus-combo { animation: none; } }
 
-/* Le curseur « combien prendre » de chaque minerai du coffre (30/10), comme au marché. */
+/* Le curseur « combien garder » de chaque minerai du coffre (23/10 ; avant, « combien prendre »).
+   📌 le nombre gardé, puis le bouton 🎒 avec ce qu'il prendra (le reste). */
 .prendre-coffre {
   display: flex;
   align-items: center;
@@ -2733,9 +2735,14 @@ g.grille-construction {
   accent-color: #f0a01c;
 }
 .prendre-compteur {
-  min-width: 26px;
+  min-width: 34px;
   text-align: right;
   font-weight: 800;
+  color: #b9a88c;
+}
+
+.prendre-compteur.garde-active {
+  color: #ffd25a;
 }
 
 /* L'aperçu du rail (ou du chemin) qu'on va poser, sous la souris (30/10). */

@@ -31,7 +31,7 @@ Le panneau s'ouvre sur l'onglet **Recruter** tant qu'on n'a personne, sinon sur 
 
 ### 1. Embaucher un mineur (« 👷 Embaucher », ou « 🎲 Recruter » avec le recruteur)
 
-- **Taille de l'équipe** (mineurs et pousseurs ensemble) : **4 employés au niveau 1 de la mine, puis 2 de plus par niveau** (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`) : 4, 6, 8, 10, puis **12** au niveau 5. Le badge affiche « *n* / max ». Équipe complète : « Ton équipe est complète. Chaque niveau de la mine te permet d'en employer 2 de plus. »
+- **Nombre de mineurs** (23/10) : **2 au niveau 1 de la mine, puis 2 de plus par niveau** (`EMPLOYES_NIVEAU_1`, `EMPLOYES_PAR_NIVEAU`, `maxEmployes`) : 2, 4, 6, 8, puis **10** au niveau 5. Les **pousseurs ne comptent pas** : au plus un par trajet de wagonnet (4, `maxPousseurs`). Le badge affiche « *mineurs* / max ». Complet : « Tu as tous tes mineurs. Chaque niveau de la mine te permet d'en employer 2 de plus. » (avant le 23/10 : 4 employés au niveau 1, pousseurs compris.)
 - **Le prix dépend seulement du nombre d'employés qu'on a en ce moment** (mineurs et pousseurs, `PRIX_EMBAUCHE`). Au-delà de la liste, chaque embauche coûte **2,2 fois** la précédente (`HAUSSE_APRES_LISTE`, 30/10 ; avant, 60 % de plus). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus.
 
 | Embauche | 1re | 2e | 3e | 4e | 5e | 6e | 7e | 8e | 9e | 10e | 11e | 12e |
@@ -57,15 +57,15 @@ Une carte par employé, directement dans l'onglet Employés (23/10 : avant, une 
 
 Chaque amélioration donne une meilleure pioche : il creuse plus vite, et son sac (le tas où il pose ses blocs au fond, en attendant la caisse de l'ascenseur) est plus grand. Payé **en argent seulement** (`NIVEAUX_EMPLOYE`). Ces pioches ne s'usent pas.
 
-| Niveau | Pioche | Creuse (23/10) | Sac | Coût | Niveau du joueur | Salaire / 5 min (23/10) |
+| Niveau | Pioche | Creuse (23/10) | Sac | Coût | Niveau du joueur | Salaire / 5 min (23/10, bis) |
 |---|---|---:|---:|---:|---:|---:|
-| 1 | Bois | 0,5 bloc/s | 10 | (de base) | — | 150 $ |
-| 2 | Pierre | 0,6 bloc/s | 15 | 500 $ | 4 | 320 $ |
-| 3 | Fer | 0,75 bloc/s | 20 | 3 000 $ | 6 | 600 $ |
-| 4 | Or | 0,95 bloc/s | 30 | 15 000 $ | 9 | 1 000 $ |
-| 5 | Diamant | 1,2 bloc/s | 45 | 60 000 $ | 12 | 1 600 $ |
+| 1 | Bois | 0,5 bloc/s | 10 | (de base) | — | 220 $ |
+| 2 | Pierre | 0,6 bloc/s | 15 | 500 $ | 4 | 450 $ |
+| 3 | Fer | 0,75 bloc/s | 20 | 3 000 $ | 6 | 850 $ |
+| 4 | Or | 0,95 bloc/s | 30 | 15 000 $ | 9 | 1 400 $ |
+| 5 | Diamant | 1,2 bloc/s | 45 | 60 000 $ | 12 | 2 200 $ |
 
-Le 23/10, le premier mineur creuse **0,5 bloc/s** (avant 0,22) et ne remonte plus : il creuse sans s'arrêter, c'est l'ascenseur qui fait les allers-retours. Pour garder le même rythme de partie (niveau 5 de la mine en 6 h 30 à 7 h 30 pour le bot), les pioches suivantes montent moins (0,6 à 1,2 au lieu de 0,32 à 1) et les salaires suivent à peu près la pioche (150 à 1 600 $ au lieu de 90 à 2 400 $) : une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-et-léchelle)). Sans le niveau du joueur, la carte affiche « 🔒 … ⭐ *N* requis » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
+Le 23/10, le premier mineur creuse **0,5 bloc/s** (avant 0,22) et ne remonte plus : il creuse sans s'arrêter, c'est l'ascenseur qui fait les allers-retours. Pour garder le même rythme de partie (niveau 5 de la mine en 7 h 48 pour le bot, médiane), les pioches suivantes montent moins (0,6 à 1,2 au lieu de 0,32 à 1) et les salaires suivent à peu près la pioche (220 à 2 200 $ depuis le 23/10 bis, un peu plus chers ; d'abord 150 à 1 600 $ ; le 30/10, 90 à 2 400 $) : une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-et-léchelle)). Sans le niveau du joueur, la carte affiche « 🔒 … ⭐ *N* requis » à la place du bouton. Chaque pioche achetée rapporte 30 XP.
 
 - **Sa pioche lui descend par l'ascenseur** (27/10) : si un forgeron est posé, l'amélioration est payée tout de suite et compte tout de suite ; le mineur attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse (« ⛏️ Le forgeron fait une pioche en … pour *X* : elle lui descendra par l'ascenseur. »). Il ne remonte plus au village pour ça : **un mineur ne remonte que s'il n'est plus payé** (il va alors attendre devant le Personnel). Sans forgeron, il l'a directement. Une pioche ne s'achète pas pour un pousseur (il ne creuse pas).
 

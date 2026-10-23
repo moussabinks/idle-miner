@@ -4,7 +4,7 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
 import { embaucher, embaucherPousseur } from './employes'
 import { NIVEAUX_FORAGE, SECONDES_PAR_CHARBON } from './donnees'
-import { type EtatJeu } from './mineur'
+import { reglerGarde, type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
 import {
@@ -129,6 +129,15 @@ describe('les trajets des wagonnets', () => {
     etat.coffre.contenu = { fer: 10 }
     etat.nonAVendre = ['fer']
     expect(peutPousser(etat, 'mine-marche')).toBe(false)
+  })
+
+  it('il ne prend que ce qu’il y a en plus de ce qu’on garde (23/10)', () => {
+    const etat = partieAvecTrajet()
+    etat.coffre.contenu = { fer: 60 }
+    reglerGarde(etat, 'coffre', 'fer', 40)
+    expect(aCharger(etat, 'mine-marche')).toBe(20)
+    etat.coffre.contenu = { fer: 30 }
+    expect(aCharger(etat, 'mine-marche')).toBe(0)
   })
 
   it('le pousseur de ce trajet le pousse tout seul dès que le coffre n’est pas vide', () => {
