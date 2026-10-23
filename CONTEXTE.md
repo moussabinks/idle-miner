@@ -214,4 +214,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (20)** : le manager est une **option** : un interrupteur sur sa carte l'arrête ou le remet au travail. Arrêté, il ne paie personne, on ne lui doit rien, et on paie ses employés soi-même.
 - **2026-10-23 (21)** : foreuse et générateur moins forts sans pousseur : le réservoir de la foreuse tient **5 min au niveau 1** (15 charbons), puis 7, 9, 12, 15, 18 min ; le générateur a une **réserve** de 5, 7, 10, 13, 16 min selon son niveau (à la main comme par les rails). Le **puisage** du générateur dans le coffre est retiré : il faut un pousseur pour ne jamais s'arrêter.
 - **2026-10-23 (22)** : passer un niveau ferme tous les panneaux et menus ouverts, et la fête du niveau ne peut pas être fermée pendant 1 s (bouton grisé qui se remplit).
+- **2026-10-23 (23)** : chariot de la foreuse bien plus petit : 100, 160, 240, 360, 520, 720 places (avant 200 à 6 000) : plein en 3 min 20 quand forage et chariot ont le même niveau, il faut le vider souvent et l'agrandir avec le forage. Bot : niveau 5 en ~6 h 11 (médiane).
 

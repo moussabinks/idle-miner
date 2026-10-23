@@ -79,6 +79,6 @@ describe('la foreuse', () => {
     ameliorerForage(etat)
     ameliorerChariot(etat)
     expect(vitesseForage(etat)).toBe(1.2)
-    expect(capaciteChariot(etat)).toBe(400)
+    expect(capaciteChariot(etat)).toBe(160)
   })
 })

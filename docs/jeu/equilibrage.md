@@ -205,19 +205,19 @@ Améliorations (niveaux 2 à 5) : 197 500 $ + 1 240 fer + 820 redstone.
 
 | Niveau | Forage (bloc/s) | Prix (29/10) | Chariot (places) | Prix (29/10) | Niv. joueur (les deux) |
 |---|---:|---|---:|---|---:|
-| 1 | 0,5 | (le bâtiment : 3 000 $ + 120 pierre + 60 fer) | 200 | (de base) | 5 (le bâtiment, 30/10 ; avant 6) |
-| 2 | 0,8 | 3 500 $ + 50 fer + 20 redstone | 400 | 2 500 $ + 40 fer | 6 |
-| 3 | 1,2 | 10 000 $ + 100 fer + 50 redstone | 800 | 7 500 $ + 80 fer + 25 redstone | 9 |
-| 4 | 1,8 | 25 000 $ + 160 fer + 100 redstone | 1 600 | 20 000 $ + 150 fer + 70 redstone | 11 |
-| 5 | 2,6 | 60 000 $ + 160 redstone + 50 or | 3 000 | 50 000 $ + 130 redstone + 40 or | 14 |
-| 6 | 3,6 | 150 000 $ + 100 or + 25 émeraude | 6 000 | 120 000 $ + 90 or + 20 émeraude | 15 |
+| 1 | 0,5 | (le bâtiment : 3 000 $ + 120 pierre + 60 fer) | 100 | (de base) | 5 (le bâtiment, 30/10 ; avant 6) |
+| 2 | 0,8 | 3 500 $ + 50 fer + 20 redstone | 160 | 2 500 $ + 40 fer | 6 |
+| 3 | 1,2 | 10 000 $ + 100 fer + 50 redstone | 240 | 7 500 $ + 80 fer + 25 redstone | 9 |
+| 4 | 1,8 | 25 000 $ + 160 fer + 100 redstone | 360 | 20 000 $ + 150 fer + 70 redstone | 11 |
+| 5 | 2,6 | 60 000 $ + 160 redstone + 50 or | 520 | 50 000 $ + 130 redstone + 40 or | 14 |
+| 6 | 3,6 | 150 000 $ + 100 or + 25 émeraude | 720 | 120 000 $ + 90 or + 20 émeraude | 15 |
 
 Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. Total du chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude.
 
 - **Charbon** : 1 charbon = 20 s de forage, quelle que soit la vitesse (3 charbons par minute).
 - **Recharge automatique** : retirée le 23/10 (le charbon arrive par les rails, avec le wagonnet Mine → Foreuse, ou à la main).
 - **Ce qu'elle rapporte** : vitesse × valeur moyenne d'un bloc au niveau de la mine. Au niveau 2 de la mine, au forage de base : 0,5 × 4,58 ≈ 2,3 $/s. Tout au maximum (niveau 5 de la mine, forage 3,6, générateur ×2,5) : 9 bloc/s × 19,79 ≈ **178 $/s**.
-- **Temps pour remplir le chariot** (`secondesPourRemplir`) = capacité ÷ vitesse : 400 s au niveau 1/1, 500 s au 2/2, 667 s au 3/3, 889 s au 4/4, 1 154 s au 5/5, 1 667 s au 6/6 (sans électricité).
+- **Temps pour remplir le chariot** (`secondesPourRemplir`) = capacité ÷ vitesse : **200 s à chaque niveau** quand forage et chariot ont le même niveau (sans électricité ; 23/10, avant : 400 à 1 667 s, jamais plein).
 
 ## Les mineurs employés
 
@@ -416,7 +416,7 @@ Pour mémoire, le 29/10 (avant l'économie plus dure du 30/10) : niveau 2 en 26,
 | Remplir le coffre de départ (débit seul) | jamais : au niveau 1, la mine ne sort rien toute seule (27/10) | `NIVEAUX_COFFRE`, `NIVEAUX_MINE` |
 | Une paie de mineur | 5 min | `SECONDES_PAR_PAIE` |
 | Un charbon dans la foreuse / une redstone dans le générateur | 20 s / 30 s | `SECONDES_PAR_CHARBON`, `SECONDES_PAR_REDSTONE` |
-| Remplir le chariot de la foreuse | 400 s (niveau 1) à 1 667 s (niveau 6), sans électricité | `NIVEAUX_CHARIOT`, `NIVEAUX_FORAGE` |
+| Remplir le chariot de la foreuse | 200 s à chaque niveau (même niveau de forage et de chariot), sans électricité | `NIVEAUX_CHARIOT`, `NIVEAUX_FORAGE` |
 | Un trajet de mineur | 6 s (ascenseur niveau 1, dès le début) à 1 s (niveau 6) | `NIVEAUX_ASCENSEUR` |
 | Rattrapage hors ligne | 8 h au plus (résumé « Bon retour, mineur ! ») | `ABSENCE_MAX`, `absence.ts` |
 | Le joueur traverse la clairière (60 cases) | ≈ 8 s (7,5 cases/s) | `VITESSE_JOUEUR` |
