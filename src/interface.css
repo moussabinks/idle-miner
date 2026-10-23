@@ -720,6 +720,25 @@
   color: #7a4a1a;
 }
 
+/* (23/10) Tout ce qu'il faut pour un achat : une ligne et une jauge par élément (vert quand
+   on l'a). */
+.mission-elements {
+  display: grid;
+  gap: 2px;
+}
+
+.mission-elements .mission-compte {
+  min-width: 92px;
+}
+
+.element-fait .mission-piste i {
+  background: linear-gradient(#8ee06a, #3f9a2a);
+}
+
+.element-fait .mission-compte {
+  color: #2f7a1f;
+}
+
 /* Le bouton d'action, à droite. */
 .mission-action {
   flex-shrink: 0;

@@ -2083,7 +2083,7 @@ g.grille-construction {
 /* Une ligne par minerai : nom, nombre dans le coffre, ce que fait le wagonnet, 🎒. */
 .table-coffre {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 4px 8px;
   margin-top: 4px;
@@ -2091,7 +2091,16 @@ g.grille-construction {
 }
 
 .table-coffre.sans-wagonnet {
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+/* (23/10) Un minerai par ligne : son icône, son nom et son prix restent sur une seule ligne (le
+   nom se coupe avec « … » s'il manque de place), au lieu de passer à la ligne (la redstone). */
+.nom-coffre {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ligne-coffre {
@@ -2120,8 +2129,8 @@ g.grille-construction {
 }
 
 .reserve-coffre {
-  display: block;
-  font-size: 0.7rem;
+  margin-left: 3px;
+  font-size: 0.75rem;
   color: #ffcf7a;
 }
 
@@ -2877,4 +2886,54 @@ g.grille-construction {
 }
 @media (prefers-reduced-motion: reduce) {
   .bouton-sac-urgent { animation: none; }
+}
+
+/* Le rail proposé (23/10) : là où « ✔ Poser ce rail » le mettra, en doré (rouge s'il ne peut pas
+   aller là). */
+.rail-propose {
+  pointer-events: none;
+}
+
+.rail-propose .rails-village {
+  opacity: 0.75;
+}
+
+.losange-propose {
+  fill: rgb(255 210 90 / 0.35);
+  stroke: #ffd25a;
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+  animation: propose-brille 1.1s ease-in-out infinite alternate;
+}
+
+.rail-propose-bloque {
+  opacity: 0.6;
+}
+
+.rail-propose-bloque .losange-propose {
+  fill: rgb(230 70 50 / 0.3);
+  stroke: #ff6a5a;
+}
+
+@keyframes propose-brille {
+  from { stroke-opacity: 0.5; }
+  to { stroke-opacity: 1; }
+}
+
+/* Les flèches pour tourner la voie (23/10) : gauche, tout droit, droite, sur toute une ligne. */
+.fleches-rail {
+  display: flex;
+  flex: 1 1 100%;
+  gap: 6px;
+}
+
+.actions-edition .fleches-rail .bouton {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.fleches-rail .bouton.fleche-active {
+  box-shadow: 0 0 0 3px #ffd25a;
 }

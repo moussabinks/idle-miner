@@ -27,6 +27,7 @@ import { FenetreTrajet } from './composants/FenetreTrajet'
 import { Tutoriel } from './composants/Tutoriel'
 import { avancerTutoriel, avecBouton, etapeFaite, etapeSuivante, etapeTutoriel, passerTutoriel } from './jeu/tutoriel'
 import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
+import { avancer as avancerCase, sensDeDepart, tourner, virageEntre, type TraceRail, type Virage } from './composants/traceRail'
 import {
   construireBatiment,
   deplacerBatiment,
@@ -103,6 +104,9 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   // vers le bouton, la souris emmenait le bâtiment avec elle.
   const [fantomeFixe, setFantomeFixe] = useState(false)
   const [pinceau, setPinceau] = useState<TypeSol | null>(null)
+  // (23/10) Le tracé des rails, pas à pas : le rail proposé (doré), son sens, les rails posés.
+  const [traceRailBrut, setTraceRail] = useState<TraceRail | null>(null)
+  const traceRail = pinceau === 'rail' ? traceRailBrut : null
   const [modifier, setModifier] = useState(false)
   // Le trajet qu'on regarde en embauchant un pousseur (au Personnel) : il brille sur la carte.
   const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
@@ -176,6 +180,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
 
   function commencerPinceau(sol: TypeSol) {
     setMenuConstruction(false)
+    setTraceRail(null)
     setPinceau(sol)
   }
 
@@ -219,27 +224,72 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
     })
   }
 
-  // En mode pinceau, chaque case touchée reçoit un rail (ou un pavé) si elle est libre.
+  // En mode pinceau, une case touchée reçoit un pavé si elle est libre. (23/10) Pour les rails,
+  // elle devient le rail proposé : on le pose avec le bouton « ✔ Poser ce rail ».
   function peindre(c: Case) {
     if (pinceau === null) return
+    if (pinceau === 'rail') {
+      const dernier = traceRail?.poses.at(-1)
+      // Touchée juste à côté du dernier rail posé : la voie tourne vers elle.
+      const voisin = dernier && Math.abs(c.x - dernier.x) + Math.abs(c.y - dernier.y) === 1
+      const sens = voisin ? { x: c.x - dernier.x, y: c.y - dernier.y } : sensDeDepart(etat.village, c)
+      setTraceRail({ propose: c, sens, sensVoie: voisin && traceRail ? traceRail.sensVoie : sens, poses: voisin && traceRail ? traceRail.poses : [] })
+      return
+    }
     if (!peutPoserSol(etat, pinceau, c.x, c.y)) {
       // (30/10) On dit pourquoi : plus de fer, une boucle... (et pas sur une case déjà prise)
       const raison = raisonSolImpossible(etat, pinceau, c.x, c.y)
       if (raison) jouer(() => [raison])
       return
     }
-    const avant = trajetsAProposer(etat)
-    const apres = jouer((e) => poserSol(e, pinceau, c.x, c.y))
-    if (pinceau === 'rail') sons.rail()
-    // (30/10) Les rails relient deux bâtiments : on range les rails (plus de rail « dans la
-    // main ») et on ouvre tout de suite la fenêtre pour automatiser ce trajet.
-    const nouveaux = trajetsAProposer(apres).filter((l) => !avant.includes(l))
-    if (pinceau === 'rail' && nouveaux.length > 0) {
-      setPinceau(null)
-      setTrajetsOuverts(nouveaux)
-    }
+    jouer((e) => poserSol(e, pinceau, c.x, c.y))
   }
 
+
+  // (23/10) Poser le rail proposé, puis proposer le suivant, dans le même sens.
+  function poserRailPropose() {
+    const t = traceRail
+    if (!t) return
+    const c = t.propose
+    if (!peutPoserSol(etat, 'rail', c.x, c.y)) {
+      const raison = raisonSolImpossible(etat, 'rail', c.x, c.y)
+      if (raison) jouer(() => [raison])
+      return
+    }
+    const avant = trajetsAProposer(etat)
+    const apres = jouer((e) => poserSol(e, 'rail', c.x, c.y))
+    sons.rail()
+    // Les rails relient deux bâtiments : on range les rails et on ouvre tout de suite la fenêtre
+    // pour automatiser ce trajet (30/10).
+    const nouveaux = trajetsAProposer(apres).filter((l) => !avant.includes(l))
+    if (nouveaux.length > 0) {
+      setPinceau(null)
+      setTrajetsOuverts(nouveaux)
+      return
+    }
+    setTraceRail({ propose: avancerCase(c, t.sens), sens: t.sens, sensVoie: t.sens, poses: [...t.poses, c] })
+  }
+
+  // Les flèches : le rail proposé va tout droit, à gauche ou à droite après le dernier rail posé.
+  function tournerRail(virage: Virage) {
+    const t = traceRail
+    const dernier = t?.poses.at(-1)
+    if (!t || !dernier) return
+    const sens = tourner(t.sensVoie, virage)
+    setTraceRail({ ...t, sens, propose: avancerCase(dernier, sens) })
+  }
+
+  // « ↩ Retirer le dernier » : on reprend le dernier rail posé (remboursé), il redevient proposé.
+  function retirerDernierRail() {
+    const t = traceRail
+    const dernier = t?.poses.at(-1)
+    if (!t || !dernier) return
+    jouer((e) => retirerSol(e, 'rail', dernier.x, dernier.y))
+    const poses = t.poses.slice(0, -1)
+    const avantDernier = poses.at(-1)
+    const sensVoie = avantDernier ? { x: dernier.x - avantDernier.x, y: dernier.y - avantDernier.y } : t.sensVoie
+    setTraceRail({ propose: dernier, sens: sensVoie, sensVoie, poses })
+  }
 
   // --- Les bâtiments : on les touche, on marche jusqu'à eux, puis le panneau s'ouvre ---
   const [panneauFerme, setPanneauFerme] = useState(false)
@@ -515,16 +565,59 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
         </button>
       </div>
     )
+  } else if (pinceau === 'rail') {
+    // (23/10) Les rails, pas à pas : toucher une case pour commencer, « ✔ Poser ce rail », puis
+    // les flèches pour tourner. Glisser déplace la carte.
+    const t = traceRail
+    const dernier = t?.poses.at(-1)
+    const okPropose = t !== null && peutPoserSol(etat, 'rail', t.propose.x, t.propose.y)
+    const raison = t && !okPropose ? raisonSolImpossible(etat, 'rail', t.propose.x, t.propose.y) ?? 'Case déjà prise : touche une autre case, ou tourne.' : null
+    const virage = t && dernier ? virageEntre(t.sensVoie, t.sens) : null
+    barre = (
+      <div className="actions actions-edition actions-rails">
+        <p className="consigne-edition">
+          {!t
+            ? '🛤️ Touche le sol là où commence ta voie, juste à côté d’un bâtiment.'
+            : !dernier
+              ? '🛤️ Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.'
+              : '🛤️ Choisis où va le prochain rail avec les flèches, puis pose-le.'}{' '}
+          ({COUT_RAIL.materiaux.fer} 🔩 fer le rail · glisse pour déplacer la carte)
+          {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
+        </p>
+        {t && dernier && (
+          <div className="fleches-rail" role="group" aria-label="Où va le prochain rail">
+            <button className={`bouton bouton-neutre ${virage === 'gauche' ? 'fleche-active' : ''}`} onClick={() => tournerRail('gauche')} title="Le prochain rail tourne à gauche">
+              ↰ Gauche
+            </button>
+            <button className={`bouton bouton-neutre ${virage === 'droit' ? 'fleche-active' : ''}`} onClick={() => tournerRail('droit')} title="Le prochain rail va tout droit">
+              ⬆ Tout droit
+            </button>
+            <button className={`bouton bouton-neutre ${virage === 'droite' ? 'fleche-active' : ''}`} onClick={() => tournerRail('droite')} title="Le prochain rail tourne à droite">
+              ↱ Droite
+            </button>
+          </div>
+        )}
+        {t && (
+          <button className="bouton bouton-acheter" disabled={!okPropose} onClick={poserRailPropose}>
+            ✔ Poser ce rail
+          </button>
+        )}
+        {dernier && (
+          <button className="bouton bouton-stop" onClick={retirerDernierRail} title="Reprendre le dernier rail posé (le fer est rendu)">
+            ↩ Retirer le dernier
+          </button>
+        )}
+        <button className="bouton bouton-vendre" onClick={() => setPinceau(null)}>
+          ✔ Terminé
+        </button>
+      </div>
+    )
   } else if (pinceau !== null) {
-    const cout = pinceau === 'rail' ? COUT_RAIL : COUT_CHEMIN
+    // (les chemins : un toucher pose un pavé ; glisser déplace la carte)
     barre = (
       <div className="actions actions-edition">
         <p className="consigne-edition">
-          {pinceau === 'rail'
-            ? '🛤️ Le rail suit ta souris : clique (ou glisse) sur le sol pour le poser, d’un bâtiment à un autre'
-            : '🪨 Clique (ou glisse) sur le sol pour poser un chemin'}{' '}
-          (
-          {cout.argent ? `${cout.argent} $` : `${cout.materiaux.fer} 🔩 fer`} la case).
+          🪨 Touche le sol pour poser un chemin (glisse pour déplacer la carte) ({COUT_CHEMIN.argent ? `${COUT_CHEMIN.argent} $` : `${COUT_CHEMIN.materiaux.fer} 🔩 fer`} la case).
         </p>
         <button className="bouton bouton-vendre" onClick={() => setPinceau(null)}>
           ✔ Terminé
@@ -615,6 +708,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
           onPeindre={peindre}
           trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
           zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
+          railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y) } : null}
           onOuvrirTrajet={setTrajetsOuverts}
         />
         <Gains gains={gains} />

@@ -90,10 +90,11 @@ function argent(n: number): string {
   return `${Math.round(n).toLocaleString('fr-FR')} $`
 }
 
-// « 1 h 05 min », « 12 min », « 45 s ».
+// « 1 h 05 min », « 12 min », « 45 s ». (23/10) Les minutes sont arrondies au-dessus : un
+// salaire de 5 minutes qui vient de commencer affiche « 5 min » (avant, « 4 min »).
 function duree(secondes: number): string {
-  const minutes = Math.floor(secondes / 60)
-  if (minutes < 1) return `${Math.max(0, Math.ceil(secondes))} s`
+  if (secondes < 60) return `${Math.max(0, Math.ceil(secondes))} s`
+  const minutes = Math.ceil(secondes / 60)
   if (minutes < 60) return `${minutes} min`
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
 }

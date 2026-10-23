@@ -105,7 +105,7 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
             </div>
             <div className="construction-texte">
               <strong>🛤️ Rails</strong>
-              <span className="discret">Relie deux bâtiments (mine, marché, foreuse, générateur), puis envoie un wagonnet depuis le panneau du départ. Pose-les en ligne, ils se raccordent tout seuls ; un rail sur le côté fait un virage ou un embranchement. Pas de boucle !</span>
+              <span className="discret">Relie deux bâtiments (mine, marché, foreuse, générateur), puis envoie un wagonnet depuis le panneau du départ. Touche la case de départ, pose le rail, puis choisis tout droit, à gauche ou à droite avec les flèches : ils se raccordent tout seuls. Pas de boucle !</span>
               <span className="discret">1 case · {etat.village.rails.length} posée{etat.village.rails.length > 1 ? 's' : ''}</span>
             </div>
             <div className="construction-achat">

@@ -82,6 +82,8 @@ type Props = {
   trajetEnSurbrillance?: IdLiaison | null // un trajet qui brille sur la carte (quand on embauche un pousseur)
   zonesRails?: boolean // on pose des rails : les bâtiments qu'on peut relier sont entourés de jaune
   onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
+  // (23/10) Le rail proposé (doré) qu'on posera avec le bouton « Poser », et s'il peut l'être.
+  railPropose?: { c: Case; ok: boolean } | null
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -113,6 +115,7 @@ export function VueVillage({
   trajetEnSurbrillance = null,
   zonesRails = false,
   onOuvrirTrajet,
+  railPropose = null,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -315,9 +318,10 @@ export function VueVillage({
     // souris, un fantôme pas encore fixé suit le curseur : il est donc toujours dessous. Tant
     // qu'il n'est pas fixé (par un clic), glisser déplace la carte, pas le bâtiment.
     const surLeFantome = fantome !== null && dansLeFantome(c) && (fantomeFixe || e.pointerType !== 'mouse')
+    // (23/10) Avec des rails (ou des chemins) en main, glisser déplace la carte : on ne pose
+    // plus rien en glissant. Un simple toucher choisit la case (voir pointerUp).
     const mode = pinceau ? 'pinceau' : surLeFantome ? 'fantome' : 'tap'
     geste.current = { mode, depart: { x: e.clientX, y: e.clientY }, temps: performance.now(), camera: cameraVisee(), deplace: false }
-    if (mode === 'pinceau') onPeindre(c)
   }
 
   function pointerMove(e: React.PointerEvent) {
@@ -352,7 +356,6 @@ export function VueVillage({
     if (!g.deplace && Math.hypot(dx, dy) > 7) g.deplace = true
     if (!g.deplace) return
     if (g.mode === 'fantome') onGlisser(caseSous(e.clientX, e.clientY))
-    else if (g.mode === 'pinceau') onPeindre(caseSous(e.clientX, e.clientY))
     else {
       g.mode = 'carte'
       viser(borner({ ...g.camera, cx: g.camera.cx - dx / g.camera.z, cy: g.camera.cy - dy / g.camera.z }), false)
@@ -365,13 +368,16 @@ export function VueVillage({
   // point (en traversant le joueur, les bulles...). Sur un chemin, « juste à côté » ne compte
   // que si on le demande (en mode Modifier, toucher un chemin doit le choisir, lui).
   function batimentVise(sx: number, sy: number, procheSurChemin = true): IdBatiment | null {
+    const c = caseSous(sx, sy)
+    const occupant = occupation(village).get(`${c.x},${c.y}`)
+    // (23/10) Un rail est toujours prioritaire : même juste à côté d'un bâtiment (ou sous son
+    // image, qui dépasse de ses cases), toucher un rail choisit le rail, pas le bâtiment.
+    if (occupant?.type === 'rail') return null
     const element = document.elementsFromPoint(sx, sy).find((el) => el.hasAttribute('data-cible'))
     const donnee = element?.getAttribute('data-cible')
     if (donnee?.startsWith('batiment:')) return donnee.slice(9) as IdBatiment
-    const c = caseSous(sx, sy)
-    const occupant = occupation(village).get(`${c.x},${c.y}`)
     if (occupant?.type === 'batiment') return occupant.id
-    if (occupant?.type === 'rail' || (occupant?.type === 'chemin' && !procheSurChemin)) return null
+    if (occupant?.type === 'chemin' && !procheSurChemin) return null
     return batimentProcheDe(village, c.x + 0.5, c.y + 0.5, MARGE_CLIC_BATIMENT)
   }
   const [survol, setSurvol] = useState<IdBatiment | null>(null)
@@ -398,8 +404,12 @@ export function VueVillage({
     if (pointeurs.current.size < 2) pincement.current = null
     const g = geste.current
     geste.current = null
-    if (!g || g.deplace || g.mode === 'pinceau') return
+    if (!g || g.deplace) return
     if (performance.now() - g.temps > 600) return
+    if (g.mode === 'pinceau') {
+      onPeindre(caseSous(e.clientX, e.clientY))
+      return
+    }
     // Un simple toucher : on regarde ce qu'il y a dessous. Un bâtiment (son image, ses cases, ou
     // juste à côté, 29/10 : avant, un clic sur son toit, qui dépasse de ses cases, ou juste à
     // côté faisait marcher le joueur sans ouvrir son panneau), sinon des rails ou un chemin.
@@ -788,7 +798,14 @@ export function VueVillage({
       {fantome && <LosangeEmprise x={fantome.x} y={fantome.y} taille={tailleFantome(fantome)} libre={fantomeLibre} />}
       {fantome?.type === 'sol' && fantome.sol === 'chemin' && <CaseChemin x={fantome.x} y={fantome.y} />}
       {/* (30/10) L'aperçu de ce qu'on peint, sous la souris : vert si on peut le poser, rouge sinon. */}
-      {pinceau && caseApercu && typePinceau && (
+      {/* (23/10) Le rail proposé, en doré, là où « Poser » le mettra (raccordé au dernier rail). */}
+      {pinceau && railPropose && (
+        <g className={`rail-propose ${railPropose.ok ? '' : 'rail-propose-bloque'}`}>
+          <RailsDuVillage village={{ ...village, rails: [...village.rails, cleCase(railPropose.c.x, railPropose.c.y)] }} seulement={[cleCase(railPropose.c.x, railPropose.c.y)]} />
+          <polygon className="losange-propose" points={losange(railPropose.c.x, railPropose.c.y, 1)} />
+        </g>
+      )}
+      {pinceau && caseApercu && typePinceau && !railPropose && (
         <g className="apercu-pinceau">
           {typePinceau === 'rail' ? (
             <RailsDuVillage village={{ ...village, rails: [cleCase(caseApercu.x, caseApercu.y)] }} />

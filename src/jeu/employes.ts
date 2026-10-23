@@ -290,7 +290,7 @@ export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
   }
   etat.argent -= paye
   etat.stats.salairesPayes += paye
-  return [`💵 Salaires payés (${paye.toLocaleString('fr-FR')} $) : tes mineurs travaillent encore ${Math.floor(tempsPayeMin(etat) / 60)} min.`]
+  return [`💵 Salaires payés (${paye.toLocaleString('fr-FR')} $) : tes mineurs travaillent encore ${Math.ceil(tempsPayeMin(etat) / 60)} min.`]
 }
 
 export function alerteSalaires(etat: EtatJeu): string | null {

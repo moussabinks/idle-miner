@@ -109,6 +109,7 @@ Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même él
 
 - Chaque mineur doit être payé **toutes les 5 minutes** (`SECONDES_PAR_PAIE = 300`, depuis le 28/10 ; avant, 10 minutes).
 - **Salaire de 5 minutes** = salaire de sa pioche (tableau ci-dessus) × multiplicateur de sa rareté, arrondi.
+- (23/10) Le temps payé s'affiche **arrondi à la minute au-dessus** : juste après la paie, « payés 5 min » (avant, « 4 min » dès la première seconde passée).
 - Sans manager, **on ne paie que 5 minutes à la fois** : le bouton complète chaque mineur jusqu'à 5 minutes payées, et ne fait payer que le temps manquant (au prorata, arrondi au dollar supérieur). La carte « 💵 Salaires » indique le total pour 5 minutes et le temps qu'il reste au moins payé (« Tout le monde est payé pour encore 4 min. On paie 5 minutes à la fois (le manager, au niveau 4 de la mine, s'en chargera pour toi). »). Elle passe en rouge quand quelqu'un attend son salaire.
 - Cette carte disparaît quand on a embauché le manager.
 
