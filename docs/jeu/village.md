@@ -106,7 +106,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 
 | Trajet | Ce que fait le wagonnet |
 |---|---|
-| 💰 Mine → Marché | emporte le coffre de la mine (les plus chers d'abord) et le vend. Il laisse les objets « gardés », et le charbon et la redstone dont les deux trajets suivants ont besoin. |
+| 💰 Mine → Marché | emporte le coffre de la mine (un peu de chaque objet s'il n'a pas la place pour tout, 23/10) et le vend. Il laisse les objets « gardés », et le charbon et la redstone dont les deux trajets suivants ont besoin. |
 | 🔥 Mine → Foreuse | dès que le réservoir de la foreuse n'est plus plein, emporte tout le charbon du coffre : il remplit le réservoir (15 à 54 charbons selon le niveau de forage, 5 à 18 min, 23/10), le surplus va dans le chariot (28/10). |
 | 🔴 Mine → Générateur | apporte la redstone du coffre, jusqu'à sa réserve (5 à 16 min selon son niveau, 23/10). |
 | 🛒 Foreuse → Marché | vend ce qui est coché dans le chariot de la foreuse. |

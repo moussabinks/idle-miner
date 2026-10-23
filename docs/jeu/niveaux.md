@@ -65,18 +65,18 @@ Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le ma
 
 | Niveau | Ce qui se débloque |
 |---:|---|
-| 1 | 💰 Marché, ⚒️ Forgeron ; tout ce qu'on a au départ (pioche en pierre, sac de 32, coffre de 100, 🛗 ascenseur niveau 1 dans la mine depuis le 30/10, wagonnets de 40…) |
+| 1 | 💰 Marché, ⚒️ Forgeron ; tout ce qu'on a au départ (pioche en pierre, sac de 32, coffre de 100, 🛗 ascenseur niveau 1 dans la mine depuis le 30/10, wagonnets de 20…) |
 | 2 | 👷 **Personnel** ; 📦 coffre de 250 places |
 | 3 | 🎒 **Bazar** ; 🛤️ **les rails et les wagonnets** ; 🎒 sac de 64 places |
 | 4 | ⛏️ **Mine niveau 2** (Veine de redstone) ; ⛏️ pioche en fer ; 👷 pioche en pierre pour les mineurs |
 | 5 | ⚙️ **Foreuse** (30/10 : avant le générateur) ; 📦 coffre de 600 places ; 🎒 sac de 128 places ; 🛗 ascenseur niveau 2 |
-| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 100 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 160 places |
+| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 40 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 160 places |
 | 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or |
 | 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; 🛗 ascenseur niveau 3 ; ⚡ générateur rayon 20 |
-| 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 250 places ; ⚙️ forage 1,2 ; 🛒 chariot de 240 |
+| 9 | 💼 **le manager** ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 70 places ; ⚙️ forage 1,2 ; 🛒 chariot de 240 |
 | 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 💚 pioche en émeraude, pour toi et (👷) pour les mineurs (23/10) ; 🛗 ascenseur niveau 4 ; ⚡ générateur rayon 26 |
 | 11 | 🎩 **le recruteur** ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 360 ; 💼 manager éveillé 30 min |
-| 12 | 🎩 recruteur niveau 2 ; 💼 manager éveillé 45 min ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 600 places |
+| 12 | 🎩 recruteur niveau 2 ; 💼 manager éveillé 45 min ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 120 places |
 | 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 5 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 ; 💼 manager éveillé 1 h |
 | 14 | 💼 manager éveillé 1 h 30 ; 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 520 |
 | 15 | 🎒 sac de 2 048 places ; 🛗 ascenseur niveau 6 ; ⚡ générateur rayon 40 ; ⚙️ forage 3,6 ; 🛒 chariot de 720 ; 🎩 recruteur niveau 4 |

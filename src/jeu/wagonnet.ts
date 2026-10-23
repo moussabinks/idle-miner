@@ -133,7 +133,7 @@ export function exclusAffiches(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
 // prochain voyage avec ces objets décochés, ce que ça vaut, qui le fait rouler, le temps d'un
 // aller-retour, et ce que ça rapporterait par minute.
 export type ApercuTrajet = {
-  objets: [IdBloc, number][] // le prochain chargement (les plus chers d'abord, dans la limite des places)
+  objets: [IdBloc, number][] // le prochain chargement (un peu de chaque objet, dans la limite des places : voir repartir)
   places: number
   valeur: number // ce qu'il vendrait (0 si l'arrivée n'est pas le marché)
   moteur: 'electricite' | 'pousseur' | 'toi'
@@ -143,14 +143,7 @@ export type ApercuTrajet = {
 
 export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]): ApercuTrajet {
   const places = capaciteTrajet(etat, liaison)
-  let reste = places
-  const objets: [IdBloc, number][] = []
-  for (const [bloc, nombre] of aEmporter(etat, liaison, exclus)) {
-    const pris = Math.min(nombre, reste)
-    if (pris <= 0) continue
-    objets.push([bloc, pris])
-    reste -= pris
-  }
+  const objets = repartir(aEmporter(etat, liaison, exclus), places)
   const versLeMarche = LIAISONS[liaison].arrivee === 'marche'
   const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
@@ -405,16 +398,30 @@ export function aCharger(etat: EtatJeu, liaison: IdLiaison): number {
   return aEmporter(etat, liaison).reduce((total, [, nombre]) => total + nombre, 0)
 }
 
+// (23/10) Ce qu'on met dans un wagonnet trop petit pour tout emporter : un peu de chaque objet,
+// selon ce qu'il y en a (la pierre part aussi, sinon elle remplissait le coffre et la mine
+// s'arrêtait), et les places qui restent aux plus chers. La liste est rangée des plus chers aux
+// moins chers.
+export function repartir(liste: [IdBloc, number][], places: number): [IdBloc, number][] {
+  const total = liste.reduce((somme, [, nombre]) => somme + nombre, 0)
+  if (total <= places) return liste.filter(([, nombre]) => nombre > 0)
+  const parts = liste.map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.floor((nombre * places) / total)])
+  let reste = places - parts.reduce((somme, [, nombre]) => somme + nombre, 0)
+  for (let i = 0; i < parts.length && reste > 0; i++) {
+    const enPlus = Math.min(reste, liste[i][1] - parts[i][1])
+    parts[i][1] += enPlus
+    reste -= enPlus
+  }
+  return parts.filter(([, nombre]) => nombre > 0)
+}
+
 // Remplit le wagonnet au départ (dans le coffre de la mine, ou le chariot de la foreuse).
 function charger(etat: EtatJeu, trajet: Trajet): void {
-  let place = capaciteTrajet(etat, trajet.liaison) - totalObjets(trajet.chargement)
-  for (const [bloc, nombre] of aEmporter(etat, trajet.liaison)) {
-    const pris = Math.min(nombre, place)
-    if (pris <= 0) continue
+  const place = capaciteTrajet(etat, trajet.liaison) - totalObjets(trajet.chargement)
+  for (const [bloc, pris] of repartir(aEmporter(etat, trajet.liaison), place)) {
     ajouterA(trajet.chargement, bloc, pris)
     if (trajet.liaison === 'foreuse-marche') retirerDuChariot(etat, bloc, pris)
     else retirerDe(etat.coffre.contenu, bloc, pris)
-    place -= pris
   }
 }
 

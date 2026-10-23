@@ -385,11 +385,17 @@ export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine
 export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
 
 // La taille des wagonnets (au bâtiment Mine) : elle vaut pour tous les trajets.
+// (23/10) Petits : à peu près ce que la mine et les mineurs sortent pendant un aller-retour
+// (1 à 3 blocs/s au début selon qu'on clique ou non, 5 à 8 vers la fin, pour un aller-retour
+// d'environ 15 s). Le wagonnet suit donc
+// tout juste la production : l'agrandir, ou améliorer le pousseur (places ×1,25 à ×2,5, arrêts plus
+// courts) et électrifier les rails, sert vraiment. Avant : 40, 100, 250, 600, bien trop grands.
+// Quand il ne prend pas tout, il prend un peu de chaque objet (voir repartir dans wagonnet.ts).
 export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
-  { capacite: 40, cout: { materiaux: {} } },
-  { capacite: 100, cout: { argent: 1200, materiaux: { fer: 60 } } },
-  { capacite: 250, cout: { argent: 6000, materiaux: { fer: 150, redstone: 40 } } },
-  { capacite: 600, cout: { argent: 25000, materiaux: { or: 80 } } },
+  { capacite: 20, cout: { materiaux: {} } },
+  { capacite: 40, cout: { argent: 1200, materiaux: { fer: 60 } } },
+  { capacite: 70, cout: { argent: 6000, materiaux: { fer: 150, redstone: 40 } } },
+  { capacite: 120, cout: { argent: 25000, materiaux: { or: 80 } } },
 ]
 
 // ---------------------------------------------------------------------------
