@@ -209,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))
+    const convertie = convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -338,5 +338,16 @@ export function convertirVersion25(donnees: unknown): unknown {
   const decaler = (niveau: number) => (niveau >= 3 ? niveau + 1 : niveau)
   const pioches: Record<number, number> = {}
   for (const [niveau, usure] of Object.entries(ancienne.pioches)) pioches[decaler(Number(niveau))] = usure
-  return { ...ancienne, version: VERSION_ETAT, pioches, niveauPioche: decaler(ancienne.niveauPioche), meilleure: decaler(ancienne.meilleure) }
+  return { ...ancienne, version: 26, pioches, niveauPioche: decaler(ancienne.niveauPioche), meilleure: decaler(ancienne.meilleure) }
+}
+
+// Version 26 → 27 (23/10) : les mineurs ont aussi leur pioche en émeraude, entre l'or (3) et le
+// diamant, qui passe du niveau 4 au niveau 5 (seulement pour les mineurs : le niveau d'un
+// pousseur, c'est autre chose).
+export function convertirVersion26(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 26 || !Array.isArray(ancienne.employes)) return donnees
+  const employes = ancienne.employes.map((e) => (e.role === 'mineur' && e.niveau >= 4 ? { ...e, niveau: e.niveau + 1 } : e))
+  return { ...ancienne, version: VERSION_ETAT, employes }
 }
