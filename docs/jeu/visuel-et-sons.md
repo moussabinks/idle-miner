@@ -353,3 +353,13 @@ Résultat : **le jeu marche hors ligne** (sans compte en ligne ni classement).
 ## Le relief des décorations et des chemins (24/10)
 
 La lumière vient d'en haut à gauche. `Relief.tsx` donne deux outils : `Boule` (une boule en volume : côté à l'ombre, partie éclairée décalée vers la lumière, reflet) et `OmbreAuSol` (une ombre douce, un peu vers la droite). Les buissons, les feuillages des arbres et les fleurs sont faits de boules ; le tronc a un reflet à gauche et l'ombre du feuillage en haut ; le tonneau est rond (clair à gauche, sombre à droite, douelles, cercles brillants) ; la caisse a une face à l'ombre et ses planches ; le sapin a sa moitié droite à l'ombre ; la lanterne a une vitre brillante ; la fontaine a un bassin en épaisseur et un reflet sur l'eau ; la statue dorée a ses ombres. Les **pavés des chemins** dépassent du sol : un flanc sombre dessous et un bord éclairé.
+
+## Fluidité (23/10)
+
+Mesuré dans Chrome (taille de ce que le navigateur redessine à chaque seconde, sur une grosse partie) :
+
+- **L'écume et les vagues du rivage** ne bougent plus. Elles suivent tout le rivage : à chaque image, le navigateur redessinait toute l'eau (une très grande image), environ **180 millions de pixels par seconde**. C'était de loin ce qui faisait le plus ramer. Après : environ 5 à 15 millions. Les petits reflets de la mer scintillent toujours, par petits pas (`steps`).
+- Plus de pointillés qui défilent (le contour doré du bâtiment ouvert, le rayon du générateur, les bâtiments d'un trajet) : ils faisaient redessiner tout le sol.
+- Plus de lueur en filtre sur le wagonnet électrique (recalculée à chaque image pendant qu'il roule).
+- Les animations dorées du tutoriel bougent par `transform`, sans repasser par React (voir l'interface).
+- Règle pour la suite : au village, n'animer que `transform` et `opacity`, sur de petits éléments ; jamais `stroke-dashoffset`, `box-shadow`, `filter` ou la position (`left`, `top`) d'un grand dessin.

@@ -180,11 +180,7 @@
   stroke: rgb(255 214 90 / 0.85);
   stroke-width: 1.6;
   stroke-dasharray: 6 4;
-  animation: tirets 1s linear infinite;
-}
-
-@keyframes tirets {
-  to { stroke-dashoffset: -20; }
+  /* (23/10, fluidité) Plus de tirets qui défilent : ils faisaient redessiner tout le sol. */
 }
 
 /* --- Les personnages ------------------------------------------------------------- */
@@ -971,18 +967,15 @@
   /* Sa propre couche : quand l'eau bouge, le navigateur ne redessine qu'elle. */
   will-change: transform;
 }
-.eau-plage .ecume {
-  animation: ecume-plage 4.5s ease-in-out infinite;
-}
+/* (23/10, fluidité) L'écume et les vagues suivent tout le rivage : quand elles bougeaient, le
+   navigateur redessinait toute l'eau (une très grande image) 60 fois par seconde. C'était, de
+   loin, ce qui ralentissait le plus le jeu. Elles restent donc immobiles ; les petits reflets
+   scintillent toujours (par petits pas, environ 2 fois par seconde chacun). */
 .eau-plage .vague {
-  animation: vague-plage 5.5s ease-in-out infinite;
-}
-.eau-plage .vague-2 {
-  animation-duration: 7s;
-  animation-delay: -2s;
+  opacity: 0.7;
 }
 .eau-plage .reflet-mer {
-  animation: reflet-plage 4s ease-in-out infinite;
+  animation: reflet-plage 4s steps(8) infinite;
 }
 .objets-plage .flamme {
   transform-box: fill-box;
@@ -996,14 +989,6 @@
 .objets-plage .barque-flotte,
 .objets-plage .ecume-rocher {
   animation: flotte-plage 3.2s ease-in-out infinite;
-}
-@keyframes ecume-plage {
-  0%, 100% { transform: translate(0, 0); opacity: 0.92; }
-  50% { transform: translate(-2px, 2.5px); opacity: 0.6; }
-}
-@keyframes vague-plage {
-  0%, 100% { transform: translate(0, 0); stroke-dashoffset: 0; opacity: 0.85; }
-  50% { transform: translate(-3px, 3px); stroke-dashoffset: 18; opacity: 0.4; }
 }
 @keyframes reflet-plage {
   0%, 100% { opacity: 0; }
@@ -1357,7 +1342,7 @@
   fill: rgb(255 214 60 / 0.16);
   stroke: #ffd63c;
   stroke-width: 3;
-  animation: rayon-tourne 1.6s linear infinite;
+  /* (23/10, fluidité) Immobile : un cercle aussi grand qui tourne faisait redessiner tout le sol. */
 }
 
 .rayon-generateur:not(.rayon-allume) {
@@ -1365,14 +1350,8 @@
   fill: rgb(220 220 220 / 0.08);
 }
 
-@keyframes rayon-tourne {
-  to { stroke-dashoffset: -36; }
-}
-
-/* Le wagonnet électrique : de petites étincelles. */
-.wagonnet-electrique {
-  filter: drop-shadow(0 0 4px #ffe066);
-}
+/* Le wagonnet électrique (23/10, fluidité : plus de lueur en filtre, recalculée à chaque image
+   pendant qu'il roule ; ses étincelles suffisent). */
 
 /* Les petits « +X $ » (le wagonnet qui vend), en haut au milieu de l'écran. */
 .gains-village {
@@ -1615,16 +1594,12 @@ g.grille-construction {
   stroke: #ffd84a;
   stroke-width: 3;
   stroke-dasharray: 8 5;
-  animation: trajet-tourne 1.2s linear infinite;
+  /* (23/10, fluidité) Immobile (voir .emprise-active). */
 }
 
 @keyframes trajet-brille {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
-}
-
-@keyframes trajet-tourne {
-  to { stroke-dashoffset: -26; }
 }
 
 @media (prefers-reduced-motion: reduce) {
