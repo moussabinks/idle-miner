@@ -701,7 +701,7 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
   }
 
   return (
-    <div className={`jeu plein-ecran mode-village ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${panneau ? 'avec-panneau' : ''} ${batimentActif && PANNEAUX_LARGES.includes(batimentActif) ? 'panneau-large' : ''}`}>
+    <div className={`jeu plein-ecran mode-village ${etat.employes.length > 0 ? 'avec-mineurs' : ''} ${panneau ? 'avec-panneau' : ''} ${batimentActif && PANNEAUX_LARGES.includes(batimentActif) ? 'panneau-large' : ''} ${batimentActif === 'puits' ? 'panneau-mine-xl' : ''}`}>
       {/* La scène prend tout l'écran : le village vu du ciel. */}
       <main className="scene">
         <VueVillage

@@ -29,6 +29,7 @@ import {
   estCassee,
   piocheEnMain,
   nbDansCoffre,
+  noterCombo,
   peutPayer,
   prendreDuCoffre,
   prochainNiveauCoffre,
@@ -47,6 +48,7 @@ import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
 import { StockMinerais } from './StockMinerais'
 import { sons } from '../sons'
+import { useCompteur } from '../useCompteur'
 import { niveauAtteint, niveauPourBatiment, verrou } from '../jeu/niveaux'
 
 type Props = PropsPanneau & {
@@ -72,21 +74,32 @@ function prochainPalier(combo: number) {
   return BONUS_COMBO.find((b) => b.palier > combo) ?? null
 }
 
-// Le bloc à casser, en très grand, avec ses éclats, les minerais qui en sortent et le combo.
+// Le bloc à casser, en très grand (23/10 : refait pour être le cœur du jeu). De haut en bas :
+//   - le niveau de la mine et le bloc qui attend (« 👆 🔩 Fer ») ;
+//   - le bonus de combo en cours ;
+//   - le gros bloc, ses éclats, les minerais qui en sortent et le compteur de combo ;
+//   - la barre de combo : où on en est vers le prochain bonus (×10, ×25, ×50...) ;
+//   - quatre compteurs : les blocs cassés à la main, ce qu'ils valent depuis qu'on a ouvert le
+//     panneau, le record de combo et les clics par seconde ;
+//   - la pioche (elle tremble et rougit quand elle est cassée, à chaque clic).
 function BlocACliquer({
   etat,
   eclats,
   trouvailles,
   onCliquer,
   onPalier,
+  onFinCombo,
   clicsParSeconde,
+  valeurSession,
 }: {
   etat: EtatJeu
   eclats: Eclat[]
   trouvailles: Trouvaille[]
   onCliquer: () => void
   onPalier: (palier: number) => void
+  onFinCombo: (combo: number) => void
   clicsParSeconde: number
+  valeurSession: number
 }) {
   const bonus = bonusActif(etat)
   const prod = production(etat)
@@ -94,29 +107,48 @@ function BlocACliquer({
   const plein = coffrePlein(etat)
   const cassee = estCassee(etat)
   const [combo, setCombo] = useState(0)
+  const comboRef = useRef(0)
   const dernierClic = useRef(0)
   const finCombo = useRef(0)
+  const blocsAffiches = useCompteur(etat.stats.blocsCasses)
+  const valeurAffichee = useCompteur(Math.round(valeurSession))
+  const record = etat.stats.meilleurCombo ?? 0
 
   function cliquer() {
     const maintenant = performance.now()
     const suite = maintenant - dernierClic.current < DELAI_COMBO ? combo + 1 : 1
     dernierClic.current = maintenant
     setCombo(suite)
+    comboRef.current = suite
     if (PALIERS_COMBO.includes(suite)) {
       sons.combo(PALIERS_COMBO.indexOf(suite))
       onPalier(suite)
     }
-    // Sans clic pendant un moment, le combo retombe.
+    // Sans clic pendant un moment, le combo retombe (et devient peut-être le record).
     window.clearTimeout(finCombo.current)
-    finCombo.current = window.setTimeout(() => setCombo(0), DELAI_COMBO)
+    finCombo.current = window.setTimeout(() => {
+      if (comboRef.current >= 3) onFinCombo(comboRef.current)
+      comboRef.current = 0
+      setCombo(0)
+    }, DELAI_COMBO)
     onCliquer()
   }
   useEffect(() => () => window.clearTimeout(finCombo.current), [])
 
   // Plus le combo est long, plus le bloc brille (de 0 à 1).
   const ardeur = Math.min(1, combo / 50)
+  // La barre de combo : du palier d'avant au prochain.
+  const prochain = prochainPalier(combo)
+  const avant = [...PALIERS_COMBO].reverse().find((p) => p <= combo) ?? 0
+  const partCombo = prochain ? (combo - avant) / (prochain.palier - avant) : 1
   return (
-    <div className={`zone-bloc-mine ${combo >= 10 ? 'zone-en-feu' : ''} ${bonus ? 'zone-bonus' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
+    <div className={`zone-bloc-mine zone-bloc-geante ${combo >= 10 ? 'zone-en-feu' : ''} ${bonus ? 'zone-bonus' : ''}`} style={{ ['--ardeur' as string]: ardeur }}>
+      <div className="bloc-mine-entete">
+        <span className="discret titre-niveau-mine">
+          Niveau {etat.niveauMine} · <strong>{infoNiveauMine(etat.niveauMine).nom}</strong>
+        </span>
+        <strong className={`bloc-a-casser ${plein ? 'bloc-a-casser-plein' : ''}`}>{plein ? '📦 Coffre plein !' : `👆 ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
+      </div>
       {/* Le bonus de combo en cours (30/10), avec le temps qui reste. */}
       {bonus && (
         <span key={etat.bonus?.palier} className="bonus-combo" aria-live="polite">
@@ -125,11 +157,6 @@ function BlocACliquer({
             {bonus.fortune > 0 && ` +${Math.round(bonus.fortune * 100)} % fortune`}
             {bonus.blocs > 1 && ` · ×${bonus.blocs} blocs`} · {Math.ceil(secondesBonus(etat))} s
           </small>
-        </span>
-      )}
-      {!bonus && combo >= 3 && prochainPalier(combo) && (
-        <span className="bonus-prochain discret">
-          Prochain bonus à ×{prochainPalier(combo)?.palier} : {prochainPalier(combo)?.emoji} {prochainPalier(combo)?.nom}
         </span>
       )}
       <button
@@ -165,39 +192,71 @@ function BlocACliquer({
           </span>
         )}
       </button>
-      {/* À côté du bloc (27/10) : le niveau, le bloc, ta pioche et ce que produit la mine. */}
-      <div className="bloc-mine-texte">
-        <span className="discret titre-niveau-mine">
-          Niveau {etat.niveauMine} · <strong>{infoNiveauMine(etat.niveauMine).nom}</strong>
+      {/* La barre de combo, toujours là : elle donne envie d'aller au prochain bonus. */}
+      <div className={`barre-combo ${combo >= 3 ? 'barre-combo-active' : ''}`}>
+        <span className="barre-combo-piste" aria-hidden="true">
+          <i style={{ width: `${Math.round(partCombo * 100)}%` }} />
         </span>
-        <strong>{plein ? '📦 Coffre plein !' : `👆 ${BLOCS[bloc].emoji} ${BLOCS[bloc].nom}`}</strong>
-        <JaugePioche etat={etat} />
-        <span className="discret">
-          {cassee ? '💥 Pioche cassée : 2 clics par bloc (forgeron).' : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de doubler un minerai`}
-        </span>
-        <span className="production-mini">
-          ⚙️ {parSeconde(prod.total + clicsParSeconde)} blocs/s · ≈ {Math.round(prod.dollarsParMinute).toLocaleString('fr-FR')} $/min
+        <span className="barre-combo-texte">
+          {prochain
+            ? combo >= 3
+              ? `🔥 ×${combo} → ×${prochain.palier} : ${prochain.emoji} ${prochain.nom}`
+              : `Clique vite ! ×${prochain.palier} = ${prochain.emoji} ${prochain.nom}`
+            : `🏆 ×${combo} : légendaire !`}
         </span>
       </div>
+      {/* Les compteurs (23/10) : ça monte à chaque bloc. */}
+      <div className="compteurs-mine">
+        <span className="compteur-mine" title="Les blocs que tu as cassés à la main, depuis le début">
+          <b>🔨</b>
+          <strong key={etat.stats.blocsCasses} className="compteur-saute">
+            {blocsAffiches.toLocaleString('fr-FR')}
+          </strong>
+          <small>cassés</small>
+        </span>
+        <span className="compteur-mine" title="Ce que valent les blocs que tu as cassés depuis que tu as ouvert la mine (au marché)">
+          <b>💰</b>
+          <strong>+{valeurAffichee.toLocaleString('fr-FR')} $</strong>
+          <small>ce tour</small>
+        </span>
+        <span className={`compteur-mine ${combo > 0 && combo >= record ? 'compteur-record' : ''}`} title="Ton plus long combo">
+          <b>🏆</b>
+          <strong>×{Math.max(record, combo)}</strong>
+          <small>record</small>
+        </span>
+        <span className="compteur-mine" title="Tes clics par seconde (ces 3 dernières secondes)">
+          <b>⚡</b>
+          <strong>{parSeconde(clicsParSeconde)}</strong>
+          <small>clics/s</small>
+        </span>
+      </div>
+      <JaugePioche etat={etat} />
+      <span className="production-mini">
+        {cassee ? '💥 Pioche cassée : 2 clics par bloc, fais-la réparer au forgeron !' : `⛏️ ${Math.round(chanceDoublement(etat) * 100)} % de doubler un minerai`} · ⚙️ {parSeconde(prod.total + clicsParSeconde)} blocs/s · ≈{' '}
+        {Math.round(prod.dollarsParMinute).toLocaleString('fr-FR')} $/min
+      </span>
     </div>
   )
 }
 
 // La pioche en main : son nom et sa durabilité (du vert au rouge quand elle s'use, « cassée » à zéro).
+// (23/10) Cassée, elle rougit et clignote, et tremble à chaque clic, pour prévenir.
 function JaugePioche({ etat }: { etat: EtatJeu }) {
   const pioche = piocheEnMain(etat)
   const reste = durabiliteRestante(etat)
   const part = reste / Math.max(1, pioche.durabilite)
   // (30/10) Sous 15 %, elle clignote ; sa couleur va du vert (neuve) au rouge (presque cassée).
   const niveau = reste <= 0 ? 'pioche-cassee' : part < 0.15 ? 'pioche-usee' : ''
+  // (cassée : la clé change à chaque clic, la jauge rejoue sa secousse)
+  const secousse = reste <= 0 ? etat.stats.blocsCasses * 2 + etat.clics : 0
   return (
-    <div className={`jauge-pioche ${niveau}`} style={{ ['--teinte' as string]: Math.round(part * 120) }} title={`Pioche en ${pioche.nom} : ${reste} / ${pioche.durabilite} clics`}>
+    <div key={secousse} className={`jauge-pioche ${niveau}`} style={{ ['--teinte' as string]: Math.round(part * 120) }} title={`Pioche en ${pioche.nom} : ${reste} / ${pioche.durabilite} clics`}>
       <span className="jauge-pioche-icone" aria-hidden="true">
         {reste <= 0 ? '💥' : pioche.emoji}
       </span>
       <span className="jauge-pioche-barre">
         <i style={{ width: `${Math.round(part * 100)}%` }} />
-        <span className="jauge-pioche-texte">{reste <= 0 ? 'Cassée : répare-la au forgeron' : `Pioche en ${pioche.nom} · ${reste} / ${pioche.durabilite}`}</span>
+        <span className="jauge-pioche-texte">{reste <= 0 ? '💥 Cassée : répare-la au forgeron !' : `Pioche en ${pioche.nom} · ${reste} / ${pioche.durabilite}`}</span>
       </span>
     </div>
   )
@@ -430,6 +489,13 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
     clics.current.push(performance.now())
     onCliquer()
   }
+  // (23/10) Ce que valent les blocs cassés à la main depuis qu'on a ouvert le panneau : on garde
+  // la photo du départ, et on compte la différence (au prix du marché).
+  const [departSession] = useState(() => ({ ...etat.stats.blocsParType }))
+  const valeurSession = (Object.entries(etat.stats.blocsParType) as [IdBloc, number][]).reduce(
+    (total, [bloc, n]) => total + Math.max(0, (n ?? 0) - (departSession[bloc] ?? 0)) * BLOCS[bloc].prix,
+    0,
+  )
   const niveau = infoNiveauMine(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
@@ -492,7 +558,9 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
             trouvailles={trouvailles}
             onCliquer={cliquer}
             onPalier={(palier) => jouer((e) => activerBonusCombo(e, palier))}
+            onFinCombo={(combo) => jouer((e) => noterCombo(e, combo))}
             clicsParSeconde={clicsParSeconde}
+            valeurSession={valeurSession}
           />
           <CoffreMine etat={etat} jouer={jouer} />
           {/* (30/10) Un raccourci bien visible vers les améliorations de la mine. */}

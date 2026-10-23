@@ -56,6 +56,7 @@ export type Statistiques = {
   salairesPayes: number // les salaires payés aux mineurs et au manager
   tempsDeJeu: number // en secondes
   voyagesWagonnet: number
+  meilleurCombo?: number // (23/10) le plus long combo de clics (absent : 0)
 }
 
 export function nouvellesStatistiques(): Statistiques {
@@ -79,6 +80,9 @@ export function nouvellesStatistiques(): Statistiques {
 export type Coffre = {
   niveau: number // index dans NIVEAUX_COFFRE
   contenu: Inventaire
+  // (23/10) Ce que le wagonnet du marché laisse toujours dans le coffre, minerai par minerai
+  // (« garder 40 fer ») : il n'emporte que le reste. Absent : il emporte tout.
+  garder?: Inventaire
 }
 
 // La foreuse (niveau 2 de la mine) : un bâtiment qui creuse tout seul avec du charbon.
@@ -572,6 +576,14 @@ export function ameliorerAscenseur(etat: EtatJeu): string[] {
 
 // Met dans le sac ce qui est dans le coffre : le lot choisi, ou tout, les objets les plus chers
 // d'abord, tant qu'il y a de la place.
+// (23/10) Un combo de clics vient de finir : il devient le record s'il est plus long.
+export function noterCombo(etat: EtatJeu, combo: number): string[] {
+  if (combo <= (etat.stats.meilleurCombo ?? 0)) return []
+  const ancien = etat.stats.meilleurCombo ?? 0
+  etat.stats.meilleurCombo = combo
+  return ancien >= 10 ? [`🏆 Nouveau record de combo : ×${combo} !`] : []
+}
+
 export function prendreDuCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
   let place = placeLibre(etat)
   if (place <= 0) return ['🎒 Ton sac est plein : va d’abord vendre au marché.']
