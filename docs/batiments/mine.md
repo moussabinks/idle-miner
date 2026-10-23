@@ -159,10 +159,12 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, nivea
 
 | Niveau | Places | Prix (29/10) | Niveau du joueur |
 |---|---:|---|---:|
-| 1 | 40 | (départ) | — |
-| 2 | 100 | 1 200 $ + 60 fer | 6 |
-| 3 | 250 | 6 000 $ + 150 fer + 40 redstone | 9 |
-| 4 | 600 | 25 000 $ + 80 or | 12 |
+| 1 | 20 | (départ) | — |
+| 2 | 40 | 1 200 $ + 60 fer | 6 |
+| 3 | 70 | 6 000 $ + 150 fer + 40 redstone | 9 |
+| 4 | 120 | 25 000 $ + 80 or | 12 |
+
+(23/10) Bien plus petits qu'avant (40, 100, 250, 600) : à peu près ce que la mine et les mineurs sortent pendant un aller-retour (1 à 3 blocs/s au début, 5 à 8 vers la fin, pour un aller-retour d'environ 15 s). Le wagonnet suit donc tout juste la production : l'agrandir, améliorer son pousseur (places ×1,25 à ×2,5, arrêts plus courts) et électrifier les rails sert vraiment. Trop petit, le coffre se remplit. Quand il ne peut pas tout prendre, il prend **un peu de chaque objet** selon ce qu'il y en a, et les places qui restent aux plus chers (`repartir` dans `wagonnet.ts`) : la pierre part aussi, au lieu de rester et de remplir le coffre.
 
 Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
 
@@ -188,7 +190,7 @@ Vitesses (`VITESSE_POUSSE_JOUEUR`, `VITESSE_POUSSE_MINEUR`, `VITESSE_RAILS`) : *
 - **4 trajets**, un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur (ils partent d'ici), et Foreuse → Marché (il part de la foreuse, voir [foreuse.md](foreuse.md)). Plusieurs wagonnets peuvent partager les mêmes rails : ils se croisent sans se gêner.
 - **La longueur d'un trajet** = le nombre de cases de sa ligne **+ 1**. Un aller-retour dure `2 × longueur ÷ vitesse + 4 s` (chargement et vidage).
 - **Ce qu'il emporte au départ**, jusqu'à sa capacité :
-  - **vers le marché** : le coffre, **les objets les plus chers d'abord**, **sauf les objets gardés** (`nonAVendre`) et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets existent). Au marché, il vend tout (« 🛤️ Le wagonnet a tout vendu au marché : +*X* $ » quand c'est toi qui pousses) ;
+  - **vers le marché** : le coffre, **un peu de chaque objet** s'il n'a pas la place pour tout (23/10, `repartir`), **sauf les objets gardés** (`nonAVendre`) et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets existent). Au marché, il vend tout (« 🛤️ Le wagonnet a tout vendu au marché : +*X* $ » quand c'est toi qui pousses) ;
   - **vers la foreuse** : dès que son réservoir n'est plus plein, tout le charbon du coffre ; le réservoir se remplit (15 à 54 charbons selon son niveau de forage, 23/10) et le surplus va dans son chariot (28/10) ;
   - **vers le générateur** : la redstone du coffre, jusqu'à remplir sa réserve (5 à 16 min selon son niveau, 23/10).
   - Puis il revient au quai. S'il n'a rien à porter, il reste au quai.

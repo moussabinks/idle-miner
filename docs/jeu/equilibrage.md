@@ -169,13 +169,13 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
 | `reserveMinutes` (`NIVEAUX_GENERATEUR`, 23/10) | 5, 7, 10, 13, 16 min de redstone : la réserve du générateur (à la main et par le wagonnet Mine → Générateur) |
 
-`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`, 29/10) : 40 → **100** (1 200 $ + 60 fer, niveau 6 du joueur) → **250** (6 000 $ + 150 fer + 40 redstone, niveau 9) → **600** places (25 000 $ + 80 or, niveau 12). Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
+`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`, 23/10 ; avant 40, 100, 250, 600) : 20 → **40** (1 200 $ + 60 fer, niveau 6 du joueur) → **70** (6 000 $ + 150 fer + 40 redstone, niveau 9) → **120** places (25 000 $ + 80 or, niveau 12). Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
 
 - **Trajets** (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, un wagonnet chacun, créés gratuitement par le joueur.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
 - **Aller-retour** (`secondesAllerRetour`) = `2 × longueur ÷ vitesse + 2 × 2 s`.
 - **Chargement**, jusqu'à la capacité :
-  - Mine → Marché : les objets du coffre les plus chers d'abord, sauf les objets gardés (`nonAVendre`), et sauf le charbon qui manque au réservoir de la foreuse et la redstone qui manque à la réserve du générateur (si ces trajets existent) ;
+  - Mine → Marché : les objets du coffre (s'il n'a pas la place pour tout : un peu de chaque, selon les quantités, le reste aux plus chers ; `repartir`, 23/10), sauf les objets gardés (`nonAVendre`), et sauf le charbon qui manque au réservoir de la foreuse et la redstone qui manque à la réserve du générateur (si ces trajets existent) ;
   - Mine → Foreuse (28/10) : dès que le réservoir de la foreuse n'est plus plein (`placeCharbonForeuse` > 0), **tout le charbon du coffre** ; à l'arrivée (`livrerCharbon`), il remplit le réservoir (`NIVEAUX_FORAGE[...].reservoir`), le surplus va dans le chariot (tant qu'il y a de la place), et le reste revient dans le coffre ;
   - Mine → Générateur : `arrondi au-dessus((1 800 − réserve du générateur) ÷ 30)` redstones, au plus ce qu'il y a dans le coffre ;
   - Foreuse → Marché : ce qui est coché dans le chariot, le plus cher d'abord (l'argent compte dans `argentWagonnet`).

@@ -142,7 +142,10 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
   function reglerGarde(): void {
     const garde = reserve()
     // On garde un minerai tant qu'on n'en a pas assez (ensuite, le surplus part au marché).
-    etat.nonAVendre = (Object.keys(garde) as IdBloc[]).filter((bloc) => (etat.coffre.contenu[bloc] ?? 0) < (garde[bloc] ?? 0) * 1.5 && nbDansCoffre(etat) < capaciteCoffre(etat) * 0.8)
+    // (23/10 : avec les petits wagonnets, le coffre est souvent presque plein ; il garde quand même
+    // ses minerais, et ne lâche que la pierre.)
+    const presquePlein = nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.8
+    etat.nonAVendre = (Object.keys(garde) as IdBloc[]).filter((bloc) => (etat.coffre.contenu[bloc] ?? 0) < (garde[bloc] ?? 0) * 1.5 && !(presquePlein && bloc === 'pierre'))
   }
 
   // Un voyage à pied : il prend le coffre (sauf ce qu'il garde) et va le vendre au marché.
@@ -242,7 +245,9 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
     const wagonnet = prochainNiveauWagonnet(etat)
-    if (wagonnet && etat.trajets.length > 0 && etat.argent >= (wagonnet.cout.argent ?? 0) * 2 && peutPayer(etat, wagonnet.cout) && gardeLaMine(wagonnet.cout)) ameliorerWagonnet(etat)
+    // (23/10) Les wagonnets sont petits : quand le coffre se remplit, il les agrandit tout de suite.
+    const coffreSeRemplit = nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.7
+    if (wagonnet && etat.trajets.length > 0 && peutPayer(etat, wagonnet.cout) && gardeLaMine(wagonnet.cout) && (coffreSeRemplit || etat.argent >= (wagonnet.cout.argent ?? 0) * 2)) ameliorerWagonnet(etat)
     const prixSac = prixProchainSac(etat)
     if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }
@@ -254,6 +259,8 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     // wagonnet ne part qu'avec un pousseur payé, même électrique : sans paie, il va vendre lui-même.)
     const wagonnetActif = trajetDe(etat, 'mine-marche') !== null && etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche' && e.tempsPaye > 0)
     if (!wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) / 2) allerVendre()
+    // (23/10) Le wagonnet ne suit pas (il est petit) : il va aussi vendre à pied.
+    else if (wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.85) allerVendre()
     for (let i = 0; i < CLICS_PAR_SECONDE * PAS; i++) cliquerMine(etat, aleatoire)
     attendre(PAS)
     if (trajetDe(etat, 'mine-marche') && tempsRails === null) tempsRails = temps

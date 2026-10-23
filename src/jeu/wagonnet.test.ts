@@ -28,6 +28,7 @@ import {
   milieuDeLigne,
   objetsAuChoix,
   reglerTrajet,
+  repartir,
   trajetsAProposer,
   peutCreerTrajet,
   peutPousser,
@@ -102,13 +103,14 @@ describe('les trajets des wagonnets', () => {
     etat.coffre.contenu = { fer: 10, pierre: 50 }
     pousserTrajet(etat, 'mine-marche')
     expect(joueurPousse(etat)).toBe(true)
-    expect(capaciteWagonnet(etat)).toBe(40)
-    expect(etat.coffre.contenu).toEqual({ pierre: 20 }) // les plus chers d'abord, 40 places
+    expect(capaciteWagonnet(etat)).toBe(20)
+    // (23/10) 20 places pour 60 objets : un peu de chaque (4 fer, 16 pierres), pas tout le fer d'abord.
+    expect(etat.coffre.contenu).toEqual({ fer: 6, pierre: 34 })
     const messages = allerRetour(etat, 'mine-marche')
-    expect(etat.argent).toBe(150) // 10 fer à 12 $ + 30 pierres à 1 $
-    expect(etat.stats.argentWagonnet).toBe(150)
+    expect(etat.argent).toBe(64) // 4 fer à 12 $ + 16 pierres à 1 $
+    expect(etat.stats.argentWagonnet).toBe(64)
     expect(etat.stats.voyagesWagonnet).toBe(1)
-    expect(messages.some((m) => m.includes('+150 $'))).toBe(true)
+    expect(messages.some((m) => m.includes('+64 $'))).toBe(true)
     expect(joueurPousse(etat)).toBe(false)
   })
 
@@ -228,15 +230,15 @@ describe('les trajets des wagonnets', () => {
     etat.foreuse.carburant = 5 * SECONDES_PAR_CHARBON
     etat.coffre.contenu = { charbon: 200, fer: 5 }
     pousserTrajet(etat, 'mine-foreuse')
-    expect(trajetDe(etat, 'mine-foreuse')?.chargement).toEqual({ charbon: 40 })
+    expect(trajetDe(etat, 'mine-foreuse')?.chargement).toEqual({ charbon: 20 }) // (23/10) 20 places
     allerRetour(etat, 'mine-foreuse')
     expect(etat.foreuse.carburant).toBe(NIVEAUX_FORAGE[0].reservoir * SECONDES_PAR_CHARBON)
-    expect(etat.foreuse.chariot).toEqual({ charbon: 30 })
+    expect(etat.foreuse.chariot).toEqual({ charbon: 10 })
     // Réservoir plein : il ne repart pas, et le wagonnet du marché peut vendre le charbon.
     expect(aCharger(etat, 'mine-foreuse')).toBe(0)
-    etat.coffre.contenu = { charbon: 30 }
+    etat.coffre.contenu = { charbon: 15 }
     pousserTrajet(etat, 'mine-marche')
-    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ charbon: 30 })
+    expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ charbon: 15 })
   })
 
   it('Foreuse → Marché : il vend le chariot de la foreuse', () => {
@@ -376,8 +378,9 @@ describe('l’aperçu d’un trajet, dans la fenêtre des rails (27/10)', () => 
     const etat = partie()
     etat.coffre.contenu = { pierre: 30, fer: 5, charbon: 10 }
     const tout = apercuTrajet(etat, 'mine-marche', [])
-    expect(tout.objets).toEqual([['fer', 5], ['charbon', 10], ['pierre', 25]]) // 40 places, les plus chers d'abord
-    expect(tout.valeur).toBe(5 * 12 + 10 * 5 + 25)
+    // (23/10) 20 places pour 45 objets : un peu de chaque, la place qui reste au plus cher.
+    expect(tout.objets).toEqual([['fer', 3], ['charbon', 4], ['pierre', 13]])
+    expect(tout.valeur).toBe(3 * 12 + 4 * 5 + 13)
     expect(tout.moteur).toBe('toi') // pas de pousseur : c'est toi qui pousses
     expect(tout.parMinute).toBeGreaterThan(0)
     const sansPierre = apercuTrajet(etat, 'mine-marche', ['pierre'])
@@ -391,6 +394,14 @@ describe('l’aperçu d’un trajet, dans la fenêtre des rails (27/10)', () => 
     reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
     // (l'or n'est pas un minerai du niveau 1 : il reste gardé)
     expect(etat.nonAVendre).toEqual(['or'])
+  })
+})
+
+describe('un wagonnet trop petit prend un peu de chaque objet (23/10)', () => {
+  it('répartit les places selon les quantités, le reste aux plus chers', () => {
+    expect(repartir([['fer', 10], ['pierre', 50]], 20)).toEqual([['fer', 4], ['pierre', 16]])
+    expect(repartir([['fer', 3], ['pierre', 5]], 20)).toEqual([['fer', 3], ['pierre', 5]])
+    expect(repartir([['diamant', 1], ['pierre', 99]], 10)).toEqual([['diamant', 1], ['pierre', 9]])
   })
 })
 

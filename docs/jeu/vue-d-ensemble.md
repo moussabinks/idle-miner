@@ -137,7 +137,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Succès** | 21 accomplissements (`succes.ts`). |
 | **Trajet** | Un wagonnet entre deux bâtiments, créé par le joueur (bulle « 🛤️ Automatiser » sur les rails) : Mine → Marché, Mine → Foreuse, Mine → Générateur ou Foreuse → Marché. Un wagonnet par trajet. |
 | **Village** | La clairière vue du ciel, où tout se passe. Voir [village.md](village.md). |
-| **Wagonnet** | Le chariot qui roule sur les rails, un par trajet : il charge au départ (40 à 600 places, la même taille pour tous), livre à l'arrivée (vend, ou apporte charbon ou redstone) et revient. Poussé par toi (3 cases/s) ou par un mineur (2,5 cases/s), ou électrique (8 à 24 cases/s). |
+| **Wagonnet** | Le chariot qui roule sur les rails, un par trajet : il charge au départ (20 à 120 places depuis le 23/10, la même taille pour tous ; × la force de son pousseur), livre à l'arrivée (vend, ou apporte charbon ou redstone) et revient. Poussé par toi (3 cases/s) ou par un mineur (2,5 cases/s), ou électrique (8 à 24 cases/s). |
 | **XP** | (29/10) Les points d'expérience du joueur : 1 par bloc cassé en cliquant, 40 par bâtiment, 3 par case de rails, 30 par trajet, 25 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, 3 par voyage de wagonnet. Une chose ne rapporte qu'une fois. |
 
 ## Les choix de design (à respecter)
