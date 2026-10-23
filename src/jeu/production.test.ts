@@ -74,7 +74,8 @@ describe('les goulots : ascenseur et wagonnet', () => {
     const pousse = analyseWagonnet(etat)
     expect(pousse?.moteur).toBe('pousseur')
     expect(pousse?.debitMax).toBeGreaterThan(0)
-    etat.niveauWagonnets += 1
+    // (23/10) un chariot plus grand pour son pousseur
+    etat.employes[0].chariot = 1
     expect(analyseWagonnet(etat)?.debitMax).toBeGreaterThan(pousse?.debitMax ?? Infinity)
   })
 })

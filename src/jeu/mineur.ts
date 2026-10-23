@@ -134,7 +134,8 @@ export type RoleEmploye = 'mineur' | 'pousseur'
 export type Employe = {
   nom: string
   rarete: IdRarete
-  niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE)
+  niveau: number // sa pioche (index dans NIVEAUX_EMPLOYE) ; pour un pousseur, sa vitesse (NIVEAUX_POUSSEUR)
+  chariot?: number // (23/10) pour un pousseur : la taille de son chariot (NIVEAUX_CHARIOT_POUSSEUR ; absent : 0)
   role: RoleEmploye
   trajet: IdLiaison | null // le trajet d'un pousseur (null pour un mineur)
   etape: EtapeEmploye
@@ -194,7 +195,7 @@ export type EtatJeu = {
   manager: Manager
   foreuse: Foreuse
   generateur: Generateur
-  niveauWagonnets: number // la taille des wagonnets (index dans NIVEAUX_WAGONNET), pour tous les trajets
+  niveauWagonnets: number // (plus utilisé depuis le 23/10 : chaque pousseur a son chariot) l'ancienne taille de tous les wagonnets
   trajets: Trajet[]
   succes: string[]
   stats: Statistiques
@@ -218,7 +219,7 @@ export type EtatJeu = {
 // Version 24 (29/10) : le niveau du joueur (une partie de la version 23 reçoit l'XP de ce qu'elle a déjà).
 // Version 25 (30/10) : l'ascenseur est dans la mine dès le début, les bonus de combo, le résumé
 // de l'absence (une partie de la version 24 reçoit l'ascenseur de niveau 1).
-export const VERSION_ETAT = 27
+export const VERSION_ETAT = 28
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------

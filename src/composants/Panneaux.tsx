@@ -2,6 +2,8 @@
 // panneau des succès. Le panneau de la mine est dans PanneauMine.tsx.
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
+import { analyseWagonnet } from '../jeu/production'
+import { AlerteChariot } from './AlerteChariot'
 import { useState, type ReactNode } from 'react'
 import { OngletsPanneau } from './OngletsPanneau'
 import { StockMinerais } from './StockMinerais'
@@ -71,6 +73,7 @@ export type PropsPanneau = {
   etat: EtatJeu
   jouer: (action: Action) => void
   onReglerTrajet?: (liaisons: IdLiaison[]) => void // ouvre la fenêtre des trajets (27/10)
+  onAllerAuPersonnel?: () => void // (23/10) va au Personnel (agrandir le chariot d'un pousseur)
 }
 
 // Chaque sorte d'action a sa couleur (voir « Les couleurs des boutons » dans index.css).
@@ -300,7 +303,7 @@ export function PanneauBazar({ etat, jouer }: PropsPanneau) {
 // ---------------------------------------------------------------------------
 
 // La foreuse : elle fore toute seule tant qu'elle a du charbon, plus vite avec l'électricité.
-export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
+export function PanneauForeuse({ etat, jouer, onReglerTrajet, onAllerAuPersonnel }: PropsPanneau) {
   const foreuse = etat.foreuse
   const enMarche = foreuseEnMarche(etat)
   const chariot = prochainNiveauChariot(etat)
@@ -325,6 +328,8 @@ export function PanneauForeuse({ etat, jouer, onReglerTrajet }: PropsPanneau) {
         actif={onglet}
         onChoisir={setOnglet}
       />
+      {/* (23/10) Le chariot du pousseur Foreuse → Marché ne suit pas ce qu'elle fore. */}
+      <AlerteChariot analyse={analyseWagonnet(etat, 'foreuse-marche')} batiment="la foreuse" onAllerAuPersonnel={onAllerAuPersonnel} />
       {onglet === 'forage' && (
         <div className="ligne-achat">
           <div className="ligne-titre">

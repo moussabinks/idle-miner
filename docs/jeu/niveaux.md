@@ -13,18 +13,18 @@ Presque tout ce qu'on fait rapporte de l'XP (`XP_PAR`) :
 
 | Ce qu'on fait | XP |
 |---|---:|
-| ⛏️ Casser un bloc **en cliquant** (pas la mine toute seule, ni les mineurs, ni la foreuse) | 1 |
-| 🏗️ Poser un bâtiment | 40 |
+| ⛏️ Casser des blocs **en cliquant** (pas la mine toute seule, ni les mineurs, ni la foreuse ; 23/10 : 1 XP pour 3 blocs, `BLOCS_PAR_XP`, avant 1 par bloc) | 1 pour 3 |
+| 🏗️ Poser un bâtiment (23/10 : avant 40) | 70 |
 | 🛤️ Poser une case de rails | 3 |
 | 🚃 Créer un trajet de wagonnet | 30 |
-| 👷 Embaucher un employé (mineur ou pousseur) | 25 |
-| ⬆️ Acheter un niveau d'amélioration (coffre, pioche, sac, ascenseur, taille des wagonnets, forage, chariot, générateur, recruteur, manager, pioche d'un mineur) | 30 |
+| 👷 Embaucher un employé (mineur ou pousseur ; 23/10 : avant 25) | 40 |
+| ⬆️ Acheter un niveau d'amélioration (coffre, pioche, sac, ascenseur, chariot et vitesse des pousseurs, forage, chariot, générateur, recruteur, manager, pioche d'un mineur) | 30 |
 | ⬇️ Descendre la mine d'un niveau | 150 |
-| 🔁 Un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas) | 3 |
-| 💰 **Tout ce qu'on achète, selon son prix** (23/10, `valeurInvestie`) : bâtiments, niveaux de la mine, améliorations, pioches des employés, chefs. Le prix compte l'argent et les minerais à leur prix au marché. En plus des lignes ci-dessus | 1 par 80 $ (`VALEUR_PAR_XP`) |
-| 💵 **L'argent gagné** (ventes au marché, wagonnets, chariot ; 23/10) | 1 par 200 $ (`ARGENT_PAR_XP`) |
+| 💰 **Tout ce qu'on achète, selon son prix** (23/10, `valeurInvestie`) : bâtiments, niveaux de la mine, améliorations, pioches des employés, chefs. Le prix compte l'argent et les minerais à leur prix au marché. En plus des lignes ci-dessus | 1 par 25 $ (`VALEUR_PAR_XP`, 23/10 bis ; avant 80) |
 
 **Pourquoi (23/10)** : avant, une amélioration rapportait 30 XP qu'elle coûte 1 000 $ ou 300 000 $, et l'XP venait surtout des clics. Un joueur qui avait tout acheté à son niveau restait bloqué : seul le minage à la main le faisait avancer. Maintenant, une amélioration chère rapporte bien plus (agrandir les wagonnets : ~55 XP pour le 2e niveau, ~135 pour le 3e, ~380 pour le 4e ; un mineur en pioche de diamant : ~780), et l'argent gagné en rapporte un peu : chaque niveau débloque des achats qui rapportent de quoi approcher le suivant. Le bot (qui clique sans arrêt) gagne environ 45 000 XP en clics et 28 000 XP sans clic sur une partie : un joueur qui laisse tourner arrive vers le niveau 13 quand il peut payer la mine niveau 5, un joueur qui clique beaucoup est loin devant. Une partie d'avant ce changement reçoit l'XP de tout ce qu'elle a déjà acheté (au premier chargement), ce qui débloque ceux qui étaient coincés.
+
+**Rester AFK ne rapporte plus d'XP (23/10, bis)** : plus d'XP pour les voyages des wagonnets ni pour l'argent gagné ; il faut acheter (ou cliquer) pour avancer. L'XP vient surtout des achats (1 par 25 $, plus les XP fixes), et un peu des clics (1 pour 3 blocs). Mesuré avec le bot (qui clique sans arrêt) : ~35 000 XP d'achats et ~15 000 de clics sur une partie ; niveau 3 (les rails) vers 3 min, niveau 10 vers 2 h 40, niveau 13 vers 4 h 25, quand la mine niveau 5 se paie vers 6 h 20 : le joueur n'est presque jamais bloqué par son niveau, sans être très en avance. Une partie d'avant reçoit l'XP de ses achats au nouveau taux, et les clics repartent de ses blocs actuels.
 
 ### Une chose ne rapporte qu'une fois
 
@@ -98,7 +98,7 @@ Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
 | Sacs (64 → 2 048) | 3, 5, 8, 11, 14, 15 |
 | Ascenseur (niveaux 2 à 6) | 5, 8, 10, 13, 15 (le niveau 1 est dans la mine dès le début, 30/10) |
 | Pioche des mineurs (pierre, fer, or, émeraude, diamant) | 4, 6, 9, 10, 12 |
-| Taille des wagonnets (100, 250, 600) | 6, 9, 12 |
+| Chariot de chaque pousseur (35, 55, 80, 115, 160, 220 places ; 23/10) | 4, 6, 8, 10, 12, 14 |
 | Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
 | Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |
 | Chariot de la foreuse (160 → 720) | 6, 9, 11, 14, 15 |

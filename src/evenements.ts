@@ -26,11 +26,10 @@ function totalNiveaux(etat: EtatJeu): number {
     etat.foreuse.niveauVitesse +
     etat.foreuse.niveauChariot +
     etat.generateur.niveau +
-    etat.niveauWagonnets +
     etat.niveauSac +
     etat.meilleure +
     etat.recruteur
-  for (const mineur of etat.employes) total += mineur.niveau
+  for (const mineur of etat.employes) total += mineur.niveau + (mineur.chariot ?? 0)
   return total
 }
 

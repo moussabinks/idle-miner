@@ -3,17 +3,14 @@
 //   - pas encore de rails jusque-là : on explique comment faire ;
 //   - des rails, mais pas de trajet : on le crée avec la bulle « 🛤️ Automatiser » sur les rails ;
 //   - un trajet : où en est son wagonnet, le pousser soi-même, ou arrêter le trajet.
-// À la mine, on peut aussi agrandir les wagonnets (pour tous les trajets).
+// (23/10 : la taille d'un wagonnet, c'est le chariot de son pousseur, au Personnel.)
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
-import { BATIMENTS, LIAISONS, NIVEAUX_WAGONNET, type IdBatiment, type IdLiaison } from '../jeu/donnees'
-import { peutPayer } from '../jeu/mineur'
+import { BATIMENTS, LIAISONS, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import {
   aCharger,
   aUnPousseur,
-  ameliorerWagonnet,
   capaciteTrajet,
-  capaciteWagonnet,
   distanceDepuisLeDepart,
   enRoute,
   ligneDe,
@@ -21,15 +18,12 @@ import {
   longueurTrajet,
   peutPousser,
   pousserTrajet,
-  prochainNiveauWagonnet,
   supprimerTrajet,
   trajetDe,
   trajetElectrique,
 } from '../jeu/wagonnet'
-import { Amelioration } from './Amelioration'
 import { Barre } from './Barre'
 import type { PropsPanneau } from './Panneaux'
-import { verrou } from '../jeu/niveaux'
 
 // Les bâtiments des trajets, avec leur article (« la mine », « le marché »...).
 const NOMS: Partial<Record<IdBatiment, { le: string; au: string }>> = {
@@ -121,7 +115,6 @@ function Trajet({ etat, jouer, liaison, onReglerTrajet }: PropsPanneau & { liais
 
 export function PanneauTrajets({ etat, jouer, depart, onReglerTrajet }: PropsPanneau & { depart: IdBatiment }) {
   const liaisons = liaisonsDepuis(etat, depart)
-  const prochain = prochainNiveauWagonnet(etat)
   if (liaisons.length === 0) return null
   return (
     <>
@@ -129,21 +122,7 @@ export function PanneauTrajets({ etat, jouer, depart, onReglerTrajet }: PropsPan
       {liaisons.map((liaison) => (
         <Trajet key={liaison} etat={etat} jouer={jouer} liaison={liaison} onReglerTrajet={onReglerTrajet} />
       ))}
-      {depart === 'puits' && etat.trajets.length > 0 && (
-        <div className="ligne-achat">
-          <strong>🛒 Taille des wagonnets</strong>
-          <Amelioration
-            etat={etat}
-            actuel={`${capaciteWagonnet(etat).toLocaleString('fr-FR')} places`}
-            niveau={etat.niveauWagonnets + 1}
-            niveauMax={NIVEAUX_WAGONNET.length}
-            suivant={prochain && { cout: prochain.cout, texte: `⬆ ${prochain.capacite.toLocaleString('fr-FR')} places` }}
-            verrou={verrou(etat, 'wagonnet', etat.niveauWagonnets + 1)}
-            possible={prochain !== null && peutPayer(etat, prochain.cout)}
-            onAmeliorer={() => jouer(ameliorerWagonnet)}
-          />
-        </div>
-      )}
+      {/* (23/10) Plus de « taille des wagonnets » ici : chaque pousseur a son chariot, au Personnel. */}
     </>
   )
 }

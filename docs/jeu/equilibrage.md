@@ -39,7 +39,7 @@ Conventions : « bloc/s » = blocs par seconde ; les distances au village sont e
 | `SECONDES_PAR_PAIE` | 300 s | une paie de mineur (5 minutes, depuis le 28/10) |
 | `SECONDES_PAR_CHARBON` | 20 s | un charbon dans la foreuse |
 | `SECONDES_PAR_REDSTONE` | 30 s | une redstone dans le générateur |
-| `SECONDES_CHARGEMENT_WAGONNET` | 2 s | charger un wagonnet au départ, puis le vider à l'arrivée (sans pousseur, ou pousseur débutant ; 23/10 : 1,6 / 1,2 / 0,8 / 0,5 s avec un pousseur amélioré, `NIVEAUX_POUSSEUR`, qui porte aussi × 1,25 à × 2,5) |
+| `SECONDES_CHARGEMENT_WAGONNET` | 1 s (23/10, toujours) | charger un wagonnet au départ, puis le vider à l'arrivée (sans pousseur, ou pousseur débutant ; 23/10 : 1,6 / 1,2 / 0,8 / 0,5 s avec un pousseur amélioré, `NIVEAUX_POUSSEUR`, qui porte aussi × 1,25 à × 2,5) |
 | `TAILLE_GRILLE` | 60 | la clairière fait 60 × 60 cases |
 | Horloge (`usePartie.ts`) | tic de 50 ms | à chaque image de l'écran quand le joueur pousse un wagonnet |
 | `PAS_MAX` (`temps.ts`) | 60 s | une longue durée avance par morceaux d'une minute |
@@ -169,7 +169,7 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
 | `reserveMinutes` (`NIVEAUX_GENERATEUR`, 23/10) | 5, 7, 10, 13, 16 min de redstone : la réserve du générateur (à la main et par le wagonnet Mine → Générateur) |
 
-`NIVEAUX_WAGONNET` (pour tous les wagonnets, `niveauWagonnets`, 23/10 ; avant 40, 100, 250, 600) : 20 → **40** (1 200 $ + 60 fer, niveau 6 du joueur) → **70** (6 000 $ + 150 fer + 40 redstone, niveau 9) → **120** places (25 000 $ + 80 or, niveau 12). Total : 32 200 $ + 210 fer + 40 redstone + 80 or.
+`NIVEAUX_CHARIOT_POUSSEUR` (23/10, le chariot de chaque pousseur, au Personnel ; remplace `NIVEAUX_WAGONNET`, la taille de tous les wagonnets) : 20 → 35 → 55 → 80 → 115 → 160 → 220 places, de 1 000 $ + 30 fer à 90 000 $ + 400 fer (niveaux 4, 6, 8, 10, 12, 14 du joueur). `NIVEAUX_POUSSEUR` (sa vitesse) : × 1, 1,2, 1,45, 1,75, 2,1.
 
 - **Trajets** (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, un wagonnet chacun, créés gratuitement par le joueur.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue (voisins par un côté) d'une case collée au bâtiment de départ à une case collée à celui d'arrivée. Les rails ne font jamais de boucle (`feraitUneBoucle`) : il n'y a qu'une route. **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).

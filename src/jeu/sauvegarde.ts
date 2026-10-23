@@ -5,7 +5,7 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { LIAISONS, type IdLiaison } from './donnees'
+import { LIAISONS, NIVEAUX_CHARIOT_POUSSEUR, type IdLiaison } from './donnees'
 import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, nouveauTrajet, type EtatJeu } from './mineur'
 import { donnerXpAVieillePartie } from './niveaux'
 import { railsMineMarche, type Village } from './village'
@@ -209,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))))
+    const convertie = convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -349,5 +349,25 @@ export function convertirVersion26(donnees: unknown): unknown {
   const ancienne = donnees as EtatJeu
   if (ancienne.version !== 26 || !Array.isArray(ancienne.employes)) return donnees
   const employes = ancienne.employes.map((e) => (e.role === 'mineur' && e.niveau >= 4 ? { ...e, niveau: e.niveau + 1 } : e))
+  return { ...ancienne, version: 27, employes }
+}
+
+// Version 27 → 28 (23/10) : plus de taille des wagonnets pour tous les trajets ; chaque pousseur a
+// son chariot. Il reçoit le plus grand chariot qui ne dépasse pas ce que portait son wagonnet
+// avant (l'ancienne taille × le bonus de son ancien niveau). Son niveau devient sa vitesse.
+const ANCIENNES_TAILLES_WAGONNET = [20, 40, 70, 120]
+const ANCIENS_BONUS_POUSSEUR = [1, 1.25, 1.5, 2, 2.5]
+export function convertirVersion27(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 27 || !Array.isArray(ancienne.employes)) return donnees
+  const taille = ANCIENNES_TAILLES_WAGONNET[Math.min(Math.max(0, ancienne.niveauWagonnets ?? 0), ANCIENNES_TAILLES_WAGONNET.length - 1)]
+  const employes = ancienne.employes.map((e) => {
+    if (e.role !== 'pousseur') return e
+    const places = taille * ANCIENS_BONUS_POUSSEUR[Math.min(Math.max(0, e.niveau), ANCIENS_BONUS_POUSSEUR.length - 1)]
+    let chariot = 0
+    while (chariot + 1 < NIVEAUX_CHARIOT_POUSSEUR.length && NIVEAUX_CHARIOT_POUSSEUR[chariot + 1].places <= places) chariot += 1
+    return { ...e, chariot }
+  })
   return { ...ancienne, version: VERSION_ETAT, employes }
 }

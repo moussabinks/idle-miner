@@ -92,17 +92,35 @@ Depuis le 26/10, un pousseur est un **métier à part** : on l'embauche **pour u
 - Il est **payé** toutes les 5 minutes selon son niveau (`SALAIRES_POUSSEUR`, 23/10) : 220, 300, 420, 600, 850 $ × sa rareté. On ne peut pas le licencier pendant qu'il pousse.
 - **Changer son trajet** (la liste sur sa carte, `changerTrajet` ; un trajet qui a déjà son pousseur est grisé, « (déjà un pousseur) ») : « 🛤️ *X* va pousser le wagonnet de la mine à la foreuse. » S'il est en train de pousser, il finit d'abord son voyage, puis marche jusqu'au quai de son nouveau trajet (« va au quai de la foreuse »). Le nouveau trajet est créé s'il n'existe pas encore.
 - **Trajet arrêté** (✖ Arrêter au panneau du départ) : il attend au quai pour rien (« 🛤️ attend : son trajet est arrêté »), et la bulle **🛤️ Sans trajet** apparaît sur le Personnel : choisis-lui un autre trajet, ou licencie-le.
-- **Un pousseur par trajet automatique** (27/10) : sans pousseur payé, un wagonnet ne part pas tout seul, même sur des rails électriques (le joueur peut toujours le pousser lui-même). Sur un trajet électrique, le pousseur reste au quai et lance le wagonnet, qui roule seul et bien plus vite. Une bulle « Pousseur ? » sur le Personnel signale un trajet sans pousseur.
+- **Un pousseur par trajet automatique** (27/10) : sans pousseur payé, un wagonnet ne part pas tout seul, même sur des rails électriques (le joueur peut toujours le pousser lui-même). Sur un trajet électrique, le pousseur pousse son wagonnet plus vite (+ 30 % à + 75 %). Une bulle « Pousseur ? » sur le Personnel signale un trajet sans pousseur.
 
-**L'améliorer** (23/10, sur sa carte dans l'onglet Employés, `NIVEAUX_POUSSEUR`) : son wagonnet **porte plus** (× la taille des wagonnets) et ses **arrêts** (charger au départ, décharger ou vendre à l'arrivée, `secondesArret`) sont plus courts. En grand : « 40 ➜ 50 places · ⏱ 2 s ➜ 1,6 s », puis « 🛤️ Pousseur débutant » et le bouton.
+**L'améliorer** (23/10, bis : deux améliorations sur sa carte, dans l'onglet Employés) :
 
-| Niveau | Nom | Places du wagonnet | Arrêts | Prix | Niveau du joueur | Salaire / 5 min |
-|---|---|---:|---:|---:|---:|---:|
-| 1 | Débutant | × 1 | 2 s | (de base) | — | 220 $ |
-| 2 | Costaud | × 1,25 | 1,6 s | 1 000 $ | 5 | 300 $ |
-| 3 | Robuste | × 1,5 | 1,2 s | 5 000 $ | 8 | 420 $ |
-| 4 | Expert | × 2 | 0,8 s | 20 000 $ | 11 | 600 $ |
-| 5 | Champion | × 2,5 | 0,5 s | 60 000 $ | 14 | 850 $ |
+- **🏃 Sa vitesse** (`NIVEAUX_POUSSEUR`, en argent) : il pousse son wagonnet plus vite.
+
+| Niveau | Nom | Vitesse | Prix | Niveau du joueur | Salaire / 5 min |
+|---|---|---:|---:|---:|---:|
+| 1 | Débutant | × 1 | (de base) | — | 220 $ |
+| 2 | Costaud | × 1,2 | 1 000 $ | 5 | 300 $ |
+| 3 | Robuste | × 1,45 | 5 000 $ | 8 | 420 $ |
+| 4 | Expert | × 1,75 | 20 000 $ | 11 | 600 $ |
+| 5 | Champion | × 2,1 | 60 000 $ | 14 | 850 $ |
+
+- **🛒 Son chariot** (`NIVEAUX_CHARIOT_POUSSEUR`, argent **et fer**, de plus en plus cher ; `agrandirChariot`) : les places de son wagonnet. C'est la seule façon d'agrandir un wagonnet : il n'y a plus de « taille des wagonnets » pour tous les trajets (avant le 23/10, à la Mine). Le joueur qui pousse lui-même a le premier chariot (20 places).
+
+| Niveau | Places | Prix | Niveau du joueur |
+|---|---:|---|---:|
+| 1 | 20 | (de base) | — |
+| 2 | 35 | 1 000 $ + 30 fer | 4 |
+| 3 | 55 | 3 000 $ + 60 fer | 6 |
+| 4 | 80 | 8 000 $ + 100 fer | 8 |
+| 5 | 115 | 20 000 $ + 160 fer | 10 |
+| 6 | 160 | 45 000 $ + 250 fer | 12 |
+| 7 | 220 | 90 000 $ + 400 fer | 14 |
+
+- **Ses arrêts** (charger au départ, décharger ou vendre à l'arrivée) durent **toujours 1 s** (`SECONDES_CHARGEMENT_WAGONNET`).
+- **Il ne suit pas ?** Dans le panneau du bâtiment de départ (la Mine, la Foreuse), une alerte « 🛒 Le chariot de *Nom* est trop petit : il emporte *X* bloc/s, la mine en sort *Y* tout seule · agrandis son chariot au Personnel », avec un bouton **🛒 Personnel** (`AlerteChariot.tsx`, `analyseWagonnet` et `chariotTropPetit` dans `production.ts`). Le calcul ne compte que ce que le bâtiment sort **tout seul** : la mine elle-même plus ce que les mineurs creusent et que l'ascenseur remonte (pas les clics du joueur), ou ce que fore la foreuse.
+- **Son dessin** : il utilise encore les images des mineurs, avec leur pioche. Pour la lui retirer, il faut des images de pousseur sans pioche (la pioche est peinte dans l'image ; l'effacer automatiquement n'est pas propre).
 
 Le bonus compte pour le wagonnet de **son trajet** (`capaciteTrajet`), même électrique ou quand tu le pousses toi-même. Chaque niveau rapporte de l'XP (comme une pioche).
 

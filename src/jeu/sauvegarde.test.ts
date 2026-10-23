@@ -75,6 +75,20 @@ describe('sauvegarde', () => {
     expect(charger(stockage, '1')?.employes.map((e) => e.niveau)).toEqual([5, 3, 4])
   })
 
+  it('(23/10) version 27 : chaque pousseur reçoit un chariot comme son ancien wagonnet', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    etat.argent = 100_000
+    embaucher(etat, aleatoireAvecGraine(2))
+    const mineur = etat.employes[0]
+    const pousseur = { ...mineur, role: 'pousseur' as const, trajet: 'mine-marche' as const }
+    const stockage = fauxStockage()
+    // ancienne taille 70 places (niveau 2), pousseur « Expert » (×2) : 140 places → chariot de 115
+    sauvegarder(stockage, '1', { ...etat, version: 27, niveauWagonnets: 2, employes: [mineur, { ...pousseur, niveau: 3 }, { ...pousseur, nom: 'Zoé', niveau: 0 }] })
+    const relue = charger(stockage, '1')!
+    expect(relue.employes.map((e) => e.chariot)).toEqual([undefined, 4, 2])
+    expect(relue.employes[1].niveau).toBe(3) // son niveau devient sa vitesse
+  })
+
   it('(23/10) l’argent d’une ancienne trésorerie revient au joueur', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     const stockage = fauxStockage()

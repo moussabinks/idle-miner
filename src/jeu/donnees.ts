@@ -350,19 +350,33 @@ export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 // Les vitesses, en cases par seconde.
 export const VITESSE_POUSSE_JOUEUR = 3
 export const VITESSE_POUSSE_MINEUR = 2.5
-// Le temps pour charger le wagonnet au coffre, et pour le vider au marché (avec un pousseur
-// débutant, ou sans pousseur).
-export const SECONDES_CHARGEMENT_WAGONNET = 2
+// Le temps pour charger le wagonnet au départ, et pour le vider (ou vendre) à l'arrivée : toujours
+// 1 seconde (23/10).
+export const SECONDES_CHARGEMENT_WAGONNET = 1
 
-// Les niveaux d'un pousseur (23/10), améliorés au Personnel : son wagonnet porte plus (× la
-// taille des wagonnets) et il charge, décharge et vend plus vite. Payé en argent.
-export type NiveauPousseur = { nom: string; places: number; secondesArret: number; cout: Cout }
+// (23/10) Chaque pousseur a deux améliorations, au Personnel :
+//   - sa VITESSE (NIVEAUX_POUSSEUR, payée en argent) : il pousse son wagonnet plus vite ;
+//   - son CHARIOT (NIVEAUX_CHARIOT_POUSSEUR, argent et fer, de plus en plus cher) : son wagonnet
+//     porte plus. Il n'y a plus de « taille des wagonnets » pour tous les trajets.
+export type NiveauPousseur = { nom: string; vitesse: number; cout: Cout }
 export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
-  { nom: 'Débutant', places: 1, secondesArret: 2, cout: { materiaux: {} } },
-  { nom: 'Costaud', places: 1.25, secondesArret: 1.6, cout: { argent: 1000, materiaux: {} } },
-  { nom: 'Robuste', places: 1.5, secondesArret: 1.2, cout: { argent: 5000, materiaux: {} } },
-  { nom: 'Expert', places: 2, secondesArret: 0.8, cout: { argent: 20000, materiaux: {} } },
-  { nom: 'Champion', places: 2.5, secondesArret: 0.5, cout: { argent: 60000, materiaux: {} } },
+  { nom: 'Débutant', vitesse: 1, cout: { materiaux: {} } },
+  { nom: 'Costaud', vitesse: 1.2, cout: { argent: 1000, materiaux: {} } },
+  { nom: 'Robuste', vitesse: 1.45, cout: { argent: 5000, materiaux: {} } },
+  { nom: 'Expert', vitesse: 1.75, cout: { argent: 20000, materiaux: {} } },
+  { nom: 'Champion', vitesse: 2.1, cout: { argent: 60000, materiaux: {} } },
+]
+// Les places du chariot d'un pousseur (à peu près ce que la mine et ses mineurs sortent pendant un
+// aller-retour d'environ 15 s : il suit tout juste, il faut l'agrandir quand on produit plus).
+// Sans pousseur (le joueur pousse), c'est le premier : 20 places.
+export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
+  { places: 20, cout: { materiaux: {} } },
+  { places: 35, cout: { argent: 1000, materiaux: { fer: 30 } } },
+  { places: 55, cout: { argent: 3000, materiaux: { fer: 60 } } },
+  { places: 80, cout: { argent: 8000, materiaux: { fer: 100 } } },
+  { places: 115, cout: { argent: 20000, materiaux: { fer: 160 } } },
+  { places: 160, cout: { argent: 45000, materiaux: { fer: 250 } } },
+  { places: 220, cout: { argent: 90000, materiaux: { fer: 400 } } },
 ]
 // Le salaire d'un pousseur toutes les 5 minutes, selon son niveau (il ne creuse pas : moins cher
 // qu'un mineur avec la même pioche).
@@ -390,19 +404,6 @@ export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine
 // Les bâtiments où les rails peuvent arriver (les départs et arrivées des trajets).
 export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
 
-// La taille des wagonnets (au bâtiment Mine) : elle vaut pour tous les trajets.
-// (23/10) Petits : à peu près ce que la mine et les mineurs sortent pendant un aller-retour
-// (1 à 3 blocs/s au début selon qu'on clique ou non, 5 à 8 vers la fin, pour un aller-retour
-// d'environ 15 s). Le wagonnet suit donc
-// tout juste la production : l'agrandir, ou améliorer le pousseur (places ×1,25 à ×2,5, arrêts plus
-// courts) et électrifier les rails, sert vraiment. Avant : 40, 100, 250, 600, bien trop grands.
-// Quand il ne prend pas tout, il prend un peu de chaque objet (voir repartir dans wagonnet.ts).
-export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
-  { capacite: 20, cout: { materiaux: {} } },
-  { capacite: 40, cout: { argent: 1200, materiaux: { fer: 60 } } },
-  { capacite: 70, cout: { argent: 6000, materiaux: { fer: 150, redstone: 40 } } },
-  { capacite: 120, cout: { argent: 25000, materiaux: { or: 80 } } },
-]
 
 // ---------------------------------------------------------------------------
 // Le générateur (niveau 2 de la mine) : de l'électricité dans un rayon
@@ -621,23 +622,22 @@ export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
 // rapporte qu'une fois : retirer un rail et le reposer, ou licencier puis réembaucher, ne
 // redonne rien (voir niveaux.ts).
 export const XP_PAR = {
-  bloc: 1, // un bloc cassé à la main
-  batiment: 40,
+  // (23/10) 1 XP pour 3 blocs cassés à la main (avant, 1 par bloc : un joueur qui clique beaucoup
+  // était trop en avance). Nouvelle clé, pour qu'une vieille partie reparte de ses blocs actuels.
+  clics: 1,
+  batiment: 70, // (23/10 : avant 40, pour bien démarrer sans tout devoir aux clics)
   rail: 3, // une case de rails
   trajet: 30, // un trajet de wagonnet automatisé
-  embauche: 25, // un mineur ou un pousseur embauché
+  embauche: 40, // un mineur ou un pousseur embauché (23/10 : avant 25)
   amelioration: 30, // un niveau de n'importe quelle amélioration (coffre, pioche, sac, ascenseur...)
   niveauMine: 150, // descendre la mine d'un niveau
-  voyage: 3, // un aller-retour de wagonnet (un peu d'XP pendant qu'on ne clique pas)
   // (23/10) Ce qu'on achète rapporte aussi selon son prix (1 XP par VALEUR_PAR_XP dollars : une
-  // grosse amélioration en rapporte bien plus qu'une petite), et l'argent gagné un peu (1 XP par
-  // ARGENT_PAR_XP dollars). Un joueur qui clique avance plus vite (1 XP par bloc), un joueur qui
-  // laisse tourner avance quand même.
+  // grosse amélioration en rapporte bien plus qu'une petite). Rien pour ce qui se fait tout seul
+  // (les voyages des wagonnets, l'argent gagné) : rester AFK ne rapporte pas d'XP.
   investi: 1,
-  gains: 1,
 }
-export const VALEUR_PAR_XP = 80
-export const ARGENT_PAR_XP = 200
+export const VALEUR_PAR_XP = 25
+export const BLOCS_PAR_XP = 3
 
 // L'XP qu'il faut pour passer du niveau n au niveau n + 1 : de plus en plus.
 // 60 pour passer au niveau 2, 210 pour le 3, 430 pour le 4... environ 13 000 pour le 21.
@@ -660,7 +660,7 @@ export const NIVEAU_JOUEUR_POUR = {
   ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
   equipement: [1, 4, 6, 9, 10, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs ; 23/10 : l'émeraude au niveau 10)
   pousseur: [1, 5, 8, 11, 14], // NIVEAUX_POUSSEUR (23/10)
-  wagonnet: [1, 6, 9, 12], // NIVEAUX_WAGONNET
+  chariotPousseur: [1, 4, 6, 8, 10, 12, 14], // NIVEAUX_CHARIOT_POUSSEUR (23/10 : le chariot de chaque pousseur)
   generateur: [1, 8, 10, 13, 15], // NIVEAUX_GENERATEUR
   forage: [1, 6, 9, 11, 14, 15], // NIVEAUX_FORAGE
   chariot: [1, 6, 9, 11, 14, 15], // NIVEAUX_CHARIOT

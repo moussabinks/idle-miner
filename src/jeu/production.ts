@@ -6,6 +6,8 @@
 import { blocsParSecondeEmploye, vitesseMineurs } from './employes'
 import { valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitAscenseur, debitMine, prochainNiveauAscenseur, type EtatJeu, type Employe } from './mineur'
+import type { IdLiaison } from './donnees'
+import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { capaciteTrajet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
 
 export type ProductionMineur = {
@@ -73,28 +75,46 @@ export function analyseAscenseur(etat: EtatJeu): AnalyseAscenseur {
   return { debit, creuse, remplissage: debit > 0 ? creuse / debit : 0, gainProchainNiveau: gain, tropLent: prochain !== null && creuse > debit && gainUtile }
 }
 
-// Le wagonnet Mine → Marché : combien de blocs par seconde il peut emporter au plus (sa
-// capacité, divisée par la durée d'un aller-retour avec ses deux arrêts de chargement et de
-// vente), comparé à ce que la mine et les mineurs sortent dans le coffre.
+// Le wagonnet d'un trajet qui part de la mine ou de la foreuse vers le marché : combien de blocs par
+// seconde il peut emporter au plus (le chariot de son pousseur, divisé par la durée d'un
+// aller-retour avec ses deux arrêts), comparé à ce que le bâtiment sort TOUT SEUL (23/10 : sans
+// les clics du joueur). Pour la mine : la mine elle-même, plus ce que les mineurs creusent et que
+// l'ascenseur remonte. Pour la foreuse : ce qu'elle fore.
 export type AnalyseWagonnet = {
+  liaison: IdLiaison
   moteur: 'electricite' | 'pousseur' | 'personne' // qui le fait rouler tout seul
+  pousseur: Employe | null
   secondesAllerRetour: number
+  places: number // le chariot de son pousseur
   debitMax: number // blocs par seconde qu'il peut emporter au plus
-  apport: number // blocs par seconde qui arrivent dans le coffre
+  apport: number // blocs par seconde qui arrivent au départ, tout seuls
   surplus: number // blocs par seconde de trop (0 s'il suit)
 }
 
-export function analyseWagonnet(etat: EtatJeu): AnalyseWagonnet | null {
-  const trajet = trajetDe(etat, 'mine-marche')
-  if (!trajet || !ligneDe(etat, 'mine-marche')) return null
-  const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === 'mine-marche' && e.tempsPaye > 0)
+// Ce que le bâtiment de départ sort tout seul, par seconde.
+function apportAuDepart(etat: EtatJeu, liaison: IdLiaison): number {
+  if (liaison === 'foreuse-marche') return foreuseEnMarche(etat) || etat.foreuse.carburant > 0 ? vitesseForage(etat) : 0
+  // (le coffre plein arrête la production : on compte ce que la mine sortirait sans s'arrêter)
+  const mineurs = etat.employes.filter((e) => e.role === 'mineur' && e.etape !== 'attend').reduce((t, m) => t + blocsParSecondeEmploye(etat, m), 0)
+  return debitMine(etat) + Math.min(mineurs, debitAscenseur(etat))
+}
+
+export function analyseWagonnet(etat: EtatJeu, liaison: IdLiaison = 'mine-marche'): AnalyseWagonnet | null {
+  const trajet = trajetDe(etat, liaison)
+  if (!trajet || !ligneDe(etat, liaison)) return null
+  const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0) ?? null
   // (27/10 : sans pousseur, rien ne part, même sur des rails électriques)
-  const moteur = !pousseur ? 'personne' : trajetElectrique(etat, 'mine-marche') ? 'electricite' : 'pousseur'
+  const moteur = !pousseur ? 'personne' : trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur'
   // (23/10 : même électrique, c'est son pousseur qui le pousse, un peu plus vite)
   const vitesse = pousseur ? vitesseTrajet(etat, trajet, pousseur.nom) : 0
-  const duree = vitesse > 0 ? secondesAllerRetour(etat, 'mine-marche', vitesse) : 0
-  const debitMax = duree > 0 ? capaciteTrajet(etat, 'mine-marche') / duree : 0
-  // (le coffre plein arrête la production : on compte ce que la mine sortirait sans s'arrêter)
-  const apport = debitMine(etat) + etat.employes.filter((e) => e.role === 'mineur' && e.etape !== 'attend').reduce((t, m) => t + blocsParSecondeEmploye(etat, m), 0)
-  return { moteur, secondesAllerRetour: duree, debitMax, apport, surplus: Math.max(0, apport - debitMax) }
+  const duree = vitesse > 0 ? secondesAllerRetour(etat, liaison, vitesse) : 0
+  const places = capaciteTrajet(etat, liaison)
+  const debitMax = duree > 0 ? places / duree : 0
+  const apport = apportAuDepart(etat, liaison)
+  return { liaison, moteur, pousseur, secondesAllerRetour: duree, places, debitMax, apport, surplus: Math.max(0, apport - debitMax) }
+}
+
+// (23/10) Le pousseur de ce trajet ne suit pas la cadence : son chariot est trop petit.
+export function chariotTropPetit(analyse: AnalyseWagonnet | null): boolean {
+  return analyse !== null && analyse.moteur !== 'personne' && analyse.surplus > 0.005
 }

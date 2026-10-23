@@ -38,7 +38,8 @@ import {
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
-import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
+import { analyseAscenseur, analyseWagonnet, chariotTropPetit, production } from '../jeu/production'
+import { AlerteChariot } from './AlerteChariot'
 import { trajetAutomatique } from '../jeu/wagonnet'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { Amelioration, BadgeXp } from './Amelioration'
@@ -265,7 +266,7 @@ function JaugePioche({ etat }: { etat: EtatJeu }) {
 
 // Les goulots (27/10) : l'ascenseur et le wagonnet du marché suivent-ils la production ? Une
 // alerte quand ils ne suivent pas, une ligne verte quand tout va bien.
-function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: OngletMine) => void }) {
+function Goulots({ etat, onVoir, onAllerAuPersonnel }: { etat: EtatJeu; onVoir: (onglet: OngletMine) => void; onAllerAuPersonnel?: () => void }) {
   const ascenseur = analyseAscenseur(etat)
   const wagonnet = analyseWagonnet(etat)
   const aMineurs = etat.employes.some((e) => e.role === 'mineur')
@@ -292,20 +293,11 @@ function Goulots({ etat, onVoir }: { etat: EtatJeu; onVoir: (onglet: OngletMine)
               ⚠️ <strong>Personne ne pousse le wagonnet du marché</strong> : embauche un pousseur (Personnel) ou électrifie les rails.
             </span>
           </div>
-        ) : wagonnet.surplus > 0.005 ? (
-          <div className="goulot goulot-alerte">
-            <span
-              title={`Il emporte au plus ${parSeconde(wagonnet.debitMax)} bloc/s (aller-retour de ${Math.round(wagonnet.secondesAllerRetour)} s), la mine en sort ${parSeconde(wagonnet.apport)}. Le coffre se remplit de ${parSeconde(wagonnet.surplus)} bloc/s : agrandis les wagonnets${wagonnet.moteur === 'pousseur' ? ' ou électrifie les rails' : ''}.`}
-            >
-              ⚠️ <strong>Wagonnet saturé</strong> : {parSeconde(wagonnet.debitMax)} bloc/s au plus, la mine en sort {parSeconde(wagonnet.apport)} · agrandis-le
-            </span>
-            <button className="bouton bouton-petit bouton-ameliorer" onClick={() => onVoir('wagonnets')}>
-              ⬆️ Voir
-            </button>
-          </div>
+        ) : chariotTropPetit(wagonnet) ? (
+          <AlerteChariot analyse={wagonnet} batiment="la mine" onAllerAuPersonnel={onAllerAuPersonnel} />
         ) : (
           <div className="goulot goulot-ok">
-            ✔ Wagonnet : jusqu'à {parSeconde(wagonnet.debitMax)} bloc/s, la mine en sort {parSeconde(wagonnet.apport)}
+            ✔ Wagonnet : jusqu'à {parSeconde(wagonnet.debitMax)} bloc/s, la mine en sort {parSeconde(wagonnet.apport)} tout seule
           </div>
         ))}
     </div>
@@ -512,7 +504,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
   const wagonnetMarche = analyseWagonnet(etat)
   // (23/10) L'ascenseur trop petit : une alerte bien visible aussi dans l'onglet principal.
   const ascenseurTropPetit = etat.employes.some((e) => e.role === 'mineur') && puits.tropLent
-  const goulot = ascenseurTropPetit || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || wagonnetMarche.surplus > 0.005))
+  const goulot = ascenseurTropPetit || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || chariotTropPetit(wagonnetMarche)))
   return (
     <div className="liste-cartes panneau-mine-aere">
       {/* Cinq onglets (27/10), pour que tout tienne sans défiler : creuser (le bloc et le
@@ -527,6 +519,8 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
         actif={onglet}
         onChoisir={setOnglet}
       />
+      {/* (23/10) Le chariot du pousseur du marché ne suit pas ce que la mine sort toute seule. */}
+      {onglet !== 'production' && <AlerteChariot analyse={wagonnetMarche} batiment="la mine" onAllerAuPersonnel={onAllerAuPersonnel} />}
       {/* (23/10) Des mineurs pas payés : ils ne creusent plus. Bien en vue, avec de quoi y aller. */}
       {sansSalaire > 0 && (
         <div className="goulot goulot-alerte alerte-salaires-mine" role="status">
@@ -581,7 +575,7 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
       {onglet === 'production' && (
         <>
           <TableauProduction etat={etat} clicsParSeconde={clicsParSeconde} />
-          <Goulots etat={etat} onVoir={setOnglet} />
+          <Goulots etat={etat} onVoir={setOnglet} onAllerAuPersonnel={onAllerAuPersonnel} />
         </>
       )}
 
