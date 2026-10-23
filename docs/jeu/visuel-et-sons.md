@@ -240,7 +240,7 @@ Pour les z-index de tout le jeu : les fenêtres (`.voile`) sont à 10, le pannea
 
 ## 8. Les sons et la musique
 
-Tout est **fabriqué par le navigateur avec Web Audio** : aucun fichier audio, donc rien à charger ni à créditer. Le navigateur n'autorise le son qu'après une action du joueur : le contexte audio est créé (ou réveillé) au premier clic/toucher ou à la première touche, et la musique démarre à ce moment-là.
+Tout est **fabriqué par le navigateur avec Web Audio** : aucun fichier audio, donc rien à charger ni à créditer, **sauf le « cha-ching » du marché** (23/10, `public/sons/cash.mp3`, fourni par l'équipe, voir `venteMarche`). Le navigateur n'autorise le son qu'après une action du joueur : le contexte audio est créé (ou réveillé) au premier clic/toucher ou à la première touche, et la musique démarre à ce moment-là.
 
 ### 8.1 Les bruitages (`src/sons.ts`)
 
@@ -256,7 +256,7 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `rare` | or, émeraude ou diamant cassé | une pluie d'étincelles qui monte |
 | `fortune` | un minerai **doublé** (la fortune de la pioche, ou un bonus de combo qui casse plusieurs blocs) ; 23/10, remplace `pieces(2)` | un « ding-ding » joyeux qui monte, un scintillement et 2 pièces |
 | `vente` | une vente (marché, chariot de la foreuse) | (23/10) une **caisse enregistreuse** : deux touches « clac clac », le tiroir qui glisse et s'ouvre « tchonk », la sonnette « ding ! » (une cloche qui résonne), puis les pièces qui tombent dans le tiroir : **plus la vente est grosse, plus il y a de pièces** (3 à 14). Les pièces (`pieces`) ont un « tic » métallique et des harmoniques de vraies pièces |
-| `venteMarche(montant)` | un wagonnet a vendu au marché (27/10, remplace `pieces(3)`) | la **cloche du marché** (deux notes claires), puis le « ka-ching ! » et la cascade de pièces de `vente` (plus la vente est grosse, plus il y a de pièces) ; à partir de **1 000 $**, une petite **fanfare** de 4 notes qui monte |
+| `venteMarche(montant)` | un wagonnet (ses pousseurs) a vendu au marché (27/10), et la récolte au retour d'absence | (23/10) un **vrai enregistrement** : le « cha-ching ! » de `public/sons/cash.mp3` (le son « cash-sound » du Drive de l'équipe, « Cha-Ching! Money SOUND », 5 s, coupé autour du bruit de caisse : 2,3 s), un peu plus fort à partir de **1 000 $**. Chargé au premier clic du joueur ; deux ventes à moins de 0,4 s : un seul « cha-ching ». En attendant qu'il soit chargé (ou sans réseau), c'est la caisse fabriquée de `vente`. (Avant : la cloche du marché, la caisse de `vente` et une fanfare.) |
 | `achat` | un achat sans amélioration (construction, rachat, réparation, embauche…) | « pop » puis deux notes qui montent, et 2 pièces |
 | `amelioration` | un niveau de plus (mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur) : remplace alors `achat` | trois notes qui montent « niveau supérieur ! » |
 | `piocheCassee` | la pioche en main casse | « clang » triste |

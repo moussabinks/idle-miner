@@ -219,13 +219,22 @@ export type NiveauAscenseur = {
   // avec plus de 2 mineurs, il faut améliorer l'ascenseur)
 }
 
+// (23/10 bis) 10 niveaux au lieu de 6 : avant, le niveau 4 sur 6 (11 blocs/s) suffisait même à la
+// fin du jeu. Maintenant, son débit (capacité ÷ aller-retour) suit à peu près ce que creusent les
+// mineurs (1 par niveau de la mine, pioche et rareté de plus en plus fortes), environ × 1,5 par
+// niveau : 1 ; 1,6 ; 2,4 ; 3,5 ; 5,4 ; 8 ; 11,5 ; 16 ; 23,5 ; 34 blocs/s. Avec une mine au
+// maximum et de bons mineurs (6 à 15 blocs/s, plus avec des légendaires), il faut le niveau 7 à 9.
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
   { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6, secondesChargement: 1, secondesVidage: 2, capacite: 15 }, // déjà dans la mine au départ
-  { niveau: 2, cout: { argent: 1500, materiaux: { fer: 50, redstone: 10 } }, secondesTrajet: 4, secondesChargement: 0.8, secondesVidage: 1.6, capacite: 25 },
-  { niveau: 3, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } }, secondesTrajet: 2.8, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 40 },
-  { niveau: 4, cout: { argent: 25000, materiaux: { fer: 200, redstone: 100 } }, secondesTrajet: 2, secondesChargement: 0.5, secondesVidage: 0.9, capacite: 60 },
-  { niveau: 5, cout: { argent: 80000, materiaux: { redstone: 200, or: 60 } }, secondesTrajet: 1.4, secondesChargement: 0.4, secondesVidage: 0.7, capacite: 90 },
-  { niveau: 6, cout: { argent: 250000, materiaux: { or: 150, emeraude: 30 } }, secondesTrajet: 1, secondesChargement: 0.3, secondesVidage: 0.5, capacite: 130 },
+  { niveau: 2, cout: { argent: 1200, materiaux: { fer: 40 } }, secondesTrajet: 5, secondesChargement: 0.9, secondesVidage: 1.8, capacite: 20 },
+  { niveau: 3, cout: { argent: 4000, materiaux: { fer: 80, redstone: 15 } }, secondesTrajet: 4.2, secondesChargement: 0.8, secondesVidage: 1.6, capacite: 26 },
+  { niveau: 4, cout: { argent: 10000, materiaux: { fer: 140, redstone: 50 } }, secondesTrajet: 3.6, secondesChargement: 0.7, secondesVidage: 1.4, capacite: 33 },
+  { niveau: 5, cout: { argent: 22000, materiaux: { fer: 200, redstone: 100, or: 20 } }, secondesTrajet: 3, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 42 },
+  { niveau: 6, cout: { argent: 45000, materiaux: { redstone: 160, or: 50 } }, secondesTrajet: 2.5, secondesChargement: 0.5, secondesVidage: 1, capacite: 52 },
+  { niveau: 7, cout: { argent: 90000, materiaux: { redstone: 220, or: 90, emeraude: 10 } }, secondesTrajet: 2.1, secondesChargement: 0.45, secondesVidage: 0.9, capacite: 64 },
+  { niveau: 8, cout: { argent: 170000, materiaux: { or: 140, emeraude: 35 } }, secondesTrajet: 1.8, secondesChargement: 0.4, secondesVidage: 0.8, capacite: 78 },
+  { niveau: 9, cout: { argent: 320000, materiaux: { or: 200, emeraude: 70, diamant: 10 } }, secondesTrajet: 1.5, secondesChargement: 0.35, secondesVidage: 0.7, capacite: 95 },
+  { niveau: 10, cout: { argent: 600000, materiaux: { emeraude: 120, diamant: 35 } }, secondesTrajet: 1.25, secondesChargement: 0.3, secondesVidage: 0.6, capacite: 115 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -262,7 +271,7 @@ export const SECONDES_CHARGEMENT_ASCENSEUR = 1
 export const CAPACITE_ECHELLE = 20
 export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
-  'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot', 'Romain', 'Dodo',
+  'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot', 'Romain', 'Dodo', 'Guewen',
 ]
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, émeraude, diamant) :
@@ -672,7 +681,7 @@ export const NIVEAU_JOUEUR_POUR = {
   coffre: [1, 2, 5, 8, 12], // NIVEAUX_COFFRE
   pioches: [1, 4, 7, 10, 12], // PIOCHES (23/10 : l'émeraude au niveau 10, avec la mine d'émeraude)
   sacs: [1, 3, 5, 8, 11, 14, 15], // SACS
-  ascenseur: [1, 5, 8, 10, 13, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début)
+  ascenseur: [1, 3, 5, 7, 9, 10, 11, 13, 14, 15], // NIVEAUX_ASCENSEUR (le 1er est dans la mine dès le début ; 23/10 bis : 10 niveaux)
   equipement: [1, 4, 6, 9, 10, 12], // NIVEAUX_EMPLOYE (la pioche des mineurs ; 23/10 : l'émeraude au niveau 10)
   pousseur: [1, 5, 8, 11, 14], // NIVEAUX_POUSSEUR (23/10)
   chariotPousseur: [1, 4, 6, 8, 10, 12, 14], // NIVEAUX_CHARIOT_POUSSEUR (23/10 : le chariot de chaque pousseur)

@@ -3,7 +3,7 @@
 // toutes les 5 minutes). Le niveau de la
 // mine est affiché à côté de chacun, mais il ne compte pas. Tout le monde peut le voir ; pour y
 // apparaître, il faut un compte (le score part avec la sauvegarde en ligne).
-// En haut, un podium pour les 3 premiers ; en bas, la place du joueur et celui qu'il doit
+// En haut, un podium pour les 3 premiers, puis les 7 suivants (le top 10, 23/10) ; en bas, la place du joueur et celui qu'il doit
 // dépasser (« encore 3 000 $ pour dépasser Jade »).
 
 import { useEffect, useState } from 'react'
@@ -11,8 +11,10 @@ import { niveauMineAffiche, type LigneClassement } from '../jeu/classement'
 import { lireClassement, placeDuScore } from '../enLigne'
 import type { Joueur } from '../enLigne'
 
-// (23/10) Tous les joueurs inscrits (le podium, puis la liste en dessous, qui défile).
-const NB_LIGNES = 1000
+// (23/10) Le top 10 : le podium, puis les 7 suivants en dessous.
+const NB_LIGNES = 10
+// (23/10) Le classement se relit tout seul toutes les 5 minutes (le rythme d'envoi des scores).
+const INTERVALLE_ACTUALISATION = 5 * 60 * 1000 // ms
 const MEDAILLES = ['🥇', '🥈', '🥉']
 
 // « 1 250 $ », « 3,5 k$ », « 2,45 M$ » : court, pour que tout tienne sur une ligne.
@@ -45,6 +47,12 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
   // Change quand on clique sur « Actualiser » : le classement est relu.
   const [actualisation, setActualisation] = useState(0)
 
+  // Toutes les 5 minutes, on relit le classement (l'argent en poche des joueurs a pu changer).
+  useEffect(() => {
+    const minuterie = window.setInterval(() => setActualisation((n) => n + 1), INTERVALLE_ACTUALISATION)
+    return () => window.clearInterval(minuterie)
+  }, [])
+
   useEffect(() => {
     let annule = false
     lireClassement(NB_LIGNES)
@@ -56,7 +64,7 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
       .catch(() => {
         if (!annule) setErreur(true)
       })
-    // La place du joueur (même s'il n'est pas dans les 50 premiers, ou pas encore connecté).
+    // La place du joueur (même s'il n'est pas dans les 10 premiers, ou pas encore connecté).
     placeDuScore(monArgent, joueur?.pseudo ?? null)
       .then((resultat) => {
         if (!annule) setPlace(resultat)
