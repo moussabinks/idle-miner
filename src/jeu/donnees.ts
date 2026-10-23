@@ -299,7 +299,7 @@ export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> 
   { cout: { argent: 100000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8.5, mythique: 2.5 } },
 ]
 
-// --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec la trésorerie ---
+// --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec l'argent du joueur (23/10 : plus de trésorerie) ---
 export const NIVEAU_MINE_MANAGER = 3
 export const PRIX_MANAGER = 10000 // (23/10 ; avant 35 000 $)
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes

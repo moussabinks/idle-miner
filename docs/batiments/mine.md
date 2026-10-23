@@ -123,7 +123,7 @@ Ce que **débloque** chaque niveau :
 | 1 | Mine, Marché, Forgeron, Bazar, Personnel, rails (avec le niveau du joueur qu'il faut) ; 4 mineurs au plus |
 | 2 | **Foreuse** et **Générateur** (menu Bâtiments, aux niveaux 5 et 6 du joueur depuis le 30/10) ; la redstone ; 6 mineurs |
 | 3 | **Recruteur** (au Personnel, au niveau 9 du joueur) ; l'or ; 8 mineurs |
-| 4 | **Manager** et trésorerie (au Personnel, au niveau 11 du joueur) ; les émeraudes ; 10 mineurs |
+| 4 | **Recruteur** (au Personnel, au niveau 11 du joueur) ; les émeraudes ; 10 mineurs |
 | 5 | Les diamants ; 12 mineurs |
 
 (Les tenues et les décorations qui se débloquaient aussi sont retirées depuis le 27/10.)

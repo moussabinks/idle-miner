@@ -31,9 +31,7 @@ import {
   chancesRecrutement,
   coutAmeliorationEmploye,
   coutSalaires,
-  deposerTresorerie,
   depensesParPaie,
-  manquePourUnePaie,
   embaucher,
   gainAmeliorationEmploye,
   changerTrajet,
@@ -65,7 +63,6 @@ import {
   prochainNiveauRecruteur,
   rareteDe,
   recruteurDebloque,
-  retirerTresorerie,
   salaireEmploye,
   salaireManager,
   salairesParPaie,
@@ -168,7 +165,7 @@ function TitreChef({ role, titre, children }: { role: 'manager' | 'recruteur'; t
   )
 }
 
-// Le manager (niveau 3 de la mine) et sa trésorerie.
+// Le manager (niveau 3 de la mine) : il paie les salaires avec ton argent (23/10).
 function Manager({ etat, jouer }: Props) {
   if (!managerDebloque(etat)) {
     return (
@@ -176,7 +173,7 @@ function Manager({ etat, jouer }: Props) {
         <strong>
           🔒 Manager · {etat.niveauMine < NIVEAU_MINE_MANAGER ? `mine niveau ${NIVEAU_MINE_MANAGER}` : <BadgeXp texte={`⭐ ${NIVEAU_JOUEUR_POUR.manager}`} />}
         </strong>
-        <span className="discret">Il paiera tous les salaires tout seul, avec l'argent que tu mets dans une cagnotte (la trésorerie).</span>
+        <span className="discret">Il paiera tous les salaires tout seul, avec ton argent.</span>
       </div>
     )
   }
@@ -185,7 +182,7 @@ function Manager({ etat, jouer }: Props) {
       <div className="ligne-achat carte-manager">
         <TitreChef role="manager" titre="💼 Manager" />
         <span className="discret">
-          Il paie les salaires tout seul (le sien aussi : {argent(salaireManager())} toutes les 5 minutes), avec l'argent de la trésorerie. Fini
+          Il paie les salaires tout seul (le sien aussi : {argent(salaireManager())} toutes les 5 minutes), avec ton argent. Fini
           les mineurs qui attendent !
         </span>
         <Achat
@@ -199,44 +196,28 @@ function Manager({ etat, jouer }: Props) {
     )
   }
   const depenses = depensesParPaie(etat)
-  const manque = manquePourUnePaie(etat)
   const prochainManager = prochainNiveauManager(etat)
   const vide = !managerAuTravail(etat) || nbSansSalaire(etat) > 0
+  // (23/10) Plus de trésorerie : il se sert dans ton argent, toutes les 5 minutes.
+  const pasAssez = etat.argent < depenses
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
       <TitreChef role="manager" titre="💼 Manager">
         <span className={`badge ${vide ? '' : 'badge-vert'}`}>{managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
       </TitreChef>
       <div className="tresorerie">
-        <span>Trésorerie</span>
-        <strong>{argent(etat.tresorerie)}</strong>
+        <span>Une paie de toute l'équipe</span>
+        <strong>{argent(depenses)}</strong>
       </div>
-      {/* Combien il faut pour payer tout le monde une fois (5 min) : la jauge se remplit jusque-là. */}
-      <Barre
-        valeur={etat.tresorerie}
-        max={depenses}
-        texte={manque > 0 ? `Une paie de toute l'équipe : ${argent(etat.tresorerie)} / ${argent(depenses)}` : `✔ Une paie de toute l'équipe : ${argent(depenses)}`}
-        couleur={manque > 0 ? 'rouge' : 'vert'}
-      />
-      {manque > 0 && (
-        <div className="module-ligne">
-          <span className="texte-alerte">Il manque {argent(manque)} pour payer tout le monde (le manager se paie d'abord, puis les mineurs les moins chers).</span>
-          <button
-            className="bouton bouton-petit bouton-payer"
-            disabled={etat.argent < manque}
-            onClick={() => jouer((e) => deposerTresorerie(e, manquePourUnePaie(e)))}
-          >
-            +{argent(manque)}
-          </button>
-        </div>
-      )}
-      <span className={vide ? 'texte-alerte' : 'discret'}>
+      <span className={vide || pasAssez ? 'texte-alerte' : 'discret'}>
         {vide
-          ? '💼 La trésorerie est vide : remets de l’argent, sinon personne n’est payé !'
-          : `La trésorerie tient environ ${duree((etat.tresorerie / depenses) * SECONDES_PAR_PAIE)}.`}
+          ? '💼 Tu n’as plus assez d’argent : personne n’est payé ! Vends des blocs.'
+          : pasAssez
+            ? `⚠️ Ton argent ne suffit pas pour la prochaine paie (${argent(depenses)}).`
+            : `Il paie tout seul, avec ton argent, toutes les 5 minutes (lui d'abord, puis les mineurs les moins chers).`}
       </span>
       {/* (23/10) Jeu fermé, il ne paie que pendant un temps : on l'allonge en l'améliorant. */}
-      <span className="discret">🌙 Quand le jeu est fermé, il paie les salaires pendant <strong>{duree(secondesManagerHorsLigne(etat))}</strong> (après, tes employés attendent ton retour).</span>
+      <span className="discret">🌙 Quand le jeu est fermé, il paie les salaires avec ton argent pendant <strong>{duree(secondesManagerHorsLigne(etat))}</strong> (après, tes employés attendent ton retour).</span>
       <Amelioration
         etat={etat}
         actuel={`🌙 ${duree(secondesManagerHorsLigne(etat))} jeu fermé`}
@@ -247,36 +228,6 @@ function Manager({ etat, jouer }: Props) {
         possible={peutAmeliorerManager(etat)}
         onAmeliorer={() => jouer(ameliorerManager)}
       />
-      <div className="boutons">
-        <button
-          className="bouton bouton-petit bouton-payer"
-          disabled={etat.argent < 1}
-          onClick={() => jouer((e) => deposerTresorerie(e, Math.max(0, 6 * depensesParPaie(e) - e.tresorerie)))}
-          title="Assez pour payer toute l'équipe pendant 1 h"
-        >
-          Remplir pour 1 h
-        </button>
-        {[10000].map((montant) => (
-          <button
-            key={montant}
-            className="bouton bouton-petit bouton-payer"
-            disabled={etat.argent < 1}
-            onClick={() => jouer((e) => deposerTresorerie(e, montant))}
-          >
-            +{montant.toLocaleString('fr-FR')} $
-          </button>
-        ))}
-        <button className="bouton bouton-petit bouton-payer" disabled={etat.argent < 1} onClick={() => jouer((e) => deposerTresorerie(e, e.argent))}>
-          Tout mettre
-        </button>
-        <button
-          className="bouton bouton-petit bouton-neutre"
-          disabled={etat.tresorerie < 1}
-          onClick={() => jouer((e) => retirerTresorerie(e, e.tresorerie))}
-        >
-          Tout reprendre
-        </button>
-      </div>
     </div>
   )
 }
@@ -625,7 +576,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
       {onglet === 'chefs' && (
         <section className="categorie-employes">
           <h3 className="titre-categorie">
-            💼 Manager <span className="discret">il paie les salaires avec la trésorerie</span>
+            💼 Manager <span className="discret">il paie les salaires avec ton argent</span>
           </h3>
           <Manager etat={etat} jouer={jouer} />
         </section>
