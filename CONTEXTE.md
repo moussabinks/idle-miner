@@ -211,4 +211,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (17)** : le manager et le recruteur échangent leur place : le **manager** arrive au niveau 3 de la mine (et au niveau 9 du joueur), le **recruteur** au niveau 4 de la mine (et au niveau 11 du joueur, puis 12, 13, 15). Prix inchangés.
 - **2026-10-23 (18)** : le manager coûte **10 000 $** (avant 35 000 $) et ses améliorations hors ligne 6 000, 15 000, 35 000 et 85 000 $ (avant 20 000, 50 000, 120 000, 300 000 $).
 - **2026-10-23 (19)** : **plus de trésorerie** : le manager paie les salaires tout seul avec l'argent du joueur (plus rien à prépayer). Jeu fermé, il se sert aussi dans l'argent, pendant le temps de son niveau ; rentable ou pas, tant pis ou tant mieux. Une vieille partie récupère l'argent qui restait dans la trésorerie.
+- **2026-10-23 (20)** : le manager est une **option** : un interrupteur sur sa carte l'arrête ou le remet au travail. Arrêté, il ne paie personne, on ne lui doit rien, et on paie ses employés soi-même.
 

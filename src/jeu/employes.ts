@@ -282,7 +282,7 @@ export function nbSansSalaire(etat: EtatJeu): number {
 
 export function peutPayerSalaires(etat: EtatJeu, secondes: number): boolean {
   const cout = coutSalaires(etat, secondes)
-  return !etat.manager.embauche && cout > 0 && etat.argent >= cout
+  return !managerActif(etat) && cout > 0 && etat.argent >= cout
 }
 
 export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
@@ -306,7 +306,7 @@ export function coutSalaireEmploye(employe: Employe, secondes = SECONDES_PAR_PAI
 
 export function peutPayerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_PAR_PAIE): boolean {
   const employe = etat.employes[index]
-  if (!employe || etat.manager.embauche) return false
+  if (!employe || managerActif(etat)) return false
   const cout = coutSalaireEmploye(employe, secondes)
   return cout > 0 && etat.argent >= cout
 }
@@ -324,7 +324,7 @@ export function payerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_P
 
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
-  if (etat.manager.embauche && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Plus assez d’argent : personne n’est payé !'
+  if (managerActif(etat) && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Plus assez d’argent : personne n’est payé !'
   if (sansSalaire > 0) return sansSalaire === 1 ? '😠 1 mineur attend son salaire !' : `😠 ${sansSalaire} mineurs attendent leur salaire !`
   return null
 }
@@ -337,8 +337,20 @@ export function managerDebloque(etat: EtatJeu): boolean {
   return etat.niveauMine >= NIVEAU_MINE_MANAGER && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.manager)
 }
 
+// (23/10) Le manager est une option : on peut l'arrêter et le remettre au travail. Arrêté, il ne
+// paie plus personne (on paie soi-même, comme avant lui) et on ne lui doit rien.
+export function managerActif(etat: EtatJeu): boolean {
+  return etat.manager.embauche && etat.manager.actif !== false
+}
+
+export function basculerManager(etat: EtatJeu): string[] {
+  if (!etat.manager.embauche) return []
+  etat.manager.actif = !managerActif(etat)
+  return [etat.manager.actif ? '💼 Ton manager reprend le travail : il paie les salaires tout seul.' : '💼 Manager arrêté : tu paies les salaires toi-même.']
+}
+
 export function managerAuTravail(etat: EtatJeu): boolean {
-  return etat.manager.embauche && etat.manager.tempsPaye > 0
+  return managerActif(etat) && etat.manager.tempsPaye > 0
 }
 
 export function salaireManager(): number {
@@ -376,13 +388,13 @@ export function embaucherManager(etat: EtatJeu): string[] {
 }
 
 export function depensesParPaie(etat: EtatJeu): number {
-  return salairesParPaie(etat) + (etat.manager.embauche ? salaireManager() : 0)
+  return salairesParPaie(etat) + (managerActif(etat) ? salaireManager() : 0)
 }
 
 // Le manager paie (avec l'argent du joueur, 23/10) d'abord son propre salaire, puis les mineurs du moins cher au plus cher.
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
-  if (!manager.embauche) return
+  if (!managerActif(etat)) return
   if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaireManager()) {
     etat.argent -= salaireManager()
     etat.stats.salairesPayes += salaireManager()
@@ -920,7 +932,7 @@ function avancerNavette(etat: EtatJeu, secondes: number): string[] {
 
 function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   const manager = etat.manager
-  if (!manager.embauche || manager.tempsPaye <= 0) return []
+  if (!managerActif(etat) || manager.tempsPaye <= 0) return []
   manager.tempsPaye = Math.max(0, manager.tempsPaye - secondes)
   if (manager.tempsPaye > 0) return []
   return ['💼 Ton manager n’est plus payé : tu n’as plus assez d’argent pour les salaires !']

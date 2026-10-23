@@ -21,7 +21,9 @@ import {
   embaucherPousseur,
   coutSalaires,
   embaucher,
+  basculerManager,
   embaucherManager,
+  managerActif,
   indemnites,
   licencier,
   maxEmployes,
@@ -275,6 +277,26 @@ describe('le manager (niveau 3 de la mine)', () => {
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)
     expect(etat.argent).toBeLessThan(avant - 2 * SALAIRE_MANAGER)
+  })
+
+  it('(23/10) on peut l’arrêter : il ne paie plus, on paie soi-même', () => {
+    const etat = partie()
+    etat.niveauMine = 3
+    embaucher(etat, hasard())
+    embaucherManager(etat)
+    expect(peutPayerEmploye(etat, 0)).toBe(false)
+    basculerManager(etat)
+    expect(managerActif(etat)).toBe(false)
+    const payes = etat.stats.salairesPayes
+    const tempsManager = etat.manager.tempsPaye
+    avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
+    expect(etat.stats.salairesPayes).toBe(payes)
+    expect(etat.manager.tempsPaye).toBe(tempsManager)
+    expect(peutPayerEmploye(etat, 0)).toBe(true)
+    etat.employes[0].tempsPaye = 0
+    basculerManager(etat)
+    avancerEmployes(etat, 30, hasard())
+    expect(etat.stats.salairesPayes).toBeGreaterThan(payes)
   })
 
   it('sans argent, plus personne n’est payé', () => {

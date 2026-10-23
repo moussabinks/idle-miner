@@ -42,6 +42,8 @@ import {
   iconeActiviteEmploye,
   indemnites,
   licencier,
+  basculerManager,
+  managerActif,
   managerAuTravail,
   managerDebloque,
   maxEmployes,
@@ -197,25 +199,36 @@ function Manager({ etat, jouer }: Props) {
   }
   const depenses = depensesParPaie(etat)
   const prochainManager = prochainNiveauManager(etat)
-  const vide = !managerAuTravail(etat) || nbSansSalaire(etat) > 0
+  const actif = managerActif(etat)
+  const vide = actif && (!managerAuTravail(etat) || nbSansSalaire(etat) > 0)
   // (23/10) Plus de trésorerie : il se sert dans ton argent, toutes les 5 minutes.
   const pasAssez = etat.argent < depenses
   return (
     <div className={`ligne-achat carte-manager ${vide ? 'carte-alerte' : ''}`}>
       <TitreChef role="manager" titre="💼 Manager">
-        <span className={`badge ${vide ? '' : 'badge-vert'}`}>{managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
+        <span className={`badge ${!actif || vide ? '' : 'badge-vert'}`}>{!actif ? '⏸ Arrêté' : managerAuTravail(etat) ? 'Au travail' : '😠 Pas payé'}</span>
       </TitreChef>
-      <div className="tresorerie">
-        <span>Une paie de toute l'équipe</span>
-        <strong>{argent(depenses)}</strong>
-      </div>
-      <span className={vide || pasAssez ? 'texte-alerte' : 'discret'}>
-        {vide
-          ? '💼 Tu n’as plus assez d’argent : personne n’est payé ! Vends des blocs.'
-          : pasAssez
-            ? `⚠️ Ton argent ne suffit pas pour la prochaine paie (${argent(depenses)}).`
-            : `Il paie tout seul, avec ton argent, toutes les 5 minutes (lui d'abord, puis les mineurs les moins chers).`}
-      </span>
+      {/* (23/10) C'est une option : on l'arrête et on le remet au travail quand on veut. */}
+      <button className={`interrupteur-trajet ${actif ? 'allume' : ''}`} role="switch" aria-checked={actif} onClick={() => jouer(basculerManager)}>
+        <span className="interrupteur-curseur" aria-hidden="true" />
+        {actif ? 'Il paie les salaires tout seul' : 'Arrêté : tu paies toi-même'}
+      </button>
+      {!actif && <span className="discret">Arrêté, il ne paie personne et tu ne lui dois rien. Tu paies tes employés toi-même, dans l'onglet Employés.</span>}
+      {actif && (
+        <>
+          <div className="tresorerie">
+            <span>Une paie de toute l'équipe</span>
+            <strong>{argent(depenses)}</strong>
+          </div>
+          <span className={vide || pasAssez ? 'texte-alerte' : 'discret'}>
+            {vide
+              ? '💼 Tu n’as plus assez d’argent : personne n’est payé ! Vends des blocs.'
+              : pasAssez
+                ? `⚠️ Ton argent ne suffit pas pour la prochaine paie (${argent(depenses)}).`
+                : `Il paie tout seul, avec ton argent, toutes les 5 minutes (lui d'abord, puis les mineurs les moins chers).`}
+          </span>
+        </>
+      )}
       {/* (23/10) Jeu fermé, il ne paie que pendant un temps : on l'allonge en l'améliorant. */}
       <span className="discret">🌙 Quand le jeu est fermé, il paie les salaires avec ton argent pendant <strong>{duree(secondesManagerHorsLigne(etat))}</strong> (après, tes employés attendent ton retour).</span>
       <Amelioration
@@ -367,7 +380,7 @@ function CarteMineur({ etat, jouer, employe, index, onLicencier }: Props & { emp
         )}
       </div>
       {/* (23/10) Le payer, lui seul (sans manager) : jusqu'à 5 minutes payées. */}
-      {!etat.manager.embauche && coutSalaireEmploye(employe) > 0 && (
+      {!managerActif(etat) && coutSalaireEmploye(employe) > 0 && (
         <button
           className={`bouton bouton-petit bouton-payer payer-employe ${employe.tempsPaye <= 0 ? 'payer-urgent' : ''}`}
           disabled={!peutPayerEmploye(etat, index)}
@@ -528,7 +541,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
   }
 
   const sansSalaire = nbSansSalaire(etat)
-  const managerVide = etat.manager.embauche && !managerAuTravail(etat)
+  const managerVide = managerActif(etat) && !managerAuTravail(etat)
   return (
     <div className="liste-cartes">
       {/* Trois onglets (27/10) : les employés (et les salaires), recruter, les chefs. */}
@@ -550,7 +563,7 @@ export function PanneauEmployes({ etat, jouer, onApercuTrajet }: PropsPanneau) {
           </button>
         </div>
       )}
-      {onglet === 'equipe' && etat.employes.length > 0 && !etat.manager.embauche && <Salaires etat={etat} jouer={jouer} />}
+      {onglet === 'equipe' && etat.employes.length > 0 && !managerActif(etat) && <Salaires etat={etat} jouer={jouer} />}
       {/* (23/10) Tous les employés, chacun sa carte avec ses infos et ses stats (plus de fiche à
           ouvrir), rangés par métier : les mineurs, puis les pousseurs, chacun sous son titre. */}
       {onglet === 'equipe' &&

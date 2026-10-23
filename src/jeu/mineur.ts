@@ -168,6 +168,7 @@ export type Manager = {
   embauche: boolean
   tempsPaye: number
   niveau?: number // (23/10) index dans NIVEAUX_MANAGER : combien de temps il paie, jeu fermé (absent : 0)
+  actif?: boolean // (23/10) on peut l'arrêter : il ne paie plus personne (absent : il travaille)
 }
 
 // Ce qui se débloque en descendant dans la mine (une bulle ✨ guide le joueur jusqu'au bâtiment).

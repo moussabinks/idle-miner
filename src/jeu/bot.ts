@@ -28,6 +28,7 @@ import {
   prixEmbauche,
   salairesParPaie,
   tempsPayeMin,
+  managerActif,
 } from './employes'
 import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
 import { ameliorerGenerateur, basculerPuisage, prochainNiveauGenerateur, puisageDisponible, remplirGenerateur } from './generateur'
@@ -195,7 +196,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     }
 
     // Les salaires : le bot paie dès que quelqu'un a moins d'une minute payée.
-    if (!etat.manager.embauche && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
+    if (!managerActif(etat) && etat.employes.length > 0 && (tempsPayeMin(etat) < 60 || nbSansSalaire(etat) > 0) && peutPayerSalaires(etat, SECONDES_PAR_PAIE)) {
       payerSalaires(etat, SECONDES_PAR_PAIE)
     }
 
