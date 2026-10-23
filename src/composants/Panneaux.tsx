@@ -194,7 +194,7 @@ function CartePioche({ etat, jouer, pioche }: PropsPanneau & { pioche: (typeof P
         {equipee && <span className="badge">Équipée</span>}
       </div>
       <span className="discret">
-        {Math.round(pioche.doublement * 100)} % de chance de doubler un minerai · durabilité {pioche.durabilite} clics
+        🍀 Fortune {Math.round(pioche.doublement * 100)} % : chance de doubler un minerai en creusant à la main · durabilité {pioche.durabilite} clics
       </span>
 
       {possedee && (

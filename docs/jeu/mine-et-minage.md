@@ -106,6 +106,7 @@ Côté interface (`usePartie.ts`, `PanneauMine.tsx`) : chaque clic joue le « ta
 | 🪨 Pierre | 10 % | 150 clics | offerte au départ | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 | 400 $ + 20 fer (29/10 : 500 $ + 40 fer) | 4 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| 💚 Émeraude (23/10) | 38 % | 750 | 9 000 $ + 25 émeraudes | 10 | 300 $ + 4 émeraudes |
 | 💎 Diamant | 45 % | 1 000 | 20 000 $ + 20 diamants | 12 | 600 $ + 3 diamants |
 
 - La réparation coûte une part de ce prix, **selon l'usure** (au moins 1 $ et 1 minerai) : voir [forgeron.md](../batiments/forgeron.md).
@@ -208,6 +209,7 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2) ont, e
 | 🏗️ Tunnelier | casser 1 000 blocs en cliquant |
 | ⚙️ Âge du fer | débloquer la pioche en fer |
 | 🥇 Pioche dorée | débloquer la pioche en or |
+| 💚 Vert brillant | débloquer la pioche en émeraude (23/10) |
 | 💎 Diamants ! | débloquer la pioche en diamant |
 | 🔴 Veine de redstone | descendre la mine au niveau 2 |
 | 🟡 Chercheur d'or | niveau 3 |

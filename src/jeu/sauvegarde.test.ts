@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { cliquerMine, creerPartie } from './mineur'
+import { VERSION_ETAT, cliquerMine, creerPartie } from './mineur'
 import { niveauJoueur } from './niveaux'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
@@ -42,6 +42,16 @@ describe('sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', etat)
     expect(charger(stockage, '1')).toEqual(etat)
+  })
+
+  it('(23/10) une pioche en diamant d’une partie version 25 reste en diamant (l’émeraude s’intercale)', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    const stockage = fauxStockage()
+    sauvegarder(stockage, '1', { ...etat, version: 25, pioches: { 0: 5, 2: 10, 3: 40 }, niveauPioche: 3, meilleure: 3 })
+    const relue = charger(stockage, '1')
+    expect(relue?.pioches).toEqual({ 0: 5, 2: 10, 4: 40 })
+    expect(relue?.niveauPioche).toBe(4)
+    expect(relue?.meilleure).toBe(4)
   })
 
   it('(23/10) l’argent d’une ancienne trésorerie revient au joueur', () => {
@@ -95,7 +105,7 @@ describe('sauvegarde', () => {
     ]
     stockage.setItem(cleMonde('1'), JSON.stringify(partie22))
     const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(25)
+    expect(etat?.version).toBe(VERSION_ETAT)
     expect(etat?.employes.map((e) => e.trajet)).toEqual(['mine-marche', null])
   })
 
@@ -108,7 +118,7 @@ describe('sauvegarde', () => {
     partie23.niveauMine = 3
     stockage.setItem(cleMonde('1'), JSON.stringify(partie23))
     const etat = charger(stockage, '1')
-    expect(etat?.version).toBe(25)
+    expect(etat?.version).toBe(VERSION_ETAT)
     // (le niveau 3 de la mine demande le niveau 7 du joueur)
     expect(etat && niveauJoueur(etat)).toBe(7)
   })

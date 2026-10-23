@@ -37,6 +37,7 @@ Valeurs de `PIOCHES` (`src/jeu/donnees.ts`). La pioche en **pierre** est offerte
 | 🪨 Pierre | 10 % | 150 clics | (offerte) | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 clics | 400 $ + 20 fer | 4 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 clics | 4 000 $ + 40 or | 7 | 150 $ + 5 or |
+| 💚 Émeraude (23/10) | 38 % | 750 clics | 9 000 $ + 25 émeraudes | 10 | 300 $ + 4 émeraudes |
 | 💎 Diamant | 45 % | 1 000 clics | 20 000 $ + 20 diamants | 12 | 600 $ + 3 diamants |
 | 💥 Cassée | 0 % | — | — | — | — |
 
