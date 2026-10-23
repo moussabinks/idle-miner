@@ -467,6 +467,17 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
 
       {onglet === 'rayon' && (
         <>
+          {/* (23/10) Le boost, en grand : tout ce qui est dans le rayon va plus vite. */}
+          <div className="ligne-achat boost-generateur">
+            <strong>
+              ⚡ Boost : <span className="boost-valeur">{texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)}</span> de vitesse
+            </strong>
+            <span className="discret">
+              Dans son rayon ({rayonGenerateur(etat)} cases, le cercle jaune), tout va {texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} plus vite, tout seul :
+              l’ascenseur de la mine, les wagonnets et leurs pousseurs (quand toutes les cases des rails sont dedans), et la foreuse.
+            </span>
+          </div>
+
           {/* Ce qui est branché : la ligne de rails et la foreuse. */}
           <div className="ligne-achat">
             <strong>🔌 Ce qu'il alimente</strong>
@@ -481,7 +492,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
                     {!ligne
                       ? 'rails coupés.'
                       : trajetElectrique(etat, t.liaison)
-                        ? '✔ électrique : son pousseur va plus vite !'
+                        ? `✔ ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} de vitesse !`
                         : casesDansLeRayon(etat, ligne)
                           ? 'dans le rayon, mais le générateur ne donne pas de courant.'
                           : '✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon).'}
@@ -493,7 +504,7 @@ export function PanneauGenerateur({ etat, jouer }: PropsPanneau) {
                 {!batimentPose(etat.village, 'foreuse')
                   ? 'pas encore construite.'
                   : foreuseAlimentee(etat)
-                    ? '✔ boostée !'
+                    ? `✔ ${texteBonusGenerateur(multiplicateurGenerateur(etat) - 1)} de vitesse !`
                     : batimentDansLeRayon(etat, 'foreuse')
                       ? 'dans le rayon, mais sans courant.'
                       : '✖ hors du rayon.'}

@@ -365,13 +365,15 @@ describe('remplacer un mineur avec le recruteur (23/10)', () => {
     ameliorerRecruteur(etat)
     etat.employes[0].niveau = 2
     const ancien = etat.employes[0].nom
-    const argentAvant = etat.argent
     const prix = prixRemplacement(etat)
-    // (23/10) au moins 400 $ × niveau du joueur² (ici bien plus que le quart d'une place)
-    expect(prix).toBe(Math.round((400 * niveauJoueur(etat) ** 2) / 100) * 100)
+    // (23/10) au moins 200 $ × niveau du joueur², ou le quart de la dernière place possible
+    expect(prix).toBe(Math.round(Math.max(200 * niveauJoueur(etat) ** 2, PRIX_EMBAUCHE[maxEmployes(etat) - 1] * 0.25) / 100) * 100)
+    embaucher(etat, hasard())
+    expect(prixRemplacement(etat)).toBe(prix) // le même, qu'on ait 2 ou 3 mineurs
     expect(prix).toBeGreaterThan(PRIX_EMBAUCHE[1] * 0.25)
+    const argentAvant = etat.argent
     remplacerMineur(etat, 0, hasard())
-    expect(etat.employes).toHaveLength(2)
+    expect(etat.employes).toHaveLength(3)
     expect(etat.employes[0].nom).not.toBe(ancien)
     expect(etat.employes[0].niveau).toBe(2)
     expect(etat.argent).toBe(argentAvant - prix)

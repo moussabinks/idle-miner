@@ -130,7 +130,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 ## 5. Le rayon du générateur
 
 - Le générateur (niveau 2 de la mine) électrifie un **cercle** autour de son centre : 15 cases de rayon au niveau 1, jusqu'à 40 au niveau 5. Voir [../batiments/generateur.md](../batiments/generateur.md).
-- Sur la carte, le cercle est dessiné **en pointillés jaunes** (une ellipse, car la grille est en losange, `RayonGenerateur` dans `VueVillage.tsx`) : bien visible, avec des pointillés qui tournent, quand on est devant le générateur ou qu'on le pose ; discret le reste du temps, tant qu'il donne du courant ; gris quand il n'en donne pas ; caché s'il ne donne pas de courant et qu'on ne le regarde pas.
+- Sur la carte, le cercle est dessiné **en pointillés jaunes** (une ellipse, car la grille est en losange, `RayonGenerateur` dans `VueVillage.tsx`) : bien visible, avec des pointillés qui tournent, quand on est devant le générateur ou qu'on le pose ; gris quand il ne donne pas de courant ; caché le reste du temps (23/10).
 - Pour qu'un trajet soit électrique, **toutes ses cases de rails** doivent être dans le cercle (chaque trajet compte à part). Pour la foreuse, c'est son centre.
 
 ## 6. Les chemins (et les décorations retirées)
