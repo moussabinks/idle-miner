@@ -66,5 +66,6 @@ describe('l’absence', () => {
     const resume = resumerAbsence(avant, etat, 600)
     expect(resume?.blocsMineurs).toBeGreaterThan(0)
     expect(resume?.secondes).toBe(600)
+    expect(resume?.absenceMax).toBeNull() // (23/10) pas de manager
   })
 })
