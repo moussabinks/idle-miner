@@ -262,7 +262,7 @@ export const SECONDES_CHARGEMENT_ASCENSEUR = 1
 export const CAPACITE_ECHELLE = 20
 export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
-  'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot',
+  'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot', 'Romain', 'Dodo',
 ]
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, émeraude, diamant) :
