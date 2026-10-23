@@ -250,12 +250,12 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 
 | Son | Quand il joue | Ce qu'on entend |
 |---|---|---|
-| `coup` | à **chaque clic** sur le bloc de la mine (`cliquer` dans `usePartie`) | « tac » : un souffle aigu court et une note grave qui descend |
-| `casse` | le bloc casse | « crac » de cailloux ; plus grave pour un bloc dur (tout sauf la pierre) |
+| `coup` | à **chaque clic** sur le bloc de la mine (`cliquer` dans `usePartie`) | (23/10) un vrai coup de pioche : le « tchk » sec du fer, un petit tintement de métal et le « toc » sourd de la roche, un peu différent à chaque coup |
+| `casse` | le bloc casse | (23/10) un « crac » net, 3 à 5 cailloux qui roulent l'un après l'autre et un « boum » grave ; plus lourd pour un bloc dur (tout sauf la pierre) |
 | `minerai` | un minerai ordinaire (charbon, fer, redstone) cassé | « plink » ; si les minerais s'enchaînent (moins de 4 s entre deux), la note **monte d'un cran** sur une gamme pentatonique |
 | `rare` | or, émeraude ou diamant cassé | une pluie d'étincelles qui monte |
-| `pieces(2)` | un minerai **doublé** | 2 pièces |
-| `vente` | une vente (marché, chariot de la foreuse) | « ka-ching ! » de caisse, puis des pièces : **plus la vente est grosse, plus il y a de pièces** (3 à 12) |
+| `fortune` | un minerai **doublé** (la fortune de la pioche, ou un bonus de combo qui casse plusieurs blocs) ; 23/10, remplace `pieces(2)` | un « ding-ding » joyeux qui monte, un scintillement et 2 pièces |
+| `vente` | une vente (marché, chariot de la foreuse) | (23/10) une **caisse enregistreuse** : deux touches « clac clac », le tiroir qui glisse et s'ouvre « tchonk », la sonnette « ding ! » (une cloche qui résonne), puis les pièces qui tombent dans le tiroir : **plus la vente est grosse, plus il y a de pièces** (3 à 14). Les pièces (`pieces`) ont un « tic » métallique et des harmoniques de vraies pièces |
 | `venteMarche(montant)` | un wagonnet a vendu au marché (27/10, remplace `pieces(3)`) | la **cloche du marché** (deux notes claires), puis le « ka-ching ! » et la cascade de pièces de `vente` (plus la vente est grosse, plus il y a de pièces) ; à partir de **1 000 $**, une petite **fanfare** de 4 notes qui monte |
 | `achat` | un achat sans amélioration (construction, rachat, réparation, embauche…) | « pop » puis deux notes qui montent, et 2 pièces |
 | `amelioration` | un niveau de plus (mine, coffre, ascenseur, forage, chariot, générateur, wagonnet, sac, meilleure pioche, recruteur, pioche d'un mineur) : remplace alors `achat` | trois notes qui montent « niveau supérieur ! » |
@@ -269,7 +269,7 @@ Les sons sont déclenchés en comparant l'état avant/après chaque action (`src
 | `rail` | une case de rails posée au pinceau (`App.tsx`) | un « clang » de métal et la traverse en bois |
 | `wagonnet` | un wagonnet passe sur un joint de rail (une fois par case, `WagonnetVillage.tsx`) | « ta-tac », plus doux quand il est électrique |
 | `cloche` | un wagonnet arrive au bout de son trajet (`WagonnetVillage.tsx`), **sauf au marché** depuis le 27/10 (là, c'est `venteMarche` qui sonne) | une petite cloche |
-| `combo(palier)` | un palier de combo au bloc de la mine : 10, 25, 50, 100, 200, 500 clics rapides (`PanneauMine.tsx`, 27/10 ; depuis le 30/10, il donne aussi un bonus de combo) | un petit arpège qui monte, plus haut à chaque palier |
+| `bonus(rang)` | (23/10, remplace l'arpège `combo`, retiré) un bonus de combo qui démarre : 10, 25, 50, 100, 200, 500 clics rapides (`PanneauMine.tsx`) | un élan qui monte (souffle et note qui grimpent), puis un accord magique qui scintille ; plus long et plus brillant pour les gros bonus, avec un « boum » grave dès Frénésie |
 | `electricite` | on met de la redstone dans le générateur | un grésillement électrique qui monte |
 
 Retirés le 22/10 (avec la mine en coupe, ses blocs spéciaux et le prestige) : `lave`, `coffre`, `geode`, `nouvelleCouche`, `ding` (l'ascenseur), l'ancien `pas` (l'échelle), `talent` et `prestige`.

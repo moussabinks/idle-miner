@@ -104,6 +104,8 @@ type OptionsBruit = {
   volume?: number
   filtre?: BiquadFilterType
   frequence?: number
+  vers?: number // (23/10) fréquence d'arrivée du filtre (un souffle qui glisse : tiroir, élan)
+  q?: number // (23/10) la finesse du filtre (plus grand : un son plus « sifflé »)
 }
 
 // Un souffle (bruit blanc filtré) : coups, éboulements, lave qui siffle...
@@ -119,7 +121,9 @@ function bruit(debut: number, duree: number, options: OptionsBruit = {}) {
   source.buffer = tampon
   const filtre = ctx.createBiquadFilter()
   filtre.type = options.filtre ?? 'lowpass'
-  filtre.frequency.value = options.frequence ?? 1200
+  filtre.frequency.setValueAtTime(options.frequence ?? 1200, t)
+  if (options.vers) filtre.frequency.exponentialRampToValueAtTime(options.vers, t + duree)
+  if (options.q) filtre.Q.value = options.q
   const volume = ctx.createGain()
   volume.gain.setValueAtTime(options.volume ?? 0.3, t)
   volume.gain.exponentialRampToValueAtTime(0.0001, t + duree)
@@ -143,17 +147,25 @@ function varier(valeur: number, ecart = 0.08): number {
 // ---------------------------------------------------------------------------
 
 export const sons = {
-  // Un coup de pioche sur le bloc (avec une pioche cassée, le premier des deux clics) : « tac ».
+  // Un coup de pioche sur le bloc (avec une pioche cassée, le premier des deux clics). (23/10)
+  // Trois couches : le « tchk » sec du fer qui frappe, le petit tintement du métal, et le « toc »
+  // sourd de la roche. Un peu différent à chaque coup.
   coup() {
-    bruit(0, 0.05, { filtre: 'bandpass', frequence: varier(1800, 0.15), volume: 0.25 })
-    note(varier(180), 0, 0.06, { type: 'triangle', volume: 0.18, vers: 90 })
+    bruit(0, 0.035, { filtre: 'highpass', frequence: varier(3800, 0.15), volume: 0.28 })
+    note(varier(1350, 0.12), 0, 0.07, { type: 'triangle', volume: 0.07, vers: 900 })
+    note(varier(140, 0.1), 0, 0.09, { type: 'sine', volume: 0.3, vers: 60 })
   },
 
-  // Le bloc qui se casse : un « crac » de cailloux, plus grave pour la roche dure.
+  // Le bloc qui se casse (23/10) : un « crac » net, puis des cailloux qui roulent (quelques petits
+  // éclats l'un après l'autre) et un « boum » grave, plus lourd pour la roche dure.
   casse(dur: boolean) {
-    bruit(0, 0.14, { filtre: 'lowpass', frequence: varier(dur ? 700 : 1100), volume: 0.4 })
-    bruit(0.03, 0.09, { filtre: 'bandpass', frequence: varier(2600), volume: 0.12 })
-    note(varier(dur ? 110 : 150), 0, 0.12, { type: 'triangle', volume: 0.22, vers: 55 })
+    bruit(0, 0.06, { filtre: 'bandpass', frequence: varier(dur ? 1500 : 2200), volume: 0.42, q: 0.8 })
+    note(varier(dur ? 85 : 115), 0, 0.16, { type: 'sine', volume: 0.32, vers: 40 })
+    const cailloux = 3 + Math.floor(Math.random() * 3)
+    for (let i = 0; i < cailloux; i++) {
+      bruit(0.04 + i * 0.035 + Math.random() * 0.02, 0.04, { filtre: 'bandpass', frequence: varier(dur ? 1800 : 2600, 0.3), volume: 0.12, q: 2 })
+    }
+    bruit(0.02, 0.22, { filtre: 'lowpass', frequence: varier(dur ? 500 : 800), vers: 150, volume: 0.18 })
   },
 
   // Un minerai ordinaire qui tombe dans le sac : « plink ». Quand on en trouve plusieurs
@@ -185,31 +197,63 @@ export const sons = {
   },
 
 
-  // Des pièces qui tintent l'une après l'autre.
+  // Des pièces qui tintent l'une après l'autre (23/10 : un « tic » métallique et deux harmoniques
+  // aiguës qui ne tombent pas juste, comme des vraies pièces).
   pieces(nombre: number, debut = 0) {
     for (let i = 0; i < nombre; i++) {
-      const t = debut + i * 0.055 + Math.random() * 0.02
-      note(varier(2400, 0.1), t, 0.09, { type: 'square', volume: 0.05 })
-      note(varier(3600, 0.1), t + 0.01, 0.12, { type: 'sine', volume: 0.07 })
+      const t = debut + i * 0.05 + Math.random() * 0.03
+      const f = varier(3200, 0.12)
+      bruit(t, 0.015, { filtre: 'highpass', frequence: 6000, volume: 0.1 })
+      note(f, t, 0.14, { type: 'sine', volume: 0.07 })
+      note(f * 1.47, t, 0.1, { type: 'sine', volume: 0.04 })
+      note(f * 2.31, t, 0.06, { type: 'square', volume: 0.012 })
     }
   },
 
-  // La caisse du marché : « ka-ching ! », avec plus de pièces pour une grosse vente.
+  // La caisse enregistreuse du marché (23/10) : les touches (« clac clac »), le tiroir qui
+  // s'ouvre (un souffle qui glisse et un « tchonk »), la sonnette « ding ! » (une cloche, avec ses
+  // harmoniques qui résonnent), puis les pièces qui tombent dans le tiroir : d'autant plus que la
+  // vente est grosse.
   vente(montant: number) {
-    bruit(0, 0.05, { filtre: 'highpass', frequence: 3000, volume: 0.15 })
-    note(1568, 0.04, 0.25, { type: 'square', volume: 0.07 })
-    note(2093, 0.12, 0.6, { type: 'square', volume: 0.08 })
-    note(4186, 0.12, 0.5, { type: 'sine', volume: 0.06 })
-    const nombre = Math.min(12, 3 + Math.floor(Math.log10(Math.max(1, montant)) * 2.5))
-    sons.pieces(nombre, 0.18)
+    bruit(0, 0.025, { filtre: 'bandpass', frequence: 2500, volume: 0.2, q: 3 })
+    bruit(0.06, 0.025, { filtre: 'bandpass', frequence: 2200, volume: 0.18, q: 3 })
+    bruit(0.12, 0.12, { filtre: 'bandpass', frequence: 900, vers: 2500, volume: 0.16, q: 1.5 })
+    note(160, 0.22, 0.12, { type: 'sine', volume: 0.32, vers: 70 })
+    bruit(0.22, 0.04, { filtre: 'lowpass', frequence: 1200, volume: 0.25 })
+    // « Ding ! » : une cloche (des harmoniques qui ne tombent pas juste, comme une vraie cloche).
+    note(2637, 0.2, 1.1, { type: 'sine', volume: 0.16 })
+    note(2637 * 2.76, 0.2, 0.5, { type: 'sine', volume: 0.05 })
+    note(2637 * 5.4, 0.2, 0.25, { type: 'sine', volume: 0.025 })
+    note(3951, 0.2, 0.7, { type: 'sine', volume: 0.06 })
+    const nombre = Math.min(14, 3 + Math.floor(Math.log10(Math.max(1, montant)) * 2.5))
+    sons.pieces(nombre, 0.3)
   },
 
+  // Un bonus de combo qui démarre (Fortune, Double coup, Frénésie... ; 23/10) : un élan qui monte
+  // (un souffle qui glisse vers l'aigu et une note qui grimpe), puis un accord magique qui scintille,
+  // plus long et plus brillant pour les gros bonus (rang 0 à 5).
+  bonus(rang: number) {
+    const r = Math.max(0, Math.min(5, rang))
+    bruit(0, 0.3, { filtre: 'bandpass', frequence: 500, vers: 6000, volume: 0.12, q: 2 })
+    note(392, 0, 0.3, { type: 'triangle', volume: 0.1, vers: 1568 })
+    const accord = [1047, 1319, 1568, 2093, 2637, 3136].slice(0, 3 + Math.ceil(r / 2))
+    accord.forEach((f, i) => {
+      note(f, 0.28 + i * 0.045, 0.6 + r * 0.08, { type: 'sine', volume: 0.09 })
+      note(f * 2, 0.3 + i * 0.045, 0.25, { type: 'triangle', volume: 0.025 })
+    })
+    // Des étincelles qui scintillent.
+    for (let i = 0; i < 4 + r * 2; i++) note(varier(4200, 0.25), 0.35 + i * 0.05 + Math.random() * 0.03, 0.08, { type: 'sine', volume: 0.035 })
+    if (r >= 3) note(130.8, 0.28, 0.5, { type: 'sine', volume: 0.2 })
+  },
 
-  // Un palier de combo au bloc de la mine (27/10) : un arpège qui monte, plus haut à chaque palier.
-  combo(palier: number) {
-    const base = 784 * Math.pow(2, Math.min(palier, 5) / 6)
-    ;[1, 1.25, 1.5, 2].forEach((k, i) => note(base * k, i * 0.05, 0.18, { type: 'square', volume: 0.05 }))
-    note(base * 4, 0.2, 0.3, { type: 'sine', volume: 0.06 })
+  // La fortune : le clic a doublé un minerai (23/10) : un « ding-ding » joyeux qui monte, avec deux
+  // pièces et un scintillement : la chance !
+  fortune() {
+    note(1568, 0.03, 0.16, { type: 'triangle', volume: 0.1 })
+    note(2349, 0.09, 0.28, { type: 'triangle', volume: 0.12 })
+    note(4698, 0.09, 0.2, { type: 'sine', volume: 0.03 })
+    bruit(0.08, 0.2, { filtre: 'highpass', frequence: 7000, volume: 0.05 })
+    sons.pieces(2, 0.14)
   },
 
   // Un wagonnet vend son chargement au marché (27/10) : la cloche du marché, « ka-ching ! » et
