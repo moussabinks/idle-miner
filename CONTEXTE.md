@@ -235,4 +235,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (41)** : bug corrigé : la pioche des mineurs demande le niveau de la mine (or 3, émeraude 4, diamant 5) ; on ne peut plus acheter le diamant avant la mine de diamant.
 - **2026-10-23 (42)** : chariot de la foreuse tout petit : 25, 40, 60, 90, 130, 180 places (plein en ~50 s au même niveau que le forage) et environ deux fois plus cher (5 000 $ + 60 fer à 200 000 $ + 120 or + 30 émeraude).
 - **2026-10-23 (43)** : salaire des pousseurs selon leur vitesse et leur chariot (400 $ + 250 $ par niveau de vitesse + 200 $ par niveau de chariot). Sur la carte, plus de jauge quand un pousseur charge ou décharge : seulement quand il vend au marché. Classement : tous les joueurs (jusqu'à 1 000) et l'argent EN POCHE du meilleur monde, envoyé toutes les 5 minutes ; à lancer dans Supabase : `supabase/classement-portefeuille.sql` (sinon le serveur garde le plus haut montant).
+- **2026-10-23 (44)** : un employé au niveau max garde son échelle de carrés (toute remplie) avec « ✔ Niveau max » (pioche d'un mineur, vitesse et chariot d'un pousseur), au lieu de la faire disparaître.
 
