@@ -766,6 +766,12 @@ export function VueVillage({
       {/* On pose des rails (27/10) : les bâtiments qu'on peut relier (mine, marché, foreuse,
           générateur) sont entourés d'une ligne jaune qui brille, tout pile sur le bord de leur
           emprise. Les rails partent de là. */}
+      {/* (23/10) On pose des rails : les bâtiments deviennent presque invisibles (voir
+          .batiments-transparents) ; leur contour au sol reste bien visible. */}
+      {zonesRails &&
+        village.batiments
+          .filter((b) => !BATIMENTS_DES_RAILS.includes(b.id))
+          .map((b) => <polygon key={`contour-${b.id}`} className="contour-batiment-rails" points={losange(b.x, b.y, BATIMENTS[b.id].taille)} />)}
       {zonesRails &&
         village.batiments
           .filter((b) => BATIMENTS_DES_RAILS.includes(b.id))
@@ -861,7 +867,7 @@ export function VueVillage({
       onWheel={molette}
       aria-label="Le village vu du ciel"
     >
-      <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''} ${plageVisible ? '' : 'plage-cachee'}`}>
+      <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''} ${plageVisible ? '' : 'plage-cachee'} ${zonesRails ? 'batiments-transparents' : ''}`}>
         <TerrainVillage />
         <SolPlage />
         <EauPlage />
@@ -923,7 +929,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
   const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
   return (
     <>
-      <BoiteSvg x={x} y={y} taille={10} hauteur={130} style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
+      <BoiteSvg x={x} y={y} taille={10} hauteur={130} classe="dessus-batiment" style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
         <DessinEvolutionMine x={x} y={y} miroir={miroir} niveau={etat.niveauMine} ascenseur={etat.ascenseur.niveau > 0} hauteurCabine={hauteur} passagers={passagers} />
       </BoiteSvg>
       {auTravail && enHaut && charge > 0 && (
