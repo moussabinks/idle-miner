@@ -60,7 +60,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     const forage = prochainNiveauForage(etat)
     if (forage && debloque(etat, 'forage', etat.foreuse.niveauVitesse + 1)) achats.push({ stand: 'foreuse', nom: `Forage ${forage.vitesse} blocs/s`, cout: forage.cout })
     const chariot = prochainNiveauChariot(etat)
-    if (chariot && debloque(etat, 'chariot', etat.foreuse.niveauChariot + 1)) achats.push({ stand: 'foreuse', nom: `Chariot de ${chariot.capacite.toLocaleString('fr-FR')} places`, cout: chariot.cout })
+    if (chariot && debloque(etat, 'chariot', etat.foreuse.niveauChariot + 1)) achats.push({ stand: 'foreuse', nom: `Chariot de la foreuse : ${chariot.capacite.toLocaleString('fr-FR')} places`, cout: chariot.cout })
   }
 
   if (generateurPose(etat)) {

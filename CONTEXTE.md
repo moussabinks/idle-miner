@@ -207,4 +207,5 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-23 (13)** : la mine en très large sur grand écran (jusqu'à 920 px), en deux colonnes (bloc et compteurs à gauche ; coffre, raccourci, niveau suivant à droite ; l'onglet Améliorer aussi) : tout tient sans défiler.
 - **2026-10-23 (14)** : on peut payer chaque employé à part (bouton « 💵 Payer *Nom* » sur sa carte, `payerEmploye`), ou tout le monde d'un coup comme avant.
 - **2026-10-23 (15)** : dans le bandeau du haut, à côté du nombre d'employés, un minuteur « ⏳ m:ss » dit quand payer le prochain salaire (orange sous 1 min, « 💵 Payer ! » en rouge si quelqu'un n'est plus payé, « 💼 auto » avec le manager).
+- **2026-10-23 (16)** : la tâche et le message d'amélioration du chariot disent « Chariot de la foreuse » (on ne savait pas de quel chariot il s'agissait).
 

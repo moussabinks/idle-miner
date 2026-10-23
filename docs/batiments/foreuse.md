@@ -58,7 +58,7 @@ Tout le forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude (ava
 | 5 | 3 000 | 50 000 $ + 130 redstone + 40 or | 14 | ~19 min |
 | 6 | 6 000 | 120 000 $ + 90 or + 20 émeraude | 15 | ~28 min |
 
-Tout le chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude (avant le 29/10 : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude). Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 400 places · plein en 8 min »). Message : « 🛒 Chariot plus grand : *N* places. »
+Tout le chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude (avant le 29/10 : 82 000 $ + 160 fer + 135 redstone + 70 or + 10 émeraude). Le panneau affiche le temps pour remplir le chariot, au niveau actuel et au suivant (« 400 places · plein en 8 min »). Message : « 🛒 Chariot de la foreuse plus grand : *N* places. »
 
 ### 6. Les wagonnets (24/10)
 
@@ -80,7 +80,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« �
 
 ## Lien avec le reste du jeu
 
-- **Missions** (`missions.ts`, `objectifs.ts`) : d'abord « Construis : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine et le niveau 5 du joueur (30/10) ; une fois posée, « Forage *X* blocs/s » et « Chariot de *X* places » apparaissent dans les achats possibles (bulle 💰, missions d'amélioration). Côté automatisation : « Relie la foreuse à la mine (rails) », puis « Envoie du charbon à la foreuse (à la mine) ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : d'abord « Construis : Foreuse » (menu Bâtiments) dès le niveau 2 de la mine et le niveau 5 du joueur (30/10) ; une fois posée, « Forage *X* blocs/s » et « Chariot de la foreuse : *X* places » (23/10 : on précise de quel chariot il s'agit) apparaissent dans les achats possibles (bulle 💰, missions d'amélioration). Côté automatisation : « Relie la foreuse à la mine (rails) », puis « Envoie du charbon à la foreuse (à la mine) ».
 - **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or et émeraudes ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1), à la main ou par le wagonnet Mine → Foreuse ; on revend ce qu'elle remonte directement depuis son panneau, sans passer par le Marché, ou avec le wagonnet Foreuse → Marché. Le **générateur** la booste.
 - **Revenus et statistiques** : l'indicateur « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc au niveau de la mine, `revenu.ts`) ; les statistiques comptent `argentForeuse` (chariots vendus, la part « ⚙️ Foreuse » de l'écran 📊) et `blocsForeuse`.
 - **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend le chariot quand il est à moitié plein, et améliore le forage et le chariot quand il a plus de 3 000 $.
