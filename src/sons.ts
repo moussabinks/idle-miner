@@ -234,6 +234,25 @@ export const sons = {
     ;[784, 988, 1175, 1568].forEach((f, i) => note(f, i * 0.09, i === 3 ? 0.5 : 0.15, { type: 'triangle', volume: 0.14 }))
   },
 
+  // (23/10) La fête du niveau : un « tic » qui monte à chaque niveau du compteur...
+  ticNiveau(rang: number) {
+    note(660 + rang * 90, 0, 0.09, { type: 'square', volume: 0.06 })
+  },
+
+  // ... puis la grande fanfare : un arpège qui monte, un accord brillant et des pièces.
+  niveauGagne() {
+    ;[523, 659, 784, 1047, 1319].forEach((f, i) => note(f, i * 0.07, 0.22, { type: 'triangle', volume: 0.14 }))
+    ;[1047, 1319, 1568, 2093].forEach((f) => note(f, 0.38, 1.1, { type: 'triangle', volume: 0.07 }))
+    for (let i = 0; i < 6; i++) note(varier(2400 + i * 220, 0.05), 0.45 + i * 0.07, 0.2, { type: 'sine', volume: 0.05 })
+    sons.pieces(4, 0.4)
+  },
+
+  // Chaque déblocage qui arrive dans la liste : un petit « ding », un peu plus haut à chaque fois.
+  ligneDeblocage(rang: number) {
+    const gamme = [1047, 1175, 1319, 1568, 1760, 2093, 2349, 2637]
+    note(gamme[(rang - 1) % gamme.length], 0, 0.18, { type: 'triangle', volume: 0.1 })
+  },
+
   // Le recruteur cherche un mineur : un roulement de tambour qui accélère et monte (1,6 s).
   suspenseRecrue() {
     let t = 0

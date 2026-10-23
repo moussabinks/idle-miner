@@ -301,6 +301,15 @@ export const NIVEAU_MINE_MANAGER = 4
 export const PRIX_MANAGER = 35000
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
+// (23/10) Jeu fermé, le manager ne paie les salaires que pendant un temps (30 minutes au départ) :
+// l'améliorer l'allonge petit à petit. Jeu ouvert, il paie toujours.
+export const NIVEAUX_MANAGER: { minutesHorsLigne: number; cout: Cout }[] = [
+  { minutesHorsLigne: 30, cout: { materiaux: {} } },
+  { minutesHorsLigne: 60, cout: { argent: 20000, materiaux: {} } },
+  { minutesHorsLigne: 120, cout: { argent: 50000, materiaux: {} } },
+  { minutesHorsLigne: 240, cout: { argent: 120000, materiaux: {} } },
+  { minutesHorsLigne: 480, cout: { argent: 300000, materiaux: {} } },
+]
 
 // ---------------------------------------------------------------------------
 // Les rails et le wagonnet
@@ -313,7 +322,6 @@ export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 // Les vitesses, en cases par seconde.
 export const VITESSE_POUSSE_JOUEUR = 3
 export const VITESSE_POUSSE_MINEUR = 2.5
-export const VITESSE_RAILS = 8 // le wagonnet électrique, à la puissance 1
 // Le temps pour charger le wagonnet au coffre, et pour le vider au marché (avec un pousseur
 // débutant, ou sans pousseur).
 export const SECONDES_CHARGEMENT_WAGONNET = 2
@@ -369,16 +377,20 @@ export const NIVEAUX_WAGONNET: { capacite: number; cout: Cout }[] = [
 // Le générateur (niveau 2 de la mine) : de l'électricité dans un rayon
 // ---------------------------------------------------------------------------
 
-// Il brûle de la redstone : 1 redstone = 30 secondes de courant. Tout ce qui est dans son rayon
-// (un cercle autour de lui, en cases) est électrique : les rails (le wagonnet roule tout seul,
-// plus vite avec plus de puissance) et la foreuse (elle fore plus vite).
+// Il brûle de la redstone : 1 redstone = 30 secondes de courant. Il ACCÉLÈRE ce qui est dans son
+// rayon (un cercle autour de lui, en cases), d'un bonus raisonnable (23/10 : avant, jusqu'à × 3,
+// c'était trop fort) :
+//   - l'ascenseur de la mine (si la mine est dans le rayon) : ses trajets sont plus courts ;
+//   - les rails (un trajet dont toutes les cases sont dans le rayon) : son pousseur pousse le
+//     wagonnet plus vite (il le pousse toujours : il ne roule plus tout seul) ;
+//   - la foreuse : elle fore plus vite.
 export const SECONDES_PAR_REDSTONE = 30
-export const NIVEAUX_GENERATEUR: { rayon: number; puissance: number; cout: Cout }[] = [
-  { rayon: 15, puissance: 1, cout: { materiaux: {} } },
-  { rayon: 20, puissance: 1.3, cout: { argent: 7500, materiaux: { fer: 120, redstone: 60 } } },
-  { rayon: 26, puissance: 1.7, cout: { argent: 20000, materiaux: { fer: 220, redstone: 120 } } },
-  { rayon: 33, puissance: 2.2, cout: { argent: 50000, materiaux: { fer: 350, redstone: 220 } } },
-  { rayon: 40, puissance: 3, cout: { argent: 120000, materiaux: { fer: 550, redstone: 420 } } },
+export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; cout: Cout }[] = [
+  { rayon: 15, bonus: 0.3, cout: { materiaux: {} } },
+  { rayon: 20, bonus: 0.4, cout: { argent: 7500, materiaux: { fer: 120, redstone: 60 } } },
+  { rayon: 26, bonus: 0.5, cout: { argent: 20000, materiaux: { fer: 220, redstone: 120 } } },
+  { rayon: 33, bonus: 0.6, cout: { argent: 50000, materiaux: { fer: 350, redstone: 220 } } },
+  { rayon: 40, bonus: 0.75, cout: { argent: 120000, materiaux: { fer: 550, redstone: 420 } } },
 ]
 // À partir de ce niveau (le 2e), le générateur peut puiser la redstone dans le coffre de la mine.
 export const NIVEAU_GENERATEUR_AUTO = 1
@@ -390,11 +402,6 @@ export const RESERVE_GENERATEUR_AUTO = 300
 // ---------------------------------------------------------------------------
 
 export const SECONDES_PAR_CHARBON = 20
-// À partir de ce niveau de forage (le 3e), elle peut brûler le charbon qu'elle fore.
-export const NIVEAU_RECHARGE_AUTO = 2
-export const RESERVE_RECHARGE_AUTO = 60
-// Sous électricité, elle fore (1 + puissance) fois plus vite... à moitié : × (1 + puissance / 2).
-export const BONUS_ELECTRIQUE_FOREUSE = 0.5
 
 // Chaque niveau de forage la rend plus rapide et agrandit son réservoir : le charbon qu'elle peut
 // garder au plus (28/10). Le wagonnet du charbon la remplit jusque-là, et met le reste dans son chariot.
@@ -614,4 +621,5 @@ export const NIVEAU_JOUEUR_POUR = {
   chariot: [1, 6, 9, 11, 14, 15], // NIVEAUX_CHARIOT
   recruteur: [9, 11, 13, 15], // NIVEAUX_RECRUTEUR
   manager: 11,
+  tempsManager: [11, 12, 13, 14, 15], // NIVEAUX_MANAGER (23/10)
 }

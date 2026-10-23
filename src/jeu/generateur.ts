@@ -1,8 +1,9 @@
-// Le générateur (22/10, niveau 2 de la mine) : il brûle de la redstone et électrifie tout ce qui
-// est dans son rayon (un cercle autour de lui, en cases) :
-//   - les rails : si toutes les cases d'un trajet sont dans le rayon, son wagonnet roule tout
-//     seul (plus besoin de le pousser), d'autant plus vite que le générateur est puissant
-//     (voir wagonnet.ts) ;
+// Le générateur (22/10, niveau 2 de la mine) : il brûle de la redstone et accélère tout ce qui
+// est dans son rayon (un cercle autour de lui, en cases), de + 30 % à + 75 % selon son niveau
+// (23/10) :
+//   - l'ascenseur de la mine, si la mine est dans le rayon (voir secondesTrajetMineur) ;
+//   - les rails : si toutes les cases d'un trajet sont dans le rayon, son pousseur pousse le
+//     wagonnet plus vite (voir wagonnet.ts) ;
 //   - la foreuse : elle fore plus vite.
 // On le remplit de redstone (de son sac ou du coffre de la mine). À partir du niveau 2, il peut
 // se servir tout seul dans le coffre de la mine.
@@ -24,8 +25,14 @@ export function rayonGenerateur(etat: EtatJeu): number {
   return infoGenerateur(etat).rayon
 }
 
-export function puissanceGenerateur(etat: EtatJeu): number {
-  return infoGenerateur(etat).puissance
+// Combien de fois plus vite va ce qui est dans le rayon (1,3 au niveau 1 : + 30 %).
+export function multiplicateurGenerateur(etat: EtatJeu): number {
+  return 1 + infoGenerateur(etat).bonus
+}
+
+// « + 30 % »
+export function texteBonusGenerateur(bonus: number): string {
+  return `+ ${Math.round(bonus * 100)} %`
 }
 
 // Le générateur donne du courant : posé, allumé, et avec de la redstone.
@@ -63,6 +70,11 @@ export function casesDansLeRayon(etat: EtatJeu, cases: Case[]): boolean {
 
 export function foreuseAlimentee(etat: EtatJeu): boolean {
   return generateurEnMarche(etat) && batimentDansLeRayon(etat, 'foreuse')
+}
+
+// L'ascenseur de la mine est accéléré : la mine est dans le rayon du générateur allumé.
+export function ascenseurAlimente(etat: EtatJeu): boolean {
+  return generateurEnMarche(etat) && batimentDansLeRayon(etat, 'puits')
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +116,7 @@ export function ameliorerGenerateur(etat: EtatJeu): string[] {
   if (!generateurPose(etat) || prochain === null || !debloque(etat, 'generateur', etat.generateur.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.generateur.niveau += 1
-  return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, puissance ×${prochain.puissance}.`]
+  return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, ${texteBonusGenerateur(prochain.bonus)} de vitesse dans son rayon.`]
 }
 
 // ---------------------------------------------------------------------------

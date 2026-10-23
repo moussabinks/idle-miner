@@ -1663,7 +1663,7 @@
   font-size: 0.8rem;
 }
 
-.plein-ecran .choix-wagonnet button {
+.plein-ecran .choix-wagonnet span {
   padding: 2px 7px;
 }
 
@@ -1719,7 +1719,7 @@
 }
 
 .plein-ecran .table-coffre .bouton,
-.plein-ecran .table-coffre .choix-wagonnet button {
+.plein-ecran .table-coffre .choix-wagonnet span {
   min-height: 0;
   padding-top: 1px;
   padding-bottom: 1px;
@@ -1896,6 +1896,21 @@
   animation: absence-ligne 0.4s both;
 }
 .absence-icone { font-size: 1.3rem; }
+.absence-ventes {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 2px solid rgb(255 214 90 / 0.6);
+  background: rgb(255 214 90 / 0.12);
+}
+
+.absence-ventes-titre {
+  font-weight: 800;
+  color: #ffe9a8;
+}
+
 .absence-argent {
   font-size: 2rem;
   font-weight: 900;
@@ -2051,4 +2066,234 @@
   font-size: 0.8em;
   white-space: nowrap;
   vertical-align: middle;
+}
+
+/* (23/10) L'alerte « Ascenseur trop petit » dans l'onglet principal de la mine : elle respire
+   doucement pour qu'on la voie. */
+.alerte-ascenseur-mine {
+  animation: alerte-respire 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes alerte-respire {
+  from { box-shadow: 0 0 0 0 rgb(255 120 60 / 0); }
+  to { box-shadow: 0 0 0 3px rgb(255 120 60 / 0.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerte-ascenseur-mine { animation: none; }
+}
+
+/* --- La fête du niveau (23/10, FeteNiveau.tsx) ---------------------------------------------
+   La carte surgit en rebondissant ; l'étoile tombe avec l'ancien niveau, le chiffre saute à
+   chaque niveau gagné ; au dernier, des rayons tournent derrière et des confettis éclatent ;
+   puis les déblocages arrivent ligne par ligne, chacun avec son icône qui rebondit. */
+.fete-niveau {
+  z-index: 3000;
+}
+
+.fete-niveau-carte {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 22px 18px 18px;
+  overflow: hidden;
+  text-align: center;
+  animation: fete-arrive 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.fete-sur-titre {
+  position: relative;
+  margin: 0;
+  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-size: 1.7rem;
+  letter-spacing: 0.03em;
+  color: #ffd84a;
+  text-shadow: 0 3px 0 #8a4f08, 0 0 18px rgb(255 214 90 / 0.7);
+  animation: fete-titre 0.6s 0.15s cubic-bezier(0.3, 1.8, 0.5, 1) backwards;
+}
+
+.fete-rayons {
+  position: absolute;
+  top: 120px;
+  left: 50%;
+  width: 520px;
+  height: 520px;
+  margin: -260px 0 0 -260px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgb(255 214 90 / 0.28) 0deg 10deg, transparent 10deg 24deg);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.4s, transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+  pointer-events: none;
+}
+
+.fete-rayons-on {
+  opacity: 1;
+  transform: scale(1);
+  animation: fete-tourne 9s linear infinite;
+}
+
+.fete-etoile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 130px;
+  height: 130px;
+  animation: fete-etoile-tombe 0.7s 0.1s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
+}
+
+.fete-etoile-fond {
+  grid-area: 1 / 1;
+  font-size: 118px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 0 #a8600a) drop-shadow(0 0 14px rgb(255 214 90 / 0.8));
+}
+
+.fete-etoile-arrive .fete-etoile-fond {
+  animation: fete-etoile-boum 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.fete-chiffre {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 1;
+  margin-top: 10px;
+  font-family: 'Luckiest Guy', 'Arial Black', system-ui, sans-serif;
+  font-size: 2.6rem;
+  color: #fff;
+  -webkit-text-stroke: 2px #7a3d06;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #7a3d06, 0 0 8px rgb(0 0 0 / 0.4);
+  animation: fete-chiffre 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.fete-sous-titre {
+  position: relative;
+  margin: 2px 0 0;
+  font-weight: 800;
+  color: #ffe9a8;
+}
+
+.fete-liste {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  max-height: 40vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.fete-liste li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgb(255 214 90 / 0.14);
+  border: 1.5px solid rgb(255 214 90 / 0.45);
+  font-weight: 700;
+  text-align: left;
+  opacity: 0;
+  transform: translateX(-24px) scale(0.9);
+}
+
+.fete-liste li.fete-ligne-on {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.25s, transform 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.fete-ligne-icone {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+}
+
+.fete-ligne-on .fete-ligne-icone {
+  animation: fete-icone 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.fete-ligne-nouveau {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #3fa34d;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.fete-prochain {
+  position: relative;
+  margin: 0;
+}
+
+.fete-bouton {
+  position: relative;
+  margin-top: 4px;
+}
+
+.fete-confettis {
+  position: absolute;
+  top: 120px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.fete-confettis i {
+  position: absolute;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti 1.6s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+}
+
+.fete-confettis i.rond {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@keyframes fete-arrive {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fete-titre {
+  from { transform: translateY(-30px) scale(0.5); opacity: 0; }
+}
+
+@keyframes fete-etoile-tombe {
+  from { transform: translateY(-120px) rotate(-30deg) scale(0.5); opacity: 0; }
+}
+
+@keyframes fete-etoile-boum {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35) rotate(12deg); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fete-chiffre {
+  from { transform: translateY(18px) scale(0.4); opacity: 0; }
+}
+
+@keyframes fete-tourne {
+  to { rotate: 360deg; }
+}
+
+@keyframes fete-icone {
+  0% { transform: scale(0.2) rotate(-40deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fete-niveau-carte, .fete-sur-titre, .fete-etoile, .fete-etoile-fond, .fete-chiffre, .fete-rayons-on, .fete-ligne-icone, .fete-confettis i { animation: none !important; }
 }

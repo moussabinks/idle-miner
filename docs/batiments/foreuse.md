@@ -25,10 +25,9 @@
 - « 1 charbon = 20 s · tu en as *N* (sac + coffre) » (« · réservoir plein » s'il l'est) et les boutons **+1**, **+10** et **Tout** (anthracite) : on met du charbon **du sac, puis du coffre de la mine**, sans dépasser le réservoir (les boutons se grisent quand il n'y a plus de place). « 🔥 +*N* charbon dans la foreuse. » ou « 🔥 Le réservoir de la foreuse est plein. »
 - Si elle n'est pas boostée : « ⚡ Dans le rayon du générateur allumé, elle fore plus vite. »
 
-### 2. La recharge automatique (case à cocher)
+### 2. Plus de recharge automatique (23/10)
 
-- Disponible à partir du **3e niveau de forage** (`NIVEAU_RECHARGE_AUTO = 2`, compté à partir de 0). Avant, le panneau affiche « 🔒 Recharge automatique au charbon : débloquée au niveau 3 de forage. »
-- Cochée, la foreuse **brûle le charbon qu'elle fore** tant que sa réserve est sous **60 secondes** (`RESERVE_RECHARGE_AUTO`, et jamais au-delà du réservoir) ; au-delà, le charbon va dans le chariot comme les autres blocs.
+- L'amélioration qui faisait brûler à la foreuse le charbon qu'elle fore est **retirée** : son charbon arrive **par les rails** (le wagonnet Mine → Foreuse), ou à la main avec les boutons. Le panneau le rappelle : « 🛤️ Pour qu'elle ne s'arrête jamais : relie-la à la mine par des rails et envoie-lui le charbon en wagonnet. »
 
 ### 3. Vider le chariot
 
@@ -75,7 +74,7 @@ Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« �
 - **Quand elle tourne** : seulement si elle est **posée**, qu'il lui reste **du charbon**, et que **le chariot n'est pas plein** (`foreuseEnMarche`). Elle ne brûle pas de charbon pour rien : chariot plein, elle s'arrête (« 🛒 Le chariot de la foreuse est plein : viens le vider. ») ; plus de charbon : « 🔥 La foreuse n'a plus de charbon. »
 - **Le charbon** : **1 charbon = 20 secondes** (`SECONDES_PAR_CHARBON`), quelle que soit la vitesse : **3 charbons par minute**, 180 par heure. Plus elle fore vite, plus chaque charbon rapporte.
 - **Ce qu'elle remonte** : un bloc tiré au hasard selon le **niveau de la mine**, avec les mêmes chances que la mine (`tirerBloc`). Elle ne double jamais (la chance de doubler n'est que pour les clics du joueur). Ses blocs vont dans **son chariot**, pas dans le coffre de la mine.
-- **L'électricité** : dans le rayon du générateur allumé (le centre de la foreuse dans le cercle, `foreuseAlimentee`), elle fore **× (1 + 0,5 × la puissance du générateur)** plus vite : × 1,5 au niveau 1 du générateur, jusqu'à × 2,5 au niveau 5. Elle ne brûle **pas plus** de charbon. Voir [generateur.md](generateur.md).
+- **L'électricité** : dans le rayon du générateur allumé (le centre de la foreuse dans le cercle, `foreuseAlimentee`), elle fore **+ 30 % à + 75 %** plus vite selon le niveau du générateur (23/10, `multiplicateurGenerateur` ; avant, × 1,5 à × 2,5).
 - **Il n'y a qu'une seule foreuse**.
 - **Hors ligne** : quand on rouvre un monde, le jeu rattrape le temps passé, **au plus 8 heures**. La foreuse continue donc de forer (tant qu'elle a du charbon et de la place), et la recharge automatique continue aussi. Un message dit « ⚙️ la foreuse a remonté *N* blocs ».
 
@@ -88,9 +87,9 @@ Sans rails, le bloc explique quoi relier ; rails posés, touche la bulle **« �
 
 ## Fichiers du code
 
-- `src/jeu/foreuse.ts` : toutes les règles (charbon, forage seconde après seconde, chariot, améliorations, recharge automatique, vitesse électrique).
+- `src/jeu/foreuse.ts` : toutes les règles (charbon, forage seconde après seconde, chariot, améliorations, vitesse électrique).
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.foreuse` : 3 000 $ + 120 pierre + 60 fer, 5 × 5, porte à gauche, niveau 2 de la mine) et les chiffres (`SECONDES_PAR_CHARBON`, `NIVEAU_RECHARGE_AUTO`, `RESERVE_RECHARGE_AUTO`, `BONUS_ELECTRIQUE_FOREUSE`, `NIVEAUX_FORAGE`, `NIVEAUX_CHARIOT`).
-- `src/jeu/generateur.ts` : `foreuseAlimentee`, `puissanceGenerateur`.
+- `src/jeu/generateur.ts` : `foreuseAlimentee`, `multiplicateurGenerateur`.
 - `src/jeu/wagonnet.ts` : les trajets Mine → Foreuse (le charbon) et Foreuse → Marché (le chariot).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment (`batimentDebloque`, `construireBatiment`, `deplacerBatiment`).
 - `src/jeu/mineur.ts` : le type `Foreuse` et `nouvelleForeuse()`.

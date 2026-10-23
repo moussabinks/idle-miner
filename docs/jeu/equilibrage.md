@@ -164,7 +164,7 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
 | `COUT_RAIL` | 3 fer la case (à partir du niveau 3 du joueur, 29/10) |
 | `VITESSE_POUSSE_JOUEUR` | 3 cases/s |
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s |
-| `VITESSE_RAILS` | 8 cases/s × puissance du générateur |
+| (électrique, 23/10) | la vitesse du pousseur × 1,3 à 1,75 (`VITESSE_RAILS` est retiré : le wagonnet ne roule plus tout seul) |
 | sur sa lancée (électrique sans courant) | 1,25 case/s (`VITESSE_POUSSE_MINEUR / 2`) |
 | `RESERVE_GENERATEUR_WAGONNET` | 1 800 s de redstone (60 redstones) : le wagonnet Mine → Générateur remplit jusque-là |
 
@@ -179,23 +179,25 @@ Total : 363 500 $ + 370 fer + 350 redstone + 210 or + 30 émeraude (29/10, avec 
   - Mine → Générateur : `arrondi au-dessus((1 800 − réserve du générateur) ÷ 30)` redstones, au plus ce qu'il y a dans le coffre ;
   - Foreuse → Marché : ce qui est coché dans le chariot, le plus cher d'abord (l'argent compte dans `argentWagonnet`).
 - **Électrique** (`trajetElectrique`) : toutes les cases du trajet dans le rayon, générateur allumé avec de la redstone.
-- Exemple : la ligne du bot (3 cases, longueur 4) : poussé par toi 6,7 s l'aller-retour, par un mineur 7,2 s, électrique au niveau 1 du générateur 5 s. Un wagonnet de 40 places électrique y emporte donc jusqu'à 8 objets par seconde, bien plus que ce que sort la mine : c'est la longueur de la ligne et la capacité qui comptent quand la mine grossit.
+- Exemple : la ligne du bot (3 cases, longueur 4) : poussé par toi 6,7 s l'aller-retour, par un mineur 7,2 s, électrique au niveau 1 du générateur un peu moins (23/10 : le pousseur va + 30 %).
 
 ## Le générateur
 
-| Niveau | Rayon (cases) | Puissance | Wagonnet électrique | Foreuse | Prix (29/10) | Niv. joueur |
-|---|---:|---:|---:|---:|---|---:|
-| 1 | 15 | ×1 | 8 cases/s | ×1,5 | le bâtiment : 4 000 $ + 100 fer + 40 redstone | 6 (30/10 ; avant 5) |
-| 2 | 20 | ×1,3 | 10,4 cases/s | ×1,65 | 7 500 $ + 120 fer + 60 redstone | 8 |
-| 3 | 26 | ×1,7 | 13,6 cases/s | ×1,85 | 20 000 $ + 220 fer + 120 redstone | 10 |
-| 4 | 33 | ×2,2 | 17,6 cases/s | ×2,1 | 50 000 $ + 350 fer + 220 redstone | 13 |
-| 5 | 40 | ×3 | 24 cases/s | ×2,5 | 120 000 $ + 550 fer + 420 redstone | 15 |
+| Niveau | Rayon (cases) | Bonus (23/10) | Prix (29/10) | Niv. joueur |
+|---|---:|---:|---|---:|
+| 1 | 15 | + 30 % | le bâtiment : 4 000 $ + 100 fer + 40 redstone | 6 |
+| 2 | 20 | + 40 % | 7 500 $ + 120 fer + 60 redstone | 8 |
+| 3 | 26 | + 50 % | 20 000 $ + 220 fer + 120 redstone | 10 |
+| 4 | 33 | + 60 % | 50 000 $ + 350 fer + 220 redstone | 13 |
+| 5 | 40 | + 75 % | 120 000 $ + 550 fer + 420 redstone | 15 |
+
+Le bonus accélère d'autant l'ascenseur de la mine (si elle est dans le rayon), le pousseur d'un trajet électrique et la foreuse. (Avant le 23/10 : « puissance » × 1 à × 3, wagonnet électrique tout seul à 8 à 24 cases/s, foreuse × 1,5 à × 2,5.)
 
 Améliorations (niveaux 2 à 5) : 197 500 $ + 1 240 fer + 820 redstone.
 
 - **Consommation** : 1 redstone = 30 s, soit 2 par minute, **120 par heure**, quel que soit le niveau.
 - **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`. Un trajet est électrique quand toutes ses cases sont dedans **et** que le générateur est allumé avec de la redstone (chaque trajet compte à part).
-- **Foreuse** : vitesse × `(1 + BONUS_ELECTRIQUE_FOREUSE × puissance)`, avec `BONUS_ELECTRIQUE_FOREUSE` = 0,5.
+- **Foreuse** : vitesse × `multiplicateurGenerateur` (1,3 à 1,75).
 - **Puisage** (`NIVEAU_GENERATEUR_AUTO` = index 1, donc le 2e niveau) : sous 300 s de réserve (`RESERVE_GENERATEUR_AUTO`), il prend dans le coffre `arrondi au-dessus((300 − réserve) ÷ 30)` redstone (au plus ce qu'il y a).
 - La redstone que demande le générateur (2 / min) est petite à côté de ce que sort la mine : au niveau 2, la mine seule sort 0,25 × 10 % = 1,5 redstone par minute, et les clics et les mineurs bien plus.
 
@@ -213,7 +215,7 @@ Améliorations (niveaux 2 à 5) : 197 500 $ + 1 240 fer + 820 redstone.
 Total du forage : 248 500 $ + 310 fer + 330 redstone + 150 or + 25 émeraude. Total du chariot : 200 000 $ + 270 fer + 225 redstone + 130 or + 20 émeraude.
 
 - **Charbon** : 1 charbon = 20 s de forage, quelle que soit la vitesse (3 charbons par minute).
-- **Recharge automatique** (dès le forage niveau 3, `NIVEAU_RECHARGE_AUTO` = index 2) : un charbon foré est brûlé (+20 s) au lieu d'aller dans le chariot, tant que la réserve est sous 60 s (`RESERVE_RECHARGE_AUTO`).
+- **Recharge automatique** : retirée le 23/10 (le charbon arrive par les rails, avec le wagonnet Mine → Foreuse, ou à la main).
 - **Ce qu'elle rapporte** : vitesse × valeur moyenne d'un bloc au niveau de la mine. Au niveau 2 de la mine, au forage de base : 0,5 × 4,58 ≈ 2,3 $/s. Tout au maximum (niveau 5 de la mine, forage 3,6, générateur ×2,5) : 9 bloc/s × 19,79 ≈ **178 $/s**.
 - **Temps pour remplir le chariot** (`secondesPourRemplir`) = capacité ÷ vitesse : 400 s au niveau 1/1, 500 s au 2/2, 667 s au 3/3, 889 s au 4/4, 1 154 s au 5/5, 1 667 s au 6/6 (sans électricité).
 

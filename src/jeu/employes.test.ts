@@ -7,6 +7,8 @@ import {
   caseQuai,
   cheminEmploye,
   alerteSalaires,
+  ameliorerManager,
+  secondesManagerHorsLigne,
   ameliorerEmploye,
   ameliorerRecruteur,
   avancerEmployes,
@@ -30,7 +32,8 @@ import {
   tirerRarete,
   vitesseEmploye,
 } from './employes'
-import { nbDansCoffre, prendreDuCoffre, quantiteAGarder, reglerGarde, type EtatJeu } from './mineur'
+import { nbDansCoffre, type EtatJeu } from './mineur'
+import { avancerTemps } from './temps'
 
 function partie(argent = 1_000_000): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
@@ -307,22 +310,26 @@ describe('un mineur embauché (23/10)', () => {
   })
 })
 
-describe('garder des minerais dans le coffre (23/10)', () => {
-  it('le sac ne prend que ce qu’il y a en plus de ce qu’on garde', () => {
+describe('le manager, jeu fermé (23/10)', () => {
+  it('il paie 30 minutes, puis plus personne ; amélioré, il paie plus longtemps', () => {
     const etat = partie()
-    etat.coffre.contenu = { fer: 60 }
-    etat.inventaire = {}
-    reglerGarde(etat, 'coffre', 'fer', 40)
-    expect(quantiteAGarder(etat, 'coffre', 'fer')).toBe(40)
-    prendreDuCoffre(etat)
-    expect(etat.coffre.contenu.fer).toBe(40)
-    expect(etat.inventaire.fer).toBe(20)
-    // De nouveau 60 fer : on en reprend 20, il en reste toujours 40.
-    etat.coffre.contenu.fer = 60
-    etat.inventaire = {}
-    prendreDuCoffre(etat, { fer: 999 })
-    expect(etat.coffre.contenu.fer).toBe(40)
-    reglerGarde(etat, 'coffre', 'fer', 0)
-    expect(etat.coffre.garder).toEqual({})
+    etat.niveauMine = 4
+    etat.xp = 1_000_000
+    embaucher(etat, hasard())
+    embaucherManager(etat)
+    deposerTresorerie(etat, 500_000)
+    expect(secondesManagerHorsLigne(etat)).toBe(30 * 60)
+    // Jeu ouvert pendant 2 h, il paie tout le temps ; jeu fermé, seulement les 30 premières minutes.
+    const ouvert = structuredClone(etat)
+    for (let i = 0; i < 240; i++) {
+      ouvert.coffre.contenu = {}
+      avancerTemps(ouvert, 30, hasard())
+    }
+    const ferme = structuredClone(etat)
+    avancerTemps(ferme, 2 * 3600, hasard(), true)
+    expect(ferme.stats.salairesPayes).toBeLessThan(ouvert.stats.salairesPayes / 2)
+    expect(ferme.manager.tempsPaye).toBe(0)
+    expect(ameliorerManager(etat)[0]).toContain('1 h')
+    expect(secondesManagerHorsLigne(etat)).toBe(60 * 60)
   })
 })

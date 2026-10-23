@@ -106,7 +106,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Emprise** | Les cases qu'occupe un bâtiment. |
 | **Employé** | Un hamster embauché au Personnel, tant qu'on paie son salaire. Deux métiers : le **mineur** creuse au fond de la mine, et la caisse de l'ascenseur remonte ses blocs dans le coffre (23/10 : il ne remonte que s'il n'est plus payé) ; le **pousseur** (26/10) pousse le wagonnet d'un seul trajet, choisi à l'embauche. |
 | **Foreuse** | Machine du niveau 2 : au charbon, elle fore seule dans son chariot, plus vite dans le rayon du générateur. Une seule foreuse, 6 niveaux de forage et de chariot. |
-| **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et électrifie un cercle autour de lui (15 à 40 cases). 5 niveaux (rayon et puissance). |
+| **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et accélère ce qui est dans un cercle autour de lui (15 à 40 cases) : l'ascenseur de la mine, les wagonnets, la foreuse (+ 30 % à + 75 %, 23/10). 5 niveaux (rayon et bonus). |
 | **Hamster** | Tous les personnages : le joueur, les mineurs (casque de la couleur de leur rareté), le manager, le recruteur. Ce sont des images découpées dans les planches de l'équipe (vues de devant, derrière, gauche, droite). |
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. Depuis le 30/10, une fenêtre « Bon retour, mineur ! » le résume (`absence.ts`). |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de l'équipe. |
@@ -123,13 +123,13 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Paie / salaire** | Ce que coûtent 5 minutes de travail d'un mineur (selon sa pioche et sa rareté). Sans manager, on paie au plus 5 minutes d'avance. |
 | **Porte** | L'entrée d'un bâtiment, sur sa face avant gauche ou droite. Le joueur peut ouvrir un bâtiment de n'importe quel côté. |
 | **Pousseur** | Un mineur employé qui attend au quai et pousse un wagonnet qui a quelque chose à porter (2,5 cases/s). |
-| **Puissance** | Ce qui fait rouler les wagonnets électriques plus vite (× 1 à × 3) et booste la foreuse : elle monte avec le niveau du générateur. |
+| **Bonus du générateur** | (23/10, avant « puissance ») + 30 % à + 75 % de vitesse pour l'ascenseur, les wagonnets et la foreuse dans son rayon. |
 | **Puisage** | Option du générateur (dès son niveau 2) : il prend tout seul la redstone dans le coffre de la mine, en gardant 5 minutes d'avance. |
 | **Quai** | Le départ d'un trajet (la mine ou la foreuse) : le wagonnet y attend. Chaque pousseur attend au début des rails de son trajet, devant le bâtiment de départ. |
 | **Rails** | 3 fer la case, à partir du niveau 3 du joueur (menu Bâtiments) : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Jamais de boucle. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (×1 à ×5) et son salaire (×1 à ×3). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. Dessiné en pointillés jaunes sur la carte. |
-| **Recharge automatique** | Option de la foreuse (dès le 3e niveau de forage) : elle brûle le charbon qu'elle fore tant que sa réserve est sous 60 s. |
+| **Recharge automatique** | (retirée le 23/10) La foreuse brûlait le charbon qu'elle fore ; maintenant, son charbon arrive par les rails. |
 | **Recruteur** | Débloqué au niveau 3 de la mine et au niveau 9 du joueur (4 niveaux, de 10 000 à 100 000 $) : donne une rareté aux mineurs embauchés. |
 | **Rendement** | Le multiplicateur de rareté d'un mineur (vitesse de creusage et taille du sac). |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), affichée dans le bandeau en haut à gauche (`revenu.ts`). Les clics ne comptent pas, et il faut encore vendre. |

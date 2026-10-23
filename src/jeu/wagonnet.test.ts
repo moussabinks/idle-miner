@@ -4,7 +4,7 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
 import { ameliorerEmploye, embaucher, embaucherPousseur, peutEmbaucherPousseur } from './employes'
 import { NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON } from './donnees'
-import { reglerGarde, type EtatJeu } from './mineur'
+import { type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
 import {
@@ -133,15 +133,6 @@ describe('les trajets des wagonnets', () => {
     expect(peutPousser(etat, 'mine-marche')).toBe(false)
   })
 
-  it('il ne prend que ce qu’il y a en plus de ce qu’on garde (23/10)', () => {
-    const etat = partieAvecTrajet()
-    etat.coffre.contenu = { fer: 60 }
-    reglerGarde(etat, 'coffre', 'fer', 40)
-    expect(aCharger(etat, 'mine-marche')).toBe(20)
-    etat.coffre.contenu = { fer: 30 }
-    expect(aCharger(etat, 'mine-marche')).toBe(0)
-  })
-
   it('le pousseur de ce trajet le pousse tout seul dès que le coffre n’est pas vide', () => {
     const etat = partieAvecTrajet()
     etat.argent = 1000
@@ -181,7 +172,7 @@ describe('les trajets des wagonnets', () => {
     expect(embaucherPousseur(etat, aleatoireAvecGraine(2), 'mine-marche')).toEqual([])
   })
 
-  it('électrique, il roule tout seul et bien plus vite', () => {
+  it('électrique : son pousseur le pousse toujours, un peu plus vite (23/10)', () => {
     const etat = partieAvecTrajet()
     const trajet = trajetDe(etat, 'mine-marche')!
     const aLaMain = secondesAllerRetour(etat, 'mine-marche', 3)
@@ -195,9 +186,10 @@ describe('les trajets des wagonnets', () => {
     expect(trajet.etape).toBe('quai')
     ajouterPousseur(etat, 'mine-marche')
     avancerWagonnets(etat, 0.1)
-    expect(trajet.pousseur).toBe('electricite')
-    // (le pousseur reste au quai : c'est l'électricité qui le fait rouler)
-    expect(etat.employes[0].etape).toBe('quai')
+    expect(trajet.pousseur).toBe('Pousseur mine-marche')
+    expect(etat.employes[0].etape).toBe('pousse')
+    // + 30 % au niveau 1 du générateur : 2,5 × 1,3 cases/s (avant, 8 cases/s tout seul)
+    expect(vitesseTrajet(etat, trajet)).toBeCloseTo(2.5 * 1.3)
     expect(secondesAllerRetour(etat, 'mine-marche', vitesseTrajet(etat, trajet))).toBeLessThan(aLaMain)
   })
 

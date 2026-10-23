@@ -7,7 +7,6 @@ import {
   ameliorerChariot,
   ameliorerForage,
   avancerForeuse,
-  basculerRechargeAuto,
   capaciteChariot,
   chariotPlein,
   foreuseEnMarche,
@@ -69,20 +68,17 @@ describe('la foreuse', () => {
     const sansCourant = vitesseForage(etat)
     etat.village.batiments.push({ id: 'generateur', x: 40, y: 34, miroir: false })
     etat.generateur.carburant = 100
-    expect(vitesseForage(etat)).toBeCloseTo(sansCourant * 1.5)
+    expect(vitesseForage(etat)).toBeCloseTo(sansCourant * 1.3) // (23/10 : + 30 % au niveau 1)
   })
 
-  it('s’améliore, et brûle son propre charbon au 3e niveau de forage', () => {
+  it('s’améliore (23/10 : plus de recharge automatique, le charbon arrive par les rails)', () => {
     const etat = partie()
     etat.argent = 20_000
     etat.inventaire = { fer: 200, redstone: 100 }
-    expect(basculerRechargeAuto(etat)).toEqual([])
     ameliorerForage(etat)
     ameliorerForage(etat)
     ameliorerChariot(etat)
     expect(vitesseForage(etat)).toBe(1.2)
     expect(capaciteChariot(etat)).toBe(400)
-    basculerRechargeAuto(etat)
-    expect(etat.foreuse.rechargeAuto).toBe(true)
   })
 })

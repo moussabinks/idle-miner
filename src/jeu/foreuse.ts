@@ -5,17 +5,14 @@
 
 import type { Aleatoire } from './aleatoire'
 import {
-  BONUS_ELECTRIQUE_FOREUSE,
   NIVEAUX_CHARIOT,
   NIVEAUX_FORAGE,
-  NIVEAU_RECHARGE_AUTO,
-  RESERVE_RECHARGE_AUTO,
   SECONDES_PAR_CHARBON,
   type IdBloc,
 } from './donnees'
-import { foreuseAlimentee, puissanceGenerateur } from './generateur'
+import { foreuseAlimentee, multiplicateurGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, quantiteEnPlus, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
 import { batimentPose } from './village'
 import { debloque } from './niveaux'
 
@@ -32,9 +29,9 @@ export function vitesseForageDeBase(etat: EtatJeu): number {
   return NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].vitesse
 }
 
-// La vitesse en ce moment : plus vite dans le rayon du générateur allumé.
+// La vitesse en ce moment : plus vite dans le rayon du générateur allumé (+ 30 % à + 75 %).
 export function vitesseForage(etat: EtatJeu): number {
-  const bonus = foreuseAlimentee(etat) ? 1 + BONUS_ELECTRIQUE_FOREUSE * puissanceGenerateur(etat) : 1
+  const bonus = foreuseAlimentee(etat) ? multiplicateurGenerateur(etat) : 1
   return vitesseForageDeBase(etat) * bonus
 }
 
@@ -134,24 +131,12 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   return [`🛒 Chariot plus grand : ${prochain.capacite} places.`]
 }
 
-export function rechargeAutoDisponible(etat: EtatJeu): boolean {
-  return etat.foreuse.niveauVitesse >= NIVEAU_RECHARGE_AUTO
-}
-
-export function basculerRechargeAuto(etat: EtatJeu): string[] {
-  if (!rechargeAutoDisponible(etat)) return []
-  etat.foreuse.rechargeAuto = !etat.foreuse.rechargeAuto
-  return []
-}
-
 // Le chariot ne se vend plus sur place (27/10) : on met ce qu'on veut dans son sac (comme le
 // coffre de la mine), ou un wagonnet Foreuse → Marché l'emporte. « lot » : combien de chaque
 // objet (sans lot, tout), les plus chers d'abord, tant qu'il y a de la place dans le sac.
 export function prendreDuChariot(etat: EtatJeu, lot?: Inventaire): string[] {
   let pris = 0
-  for (const [bloc, tout] of parPrix(etat.foreuse.chariot)) {
-    // (23/10) on laisse dans le chariot ce que le joueur veut garder
-    const nombre = quantiteEnPlus(etat, 'chariot', bloc, tout)
+  for (const [bloc, nombre] of parPrix(etat.foreuse.chariot)) {
     const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
     const aPrendre = Math.min(voulu, placeLibre(etat))
     if (aPrendre <= 0) continue
@@ -195,11 +180,9 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
       const bloc = tirerBloc(etat.niveauMine, aleatoire)
       foreuse.blocsFores += 1
       etat.stats.blocsForeuse += 1
-      if (bloc === 'charbon' && foreuse.rechargeAuto && rechargeAutoDisponible(etat) && secondesDeCharbon(etat) < Math.min(RESERVE_RECHARGE_AUTO, charbonMaxForeuse(etat) * SECONDES_PAR_CHARBON)) {
-        foreuse.carburant += SECONDES_PAR_CHARBON
-      } else {
-        foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
-      }
+      // (23/10 : plus de recharge automatique avec le charbon qu'elle fore : son charbon arrive
+      // par les rails, avec le wagonnet Mine → Foreuse, ou à la main)
+      foreuse.chariot[bloc] = (foreuse.chariot[bloc] ?? 0) + 1
     }
   }
   if (chariotPlein(etat)) {

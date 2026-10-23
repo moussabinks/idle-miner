@@ -2137,12 +2137,21 @@ g.grille-construction {
 /* Vendre / Garder : deux boutons collés, celui qui est choisi est coloré. */
 .choix-wagonnet {
   display: inline-flex;
+  padding: 0;
   border-radius: 999px;
   overflow: hidden;
   border: 1.5px solid rgb(255 255 255 / 0.25);
+  background: none;
+  font: inherit;
+  cursor: pointer;
 }
 
-.choix-wagonnet button {
+/* (23/10) Tout le bouton est cliquable : il passe de « Vendre » à « Garder ». */
+.choix-wagonnet:hover {
+  border-color: rgb(255 255 255 / 0.55);
+}
+
+.choix-wagonnet span {
   padding: 3px 8px;
   border: none;
   background: rgb(0 0 0 / 0.25);
@@ -2153,12 +2162,12 @@ g.grille-construction {
   cursor: pointer;
 }
 
-.choix-wagonnet button.actif.vendre {
+.choix-wagonnet span.actif.vendre {
   background: #3fa34d;
   color: #fff;
 }
 
-.choix-wagonnet button.actif.garder {
+.choix-wagonnet span.actif.garder {
   background: #8a6a3a;
   color: #fff;
 }

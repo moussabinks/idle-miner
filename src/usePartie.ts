@@ -78,7 +78,7 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: Resume
   const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
   if (absence < 30) return { etat, resumeAbsence: null }
   const avant = photoPartie(etat)
-  avancerTemps(etat, absence, aleatoireNavigateur)
+  avancerTemps(etat, absence, aleatoireNavigateur, true)
   return { etat, resumeAbsence: resumerAbsence(avant, etat, absence) }
 }
 
@@ -148,8 +148,8 @@ export function usePartie(idMonde: string) {
       const succes = verifierSucces(copie)
 
       afficherToasts([
-        // (un niveau gagné s'affiche comme un succès, en doré)
-        ...messages.map((texte) => ({ id: prochainId++, texte, succes: texte.startsWith('🎉 Niveau') })),
+        // (23/10 : un niveau gagné a sa grande fenêtre, FeteNiveau : pas de message en plus)
+        ...messages.filter((texte) => !texte.startsWith('🎉 Niveau')).map((texte) => ({ id: prochainId++, texte, succes: false })),
         ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
       ])
       const evenements = evenementsEntre(ancien, copie)
@@ -170,11 +170,11 @@ export function usePartie(idMonde: string) {
     [afficherToasts, afficherGain, animer, changerEtat],
   )
 
-  // « Tout récupérer » : la fenêtre du retour se ferme avec une belle animation de gain.
+  // « Continuer » : la fenêtre du retour se ferme avec une belle animation des ventes.
   const recupererAbsence = useCallback(() => {
-    if (resumeAbsence && resumeAbsence.argent > 0) {
-      afficherGain(resumeAbsence.argent, true)
-      sons.vente(resumeAbsence.argent)
+    if (resumeAbsence && resumeAbsence.ventesWagonnets > 0) {
+      afficherGain(resumeAbsence.ventesWagonnets, true)
+      sons.vente(resumeAbsence.ventesWagonnets)
       setNbVentes((n) => n + 1)
     } else sons.succes()
     setResumeAbsence(null)

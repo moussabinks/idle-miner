@@ -31,7 +31,6 @@ import {
   SECONDES_PAR_REDSTONE,
   VITESSE_POUSSE_JOUEUR,
   VITESSE_POUSSE_MINEUR,
-  VITESSE_RAILS,
   type IdBatiment,
   type IdBloc,
   type IdLiaison,
@@ -40,8 +39,8 @@ import {
 } from './donnees'
 import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
 import { blocsDuNiveau } from './mine'
-import { casesDansLeRayon, generateurEnMarche, puissanceGenerateur } from './generateur'
-import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, quantiteAGarder, quantiteEnPlus, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
+import { casesDansLeRayon, generateurEnMarche, multiplicateurGenerateur } from './generateur'
+import { ajouterA, encaisser, nouveauTrajet, parPrix, payer, peutPayer, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
 import { debloque } from './niveaux'
 
@@ -158,7 +157,7 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
   const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
-  const vitesse = moteur === 'electricite' ? VITESSE_RAILS * puissanceGenerateur(etat) : moteur === 'pousseur' && pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) : VITESSE_POUSSE_JOUEUR
+  const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
   const secondes = secondesAllerRetour(etat, liaison, vitesse)
   return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
@@ -282,14 +281,18 @@ export function railsAlimentes(etat: EtatJeu): boolean {
   return etat.trajets.some((t) => trajetElectrique(etat, t.liaison))
 }
 
-// La vitesse d'un wagonnet en ce moment (cases par seconde). Électrique : plus vite avec un
-// générateur puissant ; s'il perd le courant en route, il finit son trajet doucement, sur sa lancée.
+// La vitesse d'un wagonnet en ce moment (cases par seconde). (23/10) Il est toujours poussé : sur
+// des rails électriques (toutes ses cases dans le rayon du générateur allumé), son pousseur va
+// un peu plus vite (+ 30 % à + 75 % selon le générateur ; avant, il roulait tout seul, bien trop
+// vite).
 export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.pousseur): number {
   if (pousseur === 'joueur') return VITESSE_POUSSE_JOUEUR
-  if (pousseur === 'electricite') return trajetElectrique(etat, trajet.liaison) ? VITESSE_RAILS * puissanceGenerateur(etat) : VITESSE_POUSSE_MINEUR / 2
+  const bonus = trajetElectrique(etat, trajet.liaison) ? multiplicateurGenerateur(etat) : 1
+  // (« electricite » : une vieille partie, un wagonnet parti tout seul ; il finit son voyage)
+  if (pousseur === 'electricite') return VITESSE_POUSSE_MINEUR * bonus
   // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard).
   const employe = etat.employes.find((e) => e.nom === pousseur)
-  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) : 1)
+  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) : 1) * bonus
 }
 
 // Combien de fois plus vite pousse un pousseur, selon sa rareté : la moitié du bonus d'un
@@ -337,11 +340,9 @@ function besoinRedstone(etat: EtatJeu): number {
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
   const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
   if (garde) return Infinity
-  // (23/10) ce que le joueur veut garder dans le coffre (« garder 40 fer »)
-  const voulu = quantiteAGarder(etat, 'coffre', bloc)
-  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return Math.max(voulu, besoinCharbon(etat))
-  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return Math.max(voulu, besoinRedstone(etat))
-  return voulu
+  if (bloc === 'charbon' && trajetDe(etat, 'mine-foreuse')) return besoinCharbon(etat)
+  if (bloc === 'redstone' && trajetDe(etat, 'mine-generateur')) return besoinRedstone(etat)
+  return 0
 }
 
 // Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).
@@ -363,10 +364,7 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
     }
     case 'foreuse-marche': {
       const exclus = exclusAutres ?? exclusDe(etat, liaison)
-      return parPrix(etat.foreuse.chariot)
-        .filter(([bloc]) => !exclus.includes(bloc))
-        .map(([bloc, nombre]): [IdBloc, number] => [bloc, quantiteEnPlus(etat, 'chariot', bloc, nombre)])
-        .filter(([, nombre]) => nombre > 0)
+      return parPrix(etat.foreuse.chariot).filter(([bloc]) => !exclus.includes(bloc))
     }
   }
 }
@@ -484,16 +482,12 @@ function avancerTrajet(etat: EtatJeu, trajet: Trajet, secondes: number): string[
   if (trajet.etape === 'quai') {
     if (aCharger(etat, trajet.liaison) === 0) return []
     // Le pousseur de ce trajet, s'il attend au quai (devant le bâtiment de départ) : sans lui,
-    // pas de départ, même sur des rails électriques (27/10).
+    // pas de départ. (23/10) Il le pousse toujours, même sur des rails électriques (il va
+    // seulement plus vite).
     const pousseur = pousseurAuQuai(etat, trajet.liaison)
     if (!pousseur) return []
-    if (trajetElectrique(etat, trajet.liaison)) {
-      // Électrique : il lance le wagonnet et reste au quai.
-      partir(etat, trajet, 'electricite')
-    } else {
-      partir(etat, trajet, pousseur.nom)
-      pousseur.etape = 'pousse'
-    }
+    partir(etat, trajet, pousseur.nom)
+    pousseur.etape = 'pousse'
   }
 
   const messages: string[] = []

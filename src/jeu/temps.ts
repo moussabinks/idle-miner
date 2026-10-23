@@ -4,7 +4,7 @@
 // L'interface appelle avancerTemps plusieurs fois par seconde.
 
 import type { Aleatoire } from './aleatoire'
-import { avancerEmployes } from './employes'
+import { avancerEmployes, secondesManagerHorsLigne } from './employes'
 import { avancerForeuse } from './foreuse'
 import { avancerGenerateur } from './generateur'
 import { avancerMine, type EtatJeu } from './mineur'
@@ -15,8 +15,11 @@ import { avancerWagonnets } from './wagonnet'
 // recharge dans le coffre, les wagonnets font plusieurs voyages...
 const PAS_MAX = 60
 
-export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
+// « horsLigne » : le temps passé jeu fermé (au retour du joueur). Le manager n'y paie les
+// salaires que pendant un temps (30 min au départ, plus en l'améliorant : 23/10).
+export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoire, horsLigne = false): string[] {
   const messages: string[] = []
+  const limiteManager = horsLigne ? secondesManagerHorsLigne(etat) : Infinity
   let reste = secondes
   while (reste > 1e-9) {
     const pas = Math.min(reste, PAS_MAX)
@@ -24,7 +27,7 @@ export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoi
       ...avancerMine(etat, pas, aleatoire),
       ...avancerGenerateur(etat, pas),
       ...avancerForeuse(etat, pas, aleatoire),
-      ...avancerEmployes(etat, pas, aleatoire),
+      ...avancerEmployes(etat, pas, aleatoire, secondes - reste < limiteManager),
       ...avancerWagonnets(etat, pas),
     )
     reste -= pas
