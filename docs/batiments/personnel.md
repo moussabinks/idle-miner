@@ -200,3 +200,10 @@ Total : 185 000 $ (avant le 29/10 : 5 000, 12 000, 25 000 et 50 000 $, soit 92 0
 
 Mineurs et pousseurs ont **chacun leur liste** (`PRIX_EMBAUCHE`) : 500 $, 2 000 $, 6 000 $, 15 000 $, 35 000 $, 80 000 $, 180 000 $, 400 000 $, 900 000 $, 2 000 000 $, puis ×2,2 à chaque fois. Le 1er pousseur coûte donc 500 $, même si on a déjà des mineurs. Les indemnités (40 %) suivent la liste du métier de celui qu'on licencie.
 
+## Ce qui a changé le 23/10 (suite)
+
+- **Embauche** : le mineur sort du Personnel, marche jusqu'à la mine et descend lui-même dans la caisse de l'ascenseur (on le voit debout dedans). Ensuite, il reste au fond : seule sa caisse remonte.
+- **Pioche** : le bouton de la ligne dit ce qu'on gagne (« ⛏️ +0,07/s · 500 $ ») ; la fiche explique « il creuse plus vite et porte plus », avec les blocs par seconde avant → après et la taille du sac (`gainAmeliorationEmploye`).
+- **Salaires** : quand des mineurs attendent leur salaire, une bulle « Payer ! » apparaît aussi au-dessus de la mine, et un bandeau dans son panneau mène au Personnel.
+- **Coffre plein** : le mineur attend pour vider son sac, **sans user** le temps qu'on lui a payé.
+

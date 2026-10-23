@@ -36,7 +36,7 @@ import {
   type EtatJeu,
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
-import { iconeActiviteEmploye, rareteDe } from '../jeu/employes'
+import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import { trajetDe } from '../jeu/wagonnet'
 import type { Eclat, Trouvaille } from '../usePartie'
@@ -53,6 +53,7 @@ type Props = PropsPanneau & {
   eclats: Eclat[]
   trouvailles: Trouvaille[]
   onCliquer: () => void
+  onAllerAuPersonnel?: () => void // (23/10) le bouton « Payer » quand des mineurs attendent leur salaire
 }
 
 // Un nombre de blocs par seconde, lisible (« 0,42 », « 3,1 », « 12 »).
@@ -410,7 +411,8 @@ type OngletMine = 'creuser' | 'production' | 'wagonnets' | 'ameliorer'
 // Combien de fois tu as cliqué par seconde ces 3 dernières secondes.
 const FENETRE_CLICS = 3000 // ms
 
-export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReglerTrajet }: Props) {
+export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReglerTrajet, onAllerAuPersonnel }: Props) {
+  const sansSalaire = nbSansSalaire(etat)
   const [onglet, setOnglet] = useState<OngletMine>('creuser')
   // Les heures de tes derniers clics, et ta vitesse recalculée deux fois par seconde.
   const clics = useRef<number[]>([])
@@ -455,6 +457,19 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
         actif={onglet}
         onChoisir={setOnglet}
       />
+      {/* (23/10) Des mineurs pas payés : ils ne creusent plus. Bien en vue, avec de quoi y aller. */}
+      {sansSalaire > 0 && (
+        <div className="goulot goulot-alerte alerte-salaires-mine" role="status">
+          <span>
+            😠 <strong>{sansSalaire === 1 ? 'Un mineur attend son salaire' : `${sansSalaire} mineurs attendent leur salaire`}</strong> : il{sansSalaire > 1 ? 's' : ''} ne creuse{sansSalaire > 1 ? 'nt' : ''} plus.
+          </span>
+          {onAllerAuPersonnel && (
+            <button className="bouton bouton-petit bouton-acheter" onClick={onAllerAuPersonnel}>
+              💵 Payer
+            </button>
+          )}
+        </div>
+      )}
       {onglet === 'creuser' && (
         <>
           <BlocACliquer

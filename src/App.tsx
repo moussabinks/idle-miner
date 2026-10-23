@@ -439,7 +439,17 @@ function Jeu({ monde, onQuitter }: { monde: InfoMonde; onQuitter: () => void }) 
             ✖
           </button>
         </div>
-        {batimentActif === 'puits' && <PanneauMine etat={etat} jouer={jouer} eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} onReglerTrajet={setTrajetsOuverts} />}
+        {batimentActif === 'puits' && (
+          <PanneauMine
+            etat={etat}
+            jouer={jouer}
+            eclats={eclats}
+            trouvailles={trouvailles}
+            onCliquer={cliquer}
+            onReglerTrajet={setTrajetsOuverts}
+            onAllerAuPersonnel={batimentPose(etat.village, 'employes') ? () => allerAuBatiment('employes') : undefined}
+          />
+        )}
         {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} />}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {batimentActif === 'bazar' && <PanneauBazar etat={etat} jouer={jouer} />}

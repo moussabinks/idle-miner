@@ -137,6 +137,9 @@ export type Employe = {
   lieu: IdBatiment // où il est (ou vers où il marche)
   depuis: IdBatiment // d'où il part
   forgeEnAttente: boolean // il doit passer à la forge chercher sa nouvelle pioche
+  // (23/10) Il arrive à pied du village : il descend lui-même dans la caisse de l'ascenseur (on
+  // le voit dedans). Sinon, c'est seulement la caisse vide qui redescend.
+  enCabine?: boolean
 }
 
 // Le manager (niveau 4 de la mine) : il paie les salaires tout seul, avec la trésorerie.
