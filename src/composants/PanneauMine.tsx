@@ -31,6 +31,7 @@ import {
   nbDansCoffre,
   noterCombo,
   peutPayer,
+  garderDansLeCoffre,
   prendreDuCoffre,
   prochainNiveauCoffre,
   prochainNiveauMine,
@@ -80,8 +81,8 @@ function prochainPalier(combo: number) {
 //   - le bonus de combo en cours ;
 //   - le gros bloc, ses éclats, les minerais qui en sortent et le compteur de combo ;
 //   - la barre de combo : où on en est vers le prochain bonus (×10, ×25, ×50...) ;
-//   - quatre compteurs : les blocs cassés à la main, ce qu'ils valent depuis qu'on a ouvert le
-//     panneau, le record de combo et les clics par seconde ;
+//   - trois compteurs : les blocs cassés à la main, le record de combo et les clics par seconde
+//     (24/10 : plus de « 💰 ce tour », ses gros chiffres faisaient grandir et rétrécir le panneau) ;
 //   - la pioche (elle tremble et rougit quand elle est cassée, à chaque clic).
 function BlocACliquer({
   etat,
@@ -91,7 +92,6 @@ function BlocACliquer({
   onPalier,
   onFinCombo,
   clicsParSeconde,
-  valeurSession,
 }: {
   etat: EtatJeu
   eclats: Eclat[]
@@ -100,7 +100,6 @@ function BlocACliquer({
   onPalier: (palier: number) => void
   onFinCombo: (combo: number) => void
   clicsParSeconde: number
-  valeurSession: number
 }) {
   const bonus = bonusActif(etat)
   const prod = production(etat)
@@ -112,7 +111,6 @@ function BlocACliquer({
   const dernierClic = useRef(0)
   const finCombo = useRef(0)
   const blocsAffiches = useCompteur(etat.stats.blocsCasses)
-  const valeurAffichee = useCompteur(Math.round(valeurSession))
   const record = etat.stats.meilleurCombo ?? 0
 
   function cliquer() {
@@ -215,11 +213,6 @@ function BlocACliquer({
             {blocsAffiches.toLocaleString('fr-FR')}
           </strong>
           <small>cassés</small>
-        </span>
-        <span className="compteur-mine" title="Ce que valent les blocs que tu as cassés depuis que tu as ouvert la mine (au marché)">
-          <b>💰</b>
-          <strong>+{valeurAffichee.toLocaleString('fr-FR')} $</strong>
-          <small>ce tour</small>
         </span>
         <span className={`compteur-mine ${combo > 0 && combo >= record ? 'compteur-record' : ''}`} title="Ton plus long combo">
           <b>🏆</b>
@@ -389,6 +382,7 @@ function CoffreMine({ etat, jouer }: PropsPanneau) {
       liaison="mine-marche"
       reserve={reserve}
       prendre={prendreDuCoffre}
+      garde={(bloc) => garderDansLeCoffre(etat, bloc)}
       tutoSac
     />
   )
@@ -482,13 +476,6 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
     clics.current.push(performance.now())
     onCliquer()
   }
-  // (23/10) Ce que valent les blocs cassés à la main depuis qu'on a ouvert le panneau : on garde
-  // la photo du départ, et on compte la différence (au prix du marché).
-  const [departSession] = useState(() => ({ ...etat.stats.blocsParType }))
-  const valeurSession = (Object.entries(etat.stats.blocsParType) as [IdBloc, number][]).reduce(
-    (total, [bloc, n]) => total + Math.max(0, (n ?? 0) - (departSession[bloc] ?? 0)) * BLOCS[bloc].prix,
-    0,
-  )
   const niveau = infoNiveauMine(etat.niveauMine)
   const prochain = prochainNiveauMine(etat)
   const coffre = prochainNiveauCoffre(etat)
@@ -547,7 +534,6 @@ export function PanneauMine({ etat, jouer, eclats, trouvailles, onCliquer, onReg
               onPalier={(palier) => jouer((e) => activerBonusCombo(e, palier))}
               onFinCombo={(combo) => jouer((e) => noterCombo(e, combo))}
               clicsParSeconde={clicsParSeconde}
-              valeurSession={valeurSession}
             />
           </div>
           <div className="mine-droite">
