@@ -141,6 +141,19 @@ describe('le coffre, le sac et le marché', () => {
     expect(etat.coffre.contenu).toEqual({ pierre: 30, fer: 3 })
   })
 
+  // (24/10) « Tout mettre dans le sac » laisse dans le coffre ce que le wagonnet doit garder.
+  it('tout mettre dans le sac respecte les « Garder N » du wagonnet', () => {
+    const etat = partie()
+    etat.coffre.contenu = { fer: 8, pierre: 10 }
+    etat.coffre.garder = { fer: 20, pierre: 4 }
+    prendreDuCoffre(etat)
+    expect(etat.inventaire).toEqual({ pierre: 6 }) // 8 fer < 20 : tout reste ; pierre : 10 − 4
+    expect(etat.coffre.contenu).toEqual({ fer: 8, pierre: 4 })
+    // Le bouton d'une ligne prend quand même ce qu'on a choisi.
+    prendreDuCoffre(etat, { fer: 8 })
+    expect(etat.coffre.contenu).toEqual({ pierre: 4 })
+  })
+
   it('le marché vend tout le sac, sauf les objets gardés', () => {
     const etat = partie()
     etat.inventaire = { fer: 2, charbon: 3 }

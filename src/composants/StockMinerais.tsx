@@ -28,9 +28,10 @@ type Props = PropsPanneau & {
   reserve?: Partial<Record<IdBloc, string>> // une petite mention sous un minerai (« 🔥 foreuse d'abord »)
   prendre: (e: EtatJeu, lot?: Inventaire) => string[] // mettre dans le sac (sans lot : tout)
   tutoSac?: boolean // le bouton « Tout mettre dans le sac » est une cible du tutoriel
+  garde?: (bloc: IdBloc) => number // (24/10) ce que « Tout mettre dans le sac » laisse de ce minerai
 }
 
-export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite, textePlein, liaison, reserve = {}, prendre, tutoSac = false }: Props) {
+export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite, textePlein, liaison, reserve = {}, prendre, tutoSac = false, garde = () => 0 }: Props) {
   const placeSac = placeLibre(etat)
   // Combien prendre de chaque minerai (absent : tout ce qu'il y a).
   const [choix, setChoix] = useState<Partial<Record<IdBloc, number>>>({})
@@ -40,6 +41,8 @@ export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite,
   const wagonnet = trajetDe(etat, liaison) !== null
   const total = Object.values(contenu).reduce((t, n) => t + (n ?? 0), 0)
   const plein = total >= capacite
+  // (24/10) Ce que « Tout mettre dans le sac » emporte : tout, sauf les « 📌 Garder N » du wagonnet.
+  const aEmporter = Object.entries(contenu).reduce((t, [bloc, n]) => t + Math.max(0, (n ?? 0) - garde(bloc as IdBloc)), 0)
   // Les minerais du niveau, et ceux d'avant qui resteraient dans le stock (les plus chers en haut).
   const blocs = [...new Set([...blocsDuNiveau(etat.niveauMine), ...(Object.keys(contenu) as IdBloc[])])].sort((a, b) => BLOCS[b].prix - BLOCS[a].prix)
   return (
@@ -129,10 +132,10 @@ export function StockMinerais({ etat, jouer, titre, nomStock, contenu, capacite,
         <button
           className={`bouton bouton-sac ${plein && placeSac > 0 ? 'bouton-sac-urgent' : ''}`}
           data-tuto={tutoSac ? 'sac' : undefined}
-          disabled={total === 0 || placeSac === 0}
+          disabled={aEmporter === 0 || placeSac === 0}
           onClick={() => jouer((e) => prendre(e))}
         >
-          🎒 Tout mettre dans le sac ({Math.min(total, placeSac)})
+          🎒 Tout mettre dans le sac ({Math.min(aEmporter, placeSac)})
         </button>
       </div>
       {placeSac === 0 && <span className="discret manque">🎒 Sac plein : va d’abord vendre au marché.</span>}
@@ -161,7 +164,7 @@ function PastilleWagonnet({ etat, bloc, ouvert, onToucher }: { etat: EtatJeu; bl
 }
 
 // L'encart qui s'ouvre sous la ligne (23/10) : trois gros choix, et pour « Garder », un compteur
-// qu'on règle par 10 (− / +). Le choix compte tout de suite ; « ✔ OK » referme l'encart.
+// qu'on règle par 10 (− / +) ou par 100 (−100 / +100, 24/10). Le choix compte tout de suite ; « ✔ OK » referme l'encart.
 function EncartWagonnet({
   etat,
   bloc,
@@ -196,6 +199,9 @@ function EncartWagonnet({
             Garder
           </button>
           <span className="compteur-garde">
+            <button className="pas-100" aria-label="100 de moins" disabled={garde <= 10} onClick={() => onChoisir('garder', Math.max(10, garde - 100))}>
+              −100
+            </button>
             <button aria-label="10 de moins" disabled={garde <= 10} onClick={() => onChoisir('garder', Math.max(10, garde - 10))}>
               −
             </button>
@@ -203,8 +209,11 @@ function EncartWagonnet({
             <button aria-label="10 de plus" onClick={() => onChoisir('garder', garde + 10)}>
               +
             </button>
+            <button className="pas-100" aria-label="100 de plus" onClick={() => onChoisir('garder', garde + 100)}>
+              +100
+            </button>
           </span>
-          <small>et vendre le reste</small>
+          <small>et vendre le reste (aussi gardés quand tu prends tout dans ton sac)</small>
         </div>
         <button className={`encart-option option-tout-garder ${actuel.choix === 'tout-garder' ? 'option-active' : ''}`} onClick={() => onChoisir('tout-garder')}>
           <b>🔒</b>

@@ -2770,7 +2770,8 @@
 /* Les quatre compteurs. */
 .compteurs-mine {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* (24/10) 3 cases de même largeur, qui ne bougent pas quand les chiffres grandissent. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -2789,6 +2790,11 @@
 }
 
 .compteur-mine strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   font-size: 1rem;
   font-weight: 900;
   color: #ffe066;
@@ -2949,10 +2955,26 @@
 }
 
 .compteur-garde {
-  display: inline-flex;
+  /* (24/10) − N + sur la 1re ligne, −100 et +100 en dessous. */
+  display: grid;
+  grid-template-columns: auto auto auto;
   align-items: center;
-  gap: 6px;
+  justify-items: center;
+  gap: 4px 6px;
 }
+
+.compteur-garde .pas-100 {
+  grid-row: 2;
+  width: auto;
+  min-width: 44px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.compteur-garde .pas-100:first-child { grid-column: 1; }
+.compteur-garde .pas-100:last-child { grid-column: 3; }
 
 .compteur-garde button {
   width: 28px;

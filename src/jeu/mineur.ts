@@ -585,12 +585,15 @@ export function noterCombo(etat: EtatJeu, combo: number): string[] {
   return ancien >= 10 ? [`🏆 Nouveau record de combo : ×${combo} !`] : []
 }
 
+// (24/10) « Tout mettre dans le sac » (sans lot) respecte les « 📌 Garder N » du wagonnet : il
+// laisse toujours N de ce minerai dans le coffre (avec 300 fer et « garder 1 000 », il n'en prend
+// aucun). Avec un lot (le bouton 🎒 d'une ligne), on prend ce qu'on a choisi.
 export function prendreDuCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
   let place = placeLibre(etat)
   if (place <= 0) return ['🎒 Ton sac est plein : va d’abord vendre au marché.']
   let pris = 0
   for (const [bloc, nombre] of parPrix(etat.coffre.contenu)) {
-    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
+    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre - garderDansLeCoffre(etat, bloc)
     const n = Math.min(voulu, place)
     if (n <= 0) continue
     ajouter(etat, bloc, n)
@@ -600,6 +603,12 @@ export function prendreDuCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
   }
   if (pris === 0) return []
   return [`🎒 ${pris} objet${pris > 1 ? 's' : ''} pris dans le coffre : va les vendre au marché !`]
+}
+
+// (24/10) Combien de ce minerai « Tout mettre dans le sac » laisse dans le coffre (le
+// « 📌 Garder N » du wagonnet du marché ; 0 sinon).
+export function garderDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
+  return etat.coffre.garder?.[bloc] ?? 0
 }
 
 // ---------------------------------------------------------------------------
