@@ -245,7 +245,7 @@ La sauvegarde dans le `localStorage` se fait au plus une fois par seconde, et en
 
 ### 4.4 La boucle de temps
 
-- L'horloge (`useEffect` de `usePartie.ts`) tourne **tout le temps** : toutes les 50 ms, ou à chaque image (`requestAnimationFrame`) quand le joueur pousse un wagonnet. Chaque tic compte au plus 1 s.
+- L'horloge (`useEffect` de `usePartie.ts`) tourne **tout le temps** : toutes les 50 ms, ou à chaque image (`requestAnimationFrame`) quand le joueur pousse un wagonnet. (24/10) **Onglet caché ou fenêtre réduite, le jeu continue** : le navigateur ralentit alors l'horloge (un tic par seconde, voire par minute) et arrête les images de l'écran, donc chaque tic compte **tout le temps passé** depuis le précédent (8 h au plus, comme jeu fermé ; `avancerTemps` le découpe en pas d'une minute), et on rattrape tout de suite au retour sur l'onglet (`visibilitychange`). Avant, un tic comptait au plus 1 s : caché, le jeu semblait en pause.
 - À chaque tic : `jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))`, qui enchaîne `avancerMine`, `avancerGenerateur`, `avancerForeuse`, `avancerEmployes` et `avancerWagonnets` (par morceaux de 60 s au plus), puis compte l'XP gagnée (`mettreAJourXp`, 29/10). Un niveau gagné s'affiche en notification dorée (comme un succès) avec une petite fanfare (`sons.succes`).
 - Le clic sur le bloc (`cliquer`) joue le son du coup puis `jouer((e) => cliquerMine(e, aleatoireNavigateur))`.
 - À l'ouverture d'un monde, le temps d'absence (au plus 8 h) est rattrapé en un appel à `avancerTemps` (voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#18-retour-au-jeu-après-une-absence)).

@@ -30,7 +30,7 @@ const DUREE_VENTE = 1800 // ms, la grosse animation d'une vente
 const DUREE_ECLATS = 600 // ms
 const DUREE_TROUVAILLE = 1500 // ms
 const INTERVALLE_HORLOGE = 50 // ms entre deux « tics » de l'horloge
-const ABSENCE_MAX = 8 * 60 * 60 // la mine travaille au plus 8 h pendant que le jeu est fermé
+const ABSENCE_MAX = 8 * 60 * 60 // la mine travaille au plus 8 h pendant que le jeu est fermé (ou caché)
 
 let prochainId = 1
 
@@ -181,26 +181,40 @@ export function usePartie(idMonde: string) {
   }, [resumeAbsence, afficherGain])
 
   // L'horloge tourne tout le temps : la mine sort ses blocs toute seule. Quand le joueur pousse
-  // le wagonnet, elle bat à chaque image de l'écran pour que le mouvement soit fluide.
+  // le wagonnet, elle bat aussi à chaque image de l'écran pour que le mouvement soit fluide.
+  // (24/10) Onglet caché ou fenêtre réduite, le jeu continue comme s'il était ouvert : le
+  // navigateur ralentit alors l'horloge (un tic par seconde, voire par minute) et arrête les
+  // images de l'écran ; à chaque tic, on avance donc de TOUT le temps passé depuis le précédent
+  // (avant : au plus 1 s, le jeu semblait en pause). Ordinateur en veille : 8 h au plus, comme
+  // jeu fermé.
   const mouvementFluide = joueurPousse(etat)
   useEffect(() => {
     let derniereFois = performance.now()
     const avancer = () => {
       const maintenant = performance.now()
-      // Au plus 1 s d'un coup (si l'onglet était en pause, par exemple).
-      const secondes = Math.min(1, (maintenant - derniereFois) / 1000)
+      const secondes = Math.min(ABSENCE_MAX, (maintenant - derniereFois) / 1000)
       derniereFois = maintenant
-      jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
+      if (secondes > 0) jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
     }
+    // L'horloge bat toujours (même quand les images de l'écran s'arrêtent, onglet caché).
+    const horloge = setInterval(avancer, INTERVALLE_HORLOGE)
+    // Au retour sur l'onglet, on rattrape tout de suite le temps passé.
+    const auRetour = () => {
+      if (document.visibilityState === 'visible') avancer()
+    }
+    document.addEventListener('visibilitychange', auRetour)
+    let image = 0
     if (mouvementFluide) {
-      let image = requestAnimationFrame(function boucle() {
+      image = requestAnimationFrame(function boucle() {
         avancer()
         image = requestAnimationFrame(boucle)
       })
-      return () => cancelAnimationFrame(image)
     }
-    const horloge = setInterval(avancer, INTERVALLE_HORLOGE)
-    return () => clearInterval(horloge)
+    return () => {
+      clearInterval(horloge)
+      cancelAnimationFrame(image)
+      document.removeEventListener('visibilitychange', auRetour)
+    }
   }, [mouvementFluide, jouer])
 
   // Sauvegarde automatique (au plus une fois par seconde : l'horloge change l'état sans arrêt).
