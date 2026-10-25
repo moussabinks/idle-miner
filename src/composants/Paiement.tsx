@@ -1,11 +1,11 @@
-// La fenêtre de paiement d'un pack de gemmes (25/10). Pour l'instant, aucun vrai paiement :
-// pendant le développement, un paiement simulé (aucun argent n'est pris) ; en ligne, « bientôt
-// disponible ». Voir PAIEMENT_SIMULE dans src/portail.ts.
+// La fenêtre de paiement d'un pack de gemmes (25/10). Pour l'instant, un paiement SIMULÉ (aucun
+// argent n'est pris) : elle ne s'ouvre que pendant le développement (PACKS_VISIBLES dans
+// src/portail.ts). Le jour où la boutique de CrazyGames est ouverte au jeu, c'est ici qu'on
+// l'appellera à la place.
 
 import { createPortal } from 'react-dom'
 import type { PackGemmes } from '../jeu/gemmes'
 import { nombre, prixEuros, t } from '../jeu/langue'
-import { PAIEMENT_SIMULE } from '../portail'
 import { Fenetre } from './Fenetre'
 
 type Props = {
@@ -25,20 +25,14 @@ export function Paiement({ pack, onPaye, onFermer }: Props) {
       devant
       onFermer={onFermer}
       pied={
-        PAIEMENT_SIMULE ? (
-          <>
-            <button className="btn btn-blanc" onClick={onFermer}>
-              {t('Annuler')}
-            </button>
-            <button className="btn btn-jaune" onClick={onPaye} autoFocus>
-              {t('Payer {prix}', { prix })}
-            </button>
-          </>
-        ) : (
-          <button className="btn btn-jaune" onClick={onFermer} autoFocus>
-            {t('OK')}
+        <>
+          <button className="btn btn-blanc" onClick={onFermer}>
+            {t('Annuler')}
           </button>
-        )
+          <button className="btn btn-jaune" onClick={onPaye} autoFocus>
+            {t('Payer {prix}', { prix })}
+          </button>
+        </>
       }
     >
       <div className="paiement-pack">
@@ -47,11 +41,7 @@ export function Paiement({ pack, onPaye, onFermer }: Props) {
         <span>{t('gemmes')}</span>
         <span className="paiement-prix">{prix}</span>
       </div>
-      {PAIEMENT_SIMULE ? (
-        <p className="paiement-note">{t('Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.')}</p>
-      ) : (
-        <p className="paiement-note">{t('Le paiement arrive bientôt ! En attendant, regarde une publicité pour gagner des gemmes.')}</p>
-      )}
+      <p className="paiement-note">{t('Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.')}</p>
     </Fenetre>,
     document.body,
   )

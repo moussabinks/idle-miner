@@ -81,11 +81,9 @@ export function grandMoment(): void {
   sdk?.game.happytime()
 }
 
-// (25/10) Acheter des gemmes avec de l'argent réel. Aucun vrai moyen de paiement n'est encore
-// branché (il en faudra un : Stripe pour la version Vercel, les achats de CrazyGames pour la
-// version portail). En attendant :
-//   - pendant le développement (npm run dev), un paiement SIMULÉ, qui ne prend aucun argent,
-//     pour tester la boutique ;
-//   - en ligne, la fenêtre dit que le paiement arrive bientôt, et ne donne rien (sinon, tout le
-//     monde aurait des gemmes gratuites).
-export const PAIEMENT_SIMULE = import.meta.env.DEV
+// (25/10) Les packs de gemmes contre de l'argent réel. Pas de moyen de paiement à nous (décision
+// du propriétaire) : sur CrazyGames, les achats passent par leur boutique (Xsolla, sur
+// invitation, seulement pour les joueurs connectés). Tant qu'elle n'est pas ouverte au jeu, les
+// packs ne se montrent que pendant le développement (npm run dev), avec un paiement SIMULÉ
+// (aucun argent n'est pris), pour tester la boutique. En ligne, ils sont cachés.
+export const PACKS_VISIBLES = import.meta.env.DEV

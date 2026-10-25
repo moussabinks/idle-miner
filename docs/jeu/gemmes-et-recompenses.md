@@ -30,11 +30,11 @@ Dans la boutique, sous la publicité, la section **« Acheter des gemmes »** : 
 
 Les prix s'écrivent à la façon de la langue (`prixEuros` dans `langue.ts` : « 1,99 € », « €1.99 »). Toucher une carte ouvre la fenêtre de paiement (`Paiement.tsx`).
 
-⚠️ **Aucun vrai moyen de paiement n'est encore branché** (`PAIEMENT_SIMULE` dans `src/portail.ts`) :
-- pendant le développement (`npm run dev`), un **paiement simulé** (« aucun argent n'est pris ») donne les gemmes, pour tester la boutique ;
-- en ligne (Vercel, CrazyGames), la fenêtre dit « Le paiement arrive bientôt » et ne donne rien, sinon tout le monde aurait des gemmes gratuites.
+⚠️ **Pas de moyen de paiement à nous** (décision du propriétaire, 25/10) : le jeu est préparé pour **CrazyGames**, dont la boutique (Xsolla) gère tout le paiement. Elle est **sur invitation** (il faut la demander à CrazyGames) et réservée aux joueurs **connectés** à leur compte CrazyGames. En attendant (`PACKS_VISIBLES` dans `src/portail.ts`) :
+- pendant le développement (`npm run dev`), les packs se montrent, avec un **paiement simulé** (« aucun argent n'est pris ») qui donne les gemmes, pour tester la boutique ;
+- **en ligne (Vercel et CrazyGames), les packs sont cachés** : pas de bouton d'achat qui ne marche pas.
 
-Pour le brancher, il faudra un fournisseur : par exemple **Stripe** pour la version Vercel (un paiement vérifié par le serveur, une fonction Supabase qui crédite les gemmes du compte, jamais le navigateur tout seul), et les **achats intégrés de CrazyGames** pour la version portail. Il faudra aussi les mentions légales (conditions de vente, droit de rétractation).
+Le jour où CrazyGames ouvre sa boutique au jeu : déclarer les 4 packs chez eux, appeler leur boutique dans `Paiement.tsx` à la place du paiement simulé (puis `crediterPack`), et montrer les packs seulement aux joueurs connectés.
 
 Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +1 💎 ».
 
