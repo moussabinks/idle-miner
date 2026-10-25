@@ -184,7 +184,7 @@ Les clics du joueur, eux, ne continuent pas.
 ### 1.9 Hors ligne
 
 - Sans réseau, tout marche : la partie est dans le stockage du navigateur.
-- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production, et pas dans la version CrazyGames** (`src/installation.ts`, `AVEC_INSTALLATION` dans `src/portail.ts`). Depuis le 25/10, les chemins des fichiers sont relatifs (`base: './'`) : le jeu marche aussi servi dans un sous-dossier. Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation, dont `employes-miroir.webp` depuis le 27/10 ; cache `idle-miner-v67` au 25/10 ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
+- Le jeu s'installe comme une application (PWA) : `public/manifest.webmanifest`, et un service worker `public/sw.js` enregistré **seulement en production, et pas dans la version CrazyGames** (`src/installation.ts`, `AVEC_INSTALLATION` dans `src/portail.ts`). Depuis le 25/10, les chemins des fichiers sont relatifs (`base: './'`) : le jeu marche aussi servi dans un sous-dossier. Il met en cache la page (réseau d'abord, cache si pas de réseau), les fichiers `/assets/` (cache d'abord) et les icônes, le manifeste et les **images du village** (`public/images/`, rangées dès l'installation ; cache `idle-miner-v67` au 25/10 ; cache puis mise à jour). Les requêtes vers Supabase ne sont jamais mises en cache.
 - Connecté mais sans réseau : le compte passe en statut « hors-ligne » et réessaie tout seul (voir 2.5).
 
 ---

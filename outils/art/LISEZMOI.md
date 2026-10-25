@@ -1,61 +1,70 @@
-# Les dessins du jeu (outils/art)
+# Les dessins du village (style cartoon)
 
-Tous les dessins du village, en SVG, dans le style cartoon du jeu : aplats de couleur, contours
-bleu nuit épais (`#2a2140`), formes rondes, ni dégradé ni flou. Des scripts Node tout simples,
-sans paquet à installer.
+Depuis le 25/10, tous les dessins du village sont des **SVG** fabriqués par un script Node (sans
+aucune bibliothèque à installer) : les bâtiments, la mine et ses calques, les caisses de
+l'ascenseur, l'icône des rails et les arbres. Le style : des aplats de couleur (une seule teinte
+plus sombre par face, jamais de dégradé, de texture ni de flou), un **contour bleu nuit épais**
+(`#2a2140`) partout, des formes rondes et simples, la palette de l'interface.
 
-## Les personnages : des taupes (`personnages.mjs`)
+## Fabriquer les dessins
 
-    node outils/art/personnages.mjs
+Depuis la racine du projet :
 
-Écrit les 26 images du village (`public/images/personnages/sprites/`) et les 3 portraits
-(`public/images/personnages/`) :
+```sh
+node outils/art/fabriquer.mjs
+```
 
-- le joueur (casque jaune) et un mineur de chaque rareté (`mineur_<rareté>`, casque de la couleur
-  de la rareté : les mêmes couleurs que `RARETES` dans `src/jeu/donnees.ts`), vus `_devant`,
-  `_derriere`, `_gauche` et `_droite` (« gauche » = « droite » en miroir) ;
-- le manager (lunettes, gilet, cravate, bloc-notes) et le recruteur (casquette de côté, badge,
-  sacoche, porte-voix), vus seulement `_devant` ;
-- les portraits ronds : `mineur.svg` (Pépite, qui salue), `manager.svg`, `recruteur.svg` : les
-  mêmes dessins cadrés sur la tête et les épaules.
+Le script réécrit les fichiers de `public/images/batiments/` et `public/images/village/arbres/`,
+puis affiche les **calages** (la taille de chaque dessin et les coins de son emprise au sol). S'ils
+ont changé, les recopier dans le jeu :
 
-Une taupe : un corps tout rond (la tête et le corps d'un seul bloc), un ventre et un museau plus
-clairs, de grands yeux ronds blancs à pupille noire, un nez rose, de grosses mains roses à trois
-griffes, des pieds plus foncés, un casque avec sa lampe et une pioche.
+- `CALAGES` dans `src/composants/iso.ts` (les bâtiments et la mine) ;
+- `POINTS_MINE` dans `src/composants/iso.ts` (où sont la caisse, le treuil, le bord du puits, le
+  panneau...) et `CABINE_EN_HAUT` / `CABINE_EN_BAS` dans `src/composants/DessinsVillage.tsx` ;
+- `arbre()` dans `src/composants/arbres.ts` (tous les arbres ont le même cadre).
 
-**Le calage** : toutes les images ont le même cadre, `LARGEUR` × `HAUTEUR` (136 × 132), et les
-pieds au même point, `PIED` (68, 127). Si on les change, les recopier dans `CALAGE_TAUPE`
-(`src/composants/sprites.ts`). `ECHELLE_SPRITE` (46 / 110) règle la taille au village : une taupe
-casquée fait environ 46 pixels du monde de haut.
+## Les fichiers
 
-## Les rails (`rails.mjs`)
+| Fichier | Ce qu'il dessine |
+|---|---|
+| `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers |
+| `batiments.mjs` | La dalle de pavés, le marché, le forgeron, le Personnel, la foreuse, le générateur et l'icône des rails |
+| `mine.mjs` | La mine (10 × 10), son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
+| `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
+| `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
 
-    node outils/art/rails.mjs
+## Comment c'est dessiné
 
-Écrit les images de `public/images/rails/`, dessinées par `RailsDuVillage`
-(`src/composants/DessinsVillage.tsx`). Un rail se pose sur une case, mais la voie est large de
-presque deux cases. Deux couches :
+- Les dessins sont faits **exactement à l'angle des cases du jeu**, deux fois plus grands que le
+  monde : une case y fait 66 pixels de large sur 38,28 de haut (`DX`, `DY` dans `formes.mjs`). On
+  place les volumes en **cases** (x, y de 0 à 5, ou 10 pour la mine) et en hauteur (z, en pixels).
+  Le pied de la dalle de chaque bâtiment tombe donc pile sur son emprise de 5 × 5 cases.
+- La lumière vient d'**en haut à gauche** : le dessus est le plus clair, la façade de gauche a la
+  couleur elle-même, celle de droite est plus sombre (`teintes()`). Un volume ne dessine que les
+  faces tournées vers nous (`Toile.volume`).
+- On dessine **du fond vers l'avant** : ce qui est dessiné après passe devant.
+- Le contour fait 6 pixels du dessin (3 pixels à l'écran au zoom 1), 4 pour les petits détails.
+- Aucune écriture sur les bâtiments : un bâtiment retourné (miroir) utilise la même image.
+- La porte de chaque bâtiment est du côté donné dans `src/jeu/donnees.ts` (`porte`) : « gauche »
+  = la façade en bas à gauche, « droite » = celle en bas à droite.
 
-1. **Le ballast**, une bande claire à plat sur le sol (avec quelques cailloux) : des tuiles vues
-   de dessus (1 unité = 1 case), de 2 × 2 cases centrées sur la case du rail, que le jeu pose en
-   losange et tourne d'un quart de tour si besoin : `talus_droit` (nord – sud), `talus_virage`
-   (sud – est), `talus_t` (nord – sud et l'est), `talus_croix`, et `talus_doux` (3 × 3 cases, le
-   virage doux). Chacune a **deux images** : `talus_<forme>_bord.svg` (la bande un peu plus large,
-   en encre) et `talus_<forme>.svg` (la bande claire). Le jeu pose d'abord tous les bords, puis
-   toutes les bandes : les bandes voisines se fondent, et le trait d'encre ne reste que tout
-   autour de la voie (même dans les embranchements). Dans le sens de la voie, une tuile s'arrête au
-   bord de sa case : les tuiles se raccordent sans couture.
-2. **La voie** (traverses en bois et rails d'acier, cernés d'encre), en vue isométrique comme le
-   village : une image par forme de case, `voie_<côtés>` (`ns`, `eo`, `es`, `so`, `no`, `ne`,
-   `nes`, `eso`, `nso`, `neo`, `neso`), les bouts de ligne avec leur butoir (`voie_fin_n`, `_e`,
-   `_s`, `_o` : le côté où la voie s'arrête ; `voie_seul_ns` : un rail tout seul) et les virages
-   doux (`voie_doux_es`, `_so`, `_no`, `_ne`). Le cadre de chaque image est celui que le jeu
-   attend : `CADRE` (-35, -15, 70 × 46, en pixels du monde autour du coin du haut de la case) et
-   `CADRE_DOUX` (-42, -12, 84 × 58, autour du coin du haut du carré de 2 × 2 cases) : les mêmes
-   que `CADRE_VOIE` et `CADRE_DOUX` dans `DessinsVillage.tsx`. Les traverses sont à 1/6, 1/2 et
-   5/6 de la case, et les rails s'arrêtent pile au bord : les cases se raccordent sans couture.
-   Le dessus des rails est à 0,17 case de haut (le wagonnet roule dessus : `RAIL` dans
-   `src/composants/Wagonnet3D.tsx`).
+## La mine et son ascenseur
 
-Le wagonnet, lui, est dessiné par le jeu à chaque image (`src/composants/Wagonnet3D.tsx`), dans
-le même style.
+Le jeu dessine par-dessus `mine.svg` (voir `DessinEvolutionMine` dans
+`src/composants/DessinsVillage.tsx`) : les deux câbles qui tombent du treuil, la caisse
+(`caisse-ascenseur-0.svg` vide, `1` à `4` de plus en plus riche) qui monte et descend dans le
+puits, coupée sous le bord de devant du puits, puis `mine-devant.svg` (les poutres de devant du
+puits, dans le même cadre que la mine) qui passe devant la caisse. Les caisses sont dessinées dans
+le cadre de la mine puis recadrées : leur position dans la mine est `POINTS_MINE.caisse`.
+
+## Les arbres
+
+Chaque arbre a, à ses pieds, une petite **ombre plate d'un vert à peine plus sombre que l'herbe**
+et une touffe d'herbe qui cache le bas du tronc : il se fond dans le sol (pas de tache sombre).
+Le palmier, lui, pousse sur le sable (ombre couleur de sable, pas de touffe). Les arbres sont
+dessinés dans des « canvas » par `src/composants/ForetVillage.tsx` : les SVG ont donc une largeur
+et une hauteur écrites dans leur balise.
+
+Le sol (l'herbe, le damier, la plage, la mer), les rochers et les décorations sont dessinés
+directement par le jeu, dans le même style (`DessinsVillage.tsx`, `PlageVillage.tsx`,
+`Rochers.tsx`).

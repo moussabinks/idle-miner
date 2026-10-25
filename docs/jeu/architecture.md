@@ -49,7 +49,7 @@ Dépendances de production : `react`, `react-dom`, `@supabase/supabase-js`, `@fo
 | `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json` | Options TypeScript |
 | `.oxlintrc.json` | Configuration du lint |
 | `archives/` | Le code mis de côté le 22/10 (prestige, enchanteur) : **hors de `src/`, donc ni compilé ni testé** |
-| `outils/` | Les scripts : `icones/` (la police d'icônes), `traductions/` (les textes à traduire), `rails/`, `sol/`, `batiments/` (anciens dessins) |
+| `outils/` | Les scripts : `icones/` (la police d'icônes), `traductions/` (les textes à traduire), `rails/`, `art/` (les dessins du village en SVG : bâtiments, mine, arbres) |
 
 ### 3.2 `src/jeu/` : la logique du jeu (TypeScript pur, sans React ni DOM)
 

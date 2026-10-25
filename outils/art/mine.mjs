@@ -352,7 +352,8 @@ export function mine() {
     bordDuPuits: [p(P0, P1, SOL), p(P1, P1, SOL), p(P1, P0, SOL)],
     // le pied du panneau du niveau, et le haut du chevalement (pour la jauge)
     panneau: p(2.6, 9.2, SOL),
-    dessus: p(5, 5, Z_TRAVERSE + 22 + 90),
+    // (la jauge du coffre est juste au-dessus de la roue ; la mini-jauge encore au-dessus)
+    dessus: p(5, 5, 390),
     // la caisse tout en haut (son fond sous le treuil), et tout en bas (cachée dans le puits)
     cabineEnHaut: -Math.round(Z_TREUIL - R_TREUIL - 30 - zAccroche),
     cabineEnBas: Math.round(t.pt(P1, P1, SOL)[1] - t.pt(K0, K0, SOL + HAUTEUR_CAISSE + 40)[1] + 10),

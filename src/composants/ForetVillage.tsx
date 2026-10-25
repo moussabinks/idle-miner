@@ -34,7 +34,7 @@ type Arbre = {
 // Combien de chances de tirer chaque sorte d'arbre (dans l'ordre d'ARBRES : rond, nuage, sapin,
 // buisson, cerisier, automne, palmier). Des feuillus et des sapins surtout, un peu de rose et de
 // jaune pour égayer, et pas de palmier (ils sont sur la plage).
-const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.6, 0.45, 0]
+const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.5, 0.25, 0]
 
 // La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
 // l'écart (en cases) entre deux arbres de ce rang. Les autres arbres restent derrière ce rang.

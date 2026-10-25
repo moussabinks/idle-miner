@@ -91,7 +91,7 @@ function semerDetails(): Detail[] {
       const x = cx + 0.1 + hasard() * 0.8
       const y = cy + 0.1 + hasard() * 0.8
       const tirage = hasard()
-      const sorte = tirage < 0.8 ? 'touffe' : tirage < 0.93 ? 'fleur' : 'caillou'
+      const sorte = tirage < 0.86 ? 'touffe' : tirage < 0.97 ? 'fleur' : 'caillou'
       const e = versEcran(x, y)
       details.push({
         sorte,

@@ -15,7 +15,7 @@ const LARGEUR_PIED = 200 // la largeur de l'ombre : le jeu la cale sur la taille
 const T = 8 // le contour
 
 // Une ombre plate sous l'arbre.
-const ombre = () => `<ellipse cx="0" cy="0" rx="${LARGEUR_PIED / 2}" ry="30" fill="${C.herbeFoncee}"/>`
+const ombre = (couleur = C.herbeFoncee) => `<ellipse cx="0" cy="0" rx="${LARGEUR_PIED / 2}" ry="30" fill="${couleur}"/>`
 
 // Le tronc : un peu plus large en bas, de la hauteur donnée.
 function tronc(hauteur, largeur = 42, couleur = C.tronc) {
@@ -129,7 +129,8 @@ function automne() {
 function palmier() {
   // Le tronc courbé, en anneaux, de (0, 0) à (34, -300).
   const point = (k) => [34 * k * k, -300 * k]
-  let dessin = ombre()
+  // (il pousse sur le sable : une ombre couleur de sable mouillé, et pas de touffe d'herbe)
+  let dessin = ombre('#e2c27e')
   const anneaux = 7
   for (let i = 0; i < anneaux; i++) {
     const [xa, ya] = point(i / anneaux)
@@ -166,7 +167,7 @@ function palmier() {
   ]) {
     dessin += `<circle cx="${r1(cx + dx)}" cy="${r1(cy + dy)}" r="14" fill="${C.boisFonce}" stroke="${C.encre}" stroke-width="${T - 2}"/>`
   }
-  return dessin + touffe()
+  return dessin
 }
 
 // Tous les arbres : leur nom de fichier, leur SVG et leur calage pour src/composants/arbres.ts.

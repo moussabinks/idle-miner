@@ -114,8 +114,8 @@ export const POINTS_MINE = {
   ] as [number, number][],
   // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
   panneau: [124.2, 388.9] as [number, number],
-  // au-dessus de la roue du chevalement (pour la mini-jauge du déchargement)
-  dessus: [342, 58.4] as [number, number],
+  // au-dessus de la roue du chevalement et de la jauge du coffre (pour la mini-jauge du déchargement)
+  dessus: [342, -24] as [number, number],
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer

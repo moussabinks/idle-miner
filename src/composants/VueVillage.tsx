@@ -661,6 +661,7 @@ export function VueVillage({
   const puits = batimentPose(village, 'puits')
   if (puits) {
     const taille = BATIMENTS.puits.taille
+    // (25/10) Au-dessus de la roue du chevalement : la caisse de l'ascenseur monte juste dessous.
     const centre = versEcran(puits.x + taille / 2, puits.y + taille / 2)
     const dans = nbDansCoffre(etat)
     const capacite = capaciteCoffre(etat)
@@ -668,7 +669,7 @@ export function VueVillage({
     const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
     const mineursAuFond = mineursDansLaMine(etat)
     bulles.push(
-      <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 78 }} title={t('Coffre de la mine : {dans} / {capacite}', { dans, capacite })}>
+      <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 172 }} title={t('Coffre de la mine : {dans} / {capacite}', { dans, capacite })}>
         <span className="jauge-coffre-icone" aria-hidden="true">
           📦
         </span>
