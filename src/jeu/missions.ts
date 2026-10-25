@@ -10,7 +10,7 @@ import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
 import { disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
 import { achatsPossibles } from './objectifs'
-import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
+import { railsDebloques } from './niveaux'
 import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
 import { t } from './langue'
@@ -143,17 +143,6 @@ function automatisation(etat: EtatJeu): Mission | null {
   return null
 }
 
-// Le prochain niveau du joueur, et ce qu'il débloque (29/10).
-function prochainNiveau(etat: EtatJeu): Mission | null {
-  const prochain = prochainDeblocage(etat)
-  if (!prochain) return null
-  const { xp, pourSuivant } = progressionNiveau(etat)
-  const choses = prochain.choses.slice(0, 2).join(', ') + (prochain.choses.length > 2 ? '...' : '')
-  // (si le niveau qui débloque est plus loin que le suivant, la jauge montre quand même le suivant)
-  const texte = prochain.niveau === niveauJoueur(etat) + 1 ? t('Niveau {n} : {choses}', { n: prochain.niveau, choses }) : t('Niveau {n} (tu es {actuel}) : {choses}', { n: prochain.niveau, actuel: niveauJoueur(etat), choses })
-  return mission(`niveau-${prochain.niveau}`, '⭐', texte, { progression: pourSuivant ? { valeur: xp, max: pourSuivant, icone: '⭐' } : null })
-}
-
 // Les améliorations les plus proches (celles dont on a déjà la plus grande part de l'argent).
 function ameliorations(etat: EtatJeu): Mission[] {
   const part = (cout: Cout) => (cout.argent ? Math.min(1, etat.argent / cout.argent) : 1)
@@ -163,12 +152,14 @@ function ameliorations(etat: EtatJeu): Mission[] {
     .map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
 }
 
+// (25/10) Plus de tâche « Niveau X : ce qu'il débloque » : la liste ne montre que des choses
+// qu'on peut faire maintenant (la jauge du niveau est dans le bandeau du haut).
 // « avant » : les missions affichées juste avant (leurs id). (30/10) Une mission affichée reste
 // à sa place tant qu'elle n'est pas faite : la liste ne change plus d'un coup en pleine tâche
 // (« économise pour le sac » qui devenait « récupère 40 fer »). Les nouvelles ne prennent que les
 // places libres. Seules les urgences passent toujours devant.
 export function missions(etat: EtatJeu, avant: string[] = []): Mission[] {
-  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat).slice(0, 1), prochainNiveau(etat), ...ameliorations(etat).slice(1)].filter((m): m is Mission => m !== null)
+  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat)].filter((m): m is Mission => m !== null)
   // Pas deux fois la même.
   const vues = new Set<string>()
   const candidates = toutes.filter((m) => !vues.has(m.id) && vues.add(m.id))

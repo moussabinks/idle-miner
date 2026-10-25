@@ -729,8 +729,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Touche la bulle 🛤️ sur les rails de la foreuse': 'Tap the 🛤️ bubble on the drill’s rails',
   'Relie la foreuse au marché (rails) : elle vendra toute seule': 'Link the drill to the market (rails): it’ll sell by itself',
   'Touche la bulle 🛤️ sur les rails foreuse → marché': 'Tap the 🛤️ bubble on the drill → market rails',
-  'Niveau {n} : {choses}': 'Level {n}: {choses}',
-  'Niveau {n} (tu es {actuel}) : {choses}': 'Level {n} (you’re {actuel}): {choses}',
 
   // src/jeu/niveaux.ts
   '🕳️ Mine {n}': '🕳️ Mine {n}',
