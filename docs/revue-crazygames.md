@@ -204,4 +204,5 @@ Dans l'ordre : d'abord ce qui empêche de publier, puis ce qui retient le joueur
 - [ ] Caméra plus proche au départ
 - [ ] Barre d'aide clavier qui disparaît
 - [ ] Vignette et GIF pour la fiche CrazyGames
+- [ ] Packs de gemmes (prêts, cachés en ligne) : demander à CrazyGames d'ouvrir leur boutique (Xsolla, sur invitation) et la brancher dans `Paiement.tsx`
 - [ ] Nettoyer le CSS mort (prestige, vue en coupe, enchanteur : environ 90 classes) : en cours (les anciennes feuilles sont remplacées par `src/styles/`)

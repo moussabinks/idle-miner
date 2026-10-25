@@ -888,5 +888,4 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Payer {prix}': 'Pay {prix}',
   '💎 +{n} gemmes ! Merci pour ton achat !': '💎 +{n} gems! Thanks for your purchase!',
   'Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.': 'Payment simulation: no money is taken. It is only here to test the shop.',
-  'Le paiement arrive bientôt ! En attendant, regarde une publicité pour gagner des gemmes.': 'Payments are coming soon! Meanwhile, watch an ad to earn gems.',
 }
