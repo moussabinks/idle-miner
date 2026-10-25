@@ -121,7 +121,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Manager** | Débloqué au niveau 3 de la mine (8 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur, tant qu'il est éveillé (30 min, 1 h ou 2 h selon son niveau). Un interrupteur l'arrête. |
 | **Marché** | Le bâtiment où arrivent les wagonnets : ils y vendent tout seuls. Il ne sert plus qu'à l'automatisation (25/10). |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
-| **Mission / tâche** | Une à trois choses à faire, en haut à droite : une urgence (salaires, coffre plein), un premier pas, un bâtiment, une étape de l'automatisation, l'amélioration la plus proche, ou le prochain niveau du joueur qui débloque quelque chose. |
+| **Mission / tâche** | Une à trois choses à faire, en haut à droite : une urgence (salaires, coffre plein), un premier pas, un bâtiment, une étape de l'automatisation, ou l’amélioration la plus proche : seulement des choses faisables (25/10). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
 | **Monde** | Une partie séparée (jusqu'à 5), choisie sur l'écran d'accueil. |
 | **Niveau du joueur** | De 1 à **15**, gagné avec l'**XP** : il débloque les rails (2) et les niveaux de la mine (3, 5, 7, 9) ; chaque niveau rapporte 3 gemmes. Ne pas confondre avec le niveau de la mine. |
