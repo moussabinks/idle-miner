@@ -24,6 +24,7 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 - **👷 Équipe** : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, puis pousseurs). Pastille « ! » si quelqu'un n'est pas payé ;
 - **➕ Embaucher** : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « + » quand on peut payer une embauche ;
+- **🎲 Remplacer** (avec le recruteur) : un bouton aux couleurs de toutes les raretés qui défilent, avec un dé qui roule (`btn-hasard`, 25/10) : une nouvelle recrue prend la place du mineur, rareté au hasard.
 - **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort.
 
 **Deux métiers** : les **mineurs** ne font que creuser (la caisse de l'ascenseur remonte ce qu'ils cassent). Les **pousseurs** ne creusent jamais : ils poussent le wagonnet d'un seul trajet.
