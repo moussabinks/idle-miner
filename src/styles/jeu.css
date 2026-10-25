@@ -374,7 +374,7 @@
   position: absolute;
   left: var(--marge-gauche);
   right: var(--marge-droite);
-  bottom: var(--marge-bas);
+  bottom: calc(var(--marge-bas) + 10px); /* (de la place pour l’étiquette des ronds) */
 }
 
 .barre-village {
@@ -415,13 +415,26 @@
 }
 
 .gros-rond-icone {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   line-height: 1;
 }
 
+/* Le nom : une étiquette à cheval sur le bas du rond (25/10 : dans le rond, il débordait sur
+   téléphone et en anglais). */
 .gros-rond-texte {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  z-index: 2;
+  translate: -50% 0;
+  padding: 1px 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
   font-family: var(--police-titre);
-  font-size: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* La mine : jaune, avec un anneau qui se remplit comme le coffre. */
@@ -439,7 +452,7 @@
   z-index: 0;
 }
 
-.gros-rond-mine > * {
+.gros-rond-mine > .gros-rond-icone {
   position: relative;
   z-index: 1;
 }
@@ -459,6 +472,7 @@
 }
 
 .gros-rond-petit .gros-rond-texte {
+  bottom: -10px;
   font-size: 0.75rem;
 }
 
