@@ -310,7 +310,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Les mineurs rares sortent plus souvent.': 'Rare miners show up more often.',
   'Ce qu’il trouvera :': 'What they’ll find:',
   'Chances à la prochaine embauche :': 'Odds for the next hire:',
-  'Équipe': 'Team',
   'Chefs': 'Bosses',
   'Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !': 'Nobody yet. Your miners will dig for you, even with the game closed!',
   'Embaucher un mineur': 'Hire a miner',
@@ -877,4 +876,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it.',
   '= garder un minerai pour tes améliorations (il n’est pas vendu)': '= keep an ore for your upgrades (it won’t be sold)',
   'Demi-tour': 'Turn back',
+  '{a} à {b} blocs/s': '{a} to {b} blocks/s',
+  '{n} cases/s': '{n} tiles/s',
+  'Recruter': 'Recruit',
 }

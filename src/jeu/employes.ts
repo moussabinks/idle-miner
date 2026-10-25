@@ -152,6 +152,14 @@ export function vitesseEmploye(employe: Employe): number {
   return NIVEAUX_EMPLOYE[employe.niveau].vitesse * rareteDe(employe).rendement
 }
 
+// (25/10) Ce que ferait une nouvelle recrue, pour l'afficher avant de l'embaucher : un mineur
+// creuse tant de blocs par seconde (avec sa première pioche), pour tant de salaire. Sa rareté
+// change tout (avec le recruteur, elle est tirée au hasard) : par défaut, commune.
+export function apercuRecrue(role: RoleEmploye, rarete: IdRarete = 'commun'): { vitesse: number; salaire: number } {
+  const recrue = { role, niveau: 0, rarete, chariot: 0 } as Employe
+  return { vitesse: role === 'mineur' ? vitesseEmploye(recrue) : 0, salaire: salaireEmploye(recrue) }
+}
+
 // Ce que creusent par seconde tous les mineurs payés.
 export function vitesseMineurs(etat: EtatJeu): number {
   return etat.employes.filter((e) => e.role === 'mineur' && e.tempsPaye > 0).reduce((total, e) => total + vitesseEmploye(e), 0)

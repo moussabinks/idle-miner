@@ -1120,3 +1120,11 @@
     animation: none;
   }
 }
+
+/* (25/10) Ce que fera une recrue (avant de l'embaucher) : ses blocs/s, son salaire... */
+.stats-recrue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}

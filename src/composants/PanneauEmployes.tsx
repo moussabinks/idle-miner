@@ -22,12 +22,14 @@ import {
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   PRIX_MANAGER,
+  VITESSE_POUSSE_MINEUR,
   RARETES,
   SECONDES_PAR_PAIE,
   type IdLiaison,
 } from '../jeu/donnees'
 import {
   agrandirChariot,
+  apercuRecrue,
   ameliorerEmploye,
   ameliorerManager,
   ameliorerRecruteur,
@@ -344,7 +346,21 @@ function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
       <Achat
         icone="⛏️"
         titre={`${t('Mineur')} · ${nbDuRole(etat, 'mineur')} / ${max}`}
-        effet={avecRecruteur ? t('Sa rareté est une surprise ! Ses 10 premières minutes sont payées.') : t('Il creuse tout seul au fond de la mine. Ses 10 premières minutes sont payées.')}
+        effet={
+          <>
+            {avecRecruteur ? t('Sa rareté est une surprise ! Ses 10 premières minutes sont payées.') : t('Il creuse tout seul au fond de la mine. Ses 10 premières minutes sont payées.')}
+            {/* (25/10) Ce qu'il fera, avant de l'embaucher */}
+            <span className="stats-recrue">
+              <span className="etiquette">
+                ⛏️{' '}
+                {avecRecruteur
+                  ? t('{a} à {b} blocs/s', { a: parSeconde(apercuRecrue('mineur', 'commun').vitesse), b: parSeconde(apercuRecrue('mineur', 'mythique').vitesse) })
+                  : t('{n} blocs/s', { n: parSeconde(apercuRecrue('mineur').vitesse) })}
+              </span>
+              <span className="etiquette">💵 {t('{n} $ / 5 min', { n: nombre(apercuRecrue('mineur').salaire) })}</span>
+            </span>
+          </>
+        }
         cout={{ argent: prix, materiaux: {} }}
         possible={etat.argent >= prix}
         action={(e) => embaucher(e, aleatoireNavigateur)}
@@ -392,7 +408,16 @@ function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTra
         <Achat
           icone="🛤️"
           titre={choisie ? nomTrajet(choisie) : t('Choisis un trajet')}
-          effet={choisie ? t('Ce trajet brille sur la carte.') : undefined}
+          effet={
+            <>
+              {choisie ? t('Ce trajet brille sur la carte.') : null}
+              <span className="stats-recrue">
+                <span className="etiquette">🛤️ {t('{n} cases/s', { n: parSeconde(VITESSE_POUSSE_MINEUR * NIVEAUX_POUSSEUR[0].vitesse) })}</span>
+                <span className="etiquette">🚃 {t('{n} places', { n: nombre(NIVEAUX_CHARIOT_POUSSEUR[0].places) })}</span>
+                <span className="etiquette">💵 {t('{n} $ / 5 min', { n: nombre(apercuRecrue('pousseur').salaire) })}</span>
+              </span>
+            </>
+          }
           cout={{ argent: prix, materiaux: {} }}
           possible={choisie !== null && peutEmbaucherPousseur(etat, choisie)}
           action={(e) => (choisie ? embaucherPousseur(e, aleatoireNavigateur, choisie) : [])}
@@ -550,7 +575,8 @@ function Recruteur({ etat }: { etat: EtatJeu }) {
 // Le panneau
 // ---------------------------------------------------------------------------
 
-type OngletPersonnel = 'equipe' | 'embaucher' | 'chefs'
+// (25/10) Un seul onglet « Personnel » : l'équipe et les embauches ensemble ; puis les chefs.
+type OngletPersonnel = 'personnel' | 'chefs'
 
 export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   const { etat, jouer } = useJeu()
@@ -558,7 +584,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   const [recrue, setRecrue] = useState<Employe | null>(null)
   // Le mineur qu'on veut licencier : on demande d'abord confirmation.
   const [aLicencier, setALicencier] = useState<number | null>(null)
-  const [onglet, setOnglet] = useState<OngletPersonnel>(etat.employes.length === 0 ? 'embaucher' : 'equipe')
+  const [onglet, setOnglet] = useState<OngletPersonnel>('personnel')
 
   // Une nouvelle recrue (embauche ou remplacement, en argent ou en gemmes) : avec le recruteur,
   // on la dévoile en grand. On compare les noms de l'équipe avant et après.
@@ -578,24 +604,18 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
     <div className="panneau-bat panneau-personnel">
       <OngletsPanneau
         onglets={[
-          { id: 'equipe', titre: `👷 ${t('Équipe')}`, pastille: sansSalaire > 0 ? '!' : null },
-          { id: 'embaucher', titre: `➕ ${t('Embaucher')}`, pastille: prix !== null && etat.argent >= prix ? '+' : null },
+          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 ? '!' : prix !== null && etat.argent >= prix ? '+' : null },
           { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
       />
 
-      {onglet === 'equipe' && etat.employes.length === 0 && (
-        <div className="carte carte-creme vide-equipe">
-          <p>{t('Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !')}</p>
-          <button className="btn btn-vert" onClick={() => setOnglet('embaucher')}>
-            ➕ {t('Embaucher un mineur')}
-          </button>
-        </div>
+      {onglet === 'personnel' && etat.employes.length === 0 && (
+        <p className="carte carte-creme vide-equipe">{t('Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !')}</p>
       )}
-      {onglet === 'equipe' && etat.employes.length > 0 && !managerPaieLesSalaires(etat) && <Salaires etat={etat} jouer={jouer} />}
-      {onglet === 'equipe' &&
+      {onglet === 'personnel' && etat.employes.length > 0 && !managerPaieLesSalaires(etat) && <Salaires etat={etat} jouer={jouer} />}
+      {onglet === 'personnel' &&
         (['mineur', 'pousseur'] as const).map((role) => {
           const liste = etat.employes.map((e, index) => ({ e, index })).filter(({ e }) => e.role === role)
           if (liste.length === 0) return null
@@ -611,12 +631,13 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
           )
         })}
 
-      {onglet === 'embaucher' && (
-        <>
-          <h3 className="titre-section">{t('Mineur')}</h3>
+      {/* Recruter, dans le même onglet, sous l'équipe. */}
+      {onglet === 'personnel' && (
+        <section className="section-employes">
+          <h3 className="titre-section">➕ {t('Recruter')}</h3>
           <EmbaucheMineur etat={etat} />
           <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} />
-        </>
+        </section>
       )}
 
       {onglet === 'chefs' && (
