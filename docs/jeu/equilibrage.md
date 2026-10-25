@@ -361,7 +361,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 
 - **XP** (`XP_PAR`) : 1 pour 3 blocs cassés en cliquant, 70 par bâtiment, 3 par case de rails, 30 par trajet, 40 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, et 1 par 25 $ de ce qu'on a acheté (`VALEUR_PAR_XP`). Chaque chose ne compte qu'une fois (`recordsXp`). Rien pour ce qui se fait tout seul.
 - **Courbe** : `xpPourPasser(n) = 60 × n^1,8`, arrondi à la dizaine : 60 XP pour passer au niveau 2, 210 pour le 3… Il faut 1 430 XP au total pour le niveau 5, 11 680 pour le 10, **38 230 pour le 15** (le maximum).
-- **Déblocages** (`NIVEAU_JOUEUR_POUR`) : rails au niveau 2 ; mine niveaux 2 à 5 aux niveaux 3, 5, 7, 9. Chaque niveau rapporte 3 gemmes.
+- **Déblocages** (`NIVEAU_JOUEUR_POUR`) : rails au niveau 2 ; mine niveaux 2 à 5 aux niveaux 3, 5, 7, 9. Chaque niveau rapporte 1 gemme (25/10 : 3 avant).
 
 ## Le bot de simulation
 

@@ -68,7 +68,8 @@ describe('les missions (en haut à droite)', () => {
     // (le forgeron vient après le Personnel et le marché dans le menu : 30 $ et 15 pierre)
     const forgeron = missions(etat).find((m) => m.id === 'construire-forgeron')
     // (23/10) tout ce qu'il faut, dès le début : l'argent et la pierre, chacun avec sa jauge
-    expect(forgeron).toMatchObject({ stand: 'puits', texte: 'Construis : Forgeron' })
+    // (25/10) « Voir » ouvre le menu Bâtiments (avant : la mine), pour montrer le forgeron
+    expect(forgeron).toMatchObject({ construction: true, texte: 'Construis : Forgeron' })
     expect(forgeron?.elements).toEqual([
       { icone: '💵', nom: '$', valeur: 30, max: 30 },
       { icone: expect.any(String), nom: 'pierre', valeur: 12, max: 15 },

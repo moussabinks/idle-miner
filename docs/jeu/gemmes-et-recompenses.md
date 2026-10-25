@@ -12,11 +12,11 @@
 | Comment | Combien | Code |
 |---|---:|---|
 | 📺 Regarder une **publicité** jusqu'au bout | **1 💎** | `GEMMES_PAR_PUB`, `recompenserPub` |
-| ⭐ Gagner un **niveau du joueur** | **3 💎** par niveau (42 du niveau 2 au niveau 15) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
+| ⭐ Gagner un **niveau du joueur** | **1 💎** par niveau (14 du niveau 2 au niveau 15 ; 3 avant le 25/10) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
 | 🎁 Le **cadeau du jour** | 2 à 12 💎 selon le jour de la série (35 par semaine), plus des bonus | `RECOMPENSES_QUOTIDIENNES` |
 | 🎉 Une **ancienne partie** convertie le 25/10 | 10 💎 offertes (une fois) | `GEMMES_CADEAU` dans `sauvegarde.ts` |
 
-Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +3 💎 ».
+Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +1 💎 ».
 
 ### La publicité
 
@@ -101,7 +101,7 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 |---|---|
 | `src/jeu/gemmes.ts` | Toutes les règles : gagner des gemmes (`gagnerGemmes`, `recompenserPub`), le prix en gemmes (`valeurEnDollars`, `prixEnGemmes`), les bonus (`BOOSTS`, `acheterBoost`, `boostActif`, `secondesBoost`, `multiplicateurVentes`, `multiplicateurProduction`), le trésor (`TRESOR`, `acheterTresor`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `etatQuotidien`, `recupererQuotidien`, `jourDe`, `veille`). Testé dans `gemmes.test.ts`. |
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
-| `src/jeu/niveaux.ts` | Les 3 gemmes de chaque niveau gagné (`mettreAJourXp`). |
+| `src/jeu/niveaux.ts` | La gemme de chaque niveau gagné (`mettreAJourXp`). |
 | `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |
 | `src/composants/Boutique.tsx` | La boutique (publicité, bonus). |
 | `src/composants/RecompensesQuotidiennes.tsx` | Le calendrier du cadeau du jour. |

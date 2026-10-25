@@ -671,3 +671,9 @@
     display: none;
   }
 }
+
+/* (25/10) Le ✔ d'une chose réunie, après son icône et son compte */
+.tache-coche {
+  color: var(--vert-fonce);
+  font-weight: 800;
+}

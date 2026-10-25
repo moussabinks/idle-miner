@@ -47,7 +47,7 @@ La boucle en quatre mots, la même partout (accueil, tutoriel, aide, `etapesDuJe
 - **Embaucher** : au **Personnel**, des **taupes mineuses** creusent au fond de la mine et remplissent le coffre toutes seules (le premier mineur ne coûte que 50 $) ; on paie leur salaire toutes les 5 minutes.
 - **Automatiser** : on relie la mine au **marché** avec des **rails** : un wagonnet, poussé par toi ou par un **pousseur**, y vend le coffre tout seul, même jeu fermé. Puis le **générateur** électrifie les rails (le wagonnet va plus vite) et la **foreuse**. D'autres trajets emportent le charbon à la foreuse, la redstone au générateur, et le chariot de la foreuse au marché.
 - **Descendre** : la mine a **5 niveaux** (pierre, charbon et fer ; puis redstone ; or ; émeraudes ; diamants). Chaque niveau est un **palier** : descendre au niveau N permet d'améliorer **tout le reste** (coffre, ascenseur, pioches, mineurs, pousseurs, foreuse, générateur) jusqu'à son niveau N. On améliore un niveau de chaque chose, puis on descend.
-- **Monter de niveau** : tout ce qu'on fait rapporte de l'**XP**. Le **niveau du joueur** (⭐, de 1 à 15) débloque les rails (niveau 2) et les niveaux de la mine (3, 5, 7, 9), et **chaque niveau rapporte 3 gemmes**. Voir [niveaux.md](niveaux.md).
+- **Monter de niveau** : tout ce qu'on fait rapporte de l'**XP**. Le **niveau du joueur** (⭐, de 1 à 15) débloque les rails (niveau 2) et les niveaux de la mine (3, 5, 7, 9), et **chaque niveau rapporte 1 gemme**. Voir [niveaux.md](niveaux.md).
 - **Les gemmes** 💎 : une publicité regardée = 1 gemme ; elles paient n'importe quelle amélioration, ou un bonus à la boutique (production × 2, ventes × 2, clics en or, trésor). Le **cadeau du jour** récompense ceux qui reviennent chaque jour. Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md).
 
 Il n'y a pas encore de fin de partie : au niveau 5, on continue d'agrandir, d'embaucher et d'automatiser. Une **« nouvelle mine »** avec un bonus permanent est prévue pour la fin de partie (à partir du prestige rangé dans `archives/`).
@@ -124,7 +124,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Mission / tâche** | Une à trois choses à faire, en haut à droite : une urgence (salaires, coffre plein), un premier pas, un bâtiment, une étape de l'automatisation, ou l’amélioration la plus proche : seulement des choses faisables (25/10). |
 | **Modifier (✏️)** | Le mode pour déplacer (gratuit), retourner ou enlever ce qui est posé au village. |
 | **Monde** | Une partie séparée (jusqu'à 5), choisie sur l'écran d'accueil. |
-| **Niveau du joueur** | De 1 à **15**, gagné avec l'**XP** : il débloque les rails (2) et les niveaux de la mine (3, 5, 7, 9) ; chaque niveau rapporte 3 gemmes. Ne pas confondre avec le niveau de la mine. |
+| **Niveau du joueur** | De 1 à **15**, gagné avec l'**XP** : il débloque les rails (2) et les niveaux de la mine (3, 5, 7, 9) ; chaque niveau rapporte 1 gemme. Ne pas confondre avec le niveau de la mine. |
 | **Niveau de la mine** | De 1 à 5 : il décide des blocs qui sortent, du débit, du nombre de mineurs, des bâtiments, et c'est le **palier** de toutes les améliorations. |
 | **Paie / salaire** | Ce que coûtent 5 minutes de travail d'un employé (selon sa pioche ou son niveau, et sa rareté). Sans manager, on paie au plus 5 minutes d'avance. |
 | **Palier** | (25/10) Le niveau de la mine vu comme une marche : à la mine niveau N, toutes les améliorations peuvent monter jusqu'à leur niveau N (les chefs : `PALIER_CHEF`). Un cadenas « 🕳️ Mine N » le rappelle. |

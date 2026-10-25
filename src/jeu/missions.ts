@@ -72,10 +72,11 @@ function missionAchat(etat: EtatJeu, id: string, icone: string, nom: string, cou
   const elements = elementsDuCout(etat, cout)
   const manque = ceQuiManque(etat, cout)
   if (!manque) return mission(id, icone, nom, { ...options, elements, pret: true })
-  // Ce qu'il manque d'abord : l'argent au marché, les minerais à la mine.
-  // (25/10) L'argent et les minerais viennent tous les deux de la mine (on y vend le coffre).
-  const ou = 'puits'
-  return mission(id, icone, nom, { ...options, construction: false, stand: ou, elements })
+  // (25/10) Un bâtiment à construire : « Voir » ouvre le menu Bâtiments, pour le montrer avec
+  // son prix. Une amélioration : « Voir » ouvre son bâtiment.
+  if (options.construction) return mission(id, icone, nom, { ...options, elements })
+  // Sans bâtiment précis : la mine (on y vend le coffre pour l'argent, et on y trouve les minerais).
+  return mission(id, icone, nom, { stand: 'puits', ...options, construction: false, elements })
 }
 
 // Les urgences : ce qui bloque la production.

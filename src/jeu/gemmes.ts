@@ -41,8 +41,9 @@ export type Quotidien = { dernierJour: string | null; serie: number }
 export const GEMMES_PAR_PUB = 1
 // La durée d'une publicité (pour l'instant, une fausse publicité : un écran noir et un compte à rebours).
 export const SECONDES_PUB = 30
-// Chaque niveau du joueur gagné rapporte des gemmes.
-export const GEMMES_PAR_NIVEAU = 3
+// Chaque niveau du joueur gagné rapporte une gemme. (25/10, demandé par le propriétaire : 3
+// avant, le joueur avait trop de gemmes et n'avait plus envie de regarder de publicités.)
+export const GEMMES_PAR_NIVEAU = 1
 
 export function gagnerGemmes(etat: EtatJeu, nombre: number): void {
   etat.gemmes = (etat.gemmes ?? 0) + nombre

@@ -83,7 +83,9 @@ export function Missions({ etat, onAllerAuStand, onConstruire }: Props) {
                         <i style={{ width: `${Math.min(100, (el.valeur / Math.max(1, el.max)) * 100)}%` }} />
                       </span>
                       <span className="tache-compte">
-                        {el.valeur >= el.max ? '✔' : el.icone} {nombreAbrege(el.valeur)}/{nombreAbrege(el.max)}
+                        {/* (25/10) L'icône reste quand c'est fait (avant : ✔ à sa place, on ne savait plus de quoi on parlait) */}
+                        {el.icone} {nombreAbrege(el.valeur)}/{nombreAbrege(el.max)}
+                        {el.valeur >= el.max && <span className="tache-coche"> ✔</span>}
                       </span>
                     </span>
                   ))}
