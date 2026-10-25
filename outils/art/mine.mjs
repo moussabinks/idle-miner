@@ -1,8 +1,14 @@
 // La mine (10 × 10 cases) : un puits carré au milieu, entouré de poutres, un chevalement en bois
-// (deux poteaux, une poutre, deux lanternes, une grande roue et le treuil). Au fond (25/10), une
-// montagne toute ronde pleine de filons de minerais et de cristaux, avec son drapeau ; à gauche,
-// l'entrée d'une galerie, sa voie et un wagonnet plein de pierres précieuses ; devant, un coffre
-// au trésor ; à droite, la cabane à outils, un rocher à cristaux, des tonneaux et des caisses.
+// (deux poteaux, une poutre, deux lanternes, une grande roue et le treuil). Les parois du puits
+// sont pleines de minerais et de cristaux. Tout le reste reste bas (25/10 : plus de grosse
+// montagne au fond, qui cachait le décor derrière la mine) : à gauche, une petite butte de rochers
+// avec l'entrée d'une galerie, sa voie et un wagonnet plein de minerais ; au fond, un tas de
+// rochers à minerais et à cristaux ; devant, un coffre au trésor ; à droite, la cabane à outils,
+// un rocher à cristaux, des tonneaux et des caisses.
+//
+// Les minerais ont la forme des icônes du jeu (minerai() dans formes.mjs) : un caillou, un
+// morceau de charbon, des lingots de fer et d'or, des cristaux de redstone, des émeraudes et des
+// diamants (plus des petits cubes).
 //
 // Le jeu dessine par-dessus (src/composants/DessinsVillage.tsx, DessinEvolutionMine) : les câbles
 // qui tombent du treuil, la caisse de l'ascenseur qui monte et descend dans le puits, puis le
@@ -10,10 +16,10 @@
 // Tous ces dessins ont le même cadre que mine.svg (les mêmes pixels) ; les points utiles (où
 // sortent les câbles, le bord du puits...) sont renvoyés dans « points ».
 
-import { C, DX, DY, TRAIT, TRAIT_FIN, Toile, clair, fonce, hasardAvecGraine, polygone, r1, rocher, teintes } from './formes.mjs'
+import { C, DX, DY, TRAIT, TRAIT_FIN, Toile, clair, fonce, hasardAvecGraine, minerai, polygone, r1, rocher, teintes } from './formes.mjs'
 
 const TAILLE = 10
-const HAUT = 300 // la place au-dessus du coin du haut (pour la montagne et son drapeau)
+const HAUT = 110 // la place au-dessus du coin du haut (pour la roue du chevalement)
 const SOL = 12 // l'épaisseur de la dalle : le sol de la mine est à cette hauteur
 // Le puits : de 3,4 à 6,6 cases, dans les deux sens.
 const P0 = 3.4
@@ -21,8 +27,8 @@ const P1 = 6.6
 const POUTRE = 0.35 // la largeur des poutres du bord
 const Z_POUTRE = SOL + 12
 // Le chevalement.
-const Z_TRAVERSE = 196 // le bas de la grande poutre du haut
-const Z_TREUIL = 172 // le milieu du treuil (sous la poutre)
+const Z_TRAVERSE = 176 // le bas de la grande poutre du haut
+const Z_TREUIL = 152 // le milieu du treuil (sous la poutre)
 const R_TREUIL = 16
 // La caisse de l'ascenseur : un carré de 1,5 case au milieu du puits, haute de 50 pixels. À sa
 // hauteur de référence (décalage 0), elle est posée au niveau du sol.
@@ -53,34 +59,50 @@ function poutresDeDevant(t) {
   }
 }
 
-// Un minerai qui dépasse d'un rocher : un petit losange brillant.
-function gemme(t, x, y, couleur, k = 1) {
-  const p = [
-    [x, y - 10 * k],
-    [x + 7 * k, y],
-    [x, y + 8 * k],
-    [x - 7 * k, y],
-  ]
-  t.ajouter(polygone(p, couleur, TRAIT_FIN))
-  t.ajouter(`<path d="M${r1(x - 2 * k)} ${r1(y - 4 * k)} L${r1(x + 1 * k)} ${r1(y - 7 * k)}" stroke="${C.blanc}" stroke-width="3"/>`)
-}
-
 // ---------------------------------------------------------------------------
 // Les petits dessins de la mine
 // ---------------------------------------------------------------------------
 
-// Un filon de minerai sur la roche : trois petits carrés de couleur (comme dans Minecraft).
-function filon(t, x, y, z, couleur, k = 1) {
+// Un filon : deux ou trois minerais (en vraies formes, voir minerai()) serrés les uns contre les
+// autres, au point (x, y, z) de la mine. k : la taille (1 : des minerais de 24 pixels).
+function filon(t, x, y, z, sortes, k = 1, graine = 1) {
   const [cx, cy] = t.pt(x, y, z)
-  for (const [dx, dy, c] of [
-    [0, 0, 9],
-    [11, 6, 7],
-    [-8, 9, 6],
-  ]) {
-    const cote = c * k
-    t.ajouter(`<rect x="${r1(cx + dx * k - cote / 2)}" y="${r1(cy + dy * k - cote / 2)}" width="${r1(cote)}" height="${r1(cote)}" rx="2" fill="${couleur}" stroke="${C.encre}" stroke-width="3"/>`)
+  const hasard = hasardAvecGraine(graine)
+  const places = [
+    [0, 0, 24],
+    [16, 8, 19],
+    [-15, 9, 17],
+  ]
+  sortes.forEach((sorte, i) => {
+    const [dx, dy, taille] = places[i % places.length]
+    t.ajouter(minerai(sorte, cx + dx * k, cy + dy * k, taille * k, (hasard() - 0.5) * 40))
+  })
+}
+
+// Un tas de minerais (en vraies formes), posé à la hauteur z sur le carré (x0, y0) - (x1, y1) :
+// plus haut au milieu, dessiné du fond vers l'avant. « pas » : l'écart entre deux minerais (en
+// cases), « taille » : leur largeur (en pixels), « bosse » : de combien le milieu monte.
+function tasDeMinerais(t, x0, y0, x1, y1, z, sortes, graine, { pas = 0.3, taille = 26, bosse = 16 } = {}) {
+  const hasard = hasardAvecGraine(graine)
+  const tas = []
+  const nx = Math.max(1, Math.round((x1 - x0) / pas))
+  const ny = Math.max(1, Math.round((y1 - y0) / pas))
+  for (let i = 0; i < nx; i++) {
+    for (let j = 0; j < ny; j++) {
+      const x = x0 + (i + 0.5) * ((x1 - x0) / nx) + (hasard() - 0.5) * pas * 0.4
+      const y = y0 + (j + 0.5) * ((y1 - y0) / ny) + (hasard() - 0.5) * pas * 0.4
+      // Plus haut au milieu : un petit tas bombé.
+      const milieu = Math.max(0, 1 - Math.hypot((i - (nx - 1) / 2) / (nx / 2), (j - (ny - 1) / 2) / (ny / 2)))
+      tas.push({ x, y, z: z + milieu * bosse, sorte: sortes[Math.floor(hasard() * sortes.length)], angle: (hasard() - 0.5) * 50 })
+    }
   }
-  t.ajouter(`<rect x="${r1(cx - 2.5 * k)}" y="${r1(cy - 2.5 * k)}" width="${r1(2.5 * k)}" height="${r1(2.5 * k)}" fill="${C.blanc}"/>`)
+  // Un dernier minerai tout en haut du tas.
+  tas.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: z + bosse + 8, sorte: sortes[sortes.length - 1], angle: -8 })
+  tas.sort((a, b) => a.x + a.y + a.z / 60 - (b.x + b.y + b.z / 60))
+  for (const m of tas) {
+    const [px, py] = t.pt(m.x, m.y, m.z)
+    t.ajouter(minerai(m.sorte, px, py - taille * 0.3, taille * (0.9 + hasard() * 0.2), m.angle))
+  }
 }
 
 // Un cristal : un prisme à six faces, pointu, qui sort de la roche (penché de « penche » cases).
@@ -131,69 +153,22 @@ function courbeRonde(liste, ferme = false) {
   return ferme ? d + ' Z' : d
 }
 
-// La montagne, dans le coin du fond de la mine : une grosse roche toute ronde, faite de trois
-// bosses (une épaule à gauche, le sommet, une épaule à droite). Comme les rochers du village :
-// le corps un peu à l'ombre, un grand reflet plus clair en haut à gauche, et quelques fentes.
-function montagne(t) {
-  // La crête, de son pied à gauche à son pied à droite : [x, y, hauteur] (en cases, en pixels).
-  const crete = [
-    [0, 7.7, 0],
-    [0.08, 7.15, 104],
-    [0.32, 5.8, 172],
-    [0.6, 4.6, 152],
-    [0.85, 3.5, 214],
-    [1.35, 2.0, 274],
-    [2.15, 1.25, 270],
-    [3.35, 0.8, 196],
-    [4.6, 0.48, 206],
-    [5.9, 0.27, 152],
-    [6.9, 0.12, 80],
-    [7.5, 0, 0],
-  ]
-  // Le pied de la montagne, devant (de droite à gauche), au ras du sol.
-  const pied = [
-    [6.2, 1.6],
-    [4.6, 2.7],
-    [3.0, 3.0],
-    [2.7, 4.6],
-    [1.6, 6.2],
-  ]
-  const contour = [...crete.map(([x, y, z]) => t.pt(x, y, SOL + z)), ...pied.map(([x, y]) => t.pt(x, y, SOL))]
-  // Le reflet : le même contour, plus petit, remonté vers la gauche (vers la lumière).
+// Une butte de rochers toute ronde (pour l'entrée de la galerie) : son contour passe par ces
+// points [x, y, hauteur] (en cases, en pixels au-dessus du sol), de son pied à gauche jusqu'à son
+// pied à droite. Comme les rochers du village : le corps un peu à l'ombre, un grand reflet plus
+// clair en haut à gauche. Elle reste basse : elle ne doit rien cacher derrière la mine.
+function butte(t, contour3d, eclats = []) {
+  const contour = contour3d.map(([x, y, z]) => t.pt(x, y, SOL + z))
   const centre = contour.reduce((s, [x, y]) => [s[0] + x / contour.length, s[1] + y / contour.length], [0, 0])
-  const reflet = contour.map(([x, y]) => [centre[0] - 38 + (x - centre[0]) * 0.8, centre[1] - 46 + (y - centre[1]) * 0.8])
+  const reflet = contour.map(([x, y]) => [centre[0] - 16 + (x - centre[0]) * 0.8, centre[1] - 20 + (y - centre[1]) * 0.8])
   const chemin = courbeRonde(contour, true)
-  const id = t.nouvelId('montagne')
+  const id = t.nouvelId('butte')
   t.defs.push(`<clipPath id="${id}"><path d="${chemin}"/></clipPath>`)
   t.ajouter(`<path d="${chemin}" fill="${fonce(C.pierre, 0.24)}"/>`)
   t.ajouter(`<path d="${courbeRonde(reflet, true)}" fill="${C.pierre}" clip-path="url(#${id})"/>`)
-  // Un éclat plus clair sur le haut de chaque bosse.
-  for (const [x, y, z, l, h] of [
-    [1.25, 1.7, 236, 56, 22],
-    [0.35, 5.3, 150, 34, 14],
-    [4.3, 0.35, 180, 34, 14],
-  ]) {
+  for (const [x, y, z, l, h] of eclats) {
     const [ex, ey] = t.pt(x, y, SOL + z)
     t.ajouter(`<ellipse cx="${r1(ex)}" cy="${r1(ey)}" rx="${l}" ry="${h}" fill="${clair(C.pierre, 0.45)}" transform="rotate(-18 ${r1(ex)} ${r1(ey)})" clip-path="url(#${id})"/>`)
-  }
-  // Les fentes entre les bosses, et quelques traits de roche.
-  for (const ligne of [
-    [
-      [0.62, 4.5, 150],
-      [1.3, 4.6, 100],
-      [1.8, 5.3, 30],
-    ],
-    [
-      [3.4, 0.75, 194],
-      [3.9, 1.5, 120],
-      [4.7, 1.9, 30],
-    ],
-    [
-      [1.7, 2.6, 150],
-      [2.4, 2.3, 120],
-    ],
-  ]) {
-    t.ajouter(`<path d="${courbeRonde(ligne.map(([x, y, z]) => t.pt(x, y, SOL + z)))}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" clip-path="url(#${id})"/>`)
   }
   t.ajouter(`<path d="${chemin}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
 }
@@ -207,27 +182,6 @@ function lanterne(t, x, y, z) {
   t.ajouter(`<rect x="${r1(lx - 8)}" y="${r1(ly + 14)}" width="16" height="19" rx="4" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
   t.ajouter(`<path d="M${r1(lx)} ${r1(ly + 19)} Q${r1(lx + 4)} ${r1(ly + 25)} ${r1(lx)} ${r1(ly + 29)} Q${r1(lx - 4)} ${r1(ly + 25)} ${r1(lx)} ${r1(ly + 19)} Z" fill="${C.orange}"/>`)
   t.ajouter(`<rect x="${r1(lx - 9)}" y="${r1(ly + 32)}" width="18" height="5" rx="2" fill="${C.charbon}" stroke="${C.encre}" stroke-width="3"/>`)
-}
-
-// Un tas de minerais en petits cubes (pour le wagonnet), posé à la hauteur z, sur le carré
-// (x0, y0) - (x1, y1).
-function tasDeCubes(t, x0, y0, x1, y1, z, couleurs, graine) {
-  const hasard = hasardAvecGraine(graine)
-  const c = 0.26
-  const cubes = []
-  const nx = Math.round((x1 - x0) / 0.3)
-  const ny = Math.round((y1 - y0) / 0.3)
-  for (let i = 0; i < nx; i++) {
-    for (let j = 0; j < ny; j++) {
-      const x = x0 + (i + 0.5) * ((x1 - x0) / nx) - c / 2
-      const y = y0 + (j + 0.5) * ((y1 - y0) / ny) - c / 2
-      // Plus haut au milieu : un petit tas bombé.
-      const milieu = 1 - Math.abs(i - (nx - 1) / 2) / nx - Math.abs(j - (ny - 1) / 2) / ny
-      cubes.push({ x, y, z: z + Math.round(milieu * 14), couleur: couleurs[Math.floor(hasard() * couleurs.length)] })
-    }
-  }
-  cubes.sort((a, b) => a.x + a.y + a.z / 40 - (b.x + b.y + b.z / 40))
-  for (const cube of cubes) t.boite(cube.x, cube.y, cube.x + c, cube.y + c, cube.z, cube.z + 11, teintes(cube.couleur), { trait: TRAIT_FIN })
 }
 
 // Un buisson tout rond (trois boules vertes), posé au sol en (x, y).
@@ -282,9 +236,9 @@ function coffreTresor(t, x0, y0) {
   ]) {
     t.ajouter(`<ellipse cx="${r1(cx + dx)}" cy="${r1(cy + dy)}" rx="9" ry="6.5" fill="${C.or}" stroke="${C.encre}" stroke-width="3"/>`)
   }
-  gemme(t, cx - 15, cy - 20, C.redstone, 1)
-  gemme(t, cx + 12, cy - 25, C.diamant, 1.3)
-  gemme(t, cx + 27, cy - 10, C.emeraude, 0.9)
+  t.ajouter(minerai('redstone', cx - 16, cy - 20, 20, -14))
+  t.ajouter(minerai('diamant', cx + 10, cy - 26, 28, 8))
+  t.ajouter(minerai('emeraude', cx + 28, cy - 12, 19, 18))
   // Deux pièces tombées par terre.
   for (const [x, y] of [
     [x1 + 0.2, y1 + 0.1],
@@ -296,7 +250,7 @@ function coffreTresor(t, x0, y0) {
 }
 
 // Un wagonnet sur une voie qui va dans le sens des y (son milieu en x, y) : une caisse en métal
-// plus large en haut, ses roues, et un tas de minerais et de pierres précieuses.
+// plus large en haut, ses roues, et un tas de minerais (de l'or, des diamants, des émeraudes...).
 function wagonnet(t, x, y) {
   const [w0, w1, wy0, wy1, zw0, zw1] = [x - 0.55, x + 0.55, y - 0.65, y + 0.65, SOL + 14, SOL + 50]
   const metal = teintes('#7c82a3', '#5d6283', fonce('#5d6283', 0.4))
@@ -332,10 +286,8 @@ function wagonnet(t, x, y) {
     const [ex, ey] = t.pt(w1 - 0.05, yy, SOL + 12)
     t.ajouter(`<circle cx="${r1(ex)}" cy="${r1(ey)}" r="10" fill="${C.charbon}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/><circle cx="${r1(ex)}" cy="${r1(ey)}" r="3.5" fill="${C.metal}"/>`)
   }
-  tasDeCubes(t, w0 + 0.06, wy0 + 0.06, w1 - 0.06, wy1 - 0.06, zw1 - 4, [C.or, C.diamant, C.emeraude, C.redstone, C.or, C.violet], 9)
-  const [gx, gy] = t.pt(x, y, zw1 + 30)
-  gemme(t, gx, gy, C.diamant, 1.6)
-  etincelle(t, x - 0.3, y - 0.5, zw1 + 52, 0.9)
+  tasDeMinerais(t, w0 + 0.1, wy0 + 0.1, w1 - 0.1, wy1 - 0.1, zw1 - 4, ['or', 'emeraude', 'redstone', 'or', 'diamant'], 9, { pas: 0.36, taille: 24, bosse: 12 })
+  etincelle(t, x - 0.3, y - 0.5, zw1 + 46, 0.9)
 }
 
 // Le fond de la mine : tout, sauf ce qui bouge.
@@ -352,47 +304,44 @@ function fond() {
     t.ajouter(`<ellipse cx="${r1(px)}" cy="${r1(py)}" rx="${r1(4 + hasard() * 4)}" ry="${r1(2.5 + hasard() * 2)}" fill="#c2a57a"/>`)
   }
 
-  // La montagne du fond, posée dans le coin du fond de la mine (voir montagne()).
-  montagne(t)
   const roche = (x, y, l, h, graine) => {
     const [px, py] = t.pt(x, y, SOL)
     t.ajouter(rocher(px, py, l, h, graine, C.pierre))
   }
-  // Des filons de minerais (des petits carrés de couleur), éparpillés sur la roche.
-  for (const [x, y, z, couleur, k] of [
-    [1.7, 1.7, 236, C.or, 1.2],
-    [2.2, 1.3, 200, C.emeraude, 1],
-    [1.35, 2.2, 186, C.diamant, 1],
-    [0.7, 3.4, 172, C.redstone, 1.1],
-    [0.5, 4.3, 128, C.or, 1.3],
-    [0.35, 5.7, 72, C.diamant, 1.15],
-    [0.25, 6.1, 140, C.charbon, 1],
-    [4.2, 0.45, 150, C.or, 1.2],
-    [5.4, 0.45, 104, C.emeraude, 1.1],
-    [3.9, 1.2, 70, C.redstone, 1.1],
-    [5.9, 0.85, 40, C.or, 1],
-  ]) {
-    filon(t, x, y, z, couleur, k)
-  }
-  // Le petit drapeau tout en haut.
-  const [mx, my] = t.pt(1.7, 1.7, 270)
-  t.ajouter(`<path d="M${r1(mx)} ${r1(my + 8)} L${r1(mx)} ${r1(my - 56)}" stroke="${C.encre}" stroke-width="${4 + 2 * TRAIT_FIN}"/>`)
-  t.ajouter(`<path d="M${r1(mx)} ${r1(my + 8)} L${r1(mx)} ${r1(my - 56)}" stroke="${C.boisFonce}" stroke-width="4"/>`)
-  t.ajouter(`<path d="M${r1(mx + 2)} ${r1(my - 54)} L${r1(mx + 40)} ${r1(my - 43)} L${r1(mx + 2)} ${r1(my - 31)} Z" fill="${C.toit}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
-  t.ajouter(`<circle cx="${r1(mx)}" cy="${r1(my - 58)}" r="5" fill="${C.jaune}" stroke="${C.encre}" stroke-width="3"/>`)
-  // Les grappes de cristaux qui sortent de la roche, et leurs étincelles.
-  grappe(t, 2.6, 2.6, 150, C.violet, 0.9)
-  grappe(t, 3.6, 1.0, 110, C.emeraude, 1)
-  grappe(t, 1.1, 3.4, 150, C.diamant, 1.15)
-  grappe(t, 5.3, 0.55, 118, C.redstone, 0.75)
-  etincelle(t, 0.7, 3.4, 230, 1.1)
-  etincelle(t, 3.9, 0.6, 170, 0.8)
-  etincelle(t, 2.4, 1.1, 250, 0.9, C.jaune)
-  etincelle(t, 0.4, 2.1, 250, 0.8)
+  // Au fond, de chaque côté, sous la poutre du chevalement : deux rochers bien bas (25/10 : plus
+  // de montagne, qui cachait tout le décor), pleins de filons de minerais. (Le coin tout au fond
+  // est caché par le chevalement : on n'y met rien.)
+  roche(1.7, 3.75, 70, 42, 41)
+  filon(t, 1.7, 3.7, SOL + 24, ['or', 'or'], 0.9, 3)
+  roche(3.75, 1.7, 64, 40, 45)
+  filon(t, 3.75, 1.65, SOL + 22, ['emeraude', 'redstone'], 0.85, 4)
+  etincelle(t, 1.0, 3.0, SOL + 68, 0.85)
+  etincelle(t, 3.1, 1.0, SOL + 58, 0.7, C.jaune)
 
-  // L'entrée d'une galerie, au pied de l'épaule de gauche : un trou noir dans la roche, tenu
-  // par un cadre en bois, et des rails qui en sortent.
-  const [ga0, ga1, yGalerie, zGalerie] = [0.1, 1.5, 6.7, 74]
+  // À gauche : une petite butte de rochers, basse et toute ronde, avec l'entrée d'une galerie.
+  butte(
+    t,
+    [
+      [0, 7.05, 0],
+      [0, 6.75, 46],
+      [0.02, 6.25, 84],
+      [0.2, 5.65, 98],
+      [0.45, 5.15, 86],
+      [0.85, 4.75, 92],
+      [1.45, 4.6, 64],
+      [2.05, 4.85, 34],
+      [2.4, 5.45, 10],
+      [2.3, 6.3, 0],
+      [1.2, 7.05, 0],
+    ],
+    [[0.3, 5.5, 88, 24, 9]],
+  )
+  filon(t, 0.95, 4.95, SOL + 62, ['diamant', 'charbon'], 0.9, 7)
+  filon(t, 1.9, 5.3, SOL + 24, ['or', 'redstone'], 0.85, 8)
+
+  // L'entrée de la galerie, dans la butte : un trou noir dans la roche, tenu par un cadre en
+  // bois, et des rails qui en sortent.
+  const [ga0, ga1, yGalerie, zGalerie] = [0.1, 1.5, 6.7, 64]
   const largeurGalerie = (ga1 - ga0) * 38.15
   t.surFace(
     'gauche',
@@ -406,7 +355,7 @@ function fond() {
       `<rect x="${r1(largeurGalerie - 11)}" y="${-zGalerie + 4}" width="11" height="${zGalerie - 4}" rx="2" fill="${C.boisFonce}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
       `<rect x="-6" y="${-zGalerie - 8}" width="${r1(largeurGalerie + 12)}" height="13" rx="3" fill="${C.bois}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
       // deux yeux qui brillent dans le noir (une taupe au travail !)
-      `<circle cx="${r1(largeurGalerie / 2 - 6)}" cy="-34" r="3.6" fill="${C.jaune}"/><circle cx="${r1(largeurGalerie / 2 + 6)}" cy="-34" r="3.6" fill="${C.jaune}"/>`,
+      `<circle cx="${r1(largeurGalerie / 2 - 6)}" cy="-28" r="3.6" fill="${C.jaune}"/><circle cx="${r1(largeurGalerie / 2 + 6)}" cy="-28" r="3.6" fill="${C.jaune}"/>`,
   )
   // La voie qui sort de la galerie et descend vers le devant de la mine.
   const [rv0, rv1, xv] = [yGalerie + 0.05, 9.7, (ga0 + ga1) / 2]
@@ -418,13 +367,8 @@ function fond() {
   // Une lanterne accrochée au linteau de la galerie.
   lanterne(t, ga1 + 0.05, yGalerie + 0.05, SOL + zGalerie + 6)
 
-  // Quelques rochers ronds au pied de la montagne.
-  roche(3.0, 4.0, 70, 46, 3)
-  roche(4.3, 3.0, 64, 40, 5)
-  gemme(t, ...t.pt(3.0, 4.0, SOL + 32), C.or, 1)
-  gemme(t, ...t.pt(4.3, 3.0, SOL + 26), C.diamant, 0.9)
-  // Des buissons au pied de la montagne (un peu de vert, comme le village autour).
-  buisson(t, 1.9, 6.3, 1)
+  // Un buisson à côté de la galerie (un peu de vert, comme le village autour).
+  buisson(t, 2.4, 6.6, 0.9)
 
   // La cabane à outils, à droite au fond : sa porte et son pignon sur la façade de gauche.
   const planches = teintes(C.bois, C.boisFonce)
@@ -458,42 +402,95 @@ function fond() {
   const pioche = `M${r1(pxp - 17)} ${r1(pyp + 12)} Q${r1(pxp - 2)} ${r1(pyp - 10)} ${r1(pxp + 17)} ${r1(pyp - 2)}`
   t.ajouter(`<path d="${pioche}" stroke="${C.encre}" stroke-width="${6 + 2 * TRAIT}" fill="none"/><path d="${pioche}" stroke="${C.metal}" stroke-width="6" fill="none"/>`)
 
-  // Le puits : un trou tout noir, ses deux parois du fond (avec des planches), et ses poutres.
+  // Le puits : un trou tout noir, ses deux parois du fond (en roche, pleines de minerais et de
+  // cristaux : on a envie d'y descendre !), une planche tout en haut, et ses poutres.
   const trou = [t.pt(P0, P0, SOL), t.pt(P1, P0, SOL), t.pt(P1, P1, SOL), t.pt(P0, P1, SOL)]
   t.ajouter(polygone(trou, C.encre, 0))
   const idTrou = t.nouvelId('trou')
   t.defs.push(`<clipPath id="${idTrou}"><polygon points="${trou.map(([x, y]) => `${r1(x)},${r1(y)}`).join(' ')}"/></clipPath>`)
+  let parois = ''
+  const PROFOND = -140
   const paroi = (a, b, couleur) => {
-    const p = [t.pt(...a, SOL), t.pt(...b, SOL), t.pt(...b, -90), t.pt(...a, -90)]
-    t.ajouter(`<g clip-path="url(#${idTrou})">${polygone(p, couleur, TRAIT_FIN)}</g>`)
+    parois += polygone([t.pt(...a, SOL), t.pt(...b, SOL), t.pt(...b, PROFOND), t.pt(...a, PROFOND)], couleur, TRAIT_FIN)
   }
-  paroi([P0, P0], [P1, P0], '#6a5a7e')
-  paroi([P0, P0], [P0, P1], '#54476a')
-  for (const z of [-10, -50]) {
-    const planche = (a, b, couleur) => {
-      const p = [t.pt(...a, z + 9), t.pt(...b, z + 9), t.pt(...b, z), t.pt(...a, z)]
-      t.ajouter(`<g clip-path="url(#${idTrou})">${polygone(p, couleur, TRAIT_FIN)}</g>`)
-    }
-    planche([P0, P0], [P1, P0], fonce(C.bois, 0.3))
-    planche([P0, P0], [P0, P1], fonce(C.boisFonce, 0.3))
-  }
-  // Une lueur de diamant tout au fond du puits (on devine des trésors en bas).
-  for (const [x, y, z, couleur] of [
-    [P0 + 0.5, P0 + 1.2, -70, C.diamant],
-    [P0 + 1.3, P0 + 0.4, -60, C.or],
+  const ROCHE_CLAIRE = '#7d7092'
+  const ROCHE_SOMBRE = '#5f5376'
+  paroi([P0, P0], [P1, P0], ROCHE_CLAIRE)
+  paroi([P0, P0], [P0, P1], ROCHE_SOMBRE)
+  // Le bas des parois se perd dans le noir : une bande plus sombre, puis le noir du trou.
+  for (const [a, b] of [
+    [
+      [P0, P0],
+      [P1, P0],
+    ],
+    [
+      [P0, P0],
+      [P0, P1],
+    ],
   ]) {
-    const [gx, gy] = t.pt(x, y, z)
-    t.ajouter(`<g clip-path="url(#${idTrou})">${polygone(
-      [
-        [gx, gy - 7],
-        [gx + 5, gy],
-        [gx, gy + 6],
-        [gx - 5, gy],
-      ],
-      couleur,
-      3,
-    )}</g>`)
+    parois += polygone([t.pt(...a, -96), t.pt(...b, -96), t.pt(...b, PROFOND), t.pt(...a, PROFOND)], fonce(ROCHE_SOMBRE, 0.45), 0)
   }
+  // Des fentes dans la roche.
+  for (const ligne of [
+    [
+      [4.6, P0, -6],
+      [4.9, P0, -26],
+      [4.75, P0, -48],
+    ],
+    [
+      [P0, 4.7, -10],
+      [P0, 4.95, -34],
+    ],
+    [
+      [3.9, P0, -44],
+      [4.2, P0, -58],
+    ],
+  ]) {
+    const p = ligne.map(([x, y, z]) => t.pt(x, y, z))
+    parois += `<polyline points="${p.map(([x, y]) => `${r1(x)},${r1(y)}`).join(' ')}" fill="none" stroke="${fonce(ROCHE_SOMBRE, 0.35)}" stroke-width="3"/>`
+  }
+  // La planche qui tient le haut des parois.
+  for (const [a, b, couleur] of [
+    [[P0, P0], [P1, P0], fonce(C.bois, 0.2)],
+    [[P0, P0], [P0, P1], fonce(C.boisFonce, 0.2)],
+  ]) {
+    parois += polygone([t.pt(...a, SOL - 2), t.pt(...b, SOL - 2), t.pt(...b, SOL - 14), t.pt(...a, SOL - 14)], couleur, TRAIT_FIN)
+  }
+  // Les minerais dans les parois (de la forme des icônes du jeu), du haut vers le bas.
+  const dansLaParoi = (x, y, z, sorte, taille, angle) => {
+    const [px, py] = t.pt(x, y, z)
+    parois += minerai(sorte, px, py, taille, angle)
+  }
+  for (const [x, y, z, sorte, taille, angle] of [
+    // la paroi de droite (au fond à droite)
+    [3.85, P0, -24, 'or', 26, -10],
+    [4.45, P0, -38, 'diamant', 26, 12],
+    [5.1, P0, -16, 'charbon', 22, 20],
+    [5.55, P0, -30, 'redstone', 20, -15],
+    [3.75, P0, -66, 'redstone', 22, 18],
+    [4.35, P0, -78, 'emeraude', 22, -12],
+    [3.9, P0, -108, 'diamant', 22, -6],
+    // la paroi de gauche (au fond à gauche)
+    [P0, 3.85, -26, 'emeraude', 24, 8],
+    [P0, 4.5, -44, 'or', 26, 14],
+    [P0, 5.15, -14, 'fer', 22, -12],
+    [P0, 5.6, -32, 'diamant', 20, 10],
+    [P0, 3.75, -70, 'charbon', 22, -18],
+    [P0, 4.3, -86, 'redstone', 22, 10],
+    [P0, 3.9, -112, 'or', 20, 0],
+  ]) {
+    dansLaParoi(x, y, z, sorte, taille, angle)
+  }
+  // Des étincelles sur les plus belles pierres.
+  for (const [x, y, z, k] of [
+    [4.6, P0, -24, 0.6],
+    [P0, 4.7, -30, 0.6],
+    [3.6, P0, -96, 0.5],
+  ]) {
+    const [ex, ey] = t.pt(x, y, z)
+    parois += `<path d="M${r1(ex)} ${r1(ey - 11 * k)} L${r1(ex + 3 * k)} ${r1(ey - 3 * k)} L${r1(ex + 11 * k)} ${r1(ey)} L${r1(ex + 3 * k)} ${r1(ey + 3 * k)} L${r1(ex)} ${r1(ey + 11 * k)} L${r1(ex - 3 * k)} ${r1(ey + 3 * k)} L${r1(ex - 11 * k)} ${r1(ey)} L${r1(ex - 3 * k)} ${r1(ey - 3 * k)} Z" fill="${C.blanc}" stroke="${C.encre}" stroke-width="2.5"/>`
+  }
+  t.ajouter(`<g clip-path="url(#${idTrou})">${parois}</g>`)
   poutresDuFond(t)
 
   // Le chevalement : deux gros poteaux aux coins gauche et droit du puits, leurs jambes de force,
@@ -581,25 +578,17 @@ function fond() {
   }
   grappe(t, 8.75, 4.55, SOL + 34, C.diamant, 0.8)
   etincelle(t, 8.3, 4.2, SOL + 110, 0.8)
-  const [gx2, gy2] = t.pt(9.3, 6.2, SOL)
-  gemme(t, gx2 - 6, gy2 - 22, C.emeraude, 0.9)
+  filon(t, 9.3, 6.2, SOL + 20, ['emeraude', 'emeraude'], 0.8, 11)
 
   // Devant à droite, plus près : des tonneaux, une caisse de charbon et une caisse d'or.
   t.cylindre(8.7, 6.7, 0.3, SOL, SOL + 34, bois, { cerclages: [SOL + 9, SOL + 25] })
   t.cylindre(9.35, 7.2, 0.3, SOL, SOL + 34, bois, { cerclages: [SOL + 9, SOL + 25] })
-  for (const [x0, y0, couleur] of [
-    [7.6, 7.9, C.charbon],
-    [8.6, 8.0, C.or],
+  for (const [x0, y0, sorte] of [
+    [7.6, 7.9, 'charbon'],
+    [8.6, 8.0, 'or'],
   ]) {
     t.boite(x0, y0, x0 + 0.7, y0 + 0.7, SOL, SOL + 26, bois)
-    const [cx, cy] = t.pt(x0 + 0.35, y0 + 0.35, SOL + 26)
-    for (const [ddx, ddy] of [
-      [-8, 0],
-      [8, 0],
-      [0, -7],
-    ]) {
-      t.ajouter(`<circle cx="${r1(cx + ddx)}" cy="${r1(cy + ddy)}" r="8" fill="${couleur}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
-    }
+    tasDeMinerais(t, x0 + 0.08, y0 + 0.08, x0 + 0.62, y0 + 0.62, SOL + 24, [sorte], 20 + x0, { pas: 0.27, taille: 21, bosse: 8 })
   }
   return t
 }
@@ -612,13 +601,13 @@ function devant() {
 }
 
 // Les minerais de chaque niveau de la caisse : 1 pierre, charbon, fer ; 2 + redstone ;
-// 3 + or et émeraude ; 4 + diamant.
+// 3 + or et émeraude ; 4 + diamant. (Le dernier de la liste est posé tout en haut du tas.)
 const MINERAIS_CAISSE = [
   [],
-  [C.pierre, C.charbon, C.fer],
-  [C.pierre, C.charbon, C.fer, C.redstone, C.redstone],
-  [C.charbon, C.fer, C.redstone, C.or, C.emeraude, C.or],
-  [C.fer, C.redstone, C.or, C.emeraude, C.diamant, C.diamant],
+  ['pierre', 'charbon', 'pierre', 'fer', 'charbon'],
+  ['pierre', 'charbon', 'fer', 'redstone', 'redstone'],
+  ['charbon', 'fer', 'redstone', 'or', 'emeraude', 'or'],
+  ['fer', 'redstone', 'or', 'emeraude', 'diamant', 'diamant'],
 ]
 
 // La caisse de l'ascenseur, vide (0) ou pleine (1 à 4), dans le cadre de la mine.
@@ -650,36 +639,9 @@ function caisse(niveau) {
   ]) {
     t.poutre([x, y, z0 + 4], [x, y, z1 - 2], C.metal, 3)
   }
-  // Le tas de minerais (des petits cubes), du fond vers l'avant.
-  const couleurs = MINERAIS_CAISSE[niveau]
-  if (couleurs.length) {
-    const hasard = hasardAvecGraine(40 + niveau)
-    const cubes = []
-    const c = 0.3
-    for (const [x, y, z] of [
-      [4.45, 4.45, 0],
-      [4.85, 4.4, 0],
-      [5.25, 4.45, 0],
-      [4.4, 4.85, 0],
-      [5.3, 4.85, 0],
-      [4.45, 5.25, 0],
-      [4.85, 5.3, 0],
-      [5.25, 5.25, 0],
-      [4.85, 4.85, 2],
-      [4.62, 4.62, 12],
-      [5.05, 4.6, 12],
-      [4.6, 5.05, 12],
-      [5.05, 5.05, 12],
-      [4.83, 4.83, 24],
-    ]) {
-      cubes.push({ x: x + (hasard() - 0.5) * 0.06, y: y + (hasard() - 0.5) * 0.06, z, couleur: couleurs[Math.floor(hasard() * couleurs.length)] })
-    }
-    cubes.sort((a, b) => a.x + a.y + a.z / 40 - (b.x + b.y + b.z / 40))
-    for (const cube of cubes) {
-      const zb = z1 - 6 + cube.z
-      t.boite(cube.x, cube.y, cube.x + c, cube.y + c, zb, zb + 13, teintes(cube.couleur), { trait: TRAIT_FIN })
-    }
-  }
+  // Le tas de minerais (de la forme des icônes du jeu), qui dépasse du haut de la caisse.
+  const sortes = MINERAIS_CAISSE[niveau]
+  if (sortes.length) tasDeMinerais(t, K0 + 0.14, K0 + 0.14, K1 - 0.14, K1 - 0.14, z1 - 4, sortes, 40 + niveau, { pas: 0.34, taille: 28, bosse: 18 })
   // Les anneaux où s'accrochent les câbles (aux coins gauche et droit).
   for (const [x, y] of [
     [K0, K1],
@@ -727,7 +689,7 @@ export function mine() {
     // le pied du panneau du niveau, et le haut du chevalement (pour la jauge)
     panneau: p(6.6, 9.5, SOL),
     // (la jauge du coffre est juste au-dessus de la roue ; la mini-jauge encore au-dessus)
-    dessus: p(5, 5, 390),
+    dessus: p(5, 5, 300),
     // la caisse tout en haut (son fond sous le treuil), et tout en bas (cachée dans le puits)
     cabineEnHaut: -Math.round(Z_TREUIL - R_TREUIL - 30 - zAccroche),
     cabineEnBas: Math.round(t.pt(P1, P1, SOL)[1] - t.pt(K0, K0, SOL + HAUTEUR_CAISSE + 40)[1] + 10),

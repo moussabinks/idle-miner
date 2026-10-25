@@ -329,3 +329,272 @@ export function rocher(x, y, largeur, hauteur, graine, couleur = C.pierre, trait
   const eclaire = contour.map(([px, py]) => [x - largeur * 0.1 + (px - x) * 0.72, y - hauteur * 0.22 + (py - y) * 0.72])
   return polygone(contour, fonce(couleur, 0.18), 0) + polygone(eclaire, couleur, 0) + polygone(contour, 'none', trait)
 }
+
+// ---------------------------------------------------------------------------
+// Les minerais (25/10) : les mêmes formes que les icônes du jeu (outils/icones/dessins.py), pour
+// qu'on les reconnaisse au premier coup d'œil (et plus des petits cubes) : la pierre est un
+// caillou gris, le charbon un morceau noir à facettes, le fer et l'or des lingots, la redstone un
+// cristal rouge à six côtés, l'émeraude une gemme verte à huit côtés, le diamant une gemme bleu
+// ciel taillée.
+// ---------------------------------------------------------------------------
+
+// Chaque minerai est dessiné dans un carré de 100 × 100 : son contour (la forme entière), sa
+// couleur, et ses facettes (des morceaux plus clairs ou plus sombres, posés par-dessus).
+const LINGOT = [
+  [20, 30],
+  [80, 30],
+  [94, 54],
+  [86, 80],
+  [14, 80],
+  [6, 54],
+]
+const lingot = (dessus, face, bout) => ({
+  contour: LINGOT,
+  couleur: face,
+  facettes: [
+    [
+      dessus,
+      [
+        [20, 30],
+        [80, 30],
+        [94, 54],
+        [6, 54],
+      ],
+    ],
+    [
+      bout,
+      [
+        [74, 54],
+        [94, 54],
+        [86, 80],
+        [70, 80],
+      ],
+    ],
+    [
+      '#ffffff',
+      [
+        [26, 35],
+        [50, 35],
+        [47, 42],
+        [23, 42],
+      ],
+    ],
+  ],
+})
+
+export const MINERAIS = {
+  pierre: {
+    contour: [
+      [14, 70],
+      [20, 40],
+      [40, 22],
+      [66, 20],
+      [86, 40],
+      [90, 70],
+      [70, 86],
+      [30, 86],
+    ],
+    couleur: '#a3a29e',
+    facettes: [
+      [
+        '#d3d1ca',
+        [
+          [40, 22],
+          [66, 20],
+          [60, 46],
+          [36, 48],
+        ],
+      ],
+      [
+        '#7e7d79',
+        [
+          [60, 46],
+          [86, 40],
+          [90, 70],
+          [70, 86],
+          [52, 64],
+        ],
+      ],
+    ],
+  },
+  charbon: {
+    contour: [
+      [16, 66],
+      [22, 36],
+      [46, 18],
+      [72, 24],
+      [88, 48],
+      [82, 78],
+      [54, 88],
+      [26, 84],
+    ],
+    couleur: '#3d3a46',
+    facettes: [
+      [
+        '#6b6776',
+        [
+          [46, 18],
+          [72, 24],
+          [60, 48],
+          [34, 44],
+        ],
+      ],
+      [
+        '#24212b',
+        [
+          [60, 48],
+          [88, 48],
+          [82, 78],
+          [56, 72],
+        ],
+      ],
+    ],
+    eclat: [38, 36],
+  },
+  fer: lingot('#e3e9ef', '#a3aebb', '#6f7a87'),
+  or: lingot('#ffe68a', '#f5b82e', '#c98512'),
+  redstone: {
+    contour: [
+      [50, 8],
+      [86, 30],
+      [86, 70],
+      [50, 92],
+      [14, 70],
+      [14, 30],
+    ],
+    couleur: '#e0261f',
+    facettes: [
+      [
+        '#ff8a6e',
+        [
+          [50, 8],
+          [86, 30],
+          [50, 40],
+          [14, 30],
+        ],
+      ],
+      [
+        '#9e140f',
+        [
+          [86, 30],
+          [86, 70],
+          [50, 92],
+          [50, 40],
+        ],
+      ],
+    ],
+    rond: [50, 56, 11, '#ff5a48'],
+    eclat: [74, 62],
+  },
+  emeraude: {
+    contour: [
+      [34, 10],
+      [66, 10],
+      [84, 30],
+      [84, 70],
+      [66, 90],
+      [34, 90],
+      [16, 70],
+      [16, 30],
+    ],
+    couleur: '#2fb35a',
+    facettes: [
+      [
+        '#7cf0a0',
+        [
+          [34, 10],
+          [66, 10],
+          [68, 28],
+          [32, 28],
+        ],
+      ],
+      [
+        '#1c7c3c',
+        [
+          [68, 28],
+          [84, 30],
+          [84, 70],
+          [66, 90],
+          [68, 72],
+        ],
+      ],
+      [
+        '#45cf72',
+        [
+          [32, 28],
+          [68, 28],
+          [68, 72],
+          [32, 72],
+        ],
+      ],
+      [
+        '#ffffff',
+        [
+          [38, 33],
+          [45, 33],
+          [45, 58],
+          [38, 58],
+        ],
+      ],
+    ],
+    eclat: [74, 18],
+  },
+  diamant: {
+    contour: [
+      [30, 14],
+      [70, 14],
+      [90, 46],
+      [50, 90],
+      [10, 46],
+    ],
+    couleur: '#4fd3f0',
+    facettes: [
+      [
+        '#b8f3ff',
+        [
+          [30, 14],
+          [70, 14],
+          [62, 32],
+          [38, 32],
+        ],
+      ],
+      [
+        '#1f9ec4',
+        [
+          [90, 46],
+          [62, 32],
+          [50, 90],
+        ],
+      ],
+      [
+        '#ffffff',
+        [
+          [36, 18],
+          [50, 18],
+          [44, 28],
+          [32, 28],
+        ],
+      ],
+    ],
+    eclat: [76, 22],
+  },
+}
+
+// Une petite étoile à quatre branches (l'éclat qui brille sur un minerai), dans le carré 100 × 100.
+function eclatMinerai(x, y, r) {
+  return `<path d="M${x} ${y - r} Q${x + r * 0.2} ${y - r * 0.2} ${x + r} ${y} Q${x + r * 0.2} ${y + r * 0.2} ${x} ${y + r} Q${x - r * 0.2} ${y + r * 0.2} ${x - r} ${y} Q${x - r * 0.2} ${y - r * 0.2} ${x} ${y - r} Z" fill="#ffffff"/>`
+}
+
+// Un minerai, en points du dessin : son milieu en (x, y), « taille » pixels de large, penché de
+// « angle » degrés. Le contour d'encre garde la même épaisseur (« trait ») quelle que soit la taille.
+export function minerai(sorte, x, y, taille = 24, angle = 0, trait = 3) {
+  const m = MINERAIS[sorte]
+  const k = taille / 100
+  const p = (liste) => liste.map(([a, b]) => `${a},${b}`).join(' ')
+  let dedans = `<polygon points="${p(m.contour)}" fill="${m.couleur}"/>`
+  for (const [couleur, facette] of m.facettes) dedans += `<polygon points="${p(facette)}" fill="${couleur}"${couleur === '#ffffff' ? ' opacity="0.75"' : ''}/>`
+  if (m.rond) dedans += `<circle cx="${m.rond[0]}" cy="${m.rond[1]}" r="${m.rond[2]}" fill="${m.rond[3]}"/>`
+  if (m.eclat && taille >= 18) dedans += eclatMinerai(m.eclat[0], m.eclat[1], 9)
+  dedans += `<polygon points="${p(m.contour)}" fill="none" stroke="${C.encre}" stroke-width="${r1(trait / k)}"/>`
+  return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(angle)}) scale(${Math.round(k * 1000) / 1000}) translate(-50 -55)">${dedans}</g>`
+}
