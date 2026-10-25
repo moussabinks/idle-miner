@@ -47,6 +47,13 @@ function ligne(courbe: (x: number) => number, x0: number, x1: number, pas = 0.4)
 
 const LOIN = 90 // la mer va jusque-là (bien au-delà de ce que montre la caméra)
 
+// Les couleurs de la plage (25/10, le style cartoon : des aplats, un contour bleu nuit).
+const ENCRE = '#2a2140'
+const MER = '#8cc8f5'
+const MER_CLAIRE = '#b3dcf9'
+const SABLE = '#f3dca0'
+const SABLE_MOUILLE = '#ead08e'
+
 // ---------------------------------------------------------------------------
 // Le sol : le sable, la mer, l'écume (dessinés dans le terrain, sous tout le reste)
 // ---------------------------------------------------------------------------
@@ -87,56 +94,28 @@ export const SolPlage = memo(function SolPlage() {
       <svg className="terrain-village sol-plage" style={{ left: x0, top: y0, width: x1 - x0, height: y1 - y0 }} viewBox={`${x0} ${y0} ${x1 - x0} ${y1 - y0}`} aria-hidden="true">
         <defs>
           <TouffeHerbe />
-          <filter id="flou-plage" x="-5%" y="-5%" width="110%" height="110%">
-            <feGaussianBlur stdDeviation="3.5" />
-          </filter>
-          <filter id="flou-eau" x="-10%" y="-10%" width="120%" height="120%">
-            <feGaussianBlur stdDeviation="9" />
-          </filter>
-          {/* La texture du sable (grains et ondulations, sans couture, sable.webp). */}
-          <pattern id="motif-sable" patternUnits="userSpaceOnUse" width="256" height="256">
-            <image href={cheminPublic('/images/sol/sable.webp')} width="256" height="256" />
-          </pattern>
           <clipPath id="cadre-plage">
             <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} />
           </clipPath>
         </defs>
         <g clipPath="url(#cadre-plage)">
-          {/* La mer : du bleu profond au loin, turquoise près du bord. */}
-          <polygon points={bande((x) => rivage(x) - 0.2, () => LOIN)} fill="#1d5fa8" />
-          <polygon points={bande((x) => rivage(x) + 3.5, (x) => rivage(x) + 14)} fill="#2777c0" filter="url(#flou-eau)" />
-          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 5)} fill="#2fa6c9" filter="url(#flou-eau)" />
-          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 1.7)} fill="#58d3d6" filter="url(#flou-plage)" />
-          {/* Les récifs sous l'eau (les reflets qui scintillent sont dans EauPlage). */}
+          {/* La mer : tout à plat (25/10), avec une bande plus claire le long du rivage. */}
+          <polygon points={bande((x) => rivage(x) - 0.2, () => LOIN)} fill={MER} />
+          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 1.1)} fill={MER_CLAIRE} />
+          {/* Les récifs sous l'eau : des taches à peine plus foncées. */}
           {RECIFS.map((r, i) => {
             const e = ecran(r.x, r.d)
-            return <ellipse key={`r${i}`} cx={e.x} cy={e.y} rx={r.r} ry={r.r * 0.55} fill={r.teinte < 0.5 ? '#1a6f8f' : '#227f8a'} opacity="0.55" filter="url(#flou-plage)" />
+            return <ellipse key={`r${i}`} cx={e.x} cy={e.y} rx={r.r} ry={r.r * 0.55} fill="#7fbdee" />
           })}
-          {/* Le sable : sec près de l'herbe, plus foncé et mouillé près de l'eau. */}
-          <polygon points={bande(sable, rivage)} fill="#efd59a" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => sable(x) + 0.35, (x) => rivage(x) - 0.25)} fill="#f6e2ad" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => rivage(x) - 0.75, (x) => rivage(x) + 0.05)} fill="#d9b874" filter="url(#flou-plage)" />
-          <polygon points={bande(sable, rivage)} fill="url(#motif-sable)" />
-          {/* Les ondulations du sable sec, que le vent dessine parallèles au rivage. */}
-          {[0.9, 1.45, 2.05, 2.7].map((k, i) => (
-            <path
-              key={`o${i}`}
-              d={ligne((x) => Math.min(rivage(x) - 1.1, sable(x) + k + 0.18 * Math.sin(x * 0.9 + i)), -45, N + 40)}
-              stroke={i % 2 ? '#e2c27e' : '#d8b46e'}
-              strokeWidth="1.3"
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${18 + i * 6} ${10 + i * 4}`}
-              opacity="0.55"
-            />
-          ))}
-          {/* Le sable mouillé : une bande plus sombre et brillante juste avant l'écume. */}
-          <polygon points={bande((x) => rivage(x) - 1.1, (x) => rivage(x) + 0.05)} fill="#c9a160" opacity="0.35" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => rivage(x) - 0.45, (x) => rivage(x) + 0.05)} fill="#fff6dc" opacity="0.3" filter="url(#flou-plage)" />
-          {GRAINS.map((g, i) => {
+          {/* Le sable : à plat, un peu plus foncé (mouillé) juste avant l'eau, quelques grains. */}
+          <polygon points={bande(sable, rivage)} fill={SABLE} />
+          <polygon points={bande((x) => rivage(x) - 0.55, rivage)} fill={SABLE_MOUILLE} />
+          {GRAINS.filter((_, i) => i % 3 === 0).map((g, i) => {
             const e = ecran(g.x, g.d)
-            return <circle key={`g${i}`} cx={e.x} cy={e.y} r={g.r} fill={g.teinte < 0.5 ? '#c9a462' : '#fff4cf'} opacity="0.7" />
+            return <circle key={`g${i}`} cx={e.x} cy={e.y} r={g.r} fill="#e2c27e" />
           })}
+          {/* Le trait de côte, épais et bleu nuit, comme le contour de tout le reste. */}
+          <path d={ligne(rivage, -45, N + 40)} stroke={ENCRE} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </g>
         {/* Une frange d'herbe le long du sable, pour passer doucement du damier à la plage. */}
         {Array.from({ length: Math.round(N / 0.45) }, (_, i) => {
@@ -171,18 +150,17 @@ export const EauPlage = memo(function EauPlage() {
               key={`f${i}`}
               className="reflet-mer"
               style={{ animationDelay: `${(r.teinte * 4).toFixed(2)}s` }}
-              d={`M${e.x - r.r} ${e.y} Q${e.x} ${e.y - r.r * 0.35} ${e.x + r.r} ${e.y}`}
-              stroke="#e8fbff"
-              strokeWidth="1.4"
+              d={`M${e.x - r.r} ${e.y} q${r.r / 2} ${-r.r * 0.45} ${r.r} 0 t${r.r} 0`}
+              stroke="#ffffff"
+              strokeWidth="1.8"
               fill="none"
               strokeLinecap="round"
             />
           )
         })}
-        {/* L'écume : une ligne blanche qui suit le rivage, et une vague qui va et vient. */}
-        <path className="ecume" d={ligne((x) => rivage(x) - 0.08, -45, N + 40)} stroke="#ffffff" strokeWidth="3.2" fill="none" strokeLinecap="round" opacity="0.92" />
-        <path className="vague" d={ligne((x) => rivage(x) + 0.55, -45, N + 40)} stroke="#e6fbff" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="22 14" />
-        <path className="vague vague-2" d={ligne((x) => rivage(x) + 1.3, -45, N + 40)} stroke="#d7f6ff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="12 22" />
+        {/* Les vagues : des traits blancs pointillés, parallèles au rivage. */}
+        <path className="vague" d={ligne((x) => rivage(x) + 0.6, -45, N + 40)} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="18 16" />
+        <path className="vague vague-2" d={ligne((x) => rivage(x) + 1.6, -45, N + 40)} stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeDasharray="10 26" opacity="0.8" />
       </g>
     </svg>
   )

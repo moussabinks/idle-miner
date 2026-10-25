@@ -59,8 +59,8 @@
 }
 
 .ombre-batiment {
-  /* Trois couches l'une sur l'autre : environ 0,38 au milieu, plus clair sur le bord. */
-  fill: rgb(20 40 10 / 0.15);
+  /* Une ombre plate et nette (25/10), le vert un peu plus sombre de l'herbe. */
+  fill: #74bf57;
 }
 
 /* La forêt (ForetVillage) : des tuiles de « toile » posées dans le monde. Les arbres du bas de la

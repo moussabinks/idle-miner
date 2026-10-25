@@ -8,7 +8,7 @@ import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
 import { ECHELLE_SPRITE, spritePerso } from './sprites'
-import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
+import { CALAGES, DEMI_HAUTEUR, DEMI_LARGEUR, LIMITES_TERRAIN, POINTS_MINE, pointSurSprite, transformationSprite, versEcran, type Point } from './iso'
 import { ARBRE_ROND, CERISIER, SAPIN, type ImageArbre } from './arbres'
 import { ImageFigee } from './ImageFigee'
 import { TasDeRochers } from './Rochers'
@@ -216,41 +216,6 @@ function imageCaisse(pleine: boolean, niveauMine: number): string {
 // Les calques de la mine, dans le même cadre que mine.svg (mêmes pixels, 684 × 570) : le devant
 // (les poutres du bord de devant du puits), dessiné par-dessus la caisse quand elle descend.
 const IMAGE_DEVANT_MINE = cheminPublic('/images/batiments/mine-devant.svg')
-
-// Les points utiles de l'image de la mine, en pixels de l'image. Ils sont affichés par
-// « node outils/art/fabriquer.mjs » : les recopier si on change le dessin de la mine.
-export const POINTS_MINE = {
-  // où est posée la caisse (son image), à sa hauteur de référence (décalage 0 : posée au sol)
-  caisse: { x: 282, y: 215, largeur: 120, hauteur: 177 },
-  // où les deux câbles sortent du treuil, et où ils s'accrochent à la caisse
-  treuil: [
-    [292.5, 210.4],
-    [391.5, 210.4],
-  ] as [number, number][],
-  accroches: [
-    [292.5, 302.4],
-    [391.5, 302.4],
-  ] as [number, number][],
-  // où se tient un mineur dans la caisse (ses pieds), et le bord de devant de la caisse (de
-  // droite à gauche) : on ne le voit qu'au-dessus de ce bord
-  piedDansLaCaisse: [342, 350.4] as [number, number],
-  bordCaisse: [
-    [391.5, 304.4],
-    [342, 333.1],
-    [292.5, 304.4],
-  ] as [number, number][],
-  // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la caisse ne se voit
-  // qu'au-dessus de ce bord (en dessous, elle est dans le puits)
-  bordDuPuits: [
-    [236.4, 354.4],
-    [342, 415.6],
-    [447.6, 354.4],
-  ] as [number, number][],
-  // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
-  panneau: [124.2, 388.9] as [number, number],
-  // au-dessus de la roue du chevalement (pour la mini-jauge du déchargement)
-  dessus: [342, 58.4] as [number, number],
-}
 
 // De combien de pixels de l'image la caisse se décale : tout en haut, elle pend sous le treuil ;
 // tout en bas, elle a disparu dans le puits. Sans ascenseur (vieilles parties), les câbles

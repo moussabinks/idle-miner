@@ -82,6 +82,42 @@ export const CALAGES: Record<IdBatiment, Calage> = {
   marche: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
 }
 
+// Les points utiles de l'image de la mine (pour ce que DessinsVillage dessine par-dessus : la
+// caisse de l'ascenseur, ses câbles, le panneau du niveau), en pixels de l'image. Ils sont affichés par
+// « node outils/art/fabriquer.mjs » : les recopier si on change le dessin de la mine.
+export const POINTS_MINE = {
+  // où est posée la caisse (son image), à sa hauteur de référence (décalage 0 : posée au sol)
+  caisse: { x: 282, y: 215, largeur: 120, hauteur: 177 },
+  // où les deux câbles sortent du treuil, et où ils s'accrochent à la caisse
+  treuil: [
+    [292.5, 210.4],
+    [391.5, 210.4],
+  ] as [number, number][],
+  accroches: [
+    [292.5, 302.4],
+    [391.5, 302.4],
+  ] as [number, number][],
+  // où se tient un mineur dans la caisse (ses pieds), et le bord de devant de la caisse (de
+  // droite à gauche) : on ne le voit qu'au-dessus de ce bord
+  piedDansLaCaisse: [342, 350.4] as [number, number],
+  bordCaisse: [
+    [391.5, 304.4],
+    [342, 333.1],
+    [292.5, 304.4],
+  ] as [number, number][],
+  // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la caisse ne se voit
+  // qu'au-dessus de ce bord (en dessous, elle est dans le puits)
+  bordDuPuits: [
+    [236.4, 354.4],
+    [342, 415.6],
+    [447.6, 354.4],
+  ] as [number, number][],
+  // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
+  panneau: [124.2, 388.9] as [number, number],
+  // au-dessus de la roue du chevalement (pour la mini-jauge du déchargement)
+  dessus: [342, 58.4] as [number, number],
+}
+
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer
 // (21/10) : on l'agrandit (ou la rétrécit) d'un seul coup, de façon que ses coins gauche et droit
 // tombent sur la largeur de l'emprise, et que le milieu de son pied tombe au milieu de l'emprise.

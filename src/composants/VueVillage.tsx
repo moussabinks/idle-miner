@@ -47,6 +47,7 @@ import { BOITES_PLAGE } from './plage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
   CALAGES,
+  POINTS_MINE,
   pointSurSprite,
   HAUTEUR_MONDE,
   LIMITES_CAMERA,
@@ -716,17 +717,14 @@ export function VueVillage({
   // Le sol : chemins, rails, grille, emprises.
   const sol = (
     <svg className="sol-village" viewBox={`0 0 ${LARGEUR_MONDE} ${HAUTEUR_MONDE}`} aria-hidden="true">
-      {/* Une ombre douce sous chaque bâtiment (la lumière vient d'en haut à gauche) : il est posé
-          sur le sol, pas collé dessus. Trois losanges transparents l'un sur l'autre, du plus grand
-          au plus petit : le bord est doux sans flou (un flou faisait ramer le jeu). */}
+      {/* Une ombre plate sous chaque bâtiment (25/10, le style cartoon : une ombre dure, d'un vert
+          un peu plus sombre que l'herbe), décalée vers la droite (la lumière vient d'en haut à
+          gauche) : il est posé sur le sol, pas collé dessus. */}
       {village.batiments
         .filter((b) => b.id !== 'puits')
-        .flatMap((b) =>
-          [0.6, 0, -0.6].map((marge) => {
-            const taille = BATIMENTS[b.id].taille - 0.5 + marge
-            return <polygon key={`ombre-${b.id}-${marge}`} className="ombre-batiment" points={losange(b.x + 0.6 - marge / 2, b.y + 0.2 - marge / 2, taille)} />
-          }),
-        )}
+        .map((b) => (
+          <polygon key={`ombre-${b.id}`} className="ombre-batiment" points={losange(b.x + 0.45, b.y + 0.1, BATIMENTS[b.id].taille)} />
+        ))}
       {(fantome || pinceau) && <GrilleConstruction />}
       {village.chemins.map((cle) => {
         const c = lireCle(cle)
@@ -928,7 +926,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
   const auTravail = mineursDansLaMine(etat) > 0 || charge > 0
   const enHaut = caisse.etape === 'haut'
   const calage = CALAGES.puits
-  const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
+  const dessus = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.dessus)
   return (
     <>
       <BoiteSvg x={x} y={y} taille={10} hauteur={130} classe="dessus-batiment" style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
