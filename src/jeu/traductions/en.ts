@@ -878,4 +878,5 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Garder du {nom}': 'Keep {nom}',
   'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it.',
   '= garder un minerai pour tes améliorations (il n’est pas vendu)': '= keep an ore for your upgrades (it won’t be sold)',
+  'Demi-tour': 'Turn back',
 }
