@@ -10,7 +10,7 @@
 - **La porte** : au milieu de sa face avant **gauche** (à droite si elle est retournée). Le joueur apparaît devant elle au chargement de la partie.
 - **L'ouvrir** : toucher (ou cliquer) la mine, ou le gros bouton rond **⛏️ Mine** en bas de l'écran : la taupe du joueur y marche et le panneau s'ouvre.
 - **Description** : « Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre, que tu vends d'un clic. »
-- **Le dessin au village** : la fosse de la mine, son treuil et, par-dessus, ce qui **évolue** : la **caisse de l'ascenseur** qui monte pleine et redescend vide tant que des mineurs travaillent au fond (avec un mineur dedans quand il arrive ou remonte), et un **panneau en bois** avec le niveau de la mine (« Niv. 3 »). (Le dessin passe au nouveau style du 25/10 : voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md), qui sera mise à jour.)
+- **Le dessin au village** : la fosse de la mine, son treuil et, par-dessus, ce qui **évolue** : la **caisse de l'ascenseur** qui monte pleine et redescend vide tant que des mineurs travaillent au fond (avec un mineur dedans quand il arrive ou remonte), et un **panneau en bois** avec le niveau de la mine (« Niv. 3 »). (Le dessin passe au nouveau style du 25/10 : voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md).)
 - **Bulles au-dessus** (`notifications.ts`) :
   - **📦 « Le coffre de la mine est plein : vends-le ! »** (alerte rouge) ;
   - **😠 « Payer ! »** quand des employés attendent leur salaire (la même alerte est au Personnel) ;

@@ -95,7 +95,7 @@ Les règles qui vérifient ces cadenas : `debloque(etat, chose, index)`, `palier
 - **Le passage de niveau** (`FeteNiveau.tsx`) : une grande fenêtre « Niveau supérieur ! » (le chiffre qui monte, des confettis, une fanfare), ce qu'on débloque ligne par ligne (`deblocagesDuNiveau` : les rails, un niveau de la mine), et les **+3 💎**. La fête **attend** qu'aucune fenêtre ne soit ouverte (elle ne ferme plus le panneau en cours). Le message du niveau commence toujours par « 🎉 » (« 🎉 Niveau 3 ! +3 💎 Débloqué : ⛏️ Mine niveau 2 : Veine de redstone. ») : l'interface le reconnaît ainsi, dans les deux langues.
 - **Les missions** (en haut à droite, `missions.ts`) : une mission « ⭐ Niveau *N* : … » montre le prochain niveau qui débloque quelque chose (`prochainDeblocage`) et la jauge d'XP vers le niveau suivant. Si ce niveau est plus loin que le suivant : « Niveau 9 (tu es 7) : … ».
 
-(L'écran a été refait le 25/10 : voir [interface.md](interface.md), qui sera mise à jour.)
+(L'écran a été refait le 25/10 : voir [interface.md](interface.md).)
 
 ## 5. Sauvegarde et anciennes parties
 

@@ -9,7 +9,7 @@
 - **Déblocage** : dès le début, jamais de cadenas. Depuis le 25/10, le tutoriel ne le fait plus construire (il va jusqu'au premier mineur) : la liste des tâches le propose ensuite (« Construis : Forgeron »). Les pioches suivantes, elles, demandent un **palier** de la mine (voir les chiffres).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le forgeron : la taupe du joueur marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
-- **Dessin au village** : une forge en pierre et en bois avec sa cheminée qui fume, son enclume et des pioches exposées (le dessin passe au nouveau style du 25/10 : voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md), qui sera mise à jour).
+- **Dessin au village** : une forge en pierre grise au toit d’ardoise, sa cheminée qui fume, son feu orange et son enclume, dans le style plat du 25/10 (voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md)).
 - **Description** (en haut du panneau) : « Pioches et réparations. »
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔧 « Ta pioche est cassée : fais-la réparer ! »** (bulle rouge d'alerte) quand la pioche équipée est cassée ;
