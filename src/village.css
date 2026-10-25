@@ -213,7 +213,7 @@
   width: 26px;
   height: 10px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.18) 70%, rgb(0 0 0 / 0));
+  background: rgb(42 33 64 / 0.22); /* une ombre plate (25/10) */
 }
 
 /* Pendant un saut, l'ombre rétrécit et pâlit (il s'éloigne du sol). */
@@ -256,15 +256,9 @@
   left: 0;
   top: 0;
   max-width: none;
-  /* Un léger contour sombre, puis une ombre douce : il se détache bien de l'herbe. */
-  filter: drop-shadow(0 0 0.6px rgb(30 18 8 / 0.9)) drop-shadow(0 2px 1.5px rgb(0 0 0 / 0.3));
+  /* (25/10) Plus de filtre : le contour d'encre est dans le dessin (et les filtres font ramer). */
   -webkit-user-drag: none;
   user-select: none;
-}
-
-/* Le joueur (le héros) : un liseré de lumière chaude, pour qu'on le repère tout de suite. */
-.perso-heros .image-perso {
-  filter: drop-shadow(0 0 0.6px rgb(30 18 8 / 0.9)) drop-shadow(0 0 2px rgb(255 226 140 / 0.85)) drop-shadow(0 2px 1.5px rgb(0 0 0 / 0.3));
 }
 
 /* L'anneau doré sous le joueur : il tourne et brille doucement. */
@@ -371,9 +365,10 @@
   translate: -50% 0;
   padding: 0 4px;
   border-radius: 999px;
-  background: rgb(20 16 12 / 0.75);
-  border: 1px solid var(--couleur-rarete, #8a5a2b);
-  color: #fff;
+  background: var(--creme, #fdf6e3);
+  border: 1px solid var(--encre, #2a2140);
+  border-left: 3px solid var(--couleur-rarete, #c98a55);
+  color: var(--encre, #2a2140);
   font-size: 6.5px;
   font-weight: 800;
   line-height: 1.5;
@@ -381,8 +376,7 @@
 }
 
 .etiquette-chef {
-  border-color: #e2b13a;
-  color: #ffe19a;
+  border-left-color: #f9d65a;
 }
 
 .perso-colere .perso-corps {
@@ -431,9 +425,8 @@
    et une lueur verte. */
 
 .bulle-notif {
-  --couleur-bulle: #f2a821;
-  --couleur-bulle-claire: #ffe48a;
-  --couleur-bulle-foncee: #a86a08;
+  --couleur-bulle: #f9d65a;
+  --couleur-bulle-foncee: #f6a04d;
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -459,57 +452,44 @@
   scale: 0.92;
 }
 
-/* La pointe sous le ruban, qui montre le bâtiment. */
+/* La pointe sous le ruban, qui montre le bâtiment (25/10 : style plat, contour d'encre). */
 .bulle-notif::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 10px;
-  height: 7.5px;
+  width: 11px;
+  height: 8px;
   translate: -50% 0;
-  background: #fff;
+  background: var(--encre, #2a2140);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  filter: drop-shadow(0 1.5px 0 rgb(0 0 0 / 0.3));
 }
 
-/* La médaille : bord blanc épais, couleur brillante, et un reflet en haut. */
+/* La médaille : un rond de couleur à plat, au gros contour d'encre, avec une ombre d'encre. */
 .bulle-medaille {
   position: relative;
   display: grid;
   place-items: center;
-  width: 35px;
-  height: 35px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 3px solid #fff;
-  background: radial-gradient(circle at 50% 30%, var(--couleur-bulle-claire), var(--couleur-bulle) 62%, var(--couleur-bulle-foncee));
-  box-shadow:
-    0 3px 0 rgb(0 0 0 / 0.35),
-    inset 0 -3.5px 0 rgb(0 0 0 / 0.18),
-    0 0 12.5px color-mix(in srgb, var(--couleur-bulle) 75%, transparent);
-  overflow: hidden;
+  border: 2.5px solid var(--encre, #2a2140);
+  background: var(--couleur-bulle);
+  box-shadow: 0 2.5px 0 var(--encre, #2a2140);
   z-index: 1;
 }
 
-/* Le reflet du haut (une demi-lune blanche) et un éclat qui passe de temps en temps. */
+/* Un petit reflet blanc à plat, en haut à gauche. */
 .bulle-medaille::before {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 18%;
-  width: 64%;
-  height: 38%;
+  top: 4px;
+  left: 6px;
+  width: 8px;
+  height: 5px;
   border-radius: 50%;
-  background: linear-gradient(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0));
-}
-
-.bulle-medaille::after {
-  content: '';
-  position: absolute;
-  inset: -30%;
-  background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 0.8) 50%, transparent 58%);
-  translate: -120% 0;
-  animation: reflet-bulle 3s ease-in-out infinite;
+  background: rgb(255 255 255 / 0.7);
+  rotate: -30deg;
 }
 
 /* L'icône (la police cartoon du jeu), en grand, qui se dandine. */
@@ -517,37 +497,28 @@
   position: relative;
   font-size: 19px;
   translate: 0 -1px;
-  filter: drop-shadow(0 1.5px 0 rgb(0 0 0 / 0.3));
   animation: bulle-dandine 3.2s ease-in-out infinite;
 }
 
-/* Le ruban : en travers du bas de la médaille, bouts fourchus, texte blanc bien contourné. */
+/* Le ruban : une étiquette ronde de couleur, au contour d'encre, texte blanc contourné. */
 .bulle-court {
   position: relative;
   z-index: 2;
-  margin-top: -7.5px;
-  padding: 3px 9px 3.5px;
+  margin-top: -7px;
+  padding: 2px 8px 3px;
+  border: 2px solid var(--encre, #2a2140);
+  border-radius: 999px;
+  background: var(--couleur-bulle-foncee);
+  font-family: var(--police-titre, inherit);
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 400;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  background: linear-gradient(var(--couleur-bulle), var(--couleur-bulle-foncee));
-  clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 50%, 100% 100%, 0 100%, 5px 50%);
   text-shadow:
-    -1px -1px 0 #2a1608,
-    1px -1px 0 #2a1608,
-    -1px 1px 0 #2a1608,
-    1px 1px 0 #2a1608,
-    0 1.5px 0 #2a1608;
-}
-
-/* Le ruban a un liseré clair en haut (dessiné par-dessus, dans le même découpage). */
-.bulle-court::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1.5px;
-  background: rgb(255 255 255 / 0.55);
+    -1px -1px 0 var(--encre, #2a2140),
+    1px -1px 0 var(--encre, #2a2140),
+    -1px 1px 0 var(--encre, #2a2140),
+    1px 1px 0 var(--encre, #2a2140);
 }
 
 /* « +2 » : d'autres choses à faire là-bas. */
@@ -556,24 +527,22 @@
   top: -5px;
   right: calc(50% - 24px);
   z-index: 3;
-  min-width: 14.5px;
-  height: 14.5px;
+  min-width: 15px;
+  height: 15px;
   padding: 0 3px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 2px solid #fff;
-  background: radial-gradient(circle at 40% 30%, #ff7a6a, #d1261a);
-  box-shadow: 0 1.5px 0 rgb(0 0 0 / 0.35);
+  border: 2px solid var(--encre, #2a2140);
+  background: #ee6b6b;
   font-size: 8px;
   font-weight: 900;
   animation: bulle-compte 1.6s ease-in-out infinite;
 }
 
 .bulle-alerte {
-  --couleur-bulle: #e0392c;
-  --couleur-bulle-claire: #ff9a86;
-  --couleur-bulle-foncee: #8e1a12;
+  --couleur-bulle: #ee6b6b;
+  --couleur-bulle-foncee: #e2483d;
 }
 
 /* L'alerte : la médaille tremble, et une onde rouge s'élargit autour, comme un radar. */
@@ -590,27 +559,24 @@
   height: 35px;
   margin-left: -17.5px;
   border-radius: 50%;
-  border: 3px solid #ff6a5a;
+  border: 3px solid #e2483d;
   animation: anneau-alerte 1.2s ease-out infinite;
   pointer-events: none;
 }
 
 .bulle-pret {
-  --couleur-bulle: #d23d93;
-  --couleur-bulle-claire: #ffa6d6;
-  --couleur-bulle-foncee: #82185a;
+  --couleur-bulle: #f39aa8;
+  --couleur-bulle-foncee: #e0619a;
 }
 
 .bulle-nouveau {
-  --couleur-bulle: #3f84e8;
-  --couleur-bulle-claire: #a8d6ff;
-  --couleur-bulle-foncee: #1f4f9e;
+  --couleur-bulle: #8cc8f5;
+  --couleur-bulle-foncee: #4f9df0;
 }
 
 .bulle-achat {
-  --couleur-bulle: #35ad46;
-  --couleur-bulle-claire: #a2f5a6;
-  --couleur-bulle-foncee: #1c6e28;
+  --couleur-bulle: #8fd36f;
+  --couleur-bulle-foncee: #3fae5a;
 }
 
 /* Achetable : une lueur verte qui respire autour de la médaille. */
@@ -626,7 +592,6 @@
   height: 7px;
   background: #fff6b0;
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-  filter: drop-shadow(0 0 2px #ffd84a);
   animation: etincelle-bulle 1.6s ease-in-out infinite;
 }
 
@@ -667,18 +632,13 @@
 }
 
 @keyframes bulle-lueur {
-  0%, 100% { box-shadow: 0 3px 0 rgb(0 0 0 / 0.35), inset 0 -3.5px 0 rgb(0 0 0 / 0.18), 0 0 6px rgb(80 230 100 / 0.4); }
-  50% { box-shadow: 0 3px 0 rgb(0 0 0 / 0.35), inset 0 -3.5px 0 rgb(0 0 0 / 0.18), 0 0 15px 3px rgb(80 230 100 / 0.85); }
+  0%, 100% { scale: 1; }
+  50% { scale: 1.08; }
 }
 
 @keyframes bulle-compte {
   0%, 100% { scale: 1; }
   50% { scale: 1.15; }
-}
-
-@keyframes reflet-bulle {
-  0%, 60% { translate: -120% 0; }
-  100% { translate: 120% 0; }
 }
 
 @keyframes anneau-alerte {
@@ -1045,8 +1005,8 @@ g.grille-construction {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  border: 3px solid #ffe066;
-  background: radial-gradient(closest-side, rgb(255 240 150 / 0.75), rgb(255 200 60 / 0.25) 60%, rgb(255 200 60 / 0));
+  border: 3px solid #f9d65a;
+  background: rgb(249 214 90 / 0.3);
   animation: vente-onde 0.6s ease-out forwards;
 }
 
@@ -1055,9 +1015,12 @@ g.grille-construction {
   white-space: nowrap;
   font-size: 1.35rem;
   font-weight: 900;
-  color: #ffe066;
-  -webkit-text-stroke: 1.2px #5a3a00;
-  filter: drop-shadow(0 2px 0 #3a2400) drop-shadow(0 2px 1px rgb(0 0 0 / 0.3));
+  font-family: var(--police-titre, inherit);
+  font-weight: 400;
+  color: #f9d65a;
+  -webkit-text-stroke: 1.5px var(--encre, #2a2140);
+  paint-order: stroke fill;
+  text-shadow: 0 2.5px 0 var(--encre, #2a2140);
   animation: vente-texte 2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
@@ -1069,7 +1032,6 @@ g.grille-construction {
 /* Une grosse vente (500 $ et plus) : un peu plus grande, avec un halo. */
 .vente-texte.vente-grosse {
   font-size: 1.6rem;
-  filter: drop-shadow(0 2px 0 #3a2400) drop-shadow(0 0 6px rgb(255 214 60 / 0.9));
 }
 
 .vente-piece {
@@ -1077,8 +1039,8 @@ g.grille-construction {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff6c0 0 18%, #f5c518 20% 60%, #b8860b 62%);
-  box-shadow: 0 0 0 1.2px #5a3a00;
+  background: #f9d65a;
+  box-shadow: 0 0 0 1.5px var(--encre, #2a2140);
   opacity: 0;
   animation: vente-piece 0.95s cubic-bezier(0.25, 0.6, 0.5, 1) forwards;
 }
@@ -1166,9 +1128,9 @@ g.grille-construction {
   gap: 4px;
   padding: 3px 6px 3px 4px;
   border-radius: 999px;
-  border: 2px solid #5a3a12;
-  background: linear-gradient(#6b4422, #3e2612);
-  box-shadow: 0 3px 0 rgb(0 0 0 / 0.35);
+  border: 2.5px solid var(--encre, #2a2140);
+  background: var(--creme, #fdf6e3);
+  box-shadow: 0 3px 0 var(--encre, #2a2140);
   transform: translate(-50%, -50%);
   pointer-events: none;
   white-space: nowrap;
@@ -1185,7 +1147,8 @@ g.grille-construction {
   width: 96px;
   height: 15px;
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.5);
+  border: 2px solid var(--encre, #2a2140);
+  background: #e8dcc0;
   overflow: hidden;
 }
 
@@ -1193,20 +1156,20 @@ g.grille-construction {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(#9be86a, #4fae2c);
+  background: #8fd36f;
   transition: width 0.3s;
 }
 
 .jauge-haute .jauge-coffre-barre i {
-  background: linear-gradient(#ffd25a, #e0930e);
+  background: #f9d65a;
 }
 
 .jauge-pleine .jauge-coffre-barre i {
-  background: linear-gradient(#ff7a5a, #d12c0e);
+  background: #ee6b6b;
 }
 
 .jauge-pleine {
-  border-color: #ffd84a;
+  background: #ffe1e5;
   transform: translate(-50%, -50%) scale(var(--p-sx));
   animation: jauge-pleine 2.2s ease-in-out infinite;
 }
@@ -1224,8 +1187,7 @@ g.grille-construction {
   place-items: center;
   font-size: 10px;
   font-weight: 900;
-  color: #fff;
-  -webkit-text-stroke: 0.6px rgb(0 0 0 / 0.7);
+  color: var(--encre, #2a2140);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1247,8 +1209,7 @@ g.grille-construction {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 900;
-  color: #fff3d6;
-  background: rgb(0 0 0 / 0.4);
+  color: var(--encre, #2a2140);
 }
 
 /* Les mini-jauges (27/10) : chargement, vente, déchargement... au-dessus de l'objet. */
@@ -1258,9 +1219,10 @@ g.grille-construction {
   gap: 2px;
   min-width: 84px;
   padding: 3px 6px 4px;
-  border-radius: 8px;
-  border: 1.5px solid #5a3a12;
-  background: rgb(30 18 8 / 0.88);
+  border-radius: 10px;
+  border: 2px solid var(--encre, #2a2140);
+  background: var(--creme, #fdf6e3);
+  box-shadow: 0 2px 0 var(--encre, #2a2140);
   transform: translate(-50%, -100%);
   pointer-events: none;
   z-index: 99998;
@@ -1270,19 +1232,20 @@ g.grille-construction {
 .mini-jauge-texte {
   font-size: 9px;
   font-weight: 800;
-  color: #fff3d6;
+  color: var(--encre, #2a2140);
   text-align: center;
 }
 
 .mini-jauge-texte b {
-  color: #ffe066;
+  color: #c4532a;
 }
 
 .mini-jauge-piste {
   display: block;
-  height: 5px;
+  height: 6px;
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.55);
+  border: 1.5px solid var(--encre, #2a2140);
+  background: #e8dcc0;
   overflow: hidden;
 }
 
@@ -1290,7 +1253,7 @@ g.grille-construction {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(#9be86a, #4fae2c);
+  background: #8fd36f;
 }
 
 /* Les goulots (27/10) : l'ascenseur et le wagonnet suivent-ils ? */
@@ -1326,18 +1289,16 @@ g.grille-construction {
 
 .zone-connectable-ligne {
   fill: none;
-  stroke: #ffe000;
+  stroke: #f9d65a;
   stroke-width: 7;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 6px #fff27a);
   pointer-events: none;
 }
 
 /* La bulle « 🛤️ Automatiser » au milieu des rails d'un trajet à créer. */
 .bulle-trajet {
-  --couleur-bulle: #f0b415;
-  --couleur-bulle-claire: #fff3a3;
-  --couleur-bulle-foncee: #a87406;
+  --couleur-bulle: #f9d65a;
+  --couleur-bulle-foncee: #f6a04d;
 }
 
 /* --- Le bonus de combo, au-dessus du bloc de la mine ----------------------------- */
@@ -1353,8 +1314,9 @@ g.grille-construction {
   align-items: center;
   padding: 4px 12px;
   border-radius: 999px;
-  background: linear-gradient(#ffe27a, #f0a01c);
-  color: #3b2412;
+  border: 2.5px solid var(--encre, #2a2140);
+  background: #f9d65a;
+  color: var(--encre, #2a2140);
   font-weight: 900;
   white-space: nowrap;
   box-shadow: 0 0 0 2px #fff6d2, 0 0 22px rgb(255 200 60 / 0.9);
@@ -1415,10 +1377,11 @@ g.grille-construction {
   padding: 4px 12px;
   border-radius: 999px;
   white-space: nowrap;
-  background: linear-gradient(#ffe27a, #f0a01c);
-  color: #3b2412;
+  border: 2.5px solid var(--encre, #2a2140);
+  background: #f9d65a;
+  color: var(--encre, #2a2140);
   font-weight: 900;
-  box-shadow: 0 0 0 2px #fff6d2, 0 4px 14px rgb(0 0 0 / 0.4);
+  box-shadow: 0 3px 0 var(--encre, #2a2140);
   animation: embauche-texte 2.6s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
 }
 @keyframes embauche-rayons {
