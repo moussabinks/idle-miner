@@ -498,7 +498,7 @@ export function employes() {
 // ---------------------------------------------------------------------------
 // La foreuse (25/10, redessinée) : une mèche en acier en forme de carotte (longue, pointue, avec
 // ses rainures en spirale), qui s'enfonce dans un trou plein de terre, tenue par un portique
-// jaune ; au-dessus, son moteur orange qui fume. Juste à côté de la mèche, un petit coffre en
+// jaune ; au-dessus, une roue dentée et un petit moteur rond en acier qui fume. Juste à côté de la mèche, un petit coffre en
 // bois cerclé de fer, plein de charbon (ce que la foreuse a sorti) ; un bidon au fond.
 // ---------------------------------------------------------------------------
 
@@ -642,7 +642,6 @@ export function foreuse() {
   dalle(t, 5)
   const z = DALLE
   const jaune = teintes(C.jaune, fonce(C.jaune, 0.2), clair(C.jaune, 0.35))
-  const orange = teintes(C.orange, fonce(C.orange, 0.2))
   const metalFonce = teintes('#6d7290', '#535774', '#8b90ab')
 
   // La plateforme en acier, rayée de bandes de chantier sur ses deux façades de devant.
@@ -702,39 +701,48 @@ export function foreuse() {
     jaune,
   )
 
-  // Le moteur orange, posé sur la poutre : une grille et un voyant sur la façade de gauche, une
-  // roue dentée sur celle de droite. (25/10 : plus de trémie sur son toit.)
-  const [m0, m1, zm0, zm1] = [A - 0.8, A + 0.8, zPoutre + 20, zPoutre + 62]
-  t.boite(m0, m0, m1, m1, zm0, zm1, orange)
-  t.boite(m0 - 0.07, m0 - 0.07, m1 + 0.07, m1 + 0.07, zm1, zm1 + 7, teintes(fonce(C.orange, 0.12), fonce(C.orange, 0.32)))
-  const faceMoteur = (m1 - m0) * 38.15
-  t.surFace(
-    'gauche',
-    m0,
-    m1,
-    zm0,
-    [12, 22, 32].map((v) => `<rect x="12" y="${-v - 6}" width="${r1(faceMoteur * 0.42)}" height="5" rx="2.5" fill="${fonce(C.orange, 0.35)}"/>`).join('') +
-      `<circle cx="${r1(faceMoteur * 0.76)}" cy="-23" r="9" fill="${C.redstone}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<circle cx="${r1(faceMoteur * 0.76 - 3)}" cy="-26" r="2.6" fill="${C.blanc}"/>`,
-  )
-  t.surFace(
-    'droite',
-    m1,
-    m1,
-    zm0,
-    `<circle cx="${r1(faceMoteur / 2)}" cy="-23" r="16" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" stroke-dasharray="7 4"/>` +
-      `<circle cx="${r1(faceMoteur / 2)}" cy="-23" r="10" fill="${fonce(C.jaune, 0.12)}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<circle cx="${r1(faceMoteur / 2)}" cy="-23" r="4" fill="${C.encre}"/>`,
-  )
-  // Le pot d'échappement (au fond à droite du moteur) et sa fumée.
-  const zToit = zm1 + 7
-  t.cylindre(A + 0.4, A - 0.4, 0.14, zToit, zToit + 30, metalFonce, { cerclages: [zToit + 20] })
-  const [fx, fy] = t.pt(A + 0.4, A - 0.4, zToit + 42)
+  // Le moteur (25/10 : plus de grosse caisse orange) : sur la poutre, une grande roue dentée
+  // couchée qui fait tourner l'axe de la mèche, et au-dessus un petit moteur rond en acier, cerclé,
+  // boulonné, avec son pot d'échappement qui fume.
+  const acier = teintes('#a9b1bf', '#7f889a', '#d3d8e1')
+  const zRoue = zPoutre + 20
+  // La roue dentée : son épaisseur (la même roue, plus sombre, un peu plus bas), puis son dessus.
+  const roue = (zz, rInt, rExt, dents) => {
+    const liste = []
+    for (let i = 0; i < dents * 4; i++) {
+      const a = (i / (dents * 4)) * 2 * Math.PI
+      const r = i % 4 === 1 || i % 4 === 2 ? rExt : rInt
+      liste.push(t.pt(A + r * Math.cos(a), A + r * Math.sin(a), zz))
+    }
+    return liste
+  }
+  t.ajouter(polygone(roue(zRoue, 0.8, 1.0, 10), acier.droite, TRAIT_FIN))
+  t.ajouter(polygone(roue(zRoue + 10, 0.8, 1.0, 10), acier.haut, TRAIT_FIN))
+  t.ellipseSol(A, A, 0.6, zRoue + 10, acier.gauche, { trait: 3 })
+  // Les boulons sur la roue.
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * 2 * Math.PI + 0.3
+    const [bx, by] = t.pt(A + 0.7 * Math.cos(a), A + 0.7 * Math.sin(a), zRoue + 10)
+    t.ajouter(`<circle cx="${r1(bx)}" cy="${r1(by)}" r="3.4" fill="${C.encre}"/>`)
+  }
+  // Le petit moteur rond, posé sur la roue : un cylindre d'acier cerclé, un dôme, un voyant.
+  const [zm0, zm1] = [zRoue + 10, zRoue + 42]
+  t.cylindre(A, A, 0.42, zm0, zm1, acier, { cerclages: [zm0 + 8] })
+  const [dx_, dy_] = t.pt(A, A, zm1)
+  const rxDome = 0.42 * DX * Math.SQRT2
+  t.ajouter(`<path d="M${r1(dx_ - rxDome)} ${r1(dy_)} A${r1(rxDome)} ${r1(rxDome * 0.8)} 0 0 1 ${r1(dx_ + rxDome)} ${r1(dy_)} Z" fill="${acier.haut}" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
+  t.ajouter(`<circle cx="${r1(dx_)}" cy="${r1(dy_ - rxDome * 0.8 - 2)}" r="5" fill="${C.encre}"/>`)
+  const [vx_, vy_] = t.pt(A - 0.12, A + 0.42, zm0 + 20)
+  t.ajouter(`<circle cx="${r1(vx_)}" cy="${r1(vy_)}" r="6" fill="${C.redstone}" stroke="${C.encre}" stroke-width="3"/><circle cx="${r1(vx_ - 2)}" cy="${r1(vy_ - 2)}" r="1.8" fill="${C.blanc}"/>`)
+  // Le pot d'échappement, un tuyau coudé qui sort du moteur, et sa fumée.
+  const [ex0, ey0] = t.pt(A + 0.3, A - 0.3, zm0 + 18)
+  const tuyau = `M${r1(ex0)} ${r1(ey0)} L${r1(ex0 + 22)} ${r1(ey0)} L${r1(ex0 + 22)} ${r1(ey0 - 40)}`
+  t.ajouter(`<path d="${tuyau}" stroke="${C.encre}" stroke-width="${10 + 2 * TRAIT_FIN}" fill="none"/><path d="${tuyau}" stroke="#6d7290" stroke-width="10" fill="none"/>`)
   ;[
-    [0, 0, 10],
-    [12, -16, 13],
-    [4, -37, 16],
-  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
+    [22, -54, 9],
+    [32, -70, 12],
+    [24, -91, 15],
+  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(ex0 + dx)}" cy="${r1(ey0 + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
 
   // Le mandrin (ce qui tient la mèche, sous la poutre), puis la mèche en carotte, dont la pointe
   // entre dans le trou : on la coupe sous le bord de devant du trou.
