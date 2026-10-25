@@ -80,11 +80,6 @@ export function foreuseEnMarche(etat: EtatJeu): boolean {
   return foreusePosee(etat) && etat.foreuse.carburant > 0 && !chariotPlein(etat)
 }
 
-// Combien de temps elle met pour remplir son chariot vide (pour voir si chariot et forage vont ensemble).
-export function secondesPourRemplir(etat: EtatJeu, niveauChariot = etat.foreuse.niveauChariot): number {
-  return NIVEAUX_CHARIOT[niveauChariot].capacite / vitesseForage(etat)
-}
-
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
@@ -155,10 +150,6 @@ export function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): v
   const reste = (etat.foreuse.chariot[bloc] ?? 0) - nombre
   if (reste > 0) etat.foreuse.chariot[bloc] = reste
   else delete etat.foreuse.chariot[bloc]
-}
-
-export function valeurChariot(etat: EtatJeu): number {
-  return valeurDe(etat.foreuse.chariot)
 }
 
 // ---------------------------------------------------------------------------

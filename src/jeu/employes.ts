@@ -75,7 +75,7 @@ import {
   type Navette,
   type RoleEmploye,
 } from './mineur'
-import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, secondesAPied, trouverChemin, type Case } from './village'
+import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, trouverChemin, type Case } from './village'
 import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
@@ -168,10 +168,6 @@ export function blocsParSecondeEmploye(etat: EtatJeu, employe: Employe): number 
   return vitesseEmploye(employe) * partRemontee(etat)
 }
 
-export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBatiment): number {
-  return secondesAPied(etat.village, de, vers)
-}
-
 // La case où un pousseur attend son wagonnet (23/10) : à côté du premier rail de son trajet,
 // sur le bord de la voie (une case libre). null si le trajet n'a pas de rails.
 export function caseQuai(etat: EtatJeu, liaison: IdLiaison): Case | null {
@@ -230,13 +226,6 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
     default:
       return 0
   }
-}
-
-// Ce que rapporte sa prochaine pioche (23/10) : ce qu'il creuse par seconde, avant et après.
-// null s'il a déjà la meilleure pioche (ou si c'est un pousseur).
-export function gainAmeliorationEmploye(employe: Employe): { avant: number; apres: number } | null {
-  if (employe.role === 'pousseur' || !NIVEAUX_EMPLOYE[employe.niveau + 1]) return null
-  return { avant: vitesseEmploye(employe), apres: vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) }
 }
 
 // Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
