@@ -1,0 +1,1084 @@
+/* =========================================================================
+   Les fenêtres du jeu (25/10, nouveau style) : le tutoriel, la fête du niveau, les
+   statistiques, le bilan, et les « +X $ » qui s'envolent.
+   On se sert des briques de theme.css (.fenetre, .carte, .btn, .etiquette, .jauge...) :
+   ici, seulement la mise en place de chaque écran.
+   ========================================================================= */
+
+/* =========================================================================
+   Le tutoriel (Tutoriel.tsx)
+   Ce qu'il faut toucher est mis en scène : l'écran s'assombrit autour, un anneau doré au gros
+   contour pulse, une grosse flèche jaune rebondit avec son étiquette (« Touche ici ! »), et la
+   cible elle-même palpite. Une petite carte (Pépite + la consigne) est en haut de l'écran, ou en
+   bas si la cible est en haut.
+   Les étages : les fenêtres des bâtiments sont à 50, le calque doré à 70 (par-dessus : il
+   assombrit aussi la fenêtre, sauf la cible), la carte à 72, les grandes fenêtres « devant » à 80.
+   ========================================================================= */
+
+.tuto-cible {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  /* La position et la taille de la cible, écrites à chaque image par useSuiviCible. */
+  --x: 0px;
+  --y: 0px;
+  --l: 0px;
+  --h: 0px;
+}
+
+.tuto-cible-cachee {
+  visibility: hidden;
+}
+
+/* Le voile sombre autour de la cible : un trou arrondi, et une ombre immense tout autour. */
+.tuto-trou {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  border-radius: 18px;
+  box-shadow: 0 0 0 200vmax rgb(42 33 64 / 0.38);
+  will-change: transform;
+}
+
+/* Un bâtiment à toucher sur la carte : pas de voile (l'anneau et la flèche suffisent). */
+.tuto-sur-batiment .tuto-trou {
+  display: none;
+}
+
+/* L'anneau doré, au gros contour sombre (comme tout le reste du jeu). */
+.tuto-cercle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--l) + 16px);
+  height: calc(var(--h) + 16px);
+  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  will-change: transform;
+}
+
+.tuto-cercle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  border: 5px solid var(--jaune);
+  outline: 3px solid var(--encre);
+  box-shadow: inset 0 0 0 3px var(--encre);
+  animation: tuto-pulse 0.9s ease-in-out infinite;
+}
+
+/* Un bâtiment : un anneau rond au milieu de son image (pas autour de tout le dessin). */
+.tuto-sur-batiment .tuto-cercle {
+  width: 90px;
+  height: 90px;
+  transform: translate3d(calc(var(--x) + var(--l) / 2 - 45px), calc(var(--y) + var(--h) / 2 - 45px), 0);
+}
+
+.tuto-sur-batiment .tuto-cercle::before {
+  border-radius: 50%;
+}
+
+@keyframes tuto-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.06;
+  }
+}
+
+/* La flèche : au-dessus de la cible, au milieu d'un bâtiment, ou dessous si la cible est en haut. */
+.tuto-fleche-place {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) - 10px), 0);
+  will-change: transform;
+}
+
+.tuto-sur-batiment .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2 - 40px), 0);
+}
+
+.tuto-cible-dessous .tuto-fleche-place {
+  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) + 10px), 0);
+}
+
+.tuto-fleche {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  translate: -50% -100%;
+}
+
+.tuto-fleche-dessin {
+  display: block;
+  line-height: 0;
+  animation: tuto-rebond 0.55s ease-in-out infinite alternate;
+}
+
+/* L'étiquette au-dessus de la flèche (« Touche ici ! »). */
+.tuto-geste {
+  order: -1;
+  padding: 4px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 999px;
+  background: var(--blanc);
+  box-shadow: var(--ombre-petite);
+  font-family: var(--police-titre);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+/* La cible est tout en haut : la flèche passe dessous, et pointe vers le haut. */
+.tuto-cible-dessous .tuto-fleche {
+  flex-direction: column-reverse;
+  translate: -50% 0;
+}
+
+.tuto-cible-dessous .tuto-fleche-dessin {
+  rotate: 180deg;
+}
+
+@keyframes tuto-rebond {
+  from {
+    translate: 0 -8px;
+  }
+  to {
+    translate: 0 4px;
+  }
+}
+
+/* La cible elle-même palpite (un bouton, le bloc). Un bâtiment ne bouge pas (son image
+   deviendrait floue) : l'anneau suffit. On anime « scale » (pas transform) pour ne pas gêner
+   l'enfoncement des boutons. */
+[data-tuto-actif]:not(img):not([data-cible]) {
+  animation: tuto-cible-palpite 0.9s ease-in-out infinite !important;
+}
+
+@keyframes tuto-cible-palpite {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.06;
+  }
+}
+
+/* La carte d'étape : Pépite à gauche, la consigne, et le ✖ pour passer le tutoriel. */
+.tuto-carte {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 72;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(440px, calc(100% - 24px));
+  padding: 8px 10px 8px 8px;
+  translate: -50% 0;
+  border: var(--trait) solid var(--encre);
+  border-radius: 20px;
+  background: var(--creme);
+  box-shadow: var(--ombre);
+  animation: tuto-arrive 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+/* La cible est dans le haut de l'écran : la carte descend en bas (au-dessus des gros boutons). */
+.tuto-carte-en-bas {
+  top: auto;
+  bottom: calc(108px + env(safe-area-inset-bottom));
+}
+
+@keyframes tuto-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+}
+
+.tuto-carte-pepite {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+}
+
+.tuto-carte-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Les petites étapes (des pilules : faites en vert, en cours en jaune). */
+.tuto-progression {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.tuto-progression i {
+  width: 18px;
+  height: 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--blanc);
+}
+
+.tuto-progression i.faite {
+  background: var(--vert-fonce);
+}
+
+.tuto-progression i.en-cours {
+  width: 30px;
+  background: var(--jaune);
+}
+
+.tuto-titre {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.tuto-texte {
+  font-size: 0.92rem;
+  line-height: 1.3;
+  color: var(--encre-douce);
+}
+
+.tuto-passer {
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: var(--trait-fin) solid var(--encre-douce);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* Les fenêtres du début et de la fin. */
+.tuto-pepite-parle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tuto-pepite-portrait {
+  flex-shrink: 0;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  box-shadow: var(--ombre-petite);
+}
+
+/* La bulle de Pépite, avec sa petite pointe à gauche. */
+.tuto-pepite-bulle {
+  position: relative;
+  flex: 1;
+  padding: 10px 14px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 16px;
+  background: var(--blanc);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.tuto-pepite-bulle::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  translate: 0 -50%;
+  rotate: 45deg;
+  border-left: var(--trait) solid var(--encre);
+  border-bottom: var(--trait) solid var(--encre);
+  background: var(--blanc);
+}
+
+/* Le jeu en 4 étapes (les mêmes que dans l'aide et sur l'accueil). */
+.tuto-etapes-jeu,
+.tuto-suite {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tuto-etapes-jeu li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  animation: tuto-ligne 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+}
+
+@keyframes tuto-ligne {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+.tuto-etape-numero {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-family: var(--police-titre);
+  font-size: 0.95rem;
+}
+
+.tuto-etape-icone {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.tuto-etape-texte {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.tuto-etape-texte .discret {
+  font-size: 0.85rem;
+}
+
+.tuto-suite li {
+  padding: 8px 12px;
+  font-size: 0.92rem;
+}
+
+.tuto-fenetre .fenetre-pied {
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Les confettis : des petits carrés pastel au contour sombre, qui éclatent puis tombent. */
+.tuto-confettis {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tuto-confettis i {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 3px;
+  opacity: 0;
+  animation: tuto-confetti 1.1s ease-out forwards;
+}
+
+@keyframes tuto-confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), calc(var(--y) + 40px)) rotate(240deg);
+  }
+}
+
+/* Le « Bravo ! » au milieu de l'écran, quand une étape est réussie. */
+.tuto-fete {
+  position: fixed;
+  left: 50%;
+  top: 42%;
+  z-index: 85;
+  pointer-events: none;
+}
+
+.tuto-fete .tuto-confettis {
+  top: 0;
+}
+
+.tuto-fete-texte {
+  display: block;
+  padding: 8px 22px;
+  translate: -50% -50%;
+  border: 4px solid var(--encre);
+  border-radius: 999px;
+  background: var(--vert);
+  box-shadow: var(--ombre);
+  font-family: var(--police-titre);
+  font-size: 2rem;
+  white-space: nowrap;
+  animation: tuto-bravo 1.3s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+
+@keyframes tuto-bravo {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  18% {
+    opacity: 1;
+    scale: 1.1;
+  }
+  30% {
+    scale: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: -50% -90%;
+  }
+}
+
+@media (max-width: 640px) {
+  .tuto-carte {
+    top: 8px;
+    gap: 8px;
+  }
+
+  .tuto-carte-en-bas {
+    top: auto;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .tuto-carte-pepite {
+    width: 52px;
+    height: 52px;
+  }
+
+  .tuto-titre {
+    font-size: 1.1rem;
+  }
+
+  .tuto-texte {
+    font-size: 0.85rem;
+  }
+
+  .tuto-pepite-portrait {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+/* =========================================================================
+   La fête du niveau (FeteNiveau.tsx)
+   ========================================================================= */
+
+.fete-niveau .fenetre-corps {
+  position: relative;
+  align-items: stretch;
+}
+
+.fete-etoile-zone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 4px 0;
+}
+
+.fete-etoile {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  animation: fete-etoile-tombe 0.55s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.fete-etoile-dessin {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fete-etoile-arrive {
+  animation: fete-etoile-saute 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.fete-chiffre {
+  position: relative;
+  margin-top: 10px;
+  font-family: var(--police-titre);
+  font-size: 2.6rem;
+  color: var(--encre);
+  animation: fete-chiffre 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes fete-etoile-tombe {
+  from {
+    transform: translateY(-40px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes fete-etoile-saute {
+  50% {
+    transform: scale(1.15) rotate(-6deg);
+  }
+}
+
+@keyframes fete-chiffre {
+  from {
+    transform: scale(1.6);
+  }
+}
+
+.fete-confettis {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.fete-confettis i {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 3px;
+  opacity: 0;
+  animation: fete-confetti 1.3s ease-out forwards;
+}
+
+.fete-confettis i.rond {
+  border-radius: 50%;
+}
+
+@keyframes fete-confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 60px)) rotate(var(--tour));
+  }
+}
+
+.fete-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Une ligne arrive (gemmes, puis chaque déblocage). */
+.fete-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition:
+    opacity 0.25s,
+    transform 0.3s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.fete-ligne-on {
+  opacity: 1;
+  transform: none;
+}
+
+.fete-gemmes {
+  background: #efe7ff;
+}
+
+.fete-ligne-icone {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.fete-ligne-texte {
+  flex: 1;
+  min-width: 0;
+}
+
+.fete-prochain {
+  text-align: center;
+}
+
+/* =========================================================================
+   Les statistiques (Statistiques.tsx)
+   ========================================================================= */
+
+.stat-tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stat-tuile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+}
+
+.stat-tuile-titre {
+  font-size: 0.82rem;
+  color: var(--encre-douce);
+}
+
+.stat-tuile-valeur {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.stat-colonnes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.stat-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* La barre partagée entre les sources d'argent. */
+.stat-barre-sources {
+  display: flex;
+  height: 22px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--blanc);
+}
+
+.stat-barre-sources span + span {
+  border-left: var(--trait-fin) solid var(--encre);
+}
+
+.stat-legende {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat-legende li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.stat-pastille {
+  width: 14px;
+  height: 14px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+}
+
+.stat-legende-nom {
+  flex: 1;
+}
+
+.stat-blocs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat-blocs li {
+  display: grid;
+  grid-template-columns: 26px 84px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.stat-bloc-dessin {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.stat-bloc-dessin svg {
+  width: 100%;
+  height: 100%;
+}
+
+.stat-bloc-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-bloc-valeur {
+  min-width: 3ch;
+  text-align: right;
+}
+
+.stat-petits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat-petits li {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .stat-tuiles {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-colonnes {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-petits {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================================
+   Le bilan (FenetreBilan.tsx)
+   ========================================================================= */
+
+.bilan-solde {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bilan-mascotte {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.bilan-solde-texte {
+  display: flex;
+  flex-direction: column;
+}
+
+.bilan-net {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 2.2rem;
+  line-height: 1.05;
+}
+
+.bilan-net small,
+.bilan-colonne-titre small {
+  margin-left: 2px;
+  font-family: var(--police);
+  font-size: 0.45em;
+  font-weight: 900;
+  color: var(--encre-douce);
+}
+
+.bilan-rentable .bilan-net,
+.bilan-juste .bilan-net {
+  color: var(--vert-texte);
+}
+
+.bilan-perte .bilan-net {
+  color: var(--rouge-texte);
+}
+
+.bilan-rentable .bilan-solde {
+  background: #e9f9e4;
+}
+
+.bilan-perte .bilan-solde {
+  background: #fde8eb;
+}
+
+.bilan-verdict {
+  font-weight: 900;
+}
+
+.bilan-part {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bilan-colonnes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.bilan-colonne-titre {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+}
+
+.bilan-gain .bilan-colonne-titre strong {
+  color: var(--vert-texte);
+}
+
+.bilan-depense .bilan-colonne-titre strong {
+  color: var(--rouge-texte);
+}
+
+.bilan-colonne ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bilan-colonne li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'icone nom montant'
+    'jauge jauge jauge';
+  align-items: center;
+  gap: 4px 8px;
+  animation: tuto-ligne 0.3s ease-out backwards;
+}
+
+.bilan-ligne-vide {
+  opacity: 0.5;
+}
+
+.bilan-icone {
+  grid-area: icone;
+  font-size: 1.3rem;
+}
+
+.bilan-nom {
+  grid-area: nom;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.bilan-nom small {
+  color: var(--encre-douce);
+  font-size: 0.78rem;
+}
+
+.bilan-montant {
+  grid-area: montant;
+  font-weight: 900;
+}
+
+.bilan-jauge {
+  grid-area: jauge;
+  height: 10px;
+}
+
+.bilan-conseil {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .bilan-colonnes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================================
+   Les gains (Gains.tsx) : « +X $ » dans une grosse étiquette jaune qui saute, avec une gerbe
+   de pièces ; en petit en haut pour le wagonnet. Au-dessus des fenêtres (on vend depuis la
+   fenêtre de la mine), mais on ne peut pas les toucher.
+   ========================================================================= */
+
+.envol-ventes {
+  position: fixed;
+  left: 50%;
+  top: 32%;
+  z-index: 75;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.envol-vente {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.envol-vente-texte {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 6px 18px;
+  translate: -50% -50%;
+  border: 4px solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  box-shadow: var(--ombre);
+  font-family: var(--police-titre);
+  font-size: 2rem;
+  color: var(--encre);
+  white-space: nowrap;
+  animation: envol-vente 1.6s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+
+@keyframes envol-vente {
+  0% {
+    opacity: 0;
+    scale: 0.3;
+    rotate: -8deg;
+  }
+  14% {
+    opacity: 1;
+    scale: 1.15;
+    rotate: 3deg;
+  }
+  26% {
+    scale: 1;
+    rotate: 0deg;
+  }
+  75% {
+    opacity: 1;
+    translate: -50% -60%;
+  }
+  100% {
+    opacity: 0;
+    translate: -50% -140%;
+  }
+}
+
+/* Une pièce : un rond jaune au contour sombre, avec son « $ » gravé. */
+.envol-piece {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  box-shadow: inset -3px -3px 0 var(--jaune-fonce);
+  opacity: 0;
+  animation: envol-piece 0.95s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+}
+
+@keyframes envol-piece {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.5);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(var(--dx), var(--dy)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * 1.15), calc(var(--dy) + 50px)) scale(0.8);
+  }
+}
+
+/* Les petits « +X $ » (le wagonnet qui vend), en haut au milieu. */
+.envol-petits {
+  position: fixed;
+  left: 50%;
+  top: 120px;
+  z-index: 45;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.envol-petit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 2px 10px;
+  translate: -50% 0;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--vert);
+  box-shadow: var(--ombre-petite);
+  font-weight: 900;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  animation: envol-petit 1.3s ease-out forwards;
+}
+
+@keyframes envol-petit {
+  from {
+    opacity: 1;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-36px);
+  }
+}
+
+/* Moins de mouvement si le joueur le demande (theme.css coupe déjà la durée des animations). */
+@media (prefers-reduced-motion: reduce) {
+  .envol-piece,
+  .tuto-confettis,
+  .fete-confettis {
+    display: none;
+  }
+
+  [data-tuto-actif] {
+    animation: none !important;
+  }
+}

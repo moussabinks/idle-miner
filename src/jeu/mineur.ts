@@ -38,6 +38,7 @@ import {
 import { infoNiveauMine, tirerBloc } from './mine'
 import { debloque, recordsDeDepart } from './niveaux'
 import { ascenseurAlimente, multiplicateurGenerateur } from './generateur'
+import { nombre, t } from './langue'
 import { boostActif, multiplicateurVentes, prixEnGemmes, type Boosts, type Quotidien } from './gemmes'
 import { nouveauVillage, type Village } from './village'
 
@@ -433,7 +434,7 @@ export function chanceDoublement(etat: EtatJeu): number {
 // Un clic sur le bloc de la mine : il casse le bloc (avec une pioche cassée, un clic sur deux),
 // et ce qui tombe va dans le coffre. Le bloc suivant est tiré au hasard.
 export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
-  if (coffrePlein(etat)) return ['📦 Le coffre de la mine est plein : vends-le !']
+  if (coffrePlein(etat)) return [t('📦 Le coffre de la mine est plein : vends-le !')]
   const messages: string[] = []
   const cassee = estCassee(etat)
   etat.clics += 1
@@ -450,7 +451,7 @@ export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   if (bloc === 'diamant') etat.stats.diamantsTrouves += nombre
   if (!cassee) {
     etat.pioches[etat.niveauPioche] = usure(etat) + 1
-    if (estCassee(etat)) messages.push(`💥 Ta pioche en ${piocheEnMain(etat).nom} est cassée ! Il faut 2 clics par bloc : fais-la réparer au forgeron.`)
+    if (estCassee(etat)) messages.push(t('💥 Ta pioche en {pioche} est cassée ! Il faut 2 clics par bloc : fais-la réparer au forgeron.', { pioche: t(piocheEnMain(etat).nom) }))
   }
   etat.prochainBloc = tirerBloc(etat.niveauMine, aleatoire)
   return messages
@@ -496,7 +497,7 @@ export function descendreNiveauMine(etat: EtatJeu, aleatoire: Aleatoire): string
   payer(etat, prochain.cout)
   etat.niveauMine = prochain.niveau
   etat.prochainBloc = tirerBloc(etat.niveauMine, aleatoire)
-  return [`⛏️ La mine descend au niveau ${prochain.niveau} : ${prochain.nom} !`]
+  return [t('⛏️ La mine descend au niveau {n} : {nom} !', { n: prochain.niveau, nom: t(prochain.nom) })]
 }
 
 export function prochainNiveauCoffre(etat: EtatJeu) {
@@ -508,7 +509,7 @@ export function agrandirCoffre(etat: EtatJeu): string[] {
   if (prochain === null || !debloque(etat, 'coffre', etat.coffre.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.coffre.niveau += 1
-  return [`📦 Coffre agrandi : ${prochain.capacite.toLocaleString('fr-FR')} places.`]
+  return [t('📦 Coffre agrandi : {places} places.', { places: nombre(prochain.capacite) })]
 }
 
 export function niveauAscenseur(etat: EtatJeu): NiveauAscenseur | null {
@@ -558,8 +559,8 @@ export function ameliorerAscenseur(etat: EtatJeu): string[] {
   etat.ascenseur.niveau = prochain.niveau
   return [
     prochain.niveau === 1
-      ? '🛗 Ascenseur construit ! Tes mineurs remontent bien plus vite.'
-      : `🛗 Ascenseur niveau ${prochain.niveau} : un trajet en ${prochain.secondesTrajet} s.`,
+      ? t('🛗 Ascenseur construit ! Tes mineurs remontent bien plus vite.')
+      : t('🛗 Ascenseur niveau {n} : un trajet en {secondes} s.', { n: prochain.niveau, secondes: prochain.secondesTrajet }),
   ]
 }
 
@@ -572,7 +573,7 @@ export function noterCombo(etat: EtatJeu, combo: number): string[] {
   if (combo <= (etat.stats.meilleurCombo ?? 0)) return []
   const ancien = etat.stats.meilleurCombo ?? 0
   etat.stats.meilleurCombo = combo
-  return ancien >= 10 ? [`🏆 Nouveau record de combo : ×${combo} !`] : []
+  return ancien >= 10 ? [t('🏆 Nouveau record de combo : ×{combo} !', { combo })] : []
 }
 
 // ---------------------------------------------------------------------------
@@ -622,7 +623,7 @@ export function vendreCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
   if (gain <= 0) return []
   for (const [bloc, nombre] of Object.entries(vendus)) retirerDe(etat.coffre.contenu, bloc as IdBloc, nombre ?? 0)
   encaisser(etat, gain)
-  return [`💰 Vente : +${gain.toLocaleString('fr-FR')} $`]
+  return [t('💰 Vente : +{gain} $', { gain: nombre(gain) })]
 }
 
 // Vend tout un minerai du coffre (même ce qu'on garde).
@@ -677,7 +678,7 @@ export function reparer(etat: EtatJeu, niveau = etat.niveauPioche): string[] {
   if (cout === null || !peutPayer(etat, cout)) return []
   payer(etat, cout)
   etat.pioches[niveau] = 0
-  return [`🔧 Pioche en ${PIOCHES[niveau].nom} réparée.`]
+  return [t('🔧 Pioche en {pioche} réparée.', { pioche: t(PIOCHES[niveau].nom) })]
 }
 
 export function coutPioche(niveau: number): Cout {
@@ -700,12 +701,16 @@ export function acheterPioche(etat: EtatJeu, niveau: number): string[] {
   etat.meilleure = Math.max(etat.meilleure, niveau)
   etat.clics = 0
   const pioche = PIOCHES[niveau]
-  return [nouvelle ? `⛏️ Nouvelle pioche en ${pioche.nom} : ${Math.round(pioche.doublement * 100)} % de chance de doubler les minerais !` : `⛏️ Pioche en ${pioche.nom} neuve.`]
+  return [
+    nouvelle
+      ? t('⛏️ Nouvelle pioche en {pioche} : {chance} % de chance de doubler les minerais !', { pioche: t(pioche.nom), chance: Math.round(pioche.doublement * 100) })
+      : t('⛏️ Pioche en {pioche} neuve.', { pioche: t(pioche.nom) }),
+  ]
 }
 
 export function equiper(etat: EtatJeu, niveau: number): string[] {
   if (!(niveau in etat.pioches) || niveau === etat.niveauPioche) return []
   etat.niveauPioche = niveau
   etat.clics = 0
-  return [`Tu as pris la pioche en ${PIOCHES[niveau].nom}.`]
+  return [t('Tu as pris la pioche en {pioche}.', { pioche: t(PIOCHES[niveau].nom) })]
 }

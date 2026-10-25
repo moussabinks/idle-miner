@@ -7,7 +7,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { DECORATIONS, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
-import { langue, t } from '../jeu/langue'
+import { t } from '../jeu/langue'
 import {
   batimentPose,
   cheminEntre,
@@ -38,7 +38,7 @@ const BATIMENTS_SCENE: BatimentPose[] = [
   { id: 'forgeron', x: 27, y: 19, miroir: true },
   { id: 'employes', x: 6, y: 20, miroir: false },
   { id: 'foreuse', x: 26, y: 27, miroir: false },
-  { id: 'generateur', x: 21, y: 0, miroir: false },
+  { id: 'generateur', x: 27, y: 8, miroir: false },
 ]
 
 const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: boolean }[] = [
@@ -68,6 +68,14 @@ const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: bool
   { id: 'fleurs-violettes', x: 17, y: 11 },
   { id: 'fleurs-jaunes', x: 16, y: 12 },
   { id: 'fleurs-rouges', x: 24, y: 33 },
+  { id: 'cerisier', x: 33, y: 4 },
+  { id: 'sapin', x: 29, y: 3 },
+  { id: 'arbre', x: 36, y: 9 },
+  { id: 'fleurs-jaunes', x: 34, y: 11 },
+  { id: 'fleurs-violettes', x: 26, y: 6 },
+  { id: 'buisson', x: 35, y: 13 },
+  { id: 'rocher', x: 30, y: 14 },
+  { id: 'lanterne', x: 26, y: 10 },
 ]
 
 // Les rails de la mine au marché (avec un virage), et des chemins de pavés vers le Personnel
@@ -147,8 +155,9 @@ function useTemps(): number {
   return temps
 }
 
-// Ce qui ne bouge pas dans la scène (calculé une seule fois par langue).
-function objetsFixes(): ReactNode[] {
+// Ce qui ne bouge pas dans la scène (calculé une seule fois par langue : « noms », les
+// étiquettes du manager et du recruteur).
+function objetsFixes(noms: { manager: string; recruteur: string }): ReactNode[] {
   const objets: ReactNode[] = []
   for (const b of VILLAGE.batiments) {
     if (b.id === 'puits') {
@@ -183,8 +192,8 @@ function objetsFixes(): ReactNode[] {
     const pm = devant(personnel, 1, 0.9)
     const pr = devant(personnel, 0, 0.9)
     objets.push(
-      <Perso key="manager" qui="manager" x={pm.x} y={pm.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{t('Manager')}</span>} />,
-      <Perso key="recruteur" qui="recruteur" x={pr.x} y={pr.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{t('Recruteur')}</span>} />,
+      <Perso key="manager" qui="manager" x={pm.x} y={pm.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{noms.manager}</span>} />,
+      <Perso key="recruteur" qui="recruteur" x={pr.x} y={pr.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{noms.recruteur}</span>} />,
     )
   }
 
@@ -247,8 +256,9 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
   // Les bâtiments, les décorations et le joueur ne bougent pas : on les dessine une seule fois
   // (React ne redessine pas un élément qui n'a pas changé).
   // (refaits seulement si la langue change : les étiquettes « Manager » et « Recruteur »)
-  const langueActuelle = langue()
-  const objetsFixesDeLaScene = useMemo(() => objetsFixes(), [langueActuelle])
+  const nomManager = t('Manager')
+  const nomRecruteur = t('Recruteur')
+  const objetsFixesDeLaScene = useMemo(() => objetsFixes({ manager: nomManager, recruteur: nomRecruteur }), [nomManager, nomRecruteur])
   const objets: ReactNode[] = [...objetsFixesDeLaScene]
 
   // Les mineurs qui vont et viennent.

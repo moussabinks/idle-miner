@@ -12,13 +12,8 @@ import { batimentPose } from '../jeu/village'
 import { aCharger, aUnPousseur, capaciteTrajet, distanceDepuisLeDepart, enRoute, ligneDe, longueurTrajet, peutPousser, pousserTrajet, trajetDe, trajetElectrique } from '../jeu/wagonnet'
 import { Barre } from './Barre'
 import { useJeu } from './contexteJeu'
+import { nomTrajet } from './nomTrajet'
 import type { PropsPanneau } from './Panneaux'
-
-// « 💰 Mine → Marché »
-export function nomTrajet(liaison: IdLiaison): string {
-  const info = LIAISONS[liaison]
-  return `${t(BATIMENTS[info.depart].nom)} → ${t(BATIMENTS[info.arrivee].nom)}`
-}
 
 // Une ligne : le nom du trajet, son état, et le bouton.
 export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; onReglerTrajet?: (liaisons: IdLiaison[]) => void }) {

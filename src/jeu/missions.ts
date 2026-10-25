@@ -8,7 +8,7 @@ import { BATIMENTS, BLOCS, COUT_RAIL, LISTE_BATIMENTS, type Cout, type IdBatimen
 import { batimentDebloque } from './batiments'
 import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
-import { coffrePlein, disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
+import { disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
 import { achatsPossibles } from './objectifs'
 import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
 import { batimentPose } from './village'
@@ -85,7 +85,7 @@ function urgences(etat: EtatJeu): Mission[] {
   if (sansSalaire > 0 && batimentPose(etat.village, 'employes')) {
     liste.push(mission('salaires', '😠', sansSalaire === 1 ? t('Paie ton mineur au Personnel') : t('Paie tes {n} mineurs au Personnel', { n: sansSalaire }), { stand: 'employes', pret: true }))
   }
-  if (coffrePlein(etat)) liste.push(mission('coffre-plein', '📦', t('Le coffre est plein : vends-le !'), { stand: 'puits', pret: true }))
+  // (25/10) Plus de tâche « coffre plein » : la bulle sur la mine et le bandeau le disent déjà.
   return liste
 }
 

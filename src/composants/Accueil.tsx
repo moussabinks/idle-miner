@@ -86,15 +86,15 @@ function LigneMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
   }
 
   return (
-    <li className={`monde ${dernier ? 'monde-dernier' : ''}`} style={{ ['--couleur-monde' as string]: COULEURS_MONDES[monde.couleur] ?? COULEURS_MONDES[0] }}>
-      <div className="monde-haut">
-        <span className="monde-pastille" aria-hidden="true">
+    <li className={`accueil-monde ${dernier ? 'accueil-monde-dernier' : ''}`} style={{ ['--couleur-monde' as string]: COULEURS_MONDES[monde.couleur] ?? COULEURS_MONDES[0] }}>
+      <div className="accueil-monde-haut">
+        <span className="accueil-monde-pastille" aria-hidden="true">
           🌍
         </span>
-        <span className="monde-texte">
+        <span className="accueil-monde-texte">
           {edition ? (
             <form
-              className="monde-renommer"
+              className="accueil-monde-renommer"
               onSubmit={(e) => {
                 e.preventDefault()
                 valider()
@@ -106,9 +106,9 @@ function LigneMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
               </button>
             </form>
           ) : (
-            <strong className="monde-nom">{monde.nom}</strong>
+            <strong className="accueil-monde-nom">{monde.nom}</strong>
           )}
-          <span className="monde-infos">
+          <span className="accueil-monde-infos">
             {etat ? (
               <>
                 <span>🕳️ {etat.niveauMine}</span>
@@ -120,10 +120,10 @@ function LigneMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
             ) : (
               <span>{t('Partie illisible : repart de zéro')}</span>
             )}
-            <span className="monde-date">{depuis(monde.joueLe)}</span>
+            <span className="accueil-monde-date">{depuis(monde.joueLe)}</span>
           </span>
         </span>
-        <button className="btn btn-blanc btn-rond monde-plus" onClick={() => setOuvert(!ouvert)} aria-label={t('Réglages du monde')} aria-expanded={ouvert}>
+        <button className="btn btn-blanc btn-rond accueil-monde-plus" onClick={() => setOuvert(!ouvert)} aria-label={t('Réglages du monde')} aria-expanded={ouvert}>
           ⋯
         </button>
         <button className="btn btn-jaune btn-rond" disabled={bloque} onClick={onJouer} aria-label={t('Jouer à {nom}', { nom: monde.nom })}>
@@ -131,7 +131,7 @@ function LigneMonde({ monde, dernier, peutDupliquer, bloque, onJouer, onChangeme
         </button>
       </div>
       {ouvert && (
-        <div className="monde-actions">
+        <div className="accueil-monde-actions">
           <button className="btn btn-blanc btn-petit" onClick={() => setEdition(!edition)}>
             ✏️ {t('Renommer')}
           </button>

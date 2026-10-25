@@ -11,6 +11,9 @@ import './styles/theme.css' // les briques du style : couleurs, boutons, fenêtr
 import './styles/jeu.css' // l'écran de jeu : le bandeau, les tâches, les boutons du bas
 import './styles/mine.css' // la fenêtre de la mine
 import './styles/gemmes.css' // les gemmes, la publicité, le cadeau du jour, les réglages
+import './styles/batiments.css' // les panneaux des bâtiments, le Personnel, « Construire », les trajets
+import './styles/accueil.css' // l'écran d'accueil : les mondes, le classement, le compte
+import './styles/fenetres.css' // le tutoriel, la fête du niveau, les statistiques, le bilan, les gains
 import App from './App.tsx'
 import { enregistrerServiceWorker } from './installation'
 import { initialiserLangue } from './langueNavigateur'

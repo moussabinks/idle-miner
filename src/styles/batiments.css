@@ -1,0 +1,1046 @@
+/* =========================================================================
+   Les panneaux des bâtiments (25/10) : Marché, Forgeron, Foreuse, Générateur, Personnel, les
+   succès, le menu « Construire », et les fenêtres des rails et des trajets de wagonnets.
+   Les briques (boutons, cartes, lignes d'amélioration, jauges...) sont dans theme.css : ce
+   fichier ne fait que les placer.
+   ========================================================================= */
+
+/* --- Ce qui sert à tous les panneaux --- */
+
+.panneau-batiment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.liste-lignes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Un bouton qui prend la place qui reste dans une rangée. */
+.rangee-grand {
+  flex: 1;
+}
+
+/* Une carte où quelque chose ne va pas (un employé pas payé, le manager endormi...). */
+.panneau-batiment .carte-alerte,
+.ligne-alerte {
+  background: #ffe1e5;
+}
+
+/* Une astuce, en bas d'un onglet. */
+.astuce {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-width: var(--trait-fin);
+}
+
+/* L'état d'un bâtiment, en haut d'un onglet : une grosse icône, un chiffre, une étiquette. */
+.carte-etat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.carte-etat-icone {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.carte-etat-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.carte-etat-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+}
+
+/* Une alerte dans un panneau (le chariot d'un pousseur trop petit...). */
+.alerte-batiment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: #ffe1e5;
+}
+
+.alerte-batiment-icone {
+  font-size: 1.6rem;
+}
+
+.alerte-batiment-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+
+/* L'interrupteur (Interrupteur.tsx) : une piste grise ou verte, un curseur rond qui glisse. */
+.interrupteur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 900;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.interrupteur-piste {
+  position: relative;
+  flex-shrink: 0;
+  width: 58px;
+  height: 32px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 999px;
+  background: var(--gris);
+  transition: background 0.15s;
+}
+
+.interrupteur-curseur {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--blanc);
+  transition: transform 0.15s;
+}
+
+.interrupteur.allume .interrupteur-piste {
+  background: var(--vert-fonce);
+}
+
+.interrupteur.allume .interrupteur-curseur {
+  transform: translateX(26px);
+}
+
+.interrupteur:focus-visible .interrupteur-piste {
+  outline: 3px solid var(--ciel-fonce);
+  outline-offset: 2px;
+}
+
+/* --- Les trajets d'un bâtiment (PanneauTrajets.tsx) --- */
+
+.ligne-trajet-icone {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.ligne-trajet .jauge {
+  margin-top: 2px;
+}
+
+/* --- Le marché --- */
+
+.marche-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.marche-total-icone {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.marche-total-texte {
+  display: flex;
+  flex-direction: column;
+}
+
+.marche-total-texte strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.8rem;
+  color: var(--vert-texte);
+}
+
+.appel-rails {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--jaune);
+}
+
+.appel-rails .discret {
+  color: var(--encre);
+}
+
+/* --- Le forgeron --- */
+
+.pioche-icone {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.ligne-pioche .jauge {
+  margin-top: 2px;
+}
+
+/* --- Le générateur : ce qu'il accélère --- */
+
+.liste-alimentes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.liste-alimentes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 12px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: var(--arrondi-petit);
+  background: var(--blanc);
+  font-size: 0.95rem;
+}
+
+/* --- Les succès --- */
+
+.grille-succes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.succes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+  text-align: center;
+  background: var(--creme-fonce);
+  border-color: var(--gris-fonce);
+  color: var(--encre-douce);
+}
+
+.succes .discret {
+  font-size: 0.8rem;
+}
+
+.succes-obtenu {
+  background: var(--jaune);
+  border-color: var(--encre);
+  color: var(--encre);
+  box-shadow: var(--ombre-petite);
+}
+
+.succes-obtenu .discret {
+  color: var(--encre);
+}
+
+.succes-icone {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+/* =========================================================================
+   Le Personnel
+   ========================================================================= */
+
+.salaires {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.salaires-texte {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.salaires .btn {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-employes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grille-employes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 10px;
+}
+
+.carte-employe {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.carte-employe-entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carte-employe-icone {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.carte-employe-nom {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.05rem;
+}
+
+.carte-employe-chiffres {
+  color: var(--encre-douce);
+  font-size: 0.88rem;
+}
+
+.carte-employe-trajet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carte-employe-trajet .champ {
+  flex: 1;
+  min-height: 40px;
+  padding: 0.2em 0.6em;
+}
+
+/* Les améliorations dans la carte d'un employé : plus légères (on est déjà dans une carte). */
+.carte-employe .ligne-amelioration,
+.carte-chef .ligne-amelioration {
+  padding: 6px 8px;
+  border-width: var(--trait-fin);
+  background: var(--creme);
+}
+
+.carte-employe-boutons {
+  gap: 6px;
+}
+
+/* « Licencier » tout à droite, loin des autres boutons. */
+.carte-employe-licencier {
+  margin-left: auto;
+}
+
+/* Le choix du trajet d'un pousseur : une pilule par trajet. */
+.choix-trajets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px;
+}
+
+.choix-trajet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 12px;
+  background: var(--blanc);
+  color: var(--encre);
+  font: inherit;
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choix-trajet-nom {
+  flex: 1;
+  min-width: 0;
+}
+
+.choix-trajet.choisi {
+  border-width: var(--trait);
+  background: var(--jaune);
+  box-shadow: var(--ombre-petite);
+}
+
+.choix-trajet:disabled {
+  cursor: default;
+  background: var(--creme-fonce);
+  color: var(--encre-douce);
+  border-color: var(--gris-fonce);
+}
+
+/* Les chefs : le portrait à gauche, tout le reste à droite. */
+.carte-chef {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.carte-chef-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carte-chef-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+}
+
+.carte-verrouillee {
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--creme-fonce);
+}
+
+.carte-verrouillee .portrait-chef {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.portrait-chef {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--ciel);
+  object-fit: cover;
+}
+
+.fatigue-manager {
+  flex-wrap: nowrap;
+}
+
+.fatigue-jauge {
+  flex: 1;
+  min-width: 0;
+}
+
+.chances-rarete {
+  gap: 4px;
+}
+
+.vide-equipe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .grille-employes {
+    grid-template-columns: 1fr;
+  }
+
+  .portrait-chef {
+    width: 48px;
+    height: 48px;
+  }
+
+  .carte-chef {
+    gap: 8px;
+  }
+}
+
+/* --- La révélation d'une recrue (RevelationRecrue.tsx) --- */
+
+.revelation {
+  overflow: hidden;
+  align-items: center;
+  cursor: pointer;
+}
+
+.revelation-suspense {
+  animation: revelation-couleurs 0.4s steps(1) infinite;
+}
+
+@keyframes revelation-couleurs {
+  0% {
+    --couleur-rarete: #b9b4ab;
+  }
+  20% {
+    --couleur-rarete: #4f9df0;
+  }
+  40% {
+    --couleur-rarete: #b06cf0;
+  }
+  60% {
+    --couleur-rarete: #f5a524;
+  }
+  80% {
+    --couleur-rarete: #ff4d8d;
+  }
+}
+
+.revelation-scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 18px;
+  perspective: 900px;
+  cursor: default;
+}
+
+.revelation-carte {
+  position: relative;
+  width: min(260px, 72vw);
+  height: 340px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.revelation-suspense .revelation-carte {
+  cursor: pointer;
+  animation:
+    revelation-tremble 0.12s linear infinite,
+    revelation-grossit 1.6s ease-in forwards;
+}
+
+.revelation-devoilee .revelation-carte {
+  transform: rotateY(180deg);
+}
+
+@keyframes revelation-tremble {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  25% {
+    translate: -3px 1px;
+    rotate: -1.5deg;
+  }
+  75% {
+    translate: 3px -1px;
+    rotate: 1.5deg;
+  }
+}
+
+@keyframes revelation-grossit {
+  from {
+    scale: 0.85;
+  }
+  to {
+    scale: 1.05;
+  }
+}
+
+.revelation-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  border: 4px solid var(--encre);
+  border-radius: 24px;
+  box-shadow: 0 6px 0 var(--encre);
+  backface-visibility: hidden;
+  text-align: center;
+}
+
+.revelation-dos {
+  background: var(--nuit);
+  color: var(--blanc);
+  outline: 6px solid var(--couleur-rarete);
+}
+
+.revelation-chapeau {
+  font-size: 2.6rem;
+}
+
+.revelation-question {
+  font-family: var(--police-titre);
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--couleur-rarete);
+}
+
+.revelation-face-avant {
+  transform: rotateY(180deg);
+  background: var(--couleur-rarete);
+}
+
+.revelation-etoiles {
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+}
+
+.revelation-rarete {
+  font-family: var(--police-titre);
+  font-size: 2rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.revelation-devoilee .revelation-rarete {
+  animation: revelation-pop 0.6s 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+@keyframes revelation-pop {
+  from {
+    scale: 0.2;
+    opacity: 0;
+  }
+}
+
+.revelation-mineur {
+  font-size: 3.6rem;
+  line-height: 1.1;
+}
+
+.revelation-nom {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.6rem;
+}
+
+.revelation-detail {
+  font-size: 0.9rem;
+}
+
+/* Des rayons qui tournent derrière la carte (des parts franches, sans flou). */
+.revelation-rayons {
+  position: absolute;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--couleur-rarete) 0 10deg, transparent 10deg 24deg);
+  opacity: 0.45;
+  animation:
+    revelation-rayons 8s linear infinite,
+    revelation-pop 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes revelation-rayons {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.revelation-confettis {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.revelation-confetti {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 3px;
+  opacity: 0;
+  animation: revelation-confetti 1.8s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+}
+
+.revelation-confetti.rond {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+@keyframes revelation-confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--tour)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 160px)) rotate(calc(var(--tour) * 1.5)) scale(0.9);
+  }
+}
+
+.revelation-bouton {
+  z-index: 1;
+  min-width: 180px;
+  animation: revelation-pop 0.4s 0.6s both;
+}
+
+/* =========================================================================
+   La fenêtre d'un trajet de wagonnet (FenetreTrajet.tsx)
+   ========================================================================= */
+
+/* Le dessin : le départ, les rails (où roule le wagonnet), l'arrivée. */
+.dessin-trajet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: #b8e39a;
+}
+
+.dessin-batiment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 76px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.dessin-batiment img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.dessin-rails {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  border-top: 4px solid var(--encre);
+  border-bottom: 4px solid var(--encre);
+  /* les traverses en bois : des bandes franches */
+  background: repeating-linear-gradient(90deg, #a0703c 0 6px, transparent 6px 16px);
+}
+
+.dessin-wagonnet {
+  position: absolute;
+  left: 0;
+  bottom: 6px;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.dessin-actif .dessin-wagonnet {
+  animation: wagonnet-roule 3s ease-in-out infinite alternate;
+}
+
+.dessin-trajet:not(.dessin-actif) {
+  background: var(--creme-fonce);
+}
+
+.dessin-trajet:not(.dessin-actif) img {
+  filter: grayscale(0.8);
+}
+
+@keyframes wagonnet-roule {
+  to {
+    left: calc(100% - 1.6rem);
+  }
+}
+
+.trajet-description {
+  color: var(--encre-douce);
+  font-size: 0.95rem;
+}
+
+.trajet-objets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trajet-objets-titre .titre-section {
+  flex: 1;
+}
+
+/* Les minerais en tuiles : vert = il l'emporte, gris = il le laisse. */
+.tuiles-objets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 8px;
+}
+
+.tuile-objet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 88px;
+  padding: 8px 4px;
+  border: var(--trait) solid var(--gris-fonce);
+  border-radius: 14px;
+  background: var(--creme-fonce);
+  color: var(--encre-douce);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.08s;
+}
+
+.tuile-objet:active {
+  transform: translateY(2px);
+}
+
+.tuile-objet.envoye {
+  border-color: var(--encre);
+  background: var(--vert);
+  color: var(--encre);
+  box-shadow: var(--ombre-petite);
+}
+
+.tuile-coche {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--gris);
+  font-size: 0.75rem;
+}
+
+.envoye .tuile-coche {
+  background: var(--vert-fonce);
+  color: var(--blanc);
+}
+
+.tuile-icone {
+  font-size: 1.7rem;
+  line-height: 1.1;
+}
+
+.tuile-nom {
+  font-size: 0.85rem;
+}
+
+.tuile-infos {
+  font-size: 0.78rem;
+}
+
+.trajet-reserve {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trajet-apercu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trajet-apercu-objets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.trajet-apercu-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 0.95rem;
+}
+
+.trajet-apercu-chiffres strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.trajet-actions-rail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 3px dashed var(--creme-fonce);
+}
+
+/* =========================================================================
+   Le menu « Construire » (MenuConstruction.tsx)
+   ========================================================================= */
+
+.construction-ressources {
+  gap: 6px;
+}
+
+.construction-ressources .etiquette {
+  font-size: 0.9rem;
+  padding: 0.2em 0.7em;
+}
+
+/* Les bâtiments à construire : des grandes cartes, l'image en haut, le bouton en bas. */
+.grille-construction {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.construction {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.construction-possible {
+  background: #eefbe6;
+  box-shadow: var(--ombre);
+}
+
+.construction-image {
+  width: 120px;
+  height: 110px;
+  object-fit: contain;
+}
+
+.construction-texte {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.construction-texte h3 {
+  font-size: 1.3rem;
+}
+
+.construction-texte .discret {
+  font-size: 0.85rem;
+}
+
+.construction-bouton.btn {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.construction-bouton.verrou {
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+}
+
+.construction-bloquee {
+  background: var(--creme-fonce);
+  border-color: var(--gris-fonce);
+}
+
+.construction-bloquee .construction-image {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.construction-nouveau {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  z-index: 1;
+}
+
+.construction-sol-icone {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+/* Les bâtiments déjà construits : une petite liste d'étiquettes, tout en bas. */
+.construits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .grille-construction {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sur téléphone, une carte de bâtiment en ligne : l'image à gauche. */
+  .construction {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    grid-template-areas:
+      'image texte'
+      'bouton bouton';
+    align-items: center;
+    text-align: left;
+  }
+
+  .construction-image {
+    grid-area: image;
+    width: 84px;
+    height: 76px;
+  }
+
+  .construction-texte {
+    grid-area: texte;
+  }
+
+  .construction-bouton {
+    grid-area: bouton;
+  }
+
+  .dessin-batiment {
+    width: 60px;
+  }
+
+  .dessin-batiment img {
+    width: 48px;
+    height: 48px;
+  }
+}

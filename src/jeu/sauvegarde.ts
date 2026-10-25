@@ -8,6 +8,7 @@
 import { BLOCS, LIAISONS, TAILLE_GRILLE, type IdBatiment, type IdBloc, type IdLiaison } from './donnees'
 import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, ajouterA, nouveauTrajet, type EtatJeu } from './mineur'
 import { donnerXpAVieillePartie, recordsDeDepart } from './niveaux'
+import { t } from './langue'
 import { empriseBatiment, empriseLibre, lireCle, railsMineMarche, POSITION_MINE, type BatimentPose, type Village } from './village'
 
 export const NB_MONDES_MAX = 5
@@ -75,7 +76,7 @@ export function listerMondes(stockage: Stockage, maintenant = Date.now()): InfoM
         stockage.removeItem(ANCIENNE_CLE_SAUVEGARDE)
         stockage.removeItem(ANCIENNE_CLE_HORODATAGE)
         const date = Number(horodatage) || maintenant
-        liste.push({ id: '1', nom: 'Monde 1', couleur: 0, creeLe: date, joueLe: date })
+        liste.push({ id: '1', nom: t('Monde {n}', { n: 1 }), couleur: 0, creeLe: date, joueLe: date })
       }
     } catch {
       // Rien à reprendre.
@@ -94,7 +95,7 @@ function nouvelleInfo(liste: InfoMonde[], nom: string, maintenant: number): Info
   const id = String(Math.max(0, ...liste.map((m) => Number(m.id) || 0)) + 1)
   const couleursPrises = liste.map((m) => m.couleur)
   const couleur = [0, 1, 2, 3, 4].find((c) => !couleursPrises.includes(c)) ?? 0
-  return { id, nom: nom.trim() || `Monde ${id}`, couleur, creeLe: maintenant, joueLe: maintenant }
+  return { id, nom: nom.trim() || t('Monde {n}', { n: id }), couleur, creeLe: maintenant, joueLe: maintenant }
 }
 
 // Crée un monde avec cette partie. Renvoie null s'il y en a déjà 5.
@@ -119,7 +120,7 @@ export function dupliquerMonde(stockage: Stockage, id: string, maintenant = Date
   const original = listerMondes(stockage).find((m) => m.id === id)
   const etat = charger(stockage, id)
   if (!original || etat === null) return null
-  return creerMonde(stockage, `${original.nom} (copie)`, etat, maintenant)
+  return creerMonde(stockage, t('{nom} (copie)', { nom: original.nom }), etat, maintenant)
 }
 
 export function supprimerMonde(stockage: Stockage, id: string): void {
@@ -272,8 +273,8 @@ export function convertirVersion22(donnees: unknown): unknown {
   if (typeof donnees !== 'object' || donnees === null) return donnees
   const ancienne = donnees as { version?: unknown; employes?: { role?: string; trajet?: unknown }[]; trajets?: { liaison: IdLiaison }[] }
   if (ancienne.version !== 22 || !Array.isArray(ancienne.employes)) return donnees
-  const trajets = Array.isArray(ancienne.trajets) ? ancienne.trajets.map((t) => t.liaison) : []
-  const choix = trajets.includes('mine-marche') ? 'mine-marche' : (trajets.find((t) => LIAISONS[t]?.depart === 'puits') ?? null)
+  const trajets = Array.isArray(ancienne.trajets) ? ancienne.trajets.map((trajet) => trajet.liaison) : []
+  const choix = trajets.includes('mine-marche') ? 'mine-marche' : (trajets.find((liaison) => LIAISONS[liaison]?.depart === 'puits') ?? null)
   return {
     ...ancienne,
     version: 23,
