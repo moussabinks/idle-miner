@@ -233,7 +233,7 @@ Une `Fenetre` (§ 9) avec un **voile presque transparent** (on voit le village d
 | **Mine** (`PanneauMine.tsx`) | jaune | ⛏️ Creuser · ⬆️ Améliorer · 🚃 Wagonnets · 📊 Production | voir § 8.1 |
 | **Marché** (`PanneauMarche`) | vert | — | « 💰 Vendu par les wagonnets » ; sans rails, « 🛤️ Relie la mine au marché avec des rails » et **🛤️ Poser des rails** (vert, ou 🔒 ⭐ 2) ; avec des rails, les trajets qui y arrivent |
 | **Forgeron** (`PanneauPioches`) | rose | — | **Ta pioche** (jauge de durabilité, Fortune, **🔧 Réparer** ou « ✔ Neuve ») ; **Nouvelle pioche** (Acheter) ; **Tes autres pioches** (**Prendre**, bleu) |
-| **Personnel** (`PanneauEmployes.tsx`) | bleu | 👷 Équipe · ➕ Embaucher · 💼 Chefs | voir § 8.2 |
+| **Personnel** (`PanneauEmployes.tsx`) | bleu | 👷 Personnel · 💼 Chefs (25/10 : Équipe et Embaucher réunis) | voir § 8.2 |
 | **Foreuse** (`PanneauForeuse`) | orange | 🔥 Charbon · 🛒 Chariot · ⬆️ Améliorer | état, jauge de charbon, **🔥 Remplir** (jaune), ses trajets ; le chariot à vendre (`StockMinerais`) ; Forage et Chariot à améliorer |
 | **Générateur** (`PanneauGenerateur`) | violet | ⚡ Courant · ⬆️ Améliorer | état, jauge de redstone, **Remplir** (jaune), **⏸ Éteindre / ▶ Allumer** (blanc), « Ce qu'il accélère » (✔ / ✖ dans le rayon) ; l'amélioration (rayon, vitesse, réserve) |
 
@@ -249,8 +249,8 @@ Les onglets portent une **pastille** quand il y a quelque chose à faire : « ! 
 
 ### 8.2 Le Personnel
 
-- **👷 Équipe** : la carte **Salaires** (« 💵 Salaires · … $ / 5 min », **💵 Payer tout le monde**, jaune ; absente si le manager paie), puis une carte par employé, rangés en ⛏️ Mineurs et 🛤️ Pousseurs : nom, rareté, ⏳ temps payé (ou « 😠 Pas payé »), ses chiffres, son trajet (une liste déroulante pour un pousseur), ses améliorations (pioche ; ou vitesse et chariot), et **💵 Payer** (jaune), **🎲 Remplacer** (vert, avec le recruteur), **Licencier** (rose, avec une confirmation qui montre les indemnités). Sans personne : **➕ Embaucher un mineur**.
-- **➕ Embaucher** : la ligne **Mineur** (*n* / max) ; puis **Pousseur** : on choisit un trajet (« Libre », « Pas de rails », ou « ✔ son pousseur ») ; le trajet choisi **brille sur la carte** ; puis **Embaucher**.
+- **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : la carte **Salaires** (« 💵 Salaires · … $ / 5 min », **💵 Payer tout le monde**, jaune ; absente si le manager paie), puis une carte par employé, rangés en ⛏️ Mineurs et 🛤️ Pousseurs : nom, rareté, ⏳ temps payé (ou « 😠 Pas payé »), ses chiffres, son trajet (une liste déroulante pour un pousseur), ses améliorations (pioche ; ou vitesse et chariot), et **💵 Payer** (jaune), **🎲 Remplacer** (vert, avec le recruteur), **Licencier** (rose, avec une confirmation qui montre les indemnités). Sans personne : **➕ Embaucher un mineur**.
+- **➕ Recruter**, en bas du même onglet, avec ce que fera la recrue (⛏️ blocs/s, ou 🛤️ cases/s et 🚃 places, et 💵 le salaire) : la ligne **Mineur** (*n* / max) ; puis **Pousseur** : on choisit un trajet (« Libre », « Pas de rails », ou « ✔ son pousseur ») ; le trajet choisi **brille sur la carte** ; puis **Embaucher**.
 - **💼 Chefs** : le **Manager** (🔒 Mine 3, puis Embaucher ; ensuite un interrupteur « Il paie les salaires / Arrêté », la jauge de fatigue avec **☕ Réveiller**, et son Endurance) et le **Recruteur** (🔒 Mine 4, puis ses niveaux et les chances de chaque rareté), chacun avec son portrait.
 - Une embauche avec le recruteur lance **la révélation** (`RevelationRecrue.tsx`) : la carte tremble pendant 1,6 s (« Le recruteur cherche… »), puis se retourne sur sa rareté (étoiles, confettis) ; un clic accélère ; **Au travail ! / Super ! / Incroyable !** la ferme.
 
