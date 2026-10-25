@@ -604,7 +604,7 @@ export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
   sapin: { id: 'sapin', nom: 'Sapin', taille: 2 },
   cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2 },
   fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2 },
-  statue: { id: 'statue', nom: 'Statue du hamster d’or', taille: 2 },
+  statue: { id: 'statue', nom: 'Statue de la taupe d’or', taille: 2 },
 }
 
 // ---------------------------------------------------------------------------

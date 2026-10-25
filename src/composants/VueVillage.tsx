@@ -12,7 +12,6 @@ import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenera
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
-import { nombreAbrege } from '../nombres'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
@@ -656,38 +655,8 @@ export function VueVillage({
     )
   }
 
-  // La jauge du coffre de la mine, toujours au-dessus d'elle (27/10) : on voit d'un coup d'œil
-  // s'il faut le vider. Elle passe à l'orange puis au rouge (et clignote) quand il est plein.
-  const puits = batimentPose(village, 'puits')
-  if (puits) {
-    const taille = BATIMENTS.puits.taille
-    // (25/10) Au-dessus de la roue du chevalement : la caisse de l'ascenseur monte juste dessous.
-    const centre = versEcran(puits.x + taille / 2, puits.y + taille / 2)
-    const dans = nbDansCoffre(etat)
-    const capacite = capaciteCoffre(etat)
-    const part = Math.min(1, dans / Math.max(1, capacite))
-    const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
-    const mineursAuFond = mineursDansLaMine(etat)
-    bulles.push(
-      <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 172 }} title={t('Coffre de la mine : {dans} / {capacite}', { dans, capacite })}>
-        <span className="jauge-coffre-icone" aria-hidden="true">
-          📦
-        </span>
-        <span className="jauge-coffre-barre">
-          <i style={{ width: `${Math.round(part * 100)}%` }} />
-          <span className="jauge-coffre-texte">
-            {nombreAbrege(dans)} / {nombreAbrege(capacite)}
-          </span>
-        </span>
-        {/* Les mineurs au travail dans la mine (on ne les voit pas : ils sont au fond). */}
-        {mineursAuFond > 0 && (
-          <span className="jauge-coffre-mineurs" title={`${mineursAuFond} mineur(s) au travail dans la mine`}>
-            👷 {mineursAuFond}
-          </span>
-        )}
-      </div>,
-    )
-  }
+  // (25/10) Plus de jauge du coffre au-dessus de la mine : le bandeau du haut la montre déjà
+  // (📦 339 / 800), et la bulle « Plein ! » prévient quand il faut vendre.
 
   // Les mini-jauges des bâtiments qui travaillent (27/10) : la forge qui fait la pioche d'un
   // mineur, la foreuse qui fore son prochain bloc, le générateur et son courant qui reste.
@@ -937,7 +906,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
         <MiniJauge
           x={dessus.x}
           y={dessus.y}
-          texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? '📦 Coffre plein !' : `📦 Déchargement · ${charge}`}
+          texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? `📦 ${t('Coffre plein !')}` : `📦 ${t('Déchargement · {n}', { n: charge })}`}
           part={caisse.progression / secondesVidageAscenseur(etat)}
           secondes={secondesVidageAscenseur(etat) - caisse.progression}
         />

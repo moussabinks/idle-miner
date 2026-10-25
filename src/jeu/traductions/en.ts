@@ -621,7 +621,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Sapin': 'Pine tree',
   'Cerisier en fleurs': 'Cherry blossom tree',
   'Fontaine': 'Fountain',
-  'Statue du hamster d’or': 'Golden hamster statue',
+  'Statue de la taupe d’or': 'Golden mole statue',
 
   // src/jeu/employes.ts
   '🛒 Le chariot de {nom} porte maintenant {places} places.': '🛒 {nom}’s cart now holds {places} slots.',
@@ -859,7 +859,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
 
   // src/composants/VueVillage.tsx
   'Automatiser le trajet {depart} → {arrivee}': 'Automate the route {depart} → {arrivee}',
-  'Coffre de la mine : {dans} / {capacite}': 'Mine chest: {dans} / {capacite}',
   'Le village vu du ciel': 'The village from above',
   'Pioche de {nom}': '{nom}’s pickaxe',
   // src/composants/Accueil.tsx (avertissement de sauvegarde)
@@ -867,4 +866,13 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // src/composants/RecompensesQuotidiennes.tsx (ouverture du cadeau)
   'Jour {n} : bravo !': 'Day {n}: well done!',
   'Série : {n} jours de suite !': 'Streak: {n} days in a row!',
+  // src/composants/WagonnetVillage.tsx et VueVillage.tsx (mini-jauges)
+  'Chargement': 'Loading',
+  'Chargement du chariot': 'Loading the cart',
+  'Coffre plein !': 'Chest full!',
+  'Déchargement': 'Unloading',
+  'Déchargement · {n}': 'Unloading · {n}',
+  'Livraison de la redstone': 'Redstone delivery',
+  'Livraison du charbon': 'Coal delivery',
+  'Vente': 'Sale',
 }

@@ -1120,96 +1120,11 @@ g.grille-construction {
   }
 }
 
-/* La jauge du coffre de la mine (27/10), toujours au-dessus d'elle. */
-.jauge-coffre-mine {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 6px 3px 4px;
-  border-radius: 999px;
-  border: 2.5px solid var(--encre, #2a2140);
-  background: var(--creme, #fdf6e3);
-  box-shadow: 0 3px 0 var(--encre, #2a2140);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.jauge-coffre-icone {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.jauge-coffre-barre {
-  position: relative;
-  display: block;
-  width: 96px;
-  height: 15px;
-  border-radius: 999px;
-  border: 2px solid var(--encre, #2a2140);
-  background: #e8dcc0;
-  overflow: hidden;
-}
-
-.jauge-coffre-barre i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #8fd36f;
-  transition: width 0.3s;
-}
-
-.jauge-haute .jauge-coffre-barre i {
-  background: #f9d65a;
-}
-
-.jauge-pleine .jauge-coffre-barre i {
-  background: #ee6b6b;
-}
-
-.jauge-pleine {
-  background: #ffe1e5;
-  transform: translate(-50%, -50%) scale(var(--p-sx));
-  animation: jauge-pleine 2.2s ease-in-out infinite;
-}
-
-/* (23/10) Plus calme : elle grossit à peine, lentement (avant : +12 % deux fois par seconde). */
-@keyframes jauge-pleine {
-  0%, 100% { --p-sx: 1; }
-  50% { --p-sx: 1.03; }
-}
-
-.jauge-coffre-texte {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--encre, #2a2140);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .jauge-pleine {
-    animation: none;
-  }
-}
-
 /* La plage hors de l'écran (27/10) : ses animations s'arrêtent (elles reprennent dès que la
    caméra s'arrête en la voyant). */
 .plage-cachee .eau-plage *,
 .plage-cachee .objets-plage * {
   animation-play-state: paused;
-}
-
-/* Les mineurs au travail dans la mine, à côté de la jauge du coffre (27/10). */
-.jauge-coffre-mineurs {
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 900;
-  color: var(--encre, #2a2140);
 }
 
 /* Les mini-jauges (27/10) : chargement, vente, déchargement... au-dessus de l'objet. */

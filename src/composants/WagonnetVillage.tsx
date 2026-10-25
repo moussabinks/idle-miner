@@ -15,6 +15,7 @@ import { sons } from '../sons'
 import { MiniJauge, Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
+import { t } from '../jeu/langue'
 
 // Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
 // wagonnet se place entre eux et regarde de l'un vers l'autre. Dans un virage, il tourne donc
@@ -24,10 +25,11 @@ const ESSIEUX = 0.6
 const RECUL_POUSSEUR = 1.15
 
 // Ce que fait le wagonnet à son arrivée, selon le bâtiment.
-const TEXTES_LIVRAISON: Partial<Record<IdBatiment, string>> = {
-  marche: '💰 Vente',
-  foreuse: '⚫ Livraison du charbon',
-  generateur: '🔴 Livraison de la redstone',
+// (une fonction : le texte est traduit au moment de l'afficher, dans la langue choisie)
+const TEXTES_LIVRAISON: Partial<Record<IdBatiment, () => string>> = {
+  marche: () => `💰 ${t('Vente')}`,
+  foreuse: () => `⚫ ${t('Livraison du charbon')}`,
+  generateur: () => `🔴 ${t('Livraison de la redstone')}`,
 }
 
 // La vente d'un wagonnet au marché (27/10) : quand il a fini de décharger, un « +X $ » doré
@@ -192,7 +194,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const enPause = roule && distance < 0 && vitesse > 0
   const restePause = enPause ? -distance / vitesse : 0
   // (pendant ce temps, le pousseur attend à l'arrêt, sans marcher : 28/10)
-  const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? '⚙️ Chargement du chariot' : '📦 Chargement') : TEXTES_LIVRAISON[info.arrivee] ?? '📦 Déchargement'
+  const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? `⚙️ ${t('Chargement du chariot')}` : `📦 ${t('Chargement')}`) : (TEXTES_LIVRAISON[info.arrivee]?.() ?? `📦 ${t('Déchargement')}`)
   return (
     <>
       {ventesVisibles}
