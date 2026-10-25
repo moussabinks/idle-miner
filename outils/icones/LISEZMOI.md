@@ -37,3 +37,7 @@ en tête de `font-family` dans `src/styles/theme.css`.
 
 Un emoji qui n'a pas de dessin reste l'emoji du système : penser à le dessiner quand on en
 ajoute un dans le jeu. Les flèches et symboles de texte (→, ★, ✦, ▶) restent du texte.
+
+## Les icônes en images (25/10)
+
+`fabriquer.py` écrit aussi les minerais (la liste `ICONES_EN_IMAGE`) en fichiers SVG dans `public/images/icones/` (`u1F529.svg` pour 🔩...), avec les mêmes dessins que la police. Le composant `IconeImage.tsx` les affiche en `<img>` : c'est ce que font les bulles « +1 » qui s'envolent quand on casse un bloc à la mine, car dans ces bulles animées Safari ne prenait pas la police (il montrait les emojis d'Apple). Pour une nouvelle icône en image : l'ajouter à `ICONES_EN_IMAGE` et relancer le script.

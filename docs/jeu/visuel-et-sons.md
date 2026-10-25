@@ -147,7 +147,7 @@ L'image `mine.svg` ne bouge pas ; `DessinEvolutionMine` (`DessinsVillage.tsx`) d
 Dans la fenêtre de la mine (`PanneauMine.tsx`, `mine.css`) :
 
 - **Le bloc** (`BlocDessin.tsx`) : un cube vu de 3/4 en SVG plat (dessus clair, gauche moyen, droite plus foncé, contour d'encre), gris pour la pierre ; un minerai y met ses **pépites** de couleur ; jusqu'à deux **fêlures** quand il faut plusieurs coups (pioche cassée). Un minerai précieux (prix ≥ 35) brille doucement. Le même dessin sert aux statistiques.
-- **Chaque clic** : le nouveau bloc arrive en s'écrasant, comme frappé (`bloc-pousse`), cinq **éclats** gris cernés d'encre partent en étoile (`eclat`), et le minerai trouvé s'envole (« +1 » et l'icône du minerai, `trouvaille`, un peu à gauche ou à droite pour ne pas s'empiler).
+- **Chaque clic** : le nouveau bloc arrive en s'écrasant, comme frappé (`bloc-pousse`), cinq **éclats** gris cernés d'encre partent en étoile (`eclat`), et le minerai trouvé s'envole (« +1 » et l'icône du minerai, `trouvaille`, un peu à gauche ou à droite pour ne pas s'empiler ; 25/10 : l'icône est une image, `IconeImage.tsx`, car Safari ne prenait pas la police d'icônes dans cette bulle animée).
 - **Le combo** : les clics à moins de 0,9 s l'un de l'autre s'additionnent. Dès ×3, une pastille orange « 🔥 ×N » saute à chaque clic (rose et plus grosse dès ×25) ; dès ×10, le fond du bloc passe à l'orange (`.zone-en-feu`). Une jauge jaune montre le prochain palier et son bonus (`BONUS_COMBO`), qui s'affiche en étiquette jaune en haut ; trois compteurs : blocs cassés, record, clics par seconde.
 - **La pioche** : sa jauge de durabilité, rose sous 15 % ou cassée (elle clignote alors).
 
