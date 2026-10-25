@@ -430,7 +430,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '{n} / {max} succès': '{n} / {max} achievements',
 
   // src/composants/Publicite.tsx
-  'Publicité': 'Ad',
   'Quitter (sans récompense)': 'Quit (no reward)',
   'Merci ! Ta récompense est prête.': 'Thanks! Your reward is ready.',
   'Récupérer': 'Collect',
@@ -875,4 +874,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Livraison de la redstone': 'Redstone delivery',
   'Livraison du charbon': 'Coal delivery',
   'Vente': 'Sale',
+  // src/composants/Publicite.tsx
+  'Simulation de pub': 'Ad simulation',
 }

@@ -19,8 +19,8 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
       </div>
 
       {/* Gagner des gemmes : une publicité. */}
-      <div className="boutique-pub carte">
-        <span className="boutique-pub-icone" aria-hidden="true">
+      <div className="boutique-video carte">
+        <span className="boutique-video-icone" aria-hidden="true">
           📺
         </span>
         <span className="boutique-ligne-texte">

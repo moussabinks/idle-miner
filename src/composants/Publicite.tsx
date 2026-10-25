@@ -1,9 +1,15 @@
 // La publicité (25/10) : pour l'instant une FAUSSE publicité, pour tester le jeu sans régie de
-// pub. Un écran noir, un compte à rebours de 30 secondes, puis le bouton de la récompense. Quitter
-// avant la fin ne donne rien. La version CrazyGames remplacera cet écran par leur vraie publicité
-// « récompensée » (voir src/portail.ts).
+// pub. Un écran noir « Simulation de pub », un compte à rebours de 30 à 0 secondes, puis le
+// bouton de la récompense. Quitter avant la fin ne donne rien. La version CrazyGames remplacera
+// cet écran par leur vraie publicité « récompensée » (voir src/portail.ts).
+//
+// (25/10) ⚠️ Pas de mot « pub », « publicite », « ad »... dans les noms de classes CSS : les
+// bloqueurs de publicités cachent ces éléments, et le joueur ne voyait rien (seule la musique se
+// coupait). D'où « ecran-video ». L'écran est aussi posé directement dans <body> (createPortal),
+// par-dessus tout le reste du jeu.
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { SECONDES_PUB } from '../jeu/gemmes'
 import { t } from '../jeu/langue'
 
@@ -22,31 +28,34 @@ export function Publicite({ onFinie, onAnnulee }: Props) {
   }, [reste])
 
   const finie = reste <= 0
-  return (
-    <div className="publicite" role="dialog" aria-modal="true" aria-label={t('Publicité')}>
-      <span className="publicite-etiquette">{t('Publicité')}</span>
+  // L'anneau autour du compte à rebours se vide avec le temps.
+  const part = reste / SECONDES_PUB
+  return createPortal(
+    <div className="ecran-video" role="dialog" aria-modal="true" aria-label={t('Simulation de pub')}>
       {!finie && (
-        <button className="btn btn-blanc btn-petit publicite-quitter" onClick={onAnnulee}>
+        <button className="btn btn-blanc btn-petit ecran-video-quitter" onClick={onAnnulee}>
           ✖ {t('Quitter (sans récompense)')}
         </button>
       )}
-      <div className="publicite-centre">
+      <div className="ecran-video-centre">
         {finie ? (
           <>
-            <p className="publicite-texte">{t('Merci ! Ta récompense est prête.')}</p>
+            <p className="ecran-video-titre">{t('Merci ! Ta récompense est prête.')}</p>
             <button className="btn btn-violet btn-grand btn-attention" onClick={onFinie} autoFocus>
               🎁 {t('Récupérer')}
             </button>
           </>
         ) : (
           <>
-            <div className="publicite-compte" aria-live="polite">
-              {reste}
+            <p className="ecran-video-titre">{t('Simulation de pub')}</p>
+            <div className="ecran-video-compte" style={{ ['--part' as string]: `${part * 360}deg` }} aria-live="polite">
+              <span>{reste}</span>
             </div>
-            <p className="publicite-texte">{t('La récompense arrive dans {n} s…', { n: reste })}</p>
+            <p className="ecran-video-texte">{t('La récompense arrive dans {n} s…', { n: reste })}</p>
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
