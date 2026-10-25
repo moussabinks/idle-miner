@@ -100,7 +100,7 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 4. **Les défis du jour** : 3 défis tirés de la liste des tâches, pour revenir chaque jour (avec le cadeau du jour).
 5. **La collection de mineurs** : montrer tôt les mineurs rares découverts (« 3/24 mineurs découverts »).
 6. **CrazyGames** : tester le **vrai SDK** (publicités récompensées, `gameplayStart/Stop`, `happytime` : `src/portail.ts` n'a été écrit que d'après leur documentation), la sauvegarde par leur module Data, et faire la **vignette** et le **GIF** de la fiche.
-7. **Finitions** : redessiner les icônes de l'application dans le nouveau style (`public/favicon.svg` et `public/icones/*.png` sont encore l'ancien bloc sur fond sombre, avec un dégradé), garder la traduction anglaise complète à chaque nouveau texte (`npm run traductions`), ajouter au bot les repères des 5 premières minutes.
+7. **Finitions** : garder la traduction anglaise complète à chaque nouveau texte (`npm run traductions`), ajouter au bot les repères des 5 premières minutes.
 8. **Équilibrage** : l'ajuster après de vraies parties (le bot arrive au niveau 5 de la mine en ~4 h ; un vrai joueur plutôt 5 à 8 h).
 9. Idées en attente : améliorer les mineurs avec des « enchantements » (Fortune, Efficacité...) ; une **planche du joueur** (sa taupe à lui).
 

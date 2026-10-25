@@ -1,35 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- L'icône de Mega Digger : un bloc de terre avec du minerai, et une pioche dorée. -->
-  <defs>
-    <linearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2e2e3c"/>
-      <stop offset="1" stop-color="#15151a"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#fond)"/>
-  <!-- Le bloc : herbe en haut, terre dessous, avec des pixels plus clairs et plus foncés. -->
-  <g transform="translate(116 176)">
-    <rect width="280" height="280" fill="#8a5a33"/>
-    <rect width="280" height="70" fill="#5cc95c"/>
-    <rect y="70" width="35" height="35" fill="#5cc95c"/>
-    <rect x="105" y="70" width="35" height="35" fill="#5cc95c"/>
-    <rect x="210" y="70" width="35" height="35" fill="#5cc95c"/>
-    <rect x="35" width="35" height="35" fill="#7ad97a"/>
-    <rect x="175" y="35" width="35" height="35" fill="#46a846"/>
-    <rect x="70" y="140" width="35" height="35" fill="#6e4628"/>
-    <rect x="210" y="210" width="35" height="35" fill="#6e4628"/>
-    <rect x="35" y="245" width="35" height="35" fill="#a06b3f"/>
-    <!-- Les diamants. -->
-    <rect x="140" y="140" width="35" height="35" fill="#4ee8dc"/>
-    <rect x="175" y="175" width="35" height="35" fill="#4ee8dc"/>
-    <rect x="35" y="175" width="35" height="35" fill="#4ee8dc"/>
-    <rect x="245" y="140" width="35" height="35" fill="#4ee8dc"/>
-    <rect width="280" height="280" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="10"/>
+  <!-- L'icône de Mega Digger (25/10, style plat) : Pépite, la taupe mineuse, sur un fond bleu ciel
+       au contour d'encre. Fabriquée à partir de public/images/personnages/mineur.svg. -->
+  <defs><clipPath id="cadre"><rect x="12" y="12" width="488" height="488" rx="96"/></clipPath></defs>
+  <rect x="12" y="12" width="488" height="488" rx="96" fill="#8cc8f5"/>
+  <g clip-path="url(#cadre)">
+    <circle cx="256" cy="290" r="175" fill="#fdf6e3" opacity="0.55"/>
+    <svg x="46" y="92" width="420" height="420" viewBox="10 14 100 100"><g stroke-linejoin="round" stroke-linecap="round"><path d="M98 118L104 40" fill="none" stroke="#2a2140" stroke-width="9.5"/><path d="M98 118L104 40" fill="none" stroke="#c98a55" stroke-width="4.5"/><path d="M122.48 47.44Q110.52 33.48 104.54 33.02Q98.55 32.56 84.6 44.53Q98.94 40.61 103.92 41Q108.91 41.38 122.48 47.44Z" fill="#b8c0cc" stroke="#2a2140" stroke-width="3.8249999999999997"/><circle cx="104" cy="40" r="3.2" fill="#8d96a5" stroke="#2a2140" stroke-width="2.4"/><ellipse cx="60" cy="84" rx="37" ry="42" fill="#7a6a7e" stroke="#2a2140" stroke-width="4.5"/><ellipse cx="60" cy="104" rx="22" ry="16" fill="#a597a6"/><ellipse cx="60" cy="79" rx="15" ry="9.5" fill="#a597a6"/><ellipse cx="40.5" cy="77" rx="5" ry="3.2" fill="#f8bcc5"/><ellipse cx="79.5" cy="77" rx="5" ry="3.2" fill="#f8bcc5"/><circle cx="49.5" cy="64" r="9" fill="#ffffff" stroke="#2a2140" stroke-width="3.6"/><circle cx="49.5" cy="64.57" r="4.5" fill="#2a2140"/><circle cx="51.3" cy="62.59" r="1.53" fill="#ffffff"/><circle cx="70.5" cy="64" r="9" fill="#ffffff" stroke="#2a2140" stroke-width="3.6"/><circle cx="70.5" cy="64.57" r="4.5" fill="#2a2140"/><circle cx="72.3" cy="62.59" r="1.53" fill="#ffffff"/><ellipse cx="60" cy="75.5" rx="7.5" ry="5.5" fill="#f39aa8" stroke="#2a2140" stroke-width="3.375"/><circle cx="57.8" cy="74" r="1.7" fill="#ffffff"/><path d="M53.5 83Q60 92 66.5 83Z" fill="#c9506a" stroke="#2a2140" stroke-width="2.8"/><ellipse cx="96" cy="100" rx="9.5" ry="8.55" fill="#f39aa8" stroke="#2a2140" stroke-width="4.5"/><path d="M92.2 102.38v5.23M96 103.33v5.23M99.8 102.38v5.23" fill="none" stroke="#2a2140" stroke-width="2.2"/><ellipse cx="22" cy="74" rx="9.5" ry="9" fill="#f39aa8" stroke="#2a2140" stroke-width="4.5"/><path d="M17 66.5v-5M22 65.5v-5.5M27 66.5v-5" fill="none" stroke="#2a2140" stroke-width="2.2"/><path d="M27 54C27 20 93 20 93 54Z" fill="#f9d65a" stroke="#2a2140" stroke-width="4.5"/><path d="M27 54C27 20 93 20 93 54" fill="none" stroke="#2a2140" stroke-width="4.5"/><rect x="21" y="48.5" width="78" height="9" rx="4.5" fill="#c2a746" stroke="#2a2140" stroke-width="4.5"/><rect x="52" y="34" width="16" height="12" rx="3" fill="#8d96a5" stroke="#2a2140" stroke-width="3.6"/><circle cx="60" cy="37" r="8" fill="#f9d65a" stroke="#2a2140" stroke-width="4.5"/><circle cx="57.7" cy="34.8" r="2.6" fill="#ffffff"/><path d="M84 22l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#ffffff" stroke="#2a2140" stroke-width="2.2"/></g></svg>
   </g>
-  <!-- La pioche, posée en travers au-dessus du bloc. -->
-  <g transform="rotate(-38 256 210)">
-    <rect x="240" y="120" width="32" height="250" rx="10" fill="#7a4a24" stroke="#3b230f" stroke-width="8"/>
-    <path d="M110 150 Q256 50 402 150 L384 176 Q256 104 128 176 Z" fill="#f2b33d" stroke="#6b4a10" stroke-width="10" stroke-linejoin="round"/>
-    <rect x="228" y="108" width="56" height="44" rx="8" fill="#c98f22" stroke="#6b4a10" stroke-width="8"/>
-  </g>
+  <rect x="12" y="12" width="488" height="488" rx="96" fill="none" stroke="#2a2140" stroke-width="24"/>
 </svg>
