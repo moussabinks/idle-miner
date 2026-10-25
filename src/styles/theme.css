@@ -313,10 +313,6 @@ kbd {
   pointer-events: none;
 }
 
-.pastille-verte {
-  background: var(--vert-fonce);
-}
-
 /* =========================================================================
    Les fenêtres (Fenetre.tsx) : une seule façon de faire partout
      - un voile (sombre pour les fenêtres importantes, transparent pour les bâtiments) ;
