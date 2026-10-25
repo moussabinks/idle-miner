@@ -1,15 +1,17 @@
 // La fenêtre du retour (30/10) : quand on revient sur son monde, ce qui s'est passé pendant
-// l'absence (le jeu a continué de tourner, au plus 8 h) : ce que les mineurs et la mine ont
-// creusé... (23/10 : plus les voyages des wagonnets ni le coffre ; en bas, le temps d'absence
-// que couvre le manager, et comment l'allonger) (23/10) En grand : ce que les pousseurs ont vendu au marché avec leurs wagonnets
-// (l'argent est déjà dans la caisse : plus de bouton « Tout récupérer », juste « Continuer »).
+// l'absence (le jeu a continué de tourner, au plus 8 h). En grand, tout ce que l'absence a
+// rapporté ; (25/10) une publicité DOUBLE ces gains.
 // Aucune règle du jeu ici : le résumé est calculé par src/jeu/absence.ts.
 
-import type { ResumeAbsence } from '../jeu/absence'
+import { useState } from 'react'
+import { doublerAbsence, type ResumeAbsence } from '../jeu/absence'
+import { nombre, t } from '../jeu/langue'
+import { useJeu } from './contexteJeu'
+import { Fenetre } from './Fenetre'
 
 type Props = {
   resume: ResumeAbsence
-  onRecuperer: () => void
+  onFermer: () => void
 }
 
 // « 2 h 13 », « 12 min », « 45 s ».
@@ -20,68 +22,71 @@ function dureeAbsence(secondes: number): string {
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`
 }
 
-const nombre = (n: number) => Math.round(n).toLocaleString('fr-FR')
-
-export function FenetreAbsence({ resume, onRecuperer }: Props) {
+export function FenetreAbsence({ resume, onFermer }: Props) {
+  const { jouer, regarderPub } = useJeu()
+  const [double, setDouble] = useState(false)
   const lignes = [
-    resume.blocsMineurs > 0 && { icone: '👷', texte: 'Tes mineurs ont creusé', valeur: `${nombre(resume.blocsMineurs)} blocs` },
-    resume.blocsMine > 0 && { icone: '⛏️', texte: 'La mine a sorti toute seule', valeur: `${nombre(resume.blocsMine)} blocs` },
-    resume.blocsForeuse > 0 && { icone: '⚙️', texte: 'La foreuse a foré', valeur: `${nombre(resume.blocsForeuse)} blocs` },
+    resume.blocsMineurs > 0 && { icone: '👷', texte: t('Tes mineurs ont creusé'), valeur: t('{n} blocs', { n: nombre(resume.blocsMineurs) }) },
+    resume.blocsMine > 0 && { icone: '⛏️', texte: t('La mine a sorti toute seule'), valeur: t('{n} blocs', { n: nombre(resume.blocsMine) }) },
+    resume.blocsForeuse > 0 && { icone: '⚙️', texte: t('La foreuse a foré'), valeur: t('{n} blocs', { n: nombre(resume.blocsForeuse) }) },
+    resume.ventesWagonnets > 0 && { icone: '🚃', texte: t('Tes wagonnets ont vendu'), valeur: `${nombre(resume.ventesWagonnets)} $` },
   ].filter((l): l is { icone: string; texte: string; valeur: string } => Boolean(l))
+
+  function doubler() {
+    regarderPub(() => {
+      jouer((e) => doublerAbsence(e, resume))
+      setDouble(true)
+    })
+  }
+
   return (
-    <div className="voile voile-devant" role="dialog" aria-modal="true" aria-labelledby="titre-absence">
-      <section className="carte fenetre-absence">
-        <span className="absence-soleil" aria-hidden="true" />
-        <h2 id="titre-absence">Bon retour, mineur !</h2>
-        <p className="discret">Pendant ton absence ({dureeAbsence(resume.secondes)}), ta mine a continué de tourner :</p>
-        <ul className="absence-lignes">
-          {lignes.map((l, i) => (
-            <li key={l.texte} style={{ animationDelay: `${150 + i * 120}ms` }}>
-              <span className="absence-icone" aria-hidden="true">
-                {l.icone}
-              </span>
-              <span>{l.texte}</span>
-              <strong>{l.valeur}</strong>
-            </li>
-          ))}
-        </ul>
-        {/* Le chiffre le plus attirant, en grand : ce que les pousseurs ont vendu au marché. */}
-        <div className="absence-ventes">
-          <span className="absence-ventes-titre">🛤️ Tes pousseurs ont vendu au marché</span>
-          <div className="absence-argent">
-            <span aria-hidden="true">💰</span> +{nombre(resume.ventesWagonnets)} $
-          </div>
-          {resume.ventesWagonnets === 0 && <span className="discret">Relie la mine au marché et embauche un pousseur : il vendra pour toi, même jeu fermé.</span>}
-        </div>
-        {resume.sansSalaire > 0 && (
-          <p className="texte-alerte">
-            😠 {resume.sansSalaire === 1 ? 'Un mineur attend son salaire' : `${resume.sansSalaire} mineurs attendent leur salaire`} : ils se sont arrêtés. Paie-les au Personnel !
-          </p>
-        )}
-        {/* (23/10) Combien de temps le jeu tourne jeu fermé : le manager paie les salaires pendant
-            un temps (30 min au départ), qu'on allonge en l'améliorant au Personnel. */}
-        <p className={`absence-limite ${resume.absenceMax !== null && resume.secondes > resume.absenceMax ? 'absence-limite-depassee' : ''}`}>
-          {resume.absenceMax === null ? (
-            <>
-              ⏱️ Sans manager, tes mineurs s'arrêtent dès que leur salaire est fini. Embauche le <strong>manager au Personnel</strong> : il les paie
-              pendant 15 min, et plus en l'améliorant.
-            </>
-          ) : resume.managerAuMax ? (
-            <>
-              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> : ton manager s'endort après (il est au maximum). Pense à le
-              réveiller au Personnel avant de partir.
-            </>
-          ) : (
-            <>
-              ⏱️ Temps d'absence max : <strong>{dureeAbsence(resume.absenceMax)}</strong> : ton manager s'endort après. Réveille-le au Personnel avant de
-              partir ; pour qu'il tienne plus longtemps, améliore le <strong>manager</strong> au bâtiment du <strong>Personnel</strong>.
-            </>
+    <Fenetre
+      titre={t('Bon retour, mineur !')}
+      icone="☀️"
+      couleur="jaune"
+      devant
+      onFermer={onFermer}
+      pied={
+        <>
+          {resume.gains > 0 && !double && (
+            <button className="btn btn-violet btn-grand btn-attention" onClick={doubler}>
+              📺 {t('Doubler')} · +{nombre(resume.gains)} $
+            </button>
           )}
+          <button className="btn btn-jaune btn-grand" onClick={onFermer} autoFocus>
+            {t('Continuer')}
+          </button>
+        </>
+      }
+    >
+      <p className="discret">{t('Pendant ton absence ({duree}), ta mine a continué de tourner :', { duree: dureeAbsence(resume.secondes) })}</p>
+      <ul className="absence-lignes">
+        {lignes.map((l) => (
+          <li key={l.texte} className="carte">
+            <span aria-hidden="true">{l.icone}</span>
+            <span>{l.texte}</span>
+            <strong>{l.valeur}</strong>
+          </li>
+        ))}
+      </ul>
+      <div className="absence-gains carte carte-creme">
+        <span>{t('Tout ce que ton absence a rapporté')}</span>
+        <strong className="absence-total">
+          💰 +{nombre(double ? resume.gains * 2 : resume.gains)} $ {double && <span className="etiquette etiquette-violet">×2</span>}
+        </strong>
+        {resume.ventesWagonnets === 0 && <span className="discret">{t('Relie la mine au marché et embauche un pousseur : il vendra pour toi, même jeu fermé.')}</span>}
+      </div>
+      {resume.sansSalaire > 0 && (
+        <p className="texte-alerte">
+          😠 {resume.sansSalaire === 1 ? t('Un employé attend son salaire : paie-le au Personnel !') : t('{n} employés attendent leur salaire : paie-les au Personnel !', { n: resume.sansSalaire })}
         </p>
-        <button className="bouton bouton-vendre tuto-gros-bouton" onClick={onRecuperer} autoFocus>
-          ▶ Continuer
-        </button>
-      </section>
-    </div>
+      )}
+      <p className="discret">
+        ⏱️{' '}
+        {resume.absenceMax === null
+          ? t('Sans manager, tes mineurs s’arrêtent dès que leur salaire est fini. Embauche le manager au Personnel (mine niveau 3).')
+          : t('Ton manager paie les salaires pendant {duree}, puis il s’endort : réveille-le avant de partir.', { duree: dureeAbsence(resume.absenceMax) })}
+      </p>
+    </Fenetre>
   )
 }

@@ -37,7 +37,7 @@ BLANC = ('#f4f1ea', '#ffffff', '#c9c2b4')
 NOIR = ('#3d3a40', '#6e6a74', '#1f1d22')
 PEAU = ('#ffc98f', '#ffe3c2', '#d99a5c')
 ORANGE = ('#ff8a1f', '#ffc06a', '#c75a0a')
-FONCE = '#3b2412'
+FONCE = '#2a2140'  # (25/10 : le bleu nuit des contours ; avant, brun)
 BLANC_PUR = '#ffffff'
 
 ICONES = {}
@@ -811,3 +811,64 @@ def son():
 def muet():
     x = union(trait([(64, 36), (88, 64)], 8), trait([(88, 36), (64, 64)], 8))
     return r(_haut_parleur(), METAL, brillance=False) + [(ROUGE[0], x)]
+
+
+# ---------------------------------------------------------------------------
+# (25/10) Les gemmes, la publicité et le cadeau du jour
+# ---------------------------------------------------------------------------
+
+
+@icone('🎁')
+def cadeau():
+    boite = rect(14, 42, 72, 46, 6)
+    couvercle = rect(8, 30, 84, 16, 5)
+    ruban = rect(43, 30, 14, 58, 2)
+    noeud_g = svg('M 50 30 Q 30 6 20 18 Q 14 28 50 30 Z')
+    noeud_d = miroir(noeud_g)
+    return r(boite, ROUGE, brillance=False) + r(couvercle, ROUGE, brillance=False) + [(OR[0], ruban), (OR[0], noeud_g), (OR[0], noeud_d), (OR[2], rect(43, 42, 14, 4))]
+
+
+@icone('📺')
+def television():
+    caisse = rect(8, 22, 84, 62, 10)
+    ecran = rect(17, 31, 52, 44, 6)
+    antenne = union(trait([(50, 22), (32, 6)], 4), trait([(50, 22), (66, 6)], 4))
+    return [(FONCE, antenne)] + r(caisse, VIOLET, brillance=False) + [('#2f2a48', ecran), ('#8cc8f5', rect(21, 35, 44, 36, 4)), (BLANC_PUR, poly((38, 44), (38, 62), (52, 53), arrondi=2)), (OR[0], cercle(80, 40, 5)), (OR[0], cercle(80, 58, 5))]
+
+
+@icone('📌')
+def punaise():
+    tete = svg('M 30 12 Q 50 2 70 12 L 64 40 Q 50 46 36 40 Z')
+    aiguille = trait([(50, 44), (50, 92)], 5)
+    return [(METAL[2], aiguille)] + r(tete, ROUGE, brillance=True) + [(ROUGE[2], rect(28, 38, 44, 10, 5))]
+
+
+@icone('☀')
+def soleil():
+    rayons = union(*[tourne(rect(46, 2, 8, 22, 4), a) for a in range(0, 360, 45)])
+    return [(OR[2], rayons)] + r(cercle(50, 50, 26), OR, brillance=True)
+
+
+@icone('❓')
+def question():
+    crochet = courbe('M 34 32 Q 34 12 52 12 Q 70 12 70 30 Q 70 44 52 50 L 52 62', 14)
+    return [(ROUGE[0], crochet), (ROUGE[0], cercle(52, 82, 8))]
+
+
+@icone('💤')
+def sommeil():
+    z = lambda x, y, t: poly((x, y), (x + t, y), (x, y + t), (x + t, y + t), arrondi=0)
+    return [(BLEU[0], contour(z(10, 50, 34), 7)), (BLEU[1], contour(z(52, 28, 24), 6)), (BLEU[1], contour(z(76, 10, 14), 5))]
+
+
+@icone('☕')
+def cafe():
+    tasse = svg('M 14 36 L 72 36 L 66 84 Q 64 90 56 90 L 30 90 Q 22 90 20 84 Z')
+    anse = contour(ellipse(76, 56, 12, 14), 7)
+    return [(BLANC[2], anse)] + r(tasse, BLANC, brillance=False) + [('#7a4a26', rect(18, 36, 50, 8, 3)), (BLANC[1], courbe('M 34 28 Q 28 18 36 8', 5)), (BLANC[1], courbe('M 52 28 Q 46 18 54 8', 5))]
+
+
+@icone('👑')
+def couronne():
+    forme = poly((10, 76), (14, 28), (32, 50), (50, 18), (68, 50), (86, 28), (90, 76), arrondi=3)
+    return r(forme, OR, brillance=True) + [(ROUGE[0], cercle(50, 62, 7)), (BLEU[0], cercle(28, 66, 5)), (VERT[0], cercle(72, 66, 5))]

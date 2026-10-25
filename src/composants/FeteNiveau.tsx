@@ -1,13 +1,17 @@
-// La fête du niveau (23/10) : quand le joueur passe un niveau, une grande fenêtre surgit. L'étoile
-// tombe et rebondit avec l'ancien niveau, le chiffre monte jusqu'au nouveau (un « tic » par
-// niveau gagné), une gerbe de rayons et de confettis éclate, puis tout ce qu'on vient de débloquer
-// (bâtiments, améliorations) arrive ligne par ligne, chacun avec son icône et un petit son.
-// Aucune règle du jeu ici : ce qui se débloque vient de src/jeu/niveaux.ts.
+// La fête du niveau : quand le joueur passe un niveau, une fenêtre surgit (App ne la montre que
+// quand aucune autre fenêtre n'est ouverte). L'étoile arrive avec l'ancien niveau, le chiffre
+// monte jusqu'au nouveau (un « tic » par niveau gagné), des confettis éclatent, puis les gemmes
+// gagnées et tout ce qu'on vient de débloquer arrivent ligne par ligne, avec un petit son.
+// Aucune règle du jeu ici : ce qui se débloque vient de src/jeu/niveaux.ts, les gemmes de
+// src/jeu/gemmes.ts (GEMMES_PAR_NIVEAU).
 
 import { useEffect, useState } from 'react'
+import { GEMMES_PAR_NIVEAU } from '../jeu/gemmes'
+import { t } from '../jeu/langue'
 import { deblocagesDuNiveau } from '../jeu/niveaux'
 import { sons } from '../sons'
 import { tirerConfettis } from './confettis'
+import { Fenetre } from './Fenetre'
 
 type Props = {
   avant: number // le niveau d'avant
@@ -17,12 +21,12 @@ type Props = {
 }
 
 // Le temps avant que le chiffre ne se mette à monter, puis entre deux niveaux (ms).
-const DEBUT_COMPTEUR = 650
+const DEBUT_COMPTEUR = 500
 const PAS_COMPTEUR = 260
-// Entre deux lignes de la liste des déblocages (ms).
+// Entre deux lignes de la liste (ms).
 const PAS_LISTE = 230
-// (23/10) On ne peut pas la fermer pendant la première seconde (ms) : un joueur qui clique vite
-// sur la mine la fermait sans la voir.
+// On ne peut pas la fermer pendant la première seconde (ms) : un joueur qui clique vite sur la
+// mine la fermait sans la voir.
 const DELAI_AVANT_FERMER = 1000
 
 // « ⛏️ Mine niveau 2 : Veine de redstone » → l'icône, puis le texte.
@@ -32,12 +36,16 @@ function couper(chose: string): { icone: string; texte: string } {
 }
 
 export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
+  const nbNiveaux = Math.max(1, niveau - avant)
   // Tout ce qui se débloque, de tous les niveaux gagnés d'un coup.
   const choses = Array.from({ length: niveau - avant }, (_, i) => deblocagesDuNiveau(avant + 1 + i)).flat()
+  const gemmes = nbNiveaux * GEMMES_PAR_NIVEAU
+  // Les lignes à faire arriver : d'abord les gemmes, puis les déblocages.
+  const lignesTotal = 1 + choses.length
   const [affiche, setAffiche] = useState(avant)
   const [lignes, setLignes] = useState(0)
   const [peutFermer, setPeutFermer] = useState(false)
-  const [confettis] = useState(() => tirerConfettis(46, ['#ffd84a', '#ffffff', '#ff9d2e', '#9cf08f', '#7fd3ff', '#c792ff']))
+  const [confettis] = useState(() => tirerConfettis(36, ['#f9d65a', '#8fe08f', '#8cc8f5', '#f39aa8', '#b9a0f5']))
   const finCompteur = DEBUT_COMPTEUR + (niveau - avant) * PAS_COMPTEUR
 
   // Le chiffre qui monte, avec un « tic » à chaque niveau, et la fanfare à la fin.
@@ -55,21 +63,21 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
     return () => minuteurs.forEach((m) => clearTimeout(m))
   }, [avant, niveau])
 
-  // Puis les déblocages arrivent un par un.
+  // Puis les lignes arrivent une par une.
   useEffect(() => {
     const minuteurs: number[] = []
-    for (let i = 1; i <= choses.length; i++) {
+    for (let i = 1; i <= lignesTotal; i++) {
       minuteurs.push(
         window.setTimeout(() => {
           setLignes(i)
           sons.ligneDeblocage(i)
-        }, finCompteur + 350 + (i - 1) * PAS_LISTE),
+        }, finCompteur + 300 + (i - 1) * PAS_LISTE),
       )
     }
     return () => minuteurs.forEach((m) => clearTimeout(m))
-  }, [choses.length, finCompteur])
+  }, [lignesTotal, finCompteur])
 
-  // Au bout d'une seconde, on peut la fermer (en touchant à côté ou avec le bouton).
+  // Au bout d'une seconde, on peut la fermer.
   useEffect(() => {
     const minuteur = window.setTimeout(() => setPeutFermer(true), DELAI_AVANT_FERMER)
     return () => clearTimeout(minuteur)
@@ -80,10 +88,23 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
 
   const arrive = affiche === niveau
   return (
-    <div className="voile voile-devant fete-niveau" role="dialog" aria-modal="true" aria-labelledby="titre-fete-niveau" onClick={fermer}>
-      <section className="carte fete-niveau-carte" onClick={(e) => e.stopPropagation()}>
-        {/* Les rayons qui tournent derrière l'étoile, et les confettis qui éclatent. */}
-        <span className={`fete-rayons ${arrive ? 'fete-rayons-on' : ''}`} aria-hidden="true" />
+    <Fenetre
+      titre={t('Niveau supérieur !')}
+      icone="⭐"
+      couleur="jaune"
+      taille="petite"
+      devant
+      fermable={peutFermer}
+      onFermer={fermer}
+      classe="fete-niveau"
+      pied={
+        <button className="btn btn-jaune btn-grand btn-large" onClick={fermer} disabled={!peutFermer} autoFocus>
+          🎉 {t('Génial !')}
+        </button>
+      }
+    >
+      {/* L'étoile avec le niveau, et les confettis qui éclatent. */}
+      <div className="fete-etoile-zone">
         {arrive && (
           <span className="fete-confettis" aria-hidden="true">
             {confettis.map((c, i) => (
@@ -91,8 +112,8 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
                 key={i}
                 className={c.rond ? 'rond' : ''}
                 style={{
-                  ['--dx' as string]: `${c.dx}px`,
-                  ['--dy' as string]: `${c.dy}px`,
+                  ['--dx' as string]: `${c.dx * 0.7}px`,
+                  ['--dy' as string]: `${c.dy * 0.6}px`,
                   ['--tour' as string]: `${c.tour}deg`,
                   animationDelay: `${c.delai}ms`,
                   background: c.couleur,
@@ -101,49 +122,47 @@ export function FeteNiveau({ avant, niveau, prochain, onFermer }: Props) {
             ))}
           </span>
         )}
-        <p className="fete-sur-titre" id="titre-fete-niveau">
-          Niveau supérieur !
-        </p>
         <div className={`fete-etoile ${arrive ? 'fete-etoile-arrive' : ''}`}>
-          <span className="fete-etoile-fond" aria-hidden="true">
-            ⭐
-          </span>
+          <svg className="fete-etoile-dessin" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50 6 L62 36 L94 38 L69 58 L77 90 L50 72 L23 90 L31 58 L6 38 L38 36 Z" fill="#f9d65a" stroke="#2a2140" strokeWidth="6" strokeLinejoin="round" />
+          </svg>
           {/* (la clé change à chaque niveau : le chiffre rejoue son animation de saut) */}
           <span key={affiche} className="fete-chiffre">
             {affiche}
           </span>
         </div>
-        {choses.length > 0 ? (
-          <>
-            <p className="fete-sous-titre">{choses.length === 1 ? 'Tu débloques :' : `Tu débloques ${choses.length} choses :`}</p>
-            <ul className="fete-liste">
-              {choses.map((chose, i) => {
-                const { icone, texte } = couper(chose)
-                return (
-                  <li key={chose} className={i < lignes ? 'fete-ligne-on' : ''}>
-                    <span className="fete-ligne-icone" aria-hidden="true">
-                      {icone}
-                    </span>
-                    <span>{texte}</span>
-                    <span className="fete-ligne-nouveau">Nouveau !</span>
-                  </li>
-                )
-              })}
-            </ul>
-          </>
-        ) : (
-          <p className="fete-sous-titre">Bravo, continue comme ça !</p>
-        )}
-        {prochain && (
-          <p className="discret fete-prochain">
-            Au niveau {prochain.niveau} : {prochain.choses.slice(0, 2).join(', ')}
-            {prochain.choses.length > 2 ? '…' : ''}
-          </p>
-        )}
-        <button className={`bouton bouton-vendre tuto-gros-bouton fete-bouton ${peutFermer ? '' : 'fete-bouton-attente'}`} onClick={fermer} aria-disabled={!peutFermer}>
-          🎉 Génial !
-        </button>
-      </section>
-    </div>
+      </div>
+
+      <ul className="fete-liste">
+        {/* Les gemmes gagnées. */}
+        <li className={`carte fete-ligne fete-gemmes ${lignes >= 1 ? 'fete-ligne-on' : ''}`}>
+          <span className="fete-ligne-icone" aria-hidden="true">
+            💎
+          </span>
+          <span className="fete-ligne-texte">{t('Gemmes gagnées')}</span>
+          <span className="etiquette etiquette-violet">+{gemmes} 💎</span>
+        </li>
+        {/* Ce qui se débloque. */}
+        {choses.map((chose, i) => {
+          const { icone, texte } = couper(chose)
+          return (
+            <li key={chose} className={`carte fete-ligne ${i + 2 <= lignes ? 'fete-ligne-on' : ''}`}>
+              <span className="fete-ligne-icone" aria-hidden="true">
+                {icone}
+              </span>
+              <span className="fete-ligne-texte">{t(texte)}</span>
+              <span className="etiquette etiquette-vert">{t('Nouveau !')}</span>
+            </li>
+          )
+        })}
+      </ul>
+
+      {prochain && (
+        <p className="discret fete-prochain">
+          🔒 {t('Au niveau {n} : {choses}', { n: prochain.niveau, choses: prochain.choses.slice(0, 2).map((c) => t(couper(c).texte)).join(', ') })}
+          {prochain.choses.length > 2 ? '…' : ''}
+        </p>
+      )}
+    </Fenetre>
   )
 }

@@ -14,6 +14,7 @@
 
 import { BLOCS, type Cout, type IdBloc } from './donnees'
 import type { EtatJeu } from './mineur'
+import { nombre, t } from './langue'
 
 // ---------------------------------------------------------------------------
 // Ce qui est sauvegardé avec la partie
@@ -50,7 +51,7 @@ export function gagnerGemmes(etat: EtatJeu, nombre: number): void {
 export function recompenserPub(etat: EtatJeu): string[] {
   gagnerGemmes(etat, GEMMES_PAR_PUB)
   etat.stats.pubsVues = (etat.stats.pubsVues ?? 0) + 1
-  return [`💎 +${GEMMES_PAR_PUB} gemme !`]
+  return [t('💎 +{n} gemme !', { n: GEMMES_PAR_PUB })]
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +73,8 @@ export function prixEnGemmes(cout: Cout): number {
 // La boutique des gemmes : des bonus pour un temps
 // ---------------------------------------------------------------------------
 
+// (25/10) Le nom et la description restent en français ici : l'interface les traduit avec t()
+// au moment de les afficher (comme les tables de donnees.ts).
 export type InfoBoost = { id: IdBoost; nom: string; emoji: string; description: string; minutes: number; gemmes: number }
 
 export const BOOSTS: Record<IdBoost, InfoBoost> = {
@@ -116,7 +119,7 @@ export function acheterBoost(etat: EtatJeu, id: IdBoost): string[] {
   if (!peutAcheterBoost(etat, id)) return []
   etat.gemmes -= boost.gemmes
   prolongerBoost(etat, id, boost.minutes)
-  return [`${boost.emoji} ${boost.nom} pendant ${boost.minutes} min !`]
+  return [t('{emoji} {nom} pendant {minutes} min !', { emoji: boost.emoji, nom: t(boost.nom), minutes: boost.minutes })]
 }
 
 export function argentTresor(etat: EtatJeu): number {
@@ -128,7 +131,7 @@ export function acheterTresor(etat: EtatJeu): string[] {
   etat.gemmes -= TRESOR.gemmes
   const argent = argentTresor(etat)
   etat.argent += argent
-  return [`💰 Trésor : +${argent.toLocaleString('fr-FR')} $ !`]
+  return [t('💰 Trésor : +{argent} $ !', { argent: nombre(argent) })]
 }
 
 // ---------------------------------------------------------------------------
@@ -187,5 +190,9 @@ export function recupererQuotidien(etat: EtatJeu, aujourdhui: string): string[] 
   etat.argent += argent
   if (recompense.boost) prolongerBoost(etat, recompense.boost.id, recompense.boost.minutes)
   etat.quotidien = { dernierJour: aujourdhui, serie: jour }
-  return [`🎁 Jour ${jour} : +${recompense.gemmes} 💎${argent > 0 ? ` et +${argent.toLocaleString('fr-FR')} $` : ''} !`]
+  return [
+    argent > 0
+      ? t('🎁 Jour {jour} : +{gemmes} 💎 et +{argent} $ !', { jour, gemmes: recompense.gemmes, argent: nombre(argent) })
+      : t('🎁 Jour {jour} : +{gemmes} 💎 !', { jour, gemmes: recompense.gemmes }),
+  ]
 }

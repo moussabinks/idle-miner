@@ -14,6 +14,7 @@ import {
 } from './donnees'
 import { ajouterA, payer, peutPayer, type EtatJeu } from './mineur'
 import { niveauAtteint, niveauPourBatiment, railsDebloques } from './niveaux'
+import { t } from './langue'
 import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ export function construireBatiment(etat: EtatJeu, id: IdBatiment, x: number, y: 
   if (!peutConstruire(etat, id) || !placeLibrePour(etat, id, x, y)) return []
   payer(etat, coutBatiment(id))
   etat.village.batiments.push({ id, x, y, miroir })
-  return [`🏗️ ${BATIMENTS[id].nom} construit !`]
+  return [t('🏗️ {nom} construit !', { nom: t(BATIMENTS[id].nom) })]
 }
 
 // Déplacer (ou retourner) un bâtiment déjà posé : c'est gratuit.
@@ -92,8 +93,14 @@ function listeSol(etat: EtatJeu, type: TypeSol): string[] {
   return type === 'rail' ? etat.village.rails : etat.village.chemins
 }
 
-export const MESSAGE_BOUCLE = '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.'
-export const MESSAGE_BORDS = '🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.'
+// (25/10) Des fonctions et pas des constantes : le texte est traduit au moment où on le dit
+// (une constante serait traduite une seule fois, au chargement du jeu, avant le choix de la langue).
+export function messageBoucle(): string {
+  return t('🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.')
+}
+export function messageBords(): string {
+  return t('🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.')
+}
 
 // Peut-on mettre un rail sur cette case (« de » : la case d'où on le déplace, s'il y en a une) ?
 //   - 'occupee' : la case est prise (ou un chemin, un bâtiment... est déjà là) ;
@@ -121,8 +128,8 @@ export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number)
 export function poserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): string[] {
   if (type === 'rail') {
     const place = placePourUnRail(etat.village, x, y)
-    if (place === 'boucle') return [MESSAGE_BOUCLE]
-    if (place === 'bords') return [MESSAGE_BORDS]
+    if (place === 'boucle') return [messageBoucle()]
+    if (place === 'bords') return [messageBords()]
   }
   if (!peutPoserSol(etat, type, x, y)) return []
   payer(etat, coutSol(type))
@@ -137,8 +144,8 @@ export function deplacerSol(etat: EtatJeu, type: TypeSol, de: { x: number; y: nu
   if (index === -1) return []
   if (type === 'rail') {
     const place = placePourUnRail(etat.village, vers.x, vers.y, de)
-    if (place === 'boucle') return [MESSAGE_BOUCLE]
-    if (place === 'bords') return [MESSAGE_BORDS]
+    if (place === 'boucle') return [messageBoucle()]
+    if (place === 'bords') return [messageBords()]
     if (place !== 'ok') return []
   } else {
     const ignorer = { type, cle: cleCase(de.x, de.y) } as Occupant & { cle: string }
@@ -158,7 +165,7 @@ export function retirerSol(etat: EtatJeu, type: TypeSol, x: number, y: number): 
   const cout = coutSol(type)
   etat.argent += cout.argent ?? 0
   for (const [id, nombre] of Object.entries(cout.materiaux)) ajouterA(etat.coffre.contenu, id as IdBloc, nombre ?? 0)
-  return [type === 'rail' ? `🛤️ Rail retiré : +${COUT_RAIL.materiaux.fer ?? 0} 🔩 fer rendus.` : `🪨 Chemin retiré : +${COUT_CHEMIN.argent ?? 0} $ rendus.`]
+  return [type === 'rail' ? t('🛤️ Rail retiré : +{fer} 🔩 fer rendus.', { fer: COUT_RAIL.materiaux.fer ?? 0 }) : t('🪨 Chemin retiré : +{argent} $ rendus.', { argent: COUT_CHEMIN.argent ?? 0 })]
 }
 
 // Pourquoi on ne peut pas poser un rail ou un chemin ici (null : on peut). Pour le dire au
@@ -167,13 +174,13 @@ export function raisonSolImpossible(etat: EtatJeu, type: TypeSol, x: number, y: 
   if (type === 'rail' && !railsDebloques(etat)) return null
   if (!peutPayer(etat, coutSol(type))) {
     return type === 'rail'
-      ? `🔩 Plus de fer : un rail coûte ${COUT_RAIL.materiaux.fer ?? 0} fer (dans le coffre de la mine). Va creuser !`
-      : `💵 Pas assez d'argent : un chemin coûte ${COUT_CHEMIN.argent ?? 0} $.`
+      ? t('🔩 Plus de fer : un rail coûte {fer} fer (dans le coffre de la mine). Va creuser !', { fer: COUT_RAIL.materiaux.fer ?? 0 })
+      : t("💵 Pas assez d'argent : un chemin coûte {argent} $.", { argent: COUT_CHEMIN.argent ?? 0 })
   }
   if (type === 'rail') {
     const place = placePourUnRail(etat.village, x, y)
-    if (place === 'boucle') return MESSAGE_BOUCLE
-    if (place === 'bords') return MESSAGE_BORDS
+    if (place === 'boucle') return messageBoucle()
+    if (place === 'bords') return messageBords()
   }
   return null
 }

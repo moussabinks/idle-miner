@@ -9,27 +9,13 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v66'
-// Les images du village vu du ciel (20/10) sont rangées dès l'installation : sans elles, le
-// village serait vide hors ligne. (21/10 : images en haute définition et arbres, d'où le cache v4.)
-const IMAGES_DU_VILLAGE = [
-  ...Array.from({ length: 12 }, (_, i) => `/images/village/arbres/arbre${String(i + 1).padStart(2, '0')}.webp`),
-  ...['mine', 'caisse-ascenseur-0', 'caisse-ascenseur-1', 'caisse-ascenseur-2', 'caisse-ascenseur-3', 'caisse-ascenseur-4', 'mine-devant', 'bazar', 'employes', 'foreuse', 'forgeron', 'employes-miroir', 'generateur', 'marche', 'rails'].map((nom) => `/images/batiments/${nom}.webp`),
-  ...['droit', 'virage', 't', 'croix', 'doux'].map((nom) => `/images/rails/talus_${nom}.webp`),
-  ...['ns', 'eo', 'es', 'so', 'no', 'ne', 'nes', 'eso', 'nso', 'neo', 'neso'].map((code) => `/images/rails/voie_${code}.webp`),
-  ...['es', 'so', 'no', 'ne'].map((code) => `/images/rails/voie_doux_${code}.webp`),
-  ...['fin_n', 'fin_e', 'fin_s', 'fin_o', 'seul_ns'].map((code) => `/images/rails/voie_${code}.webp`),
-  ...['herbe', 'sable'].map((nom) => `/images/sol/${nom}.webp`),
-  ...['manager', 'mineur', 'recruteur'].map((nom) => `/images/personnages/${nom}.webp`),
-  // Les personnages vus de devant, de derrière, de gauche et de droite (src/composants/sprites.ts).
-  ...['joueur', 'mineur_commun', 'mineur_rare', 'mineur_epique', 'mineur_legendaire', 'mineur_mythique'].flatMap((nom) =>
-    ['devant', 'derriere', 'gauche', 'droite'].map((vue) => `/images/personnages/sprites/${nom}_${vue}.webp`),
-  ),
-  '/images/personnages/sprites/manager_devant.webp',
-  '/images/personnages/sprites/recruteur_devant.webp',
-]
-// (27/10) la police des icônes cartoon (outils/icones/fabriquer.py)
-const FICHIERS_DE_BASE = ['/', '/manifest.webmanifest', '/fonts/icones-mega.woff2', '/favicon.svg', '/sons/cash.mp3', '/icones/icone-192.png', '/icones/icone-512.png', ...IMAGES_DU_VILLAGE]
+const CACHE = 'idle-miner-v67'
+// (25/10) Les chemins sont relatifs au dossier du jeu (il peut être servi dans un sous-dossier).
+// On ne range d'avance que le strict nécessaire ; les images (bâtiments, personnages, arbres,
+// rails) sont rangées la première fois qu'elles sont chargées (cachePuisMiseAJour) : la liste ne
+// casse plus quand une image change de nom.
+const BASE = new URL('./', self.location.href).pathname
+const FICHIERS_DE_BASE = ['', 'manifest.webmanifest', 'fonts/icones-mega.woff2', 'favicon.svg', 'sons/cash.mp3', 'icones/icone-192.png', 'icones/icone-512.png'].map((f) => BASE + f)
 
 self.addEventListener('install', (evenement) => {
   evenement.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FICHIERS_DE_BASE)))
@@ -52,7 +38,7 @@ async function nettoyerAnciensFichiers(cache, page) {
   const html = await page.text()
   for (const requete of await cache.keys()) {
     const chemin = new URL(requete.url).pathname
-    if (chemin.startsWith('/assets/') && !html.includes(chemin)) await cache.delete(requete)
+    if (chemin.startsWith(BASE + 'assets/') && !html.includes(chemin.slice(BASE.length))) await cache.delete(requete)
   }
 }
 
@@ -61,12 +47,12 @@ async function reseauDAbord(requete) {
   try {
     const reponse = await fetch(requete)
     if (reponse.ok) {
-      await cache.put('/', reponse.clone()) // on garde la dernière page reçue
+      await cache.put(BASE, reponse.clone()) // on garde la dernière page reçue
       nettoyerAnciensFichiers(cache, reponse.clone())
     }
     return reponse
   } catch {
-    return (await cache.match('/')) ?? Response.error()
+    return (await cache.match(BASE)) ?? Response.error()
   }
 }
 
@@ -98,6 +84,6 @@ self.addEventListener('fetch', (evenement) => {
   if (requete.method !== 'GET' || adresse.origin !== self.location.origin) return
 
   if (requete.mode === 'navigate') evenement.respondWith(reseauDAbord(requete))
-  else if (adresse.pathname.startsWith('/assets/')) evenement.respondWith(cacheDAbord(requete))
+  else if (adresse.pathname.startsWith(BASE + 'assets/')) evenement.respondWith(cacheDAbord(requete))
   else evenement.respondWith(cachePuisMiseAJour(requete))
 })

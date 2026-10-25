@@ -25,6 +25,7 @@ import {
   telechargerMondes,
   type Joueur,
 } from './enLigne'
+import { stockage } from './stockage'
 
 // Toutes les 20 s, on envoie les mondes s'ils ont changé.
 const INTERVALLE_ENVOI = 20_000 // ms
@@ -84,14 +85,14 @@ export function useCompte() {
   }, [])
 
   const envoyer = useCallback(async (j: Joueur) => {
-    const parties = exporterTout(window.localStorage)
+    const parties = exporterTout(stockage)
     const texte = JSON.stringify(parties)
     if (texte === dernierEnvoi.current) return
     let date: number
     try {
       date = await envoyerMondes(j, parties)
       dernierEnvoi.current = texte
-      ecrireDerniereSynchro(window.localStorage, { joueur: j.id, envoyeeLe: date })
+      ecrireDerniereSynchro(stockage, { joueur: j.id, envoyeeLe: date })
     } catch {
       setStatut('hors-ligne')
       return
@@ -110,15 +111,15 @@ export function useCompte() {
       setStatut('synchro')
       try {
         const enLigne = await telechargerMondes(j)
-        const local = exporterTout(window.localStorage)
-        let choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(window.localStorage))
+        const local = exporterTout(stockage)
+        let choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(stockage))
         if (choix === 'demander' && enLigne) choix = window.confirm(questionRemplacer(enLigne)) ? 'recuperer' : 'envoyer'
         pret.current = true
 
         if (choix === 'recuperer' && enLigne) {
-          importerTout(window.localStorage, enLigne.parties)
-          dernierEnvoi.current = JSON.stringify(exporterTout(window.localStorage))
-          ecrireDerniereSynchro(window.localStorage, { joueur: j.id, envoyeeLe: enLigne.envoyeeLe })
+          importerTout(stockage, enLigne.parties)
+          dernierEnvoi.current = JSON.stringify(exporterTout(stockage))
+          ecrireDerniereSynchro(stockage, { joueur: j.id, envoyeeLe: enLigne.envoyeeLe })
           setEnvoyeeLe(enLigne.envoyeeLe)
           setVersionMondes((v) => v + 1)
           setStatut('a-jour')

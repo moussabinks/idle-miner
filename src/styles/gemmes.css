@@ -1,0 +1,247 @@
+/* =========================================================================
+   Les gemmes et ce qui va avec (25/10) : la boutique, la publicité, le cadeau du jour, le
+   retour d'absence, les réglages et l'aide.
+   ========================================================================= */
+
+/* --- La boutique (Boutique.tsx) --------------------------------------------- */
+
+.boutique-solde {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.6rem;
+}
+
+.boutique-solde strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 2.2rem;
+}
+
+.boutique-pub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #efe8ff;
+}
+
+.boutique-pub-icone,
+.boutique-icone {
+  font-size: 2rem;
+}
+
+.boutique-ligne-texte {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* --- La publicité (Publicite.tsx) : un écran noir et un compte à rebours ----------------- */
+
+.publicite {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  color: var(--blanc);
+}
+
+.publicite-etiquette {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 2px 10px;
+  border: var(--trait-fin) solid var(--blanc);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.publicite-quitter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.publicite-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.publicite-compte {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border: 6px solid var(--blanc);
+  border-radius: 50%;
+  font-family: var(--police-titre);
+  font-size: 3.5rem;
+}
+
+.publicite-texte {
+  font-size: 1.1rem;
+  color: #c9c2e4;
+}
+
+/* --- Le cadeau du jour (RecompensesQuotidiennes.tsx) ------------------------ */
+
+.quotidien-jours {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.quotidien-jour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: var(--blanc);
+  text-align: center;
+}
+
+.quotidien-jour.pris {
+  background: var(--gris);
+  opacity: 0.75;
+}
+
+.quotidien-jour.actuel {
+  background: var(--jaune);
+  box-shadow: var(--ombre);
+  animation: btn-respire 1.6s ease-in-out infinite;
+}
+
+.quotidien-jour.gros-lot {
+  grid-column: span 2;
+  background: #efe8ff;
+}
+
+.quotidien-jour.gros-lot.actuel {
+  background: var(--violet);
+}
+
+.quotidien-numero {
+  font-size: 0.8rem;
+}
+
+.quotidien-cadeau {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.quotidien-contenu {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.quotidien-revenir {
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* --- Le retour d'absence (FenetreAbsence.tsx) ---------------------------------- */
+
+.absence-lignes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.absence-lignes li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.absence-gains {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.absence-total {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 2.1rem;
+  color: var(--vert-texte);
+}
+
+/* --- Les réglages et l'aide ----------------------------------------------------- */
+
+.reglages-monde {
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.reglages-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reglages-langues {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.aide-etapes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aide-etapes li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aide-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-family: var(--police-titre);
+}
+
+.aide-icone {
+  font-size: 1.6rem;
+}
+
+.confirmation-message {
+  font-size: 1rem;
+  line-height: 1.35;
+}

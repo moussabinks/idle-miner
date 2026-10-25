@@ -13,6 +13,7 @@ import { achatsPossibles } from './objectifs'
 import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
 import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
+import { t } from './langue'
 
 export type Mission = {
   id: string // pour la reconnaître d'une fois sur l'autre
@@ -45,7 +46,7 @@ function elementsDuCout(etat: EtatJeu, cout: Cout): Element[] {
   for (const [id, nombre] of Object.entries(cout.materiaux)) {
     const bloc = id as IdBloc
     const besoin = nombre ?? 0
-    if (besoin > 0) liste.push({ icone: BLOCS[bloc].emoji, nom: BLOCS[bloc].nom.toLowerCase(), valeur: Math.min(disponible(etat, bloc), besoin), max: besoin })
+    if (besoin > 0) liste.push({ icone: BLOCS[bloc].emoji, nom: t(BLOCS[bloc].nom).toLowerCase(), valeur: Math.min(disponible(etat, bloc), besoin), max: besoin })
   }
   return liste
 }
@@ -58,7 +59,7 @@ function ceQuiManque(etat: EtatJeu, cout: Cout): { icone: string; nom: string; v
     const bloc = id as IdBloc
     const besoin = nombre ?? 0
     const possede = disponible(etat, bloc)
-    if (possede < besoin) return { icone: BLOCS[bloc].emoji, nom: BLOCS[bloc].nom.toLowerCase(), valeur: possede, max: besoin }
+    if (possede < besoin) return { icone: BLOCS[bloc].emoji, nom: t(BLOCS[bloc].nom).toLowerCase(), valeur: possede, max: besoin }
   }
   return null
 }
@@ -82,9 +83,9 @@ function urgences(etat: EtatJeu): Mission[] {
   const liste: Mission[] = []
   const sansSalaire = nbSansSalaire(etat)
   if (sansSalaire > 0 && batimentPose(etat.village, 'employes')) {
-    liste.push(mission('salaires', '😠', sansSalaire === 1 ? 'Paie ton mineur au Personnel' : `Paie tes ${sansSalaire} mineurs au Personnel`, { stand: 'employes', pret: true }))
+    liste.push(mission('salaires', '😠', sansSalaire === 1 ? t('Paie ton mineur au Personnel') : t('Paie tes {n} mineurs au Personnel', { n: sansSalaire }), { stand: 'employes', pret: true }))
   }
-  if (coffrePlein(etat)) liste.push(mission('coffre-plein', '📦', 'Le coffre est plein : vends-le !', { stand: 'puits', pret: true }))
+  if (coffrePlein(etat)) liste.push(mission('coffre-plein', '📦', t('Le coffre est plein : vends-le !'), { stand: 'puits', pret: true }))
   return liste
 }
 
@@ -92,12 +93,12 @@ function urgences(etat: EtatJeu): Mission[] {
 function premiersPas(etat: EtatJeu): Mission | null {
   if (etat.stats.argentGagne === 0) {
     if (etat.stats.blocsCasses < BLOCS_DEBUT && nbDansCoffre(etat) < BLOCS_DEBUT) {
-      return mission('casser', '⛏️', `Casse ${BLOCS_DEBUT} blocs à la mine`, { stand: 'puits', progression: { valeur: etat.stats.blocsCasses, max: BLOCS_DEBUT, icone: '⛏️' } })
+      return mission('casser', '⛏️', t('Casse {n} blocs à la mine', { n: BLOCS_DEBUT }), { stand: 'puits', progression: { valeur: etat.stats.blocsCasses, max: BLOCS_DEBUT, icone: '⛏️' } })
     }
-    return mission('vendre', '💰', 'Vends le coffre de la mine', { stand: 'puits', pret: true })
+    return mission('vendre', '💰', t('Vends le coffre de la mine'), { stand: 'puits', pret: true })
   }
-  if (!batimentPose(etat.village, 'employes')) return mission('personnel', '🏗️', 'Construis le Personnel', { construction: true, pret: peutPayer(etat, BATIMENTS.employes.cout) })
-  if (!etat.employes.some((e) => e.role === 'mineur')) return mission('mineur', '👷', 'Embauche ton premier mineur', { stand: 'employes', pret: true })
+  if (!batimentPose(etat.village, 'employes')) return mission('personnel', '🏗️', t('Construis le Personnel'), { construction: true, pret: peutPayer(etat, BATIMENTS.employes.cout) })
+  if (!etat.employes.some((e) => e.role === 'mineur')) return mission('mineur', '👷', t('Embauche ton premier mineur'), { stand: 'employes', pret: true })
   return null
 }
 
@@ -106,7 +107,7 @@ function prochainBatiment(etat: EtatJeu): Mission | null {
   const id = LISTE_BATIMENTS.find((b) => b !== 'marche' && b !== 'employes' && batimentDebloque(etat, b) && !batimentPose(etat.village, b))
   if (!id) return null
   const info = BATIMENTS[id]
-  return missionAchat(etat, `construire-${id}`, info.emoji, `Construis : ${info.nom}`, info.cout, { construction: true })
+  return missionAchat(etat, `construire-${id}`, info.emoji, t('Construis : {nom}', { nom: t(info.nom) }), info.cout, { construction: true })
 }
 
 // L'automatisation, étape par étape.
@@ -116,28 +117,28 @@ function automatisation(etat: EtatJeu): Mission | null {
   // récupérer : ça dépend du chemin que le joueur choisira.
   if (!railsDebloques(etat)) return null
   // (25/10) Le marché ne sert plus qu'au wagonnet : on le construit au moment des rails.
-  if (!batimentPose(etat.village, 'marche')) return mission('marche', '🏗️', 'Construis le marché (gratuit) : le wagonnet y vendra tout seul', { construction: true, pret: true })
+  if (!batimentPose(etat.village, 'marche')) return mission('marche', '🏗️', t('Construis le marché (gratuit) : le wagonnet y vendra tout seul'), { construction: true, pret: true })
   if (!ligneDe(etat, 'mine-marche')) {
     const fer = COUT_RAIL.materiaux.fer ?? 3
-    return mission('rails', '🛤️', `Pose des rails de la mine au marché (${fer} fer la case)`, { construction: true, pret: disponible(etat, 'fer') >= fer })
+    return mission('rails', '🛤️', t('Pose des rails de la mine au marché ({fer} fer la case)', { fer }), { construction: true, pret: disponible(etat, 'fer') >= fer })
   }
   const trajet = trajetDe(etat, 'mine-marche')
-  if (!trajet) return mission('trajet', '🚃', 'Touche la bulle 🛤️ sur les rails : automatise le trajet', { stand: 'puits', pret: true })
+  if (!trajet) return mission('trajet', '🚃', t('Touche la bulle 🛤️ sur les rails : automatise le trajet'), { stand: 'puits', pret: true })
   const electrique = railsAlimentes(etat)
   const pousseur = etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
-  if (!pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', 'Embauche un pousseur pour le wagonnet', { stand: 'employes', pret: true })
+  if (!pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', t('Embauche un pousseur pour le wagonnet'), { stand: 'employes', pret: true })
   if (generateurPose(etat) && !electrique) {
-    if (etat.generateur.carburant <= 0) return mission('allumer', '⚡', 'Mets de la redstone dans le générateur', { stand: 'generateur', pret: disponible(etat, 'redstone') > 0 })
-    return mission('electrifier', '⚡', 'Mets tous les rails dans le rayon du générateur', { stand: 'generateur' })
+    if (etat.generateur.carburant <= 0) return mission('allumer', '⚡', t('Mets de la redstone dans le générateur'), { stand: 'generateur', pret: disponible(etat, 'redstone') > 0 })
+    return mission('electrifier', '⚡', t('Mets tous les rails dans le rayon du générateur'), { stand: 'generateur' })
   }
   if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'mine-foreuse')) {
-    if (!ligneDe(etat, 'mine-foreuse')) return mission('rails-foreuse', '🛤️', 'Relie la foreuse à la mine (rails)', { construction: true })
-    return mission('trajet-foreuse', '🚃', 'Touche la bulle 🛤️ sur les rails de la foreuse', { stand: 'puits', pret: true })
+    if (!ligneDe(etat, 'mine-foreuse')) return mission('rails-foreuse', '🛤️', t('Relie la foreuse à la mine (rails)'), { construction: true })
+    return mission('trajet-foreuse', '🚃', t('Touche la bulle 🛤️ sur les rails de la foreuse'), { stand: 'puits', pret: true })
   }
   // (27/10) La foreuse vend toute seule son chariot : des rails jusqu'au marché.
   if (batimentPose(etat.village, 'foreuse') && !trajetDe(etat, 'foreuse-marche')) {
-    if (!ligneDe(etat, 'foreuse-marche')) return mission('rails-foreuse-marche', '🛤️', 'Relie la foreuse au marché (rails) : elle vendra toute seule', { construction: true })
-    return mission('trajet-foreuse-marche', '🚃', 'Touche la bulle 🛤️ sur les rails foreuse → marché', { stand: 'foreuse', pret: true })
+    if (!ligneDe(etat, 'foreuse-marche')) return mission('rails-foreuse-marche', '🛤️', t('Relie la foreuse au marché (rails) : elle vendra toute seule'), { construction: true })
+    return mission('trajet-foreuse-marche', '🚃', t('Touche la bulle 🛤️ sur les rails foreuse → marché'), { stand: 'foreuse', pret: true })
   }
   return null
 }
@@ -149,7 +150,7 @@ function prochainNiveau(etat: EtatJeu): Mission | null {
   const { xp, pourSuivant } = progressionNiveau(etat)
   const choses = prochain.choses.slice(0, 2).join(', ') + (prochain.choses.length > 2 ? '...' : '')
   // (si le niveau qui débloque est plus loin que le suivant, la jauge montre quand même le suivant)
-  const texte = prochain.niveau === niveauJoueur(etat) + 1 ? `Niveau ${prochain.niveau} : ${choses}` : `Niveau ${prochain.niveau} (tu es ${niveauJoueur(etat)}) : ${choses}`
+  const texte = prochain.niveau === niveauJoueur(etat) + 1 ? t('Niveau {n} : {choses}', { n: prochain.niveau, choses }) : t('Niveau {n} (tu es {actuel}) : {choses}', { n: prochain.niveau, actuel: niveauJoueur(etat), choses })
   return mission(`niveau-${prochain.niveau}`, '⭐', texte, { progression: pourSuivant ? { valeur: xp, max: pourSuivant, icone: '⭐' } : null })
 }
 

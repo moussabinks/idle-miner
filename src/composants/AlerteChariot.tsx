@@ -3,22 +3,25 @@
 // que le wagonnet peut emporter. On agrandit le chariot du pousseur au Personnel.
 // Aucune règle du jeu ici : le calcul est dans src/jeu/production.ts (analyseWagonnet).
 
+import { nombre, t } from '../jeu/langue'
 import { chariotTropPetit, type AnalyseWagonnet } from '../jeu/production'
-
-// « 1,25 » : des blocs par seconde, lisibles.
-const parSeconde = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
 
 export function AlerteChariot({ analyse, batiment, onAllerAuPersonnel }: { analyse: AnalyseWagonnet | null; batiment: string; onAllerAuPersonnel?: () => void }) {
   if (!analyse || !chariotTropPetit(analyse)) return null
   return (
-    <div className="goulot goulot-alerte" role="status">
-      <span title={`Son chariot : ${analyse.places} places, un aller-retour de ${Math.round(analyse.secondesAllerRetour)} s. Le surplus (${parSeconde(analyse.surplus)} bloc/s) reste au départ.`}>
-        🛒 <strong>Le chariot de {analyse.pousseur?.nom ?? 'son pousseur'} est trop petit</strong> : il emporte {parSeconde(analyse.debitMax)} bloc/s, {batiment} en sort{' '}
-        {parSeconde(analyse.apport)} tout seul · agrandis son chariot au Personnel
+    <div className="alerte-batiment" role="status">
+      <span className="alerte-batiment-icone" aria-hidden="true">
+        🛒
+      </span>
+      <span className="alerte-batiment-texte">
+        <strong>{t('Le chariot de {nom} est trop petit', { nom: analyse.pousseur?.nom ?? t('son pousseur') })}</strong>
+        <span>
+          {t('Il emporte {a} blocs/s, {batiment} en sort {b}.', { a: nombre(analyse.debitMax, 2), batiment, b: nombre(analyse.apport, 2) })}
+        </span>
       </span>
       {onAllerAuPersonnel && (
-        <button className="bouton bouton-petit bouton-ameliorer" onClick={onAllerAuPersonnel}>
-          🛒 Personnel
+        <button className="btn btn-bleu btn-petit" onClick={onAllerAuPersonnel}>
+          👷 {t('Agrandir')}
         </button>
       )}
     </div>

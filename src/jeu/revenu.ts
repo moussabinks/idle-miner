@@ -9,6 +9,7 @@
 // minerais fait varier le vrai gain.
 
 import { SECONDES_PAR_PAIE } from './donnees'
+import { t } from './langue'
 import { blocsParSecondeEmploye, managerAuTravail, managerPaieLesSalaires, salaireEmploye, salaireManager } from './employes'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { valeurMoyenneBloc } from './mine'
@@ -73,17 +74,17 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
   const mine = plein ? 0 : debitMine(etat) * valeur
   const foreuse = foreuseEnMarche(etat) ? vitesseForage(etat) * valeur : 0
   const gains: LigneBilan[] = [
-    { id: 'mine', icone: '⛏️', nom: 'La mine', detail: plein ? 'coffre plein : elle s’arrête !' : 'elle creuse toute seule', parMinute: mine * 60 },
-    { id: 'mineurs', icone: '👷', nom: 'Les mineurs', detail: `${auTravail.length} au travail sur ${mineurs.length}`, parMinute: brutMineurs * 60 },
-    { id: 'foreuse', icone: '⚙️', nom: 'La foreuse', detail: foreuseEnMarche(etat) ? 'elle fore' : 'à l’arrêt', parMinute: foreuse * 60 },
+    { id: 'mine', icone: '⛏️', nom: t('La mine'), detail: plein ? t('coffre plein : elle s’arrête !') : t('elle creuse toute seule'), parMinute: mine * 60 },
+    { id: 'mineurs', icone: '👷', nom: t('Les mineurs'), detail: t('{n} au travail sur {total}', { n: auTravail.length, total: mineurs.length }), parMinute: brutMineurs * 60 },
+    { id: 'foreuse', icone: '⚙️', nom: t('La foreuse'), detail: foreuseEnMarche(etat) ? t('elle fore') : t('à l’arrêt'), parMinute: foreuse * 60 },
   ]
   const paie = (liste: Employe[]) => liste.reduce((total, e) => total + salaireEmploye(e), 0) / (SECONDES_PAR_PAIE / 60)
   const depenses: LigneBilan[] = [
-    { id: 'salaires-mineurs', icone: '⛏️', nom: 'Salaires des mineurs', detail: `${mineurs.length} mineur${mineurs.length > 1 ? 's' : ''}`, parMinute: paie(mineurs) },
-    { id: 'salaires-pousseurs', icone: '🛤️', nom: 'Salaires des pousseurs', detail: `${pousseurs.length} pousseur${pousseurs.length > 1 ? 's' : ''}`, parMinute: paie(pousseurs) },
+    { id: 'salaires-mineurs', icone: '⛏️', nom: t('Salaires des mineurs'), detail: mineurs.length > 1 ? t('{n} mineurs', { n: mineurs.length }) : t('{n} mineur', { n: mineurs.length }), parMinute: paie(mineurs) },
+    { id: 'salaires-pousseurs', icone: '🛤️', nom: t('Salaires des pousseurs'), detail: pousseurs.length > 1 ? t('{n} pousseurs', { n: pousseurs.length }) : t('{n} pousseur', { n: pousseurs.length }), parMinute: paie(pousseurs) },
   ]
-  if (managerPaieLesSalaires(etat)) depenses.push({ id: 'manager', icone: '💼', nom: 'Salaire du manager', detail: 'il paie tout le monde', parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
-  const totalGains = gains.reduce((t, l) => t + l.parMinute, 0)
-  const totalDepenses = depenses.reduce((t, l) => t + l.parMinute, 0)
+  if (managerPaieLesSalaires(etat)) depenses.push({ id: 'manager', icone: '💼', nom: t('Salaire du manager'), detail: t('il paie tout le monde'), parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
+  const totalGains = gains.reduce((total, l) => total + l.parMinute, 0)
+  const totalDepenses = depenses.reduce((total, l) => total + l.parMinute, 0)
   return { gains, depenses, totalGains, totalDepenses, net: totalGains - totalDepenses }
 }

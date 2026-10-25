@@ -31,9 +31,9 @@ TAILLE = 11  # 1 unité du dessin = 11 unités de la police : l'icône fait 1,1 
 AVANCE = 1200
 HAUT = 900  # le haut du dessin
 
-CONTOUR = '#3b2412'  # le gros trait brun foncé autour de chaque icône
-EPAISSEUR_CONTOUR = 3.4
-OMBRE = '#00000040'
+CONTOUR = '#2a2140'  # le gros trait bleu nuit autour de chaque icône (25/10 : avant, brun)
+EPAISSEUR_CONTOUR = 3.6
+OMBRE = '#2a214055'  # une ombre dure, décalée vers le bas
 
 
 def couleur(hexa):

@@ -10,6 +10,7 @@ import { generateurPose } from './generateur'
 import { coffrePlein, estCassee, type EtatJeu } from './mineur'
 import { standsAchetables } from './objectifs'
 import { etapeTutoriel } from './tutoriel'
+import { t } from './langue'
 import { batimentPose } from './village'
 import { ligneDe, trajetDe } from './wagonnet'
 
@@ -31,28 +32,28 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   // Les urgences.
   const salaires = alerteSalaires(etat)
   if (salaires) {
-    ajouter('employes', { icone: '😠', texte: salaires, court: 'Salaires !', sorte: 'alerte' })
+    ajouter('employes', { icone: '😠', texte: salaires, court: t('Salaires !'), sorte: 'alerte' })
     // (23/10) Aussi au-dessus de la mine : c'est là qu'on voit que les mineurs ne creusent plus.
-    ajouter('puits', { icone: '😠', texte: `${salaires} Paie-les au Personnel.`, court: 'Payer !', sorte: 'alerte' })
+    ajouter('puits', { icone: '😠', texte: t('{salaires} Paie-les au Personnel.', { salaires }), court: t('Payer !'), sorte: 'alerte' })
   }
   // Un trajet dont les rails sont coupés (un rail enlevé, un bâtiment déplacé) : son wagonnet
   // attend au quai. La bulle est sur ses deux bâtiments.
-  for (const t of etat.trajets) {
-    if (ligneDe(etat, t.liaison)) continue
-    const { depart, arrivee } = LIAISONS[t.liaison]
-    const texte = `Rails coupés entre ${BATIMENTS[depart].nom.toLowerCase()} et ${BATIMENTS[arrivee].nom.toLowerCase()} : le wagonnet attend. Repose les rails !`
-    ajouter(depart, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
-    ajouter(arrivee, { icone: '🚧', texte, court: 'Rails coupés', sorte: 'alerte' })
+  for (const trajet of etat.trajets) {
+    if (ligneDe(etat, trajet.liaison)) continue
+    const { depart, arrivee } = LIAISONS[trajet.liaison]
+    const texte = t('Rails coupés entre {depart} et {arrivee} : le wagonnet attend. Repose les rails !', { depart: t(BATIMENTS[depart].nom).toLowerCase(), arrivee: t(BATIMENTS[arrivee].nom).toLowerCase() })
+    ajouter(depart, { icone: '🚧', texte, court: t('Rails coupés'), sorte: 'alerte' })
+    ajouter(arrivee, { icone: '🚧', texte, court: t('Rails coupés'), sorte: 'alerte' })
   }
   // Un trajet sans pousseur (27/10) : son wagonnet ne part pas tout seul, même électrique.
   if (batimentPose(etat.village, 'employes')) {
     // (un pousseur pas payé a déjà son alerte « Salaires ! »)
-    const sansPousseur = etat.trajets.filter((t) => ligneDe(etat, t.liaison) && !etat.employes.some((e) => e.role === 'pousseur' && e.trajet === t.liaison)).length
+    const sansPousseur = etat.trajets.filter((trajet) => ligneDe(etat, trajet.liaison) && !etat.employes.some((e) => e.role === 'pousseur' && e.trajet === trajet.liaison)).length
     if (sansPousseur > 0) {
       ajouter('employes', {
         icone: '🛤️',
-        texte: sansPousseur === 1 ? 'Un trajet de wagonnet n’a pas de pousseur : embauches-en un' : `${sansPousseur} trajets de wagonnet n’ont pas de pousseur : embauches-en`,
-        court: 'Pousseur ?',
+        texte: sansPousseur === 1 ? t('Un trajet de wagonnet n’a pas de pousseur : embauches-en un') : t('{n} trajets de wagonnet n’ont pas de pousseur : embauches-en', { n: sansPousseur }),
+        court: t('Pousseur ?'),
         sorte: 'alerte',
       })
     }
@@ -60,26 +61,26 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   // Des pousseurs dont le trajet a été arrêté : ils attendent au quai, pour rien.
   const sansTrajet = etat.employes.filter((e) => e.role === 'pousseur' && (e.trajet === null || !trajetDe(etat, e.trajet))).length
   if (sansTrajet > 0) {
-    ajouter('employes', { icone: '🛤️', texte: `${sansTrajet} pousseur${sansTrajet > 1 ? 's' : ''} sans trajet : choisis-leur un trajet au Personnel`, court: 'Sans trajet', sorte: 'alerte' })
+    ajouter('employes', { icone: '🛤️', texte: sansTrajet > 1 ? t('{n} pousseurs sans trajet : choisis-leur un trajet au Personnel', { n: sansTrajet }) : t('{n} pousseur sans trajet : choisis-leur un trajet au Personnel', { n: sansTrajet }), court: t('Sans trajet'), sorte: 'alerte' })
   }
   if (batimentPose(etat.village, 'foreuse')) {
-    if (chariotPlein(etat)) ajouter('foreuse', { icone: '🛒', texte: 'Le chariot est plein : viens le vider !', court: 'Plein !', sorte: 'alerte' })
-    else if (etat.foreuse.carburant <= 0) ajouter('foreuse', { icone: '🔥', texte: 'Plus de charbon !', court: 'Charbon ?', sorte: 'alerte' })
+    if (chariotPlein(etat)) ajouter('foreuse', { icone: '🛒', texte: t('Le chariot est plein : viens le vider !'), court: t('Plein !'), sorte: 'alerte' })
+    else if (etat.foreuse.carburant <= 0) ajouter('foreuse', { icone: '🔥', texte: t('Plus de charbon !'), court: t('Charbon ?'), sorte: 'alerte' })
   }
   if (generateurPose(etat) && etat.generateur.allume && etat.generateur.carburant <= 0) {
-    ajouter('generateur', { icone: '🔴', texte: 'Plus de redstone !', court: 'Redstone ?', sorte: 'alerte' })
+    ajouter('generateur', { icone: '🔴', texte: t('Plus de redstone !'), court: t('Redstone ?'), sorte: 'alerte' })
   }
-  if (estCassee(etat)) ajouter('forgeron', { icone: '🔧', texte: 'Ta pioche est cassée : fais-la réparer !', court: 'Réparer', sorte: 'alerte' })
+  if (estCassee(etat)) ajouter('forgeron', { icone: '🔧', texte: t('Ta pioche est cassée : fais-la réparer !'), court: t('Réparer'), sorte: 'alerte' })
   // (Plus de bulle rose « 20 objets » sur la mine, 27/10 : la jauge du coffre au-dessus d'elle le montre déjà.)
-  if (coffrePlein(etat)) ajouter('puits', { icone: '📦', texte: 'Le coffre de la mine est plein : vends-le !', court: 'Plein !', sorte: 'alerte' })
+  if (coffrePlein(etat)) ajouter('puits', { icone: '📦', texte: t('Le coffre de la mine est plein : vends-le !'), court: t('Plein !'), sorte: 'alerte' })
 
   // Ce qui vient de se débloquer (recruteur, manager) et ce qui est achetable.
-  for (const id of decouvertesAMontrer(etat)) ajouter(DECOUVERTES[id].stand, { icone: '✨', texte: `Nouveau : ${DECOUVERTES[id].nom} !`, court: 'Nouveau', sorte: 'nouveau' })
+  for (const id of decouvertesAMontrer(etat)) ajouter(DECOUVERTES[id].stand, { icone: '✨', texte: t('Nouveau : {nom} !', { nom: t(DECOUVERTES[id].nom) }), court: t('Nouveau'), sorte: 'nouveau' })
   // (30/10) « Achetable » seulement pendant le tutoriel : ensuite, il y aurait presque toujours une
   // bulle (on peut presque toujours embaucher...), et trop de bulles noient le joueur. La liste
   // des tâches propose déjà les achats.
   if (etapeTutoriel(etat) !== null) {
-    for (const id of standsAchetables(etat)) ajouter(id, { icone: '⬆️', texte: 'Une amélioration est achetable !', court: 'Achetable', sorte: 'achat' })
+    for (const id of standsAchetables(etat)) ajouter(id, { icone: '⬆️', texte: t('Une amélioration est achetable !'), court: t('Achetable'), sorte: 'achat' })
   }
 
   for (const id of Object.keys(liste) as IdBatiment[]) liste[id] = (liste[id] ?? []).sort((a, b) => PRIORITE[a.sorte] - PRIORITE[b.sorte])

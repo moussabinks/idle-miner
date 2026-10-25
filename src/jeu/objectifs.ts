@@ -18,6 +18,7 @@ import {
 } from './mineur'
 import { debloque } from './niveaux'
 import { batimentPose } from './village'
+import { nombre, t } from './langue'
 
 // Les stands du village : ce sont les bâtiments posés sur la grille (voir village.ts).
 export type IdStand = IdBatiment
@@ -34,49 +35,49 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   const pose = (id: IdBatiment) => batimentPose(etat.village, id) !== null
 
   for (const id of LISTE_BATIMENTS) {
-    if (batimentDebloque(etat, id) && !pose(id)) achats.push({ stand: id, nom: `Construire : ${BATIMENTS[id].nom}`, cout: BATIMENTS[id].cout, construction: true })
+    if (batimentDebloque(etat, id) && !pose(id)) achats.push({ stand: id, nom: t('Construire : {nom}', { nom: t(BATIMENTS[id].nom) }), cout: BATIMENTS[id].cout, construction: true })
   }
 
   const pioche = PIOCHES[etat.meilleure + 1]
-  if (pioche && pose('forgeron') && debloque(etat, 'pioches', pioche.niveau)) achats.push({ stand: 'forgeron', nom: `Pioche en ${pioche.nom}`, cout: coutPioche(pioche.niveau) })
+  if (pioche && pose('forgeron') && debloque(etat, 'pioches', pioche.niveau)) achats.push({ stand: 'forgeron', nom: t('Pioche en {nom}', { nom: t(pioche.nom) }), cout: coutPioche(pioche.niveau) })
 
   const niveau = prochainNiveauMine(etat)
-  if (niveau && debloque(etat, 'mine', etat.niveauMine)) achats.push({ stand: 'puits', nom: `Mine niveau ${niveau.niveau} : ${niveau.nom}`, cout: niveau.cout })
+  if (niveau && debloque(etat, 'mine', etat.niveauMine)) achats.push({ stand: 'puits', nom: t('Mine niveau {n} : {nom}', { n: niveau.niveau, nom: t(niveau.nom) }), cout: niveau.cout })
   const coffre = prochainNiveauCoffre(etat)
-  if (coffre && debloque(etat, 'coffre', etat.coffre.niveau + 1)) achats.push({ stand: 'puits', nom: `Coffre de ${coffre.capacite.toLocaleString('fr-FR')} places`, cout: coffre.cout })
+  if (coffre && debloque(etat, 'coffre', etat.coffre.niveau + 1)) achats.push({ stand: 'puits', nom: t('Coffre de {places} places', { places: nombre(coffre.capacite) }), cout: coffre.cout })
   const ascenseur = prochainNiveauAscenseur(etat)
   if (ascenseur && etat.employes.length > 0 && debloque(etat, 'ascenseur', etat.ascenseur.niveau)) {
-    achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? 'Construire l’ascenseur' : `Ascenseur niveau ${ascenseur.niveau}`, cout: ascenseur.cout })
+    achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? t('Construire l’ascenseur') : t('Ascenseur niveau {n}', { n: ascenseur.niveau }), cout: ascenseur.cout })
   }
   if (pose('foreuse')) {
     const forage = prochainNiveauForage(etat)
-    if (forage && debloque(etat, 'forage', etat.foreuse.niveauVitesse + 1)) achats.push({ stand: 'foreuse', nom: `Forage ${forage.vitesse} blocs/s`, cout: forage.cout })
+    if (forage && debloque(etat, 'forage', etat.foreuse.niveauVitesse + 1)) achats.push({ stand: 'foreuse', nom: t('Forage {vitesse} blocs/s', { vitesse: forage.vitesse }), cout: forage.cout })
     const chariot = prochainNiveauChariot(etat)
-    if (chariot && debloque(etat, 'chariot', etat.foreuse.niveauChariot + 1)) achats.push({ stand: 'foreuse', nom: `Chariot de la foreuse : ${chariot.capacite.toLocaleString('fr-FR')} places`, cout: chariot.cout })
+    if (chariot && debloque(etat, 'chariot', etat.foreuse.niveauChariot + 1)) achats.push({ stand: 'foreuse', nom: t('Chariot de la foreuse : {places} places', { places: nombre(chariot.capacite) }), cout: chariot.cout })
   }
 
   if (generateurPose(etat)) {
     const prochain = prochainNiveauGenerateur(etat)
-    if (prochain && debloque(etat, 'generateur', etat.generateur.niveau + 1)) achats.push({ stand: 'generateur', nom: `Générateur : rayon ${prochain.rayon} cases`, cout: prochain.cout })
+    if (prochain && debloque(etat, 'generateur', etat.generateur.niveau + 1)) achats.push({ stand: 'generateur', nom: t('Générateur : rayon {rayon} cases', { rayon: prochain.rayon }), cout: prochain.cout })
   }
 
   if (pose('employes')) {
     const prix = prixEmbauche(etat)
-    if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
+    if (prix !== null) achats.push({ stand: 'employes', nom: t('Embaucher un mineur'), cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(etat, employe)
-      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
-      if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Vitesse de ${employe.nom} : pousseur ${NIVEAUX_POUSSEUR[employe.niveau + 1].nom.toLowerCase()}`, cout })
+      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null) achats.push({ stand: 'employes', nom: t('Pioche en {pioche} pour {nom}', { pioche: t(NIVEAUX_EMPLOYE[employe.niveau + 1].nom), nom: employe.nom }), cout })
+      if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: t('Vitesse de {nom} : pousseur {vitesse}', { nom: employe.nom, vitesse: t(NIVEAUX_POUSSEUR[employe.niveau + 1].nom).toLowerCase() }), cout })
       // (23/10) le chariot de chaque pousseur
       const coutChariot = coutChariotPousseur(etat, employe)
-      if (coutChariot && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)) achats.push({ stand: 'employes', nom: `Chariot de ${employe.nom} : ${NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1].places} places`, cout: coutChariot })
+      if (coutChariot && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)) achats.push({ stand: 'employes', nom: t('Chariot de {nom} : {places} places', { nom: employe.nom, places: NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1].places }), cout: coutChariot })
     }
     const recruteur = prochainNiveauRecruteur(etat)
     if (recruteurDebloque(etat) && recruteur && debloque(etat, 'recruteur', etat.recruteur)) {
-      achats.push({ stand: 'employes', nom: etat.recruteur === 0 ? 'Embaucher le recruteur' : `Recruteur niveau ${etat.recruteur + 1}`, cout: recruteur.cout })
+      achats.push({ stand: 'employes', nom: etat.recruteur === 0 ? t('Embaucher le recruteur') : t('Recruteur niveau {n}', { n: etat.recruteur + 1 }), cout: recruteur.cout })
     }
     if (managerDebloque(etat) && !etat.manager.embauche) {
-      achats.push({ stand: 'employes', nom: 'Embaucher le manager', cout: { argent: PRIX_MANAGER, materiaux: {} } })
+      achats.push({ stand: 'employes', nom: t('Embaucher le manager'), cout: { argent: PRIX_MANAGER, materiaux: {} } })
     }
   }
   return achats

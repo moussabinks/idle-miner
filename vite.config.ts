@@ -18,6 +18,8 @@ const dateDuBuild = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // (25/10) Des chemins relatifs : le jeu marche aussi servi dans un sous-dossier (CrazyGames).
+  base: './',
   define: {
     __VERSION_JEU__: JSON.stringify(`${commitActuel()} · ${dateDuBuild}`),
   },

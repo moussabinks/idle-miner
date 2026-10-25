@@ -40,6 +40,7 @@ import {
 } from './donnees'
 import { GEMMES_PAR_NIVEAU, gagnerGemmes } from './gemmes'
 import type { EtatJeu } from './mineur'
+import { t } from './langue'
 
 // ---------------------------------------------------------------------------
 // Le niveau à partir de l'XP
@@ -113,7 +114,7 @@ export function verrouNiveau(etat: EtatJeu, requis: number): string | null {
 export function verrou(etat: EtatJeu, chose: ChoseANiveaux, index: number): string | null {
   if (chose === 'mine') return verrouNiveau(etat, niveauRequis('mine', index))
   const palier = palierRequis(chose, index) ?? 1
-  return etat.niveauMine >= palier ? null : `🕳️ Mine ${palier}`
+  return etat.niveauMine >= palier ? null : t('🕳️ Mine {n}', { n: palier })
 }
 
 export function niveauPourBatiment(id: IdBatiment): number {
@@ -130,11 +131,11 @@ export function railsDebloques(etat: EtatJeu): boolean {
 export function deblocagesDuNiveau(niveau: number): string[] {
   const liste: string[] = []
   for (const [id, requis] of Object.entries(NIVEAU_JOUEUR_POUR.batiments)) {
-    if (requis === niveau && niveau > 1) liste.push(`${BATIMENTS[id as IdBatiment].emoji} ${BATIMENTS[id as IdBatiment].nom}`)
+    if (requis === niveau && niveau > 1) liste.push(`${BATIMENTS[id as IdBatiment].emoji} ${t(BATIMENTS[id as IdBatiment].nom)}`)
   }
-  if (NIVEAU_JOUEUR_POUR.rails === niveau) liste.push('🛤️ Les rails et les wagonnets')
+  if (NIVEAU_JOUEUR_POUR.rails === niveau) liste.push(t('🛤️ Les rails et les wagonnets'))
   NIVEAU_JOUEUR_POUR.mine.forEach((requis, i) => {
-    if (requis === niveau && i > 0) liste.push(`⛏️ Mine niveau ${NIVEAUX_MINE[i].niveau} : ${NIVEAUX_MINE[i].nom}`)
+    if (requis === niveau && i > 0) liste.push(t('⛏️ Mine niveau {n} : {nom}', { n: NIVEAUX_MINE[i].niveau, nom: t(NIVEAUX_MINE[i].nom) }))
   })
   return liste
 }
@@ -242,7 +243,13 @@ export function mettreAJourXp(etat: EtatJeu): string[] {
     // (25/10) Chaque niveau gagné rapporte des gemmes.
     gagnerGemmes(etat, GEMMES_PAR_NIVEAU)
     const choses = deblocagesDuNiveau(n)
-    messages.push(`🎉 Niveau ${n} ! +${GEMMES_PAR_NIVEAU} 💎${choses.length > 0 ? ` Débloqué : ${choses.join(', ')}.` : ''}`)
+    // (25/10) Le message commence toujours par « 🎉 » : l'interface le reconnaît ainsi (usePartie.ts),
+    // dans toutes les langues.
+    messages.push(
+      choses.length > 0
+        ? t('🎉 Niveau {n} ! +{gemmes} 💎 Débloqué : {choses}.', { n, gemmes: GEMMES_PAR_NIVEAU, choses: choses.join(', ') })
+        : t('🎉 Niveau {n} ! +{gemmes} 💎', { n, gemmes: GEMMES_PAR_NIVEAU }),
+    )
   }
   return messages
 }

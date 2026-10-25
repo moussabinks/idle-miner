@@ -1,3 +1,4 @@
+import { stockage } from './stockage'
 // Les bruitages du jeu, fabriqués directement par le navigateur (Web Audio) :
 // presque pas de fichier son à charger (23/10 : seul le « cha-ching » du marché est un vrai
 // enregistrement, `public/sons/cash.mp3`). Chaque son est un petit mélange de « notes »
@@ -16,7 +17,7 @@ let actif = lireReglage(CLE_SON)
 // Lit un réglage « actif / coupé » (actif par défaut).
 export function lireReglage(cle: string): boolean {
   try {
-    return window.localStorage.getItem(cle) !== 'coupe'
+    return stockage.getItem(cle) !== 'coupe'
   } catch {
     return true
   }
@@ -24,7 +25,7 @@ export function lireReglage(cle: string): boolean {
 
 export function ecrireReglage(cle: string, valeur: boolean): void {
   try {
-    window.localStorage.setItem(cle, valeur ? 'actif' : 'coupe')
+    stockage.setItem(cle, valeur ? 'actif' : 'coupe')
   } catch {
     // Tant pis, le réglage ne sera pas gardé.
   }
@@ -46,8 +47,17 @@ export function basculerSon(): boolean {
 export function contexteAudio(): AudioContext | null {
   if (typeof window === 'undefined' || !('AudioContext' in window)) return null
   if (contexte === null) contexte = new AudioContext()
-  if (contexte.state === 'suspended') void contexte.resume()
+  if (contexte.state === 'suspended' && !enPause) void contexte.resume()
   return contexte
+}
+
+// (25/10) Pendant une publicité, tout le son du jeu (bruitages et musique) se tait.
+let enPause = false
+export function couperPourPub(muet: boolean): void {
+  enPause = muet
+  if (!contexte) return
+  if (muet) void contexte.suspend()
+  else void contexte.resume()
 }
 
 // Le contexte, seulement si les bruitages sont actifs.

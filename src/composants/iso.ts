@@ -2,8 +2,8 @@
 // de l'image de fond, et inversement. C'est seulement de l'affichage : la logique du jeu ne
 // connaît que les cases (src/jeu/village.ts).
 //
-// Le monde est mesuré en pixels : la clairière y est un losange (60 × 60 cases), son coin du haut
-// (la case 0, 0) est en (1131 ; 57), et une case fait 33 pixels de large sur 19 de haut. Le sol
+// Le monde est mesuré en pixels : la clairière y est un losange (40 × 40 cases depuis le 25/10),
+// son coin du haut (la case 0, 0) est en (801 ; 57), et une case fait 33 pixels de large sur 19 de haut. Le sol
 // en damier et la forêt autour sont dessinés par le jeu (TerrainVillage, ForetVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
@@ -18,8 +18,8 @@ const MARGE = { x: 141, y: 57.2 }
 const ORIGINE = { x: MARGE.x + TAILLE_GRILLE * DEMI_LARGEUR, y: MARGE.y }
 // La taille du monde (la clairière et ses marges), en pixels. Les mêmes chiffres sont dans
 // village.css (.monde-village) : les changer ensemble.
-export const LARGEUR_MONDE = 2262
-export const HAUTEUR_MONDE = 1407
+export const LARGEUR_MONDE = Math.round(2 * MARGE.x + 2 * TAILLE_GRILLE * DEMI_LARGEUR) // 1 602
+export const HAUTEUR_MONDE = Math.round(MARGE.y + 2 * TAILLE_GRILLE * DEMI_HAUTEUR + 201.4) // 1 024
 
 export type Point = { x: number; y: number }
 
@@ -74,7 +74,6 @@ export const CALAGES: Record<IdBatiment, Calage> = {
   // l'angle du jeu par un script (le sol est ramené à l'angle des cases, les poteaux et les murs
   // du puits gardent leur hauteur). Le pied de son losange tombe pile sur ses 10 × 10 cases.
   puits: { largeur: 1233, hauteur: 774, gauche: { x: 3, y: 403.4 }, bas: { x: 625, y: 765.4 }, droite: { x: 1225, y: 418.6 } },
-  bazar: { largeur: 1037, hauteur: 945, gauche: { x: 2, y: 652 }, bas: { x: 520, y: 942 }, droite: { x: 1034, y: 653 } },
   employes: { largeur: 1074, hauteur: 1046, gauche: { x: 2, y: 724 }, bas: { x: 530, y: 1043 }, droite: { x: 1071, y: 726 } },
   foreuse: { largeur: 971, hauteur: 913, gauche: { x: 2, y: 608 }, bas: { x: 483, y: 910 }, droite: { x: 968, y: 612 } },
   forgeron: { largeur: 1091, hauteur: 994, gauche: { x: 2, y: 670 }, bas: { x: 546, y: 991 }, droite: { x: 1088, y: 673 } },
@@ -122,7 +121,6 @@ export function pointSurSprite(calage: Calage, x: number, y: number, taille: num
 
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   puits: '/images/batiments/mine.webp',
-  bazar: '/images/batiments/bazar.webp',
   foreuse: '/images/batiments/foreuse.webp',
   forgeron: '/images/batiments/forgeron.webp',
   marche: '/images/batiments/marche.webp',

@@ -7,6 +7,7 @@ import type { EtatJeu } from './mineur'
 import { encaisser, nbDansCoffre, valeurDe } from './mineur'
 import { nbDansChariot } from './foreuse'
 import { managerActif, nbSansSalaire, prochainNiveauManager, secondesEveilManager } from './employes'
+import { nombre, t } from './langue'
 
 export type ResumeAbsence = {
   secondes: number // le temps passé
@@ -75,5 +76,5 @@ export function resumerAbsence(avant: PhotoPartie, etat: EtatJeu, secondes: numb
 export function doublerAbsence(etat: EtatJeu, resume: ResumeAbsence): string[] {
   if (resume.gains <= 0) return []
   encaisser(etat, resume.gains)
-  return [`💰 Gains doublés : +${resume.gains.toLocaleString('fr-FR')} $ !`]
+  return [t('💰 Gains doublés : +{gains} $ !', { gains: nombre(resume.gains) })]
 }
