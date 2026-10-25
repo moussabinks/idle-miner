@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine, type Aleatoire } from './jeu/aleatoire'
-import { cliquerMine, creerPartie, vendre } from './jeu/mineur'
+import { cliquerMine, creerPartie, vendreCoffre } from './jeu/mineur'
 import { evenementsEntre } from './evenements'
 
 const toujours = (valeur: number): Aleatoire => () => valeur
@@ -22,11 +22,11 @@ describe('événements pour les sons et les animations', () => {
     expect(evenementsEntre(avant, apres)).toContainEqual({ type: 'casse', bloc: 'diamant', nombre: 2, rare: true })
   })
 
-  it('une vente', () => {
+  it('une vente (le coffre de la mine)', () => {
     const avant = creerPartie(aleatoireAvecGraine(3))
-    avant.inventaire = { fer: 2 }
+    avant.coffre.contenu = { fer: 2 }
     const apres = structuredClone(avant)
-    vendre(apres)
+    vendreCoffre(apres)
     expect(evenementsEntre(avant, apres)).toEqual([{ type: 'vente', montant: 24 }])
   })
 

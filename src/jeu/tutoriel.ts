@@ -1,23 +1,22 @@
-// Le tutoriel (27/10) : quand on commence un nouveau monde, Pépite (un hamster mineur) montre
+// Le tutoriel (27/10) : quand on commence un nouveau monde, Pépite (une taupe mineuse) montre
 // les bases, étape par étape, avec une flèche sur ce qu'il faut toucher. On ne passe à l'étape
 // suivante qu'en faisant l'action demandée (sauf le bonjour et le bravo, avec un bouton).
+// (25/10) Plus court, et jusqu'au moment fort : le premier mineur qui creuse tout seul.
 //   1. bonjour ;
 //   2. casser 10 blocs à la mine (tout va dans le coffre) ;
-//   3. construire le marché (gratuit) ;
-//   4. mettre le coffre dans son sac ;
-//   5. vendre au marché ;
-//   6. construire le forgeron (29/10) ;
-//   7. bravo, et la suite : la liste des tâches en haut à droite. Ensuite, le joueur avance seul :
-//      la liste des tâches lui dit quoi faire, sans l'obliger à rien.
+//   3. vendre le coffre (depuis la mine, d'un clic) ;
+//   4. construire le Personnel ;
+//   5. embaucher son premier mineur ;
+//   6. bravo, et la suite : la liste des tâches. Ensuite, le joueur avance seul.
 // Ici, seulement les règles (où on en est, quand une étape est faite) : les textes et les flèches
 // sont dans src/composants/Tutoriel.tsx.
 
-import { nbDansSac, type EtatJeu } from './mineur'
+import type { EtatJeu } from './mineur'
 import { batimentPose } from './village'
 
-export type IdEtapeTutoriel = 'bonjour' | 'creuser' | 'marche' | 'sac' | 'vendre' | 'forgeron' | 'bravo'
+export type IdEtapeTutoriel = 'bonjour' | 'creuser' | 'vendre' | 'personnel' | 'embaucher' | 'bravo'
 
-export const ETAPES_TUTORIEL: IdEtapeTutoriel[] = ['bonjour', 'creuser', 'marche', 'sac', 'vendre', 'forgeron', 'bravo']
+export const ETAPES_TUTORIEL: IdEtapeTutoriel[] = ['bonjour', 'creuser', 'vendre', 'personnel', 'embaucher', 'bravo']
 
 // Les blocs à casser à la main avant d'aller plus loin.
 export const BLOCS_TUTORIEL = 10
@@ -41,14 +40,12 @@ export function etapeFaite(etat: EtatJeu, etape: IdEtapeTutoriel): boolean {
   switch (etape) {
     case 'creuser':
       return etat.stats.blocsCasses >= BLOCS_TUTORIEL
-    case 'marche':
-      return batimentPose(etat.village, 'marche') !== null
-    case 'sac':
-      return nbDansSac(etat) > 0 || etat.stats.argentGagne > 0
     case 'vendre':
       return etat.stats.argentGagne > 0
-    case 'forgeron':
-      return batimentPose(etat.village, 'forgeron') !== null
+    case 'personnel':
+      return batimentPose(etat.village, 'employes') !== null
+    case 'embaucher':
+      return etat.employes.some((e) => e.role === 'mineur')
     default:
       return false
   }

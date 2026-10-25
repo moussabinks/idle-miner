@@ -1,11 +1,11 @@
 // Les nouveautés du 30/10 : bonus de combo, rails remboursés, missions qui ne changent plus
 // d'un coup, résumé de l'absence.
 import { describe, expect, it } from 'vitest'
-import { photoPartie, resumerAbsence } from './absence'
+import { doublerAbsence, photoPartie, resumerAbsence } from './absence'
 import { aleatoireAvecGraine } from './aleatoire'
 import { construireBatiment, poserSol, raisonSolImpossible, retirerSol } from './batiments'
 import { embaucher } from './employes'
-import { activerBonusCombo, avancerMine, bonusActif, chanceDoublement, cliquerMine, nbDansCoffre } from './mineur'
+import { activerBonusCombo, avancerMine, bonusActif, chanceDoublement, cliquerMine, nbDansCoffre, valeurDe } from './mineur'
 import { missions } from './missions'
 import { partieDeTest } from './partieDeTest'
 import { avancerTemps } from './temps'
@@ -30,12 +30,12 @@ describe('les bonus de combo', () => {
 describe('les rails', () => {
   it('un rail retiré est remboursé, et on dit quand il n’y a plus de fer', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    etat.inventaire = { fer: 3 }
-    poserSol(etat, 'rail', 30, 37)
-    expect(etat.inventaire.fer ?? 0).toBe(0)
-    expect(raisonSolImpossible(etat, 'rail', 30, 38)).toContain('Plus de fer')
-    retirerSol(etat, 'rail', 30, 37)
-    expect(etat.inventaire.fer).toBe(3)
+    etat.coffre.contenu = { fer: 3 }
+    poserSol(etat, 'rail', 20, 27)
+    expect(etat.coffre.contenu.fer ?? 0).toBe(0)
+    expect(raisonSolImpossible(etat, 'rail', 20, 28)).toContain('Plus de fer')
+    retirerSol(etat, 'rail', 20, 27)
+    expect(etat.coffre.contenu.fer).toBe(3) // (25/10) le fer revient dans le coffre de la mine
     expect(etat.village.rails).toEqual([])
   })
 })
@@ -43,7 +43,7 @@ describe('les rails', () => {
 describe('les missions', () => {
   it('une mission affichée garde sa place tant qu’elle n’est pas faite', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    construireBatiment(etat, 'marche', 28, 38)
+    construireBatiment(etat, 'marche', 18, 28)
     etat.stats.argentGagne = 100
     const avant = missions(etat).map((m) => m.id)
     // Une nouvelle mission arrive (de quoi construire le forgeron) : elle n'en chasse aucune.
@@ -59,7 +59,7 @@ describe('l’absence', () => {
     const hasard = aleatoireAvecGraine(1)
     const etat = partieDeTest(hasard)
     etat.argent = 10_000
-    construireBatiment(etat, 'employes', 19, 31)
+    construireBatiment(etat, 'employes', 9, 21)
     embaucher(etat, hasard)
     const avant = photoPartie(etat)
     avancerTemps(etat, 600, hasard)
@@ -67,5 +67,22 @@ describe('l’absence', () => {
     expect(resume?.blocsMineurs).toBeGreaterThan(0)
     expect(resume?.secondes).toBe(600)
     expect(resume?.absenceMax).toBeNull() // (23/10) pas de manager
+    // (25/10) Les gains : ce qui attend dans le coffre (rien n'a été vendu).
+    expect(resume?.gains).toBe(valeurDe(etat.coffre.contenu))
+  })
+
+  it('(25/10) doubler l’absence redonne ses gains en argent', () => {
+    const hasard = aleatoireAvecGraine(1)
+    const etat = partieDeTest(hasard)
+    const avant = photoPartie(etat)
+    avancerTemps(etat, 300, hasard)
+    const resume = resumerAbsence(avant, etat, 300)!
+    expect(resume.gains).toBeGreaterThan(0)
+    const argent = etat.argent
+    expect(doublerAbsence(etat, resume)[0]).toContain('doublés')
+    expect(etat.argent).toBe(argent + resume.gains)
+    expect(etat.stats.argentGagne).toBe(resume.gains)
+    // Rien à doubler : rien ne se passe.
+    expect(doublerAbsence(etat, { ...resume, gains: 0 })).toEqual([])
   })
 })

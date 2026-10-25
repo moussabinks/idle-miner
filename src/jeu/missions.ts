@@ -1,6 +1,6 @@
 // Les missions (27/10), en haut à droite de l'écran : toujours une à trois choses à faire, pour
-// guider le joueur pas à pas. Au début : poser le marché, casser des blocs, les vendre ; puis
-// construire chaque bâtiment (« Récupère 25 pierre pour le Bazar : 12 / 25 ») ; puis
+// guider le joueur pas à pas. Au début : casser des blocs, les vendre, embaucher un mineur ; puis
+// construire chaque bâtiment (« Récupère 25 pierre pour la foreuse : 12 / 25 ») ; puis
 // automatiser (rails, wagonnet, pousseur, mineurs, générateur) ; enfin les améliorations les
 // plus proches. Les urgences passent devant (salaires, coffre plein).
 
@@ -8,7 +8,7 @@ import { BATIMENTS, BLOCS, COUT_RAIL, LISTE_BATIMENTS, type Cout, type IdBatimen
 import { batimentDebloque } from './batiments'
 import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
-import { coffrePlein, disponible, nbDansCoffre, nbDansSac, peutPayer, type EtatJeu } from './mineur'
+import { coffrePlein, disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
 import { achatsPossibles } from './objectifs'
 import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
 import { batimentPose } from './village'
@@ -72,7 +72,8 @@ function missionAchat(etat: EtatJeu, id: string, icone: string, nom: string, cou
   const manque = ceQuiManque(etat, cout)
   if (!manque) return mission(id, icone, nom, { ...options, elements, pret: true })
   // Ce qu'il manque d'abord : l'argent au marché, les minerais à la mine.
-  const ou = manque.nom === '$' ? (batimentPose(etat.village, 'marche') ? 'marche' : null) : 'puits'
+  // (25/10) L'argent et les minerais viennent tous les deux de la mine (on y vend le coffre).
+  const ou = 'puits'
   return mission(id, icone, nom, { ...options, construction: false, stand: ou, elements })
 }
 
@@ -83,24 +84,26 @@ function urgences(etat: EtatJeu): Mission[] {
   if (sansSalaire > 0 && batimentPose(etat.village, 'employes')) {
     liste.push(mission('salaires', '😠', sansSalaire === 1 ? 'Paie ton mineur au Personnel' : `Paie tes ${sansSalaire} mineurs au Personnel`, { stand: 'employes', pret: true }))
   }
-  if (coffrePlein(etat)) liste.push(mission('coffre-plein', '📦', 'Le coffre est plein : vide-le !', { stand: 'puits', pret: true }))
+  if (coffrePlein(etat)) liste.push(mission('coffre-plein', '📦', 'Le coffre est plein : vends-le !', { stand: 'puits', pret: true }))
   return liste
 }
 
-// Les premiers pas : poser le marché, casser des blocs, les mettre dans le sac, les vendre.
+// Les premiers pas (25/10) : casser des blocs, les vendre depuis la mine, embaucher un mineur.
 function premiersPas(etat: EtatJeu): Mission | null {
-  if (!batimentPose(etat.village, 'marche')) return mission('marche', '🏗️', 'Construis le marché (gratuit)', { construction: true, pret: true })
-  if (etat.stats.argentGagne > 0) return null
-  if (nbDansSac(etat) > 0) return mission('vendre', '💰', 'Vends ton sac au marché', { stand: 'marche', pret: true })
-  if (etat.stats.blocsCasses < BLOCS_DEBUT && nbDansCoffre(etat) < BLOCS_DEBUT) {
-    return mission('casser', '⛏️', `Casse ${BLOCS_DEBUT} blocs à la mine`, { stand: 'puits', progression: { valeur: etat.stats.blocsCasses, max: BLOCS_DEBUT, icone: '⛏️' } })
+  if (etat.stats.argentGagne === 0) {
+    if (etat.stats.blocsCasses < BLOCS_DEBUT && nbDansCoffre(etat) < BLOCS_DEBUT) {
+      return mission('casser', '⛏️', `Casse ${BLOCS_DEBUT} blocs à la mine`, { stand: 'puits', progression: { valeur: etat.stats.blocsCasses, max: BLOCS_DEBUT, icone: '⛏️' } })
+    }
+    return mission('vendre', '💰', 'Vends le coffre de la mine', { stand: 'puits', pret: true })
   }
-  return mission('remplir-sac', '🎒', 'Mets les blocs du coffre dans ton sac', { stand: 'puits', pret: true })
+  if (!batimentPose(etat.village, 'employes')) return mission('personnel', '🏗️', 'Construis le Personnel', { construction: true, pret: peutPayer(etat, BATIMENTS.employes.cout) })
+  if (!etat.employes.some((e) => e.role === 'mineur')) return mission('mineur', '👷', 'Embauche ton premier mineur', { stand: 'employes', pret: true })
+  return null
 }
 
 // Le prochain bâtiment à construire (dans l'ordre du menu).
 function prochainBatiment(etat: EtatJeu): Mission | null {
-  const id = LISTE_BATIMENTS.find((b) => b !== 'marche' && batimentDebloque(etat, b) && !batimentPose(etat.village, b))
+  const id = LISTE_BATIMENTS.find((b) => b !== 'marche' && b !== 'employes' && batimentDebloque(etat, b) && !batimentPose(etat.village, b))
   if (!id) return null
   const info = BATIMENTS[id]
   return missionAchat(etat, `construire-${id}`, info.emoji, `Construis : ${info.nom}`, info.cout, { construction: true })
@@ -108,10 +111,12 @@ function prochainBatiment(etat: EtatJeu): Mission | null {
 
 // L'automatisation, étape par étape.
 function automatisation(etat: EtatJeu): Mission | null {
-  if (!batimentPose(etat.village, 'marche') || etat.stats.argentGagne === 0) return null
-  // (29/10) Les rails se débloquent au niveau 3 du joueur. On ne dit plus combien de fer
+  if (etat.stats.argentGagne === 0 || !etat.employes.some((e) => e.role === 'mineur')) return null
+  // (29/10) Les rails se débloquent au niveau 2 du joueur (25/10). On ne dit plus combien de fer
   // récupérer : ça dépend du chemin que le joueur choisira.
   if (!railsDebloques(etat)) return null
+  // (25/10) Le marché ne sert plus qu'au wagonnet : on le construit au moment des rails.
+  if (!batimentPose(etat.village, 'marche')) return mission('marche', '🏗️', 'Construis le marché (gratuit) : le wagonnet y vendra tout seul', { construction: true, pret: true })
   if (!ligneDe(etat, 'mine-marche')) {
     const fer = COUT_RAIL.materiaux.fer ?? 3
     return mission('rails', '🛤️', `Pose des rails de la mine au marché (${fer} fer la case)`, { construction: true, pret: disponible(etat, 'fer') >= fer })
@@ -121,7 +126,6 @@ function automatisation(etat: EtatJeu): Mission | null {
   const electrique = railsAlimentes(etat)
   const pousseur = etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche')
   if (!pousseur && batimentPose(etat.village, 'employes')) return mission('pousseur', '👷', 'Embauche un pousseur pour le wagonnet', { stand: 'employes', pret: true })
-  if (!etat.employes.some((e) => e.role === 'mineur') && batimentPose(etat.village, 'employes')) return mission('mineur', '⛏️', 'Embauche un mineur au Personnel', { stand: 'employes', pret: true })
   if (generateurPose(etat) && !electrique) {
     if (etat.generateur.carburant <= 0) return mission('allumer', '⚡', 'Mets de la redstone dans le générateur', { stand: 'generateur', pret: disponible(etat, 'redstone') > 0 })
     return mission('electrifier', '⚡', 'Mets tous les rails dans le rayon du générateur', { stand: 'generateur' })

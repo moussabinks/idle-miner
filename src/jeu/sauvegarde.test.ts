@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { VERSION_ETAT, cliquerMine, creerPartie } from './mineur'
+import { NIVEAU_JOUEUR_POUR, TAILLE_GRILLE } from './donnees'
+import { VERSION_ETAT, cliquerMine, creerPartie, type EtatJeu } from './mineur'
 import { niveauJoueur } from './niveaux'
 import { embaucher } from './employes'
 import { partieDeTest } from './partieDeTest'
+import { POSITION_MINE, railsMineMarche } from './village'
 import {
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
   charger,
   cleMonde,
+  convertirVersion28,
   creerMonde,
   dupliquerMonde,
   exporterTout,
@@ -72,7 +75,9 @@ describe('sauvegarde', () => {
         { ...mineur, role: 'pousseur' as const, niveau: 4 },
       ],
     })
-    expect(charger(stockage, '1')?.employes.map((e) => e.niveau)).toEqual([5, 3, 4])
+    // Version 26 → 27 : l'émeraude s'intercale (4 → 5) ; puis 28 → 29 (25/10) : 5 pioches
+    // (bois, fer, or, émeraude, diamant), le diamant reste le diamant (5 → 4) et l'or l'or (3 → 2).
+    expect(charger(stockage, '1')?.employes.map((e) => e.niveau)).toEqual([4, 2, 4])
   })
 
   it('(23/10) version 27 : chaque pousseur reçoit un chariot comme son ancien wagonnet', () => {
@@ -82,10 +87,11 @@ describe('sauvegarde', () => {
     const mineur = etat.employes[0]
     const pousseur = { ...mineur, role: 'pousseur' as const, trajet: 'mine-marche' as const }
     const stockage = fauxStockage()
-    // ancienne taille 70 places (niveau 2), pousseur « Expert » (×2) : 140 places → chariot de 110 ; ×1 : 70 → 58
+    // ancienne taille 70 places (niveau 2), pousseur « Expert » (×2) : 140 places → chariot de 110
+    // (niveau 5 sur 7) ; ×1 : 70 → 58 (niveau 3 sur 7). Puis (25/10) 5 niveaux : 5 → 3, 3 → 2.
     sauvegarder(stockage, '1', { ...etat, version: 27, niveauWagonnets: 2, employes: [mineur, { ...pousseur, niveau: 3 }, { ...pousseur, nom: 'Zoé', niveau: 0 }] })
     const relue = charger(stockage, '1')!
-    expect(relue.employes.map((e) => e.chariot)).toEqual([undefined, 5, 3])
+    expect(relue.employes.map((e) => e.chariot)).toEqual([undefined, 3, 2])
     expect(relue.employes[1].niveau).toBe(3) // son niveau devient sa vitesse
   })
 
@@ -118,7 +124,8 @@ describe('sauvegarde', () => {
   it('une partie de la version 21 garde tout : son wagonnet devient le trajet Mine → Marché', () => {
     const stockage = fauxStockage()
     const { niveauWagonnets: _niveau, trajets: _trajets, ...partie21 } = creerPartie(aleatoireAvecGraine(1))
-    partie21.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
+    // (le village d'avant le 25/10 : 60 × 60 cases, la mine en 25, 25)
+    partie21.village.batiments = [{ id: 'puits', x: 25, y: 25, miroir: false }, { id: 'marche', x: 28, y: 40, miroir: false }]
     for (let y = 35; y <= 39; y++) partie21.village.rails.push(`30,${y}`)
     stockage.setItem(cleMonde('1'), JSON.stringify({ ...partie21, version: 21, argent: 777, wagonnet: { niveau: 2, etape: 'aller', distance: 3, chargement: {}, pousseur: 'joueur' } }))
     expect(partieAncienne(stockage, '1')).toBe(false)
@@ -154,8 +161,8 @@ describe('sauvegarde', () => {
     stockage.setItem(cleMonde('1'), JSON.stringify(partie23))
     const etat = charger(stockage, '1')
     expect(etat?.version).toBe(VERSION_ETAT)
-    // (le niveau 3 de la mine demande le niveau 7 du joueur)
-    expect(etat && niveauJoueur(etat)).toBe(7)
+    // (le niveau 3 de la mine demande le niveau 5 du joueur, 25/10)
+    expect(etat && niveauJoueur(etat)).toBe(NIVEAU_JOUEUR_POUR.mine[2])
   })
 
   it('une partie avec des tenues et des décorations (retirées le 27/10) se charge sans elles', () => {
@@ -176,6 +183,118 @@ describe('sauvegarde', () => {
     const stockage = fauxStockage()
     sauvegarder(stockage, '1', creerPartie(aleatoireAvecGraine(1)), 1_000_000)
     expect(secondesDepuisSauvegarde(stockage, '1', 1_060_000)).toBe(60)
+  })
+})
+
+// (25/10) La grande mise à jour : une partie de la version 28 (sac à dos, bazar, clairière de
+// 60 × 60, améliorations jusqu'à 10 niveaux) est convertie.
+describe('une partie de la version 28 (avant la grande mise à jour)', () => {
+  // Une partie de la version 28 : la mine en (25, 25) sur une clairière de 60 × 60.
+  function partie28(): Record<string, unknown> {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    etat.niveauMine = 5
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2))
+    etat.argent = 1000
+    const mineur = { ...etat.employes[0], niveau: 5, lieu: 'bazar' as EtatJeu['employes'][number]['lieu'] } // pioche en diamant (6 niveaux)
+    const pousseur = { ...etat.employes[0], nom: 'Zoé', role: 'pousseur' as const, trajet: 'mine-marche' as const, niveau: 4, chariot: 6 }
+    const { gemmes: _gemmes, boosts: _boosts, quotidien: _quotidien, ...reste } = etat
+    return {
+      ...reste,
+      version: 28,
+      inventaire: { fer: 10, pierre: 5 }, // le sac : 10 × 12 + 5 × 1 = 125 $
+      nonAVendre: ['fer'],
+      niveauSac: 2,
+      tutoriel: 3,
+      ascenseur: { ...etat.ascenseur, niveau: 10 },
+      foreuse: { ...etat.foreuse, niveauVitesse: 5, niveauChariot: 4 },
+      manager: { embauche: true, tempsPaye: 300, niveau: 4, fatigue: 0 },
+      employes: [mineur, pousseur],
+      coffre: { niveau: 2, contenu: { pierre: 7 } },
+      village: {
+        ...etat.village,
+        batiments: [
+          { id: 'puits', x: 25, y: 25, miroir: false },
+          { id: 'marche', x: 28, y: 40, miroir: false },
+          { id: 'bazar', x: 40, y: 25, miroir: false },
+          { id: 'forgeron', x: 55, y: 55, miroir: false }, // dans le coin : il ne tient plus
+        ],
+        // 5 rails de la mine au marché, et un rail tout au bord (hors de la nouvelle clairière)
+        rails: ['30,35', '30,36', '30,37', '30,38', '30,39', '58,10'],
+        chemins: ['12,12', '2,2'],
+        batimentsVus: ['marche', 'bazar', 'forgeron'],
+      },
+      trajets: [],
+    }
+  }
+
+  function charger28(): EtatJeu {
+    const stockage = fauxStockage()
+    stockage.setItem(cleMonde('1'), JSON.stringify(partie28()))
+    const etat = charger(stockage, '1')
+    if (!etat) throw new Error('la partie de la version 28 ne se charge pas')
+    return etat
+  }
+
+  it('se charge à la version actuelle, avec 10 gemmes offertes et sans tutoriel', () => {
+    const etat = charger28()
+    expect(etat.version).toBe(VERSION_ETAT)
+    expect(etat.gemmes).toBe(10)
+    expect(etat.boosts).toEqual({})
+    expect(etat.quotidien).toEqual({ dernierJour: null, serie: 0 })
+    expect(etat.tutoriel).toBe(99)
+  })
+
+  it('le sac est vendu, et le bazar enlevé et remboursé (200 $)', () => {
+    const etat = charger28()
+    expect(etat).not.toHaveProperty('inventaire')
+    expect(etat).not.toHaveProperty('nonAVendre')
+    expect(etat).not.toHaveProperty('niveauSac')
+    expect(etat.argent).toBe(1000 + 125 + 200)
+    expect(etat.stats.argentGagne).toBe(125)
+    expect(etat.village.batiments.map((b) => b.id)).not.toContain('bazar')
+    expect(etat.village.batimentsVus).toEqual(['marche', 'forgeron'])
+    // Un employé qui était au bazar revient à la mine.
+    expect(etat.employes[0].lieu).toBe('puits')
+  })
+
+  it('le village recule de 10 cases ; un bâtiment qui ne tient plus est reposé près de la mine', () => {
+    const etat = charger28()
+    const pose = (id: string) => etat.village.batiments.find((b) => b.id === id)
+    expect(pose('puits')).toMatchObject({ x: POSITION_MINE.x, y: POSITION_MINE.y })
+    expect(pose('marche')).toMatchObject({ x: 18, y: 30 })
+    const forgeron = pose('forgeron')!
+    expect(forgeron.x).toBeGreaterThanOrEqual(0)
+    expect(forgeron.y).toBeGreaterThanOrEqual(0)
+    expect(forgeron.x + 5).toBeLessThanOrEqual(TAILLE_GRILLE)
+    expect(forgeron.y + 5).toBeLessThanOrEqual(TAILLE_GRILLE)
+    expect(Math.hypot(forgeron.x - POSITION_MINE.x, forgeron.y - POSITION_MINE.y)).toBeLessThan(15)
+    // Les rails de la mine au marché suivent : la ligne est toujours entière.
+    expect(railsMineMarche(etat.village)).toHaveLength(5)
+    // Le chemin hors de la clairière est oublié.
+    expect(etat.village.chemins).toEqual(['2,2'])
+  })
+
+  it('un rail hors de la nouvelle clairière est enlevé, et son fer rendu dans le coffre', () => {
+    const etat = charger28()
+    expect(etat.village.rails).toEqual(['20,25', '20,26', '20,27', '20,28', '20,29'])
+    expect(etat.coffre.contenu).toEqual({ pierre: 7, fer: 3 })
+  })
+
+  it('les améliorations passent à 5 niveaux (le plus proche d’avant)', () => {
+    const etat = charger28()
+    expect(etat.ascenseur.niveau).toBe(5) // 10 → 5
+    expect(etat.foreuse.niveauVitesse).toBe(4) // 5 → 4
+    expect(etat.foreuse.niveauChariot).toBe(3) // 4 → 3
+    expect(etat.manager.niveau).toBe(2) // 4 → 2
+    expect(etat.employes[0].niveau).toBe(4) // la pioche en diamant reste le diamant
+    expect(etat.employes[1]).toMatchObject({ niveau: 4, chariot: 4 }) // chariot 6 → 4
+  })
+
+  it('ne touche pas aux autres versions', () => {
+    const actuelle = creerPartie(aleatoireAvecGraine(1))
+    expect(convertirVersion28(actuelle)).toBe(actuelle)
+    expect(convertirVersion28(null)).toBeNull()
   })
 })
 

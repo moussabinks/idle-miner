@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { niveauJoueur } from './niveaux'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { NIVEAUX_EMPLOYE, PRIX_EMBAUCHE, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
+import { NIVEAUX_EMPLOYE, NIVEAUX_MANAGER, PRIX_EMBAUCHE, PRIX_EMBAUCHE_POUSSEUR, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
 import {
   activiteEmploye,
   caseQuai,
@@ -64,12 +64,13 @@ describe('les mineurs employés', () => {
     expect(embaucher(etat, hasard())).toEqual([])
     expect(etat.employes).toHaveLength(1)
     // un pousseur reste possible : il ne compte pas dans les mineurs
-    expect(prixEmbauche(etat, 'pousseur')).toBe(500)
+    expect(prixEmbauche(etat, 'pousseur')).toBe(PRIX_EMBAUCHE_POUSSEUR[0])
     etat.niveauMine = 3
     expect(maxEmployes(etat)).toBe(3)
   })
 
-  it('le premier coûte 500 $, puis le prix monte', () => {
+  it('le premier ne coûte presque rien (25/10 : 50 $), puis le prix monte', () => {
+    expect(PRIX_EMBAUCHE[0]).toBe(50)
     const etat = partie()
     etat.niveauMine = 2
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[0])
@@ -125,7 +126,7 @@ describe('les mineurs employés', () => {
 
   it('pas payé : il attend la caisse au fond et remonte dedans, puis va au Personnel', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
     avancerEmployes(etat, 40, hasard())
@@ -144,6 +145,8 @@ describe('les mineurs employés', () => {
   it('une meilleure pioche : il creuse plus vite et porte plus', () => {
     const etat = partie()
     embaucher(etat, hasard())
+    expect(ameliorerEmploye(etat, 0)).toEqual([]) // (25/10) la pioche en fer attend le palier 2
+    etat.niveauMine = 2
     ameliorerEmploye(etat, 0)
     const mineur = etat.employes[0]
     expect(mineur.niveau).toBe(1)
@@ -155,8 +158,8 @@ describe('les mineurs employés', () => {
     const etat = partie(1000)
     // Pas de rails : pas de pousseur possible.
     expect(embaucherPousseur(etat, hasard(), 'mine-marche')).toEqual([])
-    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'employes', x: 20, y: 30, miroir: false })
-    for (let y = 35; y <= 39; y++) etat.village.rails.push(`30,${y}`)
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false }, { id: 'employes', x: 10, y: 20, miroir: false })
+    for (let y = 25; y <= 29; y++) etat.village.rails.push(`20,${y}`)
     embaucherPousseur(etat, hasard(), 'mine-marche')
     const p = etat.employes[0]
     expect(p.role).toBe('pousseur')
@@ -173,9 +176,9 @@ describe('les mineurs employés', () => {
   it('on peut changer le trajet d’un pousseur', () => {
     const etat = partie(1000)
     etat.niveauMine = 2
-    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'foreuse', x: 34, y: 40, miroir: false })
-    for (let y = 35; y <= 39; y++) etat.village.rails.push(`30,${y}`)
-    etat.village.rails.push('33,42')
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false }, { id: 'foreuse', x: 24, y: 30, miroir: false })
+    for (let y = 25; y <= 29; y++) etat.village.rails.push(`20,${y}`)
+    etat.village.rails.push('23,32')
     embaucherPousseur(etat, hasard(), 'mine-marche')
     avancerEmployes(etat, 5, hasard())
     expect(etat.employes[0].etape).toBe('quai')
@@ -186,22 +189,22 @@ describe('les mineurs employés', () => {
     expect(etat.employes[0].etape).toBe('quai')
   })
 
-  it('mineurs et pousseurs ont chacun leurs prix : le 1er pousseur coûte 500 $ (23/10)', () => {
+  it('mineurs et pousseurs ont chacun leurs prix : le 1er pousseur coûte 300 $ (25/10)', () => {
     const etat = partie()
     etat.niveauMine = 2
     embaucher(etat, hasard())
     expect(prixEmbauche(etat)).toBe(PRIX_EMBAUCHE[1])
-    expect(prixEmbauche(etat, 'pousseur')).toBe(500)
+    expect(prixEmbauche(etat, 'pousseur')).toBe(300)
   })
 
   it('licencier coûte des indemnités', () => {
     const etat = partie(1000)
     embaucher(etat, hasard())
     const prix = indemnites(etat)
-    expect(prix).toBe(200) // 40 % de 500 $
+    expect(prix).toBe(20) // 40 % de 50 $
     licencier(etat, 0)
     expect(etat.employes).toEqual([])
-    expect(etat.argent).toBe(1000 - 500 - 200)
+    expect(etat.argent).toBe(1000 - 50 - 20)
   })
 })
 
@@ -224,7 +227,7 @@ describe('les salaires', () => {
 
   it('payés ensemble, ils repartent vers la mine l’un après l’autre (pas tous au même endroit)', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
     etat.niveauMine = 3 // (3 mineurs possibles)
     embaucher(etat, hasard())
     embaucher(etat, hasard())
@@ -281,7 +284,7 @@ describe('le manager (niveau 3 de la mine)', () => {
     expect(embaucherManager(etat)).toEqual([])
     etat.niveauMine = 3
     embaucherManager(etat)
-    expect(etat.argent).toBe(1_000_000 - 500 - PRIX_MANAGER)
+    expect(etat.argent).toBe(1_000_000 - PRIX_EMBAUCHE[0] - PRIX_MANAGER)
     const avant = etat.argent
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.employes[0].tempsPaye).toBeGreaterThan(0)
@@ -325,8 +328,8 @@ describe('le manager (niveau 3 de la mine)', () => {
 describe('le pousseur va droit à son wagonnet (23/10)', () => {
   it('son chemin part du Personnel et finit sur sa case de quai, à côté du premier rail', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'marche', x: 28, y: 38, miroir: false }, { id: 'employes', x: 19, y: 31, miroir: false })
-    for (let y = 35; y <= 37; y++) etat.village.rails.push(`30,${y}`)
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 28, miroir: false }, { id: 'employes', x: 9, y: 21, miroir: false })
+    for (let y = 25; y <= 27; y++) etat.village.rails.push(`20,${y}`)
     embaucherPousseur(etat, hasard(), 'mine-marche')
     const pousseur = etat.employes[0]
     const chemin = cheminEmploye(etat, pousseur)
@@ -337,7 +340,7 @@ describe('le pousseur va droit à son wagonnet (23/10)', () => {
 describe('un mineur embauché (23/10)', () => {
   it('sort du Personnel, marche jusqu’à la mine et y descend lui-même dans la caisse', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
     embaucher(etat, hasard())
     const mineur = etat.employes[0]
     expect(mineur).toMatchObject({ etape: 'marche', depuis: 'employes', lieu: 'puits' })
@@ -359,7 +362,7 @@ describe('un mineur embauché (23/10)', () => {
 describe('le salaire d’un pousseur (23/10)', () => {
   it('monte avec sa vitesse et la taille de son chariot', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
     embaucher(etat, hasard())
     const pousseur = { ...etat.employes[0], role: 'pousseur' as const, rarete: 'commun' as const, niveau: 0, chariot: 0 }
     expect(salaireEmploye(pousseur)).toBe(400)
@@ -369,13 +372,13 @@ describe('le salaire d’un pousseur (23/10)', () => {
 })
 
 describe('la pioche des mineurs suit la mine (23/10)', () => {
-  it('pas de pioche en diamant avant la mine de diamant', () => {
+  it('pas de pioche en diamant avant la mine de diamant (25/10 : le palier 5)', () => {
     const etat = partie()
-    etat.xp = 1_000_000
     etat.niveauMine = 4
     embaucher(etat, hasard())
-    etat.employes[0].niveau = 4 // émeraude : la prochaine est le diamant
-    expect(verrouMinePioche(etat, etat.employes[0])).toBe('🕳️ Mine niveau 5')
+    etat.employes[0].niveau = 3 // émeraude : la prochaine est le diamant
+    expect(NIVEAUX_EMPLOYE[4].nom).toBe('Diamant')
+    expect(verrouMinePioche(etat, etat.employes[0])).toBe('🕳️ Mine 5')
     expect(peutAmeliorerEmploye(etat, etat.employes[0])).toBe(false)
     expect(ameliorerEmploye(etat, 0)).toEqual([])
     etat.niveauMine = 5
@@ -411,13 +414,13 @@ describe('remplacer un mineur avec le recruteur (23/10)', () => {
 })
 
 describe('la fatigue du manager (23/10)', () => {
-  it('il paie 15 minutes puis s’endort (jeu ouvert ou fermé) ; réveillé, il reprend ; amélioré, il tient 30 min', () => {
+  it('il paie 30 minutes puis s’endort (jeu ouvert ou fermé) ; réveillé, il reprend ; amélioré, il tient 1 h (25/10)', () => {
     const etat = partie()
     etat.niveauMine = 4
-    etat.xp = 1_000_000
     embaucher(etat, hasard())
     embaucherManager(etat)
-    expect(secondesEveilManager(etat)).toBe(15 * 60)
+    expect(secondesEveilManager(etat)).toBe(NIVEAUX_MANAGER[0].minutesEveil * 60)
+    expect(NIVEAUX_MANAGER[0].minutesEveil).toBe(30)
     // 2 h d'un coup (jeu fermé) : il paie au début, puis s'endort.
     const ferme = structuredClone(etat)
     const messages = avancerTemps(ferme, 2 * 3600, hasard())
@@ -432,8 +435,12 @@ describe('la fatigue du manager (23/10)', () => {
     ferme.employes[0].tempsPaye = 0
     avancerTemps(ferme, 30, hasard())
     expect(ferme.stats.salairesPayes).toBeGreaterThan(payes)
-    expect(ameliorerManager(etat)[0]).toContain('30 min')
-    expect(secondesEveilManager(etat)).toBe(30 * 60)
+    expect(ameliorerManager(etat)[0]).toContain('1 h')
+    expect(secondesEveilManager(etat)).toBe(60 * 60)
+    // (25/10) Son niveau 3 attend le palier 5 de la mine.
+    expect(ameliorerManager(etat)).toEqual([])
+    etat.niveauMine = 5
+    expect(ameliorerManager(etat)[0]).toContain('2 h')
   })
 })
 

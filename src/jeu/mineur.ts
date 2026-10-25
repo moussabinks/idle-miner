@@ -6,9 +6,9 @@
 //   - le joueur, devant la mine, clique sur le bloc : chaque clic casse un bloc ;
 //   - les mineurs employés creusent, et la caisse de l'ascenseur remonte leurs blocs (voir employes.ts) ;
 //   - la foreuse a son propre chariot (voir foreuse.ts).
-// Le joueur prend ce qui est dans le coffre, le porte au marché et le vend. Avec des rails de la
-// mine au marché, le wagonnet porte le coffre au marché (voir wagonnet.ts) : poussé par le
-// joueur ou un mineur, ou tout seul avec l'électricité du générateur (voir generateur.ts).
+// (25/10) Le joueur vend le coffre d'un clic, depuis la mine, au prix du marché (plus de sac à
+// dos). Avec des rails de la mine au marché, le wagonnet le vend tout seul (voir wagonnet.ts) :
+// poussé par le joueur ou un pousseur, plus vite avec l'électricité du générateur.
 //
 // Une action modifie l'état qu'on lui donne et renvoie les messages à afficher.
 
@@ -22,7 +22,6 @@ import {
   NIVEAUX_MINE,
   NIVEAU_MINE_MAX,
   PIOCHES,
-  SACS,
   SECONDES_ECHELLE,
   SECONDES_CHARGEMENT_ASCENSEUR,
   SECONDES_VIDAGE_EMPLOYE,
@@ -39,6 +38,7 @@ import {
 import { infoNiveauMine, tirerBloc } from './mine'
 import { debloque, recordsDeDepart } from './niveaux'
 import { ascenseurAlimente, multiplicateurGenerateur } from './generateur'
+import { boostActif, multiplicateurVentes, prixEnGemmes, type Boosts, type Quotidien } from './gemmes'
 import { nouveauVillage, type Village } from './village'
 
 export type Inventaire = Partial<Record<IdBloc, number>>
@@ -57,6 +57,7 @@ export type Statistiques = {
   tempsDeJeu: number // en secondes
   voyagesWagonnet: number
   meilleurCombo?: number // (23/10) le plus long combo de clics (absent : 0)
+  pubsVues?: number // (25/10) les publicités regardées (absent : 0)
 }
 
 export function nouvellesStatistiques(): Statistiques {
@@ -178,9 +179,11 @@ export type Decouverte = 'recruteur' | 'manager'
 export type EtatJeu = {
   version: number
   argent: number
-  inventaire: Inventaire // le sac à dos du joueur
-  nonAVendre: IdBloc[] // objets « gardés » au marché
-  niveauSac: number
+  // (25/10) Les gemmes : on en gagne en regardant une publicité, en montant de niveau et avec les
+  // récompenses quotidiennes. Elles paient une amélioration sans argent ni minerais, ou un bonus.
+  gemmes: number
+  boosts: Boosts // les bonus de la boutique en cours (voir gemmes.ts)
+  quotidien: Quotidien // la récompense du jour et la série de jours (voir gemmes.ts)
   niveauMine: number // de 1 à 5
   coffre: Coffre
   prochainBloc: IdBloc // le bloc à cliquer devant la mine
@@ -219,7 +222,9 @@ export type EtatJeu = {
 // Version 24 (29/10) : le niveau du joueur (une partie de la version 23 reçoit l'XP de ce qu'elle a déjà).
 // Version 25 (30/10) : l'ascenseur est dans la mine dès le début, les bonus de combo, le résumé
 // de l'absence (une partie de la version 24 reçoit l'ascenseur de niveau 1).
-export const VERSION_ETAT = 28
+// Version 29 (25/10, la grande mise à jour) : plus de sac ni de bazar, 5 niveaux pour tout,
+// clairière de 40 × 40, gemmes et récompenses quotidiennes (voir convertirVersion28).
+export const VERSION_ETAT = 29
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------
@@ -241,10 +246,11 @@ export function nouveauTrajet(liaison: IdLiaison): Trajet {
 export function creerPartie(aleatoire: Aleatoire): EtatJeu {
   const etat: EtatJeu = {
     version: VERSION_ETAT,
-    argent: 10, // (23/10) un peu d'argent de poche : au tutoriel, de quoi payer le forgeron
-    inventaire: {},
-    nonAVendre: [],
-    niveauSac: 0,
+    // (25/10) de quoi poser le Personnel et embaucher son premier mineur dès le tutoriel
+    argent: 80,
+    gemmes: 0,
+    boosts: {},
+    quotidien: { dernierJour: null, serie: 0 },
     niveauMine: 1,
     coffre: { niveau: 0, contenu: {} },
     prochainBloc: tirerBloc(1, aleatoire),
@@ -275,7 +281,7 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
 }
 
 // ---------------------------------------------------------------------------
-// Inventaires (le sac, le coffre)
+// Inventaires (le coffre de la mine, le chariot de la foreuse...)
 // ---------------------------------------------------------------------------
 
 // Le nombre total d'objets d'un inventaire.
@@ -297,43 +303,6 @@ export function retirerDe(inventaire: Inventaire, bloc: IdBloc, nombre: number):
 // Les objets les plus chers d'abord.
 export function parPrix(inventaire: Inventaire): [IdBloc, number][] {
   return (Object.entries(inventaire) as [IdBloc, number][]).filter(([, n]) => n > 0).sort(([a], [b]) => BLOCS[b].prix - BLOCS[a].prix)
-}
-
-// --- Le sac du joueur ---
-
-export function tailleSac(etat: EtatJeu): number {
-  return SACS[etat.niveauSac].taille
-}
-
-export function nbDansSac(etat: EtatJeu): number {
-  return totalObjets(etat.inventaire)
-}
-
-export function placeLibre(etat: EtatJeu): number {
-  return Math.max(0, tailleSac(etat) - nbDansSac(etat))
-}
-
-export function sacPlein(etat: EtatJeu): boolean {
-  return placeLibre(etat) === 0
-}
-
-export function quantite(etat: EtatJeu, bloc: IdBloc): number {
-  return etat.inventaire[bloc] ?? 0
-}
-
-export function ajouter(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
-  ajouterA(etat.inventaire, bloc, nombre)
-}
-
-export function retirer(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
-  retirerDe(etat.inventaire, bloc, nombre)
-}
-
-// Met des objets dans le sac s'il reste de la place. Renvoie le nombre qui n'a pas tenu.
-export function ramasser(etat: EtatJeu, bloc: IdBloc, nombre: number): number {
-  const rentre = Math.min(nombre, placeLibre(etat))
-  ajouter(etat, bloc, rentre)
-  return nombre - rentre
 }
 
 // --- Le coffre de la mine ---
@@ -362,34 +331,55 @@ export function rangerDansCoffre(etat: EtatJeu, bloc: IdBloc, nombre: number): n
 }
 
 // ---------------------------------------------------------------------------
-// Payer : avec l'argent, et les minerais du sac puis ceux du coffre de la mine
+// Payer : avec l'argent et les minerais du coffre de la mine (ou avec des gemmes)
 // ---------------------------------------------------------------------------
 
-// Combien on a de ce minerai en tout (sac + coffre).
+// Combien on a de ce minerai (dans le coffre de la mine).
 export function disponible(etat: EtatJeu, bloc: IdBloc): number {
-  return quantite(etat, bloc) + (etat.coffre.contenu[bloc] ?? 0)
+  return etat.coffre.contenu[bloc] ?? 0
 }
 
 export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
   return Object.entries(materiaux).every(([bloc, nombre]) => disponible(etat, bloc as IdBloc) >= (nombre ?? 0))
 }
 
+// (25/10) Payer en gemmes : pendant acheterAvecGemmes, peutPayer et payer comptent des gemmes au
+// lieu de l'argent et des minerais. Toutes les actions d'achat (améliorer le coffre, une pioche,
+// un mineur...) marchent ainsi aussi en gemmes, sans rien changer dans chacune.
+let paiementEnGemmes = false
+
 export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
+  if (paiementEnGemmes) return (etat.gemmes ?? 0) >= prixEnGemmes(cout)
   return etat.argent >= (cout.argent ?? 0) && possede(etat, cout.materiaux)
 }
 
 export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
-  for (const [id, nombre] of Object.entries(materiaux)) {
-    const bloc = id as IdBloc
-    const duSac = Math.min(nombre ?? 0, quantite(etat, bloc))
-    retirer(etat, bloc, duSac)
-    retirerDe(etat.coffre.contenu, bloc, (nombre ?? 0) - duSac)
-  }
+  for (const [id, nombre] of Object.entries(materiaux)) retirerDe(etat.coffre.contenu, id as IdBloc, nombre ?? 0)
 }
 
 export function payer(etat: EtatJeu, cout: Cout): void {
+  if (paiementEnGemmes) {
+    etat.gemmes = (etat.gemmes ?? 0) - prixEnGemmes(cout)
+    return
+  }
   etat.argent -= cout.argent ?? 0
   payerMateriaux(etat, cout.materiaux)
+}
+
+// Fait un achat en payant avec des gemmes (l'action est celle d'un achat normal : améliorer le
+// coffre, embaucher...). Les conditions (palier de la mine, niveau du joueur) restent les mêmes.
+export function acheterAvecGemmes(action: () => string[]): string[] {
+  paiementEnGemmes = true
+  try {
+    return action()
+  } finally {
+    paiementEnGemmes = false
+  }
+}
+
+// Pourrait-on faire cet achat en gemmes ?
+export function peutPayerEnGemmes(etat: EtatJeu, cout: Cout): boolean {
+  return (etat.gemmes ?? 0) >= prixEnGemmes(cout)
 }
 
 // ---------------------------------------------------------------------------
@@ -443,7 +433,7 @@ export function chanceDoublement(etat: EtatJeu): number {
 // Un clic sur le bloc de la mine : il casse le bloc (avec une pioche cassée, un clic sur deux),
 // et ce qui tombe va dans le coffre. Le bloc suivant est tiré au hasard.
 export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
-  if (coffrePlein(etat)) return ['📦 Le coffre de la mine est plein : vide-le et va vendre au marché !']
+  if (coffrePlein(etat)) return ['📦 Le coffre de la mine est plein : vends-le !']
   const messages: string[] = []
   const cassee = estCassee(etat)
   etat.clics += 1
@@ -452,7 +442,8 @@ export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const bloc = etat.prochainBloc
   const double = BLOCS[bloc].minerai && aleatoire() < chanceDoublement(etat)
   // (un bonus de combo peut casser plusieurs blocs d'un coup : 30/10)
-  const nombre = (double ? 2 : 1) * (bonusActif(etat)?.blocs ?? 1)
+  // (25/10) Le bonus « clics en or » de la boutique : 3 blocs par clic.
+  const nombre = (double ? 2 : 1) * (bonusActif(etat)?.blocs ?? 1) * (boostActif(etat, 'clics') ? 3 : 1)
   rangerDansCoffre(etat, bloc, nombre)
   ajouterA(etat.stats.blocsParType, bloc, 1)
   etat.stats.blocsCasses += 1
@@ -466,8 +457,9 @@ export function cliquerMine(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 }
 
 // La mine sort toute seule quelques blocs par seconde (tant que le coffre a de la place).
+// (25/10) Doublé par le bonus « production » de la boutique.
 export function debitMine(etat: EtatJeu): number {
-  return infoNiveauMine(etat.niveauMine).debit
+  return infoNiveauMine(etat.niveauMine).debit * (boostActif(etat, 'production') ? 2 : 1)
 }
 
 export function avancerMine(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
@@ -572,11 +564,9 @@ export function ameliorerAscenseur(etat: EtatJeu): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Prendre dans le coffre de la mine
+// Les combos de clics
 // ---------------------------------------------------------------------------
 
-// Met dans le sac ce qui est dans le coffre : le lot choisi, ou tout, les objets les plus chers
-// d'abord, tant qu'il y a de la place.
 // (23/10) Un combo de clics vient de finir : il devient le record s'il est plus long.
 export function noterCombo(etat: EtatJeu, combo: number): string[] {
   if (combo <= (etat.stats.meilleurCombo ?? 0)) return []
@@ -585,84 +575,80 @@ export function noterCombo(etat: EtatJeu, combo: number): string[] {
   return ancien >= 10 ? [`🏆 Nouveau record de combo : ×${combo} !`] : []
 }
 
-// (24/10) « Tout mettre dans le sac » (sans lot) respecte les « 📌 Garder N » du wagonnet : il
-// laisse toujours N de ce minerai dans le coffre (avec 300 fer et « garder 1 000 », il n'en prend
-// aucun). Avec un lot (le bouton 🎒 d'une ligne), on prend ce qu'on a choisi.
-export function prendreDuCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
-  let place = placeLibre(etat)
-  if (place <= 0) return ['🎒 Ton sac est plein : va d’abord vendre au marché.']
-  let pris = 0
-  for (const [bloc, nombre] of parPrix(etat.coffre.contenu)) {
-    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre - garderDansLeCoffre(etat, bloc)
-    const n = Math.min(voulu, place)
-    if (n <= 0) continue
-    ajouter(etat, bloc, n)
-    retirerDe(etat.coffre.contenu, bloc, n)
-    place -= n
-    pris += n
-  }
-  if (pris === 0) return []
-  return [`🎒 ${pris} objet${pris > 1 ? 's' : ''} pris dans le coffre : va les vendre au marché !`]
-}
-
-// (24/10) Combien de ce minerai « Tout mettre dans le sac » laisse dans le coffre (le
-// « 📌 Garder N » du wagonnet du marché ; 0 sinon).
-export function garderDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
-  return etat.coffre.garder?.[bloc] ?? 0
-}
-
 // ---------------------------------------------------------------------------
-// Vente au marché
+// Vendre (25/10 : directement depuis la mine, au prix du marché)
 // ---------------------------------------------------------------------------
 
-// Valeur d'un lot d'objets au marché.
-export function valeurDe(objets: Inventaire): number {
+// Valeur d'un lot d'objets au marché (avec le bonus « ventes » de la boutique, si on donne la partie).
+export function valeurDe(objets: Inventaire, etat?: EtatJeu): number {
   let total = 0
   for (const [id, nombre] of Object.entries(objets)) total += (nombre ?? 0) * BLOCS[id as IdBloc].prix
-  return Math.round(total)
+  return Math.round(total * (etat ? multiplicateurVentes(etat) : 1))
 }
 
-// Ce que « Vendre tout » mettrait en vente : tout le sac, sauf les objets gardés.
-export function objetsAVendre(etat: EtatJeu): Inventaire {
-  const objets: Inventaire = {}
-  for (const [id, nombre] of Object.entries(etat.inventaire)) {
-    const bloc = id as IdBloc
-    if (!etat.nonAVendre.includes(bloc) && (nombre ?? 0) > 0) objets[bloc] = nombre
-  }
-  return objets
-}
-
-// Garder (aVendre = false) ou non un objet quand on vend tout.
-export function reglerVente(etat: EtatJeu, bloc: IdBloc, aVendre: boolean): string[] {
-  const garder = etat.nonAVendre.filter((b) => b !== bloc)
-  etat.nonAVendre = aVendre ? garder : [...garder, bloc]
-  return []
-}
-
-// Encaisse une vente (marché, wagonnet, chariot).
+// Encaisse une vente (coffre, wagonnet, chariot de la foreuse).
 export function encaisser(etat: EtatJeu, gain: number): void {
   etat.argent += gain
   etat.stats.argentGagne += gain
 }
 
-// Vend une partie du sac : les quantités choisies avec les jauges du marché.
-export function vendreLot(etat: EtatJeu, lot: Inventaire): string[] {
-  const vendus: Inventaire = {}
-  for (const [id, nombre] of Object.entries(lot)) {
-    const bloc = id as IdBloc
-    const pris = Math.max(0, Math.min(Math.floor(nombre ?? 0), quantite(etat, bloc)))
-    if (pris > 0) vendus[bloc] = pris
-  }
-  const gain = valeurDe(vendus)
-  if (gain === 0) return ['Rien à vendre pour le moment.']
-  for (const [bloc, nombre] of Object.entries(vendus)) retirer(etat, bloc as IdBloc, nombre ?? 0)
-  encaisser(etat, gain)
-  return [`💰 Vente : +${gain} $`]
+// Combien de ce minerai la vente laisse dans le coffre : le « 📌 Garder N » (pour payer les
+// améliorations, ou pour les wagonnets de la foreuse et du générateur). 0 sinon.
+export function garderDansLeCoffre(etat: EtatJeu, bloc: IdBloc): number {
+  return etat.coffre.garder?.[bloc] ?? 0
 }
 
-// « Vendre tout » (sauf les objets gardés).
-export function vendre(etat: EtatJeu): string[] {
-  return vendreLot(etat, objetsAVendre(etat))
+// Ce que « Tout vendre » vendrait : tout le coffre, sauf ce qu'on garde.
+export function aVendreDuCoffre(etat: EtatJeu): Inventaire {
+  const lot: Inventaire = {}
+  for (const [id, nombre] of Object.entries(etat.coffre.contenu)) {
+    const bloc = id as IdBloc
+    const n = (nombre ?? 0) - garderDansLeCoffre(etat, bloc)
+    if (n > 0) lot[bloc] = n
+  }
+  return lot
+}
+
+// Vend un lot du coffre (sans lot : « Tout vendre », sauf ce qu'on garde).
+export function vendreCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
+  const choisi = lot ?? aVendreDuCoffre(etat)
+  const vendus: Inventaire = {}
+  for (const [id, nombre] of Object.entries(choisi)) {
+    const bloc = id as IdBloc
+    const n = Math.max(0, Math.min(Math.floor(nombre ?? 0), etat.coffre.contenu[bloc] ?? 0))
+    if (n > 0) vendus[bloc] = n
+  }
+  const gain = valeurDe(vendus, etat)
+  if (gain <= 0) return []
+  for (const [bloc, nombre] of Object.entries(vendus)) retirerDe(etat.coffre.contenu, bloc as IdBloc, nombre ?? 0)
+  encaisser(etat, gain)
+  return [`💰 Vente : +${gain.toLocaleString('fr-FR')} $`]
+}
+
+// Vend tout un minerai du coffre (même ce qu'on garde).
+export function vendreMinerai(etat: EtatJeu, bloc: IdBloc): string[] {
+  return vendreCoffre(etat, { [bloc]: etat.coffre.contenu[bloc] ?? 0 })
+}
+
+// (25/10) La punaise 📌 du panneau de la mine : « garder tout » ce minerai (il n'est plus vendu,
+// ni emporté par le wagonnet), ou le vendre de nouveau.
+export const GARDER_TOUT = 1_000_000_000
+
+export function estGardeTout(etat: EtatJeu, bloc: IdBloc): boolean {
+  return garderDansLeCoffre(etat, bloc) >= GARDER_TOUT
+}
+
+export function basculerGarderTout(etat: EtatJeu, bloc: IdBloc): string[] {
+  return reglerGarder(etat, bloc, estGardeTout(etat, bloc) ? 0 : GARDER_TOUT)
+}
+
+// Règle le « 📌 Garder N » d'un minerai (0 : on peut tout vendre).
+export function reglerGarder(etat: EtatJeu, bloc: IdBloc, nombre: number): string[] {
+  const garder = { ...(etat.coffre.garder ?? {}) }
+  if (nombre > 0) garder[bloc] = Math.floor(nombre)
+  else delete garder[bloc]
+  etat.coffre.garder = garder
+  return []
 }
 
 // ---------------------------------------------------------------------------
@@ -722,21 +708,4 @@ export function equiper(etat: EtatJeu, niveau: number): string[] {
   etat.niveauPioche = niveau
   etat.clics = 0
   return [`Tu as pris la pioche en ${PIOCHES[niveau].nom}.`]
-}
-
-// ---------------------------------------------------------------------------
-// Le sac à dos (au bazar)
-// ---------------------------------------------------------------------------
-
-export function prixProchainSac(etat: EtatJeu): number | null {
-  const prochain = SACS[etat.niveauSac + 1]
-  return prochain ? prochain.prix : null
-}
-
-export function acheterSac(etat: EtatJeu): string[] {
-  const prix = prixProchainSac(etat)
-  if (prix === null || !debloque(etat, 'sacs', etat.niveauSac + 1) || etat.argent < prix) return []
-  etat.argent -= prix
-  etat.niveauSac += 1
-  return [`🎒 Nouveau sac : ${tailleSac(etat)} places !`]
 }

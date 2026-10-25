@@ -5,10 +5,10 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { LIAISONS, NIVEAUX_CHARIOT_POUSSEUR, type IdLiaison } from './donnees'
-import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, nouveauTrajet, type EtatJeu } from './mineur'
-import { donnerXpAVieillePartie } from './niveaux'
-import { railsMineMarche, type Village } from './village'
+import { BLOCS, LIAISONS, TAILLE_GRILLE, type IdBatiment, type IdBloc, type IdLiaison } from './donnees'
+import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, ajouterA, nouveauTrajet, type EtatJeu } from './mineur'
+import { donnerXpAVieillePartie, recordsDeDepart } from './niveaux'
+import { empriseBatiment, empriseLibre, lireCle, railsMineMarche, POSITION_MINE, type BatimentPose, type Village } from './village'
 
 export const NB_MONDES_MAX = 5
 
@@ -209,7 +209,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))
+    const convertie = convertirVersion28(convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -291,10 +291,9 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.niveauMine === 'number' &&
     typeof etat.coffre === 'object' &&
     typeof etat.pioches === 'object' &&
-    typeof etat.inventaire === 'object' &&
+    typeof etat.gemmes === 'number' &&
     typeof etat.stats === 'object' &&
     Array.isArray(etat.succes) &&
-    Array.isArray(etat.nonAVendre) &&
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
     typeof etat.generateur === 'object' &&
@@ -357,6 +356,8 @@ export function convertirVersion26(donnees: unknown): unknown {
 // avant (l'ancienne taille × le bonus de son ancien niveau). Son niveau devient sa vitesse.
 const ANCIENNES_TAILLES_WAGONNET = [20, 40, 70, 120]
 const ANCIENS_BONUS_POUSSEUR = [1, 1.25, 1.5, 2, 2.5]
+// Les places des chariots des pousseurs de la version 28 (7 niveaux, avant le 25/10).
+const ANCIENNES_PLACES_CHARIOT = [20, 30, 42, 58, 80, 110, 150]
 export function convertirVersion27(donnees: unknown): unknown {
   if (typeof donnees !== 'object' || donnees === null) return donnees
   const ancienne = donnees as EtatJeu
@@ -366,8 +367,112 @@ export function convertirVersion27(donnees: unknown): unknown {
     if (e.role !== 'pousseur') return e
     const places = taille * ANCIENS_BONUS_POUSSEUR[Math.min(Math.max(0, e.niveau), ANCIENS_BONUS_POUSSEUR.length - 1)]
     let chariot = 0
-    while (chariot + 1 < NIVEAUX_CHARIOT_POUSSEUR.length && NIVEAUX_CHARIOT_POUSSEUR[chariot + 1].places <= places) chariot += 1
+    while (chariot + 1 < ANCIENNES_PLACES_CHARIOT.length && ANCIENNES_PLACES_CHARIOT[chariot + 1] <= places) chariot += 1
     return { ...e, chariot }
   })
-  return { ...ancienne, version: VERSION_ETAT, employes }
+  return { ...ancienne, version: 28, employes }
+}
+
+// Version 28 → 29 (25/10, la grande mise à jour) :
+//   - plus de sac à dos : ce qu'il contenait est vendu (au prix du marché) ;
+//   - plus de bazar : il est enlevé du village, et son prix (200 $) remboursé ;
+//   - la clairière passe de 60 × 60 à 40 × 40 cases : tout le village recule de 10 cases (la mine
+//     reste au milieu). Un bâtiment qui ne tient plus est reposé à la première place libre près de
+//     la mine ; un rail qui sort de la clairière est enlevé (son fer revient dans le coffre) ;
+//   - toutes les améliorations ont 5 niveaux (avant : jusqu'à 10) : chaque niveau d'avant devient
+//     le niveau le plus proche ;
+//   - les gemmes, les bonus et les récompenses quotidiennes arrivent (10 gemmes offertes) ;
+//   - le tutoriel a changé : une partie déjà commencée ne le refait pas.
+const ANCIEN_COTE = 60
+const ANCIEN_COUT_BAZAR = 200
+const ANCIENNE_ASCENSEUR = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5] // niveau 0 à 10 → 0 à 5
+const ANCIENNE_PIOCHE_MINEUR = [0, 0, 1, 2, 3, 4] // bois, pierre, fer, or, émeraude, diamant
+const ANCIEN_CHARIOT_POUSSEUR = [0, 1, 1, 2, 3, 3, 4]
+const ANCIENNE_FOREUSE = [0, 1, 2, 2, 3, 4] // forage et chariot de la foreuse
+const ANCIEN_MANAGER = [0, 1, 1, 2, 2]
+const GEMMES_CADEAU = 10
+
+type EtatVersion28 = EtatJeu & { inventaire?: Partial<Record<IdBloc, number>>; nonAVendre?: unknown; niveauSac?: unknown }
+
+export function convertirVersion28(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatVersion28
+  if (ancienne.version !== 28 || typeof ancienne.village !== 'object' || ancienne.village === null) return donnees
+  const { inventaire, nonAVendre: _nonAVendre, niveauSac: _niveauSac, ...reste } = ancienne
+  const etat = JSON.parse(JSON.stringify(reste)) as EtatJeu
+  etat.version = VERSION_ETAT
+
+  // Le sac est vendu.
+  let vente = 0
+  for (const [bloc, nombre] of Object.entries(inventaire ?? {})) vente += (nombre ?? 0) * (BLOCS[bloc as IdBloc]?.prix ?? 0)
+  etat.argent += Math.round(vente)
+  etat.stats.argentGagne += Math.round(vente)
+
+  // Le village : sans bazar, et 10 cases plus près du coin.
+  const decalage = (ANCIEN_COTE - TAILLE_GRILLE) / 2
+  const avaitBazar = etat.village.batiments.some((b) => (b.id as string) === 'bazar')
+  if (avaitBazar) etat.argent += ANCIEN_COUT_BAZAR
+  const batiments = etat.village.batiments.filter((b) => (b.id as string) !== 'bazar').map((b) => ({ ...b, x: b.x - decalage, y: b.y - decalage }))
+  const dans = (x: number, y: number) => x >= 0 && y >= 0 && x < TAILLE_GRILLE && y < TAILLE_GRILLE
+  const rails: string[] = []
+  let ferRendu = 0
+  for (const cle of etat.village.rails) {
+    const c = lireCle(cle)
+    if (dans(c.x - decalage, c.y - decalage)) rails.push(`${c.x - decalage},${c.y - decalage}`)
+    else ferRendu += 3
+  }
+  if (ferRendu > 0) ajouterA(etat.coffre.contenu, 'fer', ferRendu)
+  const chemins = etat.village.chemins
+    .map(lireCle)
+    .filter((c) => dans(c.x - decalage, c.y - decalage))
+    .map((c) => `${c.x - decalage},${c.y - decalage}`)
+  const village: Village = { ...etat.village, batiments: [], rails, chemins, batimentsVus: etat.village.batimentsVus.filter((id) => (id as string) !== 'bazar') }
+  // On repose chaque bâtiment ; s'il ne tient plus là, à la première place libre près de la mine.
+  for (const b of batiments) {
+    if (empriseLibre(village, empriseBatiment(b))) village.batiments.push(b)
+    else village.batiments.push(placeLibrePres(village, b))
+  }
+  etat.village = village
+
+  // 5 niveaux pour tout.
+  const borne = (table: number[], n: number) => table[Math.max(0, Math.min(table.length - 1, n))]
+  etat.ascenseur = { ...etat.ascenseur, niveau: Math.max(1, borne(ANCIENNE_ASCENSEUR, etat.ascenseur.niveau)) }
+  etat.foreuse = { ...etat.foreuse, niveauVitesse: borne(ANCIENNE_FOREUSE, etat.foreuse.niveauVitesse), niveauChariot: borne(ANCIENNE_FOREUSE, etat.foreuse.niveauChariot) }
+  etat.manager = { ...etat.manager, niveau: borne(ANCIEN_MANAGER, etat.manager.niveau ?? 0) }
+  etat.recruteur = Math.min(3, etat.recruteur)
+  const surLaCarte = (id: IdBatiment) => (id as string) === 'bazar' ? 'puits' : id
+  etat.employes = etat.employes.map((e) => ({
+    ...e,
+    niveau: e.role === 'mineur' ? borne(ANCIENNE_PIOCHE_MINEUR, e.niveau) : Math.min(4, e.niveau),
+    chariot: e.role === 'pousseur' ? borne(ANCIEN_CHARIOT_POUSSEUR, e.chariot ?? 0) : e.chariot,
+    lieu: surLaCarte(e.lieu),
+    depuis: surLaCarte(e.depuis),
+  }))
+
+  // Les nouveautés.
+  etat.gemmes = GEMMES_CADEAU
+  etat.boosts = {}
+  etat.quotidien = { dernierJour: null, serie: 0 }
+  if (etat.tutoriel !== undefined) etat.tutoriel = 99
+  // L'XP ne compte que ce qui sera fait à partir de maintenant (les prix ont changé).
+  etat.recordsXp = recordsDeDepart(etat)
+  return etat
+}
+
+// La place libre la plus proche de la mine pour un bâtiment qui ne tient plus là où il était.
+function placeLibrePres(village: Village, b: BatimentPose): BatimentPose {
+  const taille = empriseBatiment(b).taille
+  let meilleure: BatimentPose | null = null
+  let distanceMin = Infinity
+  for (let x = 0; x + taille <= TAILLE_GRILLE; x++) {
+    for (let y = 0; y + taille <= TAILLE_GRILLE; y++) {
+      if (!empriseLibre(village, { x, y, taille })) continue
+      const d = Math.hypot(x - POSITION_MINE.x, y - POSITION_MINE.y)
+      if (d < distanceMin) {
+        distanceMin = d
+        meilleure = { ...b, x, y }
+      }
+    }
+  }
+  return meilleure ?? { ...b, x: 0, y: 0 }
 }

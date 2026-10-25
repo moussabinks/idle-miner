@@ -4,7 +4,6 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { CLICS_MAINS_NUES, PIOCHES } from './donnees'
 import {
   acheterPioche,
-  acheterSac,
   agrandirCoffre,
   ameliorerAscenseur,
   avancerMine,
@@ -18,15 +17,14 @@ import {
   nbDansCoffre,
   payer,
   peutPayer,
-  prendreDuCoffre,
-  reglerVente,
+  aVendreDuCoffre,
+  reglerGarder,
   reparer,
   secondesChargementAscenseur,
   secondesTrajetMineur,
   secondesVidageAscenseur,
-  tailleSac,
-  vendre,
-  vendreLot,
+  vendreCoffre,
+  vendreMinerai,
   type EtatJeu,
 } from './mineur'
 
@@ -105,93 +103,80 @@ describe('cliquer sur le bloc de la mine', () => {
 })
 
 describe('la mine toute seule', () => {
-  it('au niveau 1, ne sort rien toute seule (27/10) : on creuse à la main', () => {
+  it('au niveau 1, sort déjà un peu de blocs toute seule (25/10 : 0,2 bloc par seconde)', () => {
     const etat = partie()
     avancerMine(etat, 50, aleatoireAvecGraine(2))
-    expect(nbDansCoffre(etat)).toBe(0)
+    expect(nbDansCoffre(etat)).toBe(10)
   })
 
   it('sort quelques blocs par seconde dans le coffre, et s’arrête quand il est plein', () => {
     const etat = partie()
     etat.niveauMine = 2
-    avancerMine(etat, 40, aleatoireAvecGraine(2)) // 0,25 bloc par seconde au niveau 2
-    expect(nbDansCoffre(etat)).toBe(10)
-    expect(etat.stats.blocsMine).toBe(10)
+    avancerMine(etat, 40, aleatoireAvecGraine(2)) // 0,3 bloc par seconde au niveau 2
+    expect(nbDansCoffre(etat)).toBe(12)
+    expect(etat.stats.blocsMine).toBe(12)
     avancerMine(etat, 10_000, aleatoireAvecGraine(2))
     expect(nbDansCoffre(etat)).toBe(100)
     expect(etat.stats.tempsDeJeu).toBe(10_040)
   })
 })
 
-describe('le coffre, le sac et le marché', () => {
-  it('on prend dans le coffre les objets les plus chers d’abord, tant que le sac a de la place', () => {
+describe('vendre le coffre de la mine (25/10 : plus de sac ni de marché à pied)', () => {
+  it('« Tout vendre » vend tout le coffre au prix du marché', () => {
     const etat = partie()
-    etat.coffre.contenu = { pierre: 30, fer: 5 }
-    prendreDuCoffre(etat)
-    expect(etat.inventaire).toEqual({ fer: 5, pierre: 27 }) // le sac fait 32 places
-    expect(etat.coffre.contenu).toEqual({ pierre: 3 })
-    expect(prendreDuCoffre(etat)[0]).toContain('plein')
+    etat.coffre.contenu = { fer: 2, charbon: 3, pierre: 10 }
+    expect(vendreCoffre(etat)).toEqual(['💰 Vente : +49 $']) // 2 × 12 + 3 × 5 + 10 × 1
+    expect(etat.coffre.contenu).toEqual({})
+    expect(etat.argent).toBe(49)
+    expect(etat.stats.argentGagne).toBe(49)
+    // Un coffre vide : rien à vendre.
+    expect(vendreCoffre(etat)).toEqual([])
   })
 
-  it('on peut ne prendre qu’une partie du coffre', () => {
+  it('on peut ne vendre qu’une partie du coffre', () => {
     const etat = partie()
     etat.coffre.contenu = { pierre: 30, fer: 5 }
-    prendreDuCoffre(etat, { fer: 2 })
-    expect(etat.inventaire).toEqual({ fer: 2 })
-    expect(etat.coffre.contenu).toEqual({ pierre: 30, fer: 3 })
+    vendreCoffre(etat, { fer: 2, pierre: 100 }) // on ne vend pas plus qu'il n'y en a
+    expect(etat.coffre.contenu).toEqual({ fer: 3 })
+    expect(etat.argent).toBe(2 * 12 + 30)
   })
 
-  // (24/10) « Tout mettre dans le sac » laisse dans le coffre ce que le wagonnet doit garder.
-  it('tout mettre dans le sac respecte les « Garder N » du wagonnet', () => {
+  it('« Tout vendre » respecte les « 📌 Garder N »', () => {
     const etat = partie()
     etat.coffre.contenu = { fer: 8, pierre: 10 }
-    etat.coffre.garder = { fer: 20, pierre: 4 }
-    prendreDuCoffre(etat)
-    expect(etat.inventaire).toEqual({ pierre: 6 }) // 8 fer < 20 : tout reste ; pierre : 10 − 4
+    reglerGarder(etat, 'fer', 20)
+    reglerGarder(etat, 'pierre', 4)
+    expect(aVendreDuCoffre(etat)).toEqual({ pierre: 6 }) // 8 fer < 20 : tout reste ; pierre : 10 − 4
+    vendreCoffre(etat)
     expect(etat.coffre.contenu).toEqual({ fer: 8, pierre: 4 })
-    // Le bouton d'une ligne prend quand même ce qu'on a choisi.
-    prendreDuCoffre(etat, { fer: 8 })
+    expect(etat.argent).toBe(6)
+    // Le bouton d'une ligne vend tout ce minerai, même ce qu'on garde.
+    vendreMinerai(etat, 'fer')
     expect(etat.coffre.contenu).toEqual({ pierre: 4 })
+    expect(etat.argent).toBe(6 + 8 * 12)
+    // Garder 0 : on n'en garde plus.
+    reglerGarder(etat, 'pierre', 0)
+    expect(etat.coffre.garder).toEqual({ fer: 20 })
+    expect(aVendreDuCoffre(etat)).toEqual({ pierre: 4 })
   })
 
-  it('le marché vend tout le sac, sauf les objets gardés', () => {
-    const etat = partie()
-    etat.inventaire = { fer: 2, charbon: 3 }
-    reglerVente(etat, 'charbon', false)
-    expect(vendre(etat)).toEqual(['💰 Vente : +24 $'])
-    expect(etat.inventaire).toEqual({ charbon: 3 })
-    vendreLot(etat, { charbon: 1 })
-    expect(etat.argent).toBe(29)
-    expect(etat.stats.argentGagne).toBe(29)
-  })
-
-  it('on paie avec les minerais du sac, puis ceux du coffre', () => {
+  it('on paie avec les minerais du coffre de la mine', () => {
     const etat = partie()
     etat.argent = 10
-    etat.inventaire = { fer: 2 }
-    etat.coffre.contenu = { fer: 5 }
+    etat.coffre.contenu = { fer: 7 }
     expect(disponible(etat, 'fer')).toBe(7)
     expect(peutPayer(etat, { argent: 10, materiaux: { fer: 8 } })).toBe(false)
     payer(etat, { argent: 10, materiaux: { fer: 6 } })
-    expect(etat.inventaire).toEqual({})
     expect(etat.coffre.contenu).toEqual({ fer: 1 })
-    expect(etat.argent).toBe(0)
-  })
-
-  it('un plus grand sac au bazar', () => {
-    const etat = partie()
-    etat.argent = 150
-    acheterSac(etat)
-    expect(tailleSac(etat)).toBe(64)
     expect(etat.argent).toBe(0)
   })
 })
 
 describe('les améliorations de la mine', () => {
-  it('descendre au niveau 2 : 900 $ et 45 fer, et la redstone arrive', () => {
+  it('descendre au niveau 2 : 800 $ et 40 fer, et la redstone arrive', () => {
     const etat = partie()
-    etat.argent = 900
-    etat.coffre.contenu = { fer: 45 }
+    etat.argent = 800
+    etat.coffre.contenu = { fer: 40 }
     expect(descendreNiveauMine(etat, aleatoireAvecGraine(3))[0]).toContain('niveau 2')
     expect(etat.niveauMine).toBe(2)
     expect(etat.argent).toBe(0)
@@ -199,12 +184,17 @@ describe('les améliorations de la mine', () => {
     expect(descendreNiveauMine(etat, aleatoireAvecGraine(3))).toEqual([]) // pas de quoi payer le niveau 3
   })
 
-  it('le coffre s’agrandit', () => {
+  it('le coffre s’agrandit, jusqu’au palier de la mine (25/10)', () => {
     const etat = partie()
     etat.argent = 400
-    etat.inventaire = { pierre: 80 }
+    etat.coffre.contenu = { pierre: 80 }
+    // Au palier 1, le coffre reste au niveau 1.
+    expect(agrandirCoffre(etat)).toEqual([])
+    etat.niveauMine = 2
     agrandirCoffre(etat)
-    expect(capaciteCoffre(etat)).toBe(250)
+    expect(capaciteCoffre(etat)).toBe(300)
+    expect(etat.argent).toBe(200)
+    expect(etat.coffre.contenu).toEqual({ pierre: 40 })
   })
 
   it('l’ascenseur raccourcit les trajets des mineurs', () => {
@@ -212,11 +202,13 @@ describe('les améliorations de la mine', () => {
     // (30/10) la mine a son ascenseur dès le début
     expect(etat.ascenseur.niveau).toBe(1)
     expect(secondesTrajetMineur(etat)).toBe(6)
-    etat.argent = 1500
-    etat.inventaire = { fer: 50, redstone: 10 }
+    etat.argent = 700
+    etat.coffre.contenu = { fer: 30 }
+    expect(ameliorerAscenseur(etat)).toEqual([]) // (25/10) il faut le palier 2 de la mine
+    etat.niveauMine = 2
     ameliorerAscenseur(etat)
     expect(etat.ascenseur.niveau).toBe(2)
-    expect(secondesTrajetMineur(etat)).toBe(5)
+    expect(secondesTrajetMineur(etat)).toBe(4.5)
     // (23/10) la caisse se charge et se vide plus vite à chaque niveau
     expect(secondesChargementAscenseur(etat)).toBeLessThan(1)
     expect(secondesVidageAscenseur(etat)).toBeLessThan(2)
@@ -242,6 +234,8 @@ describe('les pioches au forgeron', () => {
     const etat = partie()
     etat.argent = 500
     etat.coffre.contenu = { fer: 40 }
+    expect(acheterPioche(etat, 1)).toEqual([]) // (25/10) la pioche en fer attend le palier 2 de la mine
+    etat.niveauMine = 3
     expect(acheterPioche(etat, 2)).toEqual([]) // pas avant la pioche en fer
     acheterPioche(etat, 1)
     expect(etat.niveauPioche).toBe(1)

@@ -1,6 +1,6 @@
 // La foreuse (niveau 2 de la mine) : un bâtiment qui creuse tout seul.
 // On la remplit de charbon ; tant qu'elle en a, elle fore des blocs du niveau de la mine et les
-// met dans son chariot, qu'on vient vider (vendre, ou mettre dans le sac). Dans le rayon du
+// met dans son chariot, qu'on vend d'un clic (ou qu'un wagonnet emporte au marché). Dans le rayon du
 // générateur allumé, elle fore plus vite (22/10).
 
 import type { Aleatoire } from './aleatoire'
@@ -12,7 +12,8 @@ import {
 } from './donnees'
 import { foreuseAlimentee, multiplicateurGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, encaisser, payer, payerMateriaux, peutPayer, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { multiplicateurProduction } from './gemmes'
 import { batimentPose } from './village'
 import { debloque } from './niveaux'
 
@@ -30,9 +31,10 @@ export function vitesseForageDeBase(etat: EtatJeu): number {
 }
 
 // La vitesse en ce moment : plus vite dans le rayon du générateur allumé (+ 30 % à + 75 %).
+// (25/10) Et deux fois plus vite avec le bonus « production » de la boutique.
 export function vitesseForage(etat: EtatJeu): number {
   const bonus = foreuseAlimentee(etat) ? multiplicateurGenerateur(etat) : 1
-  return vitesseForageDeBase(etat) * bonus
+  return vitesseForageDeBase(etat) * bonus * multiplicateurProduction(etat)
 }
 
 export function capaciteChariot(etat: EtatJeu): number {
@@ -86,7 +88,7 @@ export function secondesPourRemplir(etat: EtatJeu, niveauChariot = etat.foreuse.
 // Actions
 // ---------------------------------------------------------------------------
 
-// Met du charbon (du sac, puis du coffre de la mine) dans la foreuse (nombre = Infinity : tout),
+// Met du charbon (du coffre de la mine) dans la foreuse (nombre = Infinity : tout),
 // sans dépasser son réservoir.
 export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   if (!foreusePosee(etat)) return []
@@ -131,21 +133,21 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   return [`🛒 Chariot de la foreuse plus grand : ${prochain.capacite} places.`]
 }
 
-// Le chariot ne se vend plus sur place (27/10) : on met ce qu'on veut dans son sac (comme le
-// coffre de la mine), ou un wagonnet Foreuse → Marché l'emporte. « lot » : combien de chaque
-// objet (sans lot, tout), les plus chers d'abord, tant qu'il y a de la place dans le sac.
-export function prendreDuChariot(etat: EtatJeu, lot?: Inventaire): string[] {
-  let pris = 0
-  for (const [bloc, nombre] of parPrix(etat.foreuse.chariot)) {
-    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
-    const aPrendre = Math.min(voulu, placeLibre(etat))
-    if (aPrendre <= 0) continue
-    ramasser(etat, bloc, aPrendre)
-    retirerDuChariot(etat, bloc, aPrendre)
-    pris += aPrendre
+// (25/10) Le chariot se vend sur place, d'un clic, au prix du marché (« lot » : combien de
+// chaque objet ; sans lot, tout). Un wagonnet Foreuse → Marché le vend aussi tout seul.
+export function vendreChariot(etat: EtatJeu, lot?: Inventaire): string[] {
+  const vendus: Inventaire = {}
+  for (const [id, nombre] of Object.entries(etat.foreuse.chariot)) {
+    const bloc = id as IdBloc
+    const n = Math.min(nombre ?? 0, lot ? Math.floor(lot[bloc] ?? 0) : Infinity)
+    if (n > 0) vendus[bloc] = n
   }
-  if (pris === 0) return placeLibre(etat) === 0 ? ['🎒 Ton sac est plein : va d’abord vendre au marché.'] : []
-  return [`🎒 ${pris} objet${pris > 1 ? 's' : ''} du chariot dans ton sac : va les vendre au marché !`]
+  const gain = valeurDe(vendus, etat)
+  if (gain <= 0) return []
+  for (const [bloc, n] of Object.entries(vendus)) retirerDuChariot(etat, bloc as IdBloc, n ?? 0)
+  encaisser(etat, gain)
+  etat.stats.argentForeuse += gain
+  return [`💰 Chariot de la foreuse vendu : +${gain.toLocaleString('fr-FR')} $`]
 }
 
 export function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): void {

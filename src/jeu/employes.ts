@@ -24,9 +24,7 @@ import {
   NIVEAUX_MANAGER,
   NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAUX_POUSSEUR,
-  NIVEAU_MINE_POUR_EQUIPEMENT,
   NIVEAUX_RECRUTEUR,
-  NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   LIAISONS,
@@ -34,7 +32,6 @@ import {
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PART_REMPLACEMENT,
-  PRIX_POUSSEUR_PAR_NIVEAU,
   PRIX_REMPLACEMENT_PAR_NIVEAU,
   PRIX_EMBAUCHE,
   PRIX_EMBAUCHE_POUSSEUR,
@@ -56,7 +53,8 @@ import {
   type IdRarete,
   type Rarete,
 } from './donnees'
-import { debloque, niveauAtteint, niveauJoueur } from './niveaux'
+import { debloque, niveauJoueur, verrou } from './niveaux'
+import { multiplicateurProduction } from './gemmes'
 import { tirerBloc } from './mine'
 import {
   ajouterA,
@@ -242,44 +240,26 @@ export function gainAmeliorationEmploye(employe: Employe): { avant: number; apre
 
 // Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
 // un pousseur (il pousse son wagonnet plus vite ; son chariot, c'est coutChariotPousseur).
-export function coutAmeliorationEmploye(etat: EtatJeu, employe: Employe): Cout | null {
-  if (employe.role === 'pousseur') {
-    const cout = NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout
-    return cout ? coutSelonNiveau(etat, cout) : null
-  }
+export function coutAmeliorationEmploye(_etat: EtatJeu, employe: Employe): Cout | null {
+  if (employe.role === 'pousseur') return NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout ?? null
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
 
-// (23/10, bis) Les améliorations d'un pousseur coûtent plus cher à mesure que le joueur monte de
-// niveau (voir PRIX_POUSSEUR_PAR_NIVEAU), argent et minerais.
-export function multiplicateurPrixPousseur(etat: EtatJeu): number {
-  return 1 + PRIX_POUSSEUR_PAR_NIVEAU * Math.max(0, niveauJoueur(etat) - 1)
-}
-
-function coutSelonNiveau(etat: EtatJeu, cout: Cout): Cout {
-  const k = multiplicateurPrixPousseur(etat)
-  const materiaux = Object.fromEntries(Object.entries(cout.materiaux).map(([bloc, n]) => [bloc, Math.round((n ?? 0) * k)]))
-  return { argent: cout.argent === undefined ? undefined : arrondiPrix(cout.argent * k), materiaux }
-}
-
-// (23/10) La prochaine pioche d'un mineur demande aussi un niveau de la mine (l'or au niveau 3,
-// l'émeraude au 4, le diamant au 5) : « 🔒 Mine niveau 5 », ou null si c'est bon.
+// (25/10) Le cadenas de son prochain niveau : « 🕳️ Mine 3 » (le palier de la mine qu'il faut),
+// ou null si c'est débloqué.
 export function verrouMinePioche(etat: EtatJeu, employe: Employe): string | null {
-  if (employe.role !== 'mineur') return null
-  const requis = NIVEAU_MINE_POUR_EQUIPEMENT[employe.niveau + 1] ?? 1
-  return etat.niveauMine >= requis ? null : `🕳️ Mine niveau ${requis}`
+  return verrou(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1)
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   const cout = coutAmeliorationEmploye(etat, employe)
-  return cout !== null && verrouMinePioche(etat, employe) === null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
+  return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
-// (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer, de plus en plus cher).
-export function coutChariotPousseur(etat: EtatJeu, employe: Employe): Cout | null {
+// (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer).
+export function coutChariotPousseur(_etat: EtatJeu, employe: Employe): Cout | null {
   if (employe.role !== 'pousseur') return null
-  const cout = NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout
-  return cout ? coutSelonNiveau(etat, cout) : null
+  return NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout ?? null
 }
 
 export function peutAgrandirChariot(etat: EtatJeu, employe: Employe): boolean {
@@ -392,7 +372,7 @@ export function alerteSalaires(etat: EtatJeu): string | null {
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
-  return etat.niveauMine >= NIVEAU_MINE_MANAGER && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.manager)
+  return etat.niveauMine >= NIVEAU_MINE_MANAGER
 }
 
 // (23/10) Le manager est une option : on peut l'arrêter et le remettre au travail. Arrêté, il ne
@@ -466,8 +446,9 @@ export function ameliorerManager(etat: EtatJeu): string[] {
 }
 
 export function embaucherManager(etat: EtatJeu): string[] {
-  if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
-  etat.argent -= PRIX_MANAGER
+  const cout = { argent: PRIX_MANAGER, materiaux: {} }
+  if (!managerDebloque(etat) || etat.manager.embauche || !peutPayer(etat, cout)) return []
+  payer(etat, cout)
   etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0, fatigue: 0 }
   return ['💼 Manager embauché ! Il paiera les salaires tout seul, avec ton argent.']
 }
@@ -561,8 +542,9 @@ export function maisonDe(etat: EtatJeu, employe: Employe): IdBatiment {
 // Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
-  if (prix === null || etat.argent < prix) return []
-  etat.argent -= prix
+  // (25/10) payer() : en argent, ou en gemmes (acheterAvecGemmes)
+  if (prix === null || !peutPayer(etat, { argent: prix, materiaux: {} })) return []
+  payer(etat, { argent: prix, materiaux: {} })
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
   // (23/10) Il sort du Personnel et marche jusqu'à la mine, puis il y descend dans la caisse
@@ -593,7 +575,7 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
 export function peutEmbaucherPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
   const prix = prixEmbauche(etat, 'pousseur')
   // (23/10) Un seul pousseur par trajet : on n'en embauche pas un deuxième.
-  return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null && !trajetPris(etat, liaison)
+  return prix !== null && peutPayer(etat, { argent: prix, materiaux: {} }) && ligneDe(etat, liaison) !== null && !trajetPris(etat, liaison)
 }
 
 // Ce trajet a-t-il déjà son pousseur ?
@@ -606,7 +588,7 @@ export function trajetPris(etat: EtatJeu, liaison: IdLiaison): boolean {
 export function embaucherPousseur(etat: EtatJeu, aleatoire: Aleatoire, liaison: IdLiaison): string[] {
   const prix = prixEmbauche(etat, 'pousseur')
   if (prix === null || !peutEmbaucherPousseur(etat, liaison)) return []
-  etat.argent -= prix
+  payer(etat, { argent: prix, materiaux: {} })
   if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
@@ -830,7 +812,8 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         }
         employe.forgeEnAttente = false
       }
-      const vitesse = vitesseEmploye(employe)
+      // (25/10) le bonus « production » de la boutique : il creuse deux fois plus vite
+      const vitesse = vitesseEmploye(employe) * multiplicateurProduction(etat)
       const place = tailleSacEmploye(employe) - nbDansSacEmploye(employe)
       // Son sac est plein : il attend que la caisse passe le prendre. (23/10) Si c'est parce que
       // le coffre de la mine est plein, ce temps d'attente n'use pas son salaire.

@@ -9,9 +9,10 @@ import { revenuBrutEmploye, revenuParSeconde } from './revenu'
 describe('revenu par seconde', () => {
   it('la mine toute seule : son débit × la valeur moyenne d’un bloc', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
-    expect(revenuParSeconde(etat).mine).toBe(0) // (au niveau 1, la mine ne sort rien toute seule)
+    // (25/10) Au niveau 1, la mine sort déjà 0,2 bloc par seconde toute seule.
+    expect(revenuParSeconde(etat).mine).toBeCloseTo(0.2 * valeurMoyenneBloc(1))
     etat.niveauMine = 2
-    expect(revenuParSeconde(etat).mine).toBeCloseTo(0.25 * valeurMoyenneBloc(2))
+    expect(revenuParSeconde(etat).mine).toBeCloseTo(0.3 * valeurMoyenneBloc(2))
     etat.coffre.contenu = { pierre: 100 } // coffre plein : la mine s'arrête
     expect(revenuParSeconde(etat).total).toBe(0)
   })

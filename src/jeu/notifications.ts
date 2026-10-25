@@ -7,7 +7,7 @@ import { DECOUVERTES, decouvertesAMontrer } from './decouvertes'
 import { alerteSalaires } from './employes'
 import { chariotPlein } from './foreuse'
 import { generateurPose } from './generateur'
-import { coffrePlein, estCassee, sacPlein, type EtatJeu } from './mineur'
+import { coffrePlein, estCassee, type EtatJeu } from './mineur'
 import { standsAchetables } from './objectifs'
 import { etapeTutoriel } from './tutoriel'
 import { batimentPose } from './village'
@@ -70,9 +70,8 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
     ajouter('generateur', { icone: '🔴', texte: 'Plus de redstone !', court: 'Redstone ?', sorte: 'alerte' })
   }
   if (estCassee(etat)) ajouter('forgeron', { icone: '🔧', texte: 'Ta pioche est cassée : fais-la réparer !', court: 'Réparer', sorte: 'alerte' })
-  if (sacPlein(etat)) ajouter('marche', { icone: '🎒', texte: 'Ton sac est plein : viens vendre !', court: 'Vendre !', sorte: 'alerte' })
   // (Plus de bulle rose « 20 objets » sur la mine, 27/10 : la jauge du coffre au-dessus d'elle le montre déjà.)
-  if (coffrePlein(etat)) ajouter('puits', { icone: '📦', texte: 'Le coffre de la mine est plein : viens le vider !', court: 'Plein !', sorte: 'alerte' })
+  if (coffrePlein(etat)) ajouter('puits', { icone: '📦', texte: 'Le coffre de la mine est plein : vends-le !', court: 'Plein !', sorte: 'alerte' })
 
   // Ce qui vient de se débloquer (recruteur, manager) et ce qui est achetable.
   for (const id of decouvertesAMontrer(etat)) ajouter(DECOUVERTES[id].stand, { icone: '✨', texte: `Nouveau : ${DECOUVERTES[id].nom} !`, court: 'Nouveau', sorte: 'nouveau' })

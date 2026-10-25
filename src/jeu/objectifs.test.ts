@@ -8,14 +8,14 @@ import { embaucher } from './employes'
 import { missions } from './missions'
 import { standsAchetables } from './objectifs'
 
-// Les bâtiments posés « à la main » (sans les payer), à des places libres autour de la mine.
+// Les bâtiments posés « à la main » (sans les payer), à des places libres autour de la mine
+// (25/10 : la clairière fait 40 × 40 cases, la mine est en 15, 15).
 const PLACES: Record<Exclude<IdBatiment, 'puits'>, [number, number]> = {
-  marche: [28, 40],
-  forgeron: [36, 24],
-  bazar: [19, 25],
-  employes: [19, 31],
-  foreuse: [36, 31],
-  generateur: [35, 37],
+  marche: [18, 30],
+  forgeron: [26, 14],
+  employes: [9, 21],
+  foreuse: [26, 21],
+  generateur: [25, 27],
 }
 
 function poser(etat: EtatJeu, ids: (keyof typeof PLACES)[]): void {
@@ -25,53 +25,68 @@ function poser(etat: EtatJeu, ids: (keyof typeof PLACES)[]): void {
 describe('les missions (en haut à droite)', () => {
   const ids = (etat: EtatJeu) => missions(etat).map((m) => m.id)
 
-  it('tout au début : poser le marché, casser des blocs, les vendre', () => {
+  it('tout au début (25/10) : casser des blocs, vendre le coffre, construire le Personnel, embaucher', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    expect(missions(etat)[0]).toMatchObject({ id: 'marche', construction: true, pret: true })
-    poser(etat, ['marche'])
     expect(missions(etat)[0]).toMatchObject({ id: 'casser', stand: 'puits', progression: { valeur: 0, max: 10 } })
     etat.stats.blocsCasses = 10
     etat.coffre.contenu = { pierre: 10 }
-    expect(ids(etat)[0]).toBe('remplir-sac')
-    etat.inventaire = { pierre: 10 }
-    expect(missions(etat)[0]).toMatchObject({ id: 'vendre', stand: 'marche' })
+    expect(missions(etat)[0]).toMatchObject({ id: 'vendre', stand: 'puits', pret: true })
+    etat.coffre.contenu = {}
+    etat.stats.argentGagne = 10
+    expect(missions(etat)[0]).toMatchObject({ id: 'personnel', construction: true, pret: false })
+    etat.argent = 40
+    expect(missions(etat)[0]).toMatchObject({ id: 'personnel', pret: true })
+    poser(etat, ['employes'])
+    expect(missions(etat)[0]).toMatchObject({ id: 'mineur', stand: 'employes' })
+  })
+
+  it('(25/10) le marché arrive avec les rails, une fois le premier mineur embauché', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    poser(etat, ['employes'])
+    etat.stats.argentGagne = 100
+    etat.argent = 1000
+    expect(ids(etat)).not.toContain('marche')
+    embaucher(etat, aleatoireAvecGraine(2))
+    expect(missions(etat).find((m) => m.id === 'marche')).toMatchObject({ construction: true, pret: true })
   })
 
   it('il y a toujours une à trois missions', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    poser(etat, ['marche'])
+    poser(etat, ['employes'])
     etat.stats.argentGagne = 5
     const liste = missions(etat)
     expect(liste.length).toBeGreaterThanOrEqual(1)
     expect(liste.length).toBeLessThanOrEqual(3)
   })
 
-  it('un bâtiment : ce qui manque, avec sa progression (« 12 / 30 pierre »)', () => {
+  it('un bâtiment : ce qui manque, avec sa progression (« 12 / 15 pierre »)', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    poser(etat, ['marche', 'forgeron'])
+    poser(etat, ['marche', 'employes'])
     etat.stats.argentGagne = 100
     etat.argent = 1000
     etat.coffre.contenu = { pierre: 12 }
-    // (le Personnel vient avant le Bazar dans le menu : 150 $ et 30 pierre)
-    const personnel = missions(etat).find((m) => m.id === 'construire-employes')
+    // (le forgeron vient après le Personnel et le marché dans le menu : 30 $ et 15 pierre)
+    const forgeron = missions(etat).find((m) => m.id === 'construire-forgeron')
     // (23/10) tout ce qu'il faut, dès le début : l'argent et la pierre, chacun avec sa jauge
-    expect(personnel).toMatchObject({ stand: 'puits', texte: 'Construis : Personnel' })
-    expect(personnel?.elements).toEqual([
-      { icone: '💵', nom: '$', valeur: 150, max: 150 },
-      { icone: expect.any(String), nom: 'pierre', valeur: 12, max: 30 },
+    expect(forgeron).toMatchObject({ stand: 'puits', texte: 'Construis : Forgeron' })
+    expect(forgeron?.elements).toEqual([
+      { icone: '💵', nom: '$', valeur: 30, max: 30 },
+      { icone: expect.any(String), nom: 'pierre', valeur: 12, max: 15 },
     ])
     etat.coffre.contenu = { pierre: 60 }
-    expect(missions(etat).find((m) => m.id === 'construire-employes')).toMatchObject({ construction: true, pret: true })
+    expect(missions(etat).find((m) => m.id === 'construire-forgeron')).toMatchObject({ construction: true, pret: true })
   })
 
   it('l’automatisation : les rails (sans dire combien de fer), puis le wagonnet', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    poser(etat, ['marche', 'forgeron', 'bazar', 'employes'])
+    poser(etat, ['marche', 'forgeron', 'employes'])
     etat.stats.argentGagne = 100
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2)) // (25/10) l'automatisation vient après le premier mineur
     expect(missions(etat).find((m) => m.id === 'rails')).toMatchObject({ pret: false, progression: null })
-    etat.inventaire = { fer: 300 }
+    etat.coffre.contenu = { fer: 300 }
     expect(missions(etat).find((m) => m.id === 'rails')).toMatchObject({ pret: true })
-    for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+    for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
     expect(ids(etat)).toContain('trajet')
   })
 
@@ -89,7 +104,8 @@ describe('les missions (en haut à droite)', () => {
 describe('stands achetables', () => {
   it('montre les bâtiments où un achat est payable tout de suite', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    poser(etat, ['marche', 'forgeron', 'bazar', 'employes'])
+    poser(etat, ['marche', 'forgeron', 'employes'])
+    etat.niveauMine = 2 // (25/10) la pioche en fer attend le palier 2 de la mine
     etat.argent = 500
     etat.coffre.contenu = { fer: 40 }
     expect(standsAchetables(etat)).toEqual(expect.arrayContaining(['forgeron', 'employes']))

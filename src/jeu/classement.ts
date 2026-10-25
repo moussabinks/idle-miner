@@ -1,7 +1,8 @@
 // Le classement des joueurs (leaderboard) : à l'argent seulement (23/10 ; le niveau de la mine est
 // affiché à côté, mais ne compte pas). Le score d'un joueur est le meilleur de ses mondes.
-// (23/10, bis) L'argent classé est l'argent EN POCHE (il baisse quand on achète), envoyé toutes les
-// 5 minutes au plus (useCompte.ts).
+// (25/10) L'argent classé est l'argent GAGNÉ en tout (avant : l'argent en poche, qui baissait
+// quand on achetait : le classement punissait les achats). Envoyé toutes les 5 minutes au plus
+// (useCompte.ts).
 // Le serveur garde le niveau de la mine dans sa colonne « prestige » (l'ancien classement) :
 // pas besoin de changer la table.
 //
@@ -21,9 +22,9 @@ export function niveauMineAffiche(ligne: Score): number | null {
   return ligne.prestige >= 1 && ligne.prestige <= NIVEAU_MINE_MAX ? ligne.prestige : null
 }
 
-// (23/10) Le plus d'argent en poche parmi des parties (pour « tu serais 7e »).
-export function meilleurArgent(etats: ({ argent: number } | null)[]): number {
-  return Math.max(0, ...etats.map((etat) => (etat ? Math.floor(etat.argent) : 0)))
+// Le plus d'argent gagné parmi des parties (pour « tu serais 7e »).
+export function meilleurArgent(etats: ({ stats: { argentGagne: number } } | null)[]): number {
+  return Math.max(0, ...etats.map((etat) => (etat ? Math.floor(etat.stats.argentGagne) : 0)))
 }
 
 // Un faux stockage en lecture seule, pour relire les parties d'une copie avec `charger`.
@@ -35,8 +36,7 @@ function stockageDeLaCopie(copie: SauvegardeComplete): Stockage {
   }
 }
 
-// Le meilleur niveau de mine et le plus d'argent EN POCHE (23/10 : l'argent actuel du portefeuille,
-// plus l'argent gagné en tout), parmi tous les mondes de la copie.
+// Le meilleur niveau de mine et le plus d'argent gagné, parmi tous les mondes de la copie.
 export function meilleurScore(copie: SauvegardeComplete): Score {
   const stockage = stockageDeLaCopie(copie)
   const score: Score = { prestige: 0, argent: 0 }
@@ -44,7 +44,7 @@ export function meilleurScore(copie: SauvegardeComplete): Score {
     const etat = charger(stockage, monde.id)
     if (etat === null) continue
     score.prestige = Math.max(score.prestige, etat.niveauMine)
-    score.argent = Math.max(score.argent, Math.floor(etat.argent))
+    score.argent = Math.max(score.argent, Math.floor(etat.stats.argentGagne))
   }
   return score
 }

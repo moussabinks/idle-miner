@@ -17,35 +17,34 @@ import {
 import { nouveauTrajet, type EtatJeu } from './mineur'
 import { railsAlimentes } from './wagonnet'
 
-// Une partie avec le marché en (28, 40), une ligne de rails de 5 cases de la mine au marché (et son trajet), et
-// le générateur posé juste à côté (son centre en 37,5 ; 39,5).
+// Une partie avec le marché en (18, 30), une ligne de rails de 5 cases de la mine au marché (et son trajet), et
+// le générateur posé juste à côté (son centre en 27,5 ; 29,5). (25/10 : la clairière fait 40 × 40 cases)
 function partie(): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
   etat.niveauMine = 2
-  etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false }, { id: 'generateur', x: 35, y: 37, miroir: false })
-  etat.inventaire = { fer: 15 }
-  for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+  etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false }, { id: 'generateur', x: 25, y: 27, miroir: false })
+  etat.coffre.contenu = { fer: 15 }
+  for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
   etat.trajets.push(nouveauTrajet('mine-marche'))
   return etat
 }
 
 describe('le générateur', () => {
-  it('a un rayon de 15 cases (un cercle autour de lui)', () => {
+  it('a un rayon de 12 cases (un cercle autour de lui)', () => {
     const etat = partie()
-    expect(rayonGenerateur(etat)).toBe(15)
-    expect(caseDansLeRayon(etat, { x: 37, y: 24 })).toBe(true) // 15 cases au-dessus
-    expect(caseDansLeRayon(etat, { x: 37, y: 23 })).toBe(false)
-    expect(caseDansLeRayon(etat, { x: 26, y: 28 })).toBe(false) // en diagonale : 15,6 cases, trop loin
+    expect(rayonGenerateur(etat)).toBe(12)
+    expect(caseDansLeRayon(etat, { x: 27, y: 17 })).toBe(true) // 12 cases au-dessus
+    expect(caseDansLeRayon(etat, { x: 27, y: 16 })).toBe(false)
+    expect(caseDansLeRayon(etat, { x: 19, y: 21 })).toBe(true) // en diagonale : 11,3 cases
+    expect(caseDansLeRayon(etat, { x: 18, y: 20 })).toBe(false) // en diagonale : 12,7 cases, trop loin
   })
 
-  it('électrifie les rails quand il a de la redstone (du sac ou du coffre)', () => {
+  it('électrifie les rails quand il a de la redstone (du coffre de la mine)', () => {
     const etat = partie()
     expect(railsAlimentes(etat)).toBe(false)
-    etat.inventaire = { redstone: 1 }
-    etat.coffre.contenu = { redstone: 1 }
+    etat.coffre.contenu = { redstone: 2 }
     remplirGenerateur(etat, Infinity)
     expect(etat.generateur.carburant).toBe(2 * SECONDES_PAR_REDSTONE)
-    expect(etat.inventaire).toEqual({})
     expect(etat.coffre.contenu).toEqual({})
     expect(railsAlimentes(etat)).toBe(true)
     // Il brûle sa redstone, puis s'arrête.
@@ -66,33 +65,33 @@ describe('le générateur', () => {
     const etat = partie()
     etat.generateur.carburant = 100
     const generateur = etat.village.batiments.find((b) => b.id === 'generateur')!
-    generateur.x = 55
-    generateur.y = 55
+    generateur.x = 35
+    generateur.y = 35
     expect(railsAlimentes(etat)).toBe(false)
   })
 
   it('électrifie aussi la foreuse dans son rayon', () => {
     const etat = partie()
     etat.generateur.carburant = 100
-    etat.village.batiments.push({ id: 'foreuse', x: 41, y: 37, miroir: false })
+    etat.village.batiments.push({ id: 'foreuse', x: 31, y: 27, miroir: false })
     expect(foreuseAlimentee(etat)).toBe(true)
   })
 
   it('(23/10) sa réserve : 5 minutes au niveau 1, plus grande une fois amélioré, et il ne se sert plus dans le coffre', () => {
     const etat = partie()
-    etat.inventaire = { redstone: 100 }
+    etat.coffre.contenu = { redstone: 100 }
     remplirGenerateur(etat, Infinity)
     expect(etat.generateur.carburant).toBe(5 * 60)
-    expect(etat.inventaire.redstone).toBe(90)
+    expect(etat.coffre.contenu.redstone).toBe(90)
     expect(remplirGenerateur(etat, 1)[0]).toContain('pleine')
     // Il ne prend rien dans le coffre tout seul.
     etat.coffre.contenu = { redstone: 50 }
     avancerGenerateur(etat, 60)
     expect(etat.coffre.contenu.redstone).toBe(50)
-    etat.argent = 7500
-    etat.inventaire = { fer: 120, redstone: 60 }
+    etat.argent = 5000
+    etat.coffre.contenu = { fer: 80, redstone: 40 }
     ameliorerGenerateur(etat)
-    expect(rayonGenerateur(etat)).toBe(20)
+    expect(rayonGenerateur(etat)).toBe(16)
     expect(reserveMaxGenerateur(etat)).toBe(7 * 60)
   })
 })

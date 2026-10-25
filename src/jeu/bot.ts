@@ -3,14 +3,14 @@
 // niveau 5 ?). Depuis le 29/10, il gagne de l'XP comme un joueur et attend ses niveaux pour
 // débloquer bâtiments et améliorations. Il ne fait que des actions qu'un joueur peut faire :
 //   - devant la mine, il clique sur le bloc (2 clics par seconde) ;
-//   - quand le coffre se remplit, il le vide dans son sac et va vendre au marché (à pied) ;
+//   - quand le coffre se remplit, il le vend depuis la mine (25/10 : plus de sac ni de marche) ;
 //   - il pose ses bâtiments, embauche des mineurs, paie leurs salaires, améliore tout ;
 //   - il relie la mine au marché avec des rails, y envoie un wagonnet, met un mineur à le pousser, puis
 //     électrifie la ligne avec le générateur.
 // Les achats se font sans compter la marche (on suppose qu'il passe devant en allant vendre).
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { BATIMENTS, PIOCHES, SECONDES_PAR_PAIE, VITESSE_JOUEUR, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { BATIMENTS, PIOCHES, SECONDES_PAR_PAIE, type Cout, type IdBatiment, type IdBloc } from './donnees'
 import { construireBatiment, estPose, peutConstruire, peutPoserSol, poserSol } from './batiments'
 import {
   agrandirChariot,
@@ -35,12 +35,11 @@ import {
   managerPaieLesSalaires,
   reveillerManager,
 } from './employes'
-import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, prendreDuChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
+import { ameliorerChariot, ameliorerForage, peutAmeliorerChariot, peutAmeliorerForage, vendreChariot, prochainNiveauChariot, prochainNiveauForage, remplirForeuse } from './foreuse'
 import { ameliorerGenerateur, prochainNiveauGenerateur, remplirGenerateur } from './generateur'
 import {
   acheterPioche,
   disponible,
-  acheterSac,
   agrandirCoffre,
   ameliorerAscenseur,
   capaciteCoffre,
@@ -49,41 +48,38 @@ import {
   descendreNiveauMine,
   estCassee,
   nbDansCoffre,
-  objetsAVendre,
   peutAcheterPioche,
   peutPayer,
   peutReparer,
-  prendreDuCoffre,
-  prixProchainSac,
+  vendreCoffre,
   prochainNiveauAscenseur,
   prochainNiveauCoffre,
   prochainNiveauMine,
   reparer,
-  vendre,
   type EtatJeu,
   type Inventaire,
 } from './mineur'
-import { niveauJoueur } from './niveaux'
+import { debloque, niveauJoueur } from './niveaux'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
-import { distanceEntre, railsMineMarche } from './village'
+import { railsMineMarche } from './village'
 import { creerTrajet, peutCreerTrajet, railsAlimentes, trajetDe } from './wagonnet'
 
-// Où le bot pose ses bâtiments autour de la mine (posée en 25,25 et large de 10 cases).
+// Où le bot pose ses bâtiments autour de la mine (posée en 15,15 et large de 10 cases), dans
+// l'ordre où il les construit.
 const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
-  { id: 'marche', x: 28, y: 38 },
-  { id: 'forgeron', x: 36, y: 24 },
-  { id: 'employes', x: 19, y: 31 },
-  { id: 'bazar', x: 19, y: 25 },
-  { id: 'generateur', x: 35, y: 37 },
-  { id: 'foreuse', x: 36, y: 31 },
+  { id: 'employes', x: 9, y: 21 },
+  { id: 'marche', x: 18, y: 28 },
+  { id: 'forgeron', x: 26, y: 14 },
+  { id: 'generateur', x: 25, y: 27 },
+  { id: 'foreuse', x: 26, y: 21 },
 ]
 
-// Les rails de la mine (dont le bas est en y = 34) au marché (dont le haut est en y = 38).
+// Les rails de la mine (dont le bas est en y = 24) au marché (dont le haut est en y = 28).
 const RAILS_DU_BOT = [
-  { x: 30, y: 35 },
-  { x: 30, y: 36 },
-  { x: 30, y: 37 },
+  { x: 20, y: 25 },
+  { x: 20, y: 26 },
+  { x: 20, y: 27 },
 ]
 
 const CLICS_PAR_SECONDE = 2
@@ -96,7 +92,7 @@ export type ResultatBot = {
   tempsRails: number | null // quand la mine a été reliée au marché
   tempsElectrique: number | null // quand les rails ont été électrifiés
   tempsNiveauxJoueur: Record<number, number> // l'heure (en s) où le joueur est arrivé à chaque niveau
-  allersRetours: number // les voyages à pied jusqu'au marché
+  allersRetours: number // les ventes faites à la main, depuis la mine (25/10 : plus de marche)
 }
 
 export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): ResultatBot {
@@ -114,60 +110,47 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     avancerTemps(etat, secondes, aleatoireTemps)
   }
 
-  // Les prochains achats qui demandent des minerais : le bot les garde (le wagonnet ne les
-  // emporte pas, et il ne les vend pas au marché).
+  // Les prochains achats qui demandent des minerais, du plus important au moins important : le
+  // bot les garde dans le coffre (il ne les vend pas, le wagonnet ne les emporte pas).
   function prochainsCouts(): Cout[] {
     const couts: Cout[] = []
-    const batiment = PLAN_DU_BOT.find((p) => !estPose(etat, p.id) && etat.niveauMine >= BATIMENTS[p.id].niveauMine)
-    if (batiment) couts.push(BATIMENTS[batiment.id].cout)
-    const pioche = PIOCHES[etat.meilleure + 1]
-    if (pioche) couts.push(pioche.cout)
-    if (estCassee(etat)) couts.push(PIOCHES[etat.niveauPioche].reparation)
+    // (le coffre d'abord : le prochain niveau de la mine ne tient pas toujours dans le coffre actuel)
+    const coffre = prochainNiveauCoffre(etat)
+    if (coffre && debloque(etat, 'coffre', etat.coffre.niveau + 1)) couts.push(coffre.cout)
     const niveau = prochainNiveauMine(etat)
     if (niveau) couts.push(niveau.cout)
-    const coffre = prochainNiveauCoffre(etat)
-    if (coffre) couts.push(coffre.cout)
     if (railsMineMarche(etat.village) === null) couts.push({ materiaux: { fer: 3 * RAILS_DU_BOT.length } })
+    if (estCassee(etat)) couts.push(PIOCHES[etat.niveauPioche].reparation)
+    const batiment = PLAN_DU_BOT.find((p) => !estPose(etat, p.id) && etat.niveauMine >= BATIMENTS[p.id].niveauMine)
+    if (batiment) couts.push(BATIMENTS[batiment.id].cout)
     if (estPose(etat, 'generateur')) couts.push({ materiaux: { redstone: 20 } })
+    const pioche = PIOCHES[etat.meilleure + 1]
+    if (pioche) couts.push(pioche.cout)
     return couts
   }
 
-  // Ce qu'il garde : de chaque minerai, ce que demande le plus gourmand des prochains achats
-  // (jamais plus de la moitié du coffre en tout).
-  function reserve(): Inventaire {
-    const garde: Inventaire = {}
-    for (const cout of prochainsCouts()) {
-      for (const [bloc, nombre] of Object.entries(cout.materiaux)) garde[bloc as IdBloc] = Math.max(garde[bloc as IdBloc] ?? 0, nombre ?? 0)
-    }
-    return garde
-  }
-
+  // Ce qu'il garde dans le coffre (« 📌 Garder N ») : de quoi payer ses prochains achats, dans
+  // l'ordre, tant que ça tient dans 70 % du coffre (sinon il se bloquerait, plein de ce qu'il garde).
   function reglerGarde(): void {
-    const garde = reserve()
-    // On garde un minerai tant qu'on n'en a pas assez (ensuite, le surplus part au marché).
-    // (23/10 : avec les petits wagonnets, le coffre est souvent presque plein ; il garde quand même
-    // ses minerais, et ne lâche que la pierre.)
-    const presquePlein = nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.8
-    etat.nonAVendre = (Object.keys(garde) as IdBloc[]).filter((bloc) => (etat.coffre.contenu[bloc] ?? 0) < (garde[bloc] ?? 0) * 1.5 && !(presquePlein && bloc === 'pierre'))
+    const garde: Inventaire = {}
+    let total = 0
+    const place = capaciteCoffre(etat) * 0.7
+    for (const cout of prochainsCouts()) {
+      for (const [id, nombre] of Object.entries(cout.materiaux)) {
+        const bloc = id as IdBloc
+        const enPlus = Math.max(0, (nombre ?? 0) - (garde[bloc] ?? 0))
+        if (total + enPlus > place) continue
+        garde[bloc] = (garde[bloc] ?? 0) + enPlus
+        total += enPlus
+      }
+    }
+    etat.coffre.garder = garde
   }
 
-  // Un voyage à pied : il prend le coffre (sauf ce qu'il garde) et va le vendre au marché.
+  // Une vente à la main : il vend le coffre (sauf ce qu'il garde) et le chariot de la foreuse.
   function allerVendre(): void {
-    const garde = reserve()
-    const lot: Inventaire = {}
-    for (const [id, nombre] of Object.entries(etat.coffre.contenu)) {
-      const bloc = id as IdBloc
-      const surplus = (nombre ?? 0) - (etat.nonAVendre.includes(bloc) ? (garde[bloc] ?? 0) : 0)
-      if (surplus > 0) lot[bloc] = surplus
-    }
-    prendreDuCoffre(etat, lot)
-    // (le chariot de la foreuse ne se vend plus sur place, 27/10 : il le porte au marché aussi)
-    if (estPose(etat, 'foreuse')) prendreDuChariot(etat)
-    const aller = distanceEntre(etat.village, 'puits', 'marche') / VITESSE_JOUEUR
-    attendre(aller)
-    etat.nonAVendre = []
-    if (Object.keys(objetsAVendre(etat)).length > 0) vendre(etat)
-    attendre(aller)
+    vendreCoffre(etat)
+    if (estPose(etat, 'foreuse')) vendreChariot(etat)
     allersRetours += 1
   }
 
@@ -254,18 +237,16 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     const pousseurMarche = indexPousseur >= 0 ? etat.employes[indexPousseur] : null
     const coutChariot = pousseurMarche ? coutChariotPousseur(etat, pousseurMarche) : null
     if (pousseurMarche && coutChariot && peutAgrandirChariot(etat, pousseurMarche) && gardeLaMine(coutChariot) && (coffreSeRemplit || etat.argent >= (coutChariot.argent ?? 0) * 2)) agrandirChariot(etat, indexPousseur)
-    const prixSac = prixProchainSac(etat)
-    if (estPose(etat, 'bazar') && prixSac !== null && etat.argent >= 3 * prixSac) acheterSac(etat)
   }
 
   while (etat.niveauMine < 5 && temps < maxSecondes) {
     reglerGarde()
     acheterSiPossible()
-    // Sans wagonnet qui roule, il va vendre à pied quand le coffre est à moitié plein. (27/10 : le
-    // wagonnet ne part qu'avec un pousseur payé, même électrique : sans paie, il va vendre lui-même.)
+    // Sans wagonnet qui roule, il vend le coffre quand il est à moitié plein. (27/10 : le
+    // wagonnet ne part qu'avec un pousseur payé, même électrique : sans paie, il vend lui-même.)
     const wagonnetActif = trajetDe(etat, 'mine-marche') !== null && etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche' && e.tempsPaye > 0)
     if (!wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) / 2) allerVendre()
-    // (23/10) Le wagonnet ne suit pas (il est petit) : il va aussi vendre à pied.
+    // (23/10) Le wagonnet ne suit pas (il est petit) : il vend aussi à la main.
     else if (wagonnetActif && nbDansCoffre(etat) >= capaciteCoffre(etat) * 0.85) allerVendre()
     for (let i = 0; i < CLICS_PAR_SECONDE * PAS; i++) cliquerMine(etat, aleatoire)
     attendre(PAS)

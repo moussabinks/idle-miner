@@ -114,12 +114,6 @@ export function reglerTrajet(etat: EtatJeu, liaison: IdLiaison, reglage: Reglage
   const trajet = trajetDe(etat, liaison)
   if (!trajet) return messages
   trajet.exclus = exclus
-  // Un objet envoyé depuis la mine n'est plus « gardé » au marché non plus (sinon le wagonnet le
-  // laisserait quand même dans le coffre).
-  if (LIAISONS[liaison].depart === 'puits') {
-    const auChoix = objetsAuChoix(etat, liaison)
-    etat.nonAVendre = etat.nonAVendre.filter((b) => !auChoix.includes(b) || exclus.includes(b))
-  }
   return messages.length > 0 ? messages : ['🛤️ Trajet réglé.']
 }
 
@@ -144,7 +138,7 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   const places = capaciteTrajet(etat, liaison)
   const objets = repartir(aEmporter(etat, liaison, exclus), places)
   const versLeMarche = LIAISONS[liaison].arrivee === 'marche'
-  const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
+  const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets), etat) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
   const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
   const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * niveauPousseur(pousseur).vitesse * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
@@ -152,11 +146,9 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
 
-// Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet, ou
-// « gardé » au marché pour le trajet de la mine.)
+// Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet.)
 export function objetEnvoye(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc): boolean {
-  if (exclusDe(etat, liaison).includes(bloc)) return false
-  return !(LIAISONS[liaison].depart === 'puits' && etat.nonAVendre.includes(bloc))
+  return !exclusDe(etat, liaison).includes(bloc)
 }
 
 // Cocher ou décocher un minerai pour le wagonnet d'un trajet (au panneau de la mine).
@@ -165,8 +157,6 @@ export function envoyerObjet(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc, en
   if (!trajet) return []
   const exclus = (trajet.exclus ?? []).filter((b) => b !== bloc)
   trajet.exclus = envoyer ? exclus : [...exclus, bloc]
-  // Envoyé : il n'est plus « gardé » non plus (sinon le wagonnet le laisserait quand même).
-  if (envoyer && LIAISONS[liaison].depart === 'puits') etat.nonAVendre = etat.nonAVendre.filter((b) => b !== bloc)
   return []
 }
 
@@ -335,13 +325,13 @@ function besoinRedstone(etat: EtatJeu): number {
   return placeRedstoneGenerateur(etat)
 }
 
-// Ce que le wagonnet du marché laisse dans le coffre : les objets « gardés » au marché (le fer
-// pour les rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la
-// foreuse, la redstone du générateur).
-// « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet et les objets
-// gardés au marché ; la fenêtre du trajet en donne d'autres pour son aperçu).
+// Ce que le wagonnet du marché laisse dans le coffre : les « 📌 Garder N » (le fer pour les
+// rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la foreuse, la
+// redstone du générateur).
+// « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet ; la fenêtre du
+// trajet en donne d'autres pour son aperçu).
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
-  const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
+  const garde = exclus ? exclus.includes(bloc) : exclusDe(etat, 'mine-marche').includes(bloc)
   if (garde) return Infinity
   // (23/10) On ne garde le charbon ou la redstone pour la foreuse ou le générateur que si leur
   // wagonnet a un pousseur embauché : sinon, rien ne les emporterait, et ils restaient bloqués
@@ -414,7 +404,7 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
   trajet.chargement = {}
   etat.stats.voyagesWagonnet += 1
   if (LIAISONS[trajet.liaison].arrivee === 'marche') {
-    const gain = valeurDe(chargement)
+    const gain = valeurDe(chargement, etat)
     encaisser(etat, gain)
     etat.stats.argentWagonnet += gain
     return trajet.pousseur === 'joueur' && gain > 0 ? [`🛤️ Le wagonnet a tout vendu au marché : +${gain} $`] : []

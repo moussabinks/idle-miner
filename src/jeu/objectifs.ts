@@ -3,7 +3,7 @@
 //   - les stands où une amélioration est payable tout de suite (pastille « Achetable ! ») ;
 //   - les améliorations à proposer dans les missions (missions.ts).
 
-import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, PIOCHES, PRIX_MANAGER, SACS, type Cout, type IdBatiment } from './donnees'
+import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, PIOCHES, PRIX_MANAGER, type Cout, type IdBatiment } from './donnees'
 import { batimentDebloque } from './batiments'
 import { coutAmeliorationEmploye, coutChariotPousseur, verrouMinePioche, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
@@ -11,7 +11,6 @@ import { generateurPose, prochainNiveauGenerateur } from './generateur'
 import {
   coutPioche,
   peutPayer,
-  prixProchainSac,
   prochainNiveauAscenseur,
   prochainNiveauCoffre,
   prochainNiveauMine,
@@ -49,11 +48,6 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   if (ascenseur && etat.employes.length > 0 && debloque(etat, 'ascenseur', etat.ascenseur.niveau)) {
     achats.push({ stand: 'puits', nom: etat.ascenseur.niveau === 0 ? 'Construire l’ascenseur' : `Ascenseur niveau ${ascenseur.niveau}`, cout: ascenseur.cout })
   }
-  // (23/10 : plus de « taille de tous les wagonnets » : chaque pousseur a son chariot, au Personnel)
-
-  const prixSac = prixProchainSac(etat)
-  if (prixSac !== null && pose('bazar') && debloque(etat, 'sacs', etat.niveauSac + 1)) achats.push({ stand: 'bazar', nom: `Sac de ${SACS[etat.niveauSac + 1].taille} places`, cout: { argent: prixSac, materiaux: {} } })
-
   if (pose('foreuse')) {
     const forage = prochainNiveauForage(etat)
     if (forage && debloque(etat, 'forage', etat.foreuse.niveauVitesse + 1)) achats.push({ stand: 'foreuse', nom: `Forage ${forage.vitesse} blocs/s`, cout: forage.cout })
@@ -71,7 +65,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     if (prix !== null) achats.push({ stand: 'employes', nom: 'Embaucher un mineur', cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(etat, employe)
-      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null && debloque(etat, 'equipement', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
+      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null) achats.push({ stand: 'employes', nom: `Pioche en ${NIVEAUX_EMPLOYE[employe.niveau + 1].nom} pour ${employe.nom}`, cout })
       if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: `Vitesse de ${employe.nom} : pousseur ${NIVEAUX_POUSSEUR[employe.niveau + 1].nom.toLowerCase()}`, cout })
       // (23/10) le chariot de chaque pousseur
       const coutChariot = coutChariotPousseur(etat, employe)

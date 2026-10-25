@@ -98,7 +98,7 @@ export function ascenseurAlimente(etat: EtatJeu): boolean {
 // Actions
 // ---------------------------------------------------------------------------
 
-// Met de la redstone (du sac, puis du coffre) dans le générateur. nombre = Infinity : tout.
+// Met de la redstone (du coffre de la mine) dans le générateur. nombre = Infinity : tout.
 export function remplirGenerateur(etat: EtatJeu, nombre: number): string[] {
   if (!generateurPose(etat)) return []
   const mis = Math.min(nombre, disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
