@@ -47,6 +47,8 @@ export function StockMinerais({ titre, contenu, capacite, blocs, vendreTout, ven
       <button className={`btn btn-jaune btn-large btn-grand ${plein ? 'btn-attention' : ''}`} data-tuto={tuto ? 'vendre' : undefined} disabled={gain <= 0} onClick={() => jouer(vendreTout)}>
         💰 {t('Tout vendre')} {gain > 0 && <span className="stock-gain">+{nombreAbrege(gain)} $</span>}
       </button>
+      {/* L'aide sur la punaise, tant qu'on ne garde encore rien (ensuite, on a compris). */}
+      {changerGarde && garde && !blocs.some((bloc) => garde(bloc) > 0 || toutGarde?.(bloc)) && <p className="stock-aide">📌 {t('= garder un minerai pour tes améliorations (il n’est pas vendu)')}</p>}
       <ul className="stock-lignes">
         {blocs.map((bloc) => (
           <LigneStock
@@ -117,10 +119,16 @@ function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre,
         </button>
       </div>
       {reglage && onChanger && onTout && (
-        <div className="stock-reglage">
-          <span className="stock-reglage-titre">
-            📌 {t('Garder')} <b>{toutGarde ? t('tout') : nombre(garde)}</b>
-          </span>
+        <div className="stock-reglage" role="group" aria-label={t('Garder du {nom}', { nom: t(info.nom) })}>
+          <div className="stock-reglage-entete">
+            <span className="stock-reglage-titre">
+              📌 {t('Garder')} <b>{toutGarde ? t('tout') : nombre(garde)}</b> {info.emoji} {t(info.nom)}
+            </span>
+            <button className="btn btn-blanc btn-rond btn-petit stock-reglage-fermer" onClick={() => setReglage(false)} aria-label={t('Fermer')}>
+              ✖
+            </button>
+          </div>
+          <p className="stock-reglage-aide">{t('Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.')}</p>
           <span className="stock-reglage-boutons">
             {PAS_GARDER.map((pas) => (
               <button key={pas} className={`btn btn-petit ${pas < 0 ? 'btn-blanc' : 'btn-bleu'}`} disabled={pas < 0 && !garde_} onClick={() => onChanger(pas)}>

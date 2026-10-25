@@ -40,7 +40,7 @@ import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
 import { nombre, t } from '../jeu/langue'
 import { verrou } from '../jeu/niveaux'
-import { analyseAscenseur, analyseWagonnet, chariotTropPetit, production } from '../jeu/production'
+import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { sons } from '../sons'
 import { useCompteur } from '../useCompteur'
@@ -308,7 +308,6 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
   const verrouMine = verrou(etat, 'mine', etat.niveauMine)
   const peutDescendre = prochain !== null && verrouMine === null && peutPayer(etat, prochain.cout)
   const ascenseurTropPetit = etat.employes.some((e) => e.role === 'mineur') && puits.tropLent
-  const goulot = ascenseurTropPetit || (wagonnetMarche !== null && (wagonnetMarche.moteur === 'personne' || chariotTropPetit(wagonnetMarche)))
 
   return (
     <div className="panneau-mine">
@@ -317,7 +316,8 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
           { id: 'creuser', titre: `⛏️ ${t('Creuser')}`, pastille: coffrePlein(etat) ? '!' : null },
           { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutDescendre ? '!' : null },
           { id: 'wagonnets', titre: `🚃 ${t('Wagonnets')}` },
-          { id: 'production', titre: `📊 ${t('Production')}`, pastille: goulot ? '!' : null },
+          // (25/10) plus de « ! » ici : il restait allumé sans rien de particulier à faire
+          { id: 'production', titre: `📊 ${t('Production')}` },
         ]}
         actif={onglet}
         onChoisir={setOnglet}

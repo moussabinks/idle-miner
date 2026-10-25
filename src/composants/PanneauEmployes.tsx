@@ -296,8 +296,15 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
         )}
         {/* Avec le recruteur : une nouvelle recrue prend sa place (même pioche), rareté au hasard. */}
         {!pousseur && etat.recruteur > 0 && (
-          <button className="btn btn-vert btn-petit" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>
-            🎲 {t('Remplacer')} · {nombreAbrege(prixRemplacement(etat))} $
+          // (25/10) Le bouton du hasard : aux couleurs de toutes les raretés, qui défilent, et un dé
+          // qui roule (on tire une rareté au hasard).
+          <button className="btn btn-petit btn-hasard" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>
+            <span className="btn-hasard-de" aria-hidden="true">
+              🎲
+            </span>
+            <span className="btn-hasard-texte">
+              {t('Remplacer')} · {nombreAbrege(prixRemplacement(etat))} $
+            </span>
           </button>
         )}
         <button className="btn btn-rose btn-petit carte-employe-licencier" disabled={employe.etape === 'pousse'} onClick={onLicencier}>
