@@ -457,7 +457,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   })
 
   // --- Le cadeau du jour : il s'ouvre tout seul une fois, au retour, après le tutoriel ----------
-  const aujourdhui = jourDe(new Date())
+  // (le jour est lu au début de la partie : passé minuit, il faut rouvrir le monde)
+  const [aujourdhui] = useState(() => jourDe(new Date()))
   const cadeauDisponible = etatQuotidien(etat, aujourdhui).disponible
   const [cadeauPropose, setCadeauPropose] = useState(false)
   if (!cadeauPropose && cadeauDisponible && etapeTuto === null && !resumeAbsence) {

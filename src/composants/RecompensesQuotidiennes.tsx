@@ -3,6 +3,7 @@
 // 7e jour. Un jour manqué, et la série repart au jour 1.
 // Les règles sont dans src/jeu/gemmes.ts.
 
+import { useState } from 'react'
 import { BOOSTS, RECOMPENSES_QUOTIDIENNES, argentRecompense, etatQuotidien, jourDe, recupererQuotidien } from '../jeu/gemmes'
 import { t } from '../jeu/langue'
 import { nombreAbrege } from '../nombres'
@@ -11,7 +12,8 @@ import { Fenetre } from './Fenetre'
 
 export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) {
   const { etat, jouer } = useJeu()
-  const aujourdhui = jourDe(new Date())
+  // (le jour est lu à l'ouverture de la fenêtre)
+  const [aujourdhui] = useState(() => jourDe(new Date()))
   const { jour, disponible } = etatQuotidien(etat, aujourdhui)
   return (
     <Fenetre titre={t('Cadeau du jour')} icone="🎁" couleur="jaune" onFermer={onFermer}>

@@ -15,7 +15,7 @@ import { useMemo, type ReactNode } from 'react'
 import type { Cout } from '../jeu/donnees'
 import { prixEnGemmes } from '../jeu/gemmes'
 import { t } from '../jeu/langue'
-import { acheterAvecGemmes, type EtatJeu } from '../jeu/mineur'
+import { acheterAvecGemmes, possibleEnGemmes, type EtatJeu } from '../jeu/mineur'
 import type { Action } from '../usePartie'
 import { useJeu } from './contexteJeu'
 import { PrixCout } from './PrixCout'
@@ -32,13 +32,6 @@ type Props = {
   texte?: string // le mot du bouton (« Améliorer » par défaut)
   icone?: string // une icône devant le titre
   classe?: string
-}
-
-// L'action réussirait-elle en payant en gemmes ? On l'essaie sur une copie de la partie.
-export function possibleEnGemmes(etat: EtatJeu, action: Action): boolean {
-  const copie = structuredClone(etat)
-  acheterAvecGemmes(() => action(copie))
-  return copie.gemmes < etat.gemmes
 }
 
 export function Amelioration({ titre, niveau, niveauMax, effet, cout, verrou = null, possible, action, texte, icone, classe = '' }: Props) {

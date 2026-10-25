@@ -378,6 +378,13 @@ export function acheterAvecGemmes(action: () => string[]): string[] {
   }
 }
 
+// L'action réussirait-elle en payant en gemmes ? On l'essaie sur une copie de la partie.
+export function possibleEnGemmes(etat: EtatJeu, action: (e: EtatJeu) => string[]): boolean {
+  const copie = structuredClone(etat)
+  acheterAvecGemmes(() => action(copie))
+  return copie.gemmes < etat.gemmes
+}
+
 // Pourrait-on faire cet achat en gemmes ?
 export function peutPayerEnGemmes(etat: EtatJeu, cout: Cout): boolean {
   return (etat.gemmes ?? 0) >= prixEnGemmes(cout)

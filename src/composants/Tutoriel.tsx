@@ -19,7 +19,7 @@ import { t } from '../jeu/langue'
 import type { EtatJeu } from '../jeu/mineur'
 import { BLOCS_TUTORIEL, ETAPES_TUTORIEL, etapeTutoriel, type IdEtapeTutoriel } from '../jeu/tutoriel'
 import { sons } from '../sons'
-import { ETAPES_DU_JEU } from './Aide'
+import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 

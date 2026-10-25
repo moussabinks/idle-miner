@@ -1,14 +1,9 @@
 // L'aide « Comment jouer » (25/10) : la boucle du jeu en 4 étapes, et les gestes de la carte.
 
 import { t } from '../jeu/langue'
+import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { Fenetre } from './Fenetre'
 
-export const ETAPES_DU_JEU = [
-  { icone: '⛏️', titre: 'Creuse', texte: 'Clique sur le bloc de la mine. Tout va dans son coffre, que tu vends d’un clic.' },
-  { icone: '👷', titre: 'Embauche', texte: 'Des mineurs creusent pour toi, même quand tu ne joues pas.' },
-  { icone: '🛤️', titre: 'Automatise', texte: 'Des rails jusqu’au marché : le wagonnet vend tout seul.' },
-  { icone: '💎', titre: 'Descends', texte: 'Chaque niveau de la mine débloque le niveau suivant de tout le reste.' },
-]
 
 export function Aide({ onFermer }: { onFermer: () => void }) {
   return (

@@ -36,11 +36,11 @@ Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../
 
 ## Le concept
 
-**Mega Digger** (ex-Idle Miner) est un *idle game* de minage inspiré de Minecraft, jouable dans le navigateur (et installable comme application, hors ligne), en **français ou en anglais**. On incarne une **taupe** qui fait grandir sa mine et son village. Le jeu doit **tourner tout seul dès les premières minutes**.
+**Mega Digger** (ex-Idle Miner) est un *idle game* de minage inspiré de Minecraft, jouable dans le navigateur (et installable comme application, hors ligne), en français, et bientôt en anglais (25/10 : tous les textes passent par `t()`, la traduction anglaise `src/jeu/traductions/en.ts` reste à remplir). On incarne une **taupe** qui fait grandir sa mine et son village. Le jeu doit **tourner tout seul dès les premières minutes**.
 
 Tout se passe **au village, vu du ciel** (vue isométrique, façon Clash of Clans) : une clairière de **40 × 40 cases**, avec la mine au milieu. On y **pose ses bâtiments où on veut**, des rails et des chemins, et on s'y promène. La mine est un bâtiment comme les autres, qu'on ouvre en le touchant. Voir [village.md](village.md).
 
-La boucle en quatre mots : **Creuse, Vends, Embauche, Automatise.**
+La boucle en quatre mots, la même partout (accueil, tutoriel, aide, `etapesDuJeu.ts`) : **Creuse, Embauche, Automatise, Descends.**
 
 - **Creuser** : devant la mine, un gros **bloc à cliquer**. Chaque clic casse un bloc (les clics rapides font un **combo**, et chaque palier du combo, 10, 25, 50… clics, donne un **bonus** de quelques secondes). Ce qui tombe va dans le **coffre de la mine**. La mine sort aussi **quelques blocs par seconde toute seule, dès le niveau 1**.
 - **Vendre** : au panneau de la mine, **💰 Tout vendre** vend le coffre d'un clic, au prix du marché (ou un seul minerai). Une **punaise 📌** garde un minerai dans le coffre (pour payer ses améliorations). Plus de sac à dos, plus de marche jusqu'au marché.
@@ -166,7 +166,7 @@ Hérités de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md)) et des d�
 - ✅ **On n'est jamais bloqué** : la mine tourne toute seule, une pioche cassée casse encore un bloc tous les 2 clics, la pioche en pierre se répare pour presque rien, les autres pioches se rachètent neuves.
 - ✅ **Une alerte, un seul endroit** : un état (coffre plein, pioche cassée, plus de charbon) = une bulle sur le bâtiment ; un conseil = la liste des tâches ; un événement = un message (au plus 3 à la fois).
 - ✅ **Sauvegarde** dans le navigateur (par `src/stockage.ts`, qui ne plante jamais), jusqu'à 5 mondes ; le jeu marche toujours sans réseau. Une vieille partie est **convertie**, jamais perdue.
-- ✅ **Tout en français dans le code**, et le jeu en **deux langues** (français et anglais, `t()`).
+- ✅ **Tout en français dans le code**, et le jeu prêt pour **deux langues** (français et anglais : chaque texte affiché passe par `t()`).
 - ✅ **Un seul style** (25/10) : cartoon simple et coloré, contours bleu nuit épais, ombres dures, fenêtres crème (voir [../../CLAUDE.md](../../CLAUDE.md), section « Le style ») ; sons fabriqués avec Web Audio.
 - ✅ **Le village se construit librement** : on pose chaque bâtiment où l'on veut, on peut tout déplacer et retourner gratuitement.
 - ✅ **Jouable au téléphone** (gros boutons ronds en bas, fenêtres qui montent du bas) et installable (PWA, hors ligne ; pas dans la version CrazyGames).
