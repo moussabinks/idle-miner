@@ -54,7 +54,7 @@ import {
   type Rarete,
 } from './donnees'
 import { debloque, niveauJoueur, verrou } from './niveaux'
-import { multiplicateurProduction } from './gemmes'
+import { multiplicateurEmployes } from './gemmes'
 import { nombre, t } from './langue'
 import { tirerBloc } from './mine'
 import {
@@ -816,8 +816,8 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         }
         employe.forgeEnAttente = false
       }
-      // (25/10) le bonus « production » de la boutique : il creuse deux fois plus vite
-      const vitesse = vitesseEmploye(employe) * multiplicateurProduction(etat)
+      // (25/10) le bonus « Employés × 2 » de la boutique : il creuse deux fois plus vite
+      const vitesse = vitesseEmploye(employe) * multiplicateurEmployes(etat)
       const place = tailleSacEmploye(employe) - nbDansSacEmploye(employe)
       // Son sac est plein : il attend que la caisse passe le prendre. (23/10) Si c'est parce que
       // le coffre de la mine est plein, ce temps d'attente n'use pas son salaire.

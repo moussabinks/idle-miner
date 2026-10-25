@@ -592,16 +592,39 @@
 
 /* --- La croix des rails (25/10) : comme une manette ---------------------------------------
         [ ⬆ ]
-   [ ↰ ][ ✔ ][ ↱ ]
-        [ ↩ ]                                                                                 */
-.rangee-rails {
+   [ ↰ ][ ✔ ][ ↱ ]        [ 🗑️ Retirer ]
+        [ ↶ ]             [ ✔️ Terminé ]
+   La barre se fait petite : juste la croix, et les deux boutons bien à l'écart. */
+.barre-edition:has(.rails-commandes) {
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 14px 10px;
+  gap: 6px;
+}
+
+.barre-edition:has(.rails-commandes) .consigne {
+  max-width: 340px;
+  margin: 0 auto;
+  font-size: 0.8rem;
+}
+
+.rails-commandes {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.rails-cote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .croix-rails {
   display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(3, 48px);
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(3, 44px);
   grid-template-areas:
     '. haut .'
     'gauche centre droite'
@@ -613,8 +636,12 @@
   min-width: 0;
   min-height: 0;
   padding: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   line-height: 1;
+}
+
+.fleche-croix {
+  display: block;
 }
 
 .croix-haut {
@@ -635,19 +662,4 @@
 
 .croix-centre {
   grid-area: centre;
-  flex-direction: column;
-  gap: 0;
-}
-
-.croix-centre small {
-  font-size: 0.7rem;
-  font-weight: 900;
-}
-
-/* (25/10) Sur un téléphone ou un écran peu haut, la phrase d'explication sous le titre d'un
-   bâtiment disparaît : la place sert au jeu (on ne doit pas défiler dans la mine). */
-@media (max-width: 640px), (max-height: 760px) {
-  .description-batiment {
-    display: none;
-  }
 }

@@ -6,7 +6,7 @@
 // dans src/jeu/donnees.ts : « gauche » = la façade en bas à gauche (y = 5), « droite » = celle en
 // bas à droite (x = 5).
 
-import { C, DX, DY, Toile, TRAIT, TRAIT_FIN, clair, fonce, points, polygone, r1, rocher, teintes } from './formes.mjs'
+import { C, DX, DY, Toile, TRAIT, TRAIT_FIN, clair, fonce, minerai, points, polygone, r1, rocher, teintes } from './formes.mjs'
 
 // L'épaisseur de la dalle de pavés, et la hauteur de son dessus.
 const DALLE = 8
@@ -179,115 +179,231 @@ export function marche() {
 }
 
 // ---------------------------------------------------------------------------
-// Le forgeron : une forge en pierre, sa cheminée qui fume, la forge rougeoyante et l'enclume
+// Le forgeron (25/10, redessiné) : une vraie forge. Au fond à droite, un grand four en pierre
+// sombre dont la bouche crache un feu orange, et sa haute cheminée en briques qui fume ; les
+// outils accrochés sur son mur et un tonneau d'eau qui fume (pour tremper le fer). Devant, la
+// grosse enclume noire sur sa souche, une barre de fer rouge dessus, le marteau et des
+// étincelles ; une meule à aiguiser, un tonneau plein d'épées et un tas de charbon.
 // ---------------------------------------------------------------------------
 
+// Les couleurs de la forge : la pierre sombre, les briques de la cheminée, le feu.
+const PIERRE_FORGE = '#8f91a8'
+const BRIQUE = '#c4664a'
+const FEU = '#ff9a3c'
+const FEU_CLAIR = '#ffd84a'
+
+// L'enclume, vue de côté : sa silhouette (le pied, la taille, la table et la bigorne pointue)
+// en [u, hauteur], u en cases le long des x depuis (x, y), découpée dans une plaque épaisse de
+// « epaisseur » cases (de y - epaisseur à y). On dessine la plaque du fond (à l'ombre), le dessus de
+// la table et de la bigorne (éclairés), puis la silhouette de devant.
+const SILHOUETTE_ENCLUME = [
+  [0.3, 0],
+  [1.3, 0],
+  [1.15, 7],
+  [1.0, 10],
+  [1.0, 18],
+  [1.4, 22],
+  [1.55, 34],
+  [0.5, 34],
+  [-0.2, 31],
+  [0.2, 26],
+  [0.55, 22],
+  [0.62, 18],
+  [0.62, 10],
+  [0.45, 7],
+]
+function enclume(t, x, y, z, epaisseur, teinte) {
+  const sommet = (y_) => SILHOUETTE_ENCLUME.map(([u, h]) => [x + u, y_, z + h])
+  t.poly(sommet(y - epaisseur), teinte.droite)
+  // Le dessus de la table, puis celui de la bigorne (entre la silhouette du fond et celle de devant).
+  for (const [a, b] of [
+    [6, 7],
+    [7, 8],
+  ]) {
+    const [ua, ha] = SILHOUETTE_ENCLUME[a]
+    const [ub, hb] = SILHOUETTE_ENCLUME[b]
+    t.poly(
+      [
+        [x + ua, y, z + ha],
+        [x + ub, y, z + hb],
+        [x + ub, y - epaisseur, z + hb],
+        [x + ua, y - epaisseur, z + ha],
+      ],
+      teinte.haut,
+    )
+  }
+  t.poly(sommet(y), teinte.gauche)
+  // Un reflet sur le bord de la table.
+  t.ligne([x + 0.55, y, z + 31], [x + 1.45, y, z + 31], clair(teinte.gauche, 0.35), 3)
+}
+
+// Une étincelle de forge (une petite étoile jaune à quatre branches), en points du dessin.
+function etincelleForge(x, y, r) {
+  return `<path d="M${r1(x)} ${r1(y - r)} L${r1(x + r * 0.28)} ${r1(y - r * 0.28)} L${r1(x + r)} ${r1(y)} L${r1(x + r * 0.28)} ${r1(y + r * 0.28)} L${r1(x)} ${r1(y + r)} L${r1(x - r * 0.28)} ${r1(y + r * 0.28)} L${r1(x - r)} ${r1(y)} L${r1(x - r * 0.28)} ${r1(y - r * 0.28)} Z" fill="${FEU_CLAIR}" stroke="${C.encre}" stroke-width="2.5"/>`
+}
+
 export function forgeron() {
-  const t = new Toile({ taille: 5, haut: 200 })
+  const t = new Toile({ taille: 5, haut: 214 })
   dalle(t, 5)
   const z = DALLE
-  const pierre = teintes(C.pierre, C.pierreFoncee, clair(C.pierre, 0.3))
-  // La maison en pierre.
-  const [x0, y0, x1, y1, zMur] = [0.7, 0.7, 3.4, 4.3, 92]
+  const pierre = teintes(PIERRE_FORGE, fonce(PIERRE_FORGE, 0.22), clair(PIERRE_FORGE, 0.3))
+  const briques = teintes(BRIQUE, fonce(BRIQUE, 0.25), clair(BRIQUE, 0.25))
+  const bois = teintes(C.bois, C.boisFonce)
+
+  // Le four : un gros bloc de pierre sombre, au fond à droite. Sa bouche est sur la façade de
+  // gauche (celle qu'on voit le mieux), les outils sont accrochés sur celle de droite.
+  const [x0, y0, x1, y1, zMur] = [1.95, 0.4, 4.25, 2.5, 80]
+
+  // La lueur du feu, à plat sur les pavés devant la bouche du four.
+  const [lx, ly] = t.pt(3.3, 3.25, z)
+  t.ajouter(`<ellipse cx="${r1(lx)}" cy="${r1(ly)}" rx="74" ry="34" fill="${FEU}" opacity="0.32"/>`)
+
+  // Le tonneau plein d'épées, au fond à gauche.
+  const [ex, ey] = t.pt(0.65, 1.45, z + 30)
+  for (const [dx, h] of [
+    [-9, 40],
+    [8, 34],
+    [0, 48],
+  ]) {
+    const lame = `M${r1(ex + dx)} ${r1(ey)} L${r1(ex + dx)} ${r1(ey - h)}`
+    t.ajouter(`<path d="${lame}" stroke="${C.encre}" stroke-width="13"/><path d="${lame}" stroke="${C.metal}" stroke-width="7"/>`)
+    t.ajouter(`<path d="M${r1(ex + dx - 2)} ${r1(ey - h + 4)} L${r1(ex + dx - 2)} ${r1(ey - 8)}" stroke="${C.blanc}" stroke-width="2.5"/>`)
+    t.ajouter(`<rect x="${r1(ex + dx - 8)}" y="${r1(ey - 9)}" width="16" height="6" rx="2" fill="${C.or}" stroke="${C.encre}" stroke-width="3"/>`)
+  }
+  t.cylindre(0.65, 1.45, 0.32, z, z + 30, bois, { cerclages: [z + 8, z + 22] })
+
   t.boite(x0, y0, x1, y1, z, zMur, pierre)
-  // Quelques pierres dessinées sur les murs.
+  // Les pierres dessinées sur les deux façades qu'on voit.
   const pierresMur = (cote, liste) => {
     for (const [u, v, l] of liste) {
-      t.surFace(cote, cote === 'gauche' ? x0 : x1, y1, z, `<rect x="${u}" y="${-v}" width="${l}" height="12" rx="5" fill="none" stroke="${fonce(C.pierreFoncee, 0.15)}" stroke-width="3"/>`)
+      t.surFace(cote, cote === 'gauche' ? x0 : x1, y1, z, `<rect x="${u}" y="${-v}" width="${l}" height="11" rx="5" fill="none" stroke="${fonce(PIERRE_FORGE, 0.3)}" stroke-width="3"/>`)
     }
   }
   pierresMur('gauche', [
-    [12, 30, 26],
-    [48, 58, 30],
-    [80, 22, 24],
-    [22, 70, 22],
+    [6, 20, 14],
+    [8, 64, 18],
+    [84, 66, 16],
+    [86, 20, 12],
   ])
-  // Le pignon (le triangle sous le toit), sur la façade de gauche.
-  const zFaite = 140
-  t.poly(
-    [
-      [x0, y1, zMur],
-      [x1, y1, zMur],
-      [(x0 + x1) / 2, y1, zFaite - 6],
-    ],
-    pierre.gauche,
+  pierresMur('droite', [[50, 14, 18]])
+  // La bouche du four : une grande arche de pierres claires, le noir du four, de grandes flammes
+  // et des braises.
+  const faceFour = (x1 - x0) * 38.15
+  const m = faceFour / 2
+  t.surFace(
+    'gauche',
+    x0,
+    y1,
+    z,
+    `<path d="M${r1(m - 41)} 0 V-34 A41 41 0 0 1 ${r1(m + 41)} -34 V0 Z" fill="${clair(PIERRE_FORGE, 0.3)}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<path d="M${r1(m - 41)} -34 A41 41 0 0 1 ${r1(m + 41)} -34" fill="none" stroke="${C.encre}" stroke-width="3" stroke-dasharray="3 14"/>` +
+      `<path d="M${r1(m - 30)} -6 V-34 A30 30 0 0 1 ${r1(m + 30)} -34 V-6 Z" fill="${C.encre}"/>` +
+      `<path d="M${r1(m - 26)} -8 Q${r1(m - 30)} -30 ${r1(m - 14)} -44 Q${r1(m - 12)} -30 ${r1(m - 4)} -34 Q${r1(m - 2)} -50 ${r1(m + 6)} -58 Q${r1(m + 10)} -40 ${r1(m + 16)} -42 Q${r1(m + 30)} -26 ${r1(m + 26)} -8 Z" fill="${FEU}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<path d="M${r1(m - 16)} -8 Q${r1(m - 18)} -24 ${r1(m - 6)} -30 Q${r1(m - 2)} -22 ${r1(m + 4)} -40 Q${r1(m + 18)} -24 ${r1(m + 16)} -8 Z" fill="${FEU_CLAIR}"/>` +
+      [-20, -8, 4, 16].map((dx, i) => `<circle cx="${r1(m + dx)}" cy="-8" r="7" fill="${i % 2 ? '#ff6b3a' : '#e2483d'}" stroke="${C.encre}" stroke-width="3"/>`).join('') +
+      `<rect x="${r1(m - 46)}" y="-7" width="92" height="9" rx="3" fill="${clair(PIERRE_FORGE, 0.15)}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`,
   )
-  // Le toit en ardoise, puis la cheminée qui sort de sa pente de droite (son pied suit la pente).
-  const ardoise = '#7c7f9e'
-  const [tx0, tx1] = [x0 - 0.18, x1 + 0.18]
-  t.toit(tx0, y0 - 0.18, tx1, y1 + 0.18, zMur - 4, zFaite, 'y', teintes(ardoise, fonce(ardoise, 0.25), ardoise))
-  const zToit = (x) => zFaite - ((x - (tx0 + tx1) / 2) / ((tx1 - tx0) / 2)) * (zFaite - zMur + 4)
-  const [cx0, cx1, cy0, cy1, zc] = [2.45, 3.0, 1.0, 1.55, 182]
-  t.volume(
-    [
-      [cx0, cy0, zToit(cx0)],
-      [cx1, cy0, zToit(cx1)],
-      [cx1, cy1, zToit(cx1)],
-      [cx0, cy1, zToit(cx0)],
-      [cx0, cy0, zc],
-      [cx1, cy0, zc],
-      [cx1, cy1, zc],
-      [cx0, cy1, zc],
-    ],
-    [
-      [4, 5, 6, 7],
-      [0, 1, 5, 4],
-      [1, 2, 6, 5],
-      [2, 3, 7, 6],
-      [3, 0, 4, 7],
-    ],
-    pierre,
-  )
-  t.boite(cx0 - 0.07, cy0 - 0.07, cx1 + 0.07, cy1 + 0.07, zc, zc + 10, teintes(C.pierreFoncee))
-  // La fumée.
-  const [fx, fy] = t.pt((cx0 + cx1) / 2, (cy0 + cy1) / 2, zc + 22)
-  ;[
-    [0, 0, 11],
-    [10, -16, 14],
-    [2, -36, 17],
-  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
-  // La forge, une grande arche sur la façade de droite (x = 3,4), rouge de braises.
+  // Sur la façade de droite, le râtelier : une planche et les outils accrochés (une pioche, une
+  // pince, un marteau, une épée).
+  const faceDroite = (y1 - y0) * 38.15
+  const outil = (chemin, couleur, largeur) => `<path d="${chemin}" stroke="${C.encre}" stroke-width="${largeur + 6}" fill="none"/><path d="${chemin}" stroke="${couleur}" stroke-width="${largeur}" fill="none"/>`
   t.surFace(
     'droite',
     x1,
     y1,
     z,
-    `<path d="M30 0 L30 -44 A30 30 0 0 1 90 -44 L90 0 Z" fill="${C.orange}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
-      `<path d="M42 0 Q36 -22 52 -40 Q54 -24 62 -30 Q66 -42 70 -48 Q86 -26 78 0 Z" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<path d="M30 -2 L90 -2" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
-      // les pierres de l'arche
-      `<path d="M24 -44 A36 36 0 0 1 96 -44" fill="none" stroke="${fonce(C.pierreFoncee, 0.2)}" stroke-width="5" stroke-dasharray="10 7"/>`,
+    `<rect x="6" y="-62" width="${r1(faceDroite - 12)}" height="9" rx="3" fill="${C.bois}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      // la pioche
+      outil('M20 -54 L20 -18', C.bois, 4) +
+      outil('M7 -48 Q20 -60 33 -48', C.metal, 5) +
+      // la pince
+      outil('M40 -54 L36 -22 M44 -54 L48 -22', C.metal, 3) +
+      // le marteau
+      outil('M62 -54 L62 -22', C.bois, 4) +
+      `<rect x="54" y="-34" width="16" height="11" rx="2" fill="${C.metal}" stroke="${C.encre}" stroke-width="3"/>`,
   )
-  // Un seau d'eau et un tas de charbon contre la forge.
-  t.cylindre(3.75, 1.0, 0.22, z, z + 20, teintes(C.bois, C.boisFonce))
-  t.ellipseSol(3.75, 1.0, 0.15, z + 20, C.bleu, { trait: 0 })
-  tasDeMinerais(t, 3.8, 3.9, z, [C.charbon, fonce(C.charbon, 0.3)], 1.2)
-  // L'enclume sur sa souche, devant la forge.
-  t.cylindre(4.35, 2.45, 0.3, z, z + 22, teintes(C.bois, C.boisFonce))
-  const enclume = teintes('#6d7290', '#535774', '#8b90ab')
-  t.boite(4.18, 2.2, 4.52, 2.7, z + 22, z + 30, enclume)
-  t.boite(4.05, 2.05, 4.65, 2.85, z + 30, z + 44, enclume)
-  // La pointe de l'enclume (la bigorne), vers le fond.
-  t.volume(
-    [
-      [4.15, 2.05, z + 32],
-      [4.55, 2.05, z + 32],
-      [4.55, 2.05, z + 44],
-      [4.15, 2.05, z + 44],
-      [4.35, 1.55, z + 42],
-    ],
-    [
-      [0, 1, 2, 3],
-      [0, 1, 4],
-      [1, 2, 4],
-      [2, 3, 4],
-      [3, 0, 4],
-    ],
-    enclume,
+  // Le dessus du four : une dalle qui déborde un peu, puis la haute cheminée en briques qui fume.
+  t.boite(x0 - 0.08, y0 - 0.08, x1 + 0.08, y1 + 0.08, zMur, zMur + 10, teintes(fonce(PIERRE_FORGE, 0.08), fonce(PIERRE_FORGE, 0.3), clair(PIERRE_FORGE, 0.2)))
+  const [c0, c1, d0, d1] = [3.2, 3.95, 0.6, 1.35]
+  t.boite(c0, d0, c1, d1, zMur + 10, zMur + 30, pierre)
+  const zCheminee = 196
+  t.boite(c0 + 0.08, d0 + 0.08, c1 - 0.08, d1 - 0.08, zMur + 30, zCheminee, briques)
+  for (let zz = zMur + 44; zz < zCheminee - 6; zz += 16) {
+    t.ligne([c0 + 0.1, d1 - 0.08, zz], [c1 - 0.1, d1 - 0.08, zz], fonce(BRIQUE, 0.35), 3)
+    t.ligne([c1 - 0.08, d1 - 0.1, zz], [c1 - 0.08, d0 + 0.1, zz], fonce(BRIQUE, 0.45), 3)
+  }
+  t.boite(c0, d0, c1, d1, zCheminee, zCheminee + 12, teintes(fonce(PIERRE_FORGE, 0.1), fonce(PIERRE_FORGE, 0.3)))
+  // La fumée, un peu grise (le charbon).
+  const [fx, fy] = t.pt((c0 + c1) / 2, (d0 + d1) / 2, zCheminee + 30)
+  ;[
+    [0, 0, 11],
+    [-12, -16, 14],
+    [-2, -38, 17],
+  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="#e6e1d8" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
+
+  // Un tas de charbon au pied de la bouche du four.
+  const [kx, ky] = t.pt(2.55, 3.3, z)
+  for (const [dx, dy, taille, angle] of [
+    [-12, -4, 20, -20],
+    [10, -6, 18, 15],
+    [-1, -14, 20, 5],
+    [0, 2, 20, -35],
+  ]) {
+    t.ajouter(minerai('charbon', kx + dx, ky + dy, taille, angle))
+  }
+
+  // L'enclume, devant à gauche : une souche, la grosse enclume noire, une barre de fer rouge sur
+  // sa table, le marteau appuyé contre la souche et des étincelles qui jaillissent.
+  const [ax, ay] = [1.7, 4.2]
+  const zs = z + 14
+  t.cylindre(ax, ay, 0.46, z, zs, bois)
+  const noir = teintes('#4a4658', '#2f2c3a', '#8a869c')
+  enclume(t, ax - 0.75, ay + 0.22, zs, 0.44, noir)
+  // La barre de fer rouge, posée sur la table.
+  t.boite(ax - 0.1, ay - 0.12, ax + 0.55, ay + 0.04, zs + 34, zs + 40, teintes(FEU, fonce(FEU, 0.25), FEU_CLAIR), { trait: TRAIT_FIN })
+  // Le marteau, appuyé contre la souche.
+  const [hx, hy] = t.pt(ax - 0.3, ay + 0.5, z)
+  t.ajouter(
+    `<path d="M${r1(hx)} ${r1(hy)} L${r1(hx - 10)} ${r1(hy - 34)}" stroke="${C.encre}" stroke-width="11"/><path d="M${r1(hx)} ${r1(hy)} L${r1(hx - 10)} ${r1(hy - 34)}" stroke="${C.bois}" stroke-width="5"/>` +
+      `<rect x="${r1(hx - 22)}" y="${r1(hy - 44)}" width="24" height="13" rx="3" fill="#9a9fb8" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" transform="rotate(-16 ${r1(hx - 10)} ${r1(hy - 37)})"/>`,
   )
-  // Un marteau posé dessus.
-  t.poutre([4.2, 2.6, z + 48], [4.5, 2.25, z + 48], C.bois, 5)
-  t.boite(4.42, 2.12, 4.6, 2.36, z + 44, z + 54, teintes(C.metal))
+  const [px, py] = t.pt(ax + 0.2, ay - 0.05, zs + 44)
+  t.ajouter(
+    [
+      [-24, -14, 8],
+      [-6, -30, 10],
+      [14, -20, 7],
+      [-34, 0, 5],
+      [26, -2, 5],
+      [6, -48, 6],
+    ]
+      .map(([dx, dy, r]) => etincelleForge(px + dx, py + dy, r))
+      .join(''),
+  )
+
+  // La meule à aiguiser, devant : une roue de pierre dans un bâti en bois.
+  t.boite(3.6, 4.05, 4.3, 4.4, z, z + 12, bois)
+  const meule = 0.7 * 19
+  t.surFace(
+    'gauche',
+    3.6,
+    4.23,
+    z + 12,
+    `<circle cx="${r1(meule)}" cy="-8" r="19" fill="${C.pierre}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<circle cx="${r1(meule)}" cy="-8" r="11" fill="none" stroke="${C.pierreFoncee}" stroke-width="3"/>` +
+      `<circle cx="${r1(meule)}" cy="-8" r="4" fill="#6d7290" stroke="${C.encre}" stroke-width="3"/>` +
+      `<path d="M${r1(meule)} -8 L${r1(meule + 26)} -20" stroke="${C.encre}" stroke-width="9"/><path d="M${r1(meule)} -8 L${r1(meule + 25)} -20" stroke="${C.bois}" stroke-width="4"/>`,
+  )
+
+  // Le tonneau d'eau pour tremper le fer, contre le four à droite, et sa vapeur.
+  t.cylindre(4.62, 0.95, 0.36, z, z + 32, bois, { cerclages: [z + 8, z + 24] })
+  t.ellipseSol(4.62, 0.95, 0.28, z + 32, C.bleu, { trait: 0 })
+  const [vx, vy] = t.pt(4.62, 0.95, z + 44)
+  ;[
+    [-4, 0, 6],
+    [4, -10, 7],
+    [-2, -22, 8],
+  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(vx + dx)}" cy="${r1(vy + dy)}" r="${r}" fill="${C.blanc}" stroke="${C.encre}" stroke-width="3"/>`))
   return t
 }
 
@@ -380,9 +496,10 @@ export function employes() {
 }
 
 // ---------------------------------------------------------------------------
-// La foreuse (25/10, redessinée) : une grosse mèche en acier qui s'enfonce dans un trou plein de
-// terre, tenue par un portique jaune ; au-dessus, son moteur orange qui fume. Une trémie à charbon
-// devant à gauche, un tas de charbon devant à droite, un bidon au fond.
+// La foreuse (25/10, redessinée) : une mèche en acier en forme de carotte (longue, pointue, avec
+// ses rainures en spirale), qui s'enfonce dans un trou plein de terre, tenue par un portique
+// jaune ; au-dessus, une roue dentée et un petit moteur rond en acier qui fume. Juste à côté de la mèche, un petit coffre en
+// bois cerclé de fer, plein de charbon (ce que la foreuse a sorti) ; un bidon au fond.
 // ---------------------------------------------------------------------------
 
 // L'acier de la mèche : le clair, le foncé (les rainures en spirale) et le reflet.
@@ -408,27 +525,30 @@ function bandesChantier(t, longueur, hauteur, jaune = C.jaune) {
   )
 }
 
-// La grosse mèche en acier, vue de côté : un cylindre puis une pointe, entourés de larges rainures
-// en spirale. (mx, yHaut) : le milieu de son haut, en pixels du dessin ; rx : son rayon (en
-// pixels) ; longueurs du cylindre et de la pointe (en pixels). « coupe » : un clipPath qui cache
-// le bout de la pointe, enfoncé dans le trou.
-function meche(t, mx, yHaut, rx, cylindre, pointe, coupe) {
+// La mèche en forme de carotte, vue de côté : large en haut, de plus en plus fine jusqu'à sa
+// pointe, entourée de rainures en spirale. (mx, yHaut) : le milieu de son haut, en pixels du
+// dessin ; rx : son rayon en haut (en pixels) ; longueur : de son haut à sa pointe (en pixels).
+// « coupe » : un clipPath qui cache ce qui est enfoncé dans le trou.
+function meche(t, mx, yHaut, rx, longueur, coupe) {
   const ry = rx * 0.58 // un cercle couché, vu à l'angle du jeu
-  const yBas = yHaut + cylindre + pointe
-  // Le rayon de la mèche à la profondeur h (en pixels sous son haut).
-  const rayon = (h) => (h <= cylindre ? rx : Math.max(0, rx * (1 - (h - cylindre) / pointe)))
-  const corps =
-    `M${r1(mx - rx)} ${r1(yHaut)} L${r1(mx - rx)} ${r1(yHaut + cylindre)} L${r1(mx)} ${r1(yBas)} ` +
-    `L${r1(mx + rx)} ${r1(yHaut + cylindre)} L${r1(mx + rx)} ${r1(yHaut)} A${r1(rx)} ${r1(ry)} 0 0 0 ${r1(mx - rx)} ${r1(yHaut)} Z`
+  // Le rayon de la mèche à la profondeur h (en pixels sous son haut) : comme une carotte, il
+  // diminue doucement puis plus vite vers la pointe.
+  const rayon = (h) => rx * Math.pow(Math.max(0, 1 - h / longueur), 0.7)
+  // Le contour : le côté gauche de haut en bas, la pointe, le côté droit de bas en haut, et
+  // l'arrondi du haut (la moitié de devant de l'ellipse).
+  const cotes = []
+  for (let i = 0; i <= 12; i++) cotes.push([mx - rayon((i / 12) * longueur), yHaut + (i / 12) * longueur])
+  for (let i = 12; i >= 0; i--) cotes.push([mx + rayon((i / 12) * longueur), yHaut + (i / 12) * longueur])
+  const corps = `M${points(cotes).replace(/ /g, ' L')} A${r1(rx)} ${r1(ry)} 0 0 0 ${r1(mx - rx)} ${r1(yHaut)} Z`
   const idCorps = t.nouvelId('meche')
   t.defs.push(`<clipPath id="${idCorps}"><path d="${corps}"/></clipPath>`)
   // Le côté droit, à l'ombre : la même mèche, en plus sombre, au-delà de cette ligne.
   const idOmbre = t.nouvelId('ombre')
-  t.defs.push(`<clipPath id="${idOmbre}"><rect x="${r1(mx + rx * 0.38)}" y="${r1(yHaut - ry - 10)}" width="${r1(rx)}" height="${r1(yBas - yHaut + ry + 20)}"/></clipPath>`)
+  t.defs.push(`<clipPath id="${idOmbre}"><rect x="${r1(mx + rx * 0.3)}" y="${r1(yHaut - ry - 10)}" width="${r1(rx)}" height="${r1(longueur + ry + 20)}"/></clipPath>`)
 
   // Une rainure en spirale (une hélice) : on suit le devant de la mèche, de la gauche (angle
   // -90°) à la droite (+90°) ; elle descend d'un demi-pas pendant ce temps. h : où elle commence.
-  const pas = 124
+  const pas = 84
   const helice = (h) => {
     const liste = []
     for (let i = 0; i <= 16; i++) {
@@ -439,36 +559,89 @@ function meche(t, mx, yHaut, rx, cylindre, pointe, coupe) {
     }
     return liste
   }
-  const largeurRainure = 42
+  const largeurRainure = 20
   const rainures = (clair, fonce_) => {
-    let svg = `<rect x="${r1(mx - rx - 4)}" y="${r1(yHaut - ry - 4)}" width="${r1(2 * rx + 8)}" height="${r1(yBas - yHaut + ry + 8)}" fill="${clair}"/>`
-    for (let h = -pas; h < cylindre + pointe; h += pas / 2) {
+    let svg = `<rect x="${r1(mx - rx - 4)}" y="${r1(yHaut - ry - 4)}" width="${r1(2 * rx + 8)}" height="${r1(longueur + ry + 8)}" fill="${clair}"/>`
+    for (let h = -pas; h < longueur; h += pas / 2) {
       const haut = helice(h)
       const bas = helice(h + largeurRainure)
       svg += polygone([...haut, ...bas.reverse()], fonce_, 0)
       // Les bords de la rainure, soulignés à l'encre.
       for (const bord of [helice(h), helice(h + largeurRainure)]) {
-        svg += `<polyline points="${points(bord)}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
+        svg += `<polyline points="${points(bord)}" fill="none" stroke="${C.encre}" stroke-width="3"/>`
       }
     }
     return svg
   }
   let svg = `<g clip-path="url(#${idCorps})">`
   svg += rainures(ACIER, ACIER_FONCE)
-  // Le reflet : une facette claire, toute droite, sur la gauche de la mèche.
-  svg += `<path d="M${r1(mx - rx * 0.62)} ${r1(yHaut - ry)} L${r1(mx - rx * 0.4)} ${r1(yHaut - ry)} L${r1(mx - rx * 0.2)} ${r1(yBas)} L${r1(mx - rx * 0.32)} ${r1(yBas)} Z" fill="${ACIER_REFLET}" opacity="0.85"/>`
+  // Le reflet : une bande claire qui suit le côté gauche de la mèche.
+  const reflet = []
+  for (let i = 0; i <= 10; i++) reflet.push([mx - rayon((i / 10) * longueur) * 0.55, yHaut - ry * 0.6 + (i / 10) * longueur * 0.9])
+  for (let i = 10; i >= 0; i--) reflet.push([mx - rayon((i / 10) * longueur) * 0.3, yHaut - ry * 0.6 + (i / 10) * longueur * 0.9])
+  svg += polygone(reflet, ACIER_REFLET, 0).replace('/>', ' opacity="0.85"/>')
   svg += `<g clip-path="url(#${idOmbre})">${rainures(fonce(ACIER, 0.18), fonce(ACIER_FONCE, 0.2))}</g>`
   svg += `</g>`
   svg += `<path d="${corps}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`
   t.ajouter(coupe ? `<g clip-path="url(#${coupe})">${svg}</g>` : svg)
 }
 
+// Quelques morceaux de charbon (de la forme de l'icône du jeu) posés en tas autour de (x, y, z).
+function tasDeCharbon(t, x, y, z, k = 1) {
+  const [cx, cy] = t.pt(x, y, z)
+  for (const [dx, dy, taille, angle] of [
+    [-12, -6, 22, -20],
+    [10, -8, 20, 15],
+    [-1, -16, 22, 5],
+    [-14, 4, 18, 30],
+    [13, 3, 19, -10],
+    [0, 2, 22, -35],
+  ]) {
+    t.ajouter(minerai('charbon', cx + dx * k, cy + dy * k, taille * k, angle))
+  }
+}
+
+// Le petit coffre de la foreuse : en bois, cerclé de fer, le couvercle ouvert (penché vers le
+// fond) et plein de charbon. Son coin du fond en (x0, y0), « lx » cases dans le sens des x, « ly »
+// dans le sens des y.
+function coffreForeuse(t, x0, y0, lx, ly, z) {
+  const [x1, y1, z1] = [x0 + lx, y0 + ly, z + 28]
+  const ferrure = teintes('#6d7290', '#535774', '#8b90ab')
+  // Le couvercle ouvert, penché vers le fond (on voit son dedans, plus sombre).
+  t.poly(
+    [
+      [x0, y0, z1],
+      [x1, y0, z1],
+      [x1, y0 - 0.3, z1 + 30],
+      [x0, y0 - 0.3, z1 + 30],
+    ],
+    fonce(C.boisFonce, 0.25),
+  )
+  t.boite(x0, y0, x1, y1, z, z1, teintes(C.bois, C.boisFonce))
+  // Le dedans, sombre, puis le charbon qui dépasse.
+  t.poly(
+    [
+      [x0 + 0.07, y0 + 0.07, z1],
+      [x1 - 0.07, y0 + 0.07, z1],
+      [x1 - 0.07, y1 - 0.07, z1],
+      [x0 + 0.07, y1 - 0.07, z1],
+    ],
+    fonce(C.boisFonce, 0.45),
+    { trait: TRAIT_FIN },
+  )
+  // Les bandes de fer (deux sur chaque façade qu'on voit) et la serrure dorée.
+  for (const x of [x0 + 0.13, x1 - 0.13]) t.ligne([x, y1, z + 3], [x, y1, z1 - 2], ferrure.droite, 4)
+  for (const y of [y0 + 0.12, y1 - 0.12]) t.ligne([x1, y, z + 3], [x1, y, z1 - 2], fonce(ferrure.droite, 0.2), 4)
+  const [sx, sy] = t.pt((x0 + x1) / 2, y1, z1 - 9)
+  t.ajouter(`<rect x="${r1(sx - 5)}" y="${r1(sy - 4)}" width="10" height="12" rx="2" fill="${C.jaune}" stroke="${C.encre}" stroke-width="3"/>`)
+  tasDeCharbon(t, (x0 + x1) / 2, (y0 + y1) / 2, z1 + 2, 0.9)
+}
+
 export function foreuse() {
-  const t = new Toile({ taille: 5, haut: 250 })
+  const t = new Toile({ taille: 5, haut: 214 })
   dalle(t, 5)
   const z = DALLE
   const jaune = teintes(C.jaune, fonce(C.jaune, 0.2), clair(C.jaune, 0.35))
-  const orange = teintes(C.orange, fonce(C.orange, 0.2))
   const metalFonce = teintes('#6d7290', '#535774', '#8b90ab')
 
   // La plateforme en acier, rayée de bandes de chantier sur ses deux façades de devant.
@@ -484,16 +657,16 @@ export function foreuse() {
   t.cylindre(4.1, 0.75, 0.24, zp, zp + 32, teintes(C.redstone, fonce(C.redstone, 0.25)), { cerclages: [zp + 11, zp + 21] })
 
   // La terre retournée autour du trou, puis le trou (sa paroi du fond, plus claire, et le noir).
-  t.ellipseSol(A, A, 1.95, zp, TERRE)
-  t.ellipseSol(A, A, 1.55, zp, fonce(TERRE, 0.55))
+  t.ellipseSol(A, A, 1.25, zp, TERRE)
+  t.ellipseSol(A, A, 0.82, zp, fonce(TERRE, 0.55))
   const [tx, ty] = t.pt(A, A, zp)
-  const rxTrou = 1.55 * DX * Math.SQRT2
-  const ryTrou = 1.55 * DY * Math.SQRT2
-  t.ajouter(`<ellipse cx="${r1(tx)}" cy="${r1(ty + 9)}" rx="${r1(rxTrou - 8)}" ry="${r1(ryTrou - 9)}" fill="${C.encre}"/>`)
+  const rxTrou = 0.82 * DX * Math.SQRT2
+  const ryTrou = 0.82 * DY * Math.SQRT2
+  t.ajouter(`<ellipse cx="${r1(tx)}" cy="${r1(ty + 5)}" rx="${r1(rxTrou - 6)}" ry="${r1(ryTrou - 6)}" fill="${C.encre}"/>`)
 
   // Le portique : deux pieds jaunes de part et d'autre du trou, des croisillons entre eux, et la
   // grosse poutre du haut, sur la diagonale qui passe par l'axe (elle est en travers à l'écran).
-  const zPoutre = 160
+  const zPoutre = 150
   const pieds = [
     [1.0, 3.9],
     [3.9, 1.0],
@@ -509,7 +682,7 @@ export function foreuse() {
     // Des bandes de chantier en bas du pied, et des rivets.
     t.surFace('gauche', x - e, y + e, zp + 12, bandesChantier(t, 2 * e * 38.15, 26))
     t.surFace('droite', x + e, y + e, zp + 12, bandesChantier(t, 2 * e * 38.15, 26, fonce(C.jaune, 0.2)))
-    for (const zr of [72, 102, 132]) {
+    for (const zr of [70, 96, 122]) {
       const [rx_, ry_] = t.pt(x - e + 0.22, y + e, zr)
       t.ajouter(`<circle cx="${r1(rx_)}" cy="${r1(ry_)}" r="3.2" fill="${fonce(C.jaune, 0.35)}"/>`)
     }
@@ -528,96 +701,82 @@ export function foreuse() {
     jaune,
   )
 
-  // Le moteur orange, posé sur la poutre : une grille et un voyant sur la façade de gauche, une
-  // roue dentée sur celle de droite.
-  const [m0, m1, zm0, zm1] = [A - 0.9, A + 0.9, zPoutre + 20, zPoutre + 66]
-  t.boite(m0, m0, m1, m1, zm0, zm1, orange)
-  t.boite(m0 - 0.07, m0 - 0.07, m1 + 0.07, m1 + 0.07, zm1, zm1 + 7, teintes(fonce(C.orange, 0.12), fonce(C.orange, 0.32)))
-  const faceMoteur = (m1 - m0) * 38.15
-  t.surFace(
-    'gauche',
-    m0,
-    m1,
-    zm0,
-    [12, 22, 32].map((v) => `<rect x="12" y="${-v - 8}" width="${r1(faceMoteur * 0.42)}" height="5" rx="2.5" fill="${fonce(C.orange, 0.35)}"/>`).join('') +
-      `<circle cx="${r1(faceMoteur * 0.76)}" cy="-26" r="9" fill="${C.redstone}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<circle cx="${r1(faceMoteur * 0.76 - 3)}" cy="-29" r="2.6" fill="${C.blanc}"/>`,
-  )
-  t.surFace(
-    'droite',
-    m1,
-    m1,
-    zm0,
-    `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="18" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" stroke-dasharray="7 4"/>` +
-      `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="11" fill="${fonce(C.jaune, 0.12)}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="4.5" fill="${C.encre}"/>`,
-  )
-  // Le pot d'échappement (au fond à droite du moteur) et sa fumée.
-  const zToit = zm1 + 7
-  t.cylindre(A + 0.5, A - 0.5, 0.15, zToit, zToit + 34, metalFonce, { cerclages: [zToit + 22] })
-  const [fx, fy] = t.pt(A + 0.5, A - 0.5, zToit + 48)
+  // Le moteur (25/10 : plus de grosse caisse orange) : sur la poutre, une grande roue dentée
+  // couchée qui fait tourner l'axe de la mèche, et au-dessus un petit moteur rond en acier, cerclé,
+  // boulonné, avec son pot d'échappement qui fume.
+  const acier = teintes('#a9b1bf', '#7f889a', '#d3d8e1')
+  const zRoue = zPoutre + 20
+  // La roue dentée : son épaisseur (la même roue, plus sombre, un peu plus bas), puis son dessus.
+  const roue = (zz, rInt, rExt, dents) => {
+    const liste = []
+    for (let i = 0; i < dents * 4; i++) {
+      const a = (i / (dents * 4)) * 2 * Math.PI
+      const r = i % 4 === 1 || i % 4 === 2 ? rExt : rInt
+      liste.push(t.pt(A + r * Math.cos(a), A + r * Math.sin(a), zz))
+    }
+    return liste
+  }
+  t.ajouter(polygone(roue(zRoue, 0.8, 1.0, 10), acier.droite, TRAIT_FIN))
+  t.ajouter(polygone(roue(zRoue + 10, 0.8, 1.0, 10), acier.haut, TRAIT_FIN))
+  t.ellipseSol(A, A, 0.6, zRoue + 10, acier.gauche, { trait: 3 })
+  // Les boulons sur la roue.
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * 2 * Math.PI + 0.3
+    const [bx, by] = t.pt(A + 0.7 * Math.cos(a), A + 0.7 * Math.sin(a), zRoue + 10)
+    t.ajouter(`<circle cx="${r1(bx)}" cy="${r1(by)}" r="3.4" fill="${C.encre}"/>`)
+  }
+  // Le petit moteur rond, posé sur la roue : un cylindre d'acier cerclé, un dôme, un voyant.
+  const [zm0, zm1] = [zRoue + 10, zRoue + 42]
+  t.cylindre(A, A, 0.42, zm0, zm1, acier, { cerclages: [zm0 + 8] })
+  const [dx_, dy_] = t.pt(A, A, zm1)
+  const rxDome = 0.42 * DX * Math.SQRT2
+  t.ajouter(`<path d="M${r1(dx_ - rxDome)} ${r1(dy_)} A${r1(rxDome)} ${r1(rxDome * 0.8)} 0 0 1 ${r1(dx_ + rxDome)} ${r1(dy_)} Z" fill="${acier.haut}" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
+  t.ajouter(`<circle cx="${r1(dx_)}" cy="${r1(dy_ - rxDome * 0.8 - 2)}" r="5" fill="${C.encre}"/>`)
+  const [vx_, vy_] = t.pt(A - 0.12, A + 0.42, zm0 + 20)
+  t.ajouter(`<circle cx="${r1(vx_)}" cy="${r1(vy_)}" r="6" fill="${C.redstone}" stroke="${C.encre}" stroke-width="3"/><circle cx="${r1(vx_ - 2)}" cy="${r1(vy_ - 2)}" r="1.8" fill="${C.blanc}"/>`)
+  // Le pot d'échappement, un tuyau coudé qui sort du moteur, et sa fumée.
+  const [ex0, ey0] = t.pt(A + 0.3, A - 0.3, zm0 + 18)
+  const tuyau = `M${r1(ex0)} ${r1(ey0)} L${r1(ex0 + 22)} ${r1(ey0)} L${r1(ex0 + 22)} ${r1(ey0 - 40)}`
+  t.ajouter(`<path d="${tuyau}" stroke="${C.encre}" stroke-width="${10 + 2 * TRAIT_FIN}" fill="none"/><path d="${tuyau}" stroke="#6d7290" stroke-width="10" fill="none"/>`)
   ;[
-    [0, 0, 10],
-    [12, -16, 13],
-    [4, -37, 16],
-  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
-  // La trémie à charbon sur le moteur : un entonnoir en métal plein de charbon.
-  const [hx, hy] = [A - 0.2, A + 0.2]
-  t.volume(
-    [
-      [hx - 0.32, hy - 0.32, zToit],
-      [hx + 0.32, hy - 0.32, zToit],
-      [hx + 0.32, hy + 0.32, zToit],
-      [hx - 0.32, hy + 0.32, zToit],
-      [hx - 0.62, hy - 0.62, zToit + 26],
-      [hx + 0.62, hy - 0.62, zToit + 26],
-      [hx + 0.62, hy + 0.62, zToit + 26],
-      [hx - 0.62, hy + 0.62, zToit + 26],
-    ],
-    [
-      [4, 5, 6, 7],
-      [0, 1, 5, 4],
-      [1, 2, 6, 5],
-      [2, 3, 7, 6],
-      [3, 0, 4, 7],
-    ],
-    teintes(C.metal, fonce(C.metal, 0.25), fonce(C.charbon, 0.1)),
-  )
-  tasDeMinerais(t, hx, hy, zToit + 28, [C.charbon, fonce(C.charbon, 0.3)], 1.25)
+    [22, -54, 9],
+    [32, -70, 12],
+    [24, -91, 15],
+  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(ex0 + dx)}" cy="${r1(ey0 + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
 
-  // Le mandrin (ce qui tient la mèche, sous la poutre), puis la grosse mèche, dont le bout
-  // disparaît dans le trou : on la coupe sous le bord de devant du trou.
-  const zMeche = 98
-  t.cylindre(A, A, 0.36, zMeche, zPoutre, metalFonce, { cerclages: [zMeche + 44, zMeche + 54] })
+  // Le mandrin (ce qui tient la mèche, sous la poutre), puis la mèche en carotte, dont la pointe
+  // entre dans le trou : on la coupe sous le bord de devant du trou.
+  const zMeche = 112
+  t.cylindre(A, A, 0.3, zMeche, zPoutre, metalFonce, { cerclages: [zMeche + 14, zMeche + 22] })
   const coupe = t.nouvelId('trou')
   t.defs.push(
     `<clipPath id="${coupe}"><path d="M${r1(tx - 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty)} L${r1(tx + rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 1 ${r1(tx - rxTrou)} ${r1(ty)} L${r1(tx - 300)} ${r1(ty)} Z"/></clipPath>`,
   )
   const [, yMeche] = t.pt(A, A, zMeche)
-  meche(t, tx, yMeche, 66, 26, 120, coupe)
+  meche(t, tx, yMeche, 30, zMeche - zp + 14, coupe)
   // Le bord de devant du trou, et des mottes de terre et des cailloux autour.
   t.ajouter(`<path d="M${r1(tx - rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 0 ${r1(tx + rxTrou)} ${r1(ty)}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
   for (const [dx, dy, l, h, graine, couleur] of [
-    [-80, 18, 30, 20, 3, TERRE],
-    [-52, 40, 24, 16, 5, C.pierre],
-    [70, 26, 30, 20, 7, TERRE],
-    [26, 52, 22, 14, 9, TERRE],
-    [-18, 54, 18, 12, 11, C.pierre],
+    [-62, 12, 26, 18, 3, TERRE],
+    [-40, 30, 20, 14, 5, C.pierre],
+    [56, 16, 26, 18, 7, TERRE],
+    [-8, 40, 18, 12, 11, C.pierre],
   ]) {
     t.ajouter(rocher(tx + dx, ty + dy, l, h, graine, couleur, TRAIT_FIN))
   }
-  // Des cailloux qui volent autour de la mèche (elle creuse !).
+  // Des cailloux qui volent autour de la pointe (elle creuse !).
   for (const [dx, dy, r] of [
-    [-82, -26, 6],
-    [-68, -50, 4],
-    [84, -34, 5],
-    [74, -58, 3.5],
+    [-44, -22, 5],
+    [-36, -42, 3.5],
+    [46, -26, 4.5],
+    [40, -46, 3],
   ]) {
     t.ajouter(`<circle cx="${r1(tx + dx)}" cy="${r1(ty + dy)}" r="${r}" fill="${fonce(TERRE, 0.25)}" stroke="${C.encre}" stroke-width="3"/>`)
   }
-  // Le tas de charbon, devant à droite (la foreuse en mange), et quelques morceaux à gauche.
-  tasDeMinerais(t, 4.2, 3.45, zp, [C.charbon, fonce(C.charbon, 0.3)], 1.4)
-  tasDeMinerais(t, 0.95, 4.35, zp, [C.charbon, fonce(C.charbon, 0.3)], 0.9)
+  // Juste à côté de la mèche, devant à droite : le petit coffre de la foreuse, plein de charbon.
+  coffreForeuse(t, 3.75, 2.2, 1.0, 0.7, zp)
+  // Quelques morceaux de charbon par terre, devant à gauche.
+  tasDeCharbon(t, 0.95, 4.3, zp, 0.8)
   return t
 }
 

@@ -28,7 +28,7 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
-import { t } from '../jeu/langue'
+import { nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
   CaseChemin,
@@ -85,7 +85,7 @@ type Props = {
   zonesRails?: boolean // on pose des rails : les bâtiments qu'on peut relier sont entourés de jaune
   onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
   // (23/10) Le rail proposé (doré) qu'on posera avec le bouton « Poser », et s'il peut l'être.
-  railPropose?: { c: Case; ok: boolean; depuis: Case | null; sens: { x: number; y: number } } | null
+  railPropose?: { c: Case; ok: boolean; depuis: Case | null; sens: { x: number; y: number }; suivi: number } | null
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -189,11 +189,14 @@ export function VueVillage({
   }
   // (25/10) Pendant qu'on pose des rails, la caméra va chercher le rail proposé s'il est caché
   // sous la barre du bas (ou hors de l'écran) : on voit toujours la flèche.
-  const cleRailPropose = railPropose ? `${railPropose.c.x},${railPropose.c.y}` : null
-  const [railSuivi, setRailSuivi] = useState<string | null>(null)
-  if (cleRailPropose !== railSuivi) {
+  // (seulement quand un bouton l'a déplacé : « suivi » change ; un toucher sur la carte, non)
+  const cleRailPropose = railPropose ? railPropose.suivi : null
+  const [railSuivi, setRailSuivi] = useState<number | null>(null)
+  if (cleRailPropose !== null && cleRailPropose !== railSuivi) {
+    const avant = railSuivi
     setRailSuivi(cleRailPropose)
-    if (railPropose) {
+    // (la première fois, on note seulement le compteur : c'était un toucher sur la carte)
+    if (avant !== null && railPropose) {
       const z = zoom ?? zoomConfort
       const vue = libre ?? { cx: versEcran(joueur.x, joueur.y).x, cy: versEcran(joueur.x, joueur.y).y - 20 }
       const p = versEcran(railPropose.c.x + 0.5, railPropose.c.y + 0.5)
@@ -526,7 +529,7 @@ export function VueVillage({
   let enAttente = 0
   let auQuai = 0
   etat.employes.forEach((mineur: Employe, index) => {
-    const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>
+    const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{nomEmploye(mineur.nom)}</span>
     let position: { x: number; y: number } | null = null
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
     let marche = false
@@ -584,7 +587,7 @@ export function VueVillage({
         etiquette={
           <>
             {colere && <span className="bulle-colere-village">😠</span>}
-            {arrivees.includes(mineur.nom) && <span className="bulle-nouveau-mineur">✨ Nouveau !</span>}
+            {arrivees.includes(mineur.nom) && <span className="bulle-nouveau-mineur">✨ {t('Nouveau !')}</span>}
             {etiquette}
           </>
         }

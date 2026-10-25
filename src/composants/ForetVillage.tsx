@@ -6,7 +6,7 @@
 // Les arbres sont toujours plantés au même endroit (hasard à graine fixe) : la forêt ne change
 // pas d'une partie à l'autre.
 //
-// Il y a environ 450 arbres (25/10 : deux fois moins qu'avant, pour aérer la carte) : en faire
+// Il y a environ 240 arbres (25/10 : quatre fois moins qu'au début, pour aérer la carte) : en faire
 // des centaines d'images de la page rendait la carte lente à faire
 // glisser. On les dessine donc dans des « toiles » (canvas), découpées en tuiles carrées, une
 // fois pour toutes. Après un zoom, les tuiles qu'on voit sont redessinées avec plus de pixels
@@ -39,13 +39,14 @@ const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.5, 0.25, 0]
 
 // La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
 // l'écart (en cases) entre deux arbres de ce rang. Les autres arbres restent derrière ce rang.
-// (25/10 : deux fois moins d'arbres qu'avant, pour aérer la carte : la lisière est un peu moins
-// serrée, et la forêt derrière a des bosquets et des petites clairières.)
+// (25/10 : deux fois moins d'arbres qu'avant, pour aérer la carte ; puis encore deux fois moins,
+// environ 230 : la lisière est un peu moins serrée, et la forêt derrière est faite de bosquets
+// séparés par des clairières.)
 const DISTANCE_LISIERE = 1.3
-const ECART_LISIERE = 2.8
-const RECUL_DERRIERE = 1.6
+const ECART_LISIERE = 3.1
+const RECUL_DERRIERE = 1.8
 // L'écart moyen (en cases) entre deux arbres de la forêt, derrière la lisière.
-const PAS_FORET = 2.4
+const PAS_FORET = 2.9
 
 // Des bosquets et des clairières : un nombre qui varie doucement d'un endroit à l'autre de la
 // forêt (entre -1 et 1 à peu près). Là où il est bas, on plante moins : de l'herbe entre des
@@ -125,12 +126,12 @@ function planterForet(): Arbre[] {
       // Juste derrière la lisière, un peu moins d'arbres, puis de plus en plus. Au fond de la
       // forêt, des arbres plus gros et moins nombreux (on n'en voit que le haut).
       const loin = dehors > 6
-      const chance = (dehors < 3.5 ? 0.6 : loin ? 0.5 : 0.85) + 0.3 * touffu(x, y)
+      const chance = (dehors < 3.5 ? 0.42 : loin ? 0.38 : 0.62) + 0.42 * touffu(x, y)
       if (hasard() > chance) continue
       // Seulement là où la caméra peut voir (un arbre haut dépasse au-dessus de son pied).
       const p = versEcran(x, y)
       if (p.x < x0 - 80 || p.x > x1 + 80 || p.y < y0 - 20 || p.y > y1 + 160) continue
-      planter(x, y, loin ? 2.2 + hasard() * 0.7 : 1.7 + hasard() * 0.6, dehors)
+      planter(x, y, loin ? 1.95 + hasard() * 0.55 : 1.7 + hasard() * 0.5, dehors)
     }
   }
   // Du fond vers l'avant : un arbre plus bas sur l'écran est dessiné par-dessus.

@@ -103,8 +103,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '30 secondes, et +{n} gemme pour toi !': '30 seconds, and +{n} gem for you!',
   'Bonus': 'Boosts',
   '{n} min': '{n} min',
-  'Trésor': 'Treasure',
-  'Un coffre plein de pièces : +{n} $ tout de suite (plus gros à chaque niveau de la mine).': 'A chest full of coins: +{n} $ right now (bigger at each mine level).',
   'Astuce : les gemmes paient aussi n’importe quelle amélioration (le bouton violet 💎, à côté du prix).': 'Tip: gems can also pay for any upgrade (the purple 💎 button, next to the price).',
 
   // src/composants/CarteClassement.tsx
@@ -685,14 +683,10 @@ export const TRADUCTIONS_EN: Record<string, string> = {
 
   // src/jeu/gemmes.ts
   '💎 +{n} gemme !': '💎 +{n} gem!',
-  'La mine, les mineurs et la foreuse creusent deux fois plus vite.': 'The mine, miners and drill dig twice as fast.',
   'Production × 2': 'Production × 2',
   'Tout ce que tu vends rapporte le double : coffre, wagonnets, foreuse.': 'Everything you sell earns double: chest, minecarts, drill.',
   'Ventes × 2': 'Sales × 2',
-  'Chaque clic sur le bloc de la mine en casse 3.': 'Each click on the mine’s block breaks 3.',
-  'Clics en or': 'Golden clicks',
   '{emoji} {nom} pendant {minutes} min !': '{emoji} {nom} for {minutes} min!',
-  '💰 Trésor : +{argent} $ !': '💰 Treasure: +{argent} $!',
   '🎁 Jour {jour} : +{gemmes} 💎 !': '🎁 Day {jour}: +{gemmes} 💎!',
 
   // src/jeu/generateur.ts
@@ -877,4 +871,12 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // src/composants/StockMinerais.tsx (réglage « garder »)
   'Garder': 'Keep',
   'tout': 'all',
+  'Chaque clic sur le bloc de la mine donne 3 blocs au lieu d’un.': 'Every click on the mine block gives 3 blocks instead of one.',
+  'Employés × 2': 'Workers × 2',
+  'La mine et la foreuse creusent deux fois plus vite.': 'The mine and the drill dig twice as fast.',
+  'Tes mineurs creusent et tes pousseurs poussent deux fois plus vite.': 'Your miners dig and your pushers push twice as fast.',
+  'Garder du {nom}': 'Keep {nom}',
+  'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it.',
+  '= garder un minerai pour tes améliorations (il n’est pas vendu)': '= keep an ore for your upgrades (it won’t be sold)',
+  'Demi-tour': 'Turn back',
 }

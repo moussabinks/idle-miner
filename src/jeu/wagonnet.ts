@@ -41,6 +41,7 @@ import { casesDansLeRayon, generateurEnMarche, livrerRedstone, multiplicateurGen
 import { ajouterA, encaisser, nouveauTrajet, parPrix, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
 import { nombre, t } from './langue'
+import { multiplicateurEmployes } from './gemmes'
 
 // ---------------------------------------------------------------------------
 // Les lignes de rails et les trajets
@@ -285,8 +286,9 @@ export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.p
   if (pousseur === 'electricite') return VITESSE_POUSSE_MINEUR * bonus
   // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard), et un
   // pousseur amélioré aussi (23/10 : sa vitesse).
+  // (25/10) Le bonus « Employés × 2 » de la boutique : il pousse deux fois plus vite.
   const employe = etat.employes.find((e) => e.nom === pousseur)
-  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) * niveauPousseur(employe).vitesse : 1) * bonus
+  return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) * niveauPousseur(employe).vitesse : 1) * bonus * multiplicateurEmployes(etat)
 }
 
 // Combien de fois plus vite pousse un pousseur, selon sa rareté : la moitié du bonus d'un

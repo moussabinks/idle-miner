@@ -53,18 +53,18 @@ Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) es
 
 ## 3. La boutique des gemmes (`Boutique.tsx`)
 
-On l'ouvre en touchant la case 💎 du bandeau. En haut, le solde de gemmes et un bouton **📺 +1 💎** pour regarder une publicité. Dessous, les **bonus** (`BOOSTS`) et le **trésor** (`TRESOR`) :
+On l'ouvre en touchant la case 💎 du bandeau. En haut, le solde de gemmes et un bouton **📺 +1 💎** pour regarder une publicité. Dessous, les **bonus** (`BOOSTS`), **3 💎 chacun** (25/10, prix du propriétaire ; plus de trésor) :
 
 | Bonus | Effet | Durée | Prix |
 |---|---|---:|---:|
-| ⚡ **Production × 2** | La mine (ce qu'elle sort toute seule), les mineurs et la foreuse creusent deux fois plus vite (`multiplicateurProduction`). | 15 min | 8 💎 |
-| 💰 **Ventes × 2** | Tout ce qu'on vend rapporte le double : le coffre, le chariot de la foreuse et les wagonnets (`multiplicateurVentes`, dans `valeurDe`). | 10 min | 8 💎 |
-| 👆 **Clics en or** | Chaque clic sur le bloc de la mine en casse **3** (en plus du doublement et des bonus de combo). | 5 min | 4 💎 |
-| 💰 **Trésor** | Un tas de pièces tout de suite, selon le palier de la mine : **600 $, 3 500 $, 14 000 $, 45 000 $ ou 140 000 $** (mine niveau 1 à 5, `argentTresor`). | — | 10 💎 |
+| ⚡ **Production × 2** | La mine (ce qu'elle sort toute seule) et la foreuse creusent deux fois plus vite (`multiplicateurProduction`). | 15 min | 3 💎 |
+| 💰 **Ventes × 2** | Tout ce qu'on vend rapporte le double : le coffre, le chariot de la foreuse et les wagonnets (`multiplicateurVentes`, dans `valeurDe`). | 15 min | 3 💎 |
+| 👷 **Employés × 2** | Les mineurs creusent et les pousseurs poussent deux fois plus vite (`multiplicateurEmployes`). | 15 min | 3 💎 |
+| ⛏️ **Fortune** (`clics`, avant « Clics en or ») | Chaque clic sur le bloc de la mine donne **3 blocs** au lieu d'un (en plus du doublement et des bonus de combo). | 5 min | 3 💎 |
 
 - Acheter un bonus **déjà en cours** ajoute sa durée à ce qui reste (`prolongerBoost`).
 - La durée se compte en **temps de jeu** (`stats.tempsDeJeu`) : elle s'use aussi pendant l'absence (le jeu rattrape l'absence en faisant avancer le temps). Un bonus est rangé dans la partie (`etat.boosts` : pour chaque bonus, l'heure de jeu où il s'arrête).
-- Le message : « ⚡ Production × 2 pendant 15 min ! », « 💰 Trésor : +3 500 $ ! ».
+- Le message : « ⚡ Production × 2 pendant 15 min ! ».
 
 ## 4. Le cadeau du jour (`RecompensesQuotidiennes.tsx`)
 
@@ -77,12 +77,12 @@ Un **calendrier de 7 jours**. Chaque jour où l'on revient, on ouvre le cadeau d
 
 | Jour | Gemmes | Bonus |
 |---:|---:|---|
-| 1 | 2 💎 | 👆 Clics en or 10 min |
+| 1 | 2 💎 | 👷 Employés × 2 10 min |
 | 2 | 3 💎 | 💰 Ventes × 2 15 min |
 | 3 | 3 💎 | ⚡ Production × 2 15 min |
 | 4 | 4 💎 | 💰 Ventes × 2 30 min |
 | 5 | 5 💎 | ⚡ Production × 2 30 min |
-| 6 | 6 💎 | 💰 Ventes × 2 30 min + 👆 Clics en or 15 min |
+| 6 | 6 💎 | 💰 Ventes × 2 30 min + 👷 Employés × 2 30 min |
 | **7** | **12 💎** | ⚡ **Production × 2 60 min** + 💰 **Ventes × 2 60 min** |
 
 Une semaine complète rapporte **35 gemmes**. Message : « 🎁 Jour 3 : +3 💎 ! ».
@@ -103,7 +103,7 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
 | `src/jeu/niveaux.ts` | Les 3 gemmes de chaque niveau gagné (`mettreAJourXp`). |
 | `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |
-| `src/composants/Boutique.tsx` | La boutique (publicité, bonus, trésor). |
+| `src/composants/Boutique.tsx` | La boutique (publicité, bonus). |
 | `src/composants/RecompensesQuotidiennes.tsx` | Le calendrier du cadeau du jour. |
 | `src/composants/Publicite.tsx` | La fausse publicité de 30 s. |
 | `src/composants/Amelioration.tsx` | Le bouton violet 💎 de chaque amélioration. |

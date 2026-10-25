@@ -5,13 +5,12 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { construireBatiment } from './batiments'
 import { NIVEAUX_COFFRE } from './donnees'
 import {
+  multiplicateurEmployes,
   BOOSTS,
   GEMMES_PAR_NIVEAU,
   GEMMES_PAR_PUB,
   RECOMPENSES_QUOTIDIENNES,
-  TRESOR,
   acheterBoost,
-  acheterTresor,
   boostActif,
   etatQuotidien,
   multiplicateurVentes,
@@ -150,15 +149,13 @@ describe('la boutique des gemmes', () => {
     expect(etat.argent).toBe(3 * 10 * 12)
   })
 
-  it('le trésor : de l’argent tout de suite, selon le palier de la mine', () => {
+  it('(25/10) le bonus « Employés × 2 » : 3 gemmes, 15 minutes', () => {
     const etat = partie()
-    etat.gemmes = TRESOR.gemmes - 1
-    expect(acheterTresor(etat)).toEqual([])
-    etat.gemmes = TRESOR.gemmes
-    etat.niveauMine = 3
-    acheterTresor(etat)
-    expect(etat.argent).toBe(TRESOR.argentParPalier[2])
+    etat.gemmes = 3
+    acheterBoost(etat, 'employes')
     expect(etat.gemmes).toBe(0)
+    expect(multiplicateurEmployes(etat)).toBe(2)
+    expect(secondesBoost(etat, 'employes')).toBe(15 * 60)
   })
 })
 
@@ -169,7 +166,7 @@ describe('les récompenses quotidiennes', () => {
     expect(recupererQuotidien(etat, '2026-10-25')[0]).toContain('Jour 1')
     expect(etat.gemmes).toBe(RECOMPENSES_QUOTIDIENNES[0].gemmes)
     // (25/10) plus d'argent : des gemmes et un bonus
-    expect(boostActif(etat, 'clics')).toBe(true)
+    expect(boostActif(etat, 'employes')).toBe(true)
     expect(etat.quotidien).toEqual({ dernierJour: '2026-10-25', serie: 1 })
   })
 

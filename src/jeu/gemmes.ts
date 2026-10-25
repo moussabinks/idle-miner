@@ -14,14 +14,15 @@
 
 import { BLOCS, type Cout, type IdBloc } from './donnees'
 import type { EtatJeu } from './mineur'
-import { nombre, t } from './langue'
+import { t } from './langue'
 
 // ---------------------------------------------------------------------------
 // Ce qui est sauvegardé avec la partie
 // ---------------------------------------------------------------------------
 
 // Les bonus de la boutique.
-export type IdBoost = 'production' | 'ventes' | 'clics'
+// (« clics » : la Fortune ; le nom d'avant est gardé, les parties l'ont déjà enregistré)
+export type IdBoost = 'production' | 'ventes' | 'clics' | 'employes'
 
 // Pour chaque bonus en cours : l'heure de jeu (stats.tempsDeJeu, en secondes) où il s'arrête.
 // Le temps de jeu avance aussi jeu fermé (on rattrape l'absence) : un bonus s'use donc aussi
@@ -78,15 +79,14 @@ export function prixEnGemmes(cout: Cout): number {
 // « court » : ce qu'il fait, en deux signes, pour les petites cases du cadeau du jour.
 export type InfoBoost = { id: IdBoost; nom: string; court: string; emoji: string; description: string; minutes: number; gemmes: number }
 
+// (25/10, prix revus par le propriétaire) Chaque bonus coûte 3 gemmes.
 export const BOOSTS: Record<IdBoost, InfoBoost> = {
-  production: { id: 'production', nom: 'Production × 2', court: '×2', emoji: '⚡', description: 'La mine, les mineurs et la foreuse creusent deux fois plus vite.', minutes: 15, gemmes: 8 },
-  ventes: { id: 'ventes', nom: 'Ventes × 2', court: '×2', emoji: '💰', description: 'Tout ce que tu vends rapporte le double : coffre, wagonnets, foreuse.', minutes: 10, gemmes: 8 },
-  clics: { id: 'clics', nom: 'Clics en or', court: '×3', emoji: '👆', description: 'Chaque clic sur le bloc de la mine en casse 3.', minutes: 5, gemmes: 4 },
+  production: { id: 'production', nom: 'Production × 2', court: '×2', emoji: '⚡', description: 'La mine et la foreuse creusent deux fois plus vite.', minutes: 15, gemmes: 3 },
+  ventes: { id: 'ventes', nom: 'Ventes × 2', court: '×2', emoji: '💰', description: 'Tout ce que tu vends rapporte le double : coffre, wagonnets, foreuse.', minutes: 15, gemmes: 3 },
+  clics: { id: 'clics', nom: 'Fortune', court: '×3', emoji: '⛏️', description: 'Chaque clic sur le bloc de la mine donne 3 blocs au lieu d’un.', minutes: 5, gemmes: 3 },
+  employes: { id: 'employes', nom: 'Employés × 2', court: '×2', emoji: '👷', description: 'Tes mineurs creusent et tes pousseurs poussent deux fois plus vite.', minutes: 15, gemmes: 3 },
 }
-export const LISTE_BOOSTS: IdBoost[] = ['production', 'ventes', 'clics']
-
-// Le trésor : un tas de pièces tout de suite, selon le palier de la mine.
-export const TRESOR = { gemmes: 10, argentParPalier: [600, 3500, 14000, 45000, 140000] }
+export const LISTE_BOOSTS: IdBoost[] = ['production', 'ventes', 'employes', 'clics']
 
 export function boostActif(etat: EtatJeu, id: IdBoost): boolean {
   return (etat.boosts?.[id] ?? 0) > etat.stats.tempsDeJeu
@@ -103,6 +103,12 @@ export function multiplicateurVentes(etat: EtatJeu): number {
 
 export function multiplicateurProduction(etat: EtatJeu): number {
   return boostActif(etat, 'production') ? 2 : 1
+}
+
+// (25/10) Le bonus « Employés × 2 » : les mineurs creusent et les pousseurs poussent deux fois
+// plus vite.
+export function multiplicateurEmployes(etat: EtatJeu): number {
+  return boostActif(etat, 'employes') ? 2 : 1
 }
 
 // Ajoute du temps à un bonus (s'il est déjà actif, le temps s'ajoute à ce qui reste).
@@ -123,18 +129,6 @@ export function acheterBoost(etat: EtatJeu, id: IdBoost): string[] {
   return [t('{emoji} {nom} pendant {minutes} min !', { emoji: boost.emoji, nom: t(boost.nom), minutes: boost.minutes })]
 }
 
-export function argentTresor(etat: EtatJeu): number {
-  return TRESOR.argentParPalier[Math.max(0, Math.min(etat.niveauMine, TRESOR.argentParPalier.length) - 1)]
-}
-
-export function acheterTresor(etat: EtatJeu): string[] {
-  if ((etat.gemmes ?? 0) < TRESOR.gemmes) return []
-  etat.gemmes -= TRESOR.gemmes
-  const argent = argentTresor(etat)
-  etat.argent += argent
-  return [t('💰 Trésor : +{argent} $ !', { argent: nombre(argent) })]
-}
-
 // ---------------------------------------------------------------------------
 // Les récompenses quotidiennes
 // ---------------------------------------------------------------------------
@@ -147,12 +141,12 @@ export type Recompense = { gemmes: number; bonus: BonusCadeau[] }
 
 // Les 7 jours de la série. Le 7e est le gros lot ; après, on recommence au jour 1.
 export const RECOMPENSES_QUOTIDIENNES: Recompense[] = [
-  { gemmes: 2, bonus: [{ id: 'clics', minutes: 10 }] },
+  { gemmes: 2, bonus: [{ id: 'employes', minutes: 10 }] },
   { gemmes: 3, bonus: [{ id: 'ventes', minutes: 15 }] },
   { gemmes: 3, bonus: [{ id: 'production', minutes: 15 }] },
   { gemmes: 4, bonus: [{ id: 'ventes', minutes: 30 }] },
   { gemmes: 5, bonus: [{ id: 'production', minutes: 30 }] },
-  { gemmes: 6, bonus: [{ id: 'ventes', minutes: 30 }, { id: 'clics', minutes: 15 }] },
+  { gemmes: 6, bonus: [{ id: 'ventes', minutes: 30 }, { id: 'employes', minutes: 30 }] },
   { gemmes: 12, bonus: [{ id: 'production', minutes: 60 }, { id: 'ventes', minutes: 60 }] },
 ]
 

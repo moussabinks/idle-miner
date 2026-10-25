@@ -122,7 +122,7 @@ Total : 60 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 20 émeraude.
 | Diamant | 45 % | 1 000 | 25 000 $ + 15 diamant | 5 | 600 $ + 3 diamant |
 
 - **Doublement** (`chanceDoublement`) : un minerai cassé en cliquant donne 2 au lieu d'1 si `aleatoire() < doublement`. 0 avec une pioche cassée. Seulement pour les clics. Un bonus de combo ajoute sa « fortune » (au plus 100 %), même avec une pioche cassée.
-- **Blocs par clic** : `(2 si doublé, sinon 1) × (blocs du bonus de combo) × (3 pendant le bonus « Clics en or »)` (`cliquerMine`). L'usure, les statistiques et l'XP comptent toujours un seul bloc.
+- **Blocs par clic** : `(2 si doublé, sinon 1) × (blocs du bonus de combo) × (3 pendant le bonus « Fortune »)` (`cliquerMine`). L'usure, les statistiques et l'XP comptent toujours un seul bloc.
 - **Usure** : +1 à chaque bloc cassé avec une pioche pas cassée. Cassée quand l'usure atteint la durabilité.
 - **Réparation** (`coutReparation`) : `part = min(1, usure / durabilité)` ; argent = `max(1, arrondi au-dessus(réparation.argent × part))`, chaque minerai = `max(1, arrondi au-dessus(n × part))`.
 
@@ -326,8 +326,8 @@ Tout le détail est dans [gemmes-et-recompenses.md](gemmes-et-recompenses.md). E
 
 - **Gagner** : 1 par publicité (`GEMMES_PAR_PUB`), 3 par niveau du joueur (`GEMMES_PAR_NIVEAU`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES` : 1, 2, 1, 3, 2, 4 et 10 gemmes, 23 par semaine).
 - **Prix en gemmes** d'un achat (`prixEnGemmes`) = `max(1, arrondi(√(valeur en $) ÷ 5))`, la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 1 000 $ → 6 💎, 80 000 $ → 57 💎.
-- **Boutique** (`BOOSTS`, `TRESOR`) : Production × 2 (15 min, 8 💎), Ventes × 2 (10 min, 8 💎), Clics en or (× 3 blocs par clic, 5 min, 4 💎), Trésor (10 💎 : 600, 3 500, 14 000, 45 000 ou 140 000 $ selon le palier).
-- **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Clics en or, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
+- **Boutique** (`BOOSTS`, 25/10) : Production × 2, Ventes × 2 et Employés × 2 (15 min chacun) et Fortune (× 3 blocs par clic, 5 min), **3 💎** chacun ; plus de trésor.
+- **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Employés × 2, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
 - **Absence × 2** (`doublerAbsence`) : une publicité redonne tout ce que l'absence a rapporté (l'argent gagné, plus la valeur de ce qui attend en plus dans le coffre et le chariot).
 
 ## Revenus par seconde

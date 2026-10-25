@@ -213,14 +213,14 @@ function imageCaisse(pleine: boolean, niveauMine: number): string {
   return IMAGES_CAISSE[pleine ? CAISSE_DU_NIVEAU[Math.max(1, Math.min(5, niveauMine))] : 0]
 }
 
-// Les calques de la mine, dans le même cadre que mine.svg (mêmes pixels, 684 × 695) : le devant
+// Les calques de la mine, dans le même cadre que mine.svg (mêmes pixels, 684 × 505) : le devant
 // (les poutres du bord de devant du puits), dessiné par-dessus la caisse quand elle descend.
 const IMAGE_DEVANT_MINE = cheminPublic('/images/batiments/mine-devant.svg')
 
 // De combien de pixels de l'image la caisse se décale : tout en haut, elle pend sous le treuil ;
 // tout en bas, elle a disparu dans le puits. Sans ascenseur (vieilles parties), les câbles
 // pendent au fond.
-const CABINE_EN_HAUT = -62
+const CABINE_EN_HAUT = -42
 const CABINE_EN_BAS = 190
 const CABLES_SANS_ASCENSEUR = 240
 

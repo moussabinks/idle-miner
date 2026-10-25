@@ -294,7 +294,13 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
       return
     }
     setTraceRail({ propose: avancerCase(c, tr.sens), sens: tr.sens, sensVoie: tr.sens, poses: [...tr.poses, c] })
+    suivreRail()
   }
+
+  // (25/10) La caméra ne va chercher le rail proposé que quand il bouge à cause d'un bouton
+  // (poser, tourner, demi-tour, retirer) : toucher la carte ne la déplace jamais.
+  const [suiviRail, setSuiviRail] = useState(0)
+  const suivreRail = () => setSuiviRail((n) => n + 1)
 
   function tournerRail(virage: Virage) {
     const tr = traceRail
@@ -302,6 +308,25 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     if (!tr || !dernier) return
     const sens = tourner(tr.sensVoie, virage)
     setTraceRail({ ...tr, sens, propose: avancerCase(dernier, sens) })
+    suivreRail()
+  }
+
+  // (25/10) La flèche « arrière » : la voie repart dans l'autre sens. Sans rail posé, la flèche se
+  // retourne ; sinon, la voie continue de l'autre bout (le premier rail posé).
+  function inverserRail() {
+    const tr = traceRail
+    if (!tr) return
+    const inverse = (s: { x: number; y: number }) => ({ x: -s.x, y: -s.y })
+    if (tr.poses.length === 0) {
+      setTraceRail({ ...tr, sens: inverse(tr.sens), sensVoie: inverse(tr.sensVoie) })
+    } else {
+      const poses = [...tr.poses].reverse()
+      const bout = poses[poses.length - 1]
+      const avant = poses[poses.length - 2]
+      const sensVoie = avant ? { x: bout.x - avant.x, y: bout.y - avant.y } : inverse(tr.sensVoie)
+      setTraceRail({ propose: avancerCase(bout, sensVoie), sens: sensVoie, sensVoie, poses })
+    }
+    suivreRail()
   }
 
   function retirerDernierRail() {
@@ -313,6 +338,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     const avantDernier = poses.at(-1)
     const sensVoie = avantDernier ? { x: dernier.x - avantDernier.x, y: dernier.y - avantDernier.y } : tr.sensVoie
     setTraceRail({ propose: dernier, sens: sensVoie, sensVoie, poses })
+    suivreRail()
   }
 
   // --- Les bâtiments : on les touche, leur fenêtre s'ouvre tout de suite (25/10) ---------------
@@ -564,33 +590,39 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           ({t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
         </p>
-        <div className="rangee rangee-centre rangee-rails">
-          {/* (25/10) La croix des rails, comme une manette : en haut, tout droit ; à gauche et à
-              droite, les virages ; en bas, revenir en arrière (retirer le dernier rail) ; au
-              milieu, poser. La flèche sur la carte montre où va la voie. */}
+        <div className="rails-commandes">
+          {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en
+              haut, tout droit ; à gauche et à droite, les virages ; en bas, demi-tour (la voie
+              repart dans l'autre sens) ; au milieu, poser. La poubelle retire le dernier rail. */}
           {tr && (
             <div className="croix-rails">
               <button className={`btn croix-haut ${virage === 'droit' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droit')} aria-label={t('Tout droit')}>
-                ⬆️
+                <FlecheCroix sorte="haut" />
               </button>
               <button className={`btn croix-gauche ${virage === 'gauche' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('gauche')} aria-label={t('Gauche')}>
-                ↰
+                <FlecheCroix sorte="gauche" />
               </button>
               <button className="btn btn-vert croix-centre" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
                 ✔️
-                <small>{t('Poser')}</small>
               </button>
               <button className={`btn croix-droite ${virage === 'droite' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droite')} aria-label={t('Droite')}>
-                ↱
+                <FlecheCroix sorte="droite" />
               </button>
-              <button className="btn btn-rose croix-bas" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
-                ↩
+              <button className="btn btn-blanc croix-bas" onClick={inverserRail} aria-label={t('Demi-tour')}>
+                <FlecheCroix sorte="demi-tour" />
               </button>
             </div>
           )}
-          <button className="btn btn-jaune" onClick={() => setPinceau(null)}>
-            {t('Terminé')}
-          </button>
+          <div className="rails-cote">
+            {tr && (
+              <button className="btn btn-rose btn-petit" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
+                🗑️ {t('Retirer')}
+              </button>
+            )}
+            <button className="btn btn-jaune btn-petit" onClick={() => setPinceau(null)}>
+              ✔️ {t('Terminé')}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -680,7 +712,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             onPeindre={peindre}
             trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
             zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
-            railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y), depuis: traceRail.poses.at(-1) ?? null, sens: traceRail.sens } : null}
+            railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y), depuis: traceRail.poses.at(-1) ?? null, sens: traceRail.sens, suivi: suiviRail } : null}
             onOuvrirTrajet={setTrajetsOuverts}
           />
           <Gains gains={gains} />
@@ -807,3 +839,23 @@ function App() {
 }
 
 export default App
+
+// (25/10) Les flèches de la croix des rails : toutes dessinées pareil (même épaisseur, même
+// couleur, contour d'encre), seule la forme change.
+function FlecheCroix({ sorte }: { sorte: 'haut' | 'gauche' | 'droite' | 'demi-tour' }) {
+  // Le trait de la flèche (dans un carré de 24 × 24), puis sa pointe.
+  const formes = {
+    haut: { trait: 'M12 20 V6', pointe: 'M6 11 L12 4 L18 11' },
+    gauche: { trait: 'M17 20 V12 Q17 8 13 8 H6', pointe: 'M10 3 L5 8 L10 13' },
+    droite: { trait: 'M7 20 V12 Q7 8 11 8 H18', pointe: 'M14 3 L19 8 L14 13' },
+    'demi-tour': { trait: 'M12 4 V18', pointe: 'M6 13 L12 20 L18 13' },
+  }[sorte]
+  return (
+    <svg className="fleche-croix" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">
+      <path d={formes.trait} fill="none" stroke="#2a2140" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={formes.pointe} fill="none" stroke="#2a2140" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={formes.trait} fill="none" stroke="#fdf6e3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={formes.pointe} fill="none" stroke="#fdf6e3" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}

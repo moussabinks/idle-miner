@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { LISTE_RARETES, RARETES } from '../jeu/donnees'
 import { rareteDe, salaireEmploye } from '../jeu/employes'
-import { nombre, t } from '../jeu/langue'
+import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe } from '../jeu/mineur'
 import { forcePousseur } from '../jeu/wagonnet'
 import { sons } from '../sons'
@@ -62,7 +62,7 @@ export function RevelationRecrue({ employe, onFermer }: Props) {
             <span className="revelation-etoiles">{etoiles}</span>
             <span className="revelation-rarete">{t(rarete.nom)} !</span>
             <span className="revelation-mineur">{pousseur ? '🛤️' : '👷'}</span>
-            <strong className="revelation-nom">{employe.nom}</strong>
+            <strong className="revelation-nom">{nomEmploye(employe.nom)}</strong>
             <span className="etiquette etiquette-jaune">{bonus > 1 ? (pousseur ? t('Pousse ×{n} plus vite', { n: nombre(bonus, 2) }) : t('Creuse ×{n} plus vite', { n: nombre(bonus, 2) })) : t('Solide et fiable')}</span>
             {pousseur && employe.trajet && <span className="revelation-detail">🛤️ {nomTrajet(employe.trajet)}</span>}
             <span className="revelation-detail">💵 {t('{n} $ / 5 min', { n: nombre(salaireEmploye(employe)) })}</span>

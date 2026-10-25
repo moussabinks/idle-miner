@@ -36,6 +36,7 @@ import { CarteInstallation } from './CarteInstallation'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 import { SceneAccueil } from './SceneAccueil'
+import { Drapeau } from './Drapeau'
 
 // Les couleurs des mondes (une par monde, pour les reconnaître d'un coup d'œil), en pastel.
 const COULEURS_MONDES = ['#f9d65a', '#8cc8f5', '#8fe08f', '#f39aa8', '#b9a0f5']
@@ -187,7 +188,7 @@ function ChoixLangue({ onLangue }: { onLangue: (l: Langue) => void }) {
             onLangue(l)
           }}
         >
-          {NOMS_LANGUES[l]}
+          <Drapeau langue={l} /> {NOMS_LANGUES[l]}
         </button>
       ))}
     </div>

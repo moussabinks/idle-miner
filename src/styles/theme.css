@@ -860,3 +860,18 @@ kbd {
     max-height: 94dvh;
   }
 }
+
+@media (max-width: 640px) and (max-height: 700px) {
+  .fenetre,
+  .fenetre-petite,
+  .fenetre-grande {
+    max-height: 97dvh;
+  }
+}
+
+/* Le drapeau d'une langue (Drapeau.tsx), à côté de son nom. */
+.drapeau {
+  display: inline-block;
+  flex: none;
+  vertical-align: -3px;
+}

@@ -81,7 +81,7 @@ import {
   verrouMinePioche,
   vitesseEmploye,
 } from '../jeu/employes'
-import { nombre, t } from '../jeu/langue'
+import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
 import { batimentPose } from '../jeu/village'
@@ -192,7 +192,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           {iconeActiviteEmploye(employe)}
         </span>
         <span className="carte-employe-nom">
-          <strong>{employe.nom}</strong>
+          <strong>{nomEmploye(employe.nom)}</strong>
           <EtiquetteRarete employe={employe} />
         </span>
         <span className={`etiquette ${paye ? '' : 'etiquette-rose'}`}>{paye ? `⏳ ${duree(employe.tempsPaye)}` : `😠 ${t('Pas payé')}`}</span>
@@ -296,8 +296,15 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
         )}
         {/* Avec le recruteur : une nouvelle recrue prend sa place (même pioche), rareté au hasard. */}
         {!pousseur && etat.recruteur > 0 && (
-          <button className="btn btn-vert btn-petit" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>
-            🎲 {t('Remplacer')} · {nombreAbrege(prixRemplacement(etat))} $
+          // (25/10) Le bouton du hasard : aux couleurs de toutes les raretés, qui défilent, et un dé
+          // qui roule (on tire une rareté au hasard).
+          <button className="btn btn-petit btn-hasard" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>
+            <span className="btn-hasard-de" aria-hidden="true">
+              🎲
+            </span>
+            <span className="btn-hasard-texte">
+              {t('Remplacer')} · {nombreAbrege(prixRemplacement(etat))} $
+            </span>
           </button>
         )}
         <button className="btn btn-rose btn-petit carte-employe-licencier" disabled={employe.etape === 'pousse'} onClick={onLicencier}>

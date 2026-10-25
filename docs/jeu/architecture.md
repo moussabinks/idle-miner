@@ -134,7 +134,7 @@ Ils lisent la partie avec **`useJeu()`** (`contexteJeu.ts`, 25/10) au lieu de la
 | `contexteJeu.ts` | **Nouveau (25/10)** : `useJeu()` donne la partie (`etat`), `jouer(action)`, `regarderPub(quandFinie)` et `ouvrirBoutique()` |
 | `Fenetre.tsx` | **Nouveau (25/10)** : **la** fenêtre du jeu, la même partout (bâtiments, succès, statistiques, boutique…) : un voile, un bandeau de couleur avec l'icône et le titre, le bouton ✖ rond, Échap ou un clic à côté pour fermer (sauf si `fermable` est faux), des boutons en bas (`pied`) ; elle monte du bas de l'écran sur téléphone |
 | `Amelioration.tsx` | Les lignes d'achat et d'amélioration, les mêmes partout : titre, niveau en carrés, effet, bouton vert avec le prix et **bouton violet 💎** pour payer en gemmes |
-| `Boutique.tsx` | **Nouveau (25/10)** : la boutique des gemmes (publicité, bonus, trésor) |
+| `Boutique.tsx` | **Nouveau (25/10)** : la boutique des gemmes (publicité, bonus) |
 | `RecompensesQuotidiennes.tsx` | **Nouveau (25/10)** : le cadeau du jour (calendrier de 7 jours) |
 | `Publicite.tsx` | **Nouveau (25/10)** : la fausse publicité de 30 s (remplacée par celle du SDK sur CrazyGames) |
 | `Reglages.tsx` | **Nouveau (25/10)** : les réglages ⚙️ (monde en cours, son, musique, langue, aide, changer de monde, recommencer à zéro avec confirmation) |
