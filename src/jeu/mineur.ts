@@ -634,6 +634,27 @@ export function vendreCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
 }
 
 // Vend tout un minerai du coffre (même ce qu'on garde).
+// (25/10, bug de l'absence) Vend juste assez du coffre pour avoir « montant » $ de plus : les
+// minerais les moins chers d'abord, jamais ce qu'on garde. Le manager s'en sert pour payer les
+// salaires quand l'argent manque : sans ça, pendant l'absence, il vidait l'argent du joueur en
+// salaires pendant que tout ce que les mineurs creusaient s'entassait dans le coffre.
+// Renvoie ce que la vente a rapporté.
+export function vendreDuCoffrePour(etat: EtatJeu, montant: number): number {
+  let gagne = 0
+  const lot = aVendreDuCoffre(etat)
+  const moinsChersDAbord = parPrix(lot).reverse()
+  for (const [bloc, disponibles] of moinsChersDAbord) {
+    if (gagne >= montant) break
+    const prixPiece = valeurDe({ [bloc]: 1 }, etat)
+    if (prixPiece <= 0) continue
+    const n = Math.min(disponibles, Math.ceil((montant - gagne) / prixPiece))
+    const avant = etat.argent
+    vendreCoffre(etat, { [bloc]: n })
+    gagne += etat.argent - avant
+  }
+  return gagne
+}
+
 export function vendreMinerai(etat: EtatJeu, bloc: IdBloc): string[] {
   return vendreCoffre(etat, { [bloc]: etat.coffre.contenu[bloc] ?? 0 })
 }
