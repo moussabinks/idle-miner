@@ -37,12 +37,12 @@ Valeurs de `PIOCHES` (`src/jeu/donnees.ts`). La pioche en **pierre** est offerte
 |---|---:|---:|---|---:|---|
 | 🪨 Pierre | 10 % | 150 clics | (offerte) | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 clics | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
-| 🟡 Or | 30 % | 500 clics | 3 500 $ + 30 or | 3 | 150 $ + 5 or |
-| 💚 Émeraude | 38 % | 750 clics | 9 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
-| 💎 Diamant | 45 % | 1 000 clics | 25 000 $ + 15 diamants | 5 | 600 $ + 3 diamants |
+| 🟡 Or | 30 % | 500 clics | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
+| 💚 Émeraude | 38 % | 750 clics | 6 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
+| 💎 Diamant | 45 % | 1 000 clics | 15 000 $ + 15 diamants | 5 | 600 $ + 3 diamants |
 | 💥 Cassée | 0 % | — | — | — | — |
 
-Avant le 25/10 : 400 $ + 20 fer, 4 000 $ + 40 or, 9 000 $ + 25 émeraudes et 20 000 $ + 20 diamants, débloquées aux niveaux 4, 7, 10 et 12 du joueur. Les réparations n'ont pas changé. Débloquer une pioche rapporte **30 XP** (plus 1 XP par 25 $ de son prix ; une seule fois : racheter une pioche neuve ne redonne rien). Chaque pioche peut aussi se payer en gemmes (bouton violet 💎).
+Avant le 25/10 : 400 $ + 20 fer, 4 000 $ + 40 or, 9 000 $ + 25 émeraudes et 20 000 $ + 20 diamants, débloquées aux niveaux 4, 7, 10 et 12 du joueur. (25/10, économie revue : l'or, l'émeraude et le diamant coûtaient d'abord 3 500 $, 9 000 $ et 25 000 $.) Les réparations n'ont pas changé. Débloquer une pioche rapporte **30 XP** (plus 1 XP par 25 $ de son prix ; une seule fois : racheter une pioche neuve ne redonne rien). Chaque pioche peut aussi se payer en gemmes (bouton violet 💎).
 
 Chaque pioche arrive avec le niveau de la mine où sort son minerai : l'or au niveau 3, l'émeraude au 4, le diamant au 5.
 

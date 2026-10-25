@@ -90,11 +90,11 @@ Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|
 | 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0,2 bloc/s (12 / min) | (départ) | — |
 | 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,3 bloc/s (18 / min) | 800 $ + 40 fer | 3 |
-| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,4 bloc/s (24 / min) | 12 000 $ + 100 fer + 40 redstone | 5 |
-| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,5 bloc/s (30 / min) | 70 000 $ + 100 redstone + 50 or | 7 |
-| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,6 bloc/s (36 / min) | 320 000 $ + 90 or + 35 émeraude | 9 |
+| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,4 bloc/s (24 / min) | 6 000 $ + 100 fer + 40 redstone | 5 |
+| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,5 bloc/s (30 / min) | 22 000 $ + 100 redstone + 50 or | 7 |
+| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,6 bloc/s (36 / min) | 80 000 $ + 90 or + 35 émeraude | 9 |
 
-Total pour aller au niveau 5 : **402 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude**. Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
+Total pour aller au niveau 5 : **108 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude** (25/10, économie revue : avant 402 800 $). Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
 
 Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **19,79 $** au niveau 5.
 
@@ -118,11 +118,11 @@ Chaque niveau de la mine est un **palier** : à la mine niveau N, toutes les am�
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
 | 2 | 300 | 200 $ + 40 pierre | 2 |
-| 3 | 800 | 3 000 $ + 80 fer | 3 |
-| 4 | 2 000 | 12 000 $ + 60 redstone + 20 or | 4 |
-| 5 | 5 000 | 45 000 $ + 60 or + 20 émeraude | 5 |
+| 3 | 800 | 2 000 $ + 80 fer | 3 |
+| 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
+| 5 | 5 000 | 18 000 $ + 60 or + 20 émeraude | 5 |
 
-Total : 60 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 20 émeraude.
+Total : 26 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 20 émeraude.
 
 ### L'ascenseur (`NIVEAUX_ASCENSEUR`)
 
@@ -132,11 +132,11 @@ Il ne transporte que les blocs des **mineurs employés** (le joueur ne descend p
 |---|---:|---:|---:|---:|---|---:|
 | 1 (au départ) | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | — | — |
 | 2 | 4,5 s | 0,9 s / 1,8 s | 25 | 2,1 bloc/s | 700 $ + 30 fer | 2 |
-| 3 | 3,5 s | 0,8 s / 1,5 s | 40 | 4,3 bloc/s | 5 000 $ + 90 fer + 30 redstone | 3 |
-| 4 | 2,6 s | 0,6 s / 1,2 s | 60 | 8,6 bloc/s | 18 000 $ + 100 redstone + 40 or | 4 |
-| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 60 000 $ + 80 or + 30 émeraude | 5 |
+| 3 | 3,5 s | 0,8 s / 1,5 s | 40 | 4,3 bloc/s | 3 000 $ + 90 fer + 30 redstone | 3 |
+| 4 | 2,6 s | 0,6 s / 1,2 s | 60 | 8,6 bloc/s | 8 000 $ + 100 redstone + 40 or | 4 |
+| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 22 000 $ + 80 or + 30 émeraude | 5 |
 
-Total : 83 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
+Total : 33 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
 
 ## Règles et comportement
 

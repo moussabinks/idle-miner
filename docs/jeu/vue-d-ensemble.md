@@ -66,7 +66,7 @@ les mineurs creusent ┘          │
 1. **Départ** : au village, devant la mine, avec **80 $**, une **pioche en pierre** offerte, un coffre de 100 places, l'ascenseur de niveau 1, et une mine qui sort déjà **0,2 bloc par seconde**. Rien d'autre n'est construit. Le **tutoriel** (Pépite, une taupe mineuse) fait faire les premiers pas jusqu'au moment fort : **casser 10 blocs**, **vendre le coffre** (depuis la mine), **construire le Personnel** (40 $) et **embaucher son premier mineur** (50 $). Après le « bravo », la liste des tâches guide sans obliger.
 2. **Creuser** : on touche la mine (ou le bouton ⛏️ Mine) : le panneau s'ouvre, avec le bloc à cliquer. Au niveau 1 : 70 % de pierre, 18 % de charbon, 12 % de fer. La pioche s'use d'un point par clic ; cassée, il faut 2 clics par bloc.
 3. **Vendre** : **💰 Tout vendre** (ou « Vendre » sur la ligne d'un minerai). On épingle 📌 le fer ou la pierre qu'on veut garder pour ses achats.
-4. **Construire et améliorer** : forgeron (30 $ + 15 pierre : la pioche en fer arrive avec la mine niveau 2), Personnel (mineurs : 50 $, puis 1 200 $, 7 000 $… et un salaire de 120 $ toutes les 5 minutes), mine (coffre, niveau suivant, ascenseur). Chaque chose faite rapporte de l'XP.
+4. **Construire et améliorer** : forgeron (30 $ + 15 pierre : la pioche en fer arrive avec la mine niveau 2), Personnel (mineurs : 50 $, puis 800 $, 3 000 $… et un salaire de 120 $ toutes les 5 minutes), mine (coffre, niveau suivant, ascenseur). Chaque chose faite rapporte de l'XP.
 5. **Les rails** (3 fer la case, au **niveau 2 du joueur**) : une ligne continue de la mine au **marché** (gratuit, jamais en boucle). Dès que les rails relient deux bâtiments, la fenêtre du trajet s'ouvre (ou la bulle **« 🛤️ Automatiser »**) : le wagonnet emporte le coffre au marché, l'y vend et revient. Il faut le **pousser** : toi, ou un **pousseur** (300 $) embauché au Personnel pour ce trajet.
 6. **Niveau 2 de la mine** (800 $ + 40 fer, au niveau 3 du joueur) : la redstone arrive, avec la **foreuse** et le **générateur**, et le **palier 2** : coffre de 300 places, pioche en fer, ascenseur 2, mineurs en pioche de fer, etc. Le générateur brûle la redstone (1 redstone = 30 s) et électrifie un cercle de 12 cases autour de lui : si **tous les rails d'un trajet** sont dedans, son pousseur va plus vite.
 7. **Niveaux 3, 4 et 5** : or (et le **manager**, qui paie les salaires tout seul), émeraudes (et le **recruteur**, pour des mineurs rares), diamants. Chaque niveau permet **1 mineur de plus** (1 au niveau 1, 5 au niveau 5) et débloque le palier suivant.
@@ -79,11 +79,11 @@ Pendant ce temps, la **mine toute seule**, les **mineurs** (tant qu'on paie leur
 |---|---|---|---|---|---|---|---|---|
 | **1** | Galerie de surface | pierre, charbon, fer | (départ) | — | 0,2 bloc/s (12 / min) | 1 | Personnel, Marché, Forgeron ; rails au niveau 2 du joueur ; palier 1 | 0 min |
 | **2** | Veine de redstone | redstone | 800 $ + 40 fer | 3 | 0,3 bloc/s (18 / min) | 2 | **Foreuse**, **Générateur** ; palier 2 | ~4 min |
-| **3** | Filon d'or | or | 12 000 $ + 100 fer + 40 redstone | 5 | 0,4 bloc/s (24 / min) | 3 | **Manager** (paie les salaires) ; palier 3 | ~32 min |
-| **4** | Grotte aux émeraudes | émeraude | 70 000 $ + 100 redstone + 50 or | 7 | 0,5 bloc/s (30 / min) | 4 | **Recruteur** (rareté des mineurs) ; manager niveau 2 ; palier 4 | ~1 h 39 |
-| **5** | Cœur de diamant | diamant | 320 000 $ + 90 or + 35 émeraudes | 9 | 0,6 bloc/s (36 / min) | 5 | le diamant ; recruteur niveaux 2 et 3, manager niveau 3 ; palier 5 | ~4 h |
+| **3** | Filon d'or | or | 6 000 $ + 100 fer + 40 redstone | 5 | 0,4 bloc/s (24 / min) | 3 | **Manager** (paie les salaires) ; palier 3 | ~24 min |
+| **4** | Grotte aux émeraudes | émeraude | 22 000 $ + 100 redstone + 50 or | 7 | 0,5 bloc/s (30 / min) | 4 | **Recruteur** (rareté des mineurs) ; manager niveau 2 ; palier 4 | ~54 min |
+| **5** | Cœur de diamant | diamant | 80 000 $ + 90 or + 35 émeraudes | 9 | 0,6 bloc/s (36 / min) | 5 | le diamant ; recruteur niveaux 2 et 3, manager niveau 3 ; palier 5 | ~1 h 40 |
 
-Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 2 à 10 minutes, niveau 5 en 3 h à 6 h (un vrai joueur met plutôt 5 à 8 h). Avant le 25/10, il fallait 15 à 40 minutes pour le niveau 2 et 6 à 9 h pour le niveau 5. Le détail des niveaux du joueur est dans [niveaux.md](niveaux.md).
+Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 2 à 10 minutes, niveau 5 en 1 h à 3 h (un vrai joueur met plutôt 2 h 30 à 4 h). Le 25/10, l'économie a été revue (paliers 3 à 5 et embauches moins chers) : avant, il fallait 3 h à 6 h pour le niveau 5. Avant le 25/10, il fallait 15 à 40 minutes pour le niveau 2 et 6 à 9 h pour le niveau 5. Le détail des niveaux du joueur est dans [niveaux.md](niveaux.md).
 
 ## Glossaire
 
@@ -118,7 +118,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, wagonnets. Les clics non. La fenêtre « Bon retour, mineur ! » le résume, et une publicité peut le doubler. |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de son métier. |
 | **Ligne (de rails)** | Une suite de rails continue entre deux bâtiments. Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
-| **Manager** | Débloqué au niveau 3 de la mine (8 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur, tant qu'il est éveillé (30 min, 1 h ou 2 h selon son niveau). Un interrupteur l'arrête. |
+| **Manager** | Débloqué au niveau 3 de la mine (5 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur, tant qu'il est éveillé (30 min, 1 h ou 2 h selon son niveau). Un interrupteur l'arrête. |
 | **Marché** | Le bâtiment où arrivent les wagonnets : ils y vendent tout seuls. Il ne sert plus qu'à l'automatisation (25/10). |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, diamant (tout sauf la pierre). |
 | **Mission / tâche** | Une à trois choses à faire, en haut à droite : une urgence (salaires, coffre plein), un premier pas, un bâtiment, une étape de l'automatisation, ou l’amélioration la plus proche : seulement des choses faisables (25/10). |
@@ -135,12 +135,11 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Rails** | 3 fer la case, à partir du niveau 2 du joueur : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Remboursés quand on les retire. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur (× 1 à × 5) et son salaire (× 1 à × 4). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. |
-| **Recruteur** | Débloqué au niveau 4 de la mine (3 niveaux, de 25 000 à 150 000 $) : donne une rareté aux employés embauchés, et permet de **remplacer** un mineur. |
+| **Recruteur** | Débloqué au niveau 4 de la mine (3 niveaux, de 10 000 à 50 000 $) : donne une rareté aux employés embauchés, et permet de **remplacer** un mineur. |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse), dans le bandeau. Les clics ne comptent pas. |
 | **Succès** | 21 accomplissements (`succes.ts`). |
 | **Taupe** | (25/10) Tous les personnages : le joueur, les mineurs (casque de la couleur de leur rareté), le manager, le recruteur, et Pépite du tutoriel. Avant, des hamsters. |
 | **Trajet** | Un wagonnet entre deux bâtiments, créé par le joueur sur ses rails : Mine → Marché, Mine → Foreuse, Mine → Générateur ou Foreuse → Marché. Un wagonnet par trajet. |
-| **Trésor** | (25/10) À la boutique, 10 gemmes : un tas de pièces selon le palier de la mine (600 $ à 140 000 $). |
 | **Village** | La clairière vue du ciel, où tout se passe. Voir [village.md](village.md). |
 | **Wagonnet** | Le chariot qui roule sur les rails, un par trajet : il charge au départ, livre à l'arrivée (vend au marché, ou apporte charbon ou redstone) et revient. Poussé par toi (3 cases/s) ou par son pousseur (2,5 cases/s × sa vitesse, plus vite sous électricité). |
 | **XP** | Les points d'expérience du joueur : 1 pour 3 blocs cassés en cliquant, 70 par bâtiment, 3 par case de rails, 30 par trajet, 40 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, et 1 par 25 $ dépensés. Une chose ne rapporte qu'une fois. |

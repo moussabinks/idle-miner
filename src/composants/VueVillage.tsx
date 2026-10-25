@@ -703,7 +703,7 @@ export function VueVillage({
   const pForeuse = auDessus('foreuse')
   if (pForeuse && foreuseEnMarche(etat)) {
     // (25/10) Plus de jauge (elle se remplissait à chaque bloc, chaque seconde) : juste « ça fore ».
-    bulles.push(<EtiquetteVillage key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte={`⚙️ ${t('Ça fore : {n} blocs/s', { n: nombre(vitesseForage(etat), 1) })}`} />)
+    bulles.push(<EtiquetteVillage key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte={`⚙️ ${t('Ça fore : {n} bloc(s)/s', { n: nombre(vitesseForage(etat), 1) })}`} />)
   }
   const pGenerateur = auDessus('generateur')
   if (pGenerateur && generateurEnMarche(etat)) {

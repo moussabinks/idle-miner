@@ -52,22 +52,22 @@ Chaque ligne d'amélioration (`Amelioration.tsx`) a **deux boutons** : le vert, 
 **Le prix en gemmes** (`prixEnGemmes`, revu le 25/10 à la demande du propriétaire) va de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
 
 ```
-prix en gemmes = arrondi( 3 + 2 × (log10(valeur en $) − 2) ), entre 3 et 10
+prix en gemmes = arrondi( 3 + 2,4 × (log10(valeur en $) − 2) ), entre 3 et 10
 ```
 
-Autrement dit : 2 gemmes de plus chaque fois que le prix est multiplié par 10. Avant, le prix suivait la racine carrée de la valeur et dépassait 100 gemmes en fin de partie.
+Autrement dit : 2,4 gemmes de plus chaque fois que le prix est multiplié par 10 (25/10, économie revue : avant 2), pour que les prix plus bas de la fin de partie coûtent toujours jusqu'à 10 gemmes. Avant, le prix suivait la racine carrée de la valeur et dépassait 100 gemmes en fin de partie.
 
 | Achat | Valeur | Prix en gemmes |
 |---|---:|---:|
 | Premier mineur | 50 $ | 3 💎 |
 | Coffre de 300 places (200 $ + 40 pierre) | 240 $ | 4 💎 |
-| Pioche en fer (300 $ + 20 fer) | 540 $ | 4 💎 |
+| Pioche en fer (300 $ + 20 fer) | 540 $ | 5 💎 |
 | Une amélioration à 1 000 $ | 1 000 $ | 5 💎 |
-| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 5 💎 |
-| Mine niveau 3 (12 000 $ + 100 fer + 40 redstone) | 13 800 $ | 7 💎 |
-| Une amélioration à 80 000 $ | 80 000 $ | 9 💎 |
-| Générateur niveau 5 (100 000 $ + 400 fer + 350 redstone) | 110 050 $ | 9 💎 |
-| Mine niveau 5 (320 000 $ + 90 or + 35 émeraudes) | 325 950 $ | 10 💎 |
+| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 6 💎 |
+| Mine niveau 3 (6 000 $ + 100 fer + 40 redstone) | 7 800 $ | 8 💎 |
+| Une amélioration à 20 000 $ | 20 000 $ | 9 💎 |
+| Générateur niveau 5 (35 000 $ + 400 fer + 350 redstone) | 45 050 $ | 9 💎 |
+| Mine niveau 5 (80 000 $ + 90 or + 35 émeraudes) | 85 950 $ | 10 💎 |
 
 Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) est lancée dans `acheterAvecGemmes(() => action)` (`mineur.ts`) : pendant ce temps, `payer` retire des gemmes au lieu de l'argent et des minerais. `peutPayerEnGemmes` dit si on en a assez.
 

@@ -36,9 +36,9 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 | Embauche | 1er | 2e | 3e | 4e | 5e |
 |---|---:|---:|---:|---:|---:|
-| Mineur (25/10) | **50 $** | 1 200 $ | 7 000 $ | 25 000 $ | 80 000 $ |
+| Mineur (25/10) | **50 $** | 800 $ | 3 000 $ | 8 000 $ | 20 000 $ |
 
-(Avant le 25/10 : 500 $, 3 500 $, 15 000 $, 45 000 $ et 130 000 $.) Au-delà de la liste, chaque embauche coûterait 2,2 fois la précédente (`HAUSSE_APRES_LISTE`). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus. Une embauche peut aussi se payer en gemmes. Chaque embauche rapporte **40 XP** (une seule fois : licencier puis réembaucher ne redonne rien).
+(Avant le 25/10 : 500 $, 3 500 $, 15 000 $, 45 000 $ et 130 000 $ ; puis, avant l'économie revue du 25/10 : 50 $, 1 200 $, 7 000 $, 25 000 $ et 80 000 $.) La liste continue (45 000, 100 000, 220 000, 500 000 et 1 000 000 $), puis chaque embauche coûterait 2,2 fois la précédente (`HAUSSE_APRES_LISTE`). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus. Une embauche peut aussi se payer en gemmes. Chaque embauche rapporte **40 XP** (une seule fois : licencier puis réembaucher ne redonne rien).
 
 - Le nouveau mineur reçoit un **prénom au hasard** pas encore pris (Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot, Romain, Dodo, Guewen ; avec un numéro si tous sont pris).
 - Il commence avec une **pioche en bois** et **ses 5 premières minutes de salaire comprises**. Il sort du Personnel, marche jusqu'à la mine et descend dans la caisse de l'ascenseur.
@@ -52,11 +52,11 @@ Chaque pioche le fait creuser plus vite, avec un plus grand sac (le tas où il p
 |---|---|---:|---:|---:|---:|---:|
 | 1 | Bois | 0,5 bloc/s | 10 | (de base) | — | 120 $ |
 | 2 | Fer | 0,75 bloc/s | 18 | 400 $ | 2 | 300 $ |
-| 3 | Or | 1 bloc/s | 28 | 4 000 $ | 3 | 700 $ |
-| 4 | Émeraude | 1,3 bloc/s | 40 | 15 000 $ | 4 | 1 300 $ |
-| 5 | Diamant | 1,7 bloc/s | 55 | 50 000 $ | 5 | 2 600 $ |
+| 3 | Or | 1 bloc/s | 28 | 2 500 $ | 3 | 700 $ |
+| 4 | Émeraude | 1,3 bloc/s | 40 | 7 000 $ | 4 | 1 300 $ |
+| 5 | Diamant | 1,7 bloc/s | 55 | 18 000 $ | 5 | 2 600 $ |
 
-(25/10 : la pioche en pierre est retirée, il en reste 5 ; avant, 6 pioches de 500 $ à 60 000 $, et des salaires de 220 $ à 2 200 $.) Le salaire fait environ 26 % de ce que le mineur fait sortir de la mine au palier de sa pioche : **une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire**. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-niveaux_ascenseur)). Toutes ses pioches : 69 400 $.
+(25/10 : la pioche en pierre est retirée, il en reste 5 ; avant, 6 pioches de 500 $ à 60 000 $, et des salaires de 220 $ à 2 200 $.) Le salaire fait environ 26 % de ce que le mineur fait sortir de la mine au palier de sa pioche : **une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire**. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-niveaux_ascenseur)). Toutes ses pioches : 27 900 $ (25/10, économie revue : avant 69 400 $).
 
 - **Sa pioche lui descend par l'ascenseur** : si un forgeron est posé, il attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse ; sinon, il l'a directement. Il ne remonte jamais pour ça.
 
@@ -68,7 +68,7 @@ Un pousseur est un **métier à part** : on l'embauche **pour un seul trajet** (
 
 | Embauche | 1er | 2e | 3e | 4e |
 |---|---:|---:|---:|---:|
-| Pousseur (25/10, `PRIX_EMBAUCHE_POUSSEUR`) | **300 $** | 1 500 $ | 5 000 $ | 12 000 $ |
+| Pousseur (25/10, `PRIX_EMBAUCHE_POUSSEUR`) | **300 $** | 1 000 $ | 2 500 $ | 5 000 $ |
 
 **Son travail** : il marche du Personnel jusqu'au **quai** (le début des rails de son trajet, devant le bâtiment de départ), attend son wagonnet, le **pousse jusqu'à l'arrivée** dès qu'il a quelque chose à porter (2,5 cases/s × sa vitesse × sa rareté ; + 30 % à + 75 % sur un trajet électrique), puis le ramène. Ses arrêts (charger, vider ou vendre) durent toujours 1 s. On peut **changer son trajet** sur sa carte. Si son trajet est arrêté, la bulle **🛤️ Sans trajet** apparaît.
 
@@ -77,10 +77,10 @@ Un pousseur est un **métier à part** : on l'embauche **pour un seul trajet** (
 | Niveau | 🏃 Vitesse (`NIVEAUX_POUSSEUR`) | Prix | 🛒 Chariot (`NIVEAUX_CHARIOT_POUSSEUR`) | Prix | Palier |
 |---|---|---:|---:|---|---:|
 | 1 | Débutant × 1 | (de base) | 20 places | (de base) | — |
-| 2 | Costaud × 1,2 | 1 000 $ | 40 | 800 $ + 40 fer | 2 |
-| 3 | Robuste × 1,4 | 5 000 $ | 70 | 4 000 $ + 100 fer | 3 |
-| 4 | Expert × 1,65 | 15 000 $ | 110 | 14 000 $ + 200 fer | 4 |
-| 5 | Champion × 1,9 | 45 000 $ | 170 | 45 000 $ + 400 fer | 5 |
+| 2 | Costaud × 1,2 | 600 $ | 40 | 800 $ + 40 fer | 2 |
+| 3 | Robuste × 1,4 | 2 000 $ | 70 | 2 500 $ + 100 fer | 3 |
+| 4 | Expert × 1,65 | 5 000 $ | 110 | 6 000 $ + 200 fer | 4 |
+| 5 | Champion × 1,9 | 12 000 $ | 170 | 15 000 $ + 400 fer | 5 |
 
 Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse lui-même a 20 places). (25/10 : plus de prix « × le niveau du joueur », et 5 niveaux au lieu de 5 et 7.) Si son chariot ne suit pas ce que sort le bâtiment de départ, une alerte le dit au panneau de la mine (ou de la foreuse), avec un bouton vers le Personnel.
 
@@ -100,9 +100,9 @@ Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse 
 
 | Mineurs dans l'équipe | 1 | 2 | 3 | 4 | 5 |
 |---|---:|---:|---:|---:|---:|
-| Indemnités (25/10) | 20 $ | 480 $ | 2 800 $ | 10 000 $ | 32 000 $ |
+| Indemnités (25/10) | 20 $ | 320 $ | 1 200 $ | 3 200 $ | 8 000 $ |
 
-Pour les pousseurs : 120 $, 600 $, 2 000 $ et 4 800 $. L'employé part avec son équipement.
+Pour les pousseurs : 120 $, 400 $, 1 000 $ et 2 000 $. L'employé part avec son équipement.
 
 ### 6. Le recruteur (palier 4 de la mine)
 
@@ -110,11 +110,11 @@ Pour les pousseurs : 120 $, 600 $, 2 000 $ et 4 800 $. L'employé part avec son 
 
 | Niveau | Prix (25/10) | Palier | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| 1 (embauche) | 25 000 $ | 4 | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 70 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
-| 3 | 150 000 $ | 5 | 50 % | 25 % | 14 % | 8 % | 3 % |
+| 1 (embauche) | 10 000 $ | 4 | 65 % | 20 % | 10 % | 4 % | 1 % |
+| 2 | 25 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
+| 3 | 50 000 $ | 5 | 50 % | 25 % | 14 % | 8 % | 3 % |
 
-Total : 245 000 $.
+Total : 85 000 $ (25/10, économie revue : avant 245 000 $).
 
 - **Les raretés** (`RARETES`) :
 
@@ -130,18 +130,18 @@ Total : 245 000 $.
 
 ### 7. Le manager (palier 3 de la mine)
 
-- **Embauche : 8 000 $** (`PRIX_MANAGER`, 25/10 ; avant 10 000 $), ses 5 premières minutes comprises. **Son salaire : 400 $ toutes les 5 minutes** (`SALAIRE_MANAGER`), pris dans l'argent du joueur.
+- **Embauche : 5 000 $** (`PRIX_MANAGER`, 25/10 ; avant 10 000 $, puis 8 000 $ avant l'économie revue), ses 5 premières minutes comprises. **Son salaire : 400 $ toutes les 5 minutes** (`SALAIRE_MANAGER`), pris dans l'argent du joueur.
 - **Il paie tout seul** : dès qu'il reste moins d'une minute payée, il paie 5 minutes de plus **avec l'argent du joueur**, d'abord lui-même, puis les employés du moins cher au plus cher. S'il n'est pas payé, il ne paie plus personne.
 - **(25/10) Il vend du coffre s'il le faut** : quand l'argent ne suffit pas pour un salaire, il vend juste ce qu'il faut du coffre de la mine, les minerais les moins chers d'abord, jamais ceux qu'on garde (📌) (`vendreDuCoffrePour`). Avant, pendant une absence, il vidait l'argent du joueur en salaires pendant que tout ce que les mineurs creusaient s'entassait dans le coffre : on revenait sans un sou.
 - **La fatigue** : il ne reste éveillé qu'un temps, **jeu ouvert comme jeu fermé**, puis il s'endort et ne paie plus personne, jusqu'à ce qu'on le **☕ Réveille** au Personnel. On ne peut donc pas laisser le jeu tourner tout seul à l'infini. Ses 3 niveaux (`NIVEAUX_MANAGER`, `PALIER_CHEF.manager`, 25/10) :
 
 | Niveau | Reste éveillé | Prix | Palier |
 |---|---:|---:|---:|
-| 1 (embauche) | 30 min | 8 000 $ | 3 |
-| 2 | 1 h | 30 000 $ | 4 |
-| 3 | 2 h | 90 000 $ | 5 |
+| 1 (embauche) | 30 min | 5 000 $ | 3 |
+| 2 | 1 h | 12 000 $ | 4 |
+| 3 | 2 h | 30 000 $ | 5 |
 
-(Avant le 25/10 : 5 niveaux, de 15 min à 1 h 30.) Total : 128 000 $.
+(Avant le 25/10 : 5 niveaux, de 15 min à 1 h 30.) Total : 47 000 $ (avant l'économie revue : 128 000 $).
 
 - **C'est une option** : un interrupteur l'arrête ou le remet au travail (`basculerManager`, `managerActif`). Arrêté, il ne paie personne et on ne lui doit rien : on paie ses employés soi-même.
 

@@ -282,7 +282,7 @@ Lancés par `npm test` (Vitest), sans navigateur. Au 25/10 : **26 fichiers, 238 
 
 | Fichier | Ce qu'il vérifie |
 |---|---|
-| `src/jeu/bot.test.ts` | **Bot d'équilibrage** : 10 parties à graines fixes. Toujours le niveau 5 ; niveau 2 en **2 à 10 min** et niveau 5 en **3 h à 6 h** (médianes, 25/10) ; niveau 5 du joueur après 8 min au moins et niveau 10 après 1 h au moins ; chaque niveau plus long que le précédent ; rails en moins de 10 min et électriques en moins de 1 h 30 ; au moins 4 employés, plus de 100 voyages de wagonnet, plus de blocs des mineurs que des clics ; plus de 3 ventes à la main au début |
+| `src/jeu/bot.test.ts` | **Bot d'équilibrage** : 10 parties à graines fixes. Toujours le niveau 5 ; niveau 2 en **2 à 10 min** et niveau 5 en **1 h à 3 h** (médianes, 25/10, économie revue ; avant 3 h à 6 h) ; niveau 5 du joueur après 8 min au moins et niveau 10 après 1 h au moins ; chaque niveau plus long que le précédent ; rails en moins de 10 min et électriques en moins de 1 h 30 ; au moins 4 employés, plus de 100 voyages de wagonnet, plus de blocs des mineurs que des clics ; plus de 3 ventes à la main au début |
 | `src/jeu/gemmes.test.ts` | **Nouveau (25/10)** : le prix en gemmes, payer une amélioration en gemmes (mêmes conditions), gagner des gemmes (publicité, niveau), les bonus et le trésor, le cadeau du jour et sa série |
 | `src/jeu/langue.test.ts` | **Nouveau (25/10)** : `t()` en français et en anglais, les `{trous}`, un texte sans traduction, `nombre`, `pluriel` |
 | `src/jeu/tutoriel.test.ts` | Les étapes du tutoriel (jusqu'au premier mineur) |

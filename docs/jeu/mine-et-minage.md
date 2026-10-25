@@ -106,9 +106,9 @@ Depuis le 25/10, le bonus **« 👆 Clics en or »** de la boutique des gemmes (
 |---|---:|---:|---|---:|---|
 | 🪨 Pierre | 10 % | 150 clics | offerte au départ | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
-| 🟡 Or | 30 % | 500 | 3 500 $ + 30 or | 3 | 150 $ + 5 or |
-| 💚 Émeraude | 38 % | 750 | 9 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
-| 💎 Diamant | 45 % | 1 000 | 25 000 $ + 15 diamants | 5 | 600 $ + 3 diamants |
+| 🟡 Or | 30 % | 500 | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
+| 💚 Émeraude | 38 % | 750 | 6 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
+| 💎 Diamant | 45 % | 1 000 | 15 000 $ + 15 diamants | 5 | 600 $ + 3 diamants |
 
 - La réparation coûte une part de ce prix, **selon l'usure** (au moins 1 $ et 1 minerai) : voir [forgeron.md](../batiments/forgeron.md).
 - **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics ; la pioche en pierre se répare pour presque rien ; toutes les autres pioches débloquées se rachètent neuves.
@@ -123,9 +123,9 @@ Depuis le 25/10, le bonus **« 👆 Clics en or »** de la boutique des gemmes (
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
 | 2 | 300 | 200 $ + 40 pierre | 2 |
-| 3 | 800 | 3 000 $ + 80 fer | 3 |
-| 4 | 2 000 | 12 000 $ + 60 redstone + 20 or | 4 |
-| 5 | 5 000 | 45 000 $ + 60 or + 20 émeraudes | 5 |
+| 3 | 800 | 2 000 $ + 80 fer | 3 |
+| 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
+| 5 | 5 000 | 18 000 $ + 60 or + 20 émeraudes | 5 |
 
 `rangerDansCoffre` ne range que ce qui tient : le clic est refusé avant (coffre plein), et un mineur garde ses blocs dans son sac au fond de la mine en attendant la place.
 
@@ -154,11 +154,11 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 | Pour aller au niveau | Prix (25/10) | Niveau du joueur |
 |---|---|---:|
 | 2 · Veine de redstone | 800 $ + 40 fer | 3 |
-| 3 · Filon d'or | 12 000 $ + 100 fer + 40 redstone | 5 |
-| 4 · Grotte aux émeraudes | 70 000 $ + 100 redstone + 50 or | 7 |
-| 5 · Cœur de diamant | 320 000 $ + 90 or + 35 émeraudes | 9 |
+| 3 · Filon d'or | 6 000 $ + 100 fer + 40 redstone | 5 |
+| 4 · Grotte aux émeraudes | 22 000 $ + 100 redstone + 50 or | 7 |
+| 5 · Cœur de diamant | 80 000 $ + 90 or + 35 émeraudes | 9 |
 
-Le niveau 2 est bien moins cher qu'avant (900 $ + 45 fer), les suivants bien plus (avant : 7 000 $, 25 000 $ et 90 000 $), car chaque niveau ouvre maintenant **tout un palier**. Descendre d'un niveau rapporte **150 XP** (et l'XP de son prix).
+Le niveau 2 est bien moins cher qu'avant (900 $ + 45 fer). Les suivants coûtent un peu moins qu'avant le 25/10 (7 000 $, 25 000 $ et 90 000 $), alors que chaque niveau ouvre maintenant **tout un palier**. (25/10, économie revue : ils coûtaient d'abord 12 000 $, 70 000 $ et 320 000 $.) Descendre d'un niveau rapporte **150 XP** (et l'XP de son prix).
 
 Le niveau change tout de suite (le bloc à cliquer est tiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), manager (3), recruteur (4), **1 mineur de plus** à chaque niveau, et le palier suivant de toutes les améliorations. Le niveau 5 est le dernier : il n'y a pas encore de fin de partie (une « nouvelle mine » est prévue).
 

@@ -326,7 +326,7 @@ Le joueur traverse la clairière (40 cases) en un peu plus de 5 s.
 Tout le détail est dans [gemmes-et-recompenses.md](gemmes-et-recompenses.md). En bref (`gemmes.ts`) :
 
 - **Gagner** : 1 par publicité (`GEMMES_PAR_PUB`), 3 par niveau du joueur (`GEMMES_PAR_NIVEAU`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES` : 1, 2, 1, 3, 2, 4 et 10 gemmes, 23 par semaine).
-- **Prix en gemmes** d'un achat (`prixEnGemmes`) (25/10) = `arrondi(3 + 2,4 × (log10(valeur en $) − 2))`, entre **3 et 10** (3 à 10 publicités), la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 100 $ → 3 💎, 1 000 $ → 5 💎, 10 000 $ → 8 💎, à partir d'environ 85 000 $ (la mine niveau 5) → 10 💎.
+- **Prix en gemmes** d'un achat (`prixEnGemmes`) (25/10) = `arrondi(3 + 2,4 × (log10(valeur en $) − 2))`, entre **3 et 10** (3 à 10 publicités), la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 100 $ → 3 💎, 1 000 $ → 5 💎, 10 000 $ → 8 💎, à partir d'environ 51 000 $ (comme la mine niveau 5, 85 950 $) → 10 💎.
 - **Boutique** (`BOOSTS`, 25/10) : Production × 2, Ventes × 2 et Employés × 2 (15 min chacun) et Fortune (× 3 blocs par clic, 5 min), **3 💎** chacun ; plus de trésor.
 - **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Employés × 2, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
 - **Absence × 2** (`doublerAbsence`) : une publicité redonne tout ce que l'absence a rapporté (l'argent gagné, plus la valeur de ce qui attend en plus dans le coffre et le chariot).
