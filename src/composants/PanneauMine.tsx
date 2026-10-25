@@ -38,7 +38,7 @@ import {
 } from '../jeu/mineur'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
-import { nombre, t } from '../jeu/langue'
+import { nombre, nomEmploye, t } from '../jeu/langue'
 import { verrou } from '../jeu/niveaux'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import type { Eclat, Trouvaille } from '../usePartie'
@@ -262,7 +262,7 @@ function TableauProduction({ etat, clicsParSeconde }: { etat: EtatJeu; clicsParS
             return (
               <li key={m.index} className="carte" style={{ ['--rarete' as string]: rarete.couleur }}>
                 <span className="production-nom">
-                  {iconeActiviteEmploye(m.employe)} {m.employe.nom} <span className="etiquette etiquette-rarete">{t(rarete.nom)}</span>
+                  {iconeActiviteEmploye(m.employe)} {nomEmploye(m.employe.nom)} <span className="etiquette etiquette-rarete">{t(rarete.nom)}</span>
                 </span>
                 <span className="jauge" aria-hidden="true">
                   <i style={{ width: `${Math.round((m.blocsParSeconde / meilleur) * 100)}%` }} />

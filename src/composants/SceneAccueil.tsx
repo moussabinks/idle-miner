@@ -7,7 +7,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { DECORATIONS, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
-import { t } from '../jeu/langue'
+import { nomEmploye, t } from '../jeu/langue'
 import {
   batimentPose,
   cheminEntre,
@@ -279,7 +279,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
         vue={sens.vue}
         marche={!etape.pause}
         classe="perso-mineur"
-        etiquette={<span className={`etiquette-perso rarete-${m.rarete}`}>{m.nom}</span>}
+        etiquette={<span className={`etiquette-perso rarete-${m.rarete}`}>{nomEmploye(m.nom)}</span>}
       />,
     )
   })

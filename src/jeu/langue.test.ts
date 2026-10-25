@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { changerLangue, langue, nombre, pluriel, t } from './langue'
+import { changerLangue, langue, nomEmploye, nombre, pluriel, t } from './langue'
 import { TRADUCTIONS_EN } from './traductions/en'
 
 // Une traduction ajoutée juste pour ces tests (en.ts peut encore être presque vide).
@@ -61,5 +61,19 @@ describe('les langues', () => {
     for (const [francais, anglais] of Object.entries(TRADUCTIONS_EN)) {
       expect(trous(anglais), `traduction de « ${francais} »`).toEqual(trous(francais))
     }
+  })
+})
+
+describe('(25/10) les prénoms des employés en anglais', () => {
+  it('en anglais, un prénom français devient un prénom anglais de la génération Z (au même rang)', () => {
+    changerLangue('en')
+    expect(nomEmploye('Raphaël')).toBe('Liam')
+    expect(nomEmploye('Noah 22')).toBe('Emma 22')
+    expect(nomEmploye('la mine')).toBe('la mine')
+    expect(t('Licencier {nom} ?', { nom: 'Moussa' })).toContain('Olivia')
+  })
+
+  it('en français, il ne change pas', () => {
+    expect(nomEmploye('Raphaël')).toBe('Raphaël')
   })
 })

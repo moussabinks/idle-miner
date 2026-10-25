@@ -28,7 +28,7 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
-import { t } from '../jeu/langue'
+import { nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
   CaseChemin,
@@ -529,7 +529,7 @@ export function VueVillage({
   let enAttente = 0
   let auQuai = 0
   etat.employes.forEach((mineur: Employe, index) => {
-    const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>
+    const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{nomEmploye(mineur.nom)}</span>
     let position: { x: number; y: number } | null = null
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
     let marche = false
@@ -587,7 +587,7 @@ export function VueVillage({
         etiquette={
           <>
             {colere && <span className="bulle-colere-village">😠</span>}
-            {arrivees.includes(mineur.nom) && <span className="bulle-nouveau-mineur">✨ Nouveau !</span>}
+            {arrivees.includes(mineur.nom) && <span className="bulle-nouveau-mineur">✨ {t('Nouveau !')}</span>}
             {etiquette}
           </>
         }

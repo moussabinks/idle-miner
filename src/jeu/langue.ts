@@ -11,10 +11,12 @@
 // Ce fichier ne dépend ni de React ni du navigateur : la logique du jeu (src/jeu) s'en sert aussi
 // pour ses messages. L'interface choisit la langue au démarrage (src/langueNavigateur.ts).
 
+import { NOMS_EMPLOYES, NOMS_EMPLOYES_EN } from './donnees'
 import { TRADUCTIONS_EN } from './traductions/en'
 
 export type Langue = 'fr' | 'en'
-export const LANGUES: Langue[] = ['fr', 'en']
+// (25/10) L'anglais d'abord : c'est la langue du jeu par défaut (voir langueNavigateur.ts).
+export const LANGUES: Langue[] = ['en', 'fr']
 export const NOMS_LANGUES: Record<Langue, string> = { fr: 'Français', en: 'English' }
 
 let langueActuelle: Langue = 'fr'
@@ -33,10 +35,23 @@ function remplir(texte: string, valeurs?: Record<string, string | number>): stri
   return texte.replace(/\{(\w+)\}/g, (tout, nom: string) => (nom in valeurs ? String(valeurs[nom]) : tout))
 }
 
-// Le texte dans la langue du joueur.
+// Le texte dans la langue du joueur. (En anglais, un prénom d'employé passé dans les {trous}
+// devient son prénom anglais : voir nomEmploye.)
 export function t(texte: string, valeurs?: Record<string, string | number>): string {
   if (langueActuelle === 'fr') return remplir(texte, valeurs)
-  return remplir(TRADUCTIONS_EN[texte] ?? texte, valeurs)
+  const traduites = valeurs && Object.fromEntries(Object.entries(valeurs).map(([cle, v]) => [cle, typeof v === 'string' ? nomEmploye(v) : v]))
+  return remplir(TRADUCTIONS_EN[texte] ?? texte, traduites)
+}
+
+// (25/10) Le prénom d'un employé dans la langue du joueur : la partie garde le prénom français
+// (« Noah », ou « Noah 22 » quand tous les prénoms sont pris) ; en anglais, il devient le prénom
+// anglais du même rang (NOMS_EMPLOYES_EN). Un autre texte reste tel quel.
+export function nomEmploye(nom: string): string {
+  if (langueActuelle === 'fr') return nom
+  const [prenom, ...reste] = nom.split(' ')
+  const rang = NOMS_EMPLOYES.indexOf(prenom)
+  if (rang < 0 || (reste.length > 0 && !/^\d+$/.test(reste.join(' ')))) return nom
+  return [NOMS_EMPLOYES_EN[rang] ?? prenom, ...reste].join(' ')
 }
 
 // Un nombre écrit à la façon de la langue : « 1 250 » en français, « 1,250 » en anglais.

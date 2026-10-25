@@ -81,7 +81,7 @@ import {
   verrouMinePioche,
   vitesseEmploye,
 } from '../jeu/employes'
-import { nombre, t } from '../jeu/langue'
+import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
 import { batimentPose } from '../jeu/village'
@@ -192,7 +192,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           {iconeActiviteEmploye(employe)}
         </span>
         <span className="carte-employe-nom">
-          <strong>{employe.nom}</strong>
+          <strong>{nomEmploye(employe.nom)}</strong>
           <EtiquetteRarete employe={employe} />
         </span>
         <span className={`etiquette ${paye ? '' : 'etiquette-rose'}`}>{paye ? `⏳ ${duree(employe.tempsPaye)}` : `😠 ${t('Pas payé')}`}</span>

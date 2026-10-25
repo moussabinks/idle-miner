@@ -262,6 +262,13 @@ export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot', 'Romain', 'Dodo', 'Guewen',
 ]
+// (25/10) En anglais, les mêmes employés portent des prénoms anglais parmi les plus donnés à la
+// génération Z (au même rang que leur prénom français : Raphaël → Liam, Moussa → Olivia...). La
+// partie garde toujours le prénom français ; seul l'affichage change (nomEmploye, langue.ts).
+export const NOMS_EMPLOYES_EN = [
+  'Liam', 'Olivia', 'Jacob', 'Emma', 'Ethan', 'Ava', 'Mason', 'Sophia', 'Chloe',
+  'Logan', 'Jayden', 'Madison', 'Aiden', 'Tyler', 'Mia', 'Caleb', 'Josh', 'Abigail', 'Dylan', 'Harper', 'Brandon',
+]
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, émeraude, diamant) :
 // environ 35 % de ce qu'il fait sortir de la mine (28/10 : paie toutes les 5 minutes, et plus

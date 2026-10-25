@@ -15,7 +15,7 @@ import { sons } from '../sons'
 import { MiniJauge, Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
-import { t } from '../jeu/langue'
+import { nomEmploye, t } from '../jeu/langue'
 
 // Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
 // wagonnet se place entre eux et regarde de l'un vers l'autre. Dans un virage, il tourne donc
@@ -220,7 +220,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
           vue={orientation.vue}
           marche={!enPause}
           classe="perso-mineur perso-pousseur"
-          etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{mineur.nom}</span>}
+          etiquette={<span className={`etiquette-perso rarete-${mineur.rarete}`}>{nomEmploye(mineur.nom)}</span>}
         />
       )}
     </>

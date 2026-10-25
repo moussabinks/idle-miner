@@ -8,6 +8,7 @@ import { choisirLangue } from '../langueNavigateur'
 import { basculerSon, sonActif } from '../sons'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
+import { Drapeau } from './Drapeau'
 
 type Props = {
   nomMonde: string
@@ -44,7 +45,7 @@ export function Reglages({ nomMonde, onFermer, onChangerDeMonde, onRecommencer, 
                 onLangue(l)
               }}
             >
-              {NOMS_LANGUES[l]}
+              <Drapeau langue={l} /> {NOMS_LANGUES[l]}
             </button>
           ))}
         </div>
