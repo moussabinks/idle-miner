@@ -27,6 +27,7 @@ import {
 } from '../jeu/village'
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
+import { pixelDessine } from './toucheImage'
 import { t } from '../jeu/langue'
 import {
   BoiteSvg,
@@ -389,9 +390,15 @@ export function VueVillage({
     // (23/10) Un rail est toujours prioritaire : même juste à côté d'un bâtiment (ou sous son
     // image, qui dépasse de ses cases), toucher un rail choisit le rail, pas le bâtiment.
     if (occupant?.type === 'rail') return null
-    const element = document.elementsFromPoint(sx, sy).find((el) => el.hasAttribute('data-cible'))
-    const donnee = element?.getAttribute('data-cible')
-    if (donnee?.startsWith('batiment:')) return donnee.slice(9) as IdBatiment
+    // (25/10) Les images sous le point, de la plus proche à la plus lointaine : la première dont
+    // le dessin (pas le vide transparent autour) est touché. Le vide de la grande image de la mine
+    // laisse donc passer le clic vers le bâtiment juste derrière.
+    for (const element of document.elementsFromPoint(sx, sy)) {
+      const donnee = element.getAttribute('data-cible')
+      if (!donnee?.startsWith('batiment:')) continue
+      if (element instanceof HTMLImageElement && !pixelDessine(element, sx, sy, element.dataset.miroir === 'oui')) continue
+      return donnee.slice(9) as IdBatiment
+    }
     if (occupant?.type === 'batiment') return occupant.id
     if (occupant?.type === 'chemin' && !procheSurChemin) return null
     return batimentProcheDe(village, c.x + 0.5, c.y + 0.5, MARGE_CLIC_BATIMENT)
