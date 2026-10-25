@@ -143,7 +143,8 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
           </span>
         ))}
         {trouvailles.map((tr) => (
-          <span key={`trouvaille-${tr.id}`} className={`trouvaille ${tr.nombre > 1 ? 'trouvaille-double' : ''}`} aria-hidden="true">
+          // (chacune un peu à gauche ou à droite, pour qu'elles ne s'empilent pas quand on clique vite)
+          <span key={`trouvaille-${tr.id}`} className={`trouvaille ${tr.nombre > 1 ? 'trouvaille-double' : ''}`} style={{ translate: `${((tr.id * 37) % 5) * 22 - 44}px 0` }} aria-hidden="true">
             +{tr.nombre} {BLOCS[tr.bloc].emoji}
           </span>
         ))}

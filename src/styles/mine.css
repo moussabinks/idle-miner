@@ -51,6 +51,8 @@
 }
 
 .zone-bloc-entete {
+  position: relative;
+  z-index: 2; /* les minerais qui s'envolent passent dessous */
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -177,7 +179,7 @@
 /* Le minerai trouvé s'envole. */
 .trouvaille {
   position: absolute;
-  top: 20%;
+  top: 32%;
   padding: 2px 10px;
   border: var(--trait-fin) solid var(--encre);
   border-radius: 999px;

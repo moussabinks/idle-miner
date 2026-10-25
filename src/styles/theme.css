@@ -559,6 +559,18 @@ kbd {
   right: -2px;
 }
 
+/* Petit téléphone et 4 onglets ou plus : les onglets non choisis ne montrent que leur icône. */
+@media (max-width: 480px) {
+  .onglets-nombreux .onglet:not(.actif) {
+    flex: 0 0 auto;
+    padding-inline: 0.7em;
+  }
+
+  .onglets-nombreux .onglet:not(.actif) .onglet-texte {
+    display: none;
+  }
+}
+
 /* =========================================================================
    Une ligne d'amélioration (Amelioration.tsx), la même partout
      [ nom  niv. 2 ]                        [ 💵 1 200 $ · 40 🔩 ] [ 💎 6 ]
