@@ -22,8 +22,8 @@
 
 Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
-- **👷 Équipe** : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, puis pousseurs). Pastille « ! » si quelqu'un n'est pas payé ;
-- **➕ Embaucher** : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « + » quand on peut payer une embauche ;
+- **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, puis pousseurs). Pastille « ! » si quelqu'un n'est pas payé ;
+- **➕ Recruter** (en bas de l'onglet Personnel, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « + » quand on peut payer une embauche ;
 - **🎲 Remplacer** (avec le recruteur) : un bouton aux couleurs de toutes les raretés qui défilent, avec un dé qui roule (`btn-hasard`, 25/10) : une nouvelle recrue prend la place du mineur, rareté au hasard.
 - **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort.
 
@@ -64,7 +64,7 @@ Chaque pioche le fait creuser plus vite, avec un plus grand sac (le tas où il p
 
 Un pousseur est un **métier à part** : on l'embauche **pour un seul trajet** (par exemple Mine → Marché), et il ne pousse que le wagonnet de ce trajet. **Il en faut un par trajet qui roule tout seul**, même sur des rails électriques ; sinon, le joueur pousse lui-même.
 
-**L'embaucher** (onglet Embaucher) : on coche son trajet dans la liste (un trajet dont les deux bâtiments sont construits ; « Libre », déjà pris par un pousseur, ou « Pas de rails »), le trajet **brille sur la carte**, puis **🛤️ Embaucher pour ce trajet**. Il faut des rails entre les deux bâtiments et un trajet sans pousseur ; si le trajet n'existe pas encore, il est **créé avec l'embauche**.
+**L'embaucher** (onglet Personnel, « Recruter ») : on coche son trajet dans la liste (un trajet dont les deux bâtiments sont construits ; « Libre », déjà pris par un pousseur, ou « Pas de rails »), le trajet **brille sur la carte**, puis **🛤️ Embaucher pour ce trajet**. Il faut des rails entre les deux bâtiments et un trajet sans pousseur ; si le trajet n'existe pas encore, il est **créé avec l'embauche**.
 
 | Embauche | 1er | 2e | 3e | 4e |
 |---|---:|---:|---:|---:|

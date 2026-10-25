@@ -310,7 +310,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Les mineurs rares sortent plus souvent.': 'Rare miners show up more often.',
   'Ce qu’il trouvera :': 'What they’ll find:',
   'Chances à la prochaine embauche :': 'Odds for the next hire:',
-  'Équipe': 'Team',
   'Chefs': 'Bosses',
   'Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !': 'Nobody yet. Your miners will dig for you, even with the game closed!',
   'Embaucher un mineur': 'Hire a miner',
@@ -487,8 +486,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // src/composants/StockMinerais.tsx
   'Plein !': 'Full!',
   'Tout vendre': 'Sell all',
-  '{prix} $ pièce': '{prix} $ each',
-  'Garder ce minerai (pour tes améliorations)': 'Keep this ore (for your upgrades)',
 
   // src/composants/Tutoriel.tsx
   'Casse {n} blocs : {fait} / {n}': 'Break {n} blocks: {fait} / {n}',
@@ -729,8 +726,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Touche la bulle 🛤️ sur les rails de la foreuse': 'Tap the 🛤️ bubble on the drill’s rails',
   'Relie la foreuse au marché (rails) : elle vendra toute seule': 'Link the drill to the market (rails): it’ll sell by itself',
   'Touche la bulle 🛤️ sur les rails foreuse → marché': 'Tap the 🛤️ bubble on the drill → market rails',
-  'Niveau {n} : {choses}': 'Level {n}: {choses}',
-  'Niveau {n} (tu es {actuel}) : {choses}': 'Level {n} (you’re {actuel}): {choses}',
 
   // src/jeu/niveaux.ts
   '🕳️ Mine {n}': '🕳️ Mine {n}',
@@ -876,7 +871,13 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'La mine et la foreuse creusent deux fois plus vite.': 'The mine and the drill dig twice as fast.',
   'Tes mineurs creusent et tes pousseurs poussent deux fois plus vite.': 'Your miners dig and your pushers push twice as fast.',
   'Garder du {nom}': 'Keep {nom}',
-  'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it.',
-  '= garder un minerai pour tes améliorations (il n’est pas vendu)': '= keep an ore for your upgrades (it won’t be sold)',
   'Demi-tour': 'Turn back',
+  '{a} à {b} blocs/s': '{a} to {b} blocks/s',
+  '{n} cases/s': '{n} tiles/s',
+  'Recruter': 'Recruit',
+  '{prix} $': '{prix} $',
+  'Prix du marché': 'Market prices',
+  'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent. Pratique pour payer tes améliorations.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it. Handy to pay for your upgrades.',
+  'Dans le coffre : {n}': 'In the chest: {n}',
+  'Gardé :': 'Kept:',
 }

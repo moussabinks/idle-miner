@@ -139,7 +139,7 @@ function etincelle(t, x, y, z, k = 1, couleur = C.blanc) {
 
 // Une courbe toute ronde qui passe par tous ces points (en pixels du dessin) : un chemin SVG
 // (des courbes de Bézier calculées à la façon de Catmull-Rom). « ferme » : on revient au début.
-function courbeRonde(liste, ferme = false) {
+export function courbeRonde(liste, ferme = false) {
   const n = liste.length
   const pris = (i) => (ferme ? liste[(i + n) % n] : liste[Math.max(0, Math.min(n - 1, i))])
   let d = `M${r1(liste[0][0])} ${r1(liste[0][1])}`

@@ -1,6 +1,6 @@
 # ⭐ Le niveau du joueur et les paliers
 
-> Le joueur a un **niveau** (de 1 à **15**) : en jouant, il gagne de l'**XP** (des points d'expérience). Depuis la grande mise à jour du 25/10, le niveau du joueur ne débloque plus que **les rails** et **les niveaux de la mine** ; tout le reste suit les **paliers** : descendre la mine au niveau N permet d'améliorer **toutes** les autres choses jusqu'à leur niveau N. Et **chaque niveau gagné rapporte 3 gemmes**.
+> Le joueur a un **niveau** (de 1 à **15**) : en jouant, il gagne de l'**XP** (des points d'expérience). Depuis la grande mise à jour du 25/10, le niveau du joueur ne débloque plus que **les rails** et **les niveaux de la mine** ; tout le reste suit les **paliers** : descendre la mine au niveau N permet d'améliorer **toutes** les autres choses jusqu'à leur niveau N. Et **chaque niveau gagné rapporte 1 gemme** (25/10 : 3 avant).
 > Écrit d'après le code au 25/10 : la logique est dans `src/jeu/niveaux.ts`, les chiffres à la fin de `src/jeu/donnees.ts` (`XP_PAR`, `VALEUR_PAR_XP`, `BLOCS_PAR_XP`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX`, `NIVEAU_JOUEUR_POUR`, `NIVEAUX_PAR_AMELIORATION`, `PALIER_CHEF`) et `GEMMES_PAR_NIVEAU` dans `src/jeu/gemmes.ts`. Le niveau du joueur n'est pas le **niveau de la mine** (1 à 5, qu'on achète au panneau de la mine) : voir [mine-et-minage.md](mine-et-minage.md).
 
 Pourquoi deux systèmes ? Le niveau du joueur récompense **tout ce qu'on fait** et rythme la descente de la mine. Les paliers (25/10) rangent les améliorations : avant, chacune avait son propre niveau du joueur (jusqu'à 10 niveaux pour l'ascenseur), et le joueur ne savait plus quoi acheter. Maintenant, la règle tient en une phrase : **on améliore un niveau de chaque chose, puis on descend la mine.**
@@ -59,7 +59,7 @@ Il faut de plus en plus d'XP pour passer un niveau : `xpPourPasser(n) = 60 × n^
 | 14 | 6 940 | 31 290 | — |
 | 15 | — (maximum) | 38 230 | — |
 
-**Chaque niveau gagné rapporte 3 gemmes** 💎 (`GEMMES_PAR_NIVEAU`), même ceux qui ne débloquent rien : 42 gemmes du niveau 2 au niveau 15. Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md).
+**Chaque niveau gagné rapporte 1 gemme** 💎 (`GEMMES_PAR_NIVEAU`), même ceux qui ne débloquent rien : 14 gemmes du niveau 2 au niveau 15. (25/10, demandé par le propriétaire : 3 avant, le joueur avait trop de gemmes pour avoir envie de regarder des publicités.) Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md).
 
 `NIVEAU_JOUEUR_POUR` (`donnees.ts`) :
 
@@ -92,7 +92,7 @@ Les règles qui vérifient ces cadenas : `debloque(etat, chose, index)`, `palier
 ## 4. Où on le voit
 
 - **Le bandeau en haut à gauche** (`Hud.tsx`) : une **⭐** avec le niveau, et une petite jauge d'XP (« 120/430 », « Max » au niveau 15).
-- **Le passage de niveau** (`FeteNiveau.tsx`) : une grande fenêtre « Niveau supérieur ! » (le chiffre qui monte, des confettis, une fanfare), ce qu'on débloque ligne par ligne (`deblocagesDuNiveau` : les rails, un niveau de la mine), et les **+3 💎**. La fête **attend** qu'aucune fenêtre ne soit ouverte (elle ne ferme plus le panneau en cours). Le message du niveau commence toujours par « 🎉 » (« 🎉 Niveau 3 ! +3 💎 Débloqué : ⛏️ Mine niveau 2 : Veine de redstone. ») : l'interface le reconnaît ainsi, dans les deux langues.
+- **Le passage de niveau** (`FeteNiveau.tsx`) : une grande fenêtre « Niveau supérieur ! » (le chiffre qui monte, des confettis, une fanfare), ce qu'on débloque ligne par ligne (`deblocagesDuNiveau` : les rails, un niveau de la mine), et le **+1 💎**. La fête **attend** qu'aucune fenêtre ne soit ouverte (elle ne ferme plus le panneau en cours). Le message du niveau commence toujours par « 🎉 » (« 🎉 Niveau 3 ! +1 💎 Débloqué : ⛏️ Mine niveau 2 : Veine de redstone. ») : l'interface le reconnaît ainsi, dans les deux langues.
 - **Les missions** (en haut à droite, `missions.ts`) : une mission « ⭐ Niveau *N* : … » montre le prochain niveau qui débloque quelque chose (`prochainDeblocage`) et la jauge d'XP vers le niveau suivant. Si ce niveau est plus loin que le suivant : « Niveau 9 (tu es 7) : … ».
 
 (L'écran a été refait le 25/10 : voir [interface.md](interface.md).)

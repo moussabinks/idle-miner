@@ -239,6 +239,17 @@
   text-align: center;
 }
 
+/* Le bonus de combo gagné (Fortune...) : une étiquette jaune qui saute, à la place du texte. */
+.bonus-combo-actif {
+  align-self: center;
+  padding: 0 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  font-weight: 900;
+  animation: hud-saute 0.3s ease-out;
+}
+
 .compteurs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -667,10 +678,7 @@
     gap: 5px;
   }
 
-  .stock-ligne-bloc:has(.stock-reglage) {
-    grid-column: 1 / -1;
-  }
-
+  
   .stock-ligne {
     gap: 4px;
     padding: 2px 3px 2px 6px;
@@ -782,5 +790,85 @@
 
   .mine-droite {
     gap: 6px;
+  }
+}
+
+/* (25/10) Le bouton « 📌 Garder » : un mot et une petite punaise (on comprend sans cliquer). Il
+   ouvre une petite fenêtre au milieu de l'écran (le réglage). */
+.stock-garder {
+  gap: 3px;
+  padding-inline: 8px;
+  font-size: 0.8rem;
+}
+
+.stock-garder-icone {
+  font-size: 0.75rem;
+}
+
+.stock-reglage-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .stock-garder {
+    padding-inline: 5px;
+    font-size: 0.72rem;
+  }
+}
+
+/* (25/10) Téléphone, deux colonnes de minerais : dans chaque case, l'icône au-dessus du nombre,
+   puis « Garder » et la vente, sans rien qui se chevauche. */
+@media (max-width: 640px) {
+  .stock-ligne {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'icone garder vendre'
+      'nombre garder vendre';
+    align-items: center;
+    gap: 0 4px;
+    padding: 3px 4px;
+  }
+
+  .stock-icone {
+    grid-area: icone;
+    justify-self: center;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .stock-nombre {
+    grid-area: nombre;
+    justify-self: center;
+    align-items: center;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .stock-garde {
+    display: none;
+  }
+
+  .stock-garder {
+    grid-area: garder;
+    gap: 1px;
+    min-height: 36px;
+    padding-inline: 2px;
+    font-size: 0.7rem;
+  }
+
+  .stock-garder-icone {
+    font-size: 0.6rem;
+  }
+
+  .stock-vendre {
+    grid-area: vendre;
+    min-height: 36px;
+    padding-inline: 4px;
+    white-space: nowrap;
+    font-size: 0.78rem;
   }
 }

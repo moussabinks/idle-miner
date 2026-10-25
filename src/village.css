@@ -63,8 +63,9 @@
   fill: #74bf57;
 }
 
-/* La forêt (ForetVillage) : des tuiles de « toile » posées dans le monde. Les arbres du bas de la
-   carte passent devant les bâtiments (mais sous les bulles). */
+/* Le décor autour de la clairière (ForetVillage) : la lisière et le paysage, dessinés en tuiles
+   (des images) posées dans le monde. Ce qui est en bas de la carte passe devant les bâtiments
+   (mais sous les bulles). */
 .foret-village {
   position: absolute;
   left: 0;
@@ -78,6 +79,42 @@
 
 .tuile-foret {
   position: absolute;
+  max-width: none;
+  user-select: none;
+}
+
+/* L'eau de la cascade (25/10, ForetVillage) : une petite boîte sur la bande d'eau de la montagne,
+   où des traits blancs descendent. Seul ce petit morceau bouge, en « transform » (le navigateur le
+   fait glisser sans rien redessiner) ; il s'arrête quand on ne le voit pas. */
+.cascade-village {
+  position: absolute;
+  overflow: hidden;
+  background: #8cc8f5;
+  border-radius: 2px;
+}
+.cascade-flot {
+  position: absolute;
+  left: 0;
+  top: -60px; /* une hauteur de motif (MOTIF dans ForetVillage) */
+  will-change: transform;
+  animation: cascade-coule 0.7s linear infinite;
+}
+.cascade-flot line {
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.cascade-arretee .cascade-flot {
+  animation-play-state: paused;
+}
+@keyframes cascade-coule {
+  from { transform: translateY(0); }
+  to { transform: translateY(60px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cascade-flot {
+    animation: none;
+  }
 }
 
 .objets-village,
@@ -1172,20 +1209,6 @@ g.grille-construction {
   gap: 5px;
 }
 
-.goulot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 9px;
-  border-radius: 10px;
-  font-size: 0.78rem;
-  line-height: 1.3;
-}
-
-.goulot > span {
-  flex: 1;
-}
-
 /* Les bâtiments qu'on peut relier par des rails (27/10) : pendant qu'on pose des rails, leur
    emprise est entourée d'une ligne jaune qui brille, tout pile sur son bord. */
 .zone-connectable-halo {
@@ -1210,35 +1233,6 @@ g.grille-construction {
   --couleur-bulle: #f9d65a;
   --couleur-bulle-foncee: #f6a04d;
 }
-
-/* --- Le bonus de combo, au-dessus du bloc de la mine ----------------------------- */
-
-.bonus-combo {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  z-index: 3;
-  translate: -50% 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 2.5px solid var(--encre, #2a2140);
-  background: #f9d65a;
-  color: var(--encre, #2a2140);
-  font-weight: 900;
-  white-space: nowrap;
-  box-shadow: 0 0 0 2px #fff6d2, 0 0 22px rgb(255 200 60 / 0.9);
-  animation: bonus-arrive 0.5s cubic-bezier(0.3, 1.8, 0.5, 1);
-  pointer-events: none;
-}
-.bonus-combo small { font-size: 0.7rem; font-weight: 800; }
-
-@keyframes bonus-arrive {
-  from { transform: scale(0.3); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .bonus-combo { animation: none; } }
 
 /* L'aperçu du rail (ou du chemin) qu'on va poser, sous la souris (30/10). */
 .apercu-pinceau {

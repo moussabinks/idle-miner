@@ -180,7 +180,7 @@ Dans l'ordre : d'abord ce qui empêche de publier, puis ce qui retient le joueur
 **Revenir (rétention J1 et J7)**
 
 - [ ] Boucle longue : « nouvelle mine » avec bonus permanent (à partir de `archives/`) : prévue, prochaine étape
-- [x] Niveaux 16 à 30 remplis, ou plafond à 15 (plafond à 15, et chaque niveau rapporte 3 gemmes)
+- [x] Niveaux 16 à 30 remplis, ou plafond à 15 (plafond à 15, et chaque niveau rapporte 1 gemme)
 - [x] Classement à l'argent gagné au total
 - [x] Fenêtre de retour avec gros « +X $ » et « ×2 avec une pub »
 - [x] Coffre quotidien (le cadeau du jour : série de 7 jours, gemmes, argent et bonus)

@@ -12,11 +12,11 @@
 | Comment | Combien | Code |
 |---|---:|---|
 | 📺 Regarder une **publicité** jusqu'au bout | **1 💎** | `GEMMES_PAR_PUB`, `recompenserPub` |
-| ⭐ Gagner un **niveau du joueur** | **3 💎** par niveau (42 du niveau 2 au niveau 15) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
+| ⭐ Gagner un **niveau du joueur** | **1 💎** par niveau (14 du niveau 2 au niveau 15 ; 3 avant le 25/10) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
 | 🎁 Le **cadeau du jour** | 2 à 12 💎 selon le jour de la série (35 par semaine), plus des bonus | `RECOMPENSES_QUOTIDIENNES` |
 | 🎉 Une **ancienne partie** convertie le 25/10 | 10 💎 offertes (une fois) | `GEMMES_CADEAU` dans `sauvegarde.ts` |
 
-Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +3 💎 ».
+Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +1 💎 ».
 
 ### La publicité
 
@@ -29,25 +29,25 @@ Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché 
 
 Chaque ligne d'amélioration (`Amelioration.tsx`) a **deux boutons** : le vert, avec le prix en argent et en minerais, et le **violet 💎**, avec le prix en gemmes. Payer en gemmes ne prend **ni argent, ni minerais**. Les conditions restent les mêmes : il faut le **palier de la mine** (ou le niveau du joueur) qu'il faut pour cette amélioration.
 
-**Le prix en gemmes** (`prixEnGemmes`) dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
+**Le prix en gemmes** (`prixEnGemmes`, revu le 25/10 à la demande du propriétaire) va de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
 
 ```
-prix en gemmes = arrondi( racine carrée(valeur en $) ÷ 5 ), au moins 1
+prix en gemmes = arrondi( 3 + 2 × (log10(valeur en $) − 2) ), entre 3 et 10
 ```
 
-La racine carrée fait que les gros achats coûtent **beaucoup moins de gemmes, en proportion**, que les petits : une gemme vaut environ 25 $ au début, et plus de 2 000 $ à la fin.
+Autrement dit : 2 gemmes de plus chaque fois que le prix est multiplié par 10. Avant, le prix suivait la racine carrée de la valeur et dépassait 100 gemmes en fin de partie.
 
 | Achat | Valeur | Prix en gemmes |
 |---|---:|---:|
-| Premier mineur | 50 $ | 1 💎 |
-| Coffre de 300 places (200 $ + 40 pierre) | 240 $ | 3 💎 |
-| Pioche en fer (300 $ + 20 fer) | 540 $ | 5 💎 |
-| Une amélioration à 1 000 $ | 1 000 $ | 6 💎 |
-| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 7 💎 |
-| Mine niveau 3 (12 000 $ + 100 fer + 40 redstone) | 13 800 $ | 23 💎 |
-| Une amélioration à 80 000 $ | 80 000 $ | 57 💎 |
-| Générateur niveau 5 (100 000 $ + 400 fer + 350 redstone) | 110 050 $ | 66 💎 |
-| Mine niveau 5 (320 000 $ + 90 or + 35 émeraudes) | 325 950 $ | 114 💎 |
+| Premier mineur | 50 $ | 3 💎 |
+| Coffre de 300 places (200 $ + 40 pierre) | 240 $ | 4 💎 |
+| Pioche en fer (300 $ + 20 fer) | 540 $ | 4 💎 |
+| Une amélioration à 1 000 $ | 1 000 $ | 5 💎 |
+| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 5 💎 |
+| Mine niveau 3 (12 000 $ + 100 fer + 40 redstone) | 13 800 $ | 7 💎 |
+| Une amélioration à 80 000 $ | 80 000 $ | 9 💎 |
+| Générateur niveau 5 (100 000 $ + 400 fer + 350 redstone) | 110 050 $ | 9 💎 |
+| Mine niveau 5 (320 000 $ + 90 or + 35 émeraudes) | 325 950 $ | 10 💎 |
 
 Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) est lancée dans `acheterAvecGemmes(() => action)` (`mineur.ts`) : pendant ce temps, `payer` retire des gemmes au lieu de l'argent et des minerais. `peutPayerEnGemmes` dit si on en a assez.
 
@@ -101,7 +101,7 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 |---|---|
 | `src/jeu/gemmes.ts` | Toutes les règles : gagner des gemmes (`gagnerGemmes`, `recompenserPub`), le prix en gemmes (`valeurEnDollars`, `prixEnGemmes`), les bonus (`BOOSTS`, `acheterBoost`, `boostActif`, `secondesBoost`, `multiplicateurVentes`, `multiplicateurProduction`), le trésor (`TRESOR`, `acheterTresor`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `etatQuotidien`, `recupererQuotidien`, `jourDe`, `veille`). Testé dans `gemmes.test.ts`. |
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
-| `src/jeu/niveaux.ts` | Les 3 gemmes de chaque niveau gagné (`mettreAJourXp`). |
+| `src/jeu/niveaux.ts` | La gemme de chaque niveau gagné (`mettreAJourXp`). |
 | `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |
 | `src/composants/Boutique.tsx` | La boutique (publicité, bonus). |
 | `src/composants/RecompensesQuotidiennes.tsx` | Le calendrier du cadeau du jour. |

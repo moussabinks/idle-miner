@@ -4,7 +4,7 @@
 // Ils n'ont aucune règle du jeu : ils lisent l'état et appellent les actions de src/jeu.
 
 import { useState, type ReactNode } from 'react'
-import { BATIMENTS, BLOCS, LIAISONS, LISTE_LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, PIOCHES, SECONDES_PAR_CHARBON, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, LISTE_BLOCS, LISTE_LIAISONS, NIVEAUX_CHARIOT, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, PIOCHES, SECONDES_PAR_CHARBON, type IdBloc, type IdLiaison } from '../jeu/donnees'
 import {
   ameliorerChariot,
   ameliorerForage,
@@ -39,7 +39,7 @@ import {
 } from '../jeu/generateur'
 import { nombre, t } from '../jeu/langue'
 import { blocsDuNiveau } from '../jeu/mine'
-import { acheterPioche, coutPioche, coutReparation, disponible, equiper, peutAcheterPioche, peutPayer, peutReparer, reparer, type EtatJeu } from '../jeu/mineur'
+import { acheterPioche, coutPioche, coutReparation, disponible, equiper, peutAcheterPioche, peutPayer, peutReparer, reparer, valeurDe, type EtatJeu } from '../jeu/mineur'
 import { railsDebloques, verrou } from '../jeu/niveaux'
 import { analyseWagonnet } from '../jeu/production'
 import { SUCCES } from '../jeu/succes'
@@ -137,6 +137,18 @@ export function PanneauMarche({ onReglerTrajet, onConstruireRails }: PropsPannea
           <PanneauTrajets arrivee="marche" onReglerTrajet={onReglerTrajet} />
         </>
       )}
+
+      {/* (25/10) Les prix du marché : ce que rapporte chaque minerai (avant, dans la mine). */}
+      <h3 className="titre-section">{t('Prix du marché')}</h3>
+      <ul className="prix-marche">
+        {LISTE_BLOCS.filter((bloc) => bloc === 'pierre' || blocsDuNiveau(etat.niveauMine).includes(bloc))
+          .sort((a, b) => BLOCS[b].prix - BLOCS[a].prix)
+          .map((bloc) => (
+            <li key={bloc} className="etiquette prix-marche-ligne">
+              <span aria-hidden="true">{BLOCS[bloc].emoji}</span> {t(BLOCS[bloc].nom)} <strong>{t('{prix} $', { prix: nombre(valeurDe({ [bloc]: 1 }, etat)) })}</strong>
+            </li>
+          ))}
+      </ul>
     </div>
   )
 }

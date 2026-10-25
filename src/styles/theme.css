@@ -83,6 +83,16 @@ p {
   margin: 0;
 }
 
+/* (25/10) Les boutons et les champs prennent la police du jeu (par défaut, le navigateur leur
+   donne la sienne : un emoji y était dessiné par le système, comme le carton 📦 de la bulle
+   « coffre plein » au lieu de notre coffre). */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 /* Sur écran tactile : pas de zoom au double appui, pas de reflet bleu au toucher. */
 button,
 a,

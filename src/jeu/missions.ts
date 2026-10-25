@@ -9,8 +9,9 @@ import { batimentDebloque } from './batiments'
 import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
 import { disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
-import { achatsPossibles } from './objectifs'
-import { niveauJoueur, progressionNiveau, prochainDeblocage, railsDebloques } from './niveaux'
+import { achatsPossibles, type AchatPossible } from './objectifs'
+import { analyseWagonnet, chariotTropPetit } from './production'
+import { railsDebloques } from './niveaux'
 import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
 import { t } from './langue'
@@ -72,10 +73,11 @@ function missionAchat(etat: EtatJeu, id: string, icone: string, nom: string, cou
   const elements = elementsDuCout(etat, cout)
   const manque = ceQuiManque(etat, cout)
   if (!manque) return mission(id, icone, nom, { ...options, elements, pret: true })
-  // Ce qu'il manque d'abord : l'argent au marché, les minerais à la mine.
-  // (25/10) L'argent et les minerais viennent tous les deux de la mine (on y vend le coffre).
-  const ou = 'puits'
-  return mission(id, icone, nom, { ...options, construction: false, stand: ou, elements })
+  // (25/10) Un bâtiment à construire : « Voir » ouvre le menu Bâtiments, pour le montrer avec
+  // son prix. Une amélioration : « Voir » ouvre son bâtiment.
+  if (options.construction) return mission(id, icone, nom, { ...options, elements })
+  // Sans bâtiment précis : la mine (on y vend le coffre pour l'argent, et on y trouve les minerais).
+  return mission(id, icone, nom, { stand: 'puits', ...options, construction: false, elements })
 }
 
 // Les urgences : ce qui bloque la production.
@@ -143,32 +145,37 @@ function automatisation(etat: EtatJeu): Mission | null {
   return null
 }
 
-// Le prochain niveau du joueur, et ce qu'il débloque (29/10).
-function prochainNiveau(etat: EtatJeu): Mission | null {
-  const prochain = prochainDeblocage(etat)
-  if (!prochain) return null
-  const { xp, pourSuivant } = progressionNiveau(etat)
-  const choses = prochain.choses.slice(0, 2).join(', ') + (prochain.choses.length > 2 ? '...' : '')
-  // (si le niveau qui débloque est plus loin que le suivant, la jauge montre quand même le suivant)
-  const texte = prochain.niveau === niveauJoueur(etat) + 1 ? t('Niveau {n} : {choses}', { n: prochain.niveau, choses }) : t('Niveau {n} (tu es {actuel}) : {choses}', { n: prochain.niveau, actuel: niveauJoueur(etat), choses })
-  return mission(`niveau-${prochain.niveau}`, '⭐', texte, { progression: pourSuivant ? { valeur: xp, max: pourSuivant, icone: '⭐' } : null })
+// Le chariot de ce pousseur est trop petit : son wagonnet ne suit pas, la production s'entasse.
+function chariotBloque(etat: EtatJeu, nom: string): boolean {
+  const pousseur = etat.employes.find((e) => e.nom === nom && e.role === 'pousseur')
+  if (!pousseur?.trajet) return false
+  const analyse = analyseWagonnet(etat, pousseur.trajet)
+  return analyse?.pousseur?.nom === nom && chariotTropPetit(analyse)
 }
 
 // Les améliorations les plus proches (celles dont on a déjà la plus grande part de l'argent).
+// (25/10, demandé par le propriétaire) D'abord les grosses : la mine, le coffre, l'ascenseur, la
+// foreuse, le générateur, les pioches, embaucher... Les améliorations d'UN employé (« Chariot de
+// Noah », « Vitesse de Noah ») seulement quand il n'y a plus rien d'autre, sauf le chariot d'un
+// pousseur qui bloque la production : celui-là passe devant.
 function ameliorations(etat: EtatJeu): Mission[] {
   const part = (cout: Cout) => (cout.argent ? Math.min(1, etat.argent / cout.argent) : 1)
-  return achatsPossibles(etat)
-    .filter((a) => !a.construction)
-    .sort((a, b) => Number(peutPayer(etat, b.cout)) - Number(peutPayer(etat, a.cout)) || part(b.cout) - part(a.cout))
-    .map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
+  const parProximite = (a: AchatPossible, b: AchatPossible) => Number(peutPayer(etat, b.cout)) - Number(peutPayer(etat, a.cout)) || part(b.cout) - part(a.cout)
+  const achats = achatsPossibles(etat).filter((a) => !a.construction)
+  const urgents = achats.filter((a) => a.chariotPousseur && a.employe && chariotBloque(etat, a.employe))
+  const grosses = achats.filter((a) => !a.employe).sort(parProximite)
+  const petites = grosses.length > 0 ? [] : achats.filter((a) => a.employe && !urgents.includes(a)).sort(parProximite)
+  return [...urgents, ...grosses, ...petites].map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
 }
 
+// (25/10) Plus de tâche « Niveau X : ce qu'il débloque » : la liste ne montre que des choses
+// qu'on peut faire maintenant (la jauge du niveau est dans le bandeau du haut).
 // « avant » : les missions affichées juste avant (leurs id). (30/10) Une mission affichée reste
 // à sa place tant qu'elle n'est pas faite : la liste ne change plus d'un coup en pleine tâche
 // (« économise pour le sac » qui devenait « récupère 40 fer »). Les nouvelles ne prennent que les
 // places libres. Seules les urgences passent toujours devant.
 export function missions(etat: EtatJeu, avant: string[] = []): Mission[] {
-  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat).slice(0, 1), prochainNiveau(etat), ...ameliorations(etat).slice(1)].filter((m): m is Mission => m !== null)
+  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat)].filter((m): m is Mission => m !== null)
   // Pas deux fois la même.
   const vues = new Set<string>()
   const candidates = toutes.filter((m) => !vues.has(m.id) && vues.add(m.id))

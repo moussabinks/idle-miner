@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { construireBatiment } from './batiments'
-import { NIVEAUX_COFFRE } from './donnees'
+import { NIVEAUX_ASCENSEUR, NIVEAUX_CHARIOT, NIVEAUX_COFFRE, NIVEAUX_EMPLOYE, NIVEAUX_FORAGE, NIVEAUX_GENERATEUR, NIVEAUX_MINE } from './donnees'
 import {
   multiplicateurEmployes,
   BOOSTS,
@@ -29,12 +29,23 @@ function partie(): EtatJeu {
 }
 
 describe('le prix en gemmes', () => {
-  it('grandit moins vite que le prix en dollars, et vaut au moins 1 gemme', () => {
-    expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(6)
-    expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(57)
-    expect(prixEnGemmes({ materiaux: {} })).toBe(1)
-    // Les minerais comptent à leur prix au marché : 200 $ + 40 pierres = 240 $ → 3 gemmes.
-    expect(prixEnGemmes({ argent: 200, materiaux: { pierre: 40 } })).toBe(3)
+  it('(25/10) de 3 gemmes pour une petite amélioration à 10 pour la plus grosse', () => {
+    expect(prixEnGemmes({ materiaux: {} })).toBe(3)
+    expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(3)
+    expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(5)
+    expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(9)
+    expect(prixEnGemmes({ argent: 10_000_000, materiaux: {} })).toBe(10)
+    // Les minerais comptent à leur prix au marché : 200 $ + 40 pierres = 240 $ → 4 gemmes.
+    expect(prixEnGemmes({ argent: 200, materiaux: { pierre: 40 } })).toBe(4)
+  })
+
+  it('aucune amélioration du jeu ne coûte plus de 10 gemmes', () => {
+    const tables = [NIVEAUX_MINE, NIVEAUX_COFFRE, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT]
+    for (const table of tables) {
+      for (const { cout } of table) expect(prixEnGemmes(cout)).toBeLessThanOrEqual(10)
+    }
+    // La plus grosse (descendre au niveau 5) coûte les 10 gemmes.
+    expect(prixEnGemmes(NIVEAUX_MINE[4].cout)).toBe(10)
   })
 })
 

@@ -123,11 +123,6 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
         <span className="etiquette etiquette-nuit">
           ⛏️ {t('Niveau {n}', { n: etat.niveauMine })} · {t(infoNiveauMine(etat.niveauMine).nom)}
         </span>
-        {bonus && (
-          <span key={etat.bonus?.palier} className="etiquette etiquette-jaune bonus-combo" aria-live="polite">
-            {bonus.emoji} {t(bonus.nom)} · {Math.ceil(secondesBonus(etat))} s
-          </span>
-        )}
       </div>
       <button className="bloc-a-cliquer" data-tuto="bloc" disabled={plein} onClick={cliquer} aria-label={t('Casser le bloc ({nom})', { nom: t(BLOCS[bloc].nom) })}>
         {/* La clé change à chaque bloc : le nouveau bloc « pousse » à sa place. */}
@@ -161,9 +156,17 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
         <span className="jauge jauge-jaune" aria-hidden="true">
           <i style={{ width: `${Math.round(partCombo * 100)}%` }} />
         </span>
-        <span className="combo-texte">
-          {prochain ? (combo >= 3 ? `🔥 ×${combo} → ×${prochain.palier} : ${prochain.emoji} ${t(prochain.nom)}` : t('Clique vite ! ×{n} = {bonus}', { n: prochain.palier, bonus: `${prochain.emoji} ${t(prochain.nom)}` })) : `🏆 ×${combo}`}
-        </span>
+        {/* (25/10) Le bonus gagné s'affiche ici, à la place du texte du combo : avant, il passait
+            par-dessus le niveau de la mine. */}
+        {bonus ? (
+          <span key={etat.bonus?.palier} className="combo-texte bonus-combo-actif" aria-live="polite">
+            {bonus.emoji} {t(bonus.nom)} · {Math.ceil(secondesBonus(etat))} s
+          </span>
+        ) : (
+          <span className="combo-texte">
+            {prochain ? (combo >= 3 ? `🔥 ×${combo} → ×${prochain.palier} : ${prochain.emoji} ${t(prochain.nom)}` : t('Clique vite ! ×{n} = {bonus}', { n: prochain.palier, bonus: `${prochain.emoji} ${t(prochain.nom)}` })) : `🏆 ×${combo}`}
+          </span>
+        )}
       </div>
       <div className="compteurs">
         <span className="compteur" title={t('Les blocs que tu as cassés à la main')}>

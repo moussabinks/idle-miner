@@ -325,7 +325,7 @@ Le joueur traverse la clairière (40 cases) en un peu plus de 5 s.
 Tout le détail est dans [gemmes-et-recompenses.md](gemmes-et-recompenses.md). En bref (`gemmes.ts`) :
 
 - **Gagner** : 1 par publicité (`GEMMES_PAR_PUB`), 3 par niveau du joueur (`GEMMES_PAR_NIVEAU`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES` : 1, 2, 1, 3, 2, 4 et 10 gemmes, 23 par semaine).
-- **Prix en gemmes** d'un achat (`prixEnGemmes`) = `max(1, arrondi(√(valeur en $) ÷ 5))`, la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 1 000 $ → 6 💎, 80 000 $ → 57 💎.
+- **Prix en gemmes** d'un achat (`prixEnGemmes`) (25/10) = `arrondi(3 + 2 × (log10(valeur en $) − 2))`, entre **3 et 10** (3 à 10 publicités), la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 100 $ → 3 💎, 1 000 $ → 5 💎, 80 000 $ → 9 💎, la mine niveau 5 → 10 💎.
 - **Boutique** (`BOOSTS`, 25/10) : Production × 2, Ventes × 2 et Employés × 2 (15 min chacun) et Fortune (× 3 blocs par clic, 5 min), **3 💎** chacun ; plus de trésor.
 - **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Employés × 2, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
 - **Absence × 2** (`doublerAbsence`) : une publicité redonne tout ce que l'absence a rapporté (l'argent gagné, plus la valeur de ce qui attend en plus dans le coffre et le chariot).
@@ -361,7 +361,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 
 - **XP** (`XP_PAR`) : 1 pour 3 blocs cassés en cliquant, 70 par bâtiment, 3 par case de rails, 30 par trajet, 40 par embauche, 30 par niveau d'amélioration, 150 par niveau de mine, et 1 par 25 $ de ce qu'on a acheté (`VALEUR_PAR_XP`). Chaque chose ne compte qu'une fois (`recordsXp`). Rien pour ce qui se fait tout seul.
 - **Courbe** : `xpPourPasser(n) = 60 × n^1,8`, arrondi à la dizaine : 60 XP pour passer au niveau 2, 210 pour le 3… Il faut 1 430 XP au total pour le niveau 5, 11 680 pour le 10, **38 230 pour le 15** (le maximum).
-- **Déblocages** (`NIVEAU_JOUEUR_POUR`) : rails au niveau 2 ; mine niveaux 2 à 5 aux niveaux 3, 5, 7, 9. Chaque niveau rapporte 3 gemmes.
+- **Déblocages** (`NIVEAU_JOUEUR_POUR`) : rails au niveau 2 ; mine niveaux 2 à 5 aux niveaux 3, 5, 7, 9. Chaque niveau rapporte 1 gemme (25/10 : 3 avant).
 
 ## Le bot de simulation
 

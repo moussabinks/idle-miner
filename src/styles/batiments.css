@@ -1120,3 +1120,26 @@
     animation: none;
   }
 }
+
+/* (25/10) Ce que fera une recrue (avant de l'embaucher) : ses blocs/s, son salaire... */
+.stats-recrue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* (25/10) Les prix du marché : une étiquette par minerai. */
+.prix-marche {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.prix-marche-ligne {
+  font-size: 0.9rem;
+  background: var(--blanc);
+}

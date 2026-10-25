@@ -2,7 +2,8 @@
 
 Depuis le 25/10, tous les dessins du village sont des **SVG** fabriqués par un script Node (sans
 aucune bibliothèque à installer) : les bâtiments, la mine et ses calques, les caisses de
-l'ascenseur, l'icône des rails et les arbres. Le style : des aplats de couleur (une seule teinte
+l'ascenseur, l'icône des rails, les arbres, et le paysage (les collines et les montagnes autour de
+la clairière). Le style : des aplats de couleur (une seule teinte
 plus sombre par face, jamais de dégradé, de texture ni de flou), un **contour bleu nuit épais**
 (`#2a2140`) partout, des formes rondes et simples, la palette de l'interface.
 
@@ -14,14 +15,16 @@ Depuis la racine du projet :
 node outils/art/fabriquer.mjs
 ```
 
-Le script réécrit les fichiers de `public/images/batiments/` et `public/images/village/arbres/`,
+Le script réécrit les fichiers de `public/images/batiments/`, `public/images/village/arbres/` et
+`public/images/village/paysage/`,
 puis affiche les **calages** (la taille de chaque dessin et les coins de son emprise au sol). S'ils
 ont changé, les recopier dans le jeu :
 
 - `CALAGES` dans `src/composants/iso.ts` (les bâtiments et la mine) ;
 - `POINTS_MINE` dans `src/composants/iso.ts` (où sont la caisse, le treuil, le bord du puits, le
   panneau...) et `CABINE_EN_HAUT` / `CABINE_EN_BAS` dans `src/composants/DessinsVillage.tsx` ;
-- `arbre()` dans `src/composants/arbres.ts` (tous les arbres ont le même cadre).
+- `arbre()` dans `src/composants/arbres.ts` (tous les arbres ont le même cadre) ;
+- `VIGNETTES` et `EAU_CASCADE` dans `src/composants/paysage.ts` (le paysage).
 
 ## Les fichiers
 
@@ -31,6 +34,7 @@ ont changé, les recopier dans le jeu :
 | `batiments.mjs` | La dalle de pavés, le marché, le forgeron (25/10 : le four et son feu, la cheminée en briques, l'enclume vue de côté, `enclume()`), le Personnel, la foreuse (25/10 : la mèche en forme de carotte, `meche()`, son petit coffre à charbon, `coffreForeuse()`, et les bandes de chantier, `bandesChantier()`), le générateur et l'icône des rails |
 | `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
+| `montagnes.mjs` | Le paysage (25/10) : les montagnes enneigées (`montagne()`, la table `MONTAGNES_SIMPLES`, la montagne à la cascade et celle à la galerie de mine), leurs filons (`filon()`), cristaux et fissures, et les collines (`colline()`, `garnirColline()`), un bosquet de sapins et des rochers |
 | `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
 
 ## Comment c'est dessiné
@@ -80,3 +84,26 @@ et une hauteur écrites dans leur balise.
 Le sol (l'herbe, le damier, la plage, la mer), les rochers et les décorations sont dessinés
 directement par le jeu, dans le même style (`DessinsVillage.tsx`, `PlageVillage.tsx`,
 `Rochers.tsx`).
+
+## Le paysage (les collines et les montagnes)
+
+Au-delà de la rangée d'arbres qui entoure la clairière, le jeu plante des « vignettes » (`paysage.ts`
+choisit où, `ForetVillage.tsx` les dessine en tuiles avec les arbres). Chaque vignette est dessinée
+autour du **milieu de son pied** (0, 0), deux fois plus grande que le monde (le jeu l'affiche à
+l'échelle 0,5) ; son cadre est donné à `svg()`.
+
+- **Une montagne** (`montagne()`) : une silhouette de pics (chaque pic : sa place en part de la
+  largeur et sa hauteur), chaque pic coupé par une arête qui descend un peu vers la droite : à
+  gauche la face éclairée (`ROCHE`), à droite celle à l'ombre (`ROCHE_OMBRE`). Un bonnet de neige
+  qui coule en gouttes sous chaque sommet, de l'herbe en bas (en langues), puis les détails :
+  filons (une veine sombre d'où sortent deux ou trois **minerais à la forme des icônes**), grappes
+  de cristaux, fissures, sapins et rochers au pied. Le contour d'encre ne suit que la silhouette :
+  le pied n'en a pas, la montagne sort du sol.
+- **Une colline** (`colline()`) : une bosse verte, à l'ombre en bas à droite, la teinte éclairée
+  décalée vers la lumière (comme le feuillage des arbres), un contour seulement sur le dessus.
+- Les vignettes ne sont **jamais retournées** (la lumière vient toujours de la gauche) : pour varier,
+  chaque montagne simple a deux versions (`-b`).
+- **La cascade** : la bande d'eau de `montagne-cascade` est aussi animée par le jeu (une petite
+  boîte posée dessus, où des traits blancs descendent) ; si on la déplace, recopier `EAU_CASCADE`
+  (affichée par `fabriquer.mjs`) dans `paysage.ts`.
+

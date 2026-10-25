@@ -25,7 +25,9 @@ export type IdStand = IdBatiment
 
 // Une amélioration qu'on peut acheter, ou un bâtiment à construire (« construction » : il
 // s'achète dans le menu Bâtiments).
-export type AchatPossible = { stand: IdStand; nom: string; cout: Cout; construction?: boolean }
+// (25/10) « employe » : une amélioration pour UN employé (sa pioche, sa vitesse, son chariot),
+// et « chariotPousseur » quand c'est le chariot d'un pousseur : les tâches les gardent pour la fin.
+export type AchatPossible = { stand: IdStand; nom: string; cout: Cout; construction?: boolean; employe?: string; chariotPousseur?: boolean }
 
 // Toutes les prochaines améliorations du moment, stand par stand : d'abord les bâtiments à
 // construire, puis le forgeron et la mine (le cœur de la progression). On ne propose les
@@ -66,11 +68,11 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
     if (prix !== null) achats.push({ stand: 'employes', nom: t('Embaucher un mineur'), cout: { argent: prix, materiaux: {} } })
     for (const employe of etat.employes) {
       const cout = coutAmeliorationEmploye(etat, employe)
-      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null) achats.push({ stand: 'employes', nom: t('Pioche en {pioche} pour {nom}', { pioche: t(NIVEAUX_EMPLOYE[employe.niveau + 1].nom), nom: employe.nom }), cout })
-      if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: t('Vitesse de {nom} : pousseur {vitesse}', { nom: employe.nom, vitesse: t(NIVEAUX_POUSSEUR[employe.niveau + 1].nom).toLowerCase() }), cout })
+      if (cout && employe.role === 'mineur' && verrouMinePioche(etat, employe) === null) achats.push({ stand: 'employes', nom: t('Pioche en {pioche} pour {nom}', { pioche: t(NIVEAUX_EMPLOYE[employe.niveau + 1].nom), nom: employe.nom }), cout, employe: employe.nom })
+      if (cout && employe.role === 'pousseur' && debloque(etat, 'pousseur', employe.niveau + 1)) achats.push({ stand: 'employes', nom: t('Vitesse de {nom} : pousseur {vitesse}', { nom: employe.nom, vitesse: t(NIVEAUX_POUSSEUR[employe.niveau + 1].nom).toLowerCase() }), cout, employe: employe.nom })
       // (23/10) le chariot de chaque pousseur
       const coutChariot = coutChariotPousseur(etat, employe)
-      if (coutChariot && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)) achats.push({ stand: 'employes', nom: t('Chariot de {nom} : {places} places', { nom: employe.nom, places: NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1].places }), cout: coutChariot })
+      if (coutChariot && debloque(etat, 'chariotPousseur', (employe.chariot ?? 0) + 1)) achats.push({ stand: 'employes', nom: t('Chariot de {nom} : {places} places', { nom: employe.nom, places: NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1].places }), cout: coutChariot, employe: employe.nom, chariotPousseur: true })
     }
     const recruteur = prochainNiveauRecruteur(etat)
     if (recruteurDebloque(etat) && recruteur && debloque(etat, 'recruteur', etat.recruteur)) {

@@ -6,7 +6,7 @@ import type { IdBatiment } from './donnees'
 import { type EtatJeu } from './mineur'
 import { embaucher } from './employes'
 import { missions } from './missions'
-import { standsAchetables } from './objectifs'
+import { achatsPossibles, standsAchetables } from './objectifs'
 
 // Les bâtiments posés « à la main » (sans les payer), à des places libres autour de la mine
 // (25/10 : la clairière fait 40 × 40 cases, la mine est en 15, 15).
@@ -68,7 +68,8 @@ describe('les missions (en haut à droite)', () => {
     // (le forgeron vient après le Personnel et le marché dans le menu : 30 $ et 15 pierre)
     const forgeron = missions(etat).find((m) => m.id === 'construire-forgeron')
     // (23/10) tout ce qu'il faut, dès le début : l'argent et la pierre, chacun avec sa jauge
-    expect(forgeron).toMatchObject({ stand: 'puits', texte: 'Construis : Forgeron' })
+    // (25/10) « Voir » ouvre le menu Bâtiments (avant : la mine), pour montrer le forgeron
+    expect(forgeron).toMatchObject({ construction: true, texte: 'Construis : Forgeron' })
     expect(forgeron?.elements).toEqual([
       { icone: '💵', nom: '$', valeur: 30, max: 30 },
       { icone: expect.any(String), nom: 'pierre', valeur: 12, max: 15 },
@@ -88,6 +89,21 @@ describe('les missions (en haut à droite)', () => {
     expect(missions(etat).find((m) => m.id === 'rails')).toMatchObject({ pret: true })
     for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
     expect(ids(etat)).toContain('trajet')
+  })
+
+  it('(25/10) les améliorations d’un seul employé passent après les grosses (mine, coffre, pioches...)', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    poser(etat, ['marche', 'forgeron', 'employes'])
+    etat.stats.argentGagne = 100
+    etat.niveauMine = 2
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2))
+    etat.argent = 1_000
+    const nom = etat.employes[0].nom
+    // Il y a bien une amélioration pour ce mineur...
+    expect(achatsPossibles(etat).some((a) => a.employe === nom)).toBe(true)
+    // ... mais les tâches montrent d'abord les grosses.
+    expect(missions(etat).some((m) => m.texte.includes(nom))).toBe(false)
   })
 
   it('les urgences passent devant : salaires, coffre plein', () => {
