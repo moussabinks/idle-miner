@@ -127,6 +127,18 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
 // directement dans des variables CSS du calque doré (--x, --y, --l, --h), et les éléments s'y
 // déplacent avec transform. React ne change que quand la cible apparaît, disparaît, ou passe
 // d'une moitié de l'écran à l'autre.
+// Fait défiler (de haut en bas seulement) la boîte qui contient l'élément, pour qu'on le voie en
+// entier. (scrollIntoView ferait aussi défiler de côté une fenêtre trop large.)
+function defilerJusqua(element: Element) {
+  let boite = element.parentElement
+  while (boite && !(boite.scrollHeight > boite.clientHeight && /auto|scroll/.test(getComputedStyle(boite).overflowY))) boite = boite.parentElement
+  if (!boite) return
+  const r = element.getBoundingClientRect()
+  const b = boite.getBoundingClientRect()
+  if (r.top < b.top) boite.scrollBy({ top: r.top - b.top - 12, behavior: 'smooth' })
+  else if (r.bottom > b.bottom) boite.scrollBy({ top: r.bottom - b.bottom + 12, behavior: 'smooth' })
+}
+
 type Suivi = {
   visible: boolean
   dessous: boolean // la cible est tout en haut : la flèche passe dessous
@@ -158,7 +170,7 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
       const r = marquee?.getBoundingClientRect() ?? null
       // Un bouton dans une fenêtre : on la fait défiler jusqu'à lui (une fois).
       if (marquee && !defile && !surBatiment) {
-        marquee.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        defilerJusqua(marquee)
         defile = true
       }
       const visible = r !== null && r.width > 0

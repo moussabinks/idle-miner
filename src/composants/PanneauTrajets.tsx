@@ -43,8 +43,8 @@ export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; o
 
   const aPorter = Math.min(capaciteTrajet(etat, liaison), aCharger(etat, liaison))
   return (
-    <div className="ligne-amelioration ligne-trajet">
-      <span className="ligne-trajet-icone" aria-hidden="true">
+    <div className="ligne-amelioration ligne-wagonnet">
+      <span className="ligne-wagonnet-icone" aria-hidden="true">
         {info.emoji}
       </span>
       <div className="ligne-amelioration-texte">

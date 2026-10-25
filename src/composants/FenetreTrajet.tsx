@@ -47,15 +47,15 @@ function duree(s: number): string {
 function DessinTrajet({ liaison, actif }: { liaison: IdLiaison; actif: boolean }) {
   const info = LIAISONS[liaison]
   return (
-    <div className={`dessin-trajet ${actif ? 'dessin-actif' : ''}`} aria-hidden="true">
-      <span className="dessin-batiment">
+    <div className={`trajet-dessin ${actif ? 'trajet-dessin-actif' : ''}`} aria-hidden="true">
+      <span className="trajet-batiment">
         <img src={IMAGES_BATIMENTS[info.depart]} alt="" draggable={false} />
         <small>{t(BATIMENTS[info.depart].nom)}</small>
       </span>
-      <span className="dessin-rails">
-        <span className="dessin-wagonnet">🛒</span>
+      <span className="trajet-rails">
+        <span className="trajet-wagonnet">🛒</span>
       </span>
-      <span className="dessin-batiment">
+      <span className="trajet-batiment">
         <img src={IMAGES_BATIMENTS[info.arrivee]} alt="" draggable={false} />
         <small>{t(BATIMENTS[info.arrivee].nom)}</small>
       </span>
@@ -114,7 +114,7 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
       couleur="bleu"
       devant
       onFermer={onFermer}
-      classe="fenetre-trajet"
+      classe="fenetre-wagonnet"
       pied={
         <>
           <button className="btn btn-blanc" onClick={onFermer}>
@@ -153,19 +153,19 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
                   {t('Rien')}
                 </button>
               </div>
-              <div className="tuiles-objets">
+              <div className="objet-tuiles">
                 {choix.map((bloc) => {
                   const envoye = !reglage.exclus.includes(bloc)
                   return (
-                    <button key={bloc} className={`tuile-objet ${envoye ? 'envoye' : ''}`} aria-pressed={envoye} onClick={() => basculer(bloc)}>
-                      <span className="tuile-coche" aria-hidden="true">
+                    <button key={bloc} className={`objet-tuile ${envoye ? 'objet-envoye' : ''}`} aria-pressed={envoye} onClick={() => basculer(bloc)}>
+                      <span className="objet-coche" aria-hidden="true">
                         {envoye ? '✔' : '✖'}
                       </span>
-                      <span className="tuile-icone" aria-hidden="true">
+                      <span className="objet-icone" aria-hidden="true">
                         {BLOCS[bloc].emoji}
                       </span>
-                      <span className="tuile-nom">{t(BLOCS[bloc].nom)}</span>
-                      <span className="tuile-infos">×{nombreAbrege(stock[bloc] ?? 0)}</span>
+                      <span className="objet-nom">{t(BLOCS[bloc].nom)}</span>
+                      <span className="objet-infos">×{nombreAbrege(stock[bloc] ?? 0)}</span>
                     </button>
                   )
                 })}

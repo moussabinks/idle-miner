@@ -433,6 +433,7 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 

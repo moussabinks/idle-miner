@@ -129,11 +129,12 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
       </div>
       <button className="bloc-a-cliquer" data-tuto="bloc" disabled={plein} onClick={cliquer} aria-label={t('Casser le bloc ({nom})', { nom: t(BLOCS[bloc].nom) })}>
         {/* La clé change à chaque bloc : le nouveau bloc « pousse » à sa place. */}
-        <span key={etat.stats.blocsCasses} className="bloc-pousse">
+        {/* (les clés ont un préfixe : sans lui, deux éléments voisins pouvaient avoir la même) */}
+        <span key={`bloc-${etat.stats.blocsCasses}`} className="bloc-pousse">
           <BlocDessin bloc={bloc} fissures={etat.clics} brille={BLOCS[bloc].minerai && BLOCS[bloc].prix >= 35} />
         </span>
         {eclats.map((e) => (
-          <span key={e.id} className="eclats" aria-hidden="true">
+          <span key={`eclat-${e.id}`} className="eclats" aria-hidden="true">
             <i />
             <i />
             <i />
@@ -142,12 +143,12 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
           </span>
         ))}
         {trouvailles.map((tr) => (
-          <span key={tr.id} className={`trouvaille ${tr.nombre > 1 ? 'trouvaille-double' : ''}`} aria-hidden="true">
+          <span key={`trouvaille-${tr.id}`} className={`trouvaille ${tr.nombre > 1 ? 'trouvaille-double' : ''}`} aria-hidden="true">
             +{tr.nombre} {BLOCS[tr.bloc].emoji}
           </span>
         ))}
         {combo >= 3 && (
-          <span key={combo} className={`combo ${combo >= 25 ? 'combo-gros' : ''}`}>
+          <span key={`combo-${combo}`} className={`combo ${combo >= 25 ? 'combo-gros' : ''}`}>
             🔥 ×{combo}
           </span>
         )}

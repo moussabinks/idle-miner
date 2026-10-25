@@ -332,40 +332,45 @@
   line-height: 1;
 }
 
-/* Pour les autres, en bas au milieu : des pastilles posées sur le village. */
+/* Pour les autres, en bas au milieu : une seule pilule posée sur le village,
+   « ⛏️ Creuse › 👷 Embauche › 🛤️ Automatise › 💎 Descends ». */
 .accueil-etapes {
   position: absolute;
   left: 50%;
   bottom: 18px;
   z-index: 1;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  width: max-content;
-  max-width: calc(100% - 880px);
+  align-items: center;
+  gap: 4px;
   margin: 0;
-  padding: 0;
+  padding: 6px 14px;
   translate: -50% 0;
+  border: var(--trait) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  box-shadow: var(--ombre-petite);
   list-style: none;
+  white-space: nowrap;
+  animation: accueil-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 0.15s backwards;
 }
 
 .accueil-etapes li {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px 6px 8px;
-  border: var(--trait) solid var(--encre);
-  border-radius: 999px;
-  background: var(--creme);
-  box-shadow: var(--ombre-petite);
-  font-size: 0.9rem;
-  white-space: nowrap;
-  animation: accueil-arrive 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  gap: 5px;
+  font-size: 0.88rem;
+}
+
+.accueil-etapes li + li::before {
+  content: '›';
+  margin: 0 4px;
+  color: var(--encre-douce);
+  font-family: var(--police-titre);
+  font-size: 1.3rem;
 }
 
 .accueil-etapes .accueil-etape-icone {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 /* --- Le classement ------------------------------------------------------------------------ */
@@ -421,7 +426,7 @@
 
 .classement-rang {
   flex-shrink: 0;
-  width: 2.2em;
+  width: 40px;
   font-family: var(--police-titre);
   font-size: 1.05rem;
   color: var(--encre-douce);
@@ -588,7 +593,7 @@
 
 /* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */
 
-@media (max-width: 1180px) {
+@media (max-width: 1240px) {
   .accueil-etapes {
     display: none;
   }
@@ -620,7 +625,7 @@
   /* Le village en haut (il défile avec la page). */
   .accueil-scene {
     bottom: auto;
-    height: 380px;
+    height: 430px;
   }
 
   .accueil-bandeau {
@@ -666,7 +671,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 14px;
-    margin-top: 170px;
+    margin-top: 230px;
     padding: 0 10px calc(36px + env(safe-area-inset-bottom));
   }
 

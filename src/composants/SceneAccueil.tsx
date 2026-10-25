@@ -231,7 +231,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
 
   // Dans une boîte large (ordinateur), le texte prend la moitié gauche : le village tient en
   // entier dans la moitié droite. Dans une boîte étroite (téléphone), on voit le milieu du
-  // village, un peu plus gros, dans le haut de la boîte (le logo cache le bas).
+  // village, un peu plus gros, sous le bandeau du haut (25/10 : le bandeau cache le haut).
   const large = marges ? taille.l > marges.gauche + marges.droite + 200 : taille.l / taille.h > 1.5
   const margeGauche = marges ? marges.gauche : taille.l * 0.5
   const margeDroite = marges ? marges.droite : 0
@@ -243,7 +243,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
   const zoomMin = Math.max(taille.l / (x1 - x0), taille.h / (y1 - y0))
   const z = Math.max(zoomMin, zoomVillage)
   const centreX = large ? margeGauche + largeurLibre / 2 : taille.l / 2
-  const centreY = large ? taille.h / 2 : taille.h * 0.4
+  const centreY = large ? taille.h / 2 : taille.h * 0.62
   // Le point du monde qu'on met là : le milieu du village, ou le milieu de la mine sur téléphone.
   const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(20, 21)
   const borner = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))

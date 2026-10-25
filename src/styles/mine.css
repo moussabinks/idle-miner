@@ -38,6 +38,8 @@
 /* --- Le bloc à cliquer ------------------------------------------------------ */
 
 .zone-bloc {
+  overflow: hidden; /* (les éclats et les minerais qui s'envolent ne font pas déborder la fenêtre) */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;

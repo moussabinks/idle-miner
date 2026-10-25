@@ -122,9 +122,15 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
           {joueur ? (
             <strong>{t('Toi · {argent} $', { argent: nombreAbrege(monArgent) })}</strong>
           ) : (
-            <strong>{monArgent > 0 ? t('Avec {argent} $, tu serais {rang}e !', { argent: nombreAbrege(monArgent), rang: rang ?? '?' }) : t('Joue pour entrer dans le classement !')}</strong>
+            <strong>
+              {monArgent <= 0
+                ? t('Joue pour entrer dans le classement !')
+                : rang === null
+                  ? t('Tu as gagné {argent} $ : crée un compte pour être classé !', { argent: nombreAbrege(monArgent) })
+                  : t('Avec {argent} $, tu serais {rang}e !', { argent: nombreAbrege(monArgent), rang })}
+            </strong>
           )}
-          {place?.suivant ? (
+          {place?.suivant && (joueur || monArgent > 0) ? (
             <span>🔥 {t('Encore {argent} $ pour dépasser {pseudo}', { argent: nombreAbrege(ecart), pseudo: place.suivant.pseudo })}</span>
           ) : rang === 1 && monArgent > 0 ? (
             <span>👑 {t('Tu es le numéro 1 !')}</span>

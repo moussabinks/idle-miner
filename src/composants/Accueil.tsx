@@ -360,13 +360,11 @@ export function Accueil({ compte, onJouer, onLangue }: Props) {
       {mondes.length > 0 && (
         <ol className="accueil-etapes" aria-label={t('Comment jouer')}>
           {ETAPES_DU_JEU.map((e, i) => (
-            <li key={e.titre} title={t(e.texte)} style={{ animationDelay: `${i * 90}ms` }}>
+            <li key={e.titre} title={`${i + 1}. ${t(e.texte)}`}>
               <span className="accueil-etape-icone" aria-hidden="true">
                 {e.icone}
               </span>
-              <strong>
-                {i + 1}. {t(e.titre)}
-              </strong>
+              <strong>{t(e.titre)}</strong>
             </li>
           ))}
         </ol>

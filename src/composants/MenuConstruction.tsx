@@ -44,22 +44,22 @@ function CarteBatiment({ id, nouveau, onPoser }: { id: IdBatiment; nouveau: bool
   const debloque = batimentDebloque(etat, id)
   const possible = peutConstruire(etat, id)
   return (
-    <article className={`carte construction ${debloque ? '' : 'construction-bloquee'} ${possible ? 'construction-possible' : ''}`}>
-      {nouveau && <span className="etiquette etiquette-rose construction-nouveau">{t('Nouveau !')}</span>}
-      <img className="construction-image" src={IMAGES_BATIMENTS[id]} alt="" draggable={false} />
-      <div className="construction-texte">
+    <article className={`carte construire-carte ${debloque ? '' : 'construire-bloque'} ${possible ? 'construire-possible' : ''}`}>
+      {nouveau && <span className="etiquette etiquette-rose construire-nouveau">{t('Nouveau !')}</span>}
+      <img className="construire-image" src={IMAGES_BATIMENTS[id]} alt="" draggable={false} />
+      <div className="construire-texte">
         <h3>
           {info.emoji} {t(info.nom)}
         </h3>
         <p className="discret">{t(info.description)}</p>
       </div>
       {debloque ? (
-        <button className={`btn btn-vert btn-large construction-bouton ${possible ? 'btn-attention' : ''}`} data-tuto={`poser-${id}`} disabled={!possible} onClick={onPoser}>
+        <button className={`btn btn-vert btn-large construire-bouton ${possible ? 'btn-attention' : ''}`} data-tuto={`poser-${id}`} disabled={!possible} onClick={onPoser}>
           <span>🏗️ {t('Construire')}</span>
           <Prix etat={etat} cout={info.cout} />
         </button>
       ) : (
-        <span className="verrou construction-bouton">🔒 {verrouBatiment(etat, id)}</span>
+        <span className="verrou construire-bouton">🔒 {verrouBatiment(etat, id)}</span>
       )}
     </article>
   )
@@ -70,7 +70,7 @@ function LigneSol({ icone, titre, effet, cout, verrou, onPoser }: { icone: strin
   const { etat } = useJeu()
   return (
     <div className="ligne-amelioration">
-      <span className="construction-sol-icone" aria-hidden="true">
+      <span className="construire-sol-icone" aria-hidden="true">
         {icone}
       </span>
       <span className="ligne-amelioration-texte">
@@ -98,9 +98,9 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
   const tries = [...aConstruire.filter((id) => batimentDebloque(etat, id)), ...aConstruire.filter((id) => !batimentDebloque(etat, id))]
   const construits = (['puits', ...LISTE_BATIMENTS] as IdBatiment[]).filter((id) => estPose(etat, id))
   return (
-    <Fenetre titre={t('Construire')} icone="🏗️" couleur="orange" taille="grande" onFermer={onFermer} classe="fenetre-construction">
+    <Fenetre titre={t('Construire')} icone="🏗️" couleur="orange" taille="grande" onFermer={onFermer} classe="fenetre-construire">
       {/* Ce qu'on a pour payer : l'argent, et les minerais du coffre de la mine. */}
-      <div className="rangee construction-ressources">
+      <div className="rangee construire-ressources">
         <span className="etiquette">💵 {nombreAbrege(etat.argent)} $</span>
         <span className="etiquette">
           {BLOCS.pierre.emoji} {nombre(disponible(etat, 'pierre'))}
@@ -116,7 +116,7 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
       </div>
 
       {tries.length > 0 ? (
-        <div className="grille-construction">
+        <div className="grille-construire">
           {tries.map((id) => (
             <CarteBatiment key={id} id={id} nouveau={nouveautes.includes(id)} onPoser={() => onPoserBatiment(id)} />
           ))}

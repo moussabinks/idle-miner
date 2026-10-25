@@ -103,7 +103,7 @@ export function PanneauMarche({ onReglerTrajet, onConstruireRails }: PropsPannea
   const { etat } = useJeu()
   const avecRails = VERS_LE_MARCHE.some((l) => ligneDe(etat, l) !== null)
   return (
-    <div className="panneau-batiment">
+    <div className="panneau-bat">
       <div className="carte carte-creme marche-total">
         <span className="marche-total-icone" aria-hidden="true">
           💰
@@ -131,8 +131,12 @@ export function PanneauMarche({ onReglerTrajet, onConstruireRails }: PropsPannea
         </div>
       )}
 
-      <h3 className="titre-section">{t('Wagonnets vers le marché')}</h3>
-      <PanneauTrajets arrivee="marche" onReglerTrajet={onReglerTrajet} />
+      {avecRails && (
+        <>
+          <h3 className="titre-section">{t('Wagonnets vers le marché')}</h3>
+          <PanneauTrajets arrivee="marche" onReglerTrajet={onReglerTrajet} />
+        </>
+      )}
     </div>
   )
 }
@@ -182,7 +186,7 @@ export function PanneauPioches(_props: PropsPanneau) {
   const autres = PIOCHES.filter((p) => p.niveau in etat.pioches && p.niveau !== etat.niveauPioche)
   const verrouSuivante = suivante ? verrou(etat, 'pioches', suivante.niveau) : null
   return (
-    <div className="panneau-batiment">
+    <div className="panneau-bat">
       <h3 className="titre-section">{t('Ta pioche')}</h3>
       <PiocheEnMain />
 
@@ -244,7 +248,7 @@ export function PanneauPioches(_props: PropsPanneau) {
 // plus vite avec l'électricité. Son chariot se vend d'un clic.
 // ---------------------------------------------------------------------------
 
-type OngletForeuse = 'forage' | 'chariot' | 'ameliorer' | 'wagonnets'
+type OngletForeuse = 'forage' | 'chariot' | 'ameliorer'
 
 export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPanneau) {
   const { etat, jouer } = useJeu()
@@ -262,13 +266,12 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
   const blocs = [...new Set([...blocsDuNiveau(etat.niveauMine), ...(Object.keys(foreuse.chariot) as IdBloc[])])].sort((a, b) => BLOCS[b].prix - BLOCS[a].prix)
 
   return (
-    <div className="panneau-batiment">
+    <div className="panneau-bat">
       <OngletsPanneau
         onglets={[
           { id: 'forage', titre: `🔥 ${t('Charbon')}`, pastille: !enMarche && !plein ? '!' : null },
           { id: 'chariot', titre: `🛒 ${t('Chariot')}`, pastille: plein ? '!' : null },
           { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerForage(etat) || peutAmeliorerChariot(etat) ? '+' : null },
-          { id: 'wagonnets', titre: `🚃 ${t('Wagonnets')}` },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
@@ -307,7 +310,9 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
               🛒 {t('Chariot plein : le vendre')}
             </button>
           )}
-          {ligneDe(etat, 'mine-foreuse') === null && <p className="carte carte-creme astuce">💡 {t('Relie-la à la mine par des rails : un wagonnet lui apportera le charbon.')}</p>}
+          <h3 className="titre-section">{t('Wagonnets')}</h3>
+          {ligneDe(etat, 'mine-foreuse') === null && <p className="discret">💡 {t('Relie-la à la mine par des rails : un wagonnet lui apportera le charbon.')}</p>}
+          <PanneauTrajets depart="foreuse" arrivee="foreuse" onReglerTrajet={onReglerTrajet} />
         </>
       )}
 
@@ -334,8 +339,9 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
             effet={
               forage ? (
                 <>
-                  {t('{n} blocs/s', { n: nombre(NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse, 1) })} → <strong>{t('{n} blocs/s', { n: nombre(forage.vitesse, 1) })}</strong> · {BLOCS.charbon.emoji}{' '}
-                  {charbonMaxForeuse(etat)} → <strong>{forage.reservoir}</strong>
+                  {t('{n} blocs/s', { n: nombre(NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse, 1) })} → <strong>{t('{n} blocs/s', { n: nombre(forage.vitesse, 1) })}</strong>
+                  <br />
+                  {t('Réservoir')} {charbonMaxForeuse(etat)} → <strong>{forage.reservoir}</strong> {BLOCS.charbon.emoji}
                 </>
               ) : (
                 t('{n} blocs/s', { n: nombre(NIVEAUX_FORAGE[foreuse.niveauVitesse].vitesse, 1) })
@@ -368,7 +374,6 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
         </div>
       )}
 
-      {onglet === 'wagonnets' && <PanneauTrajets depart="foreuse" arrivee="foreuse" onReglerTrajet={onReglerTrajet} />}
     </div>
   )
 }
@@ -425,7 +430,7 @@ export function PanneauGenerateur(_props: PropsPanneau) {
   const aMettre = Math.min(disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
   const [onglet, setOnglet] = useState<'courant' | 'ameliorer'>('courant')
   return (
-    <div className="panneau-batiment">
+    <div className="panneau-bat">
       <OngletsPanneau
         onglets={[
           { id: 'courant', titre: `⚡ ${t('Courant')}`, pastille: g.allume && !enMarche ? '!' : null },
@@ -466,8 +471,11 @@ export function PanneauGenerateur(_props: PropsPanneau) {
           effet={
             prochain ? (
               <>
-                {t('Rayon {n}', { n: rayonGenerateur(etat) })} → <strong>{prochain.rayon}</strong> · {boostGenerateur(etat)} → <strong>{texteBonusGenerateur(prochain.bonus)}</strong> · {minutes(reserveMaxGenerateur(etat))} →{' '}
-                <strong>{t('{n} min', { n: prochain.reserveMinutes })}</strong>
+                {t('Rayon')} {rayonGenerateur(etat)} → <strong>{t('{n} cases', { n: prochain.rayon })}</strong>
+                <br />
+                {t('Vitesse')} {boostGenerateur(etat)} → <strong>{texteBonusGenerateur(prochain.bonus)}</strong>
+                <br />
+                {t('Réserve')} {minutes(reserveMaxGenerateur(etat))} → <strong>{t('{n} min', { n: prochain.reserveMinutes })}</strong>
               </>
             ) : (
               `${t('Rayon {n}', { n: rayonGenerateur(etat) })} · ${boostGenerateur(etat)}`
@@ -490,7 +498,7 @@ export function PanneauGenerateur(_props: PropsPanneau) {
 export function PanneauSucces({ etat }: { etat: EtatJeu }) {
   const obtenus = SUCCES.filter((s) => etat.succes.includes(s.id)).length
   return (
-    <>
+    <div className="panneau-bat">
       <Barre valeur={obtenus} max={SUCCES.length} texte={t('{n} / {max} succès', { n: obtenus, max: SUCCES.length })} couleur="or" />
       <ul className="grille-succes">
         {SUCCES.map((s) => {
@@ -506,7 +514,7 @@ export function PanneauSucces({ etat }: { etat: EtatJeu }) {
           )
         })}
       </ul>
-    </>
+    </div>
   )
 }
 

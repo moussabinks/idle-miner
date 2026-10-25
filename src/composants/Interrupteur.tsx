@@ -9,9 +9,9 @@ type Props = {
 
 export function Interrupteur({ allume, texte, onBasculer }: Props) {
   return (
-    <button className={`interrupteur ${allume ? 'allume' : ''}`} role="switch" aria-checked={allume} onClick={onBasculer}>
-      <span className="interrupteur-piste" aria-hidden="true">
-        <span className="interrupteur-curseur" />
+    <button className={`bascule ${allume ? 'bascule-allume' : ''}`} role="switch" aria-checked={allume} onClick={onBasculer}>
+      <span className="bascule-piste" aria-hidden="true">
+        <span className="bascule-curseur" />
       </span>
       <span>{texte}</span>
     </button>

@@ -7,7 +7,7 @@
 
 /* --- Ce qui sert à tous les panneaux --- */
 
-.panneau-batiment {
+.panneau-bat {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -25,7 +25,7 @@
 }
 
 /* Une carte où quelque chose ne va pas (un employé pas payé, le manager endormi...). */
-.panneau-batiment .carte-alerte,
+.panneau-bat .carte-alerte,
 .ligne-alerte {
   background: #ffe1e5;
 }
@@ -89,7 +89,7 @@
 }
 
 /* L'interrupteur (Interrupteur.tsx) : une piste grise ou verte, un curseur rond qui glisse. */
-.interrupteur {
+.bascule {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -105,7 +105,7 @@
   cursor: pointer;
 }
 
-.interrupteur-piste {
+.bascule-piste {
   position: relative;
   flex-shrink: 0;
   width: 58px;
@@ -116,7 +116,7 @@
   transition: background 0.15s;
 }
 
-.interrupteur-curseur {
+.bascule-curseur {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -128,27 +128,27 @@
   transition: transform 0.15s;
 }
 
-.interrupteur.allume .interrupteur-piste {
+.bascule.bascule-allume .bascule-piste {
   background: var(--vert-fonce);
 }
 
-.interrupteur.allume .interrupteur-curseur {
+.bascule.bascule-allume .bascule-curseur {
   transform: translateX(26px);
 }
 
-.interrupteur:focus-visible .interrupteur-piste {
+.bascule:focus-visible .bascule-piste {
   outline: 3px solid var(--ciel-fonce);
   outline-offset: 2px;
 }
 
 /* --- Les trajets d'un bâtiment (PanneauTrajets.tsx) --- */
 
-.ligne-trajet-icone {
+.ligne-wagonnet-icone {
   font-size: 1.6rem;
   line-height: 1;
 }
 
-.ligne-trajet .jauge {
+.ligne-wagonnet .jauge {
   margin-top: 2px;
 }
 
@@ -244,6 +244,7 @@
   text-align: center;
   background: var(--creme-fonce);
   border-color: var(--gris-fonce);
+  border-style: dashed;
   color: var(--encre-douce);
 }
 
@@ -252,19 +253,27 @@
 }
 
 .succes-obtenu {
-  background: var(--jaune);
+  background: var(--blanc);
   border-color: var(--encre);
+  border-style: solid;
   color: var(--encre);
   box-shadow: var(--ombre-petite);
 }
 
-.succes-obtenu .discret {
-  color: var(--encre);
+.succes-obtenu .succes-icone {
+  background: var(--jaune);
 }
 
 .succes-icone {
-  font-size: 2rem;
-  line-height: 1.1;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: var(--trait-fin) solid currentColor;
+  border-radius: 50%;
+  background: var(--gris);
+  font-size: 1.7rem;
+  line-height: 1;
 }
 
 /* =========================================================================
@@ -298,8 +307,8 @@
 }
 
 .grille-employes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -451,13 +460,9 @@
   object-fit: cover;
 }
 
-.fatigue-manager {
-  flex-wrap: nowrap;
-}
-
 .fatigue-jauge {
   flex: 1;
-  min-width: 0;
+  min-width: 190px;
 }
 
 .chances-rarete {
@@ -471,9 +476,15 @@
   gap: 10px;
 }
 
+/* Sur téléphone, les onglets d'un panneau passent sur deux lignes plutôt que de déborder. */
 @media (max-width: 640px) {
-  .grille-employes {
-    grid-template-columns: 1fr;
+  .panneau-bat .onglets {
+    flex-wrap: wrap;
+    border-radius: 22px;
+  }
+
+  .panneau-bat .onglet {
+    padding: 0.3em 0.6em;
   }
 
   .portrait-chef {
@@ -716,7 +727,7 @@
    ========================================================================= */
 
 /* Le dessin : le départ, les rails (où roule le wagonnet), l'arrivée. */
-.dessin-trajet {
+.trajet-dessin {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -726,7 +737,7 @@
   background: #b8e39a;
 }
 
-.dessin-batiment {
+.trajet-batiment {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -738,13 +749,13 @@
   text-align: center;
 }
 
-.dessin-batiment img {
+.trajet-batiment img {
   width: 64px;
   height: 64px;
   object-fit: contain;
 }
 
-.dessin-rails {
+.trajet-rails {
   position: relative;
   flex: 1;
   height: 18px;
@@ -754,7 +765,7 @@
   background: repeating-linear-gradient(90deg, #a0703c 0 6px, transparent 6px 16px);
 }
 
-.dessin-wagonnet {
+.trajet-wagonnet {
   position: absolute;
   left: 0;
   bottom: 6px;
@@ -762,15 +773,15 @@
   line-height: 1;
 }
 
-.dessin-actif .dessin-wagonnet {
+.trajet-dessin-actif .trajet-wagonnet {
   animation: wagonnet-roule 3s ease-in-out infinite alternate;
 }
 
-.dessin-trajet:not(.dessin-actif) {
+.trajet-dessin:not(.trajet-dessin-actif) {
   background: var(--creme-fonce);
 }
 
-.dessin-trajet:not(.dessin-actif) img {
+.trajet-dessin:not(.trajet-dessin-actif) img {
   filter: grayscale(0.8);
 }
 
@@ -796,13 +807,13 @@
 }
 
 /* Les minerais en tuiles : vert = il l'emporte, gris = il le laisse. */
-.tuiles-objets {
+.objet-tuiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   gap: 8px;
 }
 
-.tuile-objet {
+.objet-tuile {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -820,18 +831,18 @@
   transition: transform 0.08s;
 }
 
-.tuile-objet:active {
+.objet-tuile:active {
   transform: translateY(2px);
 }
 
-.tuile-objet.envoye {
+.objet-tuile.objet-envoye {
   border-color: var(--encre);
   background: var(--vert);
   color: var(--encre);
   box-shadow: var(--ombre-petite);
 }
 
-.tuile-coche {
+.objet-coche {
   position: absolute;
   top: -8px;
   right: -8px;
@@ -846,21 +857,21 @@
   font-size: 0.75rem;
 }
 
-.envoye .tuile-coche {
+.objet-envoye .objet-coche {
   background: var(--vert-fonce);
   color: var(--blanc);
 }
 
-.tuile-icone {
+.objet-icone {
   font-size: 1.7rem;
   line-height: 1.1;
 }
 
-.tuile-nom {
+.objet-nom {
   font-size: 0.85rem;
 }
 
-.tuile-infos {
+.objet-infos {
   font-size: 0.78rem;
 }
 
@@ -910,23 +921,23 @@
    Le menu « Construire » (MenuConstruction.tsx)
    ========================================================================= */
 
-.construction-ressources {
+.construire-ressources {
   gap: 6px;
 }
 
-.construction-ressources .etiquette {
+.construire-ressources .etiquette {
   font-size: 0.9rem;
   padding: 0.2em 0.7em;
 }
 
 /* Les bâtiments à construire : des grandes cartes, l'image en haut, le bouton en bas. */
-.grille-construction {
+.grille-construire {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
 }
 
-.construction {
+.construire-carte {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -936,61 +947,61 @@
   text-align: center;
 }
 
-.construction-possible {
+.construire-possible {
   background: #eefbe6;
   box-shadow: var(--ombre);
 }
 
-.construction-image {
+.construire-image {
   width: 120px;
   height: 110px;
   object-fit: contain;
 }
 
-.construction-texte {
+.construire-texte {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.construction-texte h3 {
+.construire-texte h3 {
   font-size: 1.3rem;
 }
 
-.construction-texte .discret {
+.construire-texte .discret {
   font-size: 0.85rem;
 }
 
-.construction-bouton.btn {
+.construire-bouton.btn {
   flex-direction: column;
   gap: 2px;
 }
 
-.construction-bouton.verrou {
+.construire-bouton.verrou {
   justify-content: center;
   width: 100%;
   min-height: 44px;
 }
 
-.construction-bloquee {
+.construire-bloque {
   background: var(--creme-fonce);
   border-color: var(--gris-fonce);
 }
 
-.construction-bloquee .construction-image {
+.construire-bloque .construire-image {
   filter: grayscale(1);
   opacity: 0.55;
 }
 
-.construction-nouveau {
+.construire-nouveau {
   position: absolute;
   top: -10px;
   left: 10px;
   z-index: 1;
 }
 
-.construction-sol-icone {
+.construire-sol-icone {
   font-size: 1.8rem;
   line-height: 1;
 }
@@ -1006,12 +1017,12 @@
 }
 
 @media (max-width: 640px) {
-  .grille-construction {
+  .grille-construire {
     grid-template-columns: 1fr;
   }
 
   /* Sur téléphone, une carte de bâtiment en ligne : l'image à gauche. */
-  .construction {
+  .construire-carte {
     display: grid;
     grid-template-columns: 84px 1fr;
     grid-template-areas:
@@ -1021,25 +1032,25 @@
     text-align: left;
   }
 
-  .construction-image {
+  .construire-image {
     grid-area: image;
     width: 84px;
     height: 76px;
   }
 
-  .construction-texte {
+  .construire-texte {
     grid-area: texte;
   }
 
-  .construction-bouton {
+  .construire-bouton {
     grid-area: bouton;
   }
 
-  .dessin-batiment {
+  .trajet-batiment {
     width: 60px;
   }
 
-  .dessin-batiment img {
+  .trajet-batiment img {
     width: 48px;
     height: 48px;
   }

@@ -93,20 +93,23 @@
 }
 
 /* La flèche : au-dessus de la cible, au milieu d'un bâtiment, ou dessous si la cible est en haut. */
+/* (--milieu : le milieu de la cible, mais jamais collé au bord de l'écran, pour que
+   l'étiquette ne soit pas coupée) */
 .tuto-fleche-place {
+  --milieu: clamp(70px, calc(var(--x) + var(--l) / 2), calc(100vw - 70px));
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) - 10px), 0);
+  transform: translate3d(var(--milieu), calc(var(--y) - 10px), 0);
   will-change: transform;
 }
 
 .tuto-sur-batiment .tuto-fleche-place {
-  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) / 2 - 40px), 0);
+  transform: translate3d(var(--milieu), calc(var(--y) + var(--h) / 2 - 40px), 0);
 }
 
 .tuto-cible-dessous .tuto-fleche-place {
-  transform: translate3d(calc(var(--x) + var(--l) / 2), calc(var(--y) + var(--h) + 10px), 0);
+  transform: translate3d(var(--milieu), calc(var(--y) + var(--h) + 10px), 0);
 }
 
 .tuto-fleche {

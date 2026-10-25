@@ -204,7 +204,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           </>
         ) : (
           <>
-            ⛏️ {t('{n} blocs/s', { n: parSeconde(vitesseEmploye(employe)) })} · {t('{n} blocs cassés', { n: nombreAbrege(employe.blocsCasses) })}
+            ⛏️ {t('{n} blocs/s', { n: parSeconde(vitesseEmploye(employe)) })}
           </>
         )}{' '}
         · 💵 {t('{n} $ / 5 min', { n: nombre(salaireEmploye(employe)) })}
@@ -561,10 +561,10 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   const employe = aLicencier !== null ? etat.employes[aLicencier] : undefined
 
   return (
-    <div className="panneau-batiment panneau-personnel">
+    <div className="panneau-bat panneau-personnel">
       <OngletsPanneau
         onglets={[
-          { id: 'equipe', titre: `👷 ${t('Équipe')} (${etat.employes.length})`, pastille: sansSalaire > 0 ? '!' : null },
+          { id: 'equipe', titre: `👷 ${t('Équipe')}`, pastille: sansSalaire > 0 ? '!' : null },
           { id: 'embaucher', titre: `➕ ${t('Embaucher')}`, pastille: prix !== null && etat.argent >= prix ? '+' : null },
           { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne ? '!' : null },
         ]}
