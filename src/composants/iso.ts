@@ -8,6 +8,7 @@
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import { batimentPose, cleCase, empriseBatiment, porte, porteAGauche, viragesDoux, type BatimentPose, type Case, type Village } from '../jeu/village'
+import { cheminPublic } from '../chemins'
 
 // La moitié de la largeur et de la hauteur d'une case à l'écran (la taille des images des
 // bâtiments est calée dessus : elle ne change pas si la clairière grandit).
@@ -120,19 +121,19 @@ export function pointSurSprite(calage: Calage, x: number, y: number, taille: num
 }
 
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
-  puits: '/images/batiments/mine.webp',
-  foreuse: '/images/batiments/foreuse.webp',
-  forgeron: '/images/batiments/forgeron.webp',
-  marche: '/images/batiments/marche.webp',
-  employes: '/images/batiments/employes.webp',
-  generateur: '/images/batiments/generateur.webp',
+  puits: cheminPublic('/images/batiments/mine.webp'),
+  foreuse: cheminPublic('/images/batiments/foreuse.webp'),
+  forgeron: cheminPublic('/images/batiments/forgeron.webp'),
+  marche: cheminPublic('/images/batiments/marche.webp'),
+  employes: cheminPublic('/images/batiments/employes.webp'),
+  generateur: cheminPublic('/images/batiments/generateur.webp'),
 }
 
 // Pour un bâtiment retourné (miroir) qui a des écritures : la même image, mais avec ses panneaux
 // déjà retournés, pour qu'ils se lisent à l'endroit une fois toute l'image retournée
 // (fabriquée par outils/batiments/textes_miroir.py).
 export const IMAGES_BATIMENTS_MIROIR: Partial<Record<IdBatiment, string>> = {
-  employes: '/images/batiments/employes-miroir.webp',
+  employes: cheminPublic('/images/batiments/employes-miroir.webp'),
 }
 
 // L'image à afficher pour un bâtiment, selon qu'il est retourné ou non.

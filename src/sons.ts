@@ -1,4 +1,5 @@
 import { stockage } from './stockage'
+import { cheminPublic } from './chemins'
 // Les bruitages du jeu, fabriqués directement par le navigateur (Web Audio) :
 // presque pas de fichier son à charger (23/10 : seul le « cha-ching » du marché est un vrai
 // enregistrement, `public/sons/cash.mp3`). Chaque son est un petit mélange de « notes »
@@ -146,7 +147,7 @@ function bruit(debut: number, duree: number, options: OptionsBruit = {}) {
 // (23/10) Le « cha-ching » du marché : un vrai enregistrement (`public/sons/cash.mp3`, coupé
 // autour du bruit de la caisse). Il est chargé une seule fois, au premier son du jeu ; en
 // attendant (ou sans réseau), c'est la caisse fabriquée (sons.vente) qui sonne.
-const FICHIER_CASH = '/sons/cash.mp3'
+const FICHIER_CASH = cheminPublic('/sons/cash.mp3')
 let tamponCash: AudioBuffer | null = null
 let chargementCash: Promise<void> | null = null
 let dernierCash = 0 // l'heure du dernier « cha-ching » (pour ne pas en empiler dix d'un coup)

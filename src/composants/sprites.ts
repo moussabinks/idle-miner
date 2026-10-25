@@ -6,6 +6,7 @@
 // d'origine. Les mineurs employés ont la même, avec un casque de la couleur de leur rareté.
 
 import { RARETES, type IdRarete } from '../jeu/donnees'
+import { cheminPublic } from '../chemins'
 
 export type VueSprite = 'devant' | 'derriere' | 'gauche' | 'droite'
 
@@ -31,7 +32,7 @@ const CALAGE_RECRUTEUR: CalageSprite = { largeur: 322, hauteur: 387, pied: { x: 
 // (un mineur fait environ 46 pixels de haut, comme dans Clash of Clans : petit à côté des bâtiments).
 export const ECHELLE_SPRITE = 46 / 370
 
-const DOSSIER = '/images/personnages/sprites'
+const DOSSIER = cheminPublic('/images/personnages/sprites')
 
 // L'image et son calage pour un personnage vu sous un angle.
 export function spritePerso(qui: QuiSprite, vue: VueSprite): { fichier: string; calage: CalageSprite } {

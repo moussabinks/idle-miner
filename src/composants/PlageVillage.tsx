@@ -16,6 +16,7 @@ import { ImageFigee } from './ImageFigee'
 import { Rocher } from './Rochers'
 import { DEMI_LARGEUR, LIMITES_TERRAIN, profondeur, versEcran } from './iso'
 import { distanceRivage, distanceSable } from './plage'
+import { cheminPublic } from '../chemins'
 
 const N = TAILLE_GRILLE
 
@@ -94,7 +95,7 @@ export const SolPlage = memo(function SolPlage() {
           </filter>
           {/* La texture du sable (grains et ondulations, sans couture, sable.webp). */}
           <pattern id="motif-sable" patternUnits="userSpaceOnUse" width="256" height="256">
-            <image href="/images/sol/sable.webp" width="256" height="256" />
+            <image href={cheminPublic('/images/sol/sable.webp')} width="256" height="256" />
           </pattern>
           <clipPath id="cadre-plage">
             <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} />

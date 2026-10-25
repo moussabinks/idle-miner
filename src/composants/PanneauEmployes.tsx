@@ -96,6 +96,7 @@ import { Interrupteur } from './Interrupteur'
 import { OngletsPanneau } from './OngletsPanneau'
 import { nomTrajet } from './nomTrajet'
 import { RevelationRecrue } from './RevelationRecrue'
+import { cheminPublic } from '../chemins'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
 type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void }
@@ -401,7 +402,7 @@ function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTra
 
 // Le portrait d'un chef (le même hamster que celui qui attend devant le Personnel, au village).
 function Portrait({ role }: { role: 'manager' | 'recruteur' }) {
-  return <img className="portrait-chef" src={`/images/personnages/${role}.webp`} alt="" width={64} height={64} draggable={false} />
+  return <img className="portrait-chef" src={cheminPublic(`/images/personnages/${role}.webp`)} alt="" width={64} height={64} draggable={false} />
 }
 
 // (23/10) La fatigue du manager : elle monte pendant qu'il travaille ; pleine, il s'endort.

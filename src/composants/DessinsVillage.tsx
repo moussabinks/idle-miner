@@ -14,6 +14,7 @@ import { Boule, OmbreAuSol } from './Relief'
 import { ImageFigee } from './ImageFigee'
 import { TasDeRochers } from './Rochers'
 import { cleCase, DIRECTION, lireCle, raccordsRail, viragesDoux, type Case, type VirageDoux, type Village } from '../jeu/village'
+import { cheminPublic } from '../chemins'
 
 // Un point de la grille → « x,y » pour un attribut SVG.
 const p = (x: number, y: number) => {
@@ -63,7 +64,7 @@ export function BoiteSvg({ x, y, taille, hauteur, marge = 12, classe = '', style
 // une vraie grille apparaît (GrilleConstruction).
 const VERT_CLAIR = '#83bf3e'
 const VERT_FONCE = '#7eb83a'
-const IMAGE_HERBE = '/images/sol/herbe.webp'
+const IMAGE_HERBE = cheminPublic('/images/sol/herbe.webp')
 
 // Le losange de la clairière, un peu agrandi (marge en cases), en points « x,y ».
 function losangeClairiere(marge: number): string {
@@ -277,7 +278,7 @@ export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<
 // La caisse de l'ascenseur (23/10, dessins de l'équipe, « caisse-ascenseur-design ») : vide
 // quand elle redescend, pleine des minerais du niveau de la mine quand elle remonte.
 //   0 : vide ; 1 : pierre, charbon, fer ; 2 : + redstone ; 3 : + or et émeraude ; 4 : + diamant.
-const IMAGES_CAISSE = [0, 1, 2, 3, 4].map((n) => `/images/batiments/caisse-ascenseur-${n}.webp`)
+const IMAGES_CAISSE = [0, 1, 2, 3, 4].map((n) => cheminPublic(`/images/batiments/caisse-ascenseur-${n}.webp`))
 // Le dessin plein selon le niveau de la mine (niveaux 2 et 3 : celui à la redstone).
 const CAISSE_DU_NIVEAU = [1, 1, 2, 2, 3, 4]
 function imageCaisse(pleine: boolean, niveauMine: number): string {
@@ -296,7 +297,7 @@ function bordCaisse(decalage: number): string {
 
 // Les calques de la mine, dans le même cadre que mine.webp (mêmes pixels, 1 233 × 774) : le
 // devant (la barrière et le sol de devant), dessiné par-dessus la caisse quand elle descend.
-const IMAGE_DEVANT_MINE = '/images/batiments/mine-devant.webp'
+const IMAGE_DEVANT_MINE = cheminPublic('/images/batiments/mine-devant.webp')
 
 // Les points utiles de l'image de la mine, en pixels de l'image.
 const POINTS_MINE = {
@@ -536,7 +537,7 @@ export function RailsDuVillage({ village, seulement }: { village: Village; seule
         {talus.map((t) => (
           <g key={t.cle} transform={t.transform}>
             <image
-              href={`/images/rails/${t.image}.webp`}
+              href={cheminPublic(`/images/rails/${t.image}.webp`)}
               x="0"
               y="0"
               width="1"
@@ -549,7 +550,7 @@ export function RailsDuVillage({ village, seulement }: { village: Village; seule
       </g>
       <g className="rails-voie">
         {voie.map((v) => (
-          <image key={v.cle} href={`/images/rails/${v.image}.webp`} x={v.x + v.cadre.x} y={v.y + v.cadre.y} width={v.cadre.largeur} height={v.cadre.hauteur} />
+          <image key={v.cle} href={cheminPublic(`/images/rails/${v.image}.webp`)} x={v.x + v.cadre.x} y={v.y + v.cadre.y} width={v.cadre.largeur} height={v.cadre.hauteur} />
         ))}
       </g>
     </g>

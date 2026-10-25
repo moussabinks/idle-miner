@@ -22,6 +22,7 @@ import { sons } from '../sons'
 import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
+import { cheminPublic } from '../chemins'
 
 // Ce que l'interface montre en ce moment (pour savoir où mettre la flèche).
 export type EtatInterface = {
@@ -46,7 +47,7 @@ type Consigne = {
 }
 
 // Le portrait de Pépite, la taupe qui guide le joueur.
-export const PORTRAIT_PEPITE = '/images/personnages/mineur.webp'
+const PORTRAIT_PEPITE = cheminPublic('/images/personnages/mineur.webp')
 
 // Les cibles. (Un bâtiment sur la carte a l'attribut data-cible ; le reste, data-tuto.)
 const BOUTON_MINE = '[data-tuto="mine"]'
