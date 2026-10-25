@@ -15,7 +15,9 @@ import type { Action } from '../usePartie'
 import { nombreAbrege } from '../nombres'
 import { Barre } from './Barre'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useJeu } from './contexteJeu'
+import { Fenetre } from './Fenetre'
 
 type Props = {
   titre: string // « 📦 Coffre de la mine »
@@ -47,8 +49,6 @@ export function StockMinerais({ titre, contenu, capacite, blocs, vendreTout, ven
       <button className={`btn btn-jaune btn-large btn-grand ${plein ? 'btn-attention' : ''}`} data-tuto={tuto ? 'vendre' : undefined} disabled={gain <= 0} onClick={() => jouer(vendreTout)}>
         💰 {t('Tout vendre')} {gain > 0 && <span className="stock-gain">+{nombreAbrege(gain)} $</span>}
       </button>
-      {/* L'aide sur la punaise, tant qu'on ne garde encore rien (ensuite, on a compris). */}
-      {changerGarde && garde && !blocs.some((bloc) => garde(bloc) > 0 || toutGarde?.(bloc)) && <p className="stock-aide">📌 {t('= garder un minerai pour tes améliorations (il n’est pas vendu)')}</p>}
       <ul className="stock-lignes">
         {blocs.map((bloc) => (
           <LigneStock
@@ -86,7 +86,8 @@ const PAS_GARDER = [-100, -10, 10, 100]
 
 function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre, onChanger, onTout }: PropsLigne) {
   const info = BLOCS[bloc]
-  // Le réglage « garder » s'ouvre sous la ligne quand on touche la punaise.
+  // (25/10) Le réglage « garder » s'ouvre dans une petite fenêtre au milieu de l'écran : la
+  // fenêtre de la mine ne grandit plus.
   const [reglage, setReglage] = useState(false)
   const garde_ = toutGarde || garde > 0
   return (
@@ -103,31 +104,40 @@ function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre,
           {garde_ && <small className="stock-garde">📌 {toutGarde ? t('tout') : nombre(garde)}</small>}
         </strong>
         {onChanger && (
-          <button
-            className={`btn btn-petit btn-rond stock-punaise ${garde_ ? 'btn-bleu' : 'btn-blanc'}`}
-            onClick={() => setReglage((r) => !r)}
-            aria-expanded={reglage}
-            aria-label={t('Garder ce minerai (pour tes améliorations)')}
-          >
-            📌
+          <button className={`btn btn-petit stock-garder ${garde_ ? 'btn-bleu' : 'btn-blanc'}`} onClick={() => setReglage(true)} aria-haspopup="dialog">
+            <span className="stock-garder-icone" aria-hidden="true">
+              📌
+            </span>
+            {t('Garder')}
           </button>
         )}
         <button className="btn btn-jaune btn-petit stock-vendre" disabled={aVendre <= 0} onClick={onVendre}>
           +{nombreAbrege(valeurDe({ [bloc]: aVendre }, etat))} $
         </button>
       </div>
-      {reglage && onChanger && onTout && (
-        <div className="stock-reglage" role="group" aria-label={t('Garder du {nom}', { nom: t(info.nom) })}>
-          <div className="stock-reglage-entete">
-            <span className="stock-reglage-titre">
-              📌 {t('Garder')} <b>{toutGarde ? t('tout') : nombre(garde)}</b> {info.emoji} {t(info.nom)}
-            </span>
-            <button className="btn btn-blanc btn-rond btn-petit stock-reglage-fermer" onClick={() => setReglage(false)} aria-label={t('Fermer')}>
-              ✖
+      {/* (posée dans <body> : rien de la fenêtre de la mine ne la coupe) */}
+      {reglage &&
+        onChanger &&
+        onTout &&
+        createPortal(
+        <Fenetre
+          titre={t('Garder du {nom}', { nom: t(info.nom) })}
+          icone="📌"
+          couleur="bleu"
+          taille="petite"
+          devant
+          onFermer={() => setReglage(false)}
+          pied={
+            <button className="btn btn-jaune" onClick={() => setReglage(false)} autoFocus>
+              ✔️ {t('OK')}
             </button>
-          </div>
-          <p className="stock-reglage-aide">{t('Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent.')}</p>
-          <span className="stock-reglage-boutons">
+          }
+        >
+          <p className="stock-reglage-aide">{t('Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent. Pratique pour payer tes améliorations.')}</p>
+          <p className="stock-reglage-titre">
+            <span aria-hidden="true">{info.emoji}</span> {t('Dans le coffre : {n}', { n: nombre(nombreDe) })} · 📌 {t('Gardé :')} <b>{toutGarde ? t('tout') : nombre(garde)}</b>
+          </p>
+          <div className="stock-reglage-boutons">
             {PAS_GARDER.map((pas) => (
               <button key={pas} className={`btn btn-petit ${pas < 0 ? 'btn-blanc' : 'btn-bleu'}`} disabled={pas < 0 && !garde_} onClick={() => onChanger(pas)}>
                 {pas > 0 ? `+${pas}` : `−${-pas}`}
@@ -136,9 +146,10 @@ function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre,
             <button className={`btn btn-petit ${toutGarde ? 'btn-bleu' : 'btn-blanc'}`} aria-pressed={toutGarde} onClick={onTout}>
               {t('Tout')}
             </button>
-          </span>
-        </div>
-      )}
+          </div>
+        </Fenetre>,
+          document.body,
+        )}
     </li>
   )
 }

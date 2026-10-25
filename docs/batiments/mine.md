@@ -46,7 +46,7 @@ C'est la nouveauté de la grande mise à jour : **plus besoin de porter le coffr
 - en haut, « 📦 Coffre » et sa jauge (« 120 / 300 », rouge « Plein : la mine s'arrête ! ») ;
 - le gros bouton jaune **💰 Tout vendre · +X $** : tout le coffre, **sauf les minerais épinglés** (`aVendreDuCoffre`). Grisé s'il n'y a rien à vendre ; il attire l'œil quand le coffre est plein ;
 - **une ligne par minerai** que sort la mine à son niveau (même à 0, les plus chers en haut) : son icône, son nom, « *prix* $ pièce », combien il y en a, **Vendre** (ce minerai seul, même épinglé, `vendreMinerai`) et la **punaise 📌** ;
-- **📌 la punaise** (25/10) : elle ouvre sous la ligne le réglage **« Garder N »** : **−100, −10, +10, +100** (`changerGarder`), et **Tout** (`basculerGarderTout`). Ce qu'on garde (« 📌 110 » sous le nombre, ligne bleue) **reste dans le coffre** : ni « Tout vendre », ni « Vendre » de la ligne, ni le wagonnet, ni le manager ne le vendent ; le reste se vend normalement. Pratique pour garder de quoi payer ses améliorations.
+- **« 📌 Garder »** (25/10) : le bouton (un mot et une petite punaise) ouvre une **petite fenêtre au milieu de l'écran** (la fenêtre de la mine ne grandit plus) : **−100, −10, +10, +100** (`changerGarder`) et **Tout** (`basculerGarderTout`). Ce qu'on garde (« 📌 110 » sous le nombre, ligne bleue) **reste dans le coffre** : ni « Tout vendre », ni « Vendre » de la ligne, ni le wagonnet, ni le manager ne le vendent. Le prix pièce des minerais est au **marché** (« Prix du marché »).
 
 Message : « 💰 Vente : +X $ » (le « cha-ching » et la pluie de pièces). L'argent compte dans l'argent gagné (succès, classement). Pendant le bonus **« 💰 Ventes × 2 »**, la vente rapporte le double.
 
