@@ -1,29 +1,37 @@
-// La forêt autour de la clairière (21/10) : des arbres au style cartoon (7 sortes, voir arbres.ts),
-// plantés tout autour de la clairière. Le premier
-// rang (la lisière) est planté bien en ligne, à la même distance du bord et au même écart (22/10 :
-// avant, certains troncs avançaient plus que d'autres dans la clairière). Derrière, la forêt est
-// plus libre et de plus en plus serrée. On ne peut pas y aller : la forêt est hors de la grille.
-// Les arbres sont toujours plantés au même endroit (hasard à graine fixe) : la forêt ne change
-// pas d'une partie à l'autre.
+// Le décor autour de la clairière : la rangée d'arbres de la lisière (21/10), et au-delà, le
+// paysage de collines et de montagnes (25/10, voir paysage.ts).
 //
-// Il y a environ 240 arbres (25/10 : quatre fois moins qu'au début, pour aérer la carte) : en faire
-// des centaines d'images de la page rendait la carte lente à faire
-// glisser. On les dessine donc dans des « toiles » (canvas), découpées en tuiles carrées, une
-// fois pour toutes. Après un zoom, les tuiles qu'on voit sont redessinées avec plus de pixels
-// (nettes de près) ; les autres restent légères.
+// La lisière : des arbres au style cartoon (7 sortes, voir arbres.ts), plantés bien en ligne tout
+// autour de la clairière, à la même distance du bord et au même écart (22/10 : avant, certains
+// troncs avançaient plus que d'autres dans la clairière). Ils sont toujours plantés au même
+// endroit (hasard à graine fixe). On ne peut pas y aller : c'est hors de la grille.
+//
+// (25/10) Derrière la lisière, il y avait une forêt de 240 arbres : elle est remplacée par des
+// collines et des montagnes enneigées (paysage.ts). Il y a beaucoup moins d'images à dessiner.
+//
+// Tout est dessiné dans des « toiles » (canvas), découpées en tuiles carrées, une fois pour
+// toutes : en faire des centaines d'images de la page rendait la carte lente à faire glisser.
+// Après un zoom, les tuiles qu'on voit sont redessinées avec plus de pixels (nettes de près) ;
+// les autres restent légères. Seule l'eau de la cascade bouge (une toute petite animation à part,
+// qui ne fait jamais redessiner les toiles).
 
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE } from '../jeu/donnees'
 import { ARBRES } from './arbres'
 import { surLaPlage } from './plage'
-import { DEMI_LARGEUR, LIMITES_CAMERA, profondeur, versEcran, versGrille } from './iso'
+import { DEMI_LARGEUR, profondeur, versEcran } from './iso'
+import { VIGNETTES, deDevant, eauDeLaCascade, planterPaysage, type SorteVignette } from './paysage'
 
+// Toutes les images du décor : les arbres (dans l'ordre d'ARBRES), puis les vignettes du paysage.
+const SORTES_PAYSAGE = Object.keys(VIGNETTES) as SorteVignette[]
+const IMAGES: { fichier: string; largeur: number; hauteur: number }[] = [...ARBRES, ...SORTES_PAYSAGE.map((sorte) => VIGNETTES[sorte])]
+
+// Un arbre de la lisière, ou une vignette du paysage.
 type Arbre = {
-  sorte: number
+  sorte: number // sa place dans IMAGES
   x: number
   y: number
-  lointain: number // 0, 1 ou 2 : plus loin dans la forêt, l'arbre est un peu plus sombre
   devant: boolean // en bas de la carte : il passe devant les bâtiments et les personnages
   miroir: boolean
   // Où et à quelle taille on le dessine (en pixels du monde) : son coin haut-gauche et son échelle.
@@ -38,22 +46,9 @@ type Arbre = {
 const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.5, 0.25, 0]
 
 // La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
-// l'écart (en cases) entre deux arbres de ce rang. Les autres arbres restent derrière ce rang.
-// (25/10 : deux fois moins d'arbres qu'avant, pour aérer la carte ; puis encore deux fois moins,
-// environ 230 : la lisière est un peu moins serrée, et la forêt derrière est faite de bosquets
-// séparés par des clairières.)
+// l'écart (en cases) entre deux arbres de ce rang.
 const DISTANCE_LISIERE = 1.3
 const ECART_LISIERE = 3.1
-const RECUL_DERRIERE = 1.8
-// L'écart moyen (en cases) entre deux arbres de la forêt, derrière la lisière.
-const PAS_FORET = 2.9
-
-// Des bosquets et des clairières : un nombre qui varie doucement d'un endroit à l'autre de la
-// forêt (entre -1 et 1 à peu près). Là où il est bas, on plante moins : de l'herbe entre des
-// groupes d'arbres, comme une vraie forêt, plutôt que des arbres tous au même écart.
-function touffu(x: number, y: number): number {
-  return 0.6 * Math.sin(x * 0.37 + 1.3) * Math.sin(y * 0.41 + 0.4) + 0.4 * Math.sin((x - y) * 0.23 + 2.1)
-}
 
 function planterForet(): Arbre[] {
   const hasard = aleatoireAvecGraine(2026)
@@ -69,7 +64,7 @@ function planterForet(): Arbre[] {
   const arbres: Arbre[] = []
   const n = TAILLE_GRILLE
   // Planter un arbre dont le tronc est sur le point (x, y) de la grille, large de « taille » cases.
-  const planter = (x: number, y: number, taille: number, dehors: number) => {
+  const planter = (x: number, y: number, taille: number) => {
     // Pas d'arbre sur la plage ni dans la mer (en bas à gauche, voir PlageVillage).
     if (surLaPlage(x, y)) return
     const sorte = tirerSorte()
@@ -83,7 +78,6 @@ function planterForet(): Arbre[] {
       sorte,
       x,
       y,
-      lointain: dehors > 9 ? 2 : dehors > 5 ? 1 : 0,
       devant: x > n || y > n,
       miroir,
       gauche: p.x - piedX * echelle,
@@ -101,38 +95,25 @@ function planterForet(): Arbre[] {
   for (let i = 0; i < nbParCote; i++) {
     const t = debut + i * ecart
     const taille = () => 1.85 + hasard() * 0.3
-    planter(t, debut, taille(), DISTANCE_LISIERE) // le bord du haut à droite
-    planter(fin, t, taille(), DISTANCE_LISIERE) // en bas à droite
-    planter(fin - (t - debut), fin, taille(), DISTANCE_LISIERE) // en bas à gauche
-    planter(debut, fin - (t - debut), taille(), DISTANCE_LISIERE) // en haut à gauche
+    planter(t, debut, taille()) // le bord du haut à droite
+    planter(fin, t, taille()) // en bas à droite
+    planter(fin - (t - debut), fin, taille()) // en bas à gauche
+    planter(debut, fin - (t - debut), taille()) // en haut à gauche
   }
-  // Les cases à couvrir : tout ce que la caméra peut voir (les 4 coins de ses limites, avec une
-  // marge pour les arbres qui dépassent au-dessus de leur pied).
-  const { x0, y0, x1, y1 } = LIMITES_CAMERA
-  const coins = [versGrille(x0 - 80, y0 - 20), versGrille(x1 + 80, y0 - 20), versGrille(x0 - 80, y1 + 160), versGrille(x1 + 80, y1 + 160)]
-  const minX = Math.floor(Math.min(...coins.map((c) => c.x)))
-  const maxX = Math.ceil(Math.max(...coins.map((c) => c.x)))
-  const minY = Math.floor(Math.min(...coins.map((c) => c.y)))
-  const maxY = Math.ceil(Math.max(...coins.map((c) => c.y)))
-  for (let gx = minX; gx < maxX; gx += PAS_FORET) {
-    for (let gy = minY; gy < maxY; gy += PAS_FORET) {
-      // Chaque arbre bouge un peu autour de son point : on ne devine pas de quadrillage.
-      const x = gx + (hasard() - 0.5) * 1.5
-      const y = gy + (hasard() - 0.5) * 1.5
-      // De combien de cases on est sorti de la clairière.
-      const dehors = Math.max(-x, -y, x - n, y - n)
-      // Rien devant la lisière : les autres arbres restent derrière le premier rang.
-      if (dehors < DISTANCE_LISIERE + RECUL_DERRIERE) continue
-      // Juste derrière la lisière, un peu moins d'arbres, puis de plus en plus. Au fond de la
-      // forêt, des arbres plus gros et moins nombreux (on n'en voit que le haut).
-      const loin = dehors > 6
-      const chance = (dehors < 3.5 ? 0.42 : loin ? 0.38 : 0.62) + 0.42 * touffu(x, y)
-      if (hasard() > chance) continue
-      // Seulement là où la caméra peut voir (un arbre haut dépasse au-dessus de son pied).
-      const p = versEcran(x, y)
-      if (p.x < x0 - 80 || p.x > x1 + 80 || p.y < y0 - 20 || p.y > y1 + 160) continue
-      planter(x, y, loin ? 1.95 + hasard() * 0.55 : 1.7 + hasard() * 0.5, dehors)
-    }
+  // Au-delà de la lisière : les collines et les montagnes.
+  for (const p of planterPaysage()) {
+    const image = VIGNETTES[p.sorte]
+    const e = versEcran(p.x, p.y)
+    arbres.push({
+      sorte: ARBRES.length + SORTES_PAYSAGE.indexOf(p.sorte),
+      x: p.x,
+      y: p.y,
+      devant: deDevant(p.x, p.y),
+      miroir: false, // (jamais en miroir : la lumière vient toujours de la gauche)
+      gauche: e.x - image.pied.x * p.echelle,
+      haut: e.y - image.pied.y * p.echelle,
+      echelle: p.echelle,
+    })
   }
   // Du fond vers l'avant : un arbre plus bas sur l'écran est dessiné par-dessus.
   return arbres.sort((a, b) => profondeur(a.x, a.y) - profondeur(b.x, b.y))
@@ -140,14 +121,14 @@ function planterForet(): Arbre[] {
 
 const FORET = planterForet()
 
-// Les tuiles : des carrés de TUILE pixels du monde qui couvrent toute la forêt.
+// Les tuiles : des carrés de TUILE pixels du monde qui couvrent tout le décor.
 const TUILE = 384
 type Tuile = { gauche: number; haut: number; arbres: Arbre[] }
 
 function decouper(arbres: Arbre[]): Tuile[] {
   const tuiles = new Map<string, Tuile>()
   for (const a of arbres) {
-    const image = ARBRES[a.sorte]
+    const image = IMAGES[a.sorte]
     const droite = a.gauche + image.largeur * a.echelle
     const bas = a.haut + image.hauteur * a.echelle
     for (let tx = Math.floor(a.gauche / TUILE); tx <= Math.floor(droite / TUILE); tx++) {
@@ -165,22 +146,18 @@ function decouper(arbres: Arbre[]): Tuile[] {
 const TUILES_DERRIERE = decouper(FORET.filter((a) => !a.devant))
 const TUILES_DEVANT = decouper(FORET.filter((a) => a.devant))
 
-// Les images des arbres, chargées une seule fois.
+// Les images du décor, chargées une seule fois.
 const images: HTMLImageElement[] = []
 function chargerImages(): Promise<HTMLImageElement[]> {
   if (images.length === 0) {
-    for (const arbre of ARBRES) {
+    for (const dessin of IMAGES) {
       const image = new Image()
-      image.src = arbre.fichier
+      image.src = dessin.fichier
       images.push(image)
     }
   }
   return Promise.all(images.map((image) => (image.complete ? Promise.resolve() : image.decode().catch(() => undefined)))).then(() => images)
 }
-
-// Plus loin dans la forêt, les arbres sont un tout petit peu plus sombres (on devine la
-// profondeur), sans devenir des taches sombres.
-const ASSOMBRIR = ['none', 'brightness(0.95)', 'brightness(0.9)']
 
 function dessinerTuile(toile: HTMLCanvasElement, tuile: Tuile, densite: number, dessins: HTMLImageElement[]): void {
   const taille = Math.round(TUILE * densite)
@@ -198,19 +175,17 @@ function dessinerTuile(toile: HTMLCanvasElement, tuile: Tuile, densite: number, 
     if (!image?.complete) continue
     ctx.setTransform(densite * a.echelle, 0, 0, densite * a.echelle, (a.gauche - tuile.gauche) * densite, (a.haut - tuile.haut) * densite)
     if (a.miroir) {
-      ctx.translate(ARBRES[a.sorte].largeur, 0)
+      ctx.translate(IMAGES[a.sorte].largeur, 0)
       ctx.scale(-1, 1)
     }
-    ctx.filter = ASSOMBRIR[a.lointain]
     ctx.drawImage(image, 0, 0)
   }
-  ctx.filter = 'none'
 }
 
 // La partie du monde qu'on voit, et le zoom (une fois la caméra arrêtée).
 export type VueForet = { x0: number; y0: number; x1: number; y1: number; z: number }
 
-function CoucheForet({ tuiles, vue, classe }: { tuiles: Tuile[]; vue: VueForet; classe: string }) {
+function CoucheForet({ tuiles, vue, classe, children }: { tuiles: Tuile[]; vue: VueForet; classe: string; children?: ReactNode }) {
   const toiles = useRef<(HTMLCanvasElement | null)[]>([])
   const densites = useRef<number[]>([])
   const [pretes, setPretes] = useState<HTMLImageElement[] | null>(null)
@@ -254,16 +229,51 @@ function CoucheForet({ tuiles, vue, classe }: { tuiles: Tuile[]; vue: VueForet; 
           style={{ left: tuile.gauche, top: tuile.haut, width: TUILE, height: TUILE }}
         />
       ))}
+      {children}
     </div>
   )
 }
 
-// Les arbres derrière (en haut de la carte et sur les côtés) : sous les bâtiments.
+// L'eau de la cascade (25/10), qui coule par-dessus son dessin (montagne-cascade) : une petite
+// boîte posée pile sur la bande d'eau, où des traits blancs descendent sans fin. Seul ce petit
+// morceau bouge (en « transform », que le navigateur fait glisser sans rien redessiner), et il
+// s'arrête quand la caméra ne le voit pas.
+const EAU = eauDeLaCascade()
+function Cascade({ vue }: { vue: VueForet }) {
+  const visible = vue.x1 > EAU.x0 && vue.x0 < EAU.x1 && vue.y1 > EAU.y0 && vue.y0 < EAU.y1
+  const largeur = EAU.x1 - EAU.x0
+  const hauteur = EAU.y1 - EAU.y0
+  // Des traits blancs (x, haut, longueur) sur une hauteur de MOTIF pixels, répétés deux fois : le
+  // motif descend d'une hauteur de MOTIF, puis recommence (on ne voit pas la couture).
+  const MOTIF = 60
+  const traits = [
+    [0.22, 4, 20],
+    [0.62, 18, 26],
+    [0.4, 40, 14],
+    [0.8, 46, 10],
+    [0.15, 34, 8],
+  ]
+  return (
+    <div className={`cascade-village ${visible ? '' : 'cascade-arretee'}`} style={{ left: EAU.x0, top: EAU.y0, width: largeur, height: hauteur }}>
+      <svg className="cascade-flot" width={largeur} height={MOTIF * 2 + hauteur} viewBox={`0 0 ${largeur} ${MOTIF * 2 + hauteur}`} aria-hidden="true">
+        {Array.from({ length: Math.ceil(hauteur / MOTIF) + 2 }, (_, k) =>
+          traits.map(([x, y, l], i) => <line key={`${k}-${i}`} x1={x * largeur} x2={x * largeur} y1={k * MOTIF + y} y2={k * MOTIF + y + l} />),
+        )}
+      </svg>
+    </div>
+  )
+}
+
+// Le décor derrière (en haut de la carte et sur les côtés) : sous les bâtiments.
 export const ForetDerriere = memo(function ForetDerriere({ vue }: { vue: VueForet }) {
-  return <CoucheForet tuiles={TUILES_DERRIERE} vue={vue} classe="foret-derriere" />
+  return (
+    <CoucheForet tuiles={TUILES_DERRIERE} vue={vue} classe="foret-derriere">
+      <Cascade vue={vue} />
+    </CoucheForet>
+  )
 })
 
-// Les arbres devant (en bas de la carte) : par-dessus les bâtiments et les personnages.
+// Le décor devant (en bas de la carte) : par-dessus les bâtiments et les personnages.
 export const ForetDevant = memo(function ForetDevant({ vue }: { vue: VueForet }) {
   return <CoucheForet tuiles={TUILES_DEVANT} vue={vue} classe="foret-devant" />
 })

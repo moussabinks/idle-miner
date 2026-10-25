@@ -54,7 +54,7 @@ function reflet(cx, cy, r, couleur) {
   return `<path d="M${r1(xa)} ${r1(ya)} A${r1(r * 0.7)} ${r1(r * 0.7)} 0 0 1 ${r1(xb)} ${r1(yb)}" stroke="${couleur}" stroke-width="12" fill="none"/>`
 }
 
-function arbreRond(couleur = C.feuillage, sombre = C.feuillageFonce) {
+export function arbreRond(couleur = C.feuillage, sombre = C.feuillageFonce) {
   return ombre() + tronc(180) + feuillage([[0, -255, 140]], couleur, sombre, 24) + reflet(-24, -280, 140, clair(couleur, 0.35)) + touffe()
 }
 
@@ -68,7 +68,7 @@ function arbreNuage() {
   return ombre() + tronc(150) + feuillage(cercles, C.feuillage, C.feuillageFonce) + reflet(-20, -310, 100, clair(C.feuillage, 0.35)) + touffe()
 }
 
-function sapin() {
+export function sapin() {
   const vert = '#4fb064'
   const sombre = '#3e9254'
   // Trois étages, du bas vers le haut : demi-largeur, bas, pointe.
@@ -88,7 +88,7 @@ function sapin() {
   return dessin + touffe()
 }
 
-function buisson() {
+export function buisson() {
   const cercles = [
     [-85, -140, 80],
     [85, -140, 80],

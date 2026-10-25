@@ -80,6 +80,40 @@
   position: absolute;
 }
 
+/* L'eau de la cascade (25/10, ForetVillage) : une petite boîte sur la bande d'eau de la montagne,
+   où des traits blancs descendent. Seul ce petit morceau bouge, en « transform » (le navigateur le
+   fait glisser sans rien redessiner) ; il s'arrête quand on ne le voit pas. */
+.cascade-village {
+  position: absolute;
+  overflow: hidden;
+  background: #8cc8f5;
+  border-radius: 2px;
+}
+.cascade-flot {
+  position: absolute;
+  left: 0;
+  top: -60px; /* une hauteur de motif (MOTIF dans ForetVillage) */
+  will-change: transform;
+  animation: cascade-coule 0.7s linear infinite;
+}
+.cascade-flot line {
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.cascade-arretee .cascade-flot {
+  animation-play-state: paused;
+}
+@keyframes cascade-coule {
+  from { transform: translateY(0); }
+  to { transform: translateY(60px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cascade-flot {
+    animation: none;
+  }
+}
+
 .objets-village,
 .bulles-village {
   pointer-events: none;
