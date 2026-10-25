@@ -486,7 +486,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // src/composants/StockMinerais.tsx
   'Plein !': 'Full!',
   'Tout vendre': 'Sell all',
-  '{prix} $ pièce': '{prix} $ each',
   'Garder ce minerai (pour tes améliorations)': 'Keep this ore (for your upgrades)',
 
   // src/composants/Tutoriel.tsx
@@ -879,4 +878,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '{a} à {b} blocs/s': '{a} to {b} blocks/s',
   '{n} cases/s': '{n} tiles/s',
   'Recruter': 'Recruit',
+  '{prix} $': '{prix} $',
+  'Prix du marché': 'Market prices',
 }

@@ -95,10 +95,8 @@ function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre,
         <span className="stock-icone" aria-hidden="true">
           {info.emoji}
         </span>
-        <span className="stock-nom">
-          {t(info.nom)}
-          <small>{t('{prix} $ pièce', { prix: nombre(info.prix) })}</small>
-        </span>
+        {/* (25/10) Le prix pièce est au marché (« Prix du marché ») : ici, juste le nom. */}
+        <span className="stock-nom">{t(info.nom)}</span>
         <strong className="stock-nombre">
           {nombre(nombreDe)}
           {/* ce qu'on garde, en petit sous le nombre */}
