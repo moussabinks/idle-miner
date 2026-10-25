@@ -34,11 +34,16 @@ const vignette = (nom: string, largeur: number, hauteur: number, x: number, y: n
 
 // Les tailles et les pieds affichés par outils/art/fabriquer.mjs (à recopier s'ils changent).
 export const VIGNETTES = {
-  'montagne-geante': vignette('montagne-geante', 800, 685, 400, 615),
-  'montagne-grande': vignette('montagne-grande', 660, 595, 330, 535),
-  'montagne-double': vignette('montagne-double', 760, 575, 380, 515),
-  'montagne-moyenne': vignette('montagne-moyenne', 540, 450, 270, 395),
-  'montagne-petite': vignette('montagne-petite', 460, 335, 230, 285),
+  'montagne-geante': vignette('montagne-geante', 820, 685, 410, 615),
+  'montagne-geante-b': vignette('montagne-geante-b', 820, 695, 410, 625),
+  'montagne-grande': vignette('montagne-grande', 680, 605, 340, 535),
+  'montagne-grande-b': vignette('montagne-grande-b', 660, 585, 330, 515),
+  'montagne-double': vignette('montagne-double', 760, 585, 380, 515),
+  'montagne-double-b': vignette('montagne-double-b', 740, 575, 370, 505),
+  'montagne-moyenne': vignette('montagne-moyenne', 560, 465, 280, 395),
+  'montagne-moyenne-b': vignette('montagne-moyenne-b', 580, 445, 290, 375),
+  'montagne-petite': vignette('montagne-petite', 480, 355, 240, 285),
+  'montagne-petite-b': vignette('montagne-petite-b', 460, 335, 230, 265),
   'montagne-cascade': vignette('montagne-cascade', 780, 720, 390, 595),
   'montagne-grotte': vignette('montagne-grotte', 620, 550, 310, 415),
   'colline-sapins': vignette('colline-sapins', 400, 335, 200, 275),
@@ -87,9 +92,11 @@ export function cadreDe(p: Plante): { x0: number; y0: number; x1: number; y1: nu
 type Rectangle = { x0: number; y0: number; x1: number; y1: number }
 const seCroisent = (a: Rectangle, b: Rectangle) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0
 
-// Les montagnes du fond, de la plus grande à la plus petite (hauteur au-dessus du pied, en pixels
-// de l'image), et les collines.
-const MONTAGNES: SorteVignette[] = ['montagne-geante', 'montagne-grande', 'montagne-double', 'montagne-moyenne', 'montagne-petite']
+// Les montagnes du fond (sauf les deux posées à la main), de la plus grande à la plus petite (leur
+// hauteur au-dessus du pied).
+const MONTAGNES = (Object.keys(VIGNETTES) as SorteVignette[])
+  .filter((sorte) => sorte.startsWith('montagne-') && sorte !== 'montagne-cascade' && sorte !== 'montagne-grotte')
+  .sort((a, b) => VIGNETTES[b].pied.y - VIGNETTES[a].pied.y)
 // Les collines (surtout des collines toutes simples : le décor doit rester calme autour du
 // village), avec leurs chances d'être tirées : juste derrière la lisière (au fond), tout près du
 // bord devant, et loin devant (de grandes collines douces).
@@ -126,9 +133,9 @@ const COLLINES_DEVANT_LOIN: Tirage = [
 const PLUS_BASSES: SorteVignette[] = ['colline-longue', 'colline-buisson', 'colline-petite']
 
 // Les deux montagnes posées à la main, là où on les voit bien : la cascade (au fond à gauche,
-// près de la plage) et la galerie de mine (au fond à droite).
+// près de la plage) et la galerie de mine (loin devant, à droite).
 export const CASCADE: Plante = { sorte: 'montagne-cascade', x: -11.5, y: 28, echelle: ECHELLE }
-const GROTTE: Plante = { sorte: 'montagne-grotte', x: 31, y: -11, echelle: ECHELLE }
+const GROTTE: Plante = { sorte: 'montagne-grotte', x: 53, y: 15, echelle: ECHELLE }
 
 // Où est l'eau qui tombe, en pixels du monde.
 export function eauDeLaCascade(): Rectangle {
@@ -220,8 +227,8 @@ export function planterPaysage(): Plante[] {
     const place = e.y - (y0 + 14) // la hauteur qu'on a au-dessus du pied, jusqu'au haut de la caméra
     const loin = d > 13
     const choix = MONTAGNES.filter((sorte) => loin || VIGNETTES[sorte].pied.y * echelle < place)
-    // (un peu au hasard parmi les plus grandes qui tiennent)
-    const sorte = choix[Math.min(choix.length - 1, Math.floor(hasard() * 2.2))]
+    // (au hasard parmi les cinq plus grandes qui tiennent)
+    const sorte = choix[Math.min(choix.length - 1, Math.floor(hasard() * 5))]
     if (sorte) {
       const p = { sorte, x, y, echelle }
       if (possible(p)) plantes.push(p)
@@ -267,7 +274,8 @@ export function planterPaysage(): Plante[] {
   let montagnesDevant = 0
   grille(7, 3, (x, y) => {
     if (montagnesDevant >= 3 || !deDevant(x, y) || y > N || dehors(x, y) < 14 || versEcran(x, y).x < versEcran(N, 0).x + 60) return
-    for (const sorte of ['montagne-moyenne', 'montagne-petite'] as SorteVignette[]) {
+    const b = hasard() < 0.5 ? '-b' : ''
+    for (const sorte of [`montagne-moyenne${b}`, `montagne-petite${b}`] as SorteVignette[]) {
       const p = { sorte, x, y, echelle: ECHELLE * (0.95 + hasard() * 0.1) }
       if (possible(p)) {
         plantes.push(p)

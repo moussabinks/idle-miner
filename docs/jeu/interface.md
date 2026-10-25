@@ -166,6 +166,7 @@ Sous les boutons du coin : « ☑️ Tâches », une à trois choses à faire (l
 - Chaque tâche : son icône, son texte, et sa progression en petites jauges (« 🪨 12/25 », une jauge par chose à réunir : l'argent, puis chaque minerai ; 25/10 : l'icône 💵 ou du minerai reste toujours, avec un ✔ après quand c'est bon).
 - Le bouton : **Voir** (bleu) ouvre le bon bâtiment (une amélioration) ou le menu Bâtiments (un bâtiment à construire, 25/10 : avant, la mine) ; **Go !** (jaune) quand on peut le faire tout de suite.
 - Les **urgences** (salaires, coffre plein) passent devant, avec un fond à part.
+- (25/10) Les améliorations : d'abord les **grosses** (mine, coffre, ascenseur, pioches, foreuse, générateur, embaucher, chefs). Celles d'**un seul employé** (« Chariot de Noah », « Vitesse de Noah », sa pioche) seulement quand il n'y a plus rien d'autre, sauf le **chariot d'un pousseur qui bloque la production** (son wagonnet ne suit pas, `chariotTropPetit`) : celui-là passe devant.
 - Une tâche accomplie se coche (✔) avec un petit son, puis laisse la place.
 - Le titre replie ou déplie la liste (▴ / ▾). Sur téléphone, on ne voit que la première tâche.
 

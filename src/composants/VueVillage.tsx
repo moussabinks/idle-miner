@@ -866,9 +866,12 @@ export function VueVillage({
       <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''} ${plageVisible ? '' : 'plage-cachee'} ${zonesRails ? 'batiments-transparents' : ''}`}>
         <TerrainVillage />
         <SolPlage />
-        <EauPlage />
         {sol}
         <ForetDerriere vue={vueForet} />
+        {/* (25/10, fluidité) L'eau de la mer bouge (elle a sa propre couche) : elle passe après le
+            décor du fond (ils ne se touchent jamais), sinon le navigateur met chaque image du décor
+            dans sa propre couche aussi, et le jeu ralentit. */}
+        <EauPlage />
         <div className="objets-village">{objets}</div>
         <ObjetsPlage />
         <ForetDevant vue={vueForet} />

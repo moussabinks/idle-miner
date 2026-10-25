@@ -327,17 +327,20 @@ function piedDeMontagne(v, places) {
 // Les montagnes
 // ---------------------------------------------------------------------------
 
-function montagneGeante() {
-  const v = new Vignette('montagne-geante')
-  const m = montagne(v, {
+// Les montagnes toutes simples (sans cascade ni galerie), chacune en deux versions (« -b ») pour
+// qu'on ne voie pas deux fois la même côte à côte. Pour chacune : sa largeur et ses pics, la
+// graine de son hasard, ses filons [x, y, minerais, taille], ses fissures [x, y, taille], ses
+// cristaux [x, y, couleur, taille] et ce qui pousse à son pied [sorte, x, y, taille] (en pixels,
+// autour du milieu de son pied).
+const MONTAGNES_SIMPLES = [
+  {
+    nom: 'montagne-geante',
     largeur: 780,
     graine: 11,
     pics: [
       { x: -0.1, h: 600 },
       { x: 0.27, h: 430 },
     ],
-  })
-  decorerRoche(v, m, {
     filons: [
       [-160, -200, ['or', 'diamant', 'or']],
       [230, -160, ['redstone', 'redstone'], 0.9],
@@ -349,50 +352,79 @@ function montagneGeante() {
       [300, -110],
     ],
     cristaux: [[-10, -95, C.violet, 1]],
-  })
-  m.finir()
-  piedDeMontagne(v, [
-    ['sapin', -300, 10, 0.32],
-    ['sapin', -250, 30, 0.38],
-    ['rocher', 150, 40, 1],
-    ['sapin', 320, 20, 0.3],
-  ])
-  return v.svg({ x0: -400, y0: -615, x1: 400, y1: 70 })
-}
-
-function montagneGrande() {
-  const v = new Vignette('montagne-grande')
-  const m = montagne(v, { largeur: 640, graine: 23, pics: [{ x: 0.02, h: 520 }] })
-  decorerRoche(v, m, {
-    filons: [
-      [-100, -180, ['diamant', 'or', 'diamant']],
+    pied: [
+      ['sapin', -300, 10, 0.32],
+      ['sapin', -250, 30, 0.38],
+      ['rocher', 150, 40, 1],
+      ['sapin', 320, 20, 0.3],
     ],
+  },
+  {
+    nom: 'montagne-geante-b',
+    largeur: 780,
+    graine: 13,
+    pics: [
+      { x: -0.24, h: 470 },
+      { x: 0.12, h: 610 },
+    ],
+    filons: [
+      [-230, -150, ['emeraude', 'emeraude', 'or']],
+      [60, -250, ['diamant', 'redstone', 'diamant'], 0.95],
+    ],
+    fissures: [
+      [-120, -160],
+      [250, -130],
+      [160, -330, 0.8],
+    ],
+    cristaux: [[250, -70, C.diamant, 0.9]],
+    pied: [
+      ['sapin', -310, 16, 0.34],
+      ['rond', 40, 44, 0.26],
+      ['sapin', 300, 14, 0.3],
+    ],
+  },
+  {
+    nom: 'montagne-grande',
+    largeur: 640,
+    graine: 23,
+    pics: [{ x: 0.02, h: 520 }],
+    filons: [[-100, -180, ['diamant', 'or', 'diamant']]],
     fissures: [
       [-190, -90],
       [70, -120],
       [170, -90, 0.8],
     ],
-  })
-  m.finir()
-  piedDeMontagne(v, [
-    ['sapin', -230, 18, 0.34],
-    ['rocher', 60, 40, 0.9],
-    ['sapin', 240, 16, 0.3],
-  ])
-  return v.svg({ x0: -330, y0: -535, x1: 330, y1: 60 })
-}
-
-function montagneDouble() {
-  const v = new Vignette('montagne-double')
-  const m = montagne(v, {
+    pied: [
+      ['sapin', -230, 18, 0.34],
+      ['rocher', 60, 40, 0.9],
+      ['sapin', 240, 16, 0.3],
+    ],
+  },
+  {
+    nom: 'montagne-grande-b',
+    largeur: 620,
+    graine: 29,
+    pics: [{ x: -0.08, h: 500 }],
+    filons: [[90, -170, ['redstone', 'or', 'redstone'], 0.95]],
+    fissures: [
+      [-150, -150],
+      [-60, -280, 0.8],
+      [200, -80],
+    ],
+    cristaux: [[-150, -60, C.emeraude, 0.85]],
+    pied: [
+      ['sapin', 230, 20, 0.32],
+      ['sapin', -250, 24, 0.3],
+    ],
+  },
+  {
+    nom: 'montagne-double',
     largeur: 720,
     graine: 37,
     pics: [
       { x: -0.22, h: 420 },
       { x: 0.18, h: 500 },
     ],
-  })
-  decorerRoche(v, m, {
     filons: [
       [-190, -160, ['emeraude', 'or', 'emeraude']],
       [170, -150, ['redstone', 'diamant'], 0.9],
@@ -403,56 +435,109 @@ function montagneDouble() {
       [-260, -80],
     ],
     cristaux: [[260, -60, C.diamant, 0.9]],
-  })
-  m.finir()
-  piedDeMontagne(v, [
-    ['sapin', -290, 20, 0.34],
-    ['rond', -60, 40, 0.28],
-    ['sapin', 300, 20, 0.3],
-  ])
-  return v.svg({ x0: -380, y0: -515, x1: 380, y1: 60 })
-}
-
-function montagneMoyenne() {
-  const v = new Vignette('montagne-moyenne')
-  const m = montagne(v, { largeur: 520, graine: 41, pics: [{ x: -0.05, h: 380 }], neige: 0.3 })
-  decorerRoche(v, m, {
-    filons: [
-      [-80, -150, ['or', 'or', 'emeraude']],
+    pied: [
+      ['sapin', -290, 20, 0.34],
+      ['rond', -60, 40, 0.28],
+      ['sapin', 300, 20, 0.3],
     ],
+  },
+  {
+    nom: 'montagne-double-b',
+    largeur: 700,
+    graine: 43,
+    pics: [
+      { x: -0.18, h: 490 },
+      { x: 0.24, h: 380 },
+    ],
+    filons: [[-120, -230, ['or', 'or', 'diamant'], 0.95]],
+    fissures: [
+      [60, -120],
+      [230, -100, 0.8],
+      [-250, -90],
+    ],
+    cristaux: [[120, -70, C.violet, 0.85]],
+    pied: [
+      ['sapin', -280, 18, 0.32],
+      ['rocher', 250, 40, 0.9],
+    ],
+  },
+  {
+    nom: 'montagne-moyenne',
+    largeur: 520,
+    graine: 41,
+    neige: 0.3,
+    pics: [{ x: -0.05, h: 380 }],
+    filons: [[-80, -150, ['or', 'or', 'emeraude']]],
     fissures: [
       [-160, -80],
       [40, -230, 0.8],
     ],
     cristaux: [[30, -75, C.emeraude, 0.9]],
-  })
-  m.finir()
-  piedDeMontagne(v, [
-    ['sapin', -190, 20, 0.32],
-    ['rocher', 180, 36, 0.8],
-  ])
-  return v.svg({ x0: -270, y0: -395, x1: 270, y1: 55 })
-}
-
-function montagnePetite() {
-  const v = new Vignette('montagne-petite')
-  const m = montagne(v, { largeur: 440, graine: 53, pics: [{ x: 0.04, h: 270 }], neige: 0.3, herbe: 60 })
-  decorerRoche(v, m, {
+    pied: [
+      ['sapin', -190, 20, 0.32],
+      ['rocher', 180, 36, 0.8],
+    ],
+  },
+  {
+    nom: 'montagne-moyenne-b',
+    largeur: 540,
+    graine: 47,
+    neige: 0.32,
+    pics: [{ x: 0.08, h: 360 }],
+    filons: [[70, -140, ['diamant', 'emeraude'], 0.9]],
+    fissures: [
+      [-120, -100],
+      [160, -70, 0.8],
+    ],
+    cristaux: [[-120, -60, C.redstone, 0.8]],
+    pied: [
+      ['rond', -200, 26, 0.26],
+      ['sapin', 210, 20, 0.3],
+    ],
+  },
+  {
+    nom: 'montagne-petite',
+    largeur: 440,
+    graine: 53,
+    neige: 0.3,
+    herbe: 60,
+    pics: [{ x: 0.04, h: 270 }],
     filons: [[-50, -110, ['redstone', 'or'], 0.85]],
     fissures: [[80, -90, 0.8]],
     cristaux: [[110, -70, C.diamant, 0.75]],
-  })
+    pied: [
+      ['sapin', -160, 18, 0.3],
+      ['rond', 150, 26, 0.24],
+    ],
+  },
+  {
+    nom: 'montagne-petite-b',
+    largeur: 420,
+    graine: 59,
+    neige: 0.34,
+    herbe: 56,
+    pics: [{ x: -0.06, h: 250 }],
+    filons: [[40, -100, ['emeraude', 'diamant'], 0.8]],
+    fissures: [[-90, -80, 0.8]],
+    pied: [
+      ['sapin', 150, 18, 0.3],
+      ['rocher', -140, 34, 0.8],
+    ],
+  },
+]
+
+function montagneSimple({ nom, largeur, graine, pics, neige, herbe, filons = [], fissures = [], cristaux = [], pied = [] }) {
+  const v = new Vignette(nom)
+  const m = montagne(v, { largeur, graine, pics, neige, herbe })
+  decorerRoche(v, m, { filons, fissures, cristaux, graine })
   m.finir()
-  piedDeMontagne(v, [
-    ['sapin', -160, 18, 0.3],
-    ['rond', 150, 26, 0.24],
-  ])
-  return v.svg({ x0: -230, y0: -285, x1: 230, y1: 50 })
+  piedDeMontagne(v, pied)
+  return v.svg({ x0: -largeur / 2 - 20, y0: -m.haut - 15, x1: largeur / 2 + 20, y1: 70 })
 }
 
 // La montagne à la cascade : l'eau sort d'une fente de la roche, tombe tout droit jusqu'en bas et
 // remplit un petit bassin entouré de rochers. Le jeu fait couler l'eau par-dessus (une petite
-// animation, seulement sur la bande d'eau : voir CASCADE dans src/composants/paysage.ts).
+// animation, seulement sur la bande d'eau : voir EAU_CASCADE dans src/composants/paysage.ts).
 function montagneCascade() {
   const v = new Vignette('montagne-cascade')
   const m = montagne(v, {
@@ -650,11 +735,12 @@ function colline(v, { largeur: W, hauteur: H, graine, bosse = 0 }) {
 }
 
 // Des détails sur une colline : des touffes, des fleurs, des arbres, des rochers.
-// places : [sorte, x, enfoncement, taille].
+// places : [sorte, x, enfoncement sous le dessus, et selon la sorte : la taille, la couleur d'une
+// fleur, ou le minerai d'une pépite].
 function garnirColline(v, c, places) {
   for (const [sorte, x, dy = 0, k = 1] of places) {
     const y = c.surface(x) + dy
-    if (sorte === 'touffe') v.ajouter(touffe(x, y, k))
+    if (sorte === 'touffe') v.ajouter(touffe(x, y))
     else if (sorte === 'fleur') v.ajouter(fleur(x, y, k))
     else if (sorte === 'sapin') v.ajouter(petitArbre(sapin(), x, y, k))
     else if (sorte === 'rond') v.ajouter(petitArbre(arbreRond(), x, y, k))
@@ -759,8 +845,7 @@ function collineLarge() {
     ['fleur', -170, 70, C.rose],
     ['touffe', -60, 34],
     ['fleur', 40, 60, C.jaune],
-    ['sapin', 170, 34, 0.34],
-    ['sapin', 220, 50, 0.28],
+    ['rond', 190, 40, 0.26],
     ['touffe', 300, 50],
   ])
   return v.svg({ x0: -400, y0: -330, x1: 400, y1: 95 })
@@ -811,11 +896,7 @@ function rochers() {
 // Tout le paysage : les vignettes, dans l'ordre de PAYSAGE (src/composants/paysage.ts).
 export function montagnes() {
   return [
-    montagneGeante(),
-    montagneGrande(),
-    montagneDouble(),
-    montagneMoyenne(),
-    montagnePetite(),
+    ...MONTAGNES_SIMPLES.map(montagneSimple),
     montagneCascade(),
     montagneGrotte(),
     collineSapins(),

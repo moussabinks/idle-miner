@@ -121,9 +121,11 @@ function planterForet(): Arbre[] {
 
 const FORET = planterForet()
 
-// Les tuiles : des carrés de TUILE pixels du monde qui couvrent tout le décor.
+// Les tuiles : des carrés de TUILE pixels du monde qui couvrent tout le décor. Chaque tuile est
+// ensuite recadrée au plus près de ce qu'elle contient (sa largeur et sa hauteur) : une image plus
+// petite chevauche moins le reste du village (moins de travail pour le navigateur).
 const TUILE = 384
-type Tuile = { gauche: number; haut: number; arbres: Arbre[] }
+type Tuile = { gauche: number; haut: number; largeur: number; hauteur: number; arbres: Arbre[] }
 
 function decouper(arbres: Arbre[]): Tuile[] {
   const tuiles = new Map<string, Tuile>()
@@ -134,13 +136,31 @@ function decouper(arbres: Arbre[]): Tuile[] {
     for (let tx = Math.floor(a.gauche / TUILE); tx <= Math.floor(droite / TUILE); tx++) {
       for (let ty = Math.floor(a.haut / TUILE); ty <= Math.floor(bas / TUILE); ty++) {
         const cle = `${tx},${ty}`
-        const tuile = tuiles.get(cle) ?? { gauche: tx * TUILE, haut: ty * TUILE, arbres: [] }
+        const tuile = tuiles.get(cle) ?? { gauche: tx * TUILE, haut: ty * TUILE, largeur: TUILE, hauteur: TUILE, arbres: [] }
         tuile.arbres.push(a) // déjà dans l'ordre, du fond vers l'avant
         tuiles.set(cle, tuile)
       }
     }
   }
-  return [...tuiles.values()]
+  // Le recadrage : le rectangle qui contient tous les dessins de la tuile (sans sortir du carré).
+  return [...tuiles.values()].map((tuile) => {
+    const x1 = tuile.gauche + TUILE
+    const y1 = tuile.haut + TUILE
+    let g = x1
+    let h = y1
+    let d = tuile.gauche
+    let b = tuile.haut
+    for (const a of tuile.arbres) {
+      const image = IMAGES[a.sorte]
+      g = Math.min(g, Math.max(tuile.gauche, a.gauche))
+      h = Math.min(h, Math.max(tuile.haut, a.haut))
+      d = Math.max(d, Math.min(x1, a.gauche + image.largeur * a.echelle))
+      b = Math.max(b, Math.min(y1, a.haut + image.hauteur * a.echelle))
+    }
+    const gauche = Math.floor(g)
+    const haut = Math.floor(h)
+    return { ...tuile, gauche, haut, largeur: Math.ceil(d) - gauche, hauteur: Math.ceil(b) - haut }
+  })
 }
 
 const TUILES_DERRIERE = decouper(FORET.filter((a) => !a.devant))
@@ -160,15 +180,10 @@ function chargerImages(): Promise<HTMLImageElement[]> {
 }
 
 function dessinerTuile(toile: HTMLCanvasElement, tuile: Tuile, densite: number, dessins: HTMLImageElement[]): void {
-  const taille = Math.round(TUILE * densite)
-  if (toile.width !== taille) {
-    toile.width = taille
-    toile.height = taille
-  }
+  toile.width = Math.round(tuile.largeur * densite)
+  toile.height = Math.round(tuile.hauteur * densite)
   const ctx = toile.getContext('2d')
   if (!ctx) return
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.clearRect(0, 0, taille, taille)
   ctx.imageSmoothingQuality = 'high'
   for (const a of tuile.arbres) {
     const image = dessins[a.sorte]
@@ -185,9 +200,37 @@ function dessinerTuile(toile: HTMLCanvasElement, tuile: Tuile, densite: number, 
 // La partie du monde qu'on voit, et le zoom (une fois la caméra arrêtée).
 export type VueForet = { x0: number; y0: number; x1: number; y1: number; z: number }
 
+// (25/10, fluidité) Une tuile dessinée devient une simple image (une <img>) : une « toile »
+// (canvas) affichée dans la page coûte du travail au navigateur à chaque image, même si elle ne
+// change jamais (le jeu passait de 10 à 22 images par seconde sans elles, sur un ordinateur lent).
+// Une image, elle, est dessinée une fois puis simplement recopiée, comme le sol (ImageFigee).
+// Les images à la densité 1 sont gardées pour tout le jeu (l'accueil et le village les partagent).
+const IMAGES_DE_BASE = new Map<string, string>()
+
+// Dessine la tuile dans une toile (hors de la page), puis en fait une image (une adresse « blob: »).
+// En WebP sans perte : le navigateur le fabrique sans bloquer le jeu, plus vite qu'un PNG (un
+// navigateur qui ne sait pas faire de WebP fait un PNG, c'est prévu).
+function tuileEnImage(tuile: Tuile, densite: number, dessins: HTMLImageElement[]): Promise<string | null> {
+  const toile = document.createElement('canvas')
+  dessinerTuile(toile, tuile, densite, dessins)
+  return new Promise((resoudre) => {
+    toile.toBlob(
+      (contenu) => {
+        // (la toile n'est plus utile : on libère sa mémoire tout de suite)
+        toile.width = 0
+        toile.height = 0
+        resoudre(contenu ? URL.createObjectURL(contenu) : null)
+      },
+      'image/webp',
+      1,
+    )
+  })
+}
+
 function CoucheForet({ tuiles, vue, classe, children }: { tuiles: Tuile[]; vue: VueForet; classe: string; children?: ReactNode }) {
-  const toiles = useRef<(HTMLCanvasElement | null)[]>([])
-  const densites = useRef<number[]>([])
+  // Pour chaque tuile : l'adresse de son image, et la densité à laquelle elle est dessinée.
+  const [sources, setSources] = useState<(string | undefined)[]>(() => tuiles.map((_, i) => IMAGES_DE_BASE.get(`${classe}-${i}`)))
+  const densites = useRef<number[]>(tuiles.map((_, i) => (IMAGES_DE_BASE.has(`${classe}-${i}`) ? 1 : 0)))
   const [pretes, setPretes] = useState<HTMLImageElement[] | null>(null)
 
   useEffect(() => {
@@ -202,33 +245,60 @@ function CoucheForet({ tuiles, vue, classe, children }: { tuiles: Tuile[]; vue: 
 
   // Une densité (pixels par pixel du monde) adaptée au zoom et à l'écran, par paliers. Les
   // tuiles qu'on voit sont redessinées à cette densité ; les autres restent à 1 (légères).
+  // On les fait deux par deux, en laissant le navigateur respirer entre deux (celles qu'on voit
+  // d'abord) : le jeu ne se fige pas pendant qu'elles se dessinent. En attendant, chaque tuile
+  // garde son image d'avant.
   useEffect(() => {
     if (!pretes) return
     const ecran = window.devicePixelRatio || 1
     const voulue = Math.min(3, Math.max(1, Math.ceil(vue.z * ecran * 2) / 2))
+    const aFaire: { i: number; densite: number; visible: boolean }[] = []
     tuiles.forEach((tuile, i) => {
-      const toile = toiles.current[i]
-      if (!toile) return
-      const visible = tuile.gauche < vue.x1 && tuile.gauche + TUILE > vue.x0 && tuile.haut < vue.y1 && tuile.haut + TUILE > vue.y0
+      const visible = tuile.gauche < vue.x1 && tuile.gauche + tuile.largeur > vue.x0 && tuile.haut < vue.y1 && tuile.haut + tuile.hauteur > vue.y0
       const densite = visible ? voulue : Math.min(voulue, 1)
-      if (densites.current[i] === densite) return
-      densites.current[i] = densite
-      dessinerTuile(toile, tuile, densite, pretes)
+      if (densites.current[i] !== densite) aFaire.push({ i, densite, visible })
     })
-  }, [pretes, tuiles, vue])
+    aFaire.sort((a, b) => Number(b.visible) - Number(a.visible))
+    let annule = false
+    const minuteurs: number[] = []
+    const suivante = async () => {
+      const tache = aFaire.shift()
+      if (!tache || annule) return
+      const { i, densite } = tache
+      const adresse = await tuileEnImage(tuiles[i], densite, pretes)
+      if (annule || !adresse) {
+        if (adresse) URL.revokeObjectURL(adresse)
+        return
+      }
+      densites.current[i] = densite
+      const cle = `${classe}-${i}`
+      if (densite === 1 && !IMAGES_DE_BASE.has(cle)) IMAGES_DE_BASE.set(cle, adresse)
+      setSources((avant) => {
+        const ancienne = avant[i]
+        // (on oublie l'ancienne image un peu plus tard, une fois la nouvelle affichée ; jamais
+        // celles de la densité 1, gardées pour tout le jeu)
+        if (ancienne && ![...IMAGES_DE_BASE.values()].includes(ancienne)) window.setTimeout(() => URL.revokeObjectURL(ancienne), 2000)
+        const copie = [...avant]
+        copie[i] = adresse
+        return copie
+      })
+      minuteurs.push(window.setTimeout(suivante, 0))
+    }
+    // (deux à la fois : c'est deux fois plus rapide, et le jeu reste fluide)
+    minuteurs.push(window.setTimeout(suivante, 0), window.setTimeout(suivante, 0))
+    return () => {
+      annule = true
+      minuteurs.forEach(clearTimeout)
+    }
+  }, [pretes, tuiles, vue, classe])
 
   return (
     <div className={`foret-village ${classe}`} aria-hidden="true">
-      {tuiles.map((tuile, i) => (
-        <canvas
-          key={i}
-          ref={(toile) => {
-            toiles.current[i] = toile
-          }}
-          className="tuile-foret"
-          style={{ left: tuile.gauche, top: tuile.haut, width: TUILE, height: TUILE }}
-        />
-      ))}
+      {tuiles.map((tuile, i) =>
+        sources[i] ? (
+          <img key={i} className="tuile-foret" src={sources[i]} alt="" draggable={false} style={{ left: tuile.gauche, top: tuile.haut, width: tuile.largeur, height: tuile.hauteur }} />
+        ) : null,
+      )}
       {children}
     </div>
   )

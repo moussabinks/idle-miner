@@ -9,7 +9,8 @@ import { batimentDebloque } from './batiments'
 import { nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
 import { disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
-import { achatsPossibles } from './objectifs'
+import { achatsPossibles, type AchatPossible } from './objectifs'
+import { analyseWagonnet, chariotTropPetit } from './production'
 import { railsDebloques } from './niveaux'
 import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
@@ -144,13 +145,27 @@ function automatisation(etat: EtatJeu): Mission | null {
   return null
 }
 
+// Le chariot de ce pousseur est trop petit : son wagonnet ne suit pas, la production s'entasse.
+function chariotBloque(etat: EtatJeu, nom: string): boolean {
+  const pousseur = etat.employes.find((e) => e.nom === nom && e.role === 'pousseur')
+  if (!pousseur?.trajet) return false
+  const analyse = analyseWagonnet(etat, pousseur.trajet)
+  return analyse?.pousseur?.nom === nom && chariotTropPetit(analyse)
+}
+
 // Les améliorations les plus proches (celles dont on a déjà la plus grande part de l'argent).
+// (25/10, demandé par le propriétaire) D'abord les grosses : la mine, le coffre, l'ascenseur, la
+// foreuse, le générateur, les pioches, embaucher... Les améliorations d'UN employé (« Chariot de
+// Noah », « Vitesse de Noah ») seulement quand il n'y a plus rien d'autre, sauf le chariot d'un
+// pousseur qui bloque la production : celui-là passe devant.
 function ameliorations(etat: EtatJeu): Mission[] {
   const part = (cout: Cout) => (cout.argent ? Math.min(1, etat.argent / cout.argent) : 1)
-  return achatsPossibles(etat)
-    .filter((a) => !a.construction)
-    .sort((a, b) => Number(peutPayer(etat, b.cout)) - Number(peutPayer(etat, a.cout)) || part(b.cout) - part(a.cout))
-    .map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
+  const parProximite = (a: AchatPossible, b: AchatPossible) => Number(peutPayer(etat, b.cout)) - Number(peutPayer(etat, a.cout)) || part(b.cout) - part(a.cout)
+  const achats = achatsPossibles(etat).filter((a) => !a.construction)
+  const urgents = achats.filter((a) => a.chariotPousseur && a.employe && chariotBloque(etat, a.employe))
+  const grosses = achats.filter((a) => !a.employe).sort(parProximite)
+  const petites = grosses.length > 0 ? [] : achats.filter((a) => a.employe && !urgents.includes(a)).sort(parProximite)
+  return [...urgents, ...grosses, ...petites].map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
 }
 
 // (25/10) Plus de tâche « Niveau X : ce qu'il débloque » : la liste ne montre que des choses

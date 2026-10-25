@@ -310,9 +310,10 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
       <div className="monde-village" style={{ transform: `scale(${z}) translate(${-gauche}px, ${-haut}px)` }}>
         <TerrainVillage />
         <SolPlage />
-        <EauPlage />
         {SOL}
         <ForetDerriere vue={vueForet} />
+        {/* (après le décor du fond : voir VueVillage) */}
+        <EauPlage />
         <div className="objets-village">{objets}</div>
         <ObjetsPlage />
         <ForetDevant vue={vueForet} />

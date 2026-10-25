@@ -63,8 +63,9 @@
   fill: #74bf57;
 }
 
-/* La forêt (ForetVillage) : des tuiles de « toile » posées dans le monde. Les arbres du bas de la
-   carte passent devant les bâtiments (mais sous les bulles). */
+/* Le décor autour de la clairière (ForetVillage) : la lisière et le paysage, dessinés en tuiles
+   (des images) posées dans le monde. Ce qui est en bas de la carte passe devant les bâtiments
+   (mais sous les bulles). */
 .foret-village {
   position: absolute;
   left: 0;
@@ -78,6 +79,8 @@
 
 .tuile-foret {
   position: absolute;
+  max-width: none;
+  user-select: none;
 }
 
 /* L'eau de la cascade (25/10, ForetVillage) : une petite boîte sur la bande d'eau de la montagne,
