@@ -135,7 +135,7 @@ Plus de sac à dos ni de marche jusqu'au marché : le coffre **se vend directeme
 
 - **💰 Tout vendre · +X $** (gros bouton jaune) : vend tout le coffre, **sauf les minerais épinglés** (`aVendreDuCoffre`). Le bouton montre ce que ça rapporte et attire l'œil quand le coffre est plein.
 - **Une ligne par minerai** que sort la mine à son niveau (même à 0), les plus chers en haut : combien il y en a, son prix pièce, **Vendre** (ce minerai seul, même épinglé) et la **punaise 📌**.
-- **📌 La punaise** (`basculerGarderTout`, `estGardeTout`) : épinglé, un minerai est **gardé en entier** dans le coffre : ni « Tout vendre », ni le wagonnet du marché ne l'emportent. Pratique pour garder le fer des rails ou de la prochaine pioche. Le jeu le range dans `coffre.garder` (`GARDER_TOUT`, un très grand nombre) ; `reglerGarder` peut aussi garder un nombre précis (le bot s'en sert).
+- **📌 la punaise** (25/10) : elle ouvre sous la ligne le réglage **« Garder N »** : **−100, −10, +10, +100** (`changerGarder`), et **Tout** (`basculerGarderTout`). Ce qu'on garde (« 📌 110 » sous le nombre, ligne bleue) **reste dans le coffre** : ni « Tout vendre », ni « Vendre » de la ligne, ni le wagonnet, ni le manager ne le vendent ; le reste se vend normalement. Pratique pour garder de quoi payer ses améliorations.
 - Message : « 💰 Vente : +X $ ». L'argent compte dans `stats.argentGagne` (succès, classement).
 
 C'est la même interface pour le **chariot de la foreuse** (`StockMinerais.tsx`), qui se vend lui aussi sur place (sans punaise).

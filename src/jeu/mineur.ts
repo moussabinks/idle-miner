@@ -656,7 +656,7 @@ export function vendreDuCoffrePour(etat: EtatJeu, montant: number): number {
 }
 
 export function vendreMinerai(etat: EtatJeu, bloc: IdBloc): string[] {
-  return vendreCoffre(etat, { [bloc]: etat.coffre.contenu[bloc] ?? 0 })
+  return vendreCoffre(etat, { [bloc]: aVendreDuCoffre(etat)[bloc] ?? 0 })
 }
 
 // (25/10) La punaise 📌 du panneau de la mine : « garder tout » ce minerai (il n'est plus vendu,
@@ -669,6 +669,13 @@ export function estGardeTout(etat: EtatJeu, bloc: IdBloc): boolean {
 
 export function basculerGarderTout(etat: EtatJeu, bloc: IdBloc): string[] {
   return reglerGarder(etat, bloc, estGardeTout(etat, bloc) ? 0 : GARDER_TOUT)
+}
+
+// (25/10) Les boutons « −100 −10 +10 +100 » du coffre : change ce qu'on garde d'un minerai.
+// En partant de « tout garder », on part du nombre qu'il y a dans le coffre.
+export function changerGarder(etat: EtatJeu, bloc: IdBloc, pas: number): string[] {
+  const actuel = estGardeTout(etat, bloc) ? (etat.coffre.contenu[bloc] ?? 0) : garderDansLeCoffre(etat, bloc)
+  return reglerGarder(etat, bloc, Math.max(0, actuel + pas))
 }
 
 // Règle le « 📌 Garder N » d'un minerai (0 : on peut tout vendre).

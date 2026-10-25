@@ -490,7 +490,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Plein !': 'Full!',
   'Tout vendre': 'Sell all',
   '{prix} $ pièce': '{prix} $ each',
-  'Gardé : ni vendu, ni emporté par le wagonnet. Touche pour le vendre de nouveau.': 'Kept: not sold, not taken by the minecart. Tap to sell it again.',
   'Garder ce minerai (pour tes améliorations)': 'Keep this ore (for your upgrades)',
 
   // src/composants/Tutoriel.tsx
@@ -875,4 +874,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Vente': 'Sale',
   // src/composants/Publicite.tsx
   'Simulation de pub': 'Ad simulation',
+  // src/composants/StockMinerais.tsx (réglage « garder »)
+  'Garder': 'Keep',
+  'tout': 'all',
 }

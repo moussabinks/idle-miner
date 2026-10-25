@@ -46,7 +46,7 @@ C'est la nouveauté de la grande mise à jour : **plus besoin de porter le coffr
 - en haut, « 📦 Coffre » et sa jauge (« 120 / 300 », rouge « Plein : la mine s'arrête ! ») ;
 - le gros bouton jaune **💰 Tout vendre · +X $** : tout le coffre, **sauf les minerais épinglés** (`aVendreDuCoffre`). Grisé s'il n'y a rien à vendre ; il attire l'œil quand le coffre est plein ;
 - **une ligne par minerai** que sort la mine à son niveau (même à 0, les plus chers en haut) : son icône, son nom, « *prix* $ pièce », combien il y en a, **Vendre** (ce minerai seul, même épinglé, `vendreMinerai`) et la **punaise 📌** ;
-- **📌 la punaise** (`basculerGarderTout`) : épinglé (bouton bleu, ligne marquée « gardée »), le minerai **reste dans le coffre** : ni « Tout vendre », ni le wagonnet du marché ne l'emportent. On garde ainsi le fer des rails ou de la prochaine pioche, la pierre du forgeron, l'or du prochain niveau… Le toucher de nouveau le remet en vente.
+- **📌 la punaise** (25/10) : elle ouvre sous la ligne le réglage **« Garder N »** : **−100, −10, +10, +100** (`changerGarder`), et **Tout** (`basculerGarderTout`). Ce qu'on garde (« 📌 110 » sous le nombre, ligne bleue) **reste dans le coffre** : ni « Tout vendre », ni « Vendre » de la ligne, ni le wagonnet, ni le manager ne le vendent ; le reste se vend normalement. Pratique pour garder de quoi payer ses améliorations.
 
 Message : « 💰 Vente : +X $ » (le « cha-ching » et la pluie de pièces). L'argent compte dans l'argent gagné (succès, classement). Pendant le bonus **« 💰 Ventes × 2 »**, la vente rapporte le double.
 

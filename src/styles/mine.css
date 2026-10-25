@@ -335,8 +335,59 @@
   opacity: 0.55;
 }
 
-.stock-ligne.gardee {
+/* Une ligne de minerai, et sous elle (si on l'ouvre) le réglage « garder ». */
+.stock-ligne-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stock-ligne-bloc.gardee .stock-ligne {
   background: #e3f1fd;
+}
+
+.stock-garde {
+  display: block;
+  font-family: var(--police);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--encre-douce);
+  white-space: nowrap;
+}
+
+/* Le réglage « garder » : −100 −10 +10 +100 et « Tout ». */
+.stock-reglage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-left: 18px;
+  padding: 6px 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 12px;
+  background: #e3f1fd;
+}
+
+.stock-reglage-titre {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.stock-reglage-titre b {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+
+.stock-reglage-boutons {
+  display: flex;
+  gap: 5px;
+}
+
+.stock-reglage-boutons .btn {
+  min-width: 44px;
+  padding-inline: 6px;
 }
 
 .stock-icone {
@@ -357,6 +408,10 @@
 }
 
 .stock-nombre {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.05;
   font-family: var(--police-titre);
   font-weight: 400;
   font-size: 1.15rem;

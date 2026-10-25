@@ -3,8 +3,9 @@
 //   - le titre et sa jauge (« 120 / 300 ») ;
 //   - le gros bouton « Tout vendre » avec ce que ça rapporte ;
 //   - une ligne par minerai : combien il y en a, ce que ça vaut, et « Vendre » pour lui seul ;
-//   - pour le coffre, une punaise 📌 par minerai : le garder (il n'est plus vendu, ni par « Tout
-//     vendre », ni par le wagonnet) pour payer ses améliorations.
+//   - pour le coffre, une punaise 📌 par minerai : elle ouvre le réglage « garder » (−100, −10,
+//     +10, +100, ou tout) ; ce qu'on garde n'est plus vendu, ni par « Tout vendre », ni par le
+//     wagonnet, pour payer ses améliorations.
 // Aucune règle du jeu ici : le panneau reçoit les actions (vendre, garder).
 
 import { BLOCS, type IdBloc } from '../jeu/donnees'
@@ -13,6 +14,7 @@ import { valeurDe, type EtatJeu, type Inventaire } from '../jeu/mineur'
 import type { Action } from '../usePartie'
 import { nombreAbrege } from '../nombres'
 import { Barre } from './Barre'
+import { useState } from 'react'
 import { useJeu } from './contexteJeu'
 
 type Props = {
@@ -23,13 +25,15 @@ type Props = {
   vendreTout: Action
   vendre: (bloc: IdBloc) => Action
   aVendre: Inventaire // ce que « Tout vendre » vendrait (sans ce qu'on garde)
-  garde?: (bloc: IdBloc) => boolean // ce minerai est-il gardé ? (absent : pas de punaise)
-  basculerGarde?: (bloc: IdBloc) => Action
+  garde?: (bloc: IdBloc) => number // combien on en garde (absent : pas de punaise)
+  toutGarde?: (bloc: IdBloc) => boolean // on garde tout ce minerai
+  changerGarde?: (bloc: IdBloc, pas: number) => Action // −100, −10, +10, +100
+  basculerGarde?: (bloc: IdBloc) => Action // tout garder, ou plus rien
   textePlein?: string
   tuto?: boolean // le bouton « Tout vendre » est une cible du tutoriel
 }
 
-export function StockMinerais({ titre, contenu, capacite, blocs, vendreTout, vendre, aVendre, garde, basculerGarde, textePlein, tuto = false }: Props) {
+export function StockMinerais({ titre, contenu, capacite, blocs, vendreTout, vendre, aVendre, garde, toutGarde, changerGarde, basculerGarde, textePlein, tuto = false }: Props) {
   const { etat, jouer } = useJeu()
   const total = Object.values(contenu).reduce((somme, n) => somme + (n ?? 0), 0)
   const plein = total >= capacite
@@ -45,33 +49,90 @@ export function StockMinerais({ titre, contenu, capacite, blocs, vendreTout, ven
       </button>
       <ul className="stock-lignes">
         {blocs.map((bloc) => (
-          <LigneStock key={bloc} etat={etat} bloc={bloc} nombreDe={contenu[bloc] ?? 0} garde={garde?.(bloc) ?? false} onVendre={() => jouer(vendre(bloc))} onGarder={basculerGarde ? () => jouer(basculerGarde(bloc)) : undefined} />
+          <LigneStock
+            key={bloc}
+            etat={etat}
+            bloc={bloc}
+            nombreDe={contenu[bloc] ?? 0}
+            aVendre={aVendre[bloc] ?? 0}
+            garde={garde?.(bloc) ?? 0}
+            toutGarde={toutGarde?.(bloc) ?? false}
+            onVendre={() => jouer(vendre(bloc))}
+            onChanger={changerGarde && basculerGarde ? (pas) => jouer(changerGarde(bloc, pas)) : undefined}
+            onTout={basculerGarde ? () => jouer(basculerGarde(bloc)) : undefined}
+          />
         ))}
       </ul>
     </div>
   )
 }
 
-function LigneStock({ etat, bloc, nombreDe, garde, onVendre, onGarder }: { etat: EtatJeu; bloc: IdBloc; nombreDe: number; garde: boolean; onVendre: () => void; onGarder?: () => void }) {
+type PropsLigne = {
+  etat: EtatJeu
+  bloc: IdBloc
+  nombreDe: number // dans le coffre
+  aVendre: number // ce qu'on peut en vendre (sans ce qu'on garde)
+  garde: number
+  toutGarde: boolean
+  onVendre: () => void
+  onChanger?: (pas: number) => void
+  onTout?: () => void
+}
+
+// Les pas du réglage « garder ».
+const PAS_GARDER = [-100, -10, 10, 100]
+
+function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre, onChanger, onTout }: PropsLigne) {
   const info = BLOCS[bloc]
+  // Le réglage « garder » s'ouvre sous la ligne quand on touche la punaise.
+  const [reglage, setReglage] = useState(false)
+  const garde_ = toutGarde || garde > 0
   return (
-    <li className={`stock-ligne ${nombreDe === 0 ? 'vide' : ''} ${garde ? 'gardee' : ''}`}>
-      <span className="stock-icone" aria-hidden="true">
-        {info.emoji}
-      </span>
-      <span className="stock-nom">
-        {t(info.nom)}
-        <small>{t('{prix} $ pièce', { prix: nombre(info.prix) })}</small>
-      </span>
-      <strong className="stock-nombre">{nombre(nombreDe)}</strong>
-      {onGarder && (
-        <button className={`btn btn-petit btn-rond stock-punaise ${garde ? 'btn-bleu' : 'btn-blanc'}`} onClick={onGarder} aria-pressed={garde} title={garde ? t('Gardé : ni vendu, ni emporté par le wagonnet. Touche pour le vendre de nouveau.') : t('Garder ce minerai (pour tes améliorations)')}>
-          📌
+    <li className={`stock-ligne-bloc ${garde_ ? 'gardee' : ''}`}>
+      <div className={`stock-ligne ${nombreDe === 0 ? 'vide' : ''}`}>
+        <span className="stock-icone" aria-hidden="true">
+          {info.emoji}
+        </span>
+        <span className="stock-nom">
+          {t(info.nom)}
+          <small>{t('{prix} $ pièce', { prix: nombre(info.prix) })}</small>
+        </span>
+        <strong className="stock-nombre">
+          {nombre(nombreDe)}
+          {/* ce qu'on garde, en petit sous le nombre */}
+          {garde_ && <small className="stock-garde">📌 {toutGarde ? t('tout') : nombre(garde)}</small>}
+        </strong>
+        {onChanger && (
+          <button
+            className={`btn btn-petit btn-rond stock-punaise ${garde_ ? 'btn-bleu' : 'btn-blanc'}`}
+            onClick={() => setReglage((r) => !r)}
+            aria-expanded={reglage}
+            aria-label={t('Garder ce minerai (pour tes améliorations)')}
+          >
+            📌
+          </button>
+        )}
+        <button className="btn btn-jaune btn-petit stock-vendre" disabled={aVendre <= 0} onClick={onVendre}>
+          +{nombreAbrege(valeurDe({ [bloc]: aVendre }, etat))} $
         </button>
+      </div>
+      {reglage && onChanger && onTout && (
+        <div className="stock-reglage">
+          <span className="stock-reglage-titre">
+            📌 {t('Garder')} <b>{toutGarde ? t('tout') : nombre(garde)}</b>
+          </span>
+          <span className="stock-reglage-boutons">
+            {PAS_GARDER.map((pas) => (
+              <button key={pas} className={`btn btn-petit ${pas < 0 ? 'btn-blanc' : 'btn-bleu'}`} disabled={pas < 0 && !garde_} onClick={() => onChanger(pas)}>
+                {pas > 0 ? `+${pas}` : `−${-pas}`}
+              </button>
+            ))}
+            <button className={`btn btn-petit ${toutGarde ? 'btn-bleu' : 'btn-blanc'}`} aria-pressed={toutGarde} onClick={onTout}>
+              {t('Tout')}
+            </button>
+          </span>
+        </div>
       )}
-      <button className="btn btn-jaune btn-petit stock-vendre" disabled={nombreDe <= 0} onClick={onVendre}>
-        +{nombreAbrege(valeurDe({ [bloc]: nombreDe }, etat))} $
-      </button>
     </li>
   )
 }
