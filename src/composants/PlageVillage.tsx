@@ -10,7 +10,7 @@
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE } from '../jeu/donnees'
-import { ARBRES } from './arbres'
+import { PALMIER } from './arbres'
 import { DessinDecoration, TouffeHerbe } from './DessinsVillage'
 import { ImageFigee } from './ImageFigee'
 import { Rocher } from './Rochers'
@@ -443,7 +443,6 @@ function Crabe({ x, d, retard }: { x: number; d: number; retard: number }) {
 }
 
 // Un palmier : l'image des arbres de la forêt (le palmier), posé sur le sable.
-const PALMIER = ARBRES[9]
 function Palmier({ x, d, taille, miroir }: { x: number; d: number; taille: number; miroir: boolean }) {
   const p = ecran(x, d)
   const echelle = (taille * 2 * DEMI_LARGEUR) / PALMIER.largeurPied

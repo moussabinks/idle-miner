@@ -246,7 +246,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
       )}
       {pousseur && (
         <Amelioration
-          icone="🏃"
+          icone="⏱️"
           titre={t('Vitesse')}
           niveau={employe.niveau + 1}
           niveauMax={NIVEAUX_POUSSEUR.length}
@@ -400,9 +400,9 @@ function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTra
 // Les chefs
 // ---------------------------------------------------------------------------
 
-// Le portrait d'un chef (le même hamster que celui qui attend devant le Personnel, au village).
+// Le portrait d’un chef (la même taupe que celle qui attend devant le Personnel, au village).
 function Portrait({ role }: { role: 'manager' | 'recruteur' }) {
-  return <img className="portrait-chef" src={cheminPublic(`/images/personnages/${role}.webp`)} alt="" width={64} height={64} draggable={false} />
+  return <img className="portrait-chef" src={cheminPublic(`/images/personnages/${role}.svg`)} alt="" width={64} height={64} draggable={false} />
 }
 
 // (23/10) La fatigue du manager : elle monte pendant qu'il travaille ; pleine, il s'endort.

@@ -83,7 +83,7 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
   return (
     <img
       className={`sprite-batiment ${classe}`}
-      src={imageBatiment(id, miroir)}
+      src={imageBatiment(id)}
       alt={BATIMENTS[id].nom}
       width={calage.largeur}
       height={calage.hauteur}

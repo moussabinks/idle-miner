@@ -47,7 +47,7 @@ type Consigne = {
 }
 
 // Le portrait de Pépite, la taupe qui guide le joueur.
-const PORTRAIT_PEPITE = cheminPublic('/images/personnages/mineur.webp')
+const PORTRAIT_PEPITE = cheminPublic('/images/personnages/mineur.svg')
 
 // Les cibles. (Un bâtiment sur la carte a l'attribut data-cible ; le reste, data-tuto.)
 const BOUTON_MINE = '[data-tuto="mine"]'
@@ -293,7 +293,7 @@ function Felicitations({ onSuivant }: { onSuivant: () => void }) {
       <Confettis />
       <Pepite>{t('Ton mineur creuse pour toi, même quand tu ne joues pas. Maintenant, tu es libre !')}</Pepite>
       <ul className="tuto-suite">
-        <li className="carte">📋 {t('Ta liste de tâches (en haut à droite) te donne des idées.')}</li>
+        <li className="carte">☑️ {t('Ta liste de tâches (en haut à droite) te donne des idées.')}</li>
         <li className="carte">⭐ {t('Chaque niveau débloque des bâtiments et rapporte des gemmes.')}</li>
         <li className="carte">🛤️ {t('Plus tard : des rails jusqu’au marché, et tout se vend tout seul.')}</li>
       </ul>

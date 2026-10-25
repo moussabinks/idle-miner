@@ -1,5 +1,5 @@
-// La forêt autour de la clairière (21/10) : les arbres dessinés par l'équipe (12 sortes, en vue
-// isométrique, même angle que les bâtiments), plantés tout autour de la clairière. Le premier
+// La forêt autour de la clairière (21/10) : des arbres au style cartoon (7 sortes, voir arbres.ts),
+// plantés tout autour de la clairière. Le premier
 // rang (la lisière) est planté bien en ligne, à la même distance du bord et au même écart (22/10 :
 // avant, certains troncs avançaient plus que d'autres dans la clairière). Derrière, la forêt est
 // plus libre et de plus en plus serrée. On ne peut pas y aller : la forêt est hors de la grille.
@@ -31,8 +31,10 @@ type Arbre = {
   echelle: number
 }
 
-// Combien de chances de tirer chaque sorte d'arbre (feuillus et sapins surtout, peu de palmiers).
-const POIDS_SORTES = [3, 3, 3, 2.5, 3, 3, 1.5, 1.5, 0.6, 0.6, 3, 1.5]
+// Combien de chances de tirer chaque sorte d'arbre (dans l'ordre d'ARBRES : rond, nuage, sapin,
+// buisson, cerisier, automne, palmier). Des feuillus et des sapins surtout, un peu de rose et de
+// jaune pour égayer, et pas de palmier (ils sont sur la plage).
+const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.6, 0.45, 0]
 
 // La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
 // l'écart (en cases) entre deux arbres de ce rang. Les autres arbres restent derrière ce rang.
@@ -163,7 +165,9 @@ function chargerImages(): Promise<HTMLImageElement[]> {
   return Promise.all(images.map((image) => (image.complete ? Promise.resolve() : image.decode().catch(() => undefined)))).then(() => images)
 }
 
-const ASSOMBRIR = ['none', 'brightness(0.88) saturate(0.95)', 'brightness(0.76) saturate(0.9)']
+// Plus loin dans la forêt, les arbres sont un tout petit peu plus sombres (on devine la
+// profondeur), sans devenir des taches sombres.
+const ASSOMBRIR = ['none', 'brightness(0.95)', 'brightness(0.9)']
 
 function dessinerTuile(toile: HTMLCanvasElement, tuile: Tuile, densite: number, dessins: HTMLImageElement[]): void {
   const taille = Math.round(TUILE * densite)
