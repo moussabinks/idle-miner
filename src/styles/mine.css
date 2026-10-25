@@ -539,3 +539,157 @@
     height: 150px;
   }
 }
+
+/* =========================================================================
+   (25/10) La mine sans défiler, même sur un petit écran :
+     - écran peu haut : le bloc et les lignes du coffre se resserrent ;
+     - téléphone : le bloc à gauche, ses compteurs à droite ; les minerais sur deux colonnes.
+   ========================================================================= */
+
+@media (max-height: 760px) {
+  .bloc-a-cliquer {
+    height: 150px;
+  }
+
+  .bloc-pousse {
+    width: 140px;
+    height: 140px;
+  }
+
+  .zone-bloc {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .stock-ligne {
+    padding-block: 2px;
+  }
+
+  .stock-punaise {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stock .btn-grand {
+    min-height: 44px;
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .zone-bloc {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-areas:
+      'entete entete'
+      'bloc combo'
+      'bloc compteurs'
+      'bloc pioche';
+    align-items: center;
+    gap: 6px 8px;
+    padding: 8px;
+  }
+
+  .zone-bloc-entete {
+    grid-area: entete;
+  }
+
+  .bloc-a-cliquer {
+    grid-area: bloc;
+    height: 104px;
+  }
+
+  .bloc-pousse {
+    width: 100px;
+    height: 100px;
+  }
+
+  .combo-barre {
+    grid-area: combo;
+  }
+
+  .compteurs {
+    grid-area: compteurs;
+    gap: 4px;
+  }
+
+  .compteur {
+    padding: 1px 2px;
+  }
+
+  .compteur strong {
+    font-size: 0.95rem;
+  }
+
+  .compteur small {
+    font-size: 0.75rem;
+  }
+
+  .pioche {
+    grid-area: pioche;
+  }
+
+  .combo-texte {
+    font-size: 0.75rem;
+  }
+
+  /* Les minerais du coffre sur deux colonnes : l'icône, le nombre, 📌 et la vente. */
+  .stock-lignes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .stock-ligne-bloc:has(.stock-reglage) {
+    grid-column: 1 / -1;
+  }
+
+  .stock-ligne {
+    gap: 4px;
+    padding: 2px 3px 2px 6px;
+  }
+
+  .stock-nom {
+    display: none;
+  }
+
+  .stock-icone {
+    flex-shrink: 0;
+    font-size: 1.15rem;
+  }
+
+  .stock-nombre {
+    flex: 1;
+    min-width: 0;
+    font-size: 1rem;
+    text-align: right;
+  }
+
+  .pioche .jauge-texte span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .stock-punaise {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .stock-vendre {
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 0.85rem;
+  }
+
+  .stock .btn-grand {
+    min-height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .stock-reglage {
+    margin-left: 0;
+  }
+}
