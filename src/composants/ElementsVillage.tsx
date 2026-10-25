@@ -89,6 +89,7 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
       height={calage.hauteur}
       draggable={false}
       data-cible={`batiment:${id}`}
+      data-miroir={miroir ? 'oui' : undefined}
       style={{ transform: transformationSprite(calage, x, y, taille, miroir), zIndex: profondeur(x + taille / 2, y + taille / 2) }}
     />
   )

@@ -70,6 +70,7 @@ import {
   secondesTrajetMineur,
   secondesVidageAscenseur,
   totalObjets,
+  vendreDuCoffrePour,
   type EtatJeu,
   type Employe,
   type Navette,
@@ -452,6 +453,11 @@ export function depensesParPaie(etat: EtatJeu): number {
 function payerParManager(etat: EtatJeu): void {
   const manager = etat.manager
   if (!managerPaieLesSalaires(etat)) return
+  // (25/10) Pas assez d'argent : il vend un peu du coffre pour payer (voir vendreDuCoffrePour).
+  const trouverArgent = (salaire: number) => {
+    if (etat.argent < salaire) vendreDuCoffrePour(etat, salaire - etat.argent)
+  }
+  if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER) trouverArgent(salaireManager())
   if (manager.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaireManager()) {
     etat.argent -= salaireManager()
     etat.stats.salairesPayes += salaireManager()
@@ -461,6 +467,7 @@ function payerParManager(etat: EtatJeu): void {
   const parSalaire = [...etat.employes].sort((a, b) => salaireEmploye(a) - salaireEmploye(b))
   for (const employe of parSalaire) {
     const salaire = salaireEmploye(employe)
+    if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER) trouverArgent(salaire)
     if (employe.tempsPaye < SECONDES_AVANT_PAIE_MANAGER && etat.argent >= salaire) {
       etat.argent -= salaire
       etat.stats.salairesPayes += salaire

@@ -28,8 +28,8 @@ ont changé, les recopier dans le jeu :
 | Fichier | Ce qu'il dessine |
 |---|---|
 | `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers |
-| `batiments.mjs` | La dalle de pavés, le marché, le forgeron, le Personnel, la foreuse, le générateur et l'icône des rails |
-| `mine.mjs` | La mine (10 × 10), son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
+| `batiments.mjs` | La dalle de pavés, le marché, le forgeron, le Personnel, la foreuse (25/10 : la grosse mèche en acier, `meche()`, et les bandes de chantier, `bandesChantier()`), le générateur et l'icône des rails |
+| `mine.mjs` | La mine (10 × 10) : la montagne toute ronde du fond (`montagne()`, une courbe qui passe par les points de sa crête), ses filons, ses grappes de cristaux et ses étincelles, le chevalement, la galerie et son wagonnet, le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
 | `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
 
@@ -56,6 +56,11 @@ Le jeu dessine par-dessus `mine.svg` (voir `DessinEvolutionMine` dans
 puits, coupée sous le bord de devant du puits, puis `mine-devant.svg` (les poutres de devant du
 puits, dans le même cadre que la mine) qui passe devant la caisse. Les caisses sont dessinées dans
 le cadre de la mine puis recadrées : leur position dans la mine est `POINTS_MINE.caisse`.
+
+La montagne a besoin de place au-dessus de l'emprise (`HAUT` dans `mine.mjs`, 300 depuis le 25/10) :
+si on change `HAUT`, tous les points de `POINTS_MINE` bougent d'autant (pas `CABINE_EN_HAUT` /
+`CABINE_EN_BAS`, qui sont des décalages). La foreuse aussi est plus haute que les autres bâtiments
+(son portique et sa trémie) : son calage est différent.
 
 ## Les arbres
 

@@ -75,12 +75,13 @@ export function prixEnGemmes(cout: Cout): number {
 
 // (25/10) Le nom et la description restent en français ici : l'interface les traduit avec t()
 // au moment de les afficher (comme les tables de donnees.ts).
-export type InfoBoost = { id: IdBoost; nom: string; emoji: string; description: string; minutes: number; gemmes: number }
+// « court » : ce qu'il fait, en deux signes, pour les petites cases du cadeau du jour.
+export type InfoBoost = { id: IdBoost; nom: string; court: string; emoji: string; description: string; minutes: number; gemmes: number }
 
 export const BOOSTS: Record<IdBoost, InfoBoost> = {
-  production: { id: 'production', nom: 'Production × 2', emoji: '⚡', description: 'La mine, les mineurs et la foreuse creusent deux fois plus vite.', minutes: 15, gemmes: 8 },
-  ventes: { id: 'ventes', nom: 'Ventes × 2', emoji: '💰', description: 'Tout ce que tu vends rapporte le double : coffre, wagonnets, foreuse.', minutes: 10, gemmes: 8 },
-  clics: { id: 'clics', nom: 'Clics en or', emoji: '👆', description: 'Chaque clic sur le bloc de la mine en casse 3.', minutes: 5, gemmes: 4 },
+  production: { id: 'production', nom: 'Production × 2', court: '×2', emoji: '⚡', description: 'La mine, les mineurs et la foreuse creusent deux fois plus vite.', minutes: 15, gemmes: 8 },
+  ventes: { id: 'ventes', nom: 'Ventes × 2', court: '×2', emoji: '💰', description: 'Tout ce que tu vends rapporte le double : coffre, wagonnets, foreuse.', minutes: 10, gemmes: 8 },
+  clics: { id: 'clics', nom: 'Clics en or', court: '×3', emoji: '👆', description: 'Chaque clic sur le bloc de la mine en casse 3.', minutes: 5, gemmes: 4 },
 }
 export const LISTE_BOOSTS: IdBoost[] = ['production', 'ventes', 'clics']
 
@@ -138,22 +139,22 @@ export function acheterTresor(etat: EtatJeu): string[] {
 // Les récompenses quotidiennes
 // ---------------------------------------------------------------------------
 
-// Une récompense : des gemmes, de l'argent (en « parts » : une part vaut ARGENT_QUOTIDIEN selon
-// le palier de la mine), et parfois un bonus.
-export type Recompense = { gemmes: number; argent: number; boost?: { id: IdBoost; minutes: number } }
+// Une récompense : des gemmes, et des bonus pour un temps.
+// (25/10) Plus d'argent : 3 000 $ au jour 3, ce n'était plus rien trois jours plus tard. Les
+// bonus, eux, valent toujours le coup, quel que soit l'avancement du joueur.
+export type BonusCadeau = { id: IdBoost; minutes: number }
+export type Recompense = { gemmes: number; bonus: BonusCadeau[] }
 
 // Les 7 jours de la série. Le 7e est le gros lot ; après, on recommence au jour 1.
 export const RECOMPENSES_QUOTIDIENNES: Recompense[] = [
-  { gemmes: 1, argent: 1 },
-  { gemmes: 2, argent: 0 },
-  { gemmes: 1, argent: 3 },
-  { gemmes: 3, argent: 0 },
-  { gemmes: 2, argent: 0, boost: { id: 'ventes', minutes: 10 } },
-  { gemmes: 4, argent: 4 },
-  { gemmes: 10, argent: 0, boost: { id: 'production', minutes: 30 } },
+  { gemmes: 2, bonus: [{ id: 'clics', minutes: 10 }] },
+  { gemmes: 3, bonus: [{ id: 'ventes', minutes: 15 }] },
+  { gemmes: 3, bonus: [{ id: 'production', minutes: 15 }] },
+  { gemmes: 4, bonus: [{ id: 'ventes', minutes: 30 }] },
+  { gemmes: 5, bonus: [{ id: 'production', minutes: 30 }] },
+  { gemmes: 6, bonus: [{ id: 'ventes', minutes: 30 }, { id: 'clics', minutes: 15 }] },
+  { gemmes: 12, bonus: [{ id: 'production', minutes: 60 }, { id: 'ventes', minutes: 60 }] },
 ]
-
-export const ARGENT_QUOTIDIEN = [200, 1000, 4000, 12000, 30000]
 
 // Une date → « 2026-10-25 » (le jour du joueur, à son heure locale).
 export function jourDe(date: Date): string {
@@ -177,22 +178,12 @@ export function etatQuotidien(etat: EtatJeu, aujourdhui: string): { jour: number
   return { jour: continue_ ? (q.serie % RECOMPENSES_QUOTIDIENNES.length) + 1 : 1, disponible: true }
 }
 
-export function argentRecompense(etat: EtatJeu, recompense: Recompense): number {
-  return recompense.argent * ARGENT_QUOTIDIEN[Math.max(0, Math.min(etat.niveauMine, ARGENT_QUOTIDIEN.length) - 1)]
-}
-
 export function recupererQuotidien(etat: EtatJeu, aujourdhui: string): string[] {
   const { jour, disponible } = etatQuotidien(etat, aujourdhui)
   if (!disponible) return []
   const recompense = RECOMPENSES_QUOTIDIENNES[jour - 1]
   gagnerGemmes(etat, recompense.gemmes)
-  const argent = argentRecompense(etat, recompense)
-  etat.argent += argent
-  if (recompense.boost) prolongerBoost(etat, recompense.boost.id, recompense.boost.minutes)
+  for (const bonus of recompense.bonus) prolongerBoost(etat, bonus.id, bonus.minutes)
   etat.quotidien = { dernierJour: aujourdhui, serie: jour }
-  return [
-    argent > 0
-      ? t('🎁 Jour {jour} : +{gemmes} 💎 et +{argent} $ !', { jour, gemmes: recompense.gemmes, argent: nombre(argent) })
-      : t('🎁 Jour {jour} : +{gemmes} 💎 !', { jour, gemmes: recompense.gemmes }),
-  ]
+  return [t('🎁 Jour {jour} : +{gemmes} 💎 !', { jour, gemmes: recompense.gemmes })]
 }

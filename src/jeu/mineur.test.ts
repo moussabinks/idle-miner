@@ -18,6 +18,7 @@ import {
   payer,
   peutPayer,
   aVendreDuCoffre,
+  changerGarder,
   reglerGarder,
   reparer,
   secondesChargementAscenseur,
@@ -150,13 +151,20 @@ describe('vendre le coffre de la mine (25/10 : plus de sac ni de marché à pied
     vendreCoffre(etat)
     expect(etat.coffre.contenu).toEqual({ fer: 8, pierre: 4 })
     expect(etat.argent).toBe(6)
-    // Le bouton d'une ligne vend tout ce minerai, même ce qu'on garde.
+    // (25/10) Le bouton d'une ligne respecte aussi ce qu'on garde : 8 fer < 20, rien ne se vend.
+    vendreMinerai(etat, 'fer')
+    expect(etat.coffre.contenu).toEqual({ fer: 8, pierre: 4 })
+    expect(etat.argent).toBe(6)
+    // Les boutons −10 / +10 : garder 10 fer de moins, il en reste 10 à garder ; puis −100 : plus rien.
+    changerGarder(etat, 'fer', -10)
+    expect(etat.coffre.garder?.fer).toBe(10)
+    changerGarder(etat, 'fer', -100)
     vendreMinerai(etat, 'fer')
     expect(etat.coffre.contenu).toEqual({ pierre: 4 })
     expect(etat.argent).toBe(6 + 8 * 12)
     // Garder 0 : on n'en garde plus.
     reglerGarder(etat, 'pierre', 0)
-    expect(etat.coffre.garder).toEqual({ fer: 20 })
+    expect(etat.coffre.garder).toEqual({})
     expect(aVendreDuCoffre(etat)).toEqual({ pierre: 4 })
   })
 

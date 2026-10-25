@@ -19,14 +19,14 @@
   font-size: 2.2rem;
 }
 
-.boutique-pub {
+.boutique-video {
   display: flex;
   align-items: center;
   gap: 12px;
   background: #efe8ff;
 }
 
-.boutique-pub-icone,
+.boutique-video-icone,
 .boutique-icone {
   font-size: 2rem;
 }
@@ -38,57 +38,65 @@
   gap: 2px;
 }
 
-/* --- La publicité (Publicite.tsx) : un écran noir et un compte à rebours ----------------- */
-
-.publicite {
+/* --- La fausse publicité (Publicite.tsx) : un écran noir et un compte à rebours -------------
+   ⚠️ Jamais « pub » ni « publicite » dans un nom de classe :
+   les bloqueurs de publicités cachent ces éléments. */
+.ecran-video {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 2147483000; /* par-dessus absolument tout */
   display: flex;
   align-items: center;
   justify-content: center;
   background: #000;
   color: var(--blanc);
+  font-family: var(--police);
 }
 
-.publicite-etiquette {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 2px 10px;
-  border: var(--trait-fin) solid var(--blanc);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.publicite-quitter {
+.ecran-video-quitter {
   position: absolute;
   top: 12px;
   right: 12px;
 }
 
-.publicite-centre {
+.ecran-video-centre {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  padding: 16px;
+  text-align: center;
 }
 
-.publicite-compte {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 120px;
-  height: 120px;
-  border: 6px solid var(--blanc);
+.ecran-video-titre {
+  margin: 0;
+  font-family: var(--police-titre);
+  font-size: 1.8rem;
+}
+
+/* Le compte à rebours, dans un anneau blanc qui se vide. */
+.ecran-video-compte {
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
+  background: conic-gradient(var(--blanc) var(--part, 360deg), #333 0);
+}
+
+.ecran-video-compte span {
+  display: grid;
+  place-items: center;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  background: #000;
   font-family: var(--police-titre);
   font-size: 3.5rem;
 }
 
-.publicite-texte {
+.ecran-video-texte {
+  margin: 0;
   font-size: 1.1rem;
   color: #c9c2e4;
 }
@@ -109,7 +117,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 4px;
+  padding: 6px 4px 8px;
   border: var(--trait) solid var(--encre);
   border-radius: 14px;
   background: var(--blanc);
@@ -136,19 +144,65 @@
   background: var(--violet);
 }
 
+/* En haut, petit : le paquet et « Jour 3 », sur la même ligne. */
 .quotidien-numero {
   font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-.quotidien-cadeau {
-  font-size: 1.8rem;
-  line-height: 1;
+/* En grand : les gemmes. */
+.quotidien-gemmes {
+  font-family: var(--police-titre);
+  font-size: 1.6rem;
+  line-height: 1.1;
 }
 
-.quotidien-contenu {
+.quotidien-bonus {
   display: flex;
   flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+/* Chaque bonus : une petite étiquette crème au contour d'encre (« ⚡ ×2 », puis « 15 min »). */
+.quotidien-bonus-un {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1px 4px 2px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 8px;
+  background: var(--creme);
+  line-height: 1.15;
+}
+
+.quotidien-bonus-un b {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.05rem;
+}
+
+.quotidien-bonus-un small {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* La légende des bonus, sous les cases. */
+.quotidien-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin: 0;
   font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.quotidien-jour.gros-lot .quotidien-bonus {
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .quotidien-revenir {

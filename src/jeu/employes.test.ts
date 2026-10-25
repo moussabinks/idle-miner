@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { niveauJoueur } from './niveaux'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
-import { NIVEAUX_EMPLOYE, NIVEAUX_MANAGER, PRIX_EMBAUCHE, PRIX_EMBAUCHE_POUSSEUR, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE } from './donnees'
+import { BLOCS, NIVEAUX_EMPLOYE, NIVEAUX_MANAGER, PRIX_EMBAUCHE, PRIX_EMBAUCHE_POUSSEUR, PRIX_MANAGER, RARETES, SALAIRES, SALAIRE_MANAGER, SECONDES_PAR_PAIE, type IdBloc } from './donnees'
 import {
   activiteEmploye,
   caseQuai,
@@ -44,7 +44,7 @@ import {
   tirerRarete,
   vitesseEmploye,
 } from './employes'
-import { nbDansCoffre, type EtatJeu } from './mineur'
+import { GARDER_TOUT, nbDansCoffre, reglerGarder, type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 
 function partie(argent = 1_000_000): EtatJeu {
@@ -311,12 +311,31 @@ describe('le manager (niveau 3 de la mine)', () => {
     expect(etat.stats.salairesPayes).toBeGreaterThan(payes)
   })
 
-  it('sans argent, plus personne n’est payé', () => {
+  it('(25/10) sans argent, il vend un peu du coffre pour payer les salaires (bug de l’absence)', () => {
     const etat = partie()
     etat.niveauMine = 3
     embaucher(etat, hasard())
     embaucherManager(etat)
     etat.argent = 0
+    etat.coffre.contenu = { pierre: 500, diamant: 5 }
+    reglerGarder(etat, 'diamant', GARDER_TOUT)
+    const payes = etat.stats.salairesPayes
+    avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
+    // Les salaires sont payés, avec la pierre (les diamants gardés ne sont pas vendus).
+    expect(etat.stats.salairesPayes).toBeGreaterThan(payes)
+    expect(etat.coffre.contenu.pierre ?? 0).toBeLessThan(500)
+    expect(etat.coffre.contenu.diamant).toBe(5)
+    expect(etat.argent).toBeGreaterThanOrEqual(0)
+  })
+
+  it('sans argent ni rien à vendre, plus personne n’est payé', () => {
+    const etat = partie()
+    etat.niveauMine = 3
+    embaucher(etat, hasard())
+    embaucherManager(etat)
+    etat.argent = 0
+    // (tout ce qui arrive dans le coffre est gardé : il n'y a rien à vendre)
+    for (const bloc of Object.keys(BLOCS) as IdBloc[]) reglerGarder(etat, bloc, GARDER_TOUT)
     const payes = etat.stats.salairesPayes
     avancerEmployes(etat, 3 * SECONDES_PAR_PAIE, hasard())
     expect(etat.manager.tempsPaye).toBe(0)

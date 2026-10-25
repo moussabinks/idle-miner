@@ -634,8 +634,29 @@ export function vendreCoffre(etat: EtatJeu, lot?: Inventaire): string[] {
 }
 
 // Vend tout un minerai du coffre (même ce qu'on garde).
+// (25/10, bug de l'absence) Vend juste assez du coffre pour avoir « montant » $ de plus : les
+// minerais les moins chers d'abord, jamais ce qu'on garde. Le manager s'en sert pour payer les
+// salaires quand l'argent manque : sans ça, pendant l'absence, il vidait l'argent du joueur en
+// salaires pendant que tout ce que les mineurs creusaient s'entassait dans le coffre.
+// Renvoie ce que la vente a rapporté.
+export function vendreDuCoffrePour(etat: EtatJeu, montant: number): number {
+  let gagne = 0
+  const lot = aVendreDuCoffre(etat)
+  const moinsChersDAbord = parPrix(lot).reverse()
+  for (const [bloc, disponibles] of moinsChersDAbord) {
+    if (gagne >= montant) break
+    const prixPiece = valeurDe({ [bloc]: 1 }, etat)
+    if (prixPiece <= 0) continue
+    const n = Math.min(disponibles, Math.ceil((montant - gagne) / prixPiece))
+    const avant = etat.argent
+    vendreCoffre(etat, { [bloc]: n })
+    gagne += etat.argent - avant
+  }
+  return gagne
+}
+
 export function vendreMinerai(etat: EtatJeu, bloc: IdBloc): string[] {
-  return vendreCoffre(etat, { [bloc]: etat.coffre.contenu[bloc] ?? 0 })
+  return vendreCoffre(etat, { [bloc]: aVendreDuCoffre(etat)[bloc] ?? 0 })
 }
 
 // (25/10) La punaise 📌 du panneau de la mine : « garder tout » ce minerai (il n'est plus vendu,
@@ -648,6 +669,13 @@ export function estGardeTout(etat: EtatJeu, bloc: IdBloc): boolean {
 
 export function basculerGarderTout(etat: EtatJeu, bloc: IdBloc): string[] {
   return reglerGarder(etat, bloc, estGardeTout(etat, bloc) ? 0 : GARDER_TOUT)
+}
+
+// (25/10) Les boutons « −100 −10 +10 +100 » du coffre : change ce qu'on garde d'un minerai.
+// En partant de « tout garder », on part du nombre qu'il y a dans le coffre.
+export function changerGarder(etat: EtatJeu, bloc: IdBloc, pas: number): string[] {
+  const actuel = estGardeTout(etat, bloc) ? (etat.coffre.contenu[bloc] ?? 0) : garderDansLeCoffre(etat, bloc)
+  return reglerGarder(etat, bloc, Math.max(0, actuel + pas))
 }
 
 // Règle le « 📌 Garder N » d'un minerai (0 : on peut tout vendre).

@@ -13,7 +13,7 @@
 |---|---:|---|
 | 📺 Regarder une **publicité** jusqu'au bout | **1 💎** | `GEMMES_PAR_PUB`, `recompenserPub` |
 | ⭐ Gagner un **niveau du joueur** | **3 💎** par niveau (42 du niveau 2 au niveau 15) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
-| 🎁 Le **cadeau du jour** | 1 à 10 💎 selon le jour de la série (23 par semaine) | `RECOMPENSES_QUOTIDIENNES` |
+| 🎁 Le **cadeau du jour** | 2 à 12 💎 selon le jour de la série (35 par semaine), plus des bonus | `RECOMPENSES_QUOTIDIENNES` |
 | 🎉 Une **ancienne partie** convertie le 25/10 | 10 💎 offertes (une fois) | `GEMMES_CADEAU` dans `sauvegarde.ts` |
 
 Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +3 💎 ».
@@ -72,19 +72,20 @@ Un **calendrier de 7 jours**. Chaque jour où l'on revient, on ouvre le cadeau d
 
 - **Quand** : le cadeau s'ouvre **tout seul une fois** en arrivant dans le jeu, s'il est disponible (après le tutoriel, et après la fenêtre du retour). Sinon, un bouton rond jaune 🎁 (qui attire l'œil quand le cadeau attend) le rouvre.
 - **Le jour** compte à l'heure du joueur (`jourDe` : « 2026-10-25 »). La partie garde le dernier jour pris et la série (`etat.quotidien`, `etatQuotidien`, `recupererQuotidien`).
-- **L'argent** du cadeau se compte en « parts » : une part vaut `ARGENT_QUOTIDIEN` selon le palier de la mine (**200 $, 1 000 $, 4 000 $, 12 000 $, 30 000 $** aux niveaux 1 à 5 de la mine), pour que le cadeau garde sa valeur toute la partie.
+- **Pas d'argent** (25/10, à la demande du propriétaire) : 3 000 $ au jour 3 ne valaient plus rien trois jours plus tard. Chaque jour donne des **gemmes** et au moins un **bonus** de la boutique (les bonus s'ajoutent au temps qui reste).
+- **La fenêtre** : chaque case montre en petit « 🎁 Jour 3 » sur une ligne, puis **en grand** les gemmes et les bonus (« ⚡ ×2 / 15 min », `court` dans `BOOSTS`) ; une légende explique les bonus sous les cases. L'ouverture est animée (rayons, paquet qui saute, récompenses qui sortent).
 
-| Jour | Gemmes | Argent (parts) | Bonus | Argent à la mine niveau 1 / 3 / 5 |
-|---:|---:|---:|---|---|
-| 1 | 1 💎 | 1 | — | 200 $ / 4 000 $ / 30 000 $ |
-| 2 | 2 💎 | — | — | — |
-| 3 | 1 💎 | 3 | — | 600 $ / 12 000 $ / 90 000 $ |
-| 4 | 3 💎 | — | — | — |
-| 5 | 2 💎 | — | 💰 Ventes × 2 pendant 10 min | — |
-| 6 | 4 💎 | 4 | — | 800 $ / 16 000 $ / 120 000 $ |
-| **7** | **10 💎** | — | ⚡ **Production × 2 pendant 30 min** | — |
+| Jour | Gemmes | Bonus |
+|---:|---:|---|
+| 1 | 2 💎 | 👆 Clics en or 10 min |
+| 2 | 3 💎 | 💰 Ventes × 2 15 min |
+| 3 | 3 💎 | ⚡ Production × 2 15 min |
+| 4 | 4 💎 | 💰 Ventes × 2 30 min |
+| 5 | 5 💎 | ⚡ Production × 2 30 min |
+| 6 | 6 💎 | 💰 Ventes × 2 30 min + 👆 Clics en or 15 min |
+| **7** | **12 💎** | ⚡ **Production × 2 60 min** + 💰 **Ventes × 2 60 min** |
 
-Une semaine complète rapporte **23 gemmes**. Message : « 🎁 Jour 3 : +1 💎 et +12 000 $ ! ».
+Une semaine complète rapporte **35 gemmes**. Message : « 🎁 Jour 3 : +3 💎 ! ».
 
 ## 5. Le retour d'absence × 2 (`FenetreAbsence.tsx`, `absence.ts`)
 
@@ -98,7 +99,7 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 
 | Fichier | Rôle |
 |---|---|
-| `src/jeu/gemmes.ts` | Toutes les règles : gagner des gemmes (`gagnerGemmes`, `recompenserPub`), le prix en gemmes (`valeurEnDollars`, `prixEnGemmes`), les bonus (`BOOSTS`, `acheterBoost`, `boostActif`, `secondesBoost`, `multiplicateurVentes`, `multiplicateurProduction`), le trésor (`TRESOR`, `acheterTresor`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `ARGENT_QUOTIDIEN`, `etatQuotidien`, `recupererQuotidien`, `jourDe`, `veille`). Testé dans `gemmes.test.ts`. |
+| `src/jeu/gemmes.ts` | Toutes les règles : gagner des gemmes (`gagnerGemmes`, `recompenserPub`), le prix en gemmes (`valeurEnDollars`, `prixEnGemmes`), les bonus (`BOOSTS`, `acheterBoost`, `boostActif`, `secondesBoost`, `multiplicateurVentes`, `multiplicateurProduction`), le trésor (`TRESOR`, `acheterTresor`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `etatQuotidien`, `recupererQuotidien`, `jourDe`, `veille`). Testé dans `gemmes.test.ts`. |
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
 | `src/jeu/niveaux.ts` | Les 3 gemmes de chaque niveau gagné (`mettreAJourXp`). |
 | `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |

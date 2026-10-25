@@ -73,10 +73,10 @@ export const RETRAIT_BATIMENT = 0
 // l'angle des cases, deux fois plus grands que le monde : une case y fait 66 pixels de large.
 // Ces chiffres sont affichés par « node outils/art/fabriquer.mjs » : les recopier s'ils changent.
 export const CALAGES: Record<IdBatiment, Calage> = {
-  // La mine (10 × 10) : le puits, son chevalement et la petite montagne de rochers.
-  puits: { largeur: 684, hauteur: 570, gauche: { x: 12, y: 366.4 }, bas: { x: 342, y: 557.8 }, droite: { x: 672, y: 366.4 } },
+  // La mine (10 × 10) : le puits, son chevalement, la montagne aux cristaux et sa galerie.
+  puits: { largeur: 684, hauteur: 695, gauche: { x: 12, y: 491.4 }, bas: { x: 342, y: 682.8 }, droite: { x: 672, y: 491.4 } },
   employes: { largeur: 354, hauteur: 383, gauche: { x: 12, y: 275.7 }, bas: { x: 177, y: 371.4 }, droite: { x: 342, y: 275.7 } },
-  foreuse: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
+  foreuse: { largeur: 354, hauteur: 453, gauche: { x: 12, y: 345.7 }, bas: { x: 177, y: 441.4 }, droite: { x: 342, y: 345.7 } },
   forgeron: { largeur: 354, hauteur: 403, gauche: { x: 12, y: 295.7 }, bas: { x: 177, y: 391.4 }, droite: { x: 342, y: 295.7 } },
   generateur: { largeur: 354, hauteur: 403, gauche: { x: 12, y: 295.7 }, bas: { x: 177, y: 391.4 }, droite: { x: 342, y: 295.7 } },
   marche: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
@@ -87,35 +87,35 @@ export const CALAGES: Record<IdBatiment, Calage> = {
 // « node outils/art/fabriquer.mjs » : les recopier si on change le dessin de la mine.
 export const POINTS_MINE = {
   // où est posée la caisse (son image), à sa hauteur de référence (décalage 0 : posée au sol)
-  caisse: { x: 282, y: 215, largeur: 120, hauteur: 177 },
+  caisse: { x: 282, y: 340, largeur: 120, hauteur: 177 },
   // où les deux câbles sortent du treuil, et où ils s'accrochent à la caisse
   treuil: [
-    [292.5, 210.4],
-    [391.5, 210.4],
+    [292.5, 335.4],
+    [391.5, 335.4],
   ] as [number, number][],
   accroches: [
-    [292.5, 302.4],
-    [391.5, 302.4],
+    [292.5, 427.4],
+    [391.5, 427.4],
   ] as [number, number][],
   // où se tient un mineur dans la caisse (ses pieds), et le bord de devant de la caisse (de
   // droite à gauche) : on ne le voit qu'au-dessus de ce bord
-  piedDansLaCaisse: [342, 350.4] as [number, number],
+  piedDansLaCaisse: [342, 475.4] as [number, number],
   bordCaisse: [
-    [391.5, 304.4],
-    [342, 333.1],
-    [292.5, 304.4],
+    [391.5, 429.4],
+    [342, 458.1],
+    [292.5, 429.4],
   ] as [number, number][],
   // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la caisse ne se voit
   // qu'au-dessus de ce bord (en dessous, elle est dans le puits)
   bordDuPuits: [
-    [236.4, 354.4],
-    [342, 415.6],
-    [447.6, 354.4],
+    [236.4, 479.4],
+    [342, 540.6],
+    [447.6, 479.4],
   ] as [number, number][],
-  // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
-  panneau: [124.2, 388.9] as [number, number],
+  // le pied du panneau du niveau de la mine, sur le sol de devant, près de la porte
+  panneau: [246.3, 596.2] as [number, number],
   // au-dessus de la roue du chevalement et de la jauge du coffre (pour la mini-jauge du déchargement)
-  dessus: [342, -24] as [number, number],
+  dessus: [342, 101.4] as [number, number],
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer

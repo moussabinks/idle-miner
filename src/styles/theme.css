@@ -816,3 +816,47 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================================
+   (25/10) Les fenêtres s'adaptent à l'écran : sur un téléphone ou un écran peu haut, tout se
+   resserre (bandeau, marges, onglets) pour défiler le moins possible.
+   ========================================================================= */
+
+@media (max-width: 640px), (max-height: 760px) {
+  .fenetre-entete {
+    padding: 6px 8px 6px 14px;
+    border-bottom-width: 3px;
+  }
+
+  .fenetre-entete h2 {
+    font-size: 1.25rem;
+  }
+
+  .fenetre-icone {
+    font-size: 1.4rem;
+  }
+
+  .fenetre-entete .btn-rond {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+  }
+
+  .fenetre-corps {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .onglet {
+    min-height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .fenetre,
+  .fenetre-petite,
+  .fenetre-grande {
+    max-height: 94dvh;
+  }
+}

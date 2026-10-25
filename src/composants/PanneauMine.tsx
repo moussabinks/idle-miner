@@ -22,7 +22,9 @@ import {
   descendreNiveauMine,
   durabiliteRestante,
   estCassee,
+  changerGarder,
   estGardeTout,
+  garderDansLeCoffre,
   nbDansCoffre,
   noterCombo,
   peutPayer,
@@ -202,7 +204,9 @@ function CoffreMine() {
       vendreTout={(e) => vendreCoffre(e)}
       vendre={(bloc) => (e) => vendreMinerai(e, bloc)}
       aVendre={aVendreDuCoffre(etat)}
-      garde={(bloc) => estGardeTout(etat, bloc)}
+      garde={(bloc) => garderDansLeCoffre(etat, bloc)}
+      toutGarde={(bloc) => estGardeTout(etat, bloc)}
+      changerGarde={(bloc, pas) => (e) => changerGarder(e, bloc, pas)}
       basculerGarde={(bloc) => (e) => basculerGarderTout(e, bloc)}
       textePlein={t('Plein : la mine s’arrête !')}
       tuto

@@ -131,6 +131,7 @@ Total : 245 000 $.
 
 - **Embauche : 8 000 $** (`PRIX_MANAGER`, 25/10 ; avant 10 000 $), ses 5 premières minutes comprises. **Son salaire : 400 $ toutes les 5 minutes** (`SALAIRE_MANAGER`), pris dans l'argent du joueur.
 - **Il paie tout seul** : dès qu'il reste moins d'une minute payée, il paie 5 minutes de plus **avec l'argent du joueur**, d'abord lui-même, puis les employés du moins cher au plus cher. S'il n'est pas payé, il ne paie plus personne.
+- **(25/10) Il vend du coffre s'il le faut** : quand l'argent ne suffit pas pour un salaire, il vend juste ce qu'il faut du coffre de la mine, les minerais les moins chers d'abord, jamais ceux qu'on garde (📌) (`vendreDuCoffrePour`). Avant, pendant une absence, il vidait l'argent du joueur en salaires pendant que tout ce que les mineurs creusaient s'entassait dans le coffre : on revenait sans un sou.
 - **La fatigue** : il ne reste éveillé qu'un temps, **jeu ouvert comme jeu fermé**, puis il s'endort et ne paie plus personne, jusqu'à ce qu'on le **☕ Réveille** au Personnel. On ne peut donc pas laisser le jeu tourner tout seul à l'infini. Ses 3 niveaux (`NIVEAUX_MANAGER`, `PALIER_CHEF.manager`, 25/10) :
 
 | Niveau | Reste éveillé | Prix | Palier |

@@ -5,7 +5,6 @@ import { aleatoireAvecGraine } from './aleatoire'
 import { construireBatiment } from './batiments'
 import { NIVEAUX_COFFRE } from './donnees'
 import {
-  ARGENT_QUOTIDIEN,
   BOOSTS,
   GEMMES_PAR_NIVEAU,
   GEMMES_PAR_PUB,
@@ -169,7 +168,8 @@ describe('les récompenses quotidiennes', () => {
     expect(etatQuotidien(etat, '2026-10-25')).toEqual({ jour: 1, disponible: true })
     expect(recupererQuotidien(etat, '2026-10-25')[0]).toContain('Jour 1')
     expect(etat.gemmes).toBe(RECOMPENSES_QUOTIDIENNES[0].gemmes)
-    expect(etat.argent).toBe(RECOMPENSES_QUOTIDIENNES[0].argent * ARGENT_QUOTIDIEN[0])
+    // (25/10) plus d'argent : des gemmes et un bonus
+    expect(boostActif(etat, 'clics')).toBe(true)
     expect(etat.quotidien).toEqual({ dernierJour: '2026-10-25', serie: 1 })
   })
 
@@ -211,17 +211,21 @@ describe('les récompenses quotidiennes', () => {
     }
     expect(etat.gemmes).toBe(RECOMPENSES_QUOTIDIENNES.reduce((total, r) => total + r.gemmes, 0))
     expect(etat.quotidien.serie).toBe(7)
-    // Le 7e jour donne aussi le bonus « production » (et le 5e « ventes »).
-    expect(RECOMPENSES_QUOTIDIENNES[6].boost?.id).toBe('production')
+    // Le 7e jour donne aussi les bonus « production » et « ventes ».
+    expect(RECOMPENSES_QUOTIDIENNES[6].bonus.map((b) => b.id)).toEqual(['production', 'ventes'])
     expect(boostActif(etat, 'production')).toBe(true)
     expect(boostActif(etat, 'ventes')).toBe(true)
     expect(etatQuotidien(etat, '2026-10-08')).toEqual({ jour: 1, disponible: true })
   })
 
-  it('l’argent de la récompense suit le palier de la mine', () => {
+  it('(25/10) aucun jour ne donne d’argent, chaque jour donne des gemmes et un bonus', () => {
+    for (const r of RECOMPENSES_QUOTIDIENNES) {
+      expect(r.gemmes).toBeGreaterThan(0)
+      expect(r.bonus.length).toBeGreaterThan(0)
+    }
     const etat = partie()
-    etat.niveauMine = 4
+    const argent = etat.argent
     recupererQuotidien(etat, '2026-10-25')
-    expect(etat.argent).toBe(RECOMPENSES_QUOTIDIENNES[0].argent * ARGENT_QUOTIDIEN[3])
+    expect(etat.argent).toBe(argent)
   })
 })

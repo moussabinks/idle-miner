@@ -219,9 +219,20 @@ def redstone():
 
 
 @icone('🟡')
-def pepite():
-    p = poly((14, 62), (24, 34), (50, 20), (78, 28), (90, 56), (74, 82), (40, 86), arrondi=8)
-    return r(p, OR, by=34, bx=38, brx=11, bry=6) + [('#ffffffe0', eclat(70, 40, 8)), ('#e3a11e', inter(p, cercle(58, 66, 8)))]
+def or_():
+    # (25/10) L'or : une pyramide de trois lingots dorés qui brillent (avant, une pépite, pas assez
+    # reconnaissable). Le fer, lui, est une pile de deux lingots gris.
+    def lingot(dx, dy):
+        dessus = poly((14 + dx, 0 + dy), (40 + dx, 0 + dy), (48 + dx, 12 + dy), (6 + dx, 12 + dy))
+        face = poly((6 + dx, 12 + dy), (48 + dx, 12 + dy), (44 + dx, 26 + dy), (10 + dx, 26 + dy))
+        return [
+            ('#c98512', union(dessus, face)),
+            ('#ffe68a', dessus),
+            ('#f5b82e', poly((6 + dx, 12 + dy), (40 + dx, 12 + dy), (38 + dx, 26 + dy), (10 + dx, 26 + dy))),
+            ('#ffffffc0', poly((16 + dx, 3 + dy), (30 + dx, 3 + dy), (28 + dx, 8 + dy), (14 + dx, 8 + dy))),
+        ]
+
+    return lingot(2, 60) + lingot(50, 60) + lingot(26, 34) + [('#ffffffe0', eclat(80, 26, 9))]
 
 
 # ---------------------------------------------------------------------------

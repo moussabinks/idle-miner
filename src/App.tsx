@@ -564,29 +564,29 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           ({t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
         </p>
-        <div className="rangee rangee-centre">
-          {tr && dernier && (
-            <>
-              <button className={`btn btn-petit ${virage === 'gauche' ? 'btn-jaune' : 'btn-blanc'}`} onClick={() => tournerRail('gauche')}>
-                ↰ {t('Gauche')}
-              </button>
-              <button className={`btn btn-petit ${virage === 'droit' ? 'btn-jaune' : 'btn-blanc'}`} onClick={() => tournerRail('droit')}>
-                ⬆ {t('Tout droit')}
-              </button>
-              <button className={`btn btn-petit ${virage === 'droite' ? 'btn-jaune' : 'btn-blanc'}`} onClick={() => tournerRail('droite')}>
-                ↱ {t('Droite')}
-              </button>
-            </>
-          )}
-          {dernier && (
-            <button className="btn btn-rose btn-petit" onClick={retirerDernierRail}>
-              ↩ {t('Retirer le dernier')}
-            </button>
-          )}
+        <div className="rangee rangee-centre rangee-rails">
+          {/* (25/10) La croix des rails, comme une manette : en haut, tout droit ; à gauche et à
+              droite, les virages ; en bas, revenir en arrière (retirer le dernier rail) ; au
+              milieu, poser. La flèche sur la carte montre où va la voie. */}
           {tr && (
-            <button className="btn btn-vert" disabled={!okPropose} onClick={poserRailPropose}>
-              ✔ {t('Poser ce rail')}
-            </button>
+            <div className="croix-rails">
+              <button className={`btn croix-haut ${virage === 'droit' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droit')} aria-label={t('Tout droit')}>
+                ⬆️
+              </button>
+              <button className={`btn croix-gauche ${virage === 'gauche' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('gauche')} aria-label={t('Gauche')}>
+                ↰
+              </button>
+              <button className="btn btn-vert croix-centre" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
+                ✔️
+                <small>{t('Poser')}</small>
+              </button>
+              <button className={`btn croix-droite ${virage === 'droite' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droite')} aria-label={t('Droite')}>
+                ↱
+              </button>
+              <button className="btn btn-rose croix-bas" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
+                ↩
+              </button>
+            </div>
           )}
           <button className="btn btn-jaune" onClick={() => setPinceau(null)}>
             {t('Terminé')}
@@ -680,7 +680,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             onPeindre={peindre}
             trajetEnSurbrillance={batimentActif === 'employes' ? apercuTrajet : null}
             zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
-            railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y) } : null}
+            railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y), depuis: traceRail.poses.at(-1) ?? null, sens: traceRail.sens } : null}
             onOuvrirTrajet={setTrajetsOuverts}
           />
           <Gains gains={gains} />

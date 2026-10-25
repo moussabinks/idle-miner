@@ -589,3 +589,65 @@
     height: 56px;
   }
 }
+
+/* --- La croix des rails (25/10) : comme une manette ---------------------------------------
+        [ ⬆ ]
+   [ ↰ ][ ✔ ][ ↱ ]
+        [ ↩ ]                                                                                 */
+.rangee-rails {
+  align-items: center;
+}
+
+.croix-rails {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 48px);
+  grid-template-areas:
+    '. haut .'
+    'gauche centre droite'
+    '. bas .';
+  gap: 4px;
+}
+
+.croix-rails .btn {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.croix-haut {
+  grid-area: haut;
+}
+
+.croix-gauche {
+  grid-area: gauche;
+}
+
+.croix-droite {
+  grid-area: droite;
+}
+
+.croix-bas {
+  grid-area: bas;
+}
+
+.croix-centre {
+  grid-area: centre;
+  flex-direction: column;
+  gap: 0;
+}
+
+.croix-centre small {
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+/* (25/10) Sur un téléphone ou un écran peu haut, la phrase d'explication sous le titre d'un
+   bâtiment disparaît : la place sert au jeu (on ne doit pas défiler dans la mine). */
+@media (max-width: 640px), (max-height: 760px) {
+  .description-batiment {
+    display: none;
+  }
+}
