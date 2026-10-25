@@ -5,7 +5,10 @@ dessinés différemment (Apple, Google, Windows). Maintenant, une **police d'ic�
 tous par nos propres dessins, dans le style plat du jeu (25/10) : un gros contour d'encre
 (#2a2140), des couleurs franches à plat, et une seule ombre plate en bas à droite.
 
-C'est une police **en couleur** (format COLR, lu par tous les navigateurs) : il n'y a rien à
+C'est une police **en couleur**, en deux formats dans le même fichier (25/10) : **COLR** (des calques de
+couleur, pour Chrome, Edge et Firefox) et **SVG** (pour Safari, sur Mac et iPhone : avec COLR seul,
+Safari montrait les emojis d'Apple, le fer devenait un boulon 🔩), avec des contours **TrueType**.
+Il n'y a rien à
 changer dans le code. Partout où un emoji est écrit (boutons, panneaux, messages, bulles du
 village), le navigateur prend notre dessin. Elle est déclarée dans `src/icones.css` avec un
 `unicode-range` : elle ne sert qu'à ces caractères, le reste du texte garde sa police. Elle est

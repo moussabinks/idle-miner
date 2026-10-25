@@ -3,8 +3,14 @@
 # Le jeu écrivait ses icônes avec des emojis (⛏️, 📦, 💰...), dessinés différemment sur chaque
 # téléphone. Cette police remplace chacun de ces emojis par un vrai dessin, dans le style cartoon
 # du jeu : un gros contour brun foncé, des couleurs franches, une ombre et un reflet. Comme c'est
-# une police (couleur, format COLR), il n'y a rien à changer dans le code : partout où un emoji
-# est écrit, le navigateur prend notre dessin à la place.
+# une police (couleur), il n'y a rien à changer dans le code : partout où un emoji est écrit, le
+# navigateur prend notre dessin à la place.
+#
+# (25/10) Deux formats de couleur dans la même police, pour que TOUS les navigateurs la lisent :
+#   - COLR (des calques de couleur) : Chrome, Edge, Firefox ;
+#   - SVG (un petit dessin SVG par icône) : Safari, sur Mac et iPhone.
+# Et des contours au format TrueType (glyf), le plus répandu. Avant (COLR seul, contours CFF),
+# Safari montrait les emojis d'Apple à la place de nos dessins (le fer devenait un boulon 🔩).
 #
 # Lancer : python3 outils/icones/fabriquer.py (il faut fonttools, skia-pathops et brotli :
 # pip install fonttools skia-pathops brotli). Les dessins sont dans dessins.py.
@@ -13,8 +19,11 @@ import os
 import sys
 
 from fontTools.fontBuilder import FontBuilder
-from fontTools.pens.t2CharStringPen import T2CharStringPen
+from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import newTable
 
 sys.path.insert(0, os.path.dirname(__file__))
 from dessins import ICONES  # noqa: E402
@@ -44,15 +53,30 @@ def couleur(hexa):
 
 
 def vers_police(chemin):
-    """Le chemin (en 100 × 100, y vers le bas) dans les unités de la police (y vers le haut)."""
-    pen = T2CharStringPen(AVANCE, None)
-    chemin.draw(TransformPen(pen, (TAILLE, 0, 0, -TAILLE, (AVANCE - 100 * TAILLE) / 2, HAUT)))
-    return pen.getCharString()
+    """Le chemin (en 100 × 100, y vers le bas) dans les unités de la police (y vers le haut),
+    en contour TrueType (courbes du second degré)."""
+    pen = TTGlyphPen(None)
+    chemin.draw(TransformPen(Cu2QuPen(pen, 1.0, reverse_direction=False), (TAILLE, 0, 0, -TAILLE, (AVANCE - 100 * TAILLE) / 2, HAUT)))
+    return pen.glyph()
+
+
+def vers_svg(chemin):
+    """Le même chemin pour la table SVG : unités de la police, mais y vers le bas (la ligne de
+    base est à y = 0, le haut du dessin à y = -HAUT)."""
+    pen = SVGPathPen(None, ntos=lambda v: str(round(v)))  # (nombres entiers : la police est plus légère)
+    chemin.draw(TransformPen(pen, (TAILLE, 0, 0, TAILLE, (AVANCE - 100 * TAILLE) / 2, -HAUT)))
+    return pen.getCommands()
+
+
+def couleur_svg(hexa):
+    """« #rrggbbaa » → fill et fill-opacity pour le SVG."""
+    hexa = hexa.lstrip('#')
+    opacite = int(hexa[6:8], 16) / 255 if len(hexa) == 8 else 1
+    return f'fill="#{hexa[:6]}"' + (f' fill-opacity="{opacite:.3f}"' if opacite < 1 else '')
 
 
 def vide(avance):
-    pen = T2CharStringPen(avance, None)
-    return pen.getCharString()
+    return TTGlyphPen(None).glyph()
 
 
 def fabriquer():
@@ -62,6 +86,7 @@ def fabriquer():
     cmap = {0x20: 'space', 0xFE0F: 'uFE0F'}
     palette = []
     couches = {}
+    svgs = {}  # nom de l'icône → ses calques en SVG
 
     def indice(c):
         valeur = couleur(c)
@@ -78,10 +103,13 @@ def fabriquer():
         # Dessous : l'ombre (le contour décalé vers le bas), puis le contour, puis les couleurs.
         tous = [(OMBRE, deplace(bord, 0, 2.6)), (CONTOUR, bord)] + calques
         ordre.append(nom)
-        dessins[nom] = vide(AVANCE)
+        # (25/10) le glyphe de base a la silhouette entière (contour et ombre compris) : sans elle,
+        # certains navigateurs coupaient le dessin en couleur à une boîte vide
+        dessins[nom] = vers_police(union(bord, deplace(bord, 0, 2.6)))
         largeurs[nom] = AVANCE
         cmap[code] = nom
         couches[nom] = []
+        svgs[nom] = ''.join(f'<path {couleur_svg(c)} d="{vers_svg(forme)}"/>' for c, forme in tous)
         for i, (c, forme) in enumerate(tous):
             nom_couche = f'{nom}.{i}'
             ordre.append(nom_couche)
@@ -89,17 +117,29 @@ def fabriquer():
             largeurs[nom_couche] = AVANCE
             couches[nom].append((nom_couche, indice(c)))
 
-    fb = FontBuilder(UPM, isTTF=False)
+    fb = FontBuilder(UPM, isTTF=True)
     fb.setupGlyphOrder(ordre)
     fb.setupCharacterMap(cmap)
-    fb.setupCFF(NOM.replace(' ', ''), {'FullName': NOM}, dessins, {})
-    fb.setupHorizontalMetrics({nom: (largeurs[nom], 0) for nom in ordre})
+    fb.setupGlyf(dessins)
+    # (TrueType : la marge de gauche doit être le bord gauche du dessin, sinon il glisse)
+    glyf = fb.font['glyf']
+    fb.setupHorizontalMetrics({nom: (largeurs[nom], getattr(glyf[nom], 'xMin', 0)) for nom in ordre})
     fb.setupHorizontalHeader(ascent=900, descent=-200)
     fb.setupNameTable({'familyName': NOM, 'styleName': 'Regular'})
     fb.setupOS2(sTypoAscender=900, sTypoDescender=-200, usWinAscent=1000, usWinDescent=250)
     fb.setupPost()
     fb.setupCOLR(couches, version=0)
     fb.setupCPAL([palette])
+    fb.setupMaxp()
+
+    # La table SVG (pour Safari) : un document par icône, qui dessine le glyphe « glyphN ».
+    table = newTable('SVG ')
+    table.docList = []
+    for nom in svgs:
+        gid = ordre.index(nom)
+        table.docList.append((f'<svg xmlns="http://www.w3.org/2000/svg"><g id="glyph{gid}">{svgs[nom]}</g></svg>', gid, gid))
+    table.compressed = False
+    fb.font['SVG '] = table
 
     dossier = os.path.join(RACINE, 'public', 'fonts')
     os.makedirs(dossier, exist_ok=True)
