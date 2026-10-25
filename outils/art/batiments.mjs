@@ -179,11 +179,11 @@ export function marche() {
 }
 
 // ---------------------------------------------------------------------------
-// Le forgeron (25/10, redessiné) : une vraie forge. Au fond, un grand four en pierre sombre dont
-// la bouche crache un feu orange ; dessus, une haute cheminée en briques qui fume ; à
-// côté, le soufflet. Devant, la grosse enclume noire sur sa souche, une barre de fer rouge dessus,
-// le marteau et des étincelles ; un tonneau d'eau qui fume (pour tremper le fer), une meule à
-// aiguiser, un tonneau plein d'épées, un tas de charbon et, sur le mur, les outils accrochés.
+// Le forgeron (25/10, redessiné) : une vraie forge. Au fond à droite, un grand four en pierre
+// sombre dont la bouche crache un feu orange, et sa haute cheminée en briques qui fume ; les
+// outils accrochés sur son mur et un tonneau d'eau qui fume (pour tremper le fer). Devant, la
+// grosse enclume noire sur sa souche, une barre de fer rouge dessus, le marteau et des
+// étincelles ; une meule à aiguiser, un tonneau plein d'épées et un tas de charbon.
 // ---------------------------------------------------------------------------
 
 // Les couleurs de la forge : la pierre sombre, les briques de la cheminée, le feu.
@@ -197,20 +197,20 @@ const FEU_CLAIR = '#ffd84a'
 // « epaisseur » cases (de y - epaisseur à y). On dessine la plaque du fond (à l'ombre), le dessus de
 // la table et de la bigorne (éclairés), puis la silhouette de devant.
 const SILHOUETTE_ENCLUME = [
-  [0.22, 0],
-  [0.92, 0],
-  [0.82, 8],
-  [0.7, 12],
-  [0.7, 24],
-  [0.98, 29],
-  [1.04, 42],
-  [0.34, 42],
-  [-0.08, 39],
-  [0.12, 33],
-  [0.36, 28],
-  [0.42, 24],
-  [0.42, 12],
-  [0.3, 8],
+  [0.3, 0],
+  [1.3, 0],
+  [1.15, 7],
+  [1.0, 10],
+  [1.0, 18],
+  [1.4, 22],
+  [1.55, 34],
+  [0.5, 34],
+  [-0.2, 31],
+  [0.2, 26],
+  [0.55, 22],
+  [0.62, 18],
+  [0.62, 10],
+  [0.45, 7],
 ]
 function enclume(t, x, y, z, epaisseur, teinte) {
   const sommet = (y_) => SILHOUETTE_ENCLUME.map(([u, h]) => [x + u, y_, z + h])
@@ -234,31 +234,12 @@ function enclume(t, x, y, z, epaisseur, teinte) {
   }
   t.poly(sommet(y), teinte.gauche)
   // Un reflet sur le bord de la table.
-  t.ligne([x + 0.4, y, z + 39], [x + 0.95, y, z + 39], clair(teinte.gauche, 0.35), 3)
+  t.ligne([x + 0.55, y, z + 31], [x + 1.45, y, z + 31], clair(teinte.gauche, 0.35), 3)
 }
 
 // Une étincelle de forge (une petite étoile jaune à quatre branches), en points du dessin.
 function etincelleForge(x, y, r) {
   return `<path d="M${r1(x)} ${r1(y - r)} L${r1(x + r * 0.28)} ${r1(y - r * 0.28)} L${r1(x + r)} ${r1(y)} L${r1(x + r * 0.28)} ${r1(y + r * 0.28)} L${r1(x)} ${r1(y + r)} L${r1(x - r * 0.28)} ${r1(y + r * 0.28)} L${r1(x - r)} ${r1(y)} L${r1(x - r * 0.28)} ${r1(y - r * 0.28)} Z" fill="${FEU_CLAIR}" stroke="${C.encre}" stroke-width="2.5"/>`
-}
-
-// Le soufflet, en points du dessin : son bec en (x, y), tourné vers la droite. Deux planches en
-// forme de poire, le cuir plissé entre elles, les poignées à gauche.
-function soufflet(x, y) {
-  const planche = (dy) =>
-    `<path d="M${r1(x)} ${r1(y + dy)} L${r1(x - 16)} ${r1(y + dy - 6)} Q${r1(x - 52)} ${r1(y + dy - 22)} ${r1(x - 58)} ${r1(y + dy - 6)} Q${r1(x - 60)} ${r1(y + dy + 10)} ${r1(x - 18)} ${r1(y + dy + 4)} Z" fill="${C.bois}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
-  return (
-    // le bec en métal
-    `<path d="M${r1(x - 18)} ${r1(y + 2)} L${r1(x + 6)} ${r1(y + 6)}" stroke="${C.encre}" stroke-width="12"/><path d="M${r1(x - 18)} ${r1(y + 2)} L${r1(x + 5)} ${r1(y + 6)}" stroke="#6d7290" stroke-width="6"/>` +
-    planche(10) +
-    // le cuir plissé, entre les deux planches
-    `<path d="M${r1(x - 16)} ${r1(y + 3)} L${r1(x - 54)} ${r1(y - 8)} L${r1(x - 56)} ${r1(y + 10)} L${r1(x - 18)} ${r1(y + 12)} Z" fill="#a8693f" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-    [-26, -36, -46].map((dx) => `<path d="M${r1(x + dx)} ${r1(y + dx * 0.28 + 2)} L${r1(x + dx + 4)} ${r1(y + 6)} L${r1(x + dx)} ${r1(y + 11)}" fill="none" stroke="${C.encre}" stroke-width="3"/>`).join('') +
-    planche(-8) +
-    // les poignées
-    `<path d="M${r1(x - 56)} ${r1(y - 14)} L${r1(x - 72)} ${r1(y - 20)} M${r1(x - 56)} ${r1(y + 8)} L${r1(x - 72)} ${r1(y + 10)}" stroke="${C.encre}" stroke-width="10"/>` +
-    `<path d="M${r1(x - 56)} ${r1(y - 14)} L${r1(x - 71)} ${r1(y - 20)} M${r1(x - 56)} ${r1(y + 8)} L${r1(x - 71)} ${r1(y + 10)}" stroke="${C.boisFonce}" stroke-width="5"/>`
-  )
 }
 
 export function forgeron() {
@@ -271,7 +252,7 @@ export function forgeron() {
 
   // Le four : un gros bloc de pierre sombre, au fond à droite. Sa bouche est sur la façade de
   // gauche (celle qu'on voit le mieux), les outils sont accrochés sur celle de droite.
-  const [x0, y0, x1, y1, zMur] = [2.0, 0.4, 4.6, 2.45, 80]
+  const [x0, y0, x1, y1, zMur] = [1.95, 0.4, 4.25, 2.5, 80]
 
   // La lueur du feu, à plat sur les pavés devant la bouche du four.
   const [lx, ly] = t.pt(3.3, 3.25, z)
@@ -314,9 +295,9 @@ export function forgeron() {
     x0,
     y1,
     z,
-    `<path d="M${r1(m - 40)} 0 V-36 A40 40 0 0 1 ${r1(m + 40)} -36 V0 Z" fill="${clair(PIERRE_FORGE, 0.3)}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
-      `<path d="M${r1(m - 40)} -36 A40 40 0 0 1 ${r1(m + 40)} -36" fill="none" stroke="${C.encre}" stroke-width="3" stroke-dasharray="3 14"/>` +
-      `<path d="M${r1(m - 29)} -6 V-34 A29 29 0 0 1 ${r1(m + 29)} -34 V-6 Z" fill="${C.encre}"/>` +
+    `<path d="M${r1(m - 41)} 0 V-34 A41 41 0 0 1 ${r1(m + 41)} -34 V0 Z" fill="${clair(PIERRE_FORGE, 0.3)}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<path d="M${r1(m - 41)} -34 A41 41 0 0 1 ${r1(m + 41)} -34" fill="none" stroke="${C.encre}" stroke-width="3" stroke-dasharray="3 14"/>` +
+      `<path d="M${r1(m - 30)} -6 V-34 A30 30 0 0 1 ${r1(m + 30)} -34 V-6 Z" fill="${C.encre}"/>` +
       `<path d="M${r1(m - 26)} -8 Q${r1(m - 30)} -30 ${r1(m - 14)} -44 Q${r1(m - 12)} -30 ${r1(m - 4)} -34 Q${r1(m - 2)} -50 ${r1(m + 6)} -58 Q${r1(m + 10)} -40 ${r1(m + 16)} -42 Q${r1(m + 30)} -26 ${r1(m + 26)} -8 Z" fill="${FEU}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
       `<path d="M${r1(m - 16)} -8 Q${r1(m - 18)} -24 ${r1(m - 6)} -30 Q${r1(m - 2)} -22 ${r1(m + 4)} -40 Q${r1(m + 18)} -24 ${r1(m + 16)} -8 Z" fill="${FEU_CLAIR}"/>` +
       [-20, -8, 4, 16].map((dx, i) => `<circle cx="${r1(m + dx)}" cy="-8" r="7" fill="${i % 2 ? '#ff6b3a' : '#e2483d'}" stroke="${C.encre}" stroke-width="3"/>`).join('') +
@@ -343,7 +324,7 @@ export function forgeron() {
   )
   // Le dessus du four : une dalle qui déborde un peu, puis la haute cheminée en briques qui fume.
   t.boite(x0 - 0.08, y0 - 0.08, x1 + 0.08, y1 + 0.08, zMur, zMur + 10, teintes(fonce(PIERRE_FORGE, 0.08), fonce(PIERRE_FORGE, 0.3), clair(PIERRE_FORGE, 0.2)))
-  const [c0, c1, d0, d1] = [3.45, 4.25, 0.6, 1.4]
+  const [c0, c1, d0, d1] = [3.2, 3.95, 0.6, 1.35]
   t.boite(c0, d0, c1, d1, zMur + 10, zMur + 30, pierre)
   const zCheminee = 196
   t.boite(c0 + 0.08, d0 + 0.08, c1 - 0.08, d1 - 0.08, zMur + 30, zCheminee, briques)
@@ -360,10 +341,6 @@ export function forgeron() {
     [-2, -38, 17],
   ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="#e6e1d8" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
 
-  // Le soufflet, à gauche de la bouche du four, le bec tourné vers elle.
-  const [sx, sy] = t.pt(1.2, 2.55, z + 14)
-  t.ajouter(soufflet(sx + 26, sy))
-
   // Un tas de charbon au pied de la bouche du four.
   const [kx, ky] = t.pt(2.55, 3.3, z)
   for (const [dx, dy, taille, angle] of [
@@ -376,38 +353,41 @@ export function forgeron() {
   }
 
   // L'enclume, devant à gauche : une souche, la grosse enclume noire, une barre de fer rouge sur
-  // sa table, le marteau posé à côté et des étincelles qui jaillissent.
-  const [ax, ay] = [1.75, 4.3]
-  const zs = z + 18
-  t.cylindre(ax, ay, 0.44, z, zs, bois)
+  // sa table, le marteau appuyé contre la souche et des étincelles qui jaillissent.
+  const [ax, ay] = [1.7, 4.2]
+  const zs = z + 14
+  t.cylindre(ax, ay, 0.46, z, zs, bois)
   const noir = teintes('#4a4658', '#2f2c3a', '#8a869c')
-  enclume(t, ax - 0.62, ay + 0.2, zs, 0.4, noir)
-  // La barre de fer rouge, posée en travers de la table.
-  t.boite(ax - 0.05, ay - 0.3, ax + 0.12, ay + 0.28, zs + 42, zs + 48, teintes(FEU, fonce(FEU, 0.25), FEU_CLAIR), { trait: TRAIT_FIN })
-  // Le marteau, posé sur la table, le manche vers nous.
-  t.poutre([ax + 0.3, ay - 0.05, zs + 48], [ax + 0.3, ay + 0.5, zs + 48], C.bois, 5)
-  t.boite(ax + 0.18, ay - 0.2, ax + 0.4, ay + 0.02, zs + 42, zs + 54, teintes('#9a9fb8', '#6d7290', '#c4c9d8'), { trait: TRAIT_FIN })
-  const [px, py] = t.pt(ax, ay, zs + 50)
+  enclume(t, ax - 0.75, ay + 0.22, zs, 0.44, noir)
+  // La barre de fer rouge, posée sur la table.
+  t.boite(ax - 0.1, ay - 0.12, ax + 0.55, ay + 0.04, zs + 34, zs + 40, teintes(FEU, fonce(FEU, 0.25), FEU_CLAIR), { trait: TRAIT_FIN })
+  // Le marteau, appuyé contre la souche.
+  const [hx, hy] = t.pt(ax - 0.3, ay + 0.5, z)
+  t.ajouter(
+    `<path d="M${r1(hx)} ${r1(hy)} L${r1(hx - 10)} ${r1(hy - 34)}" stroke="${C.encre}" stroke-width="11"/><path d="M${r1(hx)} ${r1(hy)} L${r1(hx - 10)} ${r1(hy - 34)}" stroke="${C.bois}" stroke-width="5"/>` +
+      `<rect x="${r1(hx - 22)}" y="${r1(hy - 44)}" width="24" height="13" rx="3" fill="#9a9fb8" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" transform="rotate(-16 ${r1(hx - 10)} ${r1(hy - 37)})"/>`,
+  )
+  const [px, py] = t.pt(ax + 0.2, ay - 0.05, zs + 44)
   t.ajouter(
     [
-      [-24, -16, 8],
-      [-6, -32, 10],
-      [14, -22, 7],
+      [-24, -14, 8],
+      [-6, -30, 10],
+      [14, -20, 7],
       [-34, 0, 5],
-      [26, -4, 5],
-      [6, -50, 6],
+      [26, -2, 5],
+      [6, -48, 6],
     ]
       .map(([dx, dy, r]) => etincelleForge(px + dx, py + dy, r))
       .join(''),
   )
 
   // La meule à aiguiser, devant : une roue de pierre dans un bâti en bois.
-  t.boite(3.15, 4.3, 3.85, 4.65, z, z + 12, bois)
+  t.boite(3.6, 4.05, 4.3, 4.4, z, z + 12, bois)
   const meule = 0.7 * 19
   t.surFace(
     'gauche',
-    3.15,
-    4.48,
+    3.6,
+    4.23,
     z + 12,
     `<circle cx="${r1(meule)}" cy="-8" r="19" fill="${C.pierre}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
       `<circle cx="${r1(meule)}" cy="-8" r="11" fill="none" stroke="${C.pierreFoncee}" stroke-width="3"/>` +
@@ -415,10 +395,10 @@ export function forgeron() {
       `<path d="M${r1(meule)} -8 L${r1(meule + 26)} -20" stroke="${C.encre}" stroke-width="9"/><path d="M${r1(meule)} -8 L${r1(meule + 25)} -20" stroke="${C.bois}" stroke-width="4"/>`,
   )
 
-  // Le tonneau d'eau pour tremper le fer, devant à droite, et sa vapeur.
-  t.cylindre(4.6, 3.15, 0.36, z, z + 32, bois, { cerclages: [z + 8, z + 24] })
-  t.ellipseSol(4.6, 3.15, 0.28, z + 32, C.bleu, { trait: 0 })
-  const [vx, vy] = t.pt(4.6, 3.15, z + 44)
+  // Le tonneau d'eau pour tremper le fer, contre le four à droite, et sa vapeur.
+  t.cylindre(4.62, 0.95, 0.36, z, z + 32, bois, { cerclages: [z + 8, z + 24] })
+  t.ellipseSol(4.62, 0.95, 0.28, z + 32, C.bleu, { trait: 0 })
+  const [vx, vy] = t.pt(4.62, 0.95, z + 44)
   ;[
     [-4, 0, 6],
     [4, -10, 7],
@@ -551,7 +531,6 @@ function bandesChantier(t, longueur, hauteur, jaune = C.jaune) {
 // « coupe » : un clipPath qui cache ce qui est enfoncé dans le trou.
 function meche(t, mx, yHaut, rx, longueur, coupe) {
   const ry = rx * 0.58 // un cercle couché, vu à l'angle du jeu
-  const yBas = yHaut + longueur
   // Le rayon de la mèche à la profondeur h (en pixels sous son haut) : comme une carotte, il
   // diminue doucement puis plus vite vers la pointe.
   const rayon = (h) => rx * Math.pow(Math.max(0, 1 - h / longueur), 0.7)

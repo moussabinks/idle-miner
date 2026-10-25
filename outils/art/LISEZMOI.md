@@ -27,9 +27,9 @@ ont changé, les recopier dans le jeu :
 
 | Fichier | Ce qu'il dessine |
 |---|---|
-| `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers |
-| `batiments.mjs` | La dalle de pavés, le marché, le forgeron, le Personnel, la foreuse (25/10 : la grosse mèche en acier, `meche()`, et les bandes de chantier, `bandesChantier()`), le générateur et l'icône des rails |
-| `mine.mjs` | La mine (10 × 10) : la montagne toute ronde du fond (`montagne()`, une courbe qui passe par les points de sa crête), ses filons, ses grappes de cristaux et ses étincelles, le chevalement, la galerie et son wagonnet, le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
+| `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers ; et les **minerais** (`minerai()`, 25/10) : les mêmes formes que les icônes du jeu (`outils/icones/dessins.py`) |
+| `batiments.mjs` | La dalle de pavés, le marché, le forgeron (25/10 : le four et son feu, la cheminée en briques, l'enclume vue de côté, `enclume()`), le Personnel, la foreuse (25/10 : la mèche en forme de carotte, `meche()`, son petit coffre à charbon, `coffreForeuse()`, et les bandes de chantier, `bandesChantier()`), le générateur et l'icône des rails |
+| `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
 | `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
 
@@ -57,10 +57,17 @@ puits, coupée sous le bord de devant du puits, puis `mine-devant.svg` (les pout
 puits, dans le même cadre que la mine) qui passe devant la caisse. Les caisses sont dessinées dans
 le cadre de la mine puis recadrées : leur position dans la mine est `POINTS_MINE.caisse`.
 
-La montagne a besoin de place au-dessus de l'emprise (`HAUT` dans `mine.mjs`, 300 depuis le 25/10) :
-si on change `HAUT`, tous les points de `POINTS_MINE` bougent d'autant (pas `CABINE_EN_HAUT` /
-`CABINE_EN_BAS`, qui sont des décalages). La foreuse aussi est plus haute que les autres bâtiments
-(son portique et sa trémie) : son calage est différent.
+**La mine reste basse** (25/10 : plus de grosse montagne au fond, elle cachait le décor derrière la
+mine) : seule la roue du chevalement dépasse, et `HAUT` (la place au-dessus de l'emprise, dans
+`mine.mjs`) est de 110. Si on change `HAUT`, tous les points de `POINTS_MINE` bougent d'autant (pas
+`CABINE_EN_HAUT` / `CABINE_EN_BAS`, qui sont des décalages ; `CABINE_EN_HAUT` change si on monte
+ou descend le treuil, `Z_TREUIL`). La foreuse (son portique et sa fumée) et le forgeron (sa
+cheminée) sont plus hauts que les autres bâtiments : leur calage est différent.
+
+Les minerais (dans la caisse, le wagonnet, les parois du puits, les filons, les caisses) sont
+dessinés par `minerai(sorte, x, y, taille, angle)` de `formes.mjs`, avec les formes des icônes du
+jeu : `pierre`, `charbon`, `fer`, `or`, `redstone`, `emeraude`, `diamant`. Jamais de petits cubes :
+on doit reconnaître chaque minerai.
 
 ## Les arbres
 
