@@ -38,6 +38,110 @@
   gap: 2px;
 }
 
+/* (25/10) Les packs de gemmes (argent réel) : quatre cartes, deux par ligne sur téléphone. */
+.boutique-packs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .boutique-packs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.boutique-pack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 112px;
+  padding: 16px 6px 8px;
+  border: 3px solid var(--encre);
+  border-radius: 14px;
+  background: #efe8ff;
+  box-shadow: 0 4px 0 var(--encre);
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.boutique-pack:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--encre);
+}
+
+.boutique-pack-vedette {
+  background: #ffe9a8;
+}
+
+.boutique-pack-etiquette {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 8px;
+  border: 2px solid var(--encre);
+  border-radius: 999px;
+  background: #ff8fab;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.boutique-pack-gemmes {
+  font-family: var(--police-titre);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.boutique-pack-bonus {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #3f9a4d;
+}
+
+.boutique-pack-prix {
+  margin-top: auto;
+  padding: 3px 10px;
+  border: 2px solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+/* La fenêtre de paiement (Paiement.tsx) */
+.paiement-pack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.4rem;
+}
+
+.paiement-pack strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 2.2rem;
+}
+
+.paiement-prix {
+  margin-left: 8px;
+  padding: 2px 12px;
+  border: 3px solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.paiement-note {
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 /* --- La fausse publicité (Publicite.tsx) : un écran noir et un compte à rebours -------------
    ⚠️ Jamais « pub » ni « publicite » dans un nom de classe :
    les bloqueurs de publicités cachent ces éléments. */

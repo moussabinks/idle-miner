@@ -15,6 +15,9 @@ import {
   etatQuotidien,
   multiplicateurVentes,
   prixEnGemmes,
+  PACKS_GEMMES,
+  bonusPack,
+  crediterPack,
   recompenserPub,
   recupererQuotidien,
   secondesBoost,
@@ -237,3 +240,28 @@ describe('les récompenses quotidiennes', () => {
     expect(etat.argent).toBe(argent)
   })
 })
+
+describe('(25/10) les packs de gemmes (argent réel)', () => {
+  it('quatre packs : 10, 30, 60 et 100 gemmes pour 1,99 €, 4,99 €, 6,99 € et 8,99 €', () => {
+    expect(PACKS_GEMMES.map((p) => [p.gemmes, p.centimes])).toEqual([
+      [10, 199],
+      [30, 499],
+      [60, 699],
+      [100, 899],
+    ])
+  })
+
+  it('les gros packs donnent plus de gemmes pour le même prix', () => {
+    expect(PACKS_GEMMES.map(bonusPack)).toEqual([0, 20, 71, 121])
+  })
+
+  it('un pack payé : ses gemmes arrivent', () => {
+    const etat = partie()
+    etat.gemmes = 2
+    expect(crediterPack(etat, 'gemmes-30')[0]).toContain('30')
+    expect(etat.gemmes).toBe(32)
+    expect(crediterPack(etat, 'inconnu')).toEqual([])
+    expect(etat.gemmes).toBe(32)
+  })
+})
+

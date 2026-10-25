@@ -80,3 +80,12 @@ export function jeuEnPause(): void {
 export function grandMoment(): void {
   sdk?.game.happytime()
 }
+
+// (25/10) Acheter des gemmes avec de l'argent réel. Aucun vrai moyen de paiement n'est encore
+// branché (il en faudra un : Stripe pour la version Vercel, les achats de CrazyGames pour la
+// version portail). En attendant :
+//   - pendant le développement (npm run dev), un paiement SIMULÉ, qui ne prend aucun argent,
+//     pour tester la boutique ;
+//   - en ligne, la fenêtre dit que le paiement arrive bientôt, et ne donne rien (sinon, tout le
+//     monde aurait des gemmes gratuites).
+export const PAIEMENT_SIMULE = import.meta.env.DEV

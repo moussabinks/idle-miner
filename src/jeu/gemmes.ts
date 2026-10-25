@@ -49,6 +49,37 @@ export function gagnerGemmes(etat: EtatJeu, nombre: number): void {
   etat.gemmes = (etat.gemmes ?? 0) + nombre
 }
 
+// ---------------------------------------------------------------------------
+// Acheter des gemmes avec de l'argent réel (25/10, prix du propriétaire)
+// ---------------------------------------------------------------------------
+
+// Un pack : combien de gemmes, pour combien de centimes d'euro (199 = 1,99 €).
+export type PackGemmes = { id: string; gemmes: number; centimes: number; etiquette: 'populaire' | 'meilleure' | null }
+export const PACKS_GEMMES: PackGemmes[] = [
+  { id: 'gemmes-10', gemmes: 10, centimes: 199, etiquette: null },
+  { id: 'gemmes-30', gemmes: 30, centimes: 499, etiquette: 'populaire' },
+  { id: 'gemmes-60', gemmes: 60, centimes: 699, etiquette: null },
+  { id: 'gemmes-100', gemmes: 100, centimes: 899, etiquette: 'meilleure' },
+]
+
+// Combien de gemmes en plus, pour le même prix, par rapport au plus petit pack (en %) :
+// 30 gemmes à 4,99 € = 20 % de plus que 3 fois 10 gemmes à 1,99 €... (0 pour le petit pack).
+export function bonusPack(pack: PackGemmes): number {
+  const petit = PACKS_GEMMES[0]
+  const parCentime = pack.gemmes / pack.centimes
+  const parCentimePetit = petit.gemmes / petit.centimes
+  return Math.round((parCentime / parCentimePetit - 1) * 100)
+}
+
+// Le pack est payé : ses gemmes arrivent. (Le paiement lui-même se passe hors du jeu : voir
+// src/composants/Paiement.tsx et src/portail.ts.)
+export function crediterPack(etat: EtatJeu, id: string): string[] {
+  const pack = PACKS_GEMMES.find((p) => p.id === id)
+  if (!pack) return []
+  gagnerGemmes(etat, pack.gemmes)
+  return [t('💎 +{n} gemmes ! Merci pour ton achat !', { n: pack.gemmes })]
+}
+
 // Une publicité regardée jusqu'au bout : la récompense.
 export function recompenserPub(etat: EtatJeu): string[] {
   gagnerGemmes(etat, GEMMES_PAR_PUB)

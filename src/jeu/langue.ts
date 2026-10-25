@@ -59,6 +59,11 @@ export function nombre(n: number, chiffresApresVirgule = 0): string {
   return n.toLocaleString(langueActuelle === 'fr' ? 'fr-FR' : 'en-US', { maximumFractionDigits: chiffresApresVirgule })
 }
 
+// (25/10) Un prix en euros, à la façon de la langue : « 1,99 € » en français, « €1.99 » en anglais.
+export function prixEuros(centimes: number): string {
+  return (centimes / 100).toLocaleString(langueActuelle === 'fr' ? 'fr-FR' : 'en-US', { style: 'currency', currency: 'EUR' })
+}
+
 // Un nom au pluriel s'il y en a plusieurs : pluriel(3, 'mineur', 'mineurs').
 export function pluriel(n: number, un: string, plusieurs: string): string {
   return Math.abs(n) > 1 ? plusieurs : un
