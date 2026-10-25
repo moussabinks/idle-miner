@@ -864,4 +864,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Pioche de {nom}': '{nom}’s pickaxe',
   // src/composants/Accueil.tsx (avertissement de sauvegarde)
   'Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page.': 'This browser doesn’t keep your games: they will be lost when you close the page.',
+  // src/composants/RecompensesQuotidiennes.tsx (ouverture du cadeau)
+  'Jour {n} : bravo !': 'Day {n}: well done!',
+  'Série : {n} jours de suite !': 'Streak: {n} days in a row!',
 }
