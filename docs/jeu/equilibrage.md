@@ -327,7 +327,7 @@ Tout le détail est dans [gemmes-et-recompenses.md](gemmes-et-recompenses.md). E
 - **Gagner** : 1 par publicité (`GEMMES_PAR_PUB`), 3 par niveau du joueur (`GEMMES_PAR_NIVEAU`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES` : 1, 2, 1, 3, 2, 4 et 10 gemmes, 23 par semaine).
 - **Prix en gemmes** d'un achat (`prixEnGemmes`) = `max(1, arrondi(√(valeur en $) ÷ 5))`, la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 1 000 $ → 6 💎, 80 000 $ → 57 💎.
 - **Boutique** (`BOOSTS`, `TRESOR`) : Production × 2 (15 min, 8 💎), Ventes × 2 (10 min, 8 💎), Clics en or (× 3 blocs par clic, 5 min, 4 💎), Trésor (10 💎 : 600, 3 500, 14 000, 45 000 ou 140 000 $ selon le palier).
-- **Cadeau du jour** : une « part » d'argent vaut `ARGENT_QUOTIDIEN` = 200, 1 000, 4 000, 12 000 ou 30 000 $ selon le palier ; le jour 5 offre Ventes × 2 (10 min), le jour 7 Production × 2 (30 min).
+- **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Clics en or, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
 - **Absence × 2** (`doublerAbsence`) : une publicité redonne tout ce que l'absence a rapporté (l'argent gagné, plus la valeur de ce qui attend en plus dans le coffre et le chariot).
 
 ## Revenus par seconde
