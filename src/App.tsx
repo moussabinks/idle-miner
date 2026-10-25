@@ -28,6 +28,7 @@ import { Reglages } from './composants/Reglages'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { FenetreAbsence } from './composants/FenetreAbsence'
+import { FenetreQuelsMondes } from './composants/FenetreQuelsMondes'
 import { FeteNiveau } from './composants/FeteNiveau'
 import { FenetreBilan } from './composants/FenetreBilan'
 import { niveauJoueur, prochainDeblocage } from './jeu/niveaux'
@@ -782,14 +783,27 @@ function App() {
   const [, setLangue] = useState<Langue | null>(null)
   // Le compte reste ouvert pendant la partie : il recopie les mondes en ligne régulièrement.
   const compte = useCompte()
-  if (monde === null) return <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} />
+  // (la question « quels mondes garder ? » peut venir sur l'accueil ou pendant la partie)
+  const question = compte.question && <FenetreQuelsMondes question={compte.question} />
+  if (monde === null)
+    return (
+      <>
+        <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} />
+        {question}
+      </>
+    )
 
   function quitter() {
     compte.envoyerMaintenant() // la partie qu'on vient de jouer part tout de suite en ligne
     setMonde(null)
   }
   // « key » : changer de monde repart d'un jeu tout neuf (aucun état de l'ancien monde ne reste).
-  return <Jeu key={monde.id} monde={monde} onQuitter={quitter} onLangue={setLangue} />
+  return (
+    <>
+      <Jeu key={monde.id} monde={monde} onQuitter={quitter} onLangue={setLangue} />
+      {question}
+    </>
+  )
 }
 
 export default App
