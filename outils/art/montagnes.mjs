@@ -122,27 +122,26 @@ function etincelle(x, y, k = 1) {
   return `<path d="M${p(0, -11)} L${p(3, -3)} L${p(11, 0)} L${p(3, 3)} L${p(0, 11)} L${p(-3, 3)} L${p(-11, 0)} L${p(-3, -3)} Z" fill="#ffffff" stroke="${C.encre}" stroke-width="3"/>`
 }
 
-// Un filon : une tache de roche sombre (cabossée) d'où sortent deux ou trois minerais.
+// Un filon : une veine de roche sombre qui traverse la paroi (un peu penchée), d'où sortent deux
+// ou trois minerais bien gros, pour qu'on les reconnaisse de loin.
 function filon(x, y, sortes, k = 1, graine = 1) {
   const hasard = hasardAvecGraine(graine)
-  const n = 8
-  const bord = []
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2
-    const r = (0.8 + hasard() * 0.35) * 30 * k
-    bord.push([x + Math.cos(a) * r * 1.25, y + Math.sin(a) * r * 0.85])
-  }
-  let dessin = `<path d="${courbeRonde(bord, true)}" fill="${ROCHE_FILON}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
+  const angle = -18 + hasard() * 22
+  const l = 62 * k
+  const veine = `M${-l} ${r1(8 * k)} Q${r1(-l * 0.3)} ${r1(-14 * k)} 0 0 T${l} ${r1(-6 * k)}`
+  let dessin =
+    `<path d="${veine}" stroke="${C.encre}" stroke-width="${r1(22 * k + 2 * TRAIT_FIN)}" fill="none"/>` +
+    `<path d="${veine}" stroke="${ROCHE_FILON}" stroke-width="${r1(22 * k)}" fill="none"/>`
   const places = [
-    [-12, -3, 30],
-    [14, -6, 26],
-    [2, 12, 24],
+    [-34, 0, 38],
+    [8, -4, 42],
+    [44, -6, 34],
   ]
   sortes.forEach((sorte, i) => {
     const [dx, dy, taille] = places[i % places.length]
-    dessin += minerai(sorte, x + dx * k, y + dy * k, taille * k, (hasard() - 0.5) * 50, 3.5)
+    dessin += minerai(sorte, dx * k, dy * k, taille * k, (hasard() - 0.5) * 50, 4)
   })
-  return dessin
+  return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(angle)})">${dessin}</g>`
 }
 
 // Une petite fissure dans la roche (un « v » couché).
@@ -340,10 +339,8 @@ function montagneGeante() {
   })
   decorerRoche(v, m, {
     filons: [
-      [-170, -190, ['or', 'or', 'diamant']],
-      [60, -150, ['emeraude', 'emeraude']],
-      [-40, -300, ['diamant', 'diamant'], 0.9],
-      [230, -170, ['redstone', 'redstone', 'or'], 0.9],
+      [-160, -200, ['or', 'diamant', 'or']],
+      [230, -160, ['redstone', 'redstone'], 0.9],
     ],
     fissures: [
       [-250, -120],
@@ -368,9 +365,7 @@ function montagneGrande() {
   const m = montagne(v, { largeur: 640, graine: 23, pics: [{ x: 0.02, h: 520 }] })
   decorerRoche(v, m, {
     filons: [
-      [-120, -150, ['diamant', 'diamant', 'or']],
-      [110, -230, ['or', 'or'], 0.9],
-      [-30, -290, ['emeraude', 'emeraude'], 0.85],
+      [-100, -180, ['diamant', 'or', 'diamant']],
     ],
     fissures: [
       [-190, -90],
@@ -399,9 +394,8 @@ function montagneDouble() {
   })
   decorerRoche(v, m, {
     filons: [
-      [-200, -150, ['redstone', 'redstone']],
-      [40, -200, ['or', 'diamant', 'or']],
-      [200, -130, ['emeraude', 'emeraude'], 0.9],
+      [-190, -160, ['emeraude', 'or', 'emeraude']],
+      [170, -150, ['redstone', 'diamant'], 0.9],
     ],
     fissures: [
       [-110, -110],
@@ -424,8 +418,7 @@ function montagneMoyenne() {
   const m = montagne(v, { largeur: 520, graine: 41, pics: [{ x: -0.05, h: 380 }], neige: 0.3 })
   decorerRoche(v, m, {
     filons: [
-      [-90, -140, ['or', 'or', 'emeraude']],
-      [90, -150, ['diamant', 'diamant'], 0.9],
+      [-80, -150, ['or', 'or', 'emeraude']],
     ],
     fissures: [
       [-160, -80],
@@ -445,7 +438,7 @@ function montagnePetite() {
   const v = new Vignette('montagne-petite')
   const m = montagne(v, { largeur: 440, graine: 53, pics: [{ x: 0.04, h: 270 }], neige: 0.3, herbe: 60 })
   decorerRoche(v, m, {
-    filons: [[-60, -110, ['redstone', 'or']]],
+    filons: [[-50, -110, ['redstone', 'or'], 0.85]],
     fissures: [[80, -90, 0.8]],
     cristaux: [[110, -70, C.diamant, 0.75]],
   })
@@ -472,9 +465,8 @@ function montagneCascade() {
   })
   decorerRoche(v, m, {
     filons: [
-      [-220, -170, ['diamant', 'diamant', 'or']],
-      [130, -170, ['or', 'or', 'redstone'], 0.9],
-      [-20, -330, ['emeraude', 'emeraude'], 0.85],
+      [-250, -150, ['or', 'diamant']],
+      [140, -190, ['emeraude', 'redstone', 'emeraude'], 0.9],
     ],
     fissures: [
       [-280, -90],
@@ -551,8 +543,7 @@ function montagneGrotte() {
   const m = montagne(v, { largeur: 600, graine: 79, pics: [{ x: 0.12, h: 400 }], neige: 0.32 })
   decorerRoche(v, m, {
     filons: [
-      [110, -170, ['diamant', 'or', 'diamant']],
-      [-60, -230, ['emeraude', 'redstone'], 0.85],
+      [110, -190, ['diamant', 'or', 'diamant'], 0.9],
     ],
     fissures: [
       [-200, -90],
@@ -745,6 +736,51 @@ function collineFleurie() {
   return v.svg({ x0: -180, y0: -215, x1: 180, y1: 55 })
 }
 
+function collineDouce() {
+  const v = new Vignette('colline-douce')
+  const c = colline(v, { largeur: 440, hauteur: 124, graine: 29, bosse: 20 })
+  garnirColline(v, c, [
+    ['touffe', -130, 34],
+    ['touffe', 20, 22],
+    ['fleur', -40, 40, C.jaune],
+    ['fleur', 110, 46, '#ffffff'],
+    ['touffe', 150, 44],
+  ])
+  return v.svg({ x0: -230, y0: -150, x1: 230, y1: 65 })
+}
+
+// Deux grandes collines toutes douces (pour le devant de la carte, et entre les montagnes) : de
+// grandes formes calmes, avec peu de détails.
+function collineLarge() {
+  const v = new Vignette('colline-large')
+  const c = colline(v, { largeur: 780, hauteur: 190, graine: 41, bosse: -40 })
+  garnirColline(v, c, [
+    ['touffe', -260, 50],
+    ['fleur', -170, 70, C.rose],
+    ['touffe', -60, 34],
+    ['fleur', 40, 60, C.jaune],
+    ['sapin', 170, 34, 0.34],
+    ['sapin', 220, 50, 0.28],
+    ['touffe', 300, 50],
+  ])
+  return v.svg({ x0: -400, y0: -330, x1: 400, y1: 95 })
+}
+
+function collineLongue() {
+  const v = new Vignette('colline-longue')
+  const c = colline(v, { largeur: 900, hauteur: 150, graine: 47, bosse: 60 })
+  garnirColline(v, c, [
+    ['touffe', -320, 40],
+    ['fleur', -230, 50, '#ffffff'],
+    ['touffe', -120, 30],
+    ['buisson', 0, 30, 0.24],
+    ['fleur', 120, 46, C.violet],
+    ['touffe', 250, 36],
+    ['fleur', 330, 40, C.jaune],
+  ])
+  return v.svg({ x0: -460, y0: -200, x1: 460, y1: 90 })
+}
+
 // Un bosquet de sapins (au sol, pour les endroits sans colline).
 function bosquet() {
   const v = new Vignette('bosquet')
@@ -787,6 +823,9 @@ export function montagnes() {
     collineGrande(),
     collinePetite(),
     collineFleurie(),
+    collineDouce(),
+    collineLarge(),
+    collineLongue(),
     bosquet(),
     rochers(),
   ]

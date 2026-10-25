@@ -46,6 +46,9 @@ export const VIGNETTES = {
   'colline-grande': vignette('colline-grande', 520, 400, 260, 330),
   'colline-petite': vignette('colline-petite', 260, 155, 130, 110),
   'colline-fleurie': vignette('colline-fleurie', 360, 270, 180, 215),
+  'colline-douce': vignette('colline-douce', 460, 215, 230, 150),
+  'colline-large': vignette('colline-large', 800, 425, 400, 330),
+  'colline-longue': vignette('colline-longue', 920, 290, 460, 200),
   bosquet: vignette('bosquet', 280, 250, 140, 200),
   rochers: vignette('rochers', 220, 160, 110, 110),
 } satisfies Record<string, Vignette>
@@ -87,15 +90,40 @@ const seCroisent = (a: Rectangle, b: Rectangle) => a.x0 < b.x1 && a.x1 > b.x0 &&
 // Les montagnes du fond, de la plus grande à la plus petite (hauteur au-dessus du pied, en pixels
 // de l'image), et les collines.
 const MONTAGNES: SorteVignette[] = ['montagne-geante', 'montagne-grande', 'montagne-double', 'montagne-moyenne', 'montagne-petite']
-const COLLINES: { sorte: SorteVignette; poids: number }[] = [
-  { sorte: 'colline-sapins', poids: 3 },
-  { sorte: 'colline-buisson', poids: 2.5 },
-  { sorte: 'colline-grande', poids: 2 },
-  { sorte: 'colline-petite', poids: 2.5 },
+// Les collines (surtout des collines toutes simples : le décor doit rester calme autour du
+// village), avec leurs chances d'être tirées : juste derrière la lisière (au fond), tout près du
+// bord devant, et loin devant (de grandes collines douces).
+type Tirage = { sorte: SorteVignette; poids: number }[]
+const COLLINES_FOND: Tirage = [
+  { sorte: 'colline-douce', poids: 3 },
+  { sorte: 'colline-buisson', poids: 2 },
   { sorte: 'colline-fleurie', poids: 2 },
-  { sorte: 'bosquet', poids: 1.4 },
-  { sorte: 'rochers', poids: 1 },
+  { sorte: 'colline-large', poids: 1.6 },
+  { sorte: 'colline-sapins', poids: 1.2 },
+  { sorte: 'colline-grande', poids: 1 },
+  { sorte: 'colline-longue', poids: 1 },
+  { sorte: 'colline-petite', poids: 0.8 },
+  { sorte: 'bosquet', poids: 0.4 },
+  { sorte: 'rochers', poids: 0.4 },
 ]
+const COLLINES_DEVANT_PRES: Tirage = [
+  { sorte: 'colline-douce', poids: 3 },
+  { sorte: 'colline-longue', poids: 2 },
+  { sorte: 'colline-buisson', poids: 2 },
+  { sorte: 'colline-fleurie', poids: 2 },
+  { sorte: 'colline-petite', poids: 0.8 },
+  { sorte: 'rochers', poids: 0.4 },
+]
+const COLLINES_DEVANT_LOIN: Tirage = [
+  { sorte: 'colline-large', poids: 3 },
+  { sorte: 'colline-longue', poids: 3 },
+  { sorte: 'colline-douce', poids: 2 },
+  { sorte: 'colline-grande', poids: 1 },
+  { sorte: 'colline-sapins', poids: 0.6 },
+  { sorte: 'bosquet', poids: 0.3 },
+]
+// Si la colline tirée est trop haute (devant), on essaie celles-ci, de plus en plus basses.
+const PLUS_BASSES: SorteVignette[] = ['colline-longue', 'colline-buisson', 'colline-petite']
 
 // Les deux montagnes posées à la main, là où on les voit bien : la cascade (au fond à gauche,
 // près de la plage) et la galerie de mine (au fond à droite).
@@ -115,7 +143,7 @@ export function eauDeLaCascade(): Rectangle {
 // Ce qu'il faut garder visible devant les deux montagnes posées à la main (rien ne pousse devant) :
 // la cascade et son bassin, l'entrée de la galerie, ses rails et son wagonnet.
 function zonesAGarder(): { zone: Rectangle; profondeur: number }[] {
-  const zone = (p: Plante, x0: number, y0: number, x1: number, y1: number): Rectangle => {
+  const zone = (p: Plante, x0: number, y0: number, x1: number, y1: number) => {
     const image = VIGNETTES[p.sorte]
     const e = versEcran(p.x, p.y)
     const k = p.echelle
@@ -183,7 +211,7 @@ export function planterPaysage(): Plante[] {
 
   // 1. Les montagnes, au fond (à partir de 6 cases de la clairière). Les plus proches gardent
   // leur sommet enneigé à l'écran : on prend la plus grande qui tient sous le haut de la caméra.
-  grille(4.6, 2.4, (x, y) => {
+  grille(5.6, 2.4, (x, y) => {
     const d = dehors(x, y)
     if (d < 6.2 || deDevant(x, y)) return
     if (pres(x, y, CASCADE, 8) || pres(x, y, GROTTE, 7)) return
@@ -204,39 +232,46 @@ export function planterPaysage(): Plante[] {
     }
   })
 
-  // 2. Les collines, juste derrière la lisière, et partout devant.
-  const total = COLLINES.reduce((s, c) => s + c.poids, 0)
-  const tirerColline = (): SorteVignette => {
-    let r = hasard() * total
-    for (const c of COLLINES) {
+  // 2. Les collines : juste derrière la lisière (au fond, entre les arbres et les montagnes), et
+  // partout devant, de plus en plus grandes en s'éloignant.
+  const tirer = (tirage: Tirage): SorteVignette => {
+    let r = hasard() * tirage.reduce((somme, c) => somme + c.poids, 0)
+    for (const c of tirage) {
       r -= c.poids
       if (r < 0) return c.sorte
     }
-    return COLLINES[0].sorte
+    return tirage[0].sorte
   }
-  grille(3.1, 1.8, (x, y) => {
-    const d = dehors(x, y)
-    const devant = deDevant(x, y)
-    if (d < 3 || (!devant && d > 9.5)) return
-    if (hasard() < 0.12) return // quelques trous d'herbe
-    const echelle = ECHELLE * (0.9 + hasard() * 0.25) * (devant && d > 7 ? 1.15 : 1)
-    // On essaie une colline au hasard ; si elle est trop haute (devant), une plus petite.
-    for (const sorte of [tirerColline(), 'colline-buisson', 'colline-petite', 'rochers'] as SorteVignette[]) {
+  const planterColline = (x: number, y: number, tirage: Tirage, echelle: number) => {
+    for (const sorte of [tirer(tirage), ...PLUS_BASSES]) {
       const p = { sorte, x, y, echelle }
       if (possible(p)) {
         plantes.push(p)
         return
       }
     }
+  }
+  grille(3.5, 1.8, (x, y) => {
+    const d = dehors(x, y)
+    if (d < 3 || d > 9.5 || deDevant(x, y) || hasard() < 0.2) return
+    planterColline(x, y, COLLINES_FOND, ECHELLE * (0.9 + hasard() * 0.2))
+  })
+  grille(5, 2.2, (x, y) => {
+    const d = dehors(x, y)
+    if (d < 3 || !deDevant(x, y) || hasard() < 0.12) return
+    planterColline(x, y, d < 7 ? COLLINES_DEVANT_PRES : COLLINES_DEVANT_LOIN, ECHELLE * (0.9 + hasard() * 0.2))
   })
 
-  // 3. Loin devant (en bas à droite), quelques petites montagnes, si elles ne cachent rien.
-  grille(6, 3, (x, y) => {
-    if (!deDevant(x, y) || y > N || dehors(x, y) < 10) return
+  // 3. Loin devant, tout à droite (après le coin de droite de la clairière), quelques petites
+  // montagnes, si elles ne cachent rien.
+  let montagnesDevant = 0
+  grille(7, 3, (x, y) => {
+    if (montagnesDevant >= 3 || !deDevant(x, y) || y > N || dehors(x, y) < 14 || versEcran(x, y).x < versEcran(N, 0).x + 60) return
     for (const sorte of ['montagne-moyenne', 'montagne-petite'] as SorteVignette[]) {
       const p = { sorte, x, y, echelle: ECHELLE * (0.95 + hasard() * 0.1) }
       if (possible(p)) {
         plantes.push(p)
+        montagnesDevant += 1
         return
       }
     }
