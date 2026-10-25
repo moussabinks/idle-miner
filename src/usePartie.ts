@@ -7,7 +7,7 @@ import { aleatoireNavigateur } from './jeu/aleatoire'
 import { BLOCS, type IdBloc } from './jeu/donnees'
 import { cliquerMine, creerPartie, type EtatJeu } from './jeu/mineur'
 import { niveauJoueur } from './jeu/niveaux'
-import { photoPartie, resumerAbsence, type ResumeAbsence } from './jeu/absence'
+import { photoPartie, resumerAbsence, vendreCoffreAuRetour, type ResumeAbsence } from './jeu/absence'
 import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps } from './jeu/temps'
@@ -80,7 +80,9 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: Resume
   if (absence < 30) return { etat, resumeAbsence: null }
   const avant = photoPartie(etat)
   avancerTemps(etat, absence, aleatoireNavigateur)
-  return { etat, resumeAbsence: resumerAbsence(avant, etat, absence) }
+  // (25/10) Le coffre, souvent plein au retour, est vendu tout seul.
+  const venteCoffre = vendreCoffreAuRetour(etat)
+  return { etat, resumeAbsence: resumerAbsence(avant, etat, absence, venteCoffre) }
 }
 
 // idMonde : le monde (la sauvegarde) choisi sur l'écran d'accueil.
@@ -173,9 +175,9 @@ export function usePartie(idMonde: string) {
 
   // « Continuer » : la fenêtre du retour se ferme avec une belle animation des ventes.
   const recupererAbsence = useCallback(() => {
-    if (resumeAbsence && resumeAbsence.ventesWagonnets > 0) {
-      afficherGain(resumeAbsence.ventesWagonnets, true)
-      sons.venteMarche(resumeAbsence.ventesWagonnets)
+    if (resumeAbsence && resumeAbsence.net > 0) {
+      afficherGain(resumeAbsence.net, true)
+      sons.venteMarche(resumeAbsence.net)
       setNbVentes((n) => n + 1)
     } else sons.succes()
     setResumeAbsence(null)

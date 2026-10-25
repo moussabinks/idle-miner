@@ -160,7 +160,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Doubler': 'Double it',
   'Continuer': 'Continue',
   'Pendant ton absence ({duree}), ta mine a continué de tourner :': 'While you were away ({duree}), your mine kept running:',
-  'Tout ce que ton absence a rapporté': 'Everything you earned while away',
   'Relie la mine au marché et embauche un pousseur : il vendra pour toi, même jeu fermé.': 'Link the mine to the market and hire a pusher: they’ll sell for you, even with the game closed.',
   '{n} employés attendent leur salaire : paie-les au Personnel !': '{n} workers are waiting for their wage: pay them at the Staff!',
   'Un employé attend son salaire : paie-le au Personnel !': 'A worker is waiting for their wage: pay them at the Staff!',
@@ -888,4 +887,10 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Payer {prix}': 'Pay {prix}',
   '💎 +{n} gemmes ! Merci pour ton achat !': '💎 +{n} gems! Thanks for your purchase!',
   'Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.': 'Payment simulation: no money is taken. It is only here to test the shop.',
+  // (25/10) Le retour d'absence : le bénéfice net
+  'Bénéfice net : ce que tu as en plus en poche': 'Net profit: what you now have extra in your pocket',
+  'Le coffre de la mine, vendu à ton retour': 'Mine chest, sold on your return',
+  'Salaires payés': 'Wages paid',
+  'Autres ventes (le manager vend du coffre pour payer les salaires)': 'Other sales (the manager sells from the chest to pay wages)',
+  'Autres dépenses': 'Other expenses',
 }

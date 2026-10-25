@@ -29,8 +29,16 @@ export function FenetreAbsence({ resume, onFermer }: Props) {
     resume.blocsMineurs > 0 && { icone: '👷', texte: t('Tes mineurs ont creusé'), valeur: t('{n} blocs', { n: nombre(resume.blocsMineurs) }) },
     resume.blocsMine > 0 && { icone: '⛏️', texte: t('La mine a sorti toute seule'), valeur: t('{n} blocs', { n: nombre(resume.blocsMine) }) },
     resume.blocsForeuse > 0 && { icone: '⚙️', texte: t('La foreuse a foré'), valeur: t('{n} blocs', { n: nombre(resume.blocsForeuse) }) },
-    resume.ventesWagonnets > 0 && { icone: '🚃', texte: t('Tes wagonnets ont vendu'), valeur: `${nombre(resume.ventesWagonnets)} $` },
   ].filter((l): l is { icone: string; texte: string; valeur: string } => Boolean(l))
+  // (25/10) L'argent : les ventes, moins les salaires, = le bénéfice net (en grand dessous).
+  const comptes = [
+    resume.ventesWagonnets > 0 && { icone: '🚃', texte: t('Tes wagonnets ont vendu'), valeur: `+${nombre(resume.ventesWagonnets)} $`, classe: '' },
+    resume.venteCoffre > 0 && { icone: '📦', texte: t('Le coffre de la mine, vendu à ton retour'), valeur: `+${nombre(resume.venteCoffre)} $`, classe: '' },
+    resume.autres > 0 && { icone: '💰', texte: t('Autres ventes (le manager vend du coffre pour payer les salaires)'), valeur: `+${nombre(resume.autres)} $`, classe: '' },
+    resume.autres < 0 && { icone: '🛒', texte: t('Autres dépenses'), valeur: `−${nombre(-resume.autres)} $`, classe: 'absence-depense' },
+    resume.salaires > 0 && { icone: '💵', texte: t('Salaires payés'), valeur: `−${nombre(resume.salaires)} $`, classe: 'absence-depense' },
+  ].filter((l): l is { icone: string; texte: string; valeur: string; classe: string } => Boolean(l))
+  const net = double ? resume.net + resume.gains : resume.net
 
   function doubler() {
     regarderPub(() => {
@@ -68,11 +76,19 @@ export function FenetreAbsence({ resume, onFermer }: Props) {
             <strong>{l.valeur}</strong>
           </li>
         ))}
+        {comptes.map((l) => (
+          <li key={l.texte} className={`carte ${l.classe}`}>
+            <span aria-hidden="true">{l.icone}</span>
+            <span>{l.texte}</span>
+            <strong>{l.valeur}</strong>
+          </li>
+        ))}
       </ul>
       <div className="absence-gains carte carte-creme">
-        <span>{t('Tout ce que ton absence a rapporté')}</span>
+        <span>{t('Bénéfice net : ce que tu as en plus en poche')}</span>
         <strong className="absence-total">
-          💰 +{nombre(double ? resume.gains * 2 : resume.gains)} $ {double && <span className="etiquette etiquette-violet">×2</span>}
+          💰 {net >= 0 ? '+' : '−'}
+          {nombre(Math.abs(net))} $ {double && <span className="etiquette etiquette-violet">×2</span>}
         </strong>
         {resume.ventesWagonnets === 0 && <span className="discret">{t('Relie la mine au marché et embauche un pousseur : il vendra pour toi, même jeu fermé.')}</span>}
       </div>

@@ -111,8 +111,8 @@ Une semaine complète rapporte **35 gemmes**. Message : « 🎁 Jour 3 : +3 💎
 
 Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fenêtre **« Bon retour, mineur ! »** résume l'absence (voir [mine-et-minage.md](mine-et-minage.md#hors-ligne-au-chargement-dun-monde)). Depuis le 25/10 :
 
-- elle affiche en grand **tout ce que l'absence a rapporté** (`resume.gains`) : l'argent gagné (les wagonnets qui ont vendu au marché), **plus la valeur de ce qui attend en plus** dans le coffre de la mine et le chariot de la foreuse (à leur prix au marché) ;
-- deux boutons : **📺 Doubler · +X $** (violet : une publicité, puis `doublerAbsence` encaisse **une deuxième fois** ces gains, en argent, comptés dans l'argent gagné) et **Continuer** ;
+- elle affiche en grand le **bénéfice net** (25/10, demandé par le propriétaire : l'argent en plus dans la poche, salaires déduits ; avant, c'était le chiffre d'affaires). Au retour, le **coffre de la mine est vendu tout seul** (`vendreCoffreAuRetour`, sauf ce qu'on garde 📌). Les lignes de l'argent tombent juste : 🚃 ventes des wagonnets + 📦 coffre vendu au retour + 💰 autres ventes (surtout le manager qui vend du coffre pour payer les salaires) − 💵 salaires payés = bénéfice net (`resume.net`) ;
+- deux boutons : **📺 Doubler · +X $** (violet : une publicité, puis `doublerAbsence` encaisse **une deuxième fois** le bénéfice net, s'il est positif, en argent, comptés dans l'argent gagné) et **Continuer** ;
 - elle rappelle aussi les employés qui attendent leur salaire, et combien de temps le manager paie avant de s'endormir.
 
 ## 6. Fichiers du code
@@ -122,7 +122,7 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 | `src/jeu/gemmes.ts` | Toutes les règles : gagner des gemmes (`gagnerGemmes`, `recompenserPub`), le prix en gemmes (`valeurEnDollars`, `prixEnGemmes`), les bonus (`BOOSTS`, `acheterBoost`, `boostActif`, `secondesBoost`, `multiplicateurVentes`, `multiplicateurProduction`), le trésor (`TRESOR`, `acheterTresor`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `etatQuotidien`, `recupererQuotidien`, `jourDe`, `veille`). Testé dans `gemmes.test.ts`. |
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
 | `src/jeu/niveaux.ts` | La gemme de chaque niveau gagné (`mettreAJourXp`). |
-| `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |
+| `src/jeu/absence.ts` | `vendreCoffreAuRetour`, `resume.net` (le bénéfice net), `resume.gains` et `doublerAbsence`. |
 | `src/composants/Boutique.tsx` | La boutique (publicité, packs de gemmes, bonus). |
 | `src/composants/Paiement.tsx` | La fenêtre de paiement d'un pack (simulée pendant le développement). |
 | `src/composants/RecompensesQuotidiennes.tsx` | Le calendrier du cadeau du jour. |
