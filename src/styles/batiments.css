@@ -1074,6 +1074,10 @@
 }
 
 .btn-hasard:disabled {
+  /* (trop cher : il garde ses couleurs, juste pâli, pour donner envie) */
+  background: repeating-linear-gradient(115deg, #b9b4ab 0 14px, #4f9df0 14px 28px, #b06cf0 28px 42px, #f5a524 42px 56px, #ff4d8d 56px 70px);
+  border-color: var(--encre);
+  opacity: 0.6;
   animation: none;
 }
 
