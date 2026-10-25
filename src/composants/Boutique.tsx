@@ -1,10 +1,10 @@
 // La boutique des gemmes (25/10) : regarder une publicité pour gagner une gemme, et dépenser ses
-// gemmes en bonus (production × 2, ventes × 2, clics en or) ou en trésor (un tas de pièces).
+// gemmes en bonus (production × 2, ventes × 2, employés × 2, fortune), 3 gemmes chacun.
 // Les règles sont dans src/jeu/gemmes.ts.
 
-import { BOOSTS, GEMMES_PAR_PUB, LISTE_BOOSTS, TRESOR, acheterBoost, acheterTresor, argentTresor, peutAcheterBoost, recompenserPub, secondesBoost } from '../jeu/gemmes'
+import { BOOSTS, GEMMES_PAR_PUB, LISTE_BOOSTS, acheterBoost, peutAcheterBoost, recompenserPub, secondesBoost } from '../jeu/gemmes'
 import { nombre, t } from '../jeu/langue'
-import { minutesSecondes, nombreAbrege } from '../nombres'
+import { minutesSecondes } from '../nombres'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 
@@ -54,19 +54,6 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
           </div>
         )
       })}
-
-      <div className="ligne-amelioration">
-        <span className="boutique-icone" aria-hidden="true">
-          💰
-        </span>
-        <span className="ligne-amelioration-texte">
-          <span className="ligne-amelioration-nom">{t('Trésor')}</span>
-          <span className="ligne-amelioration-effet">{t('Un coffre plein de pièces : +{n} $ tout de suite (plus gros à chaque niveau de la mine).', { n: nombreAbrege(argentTresor(etat)) })}</span>
-        </span>
-        <button className="btn btn-violet btn-petit" disabled={etat.gemmes < TRESOR.gemmes} onClick={() => jouer(acheterTresor)}>
-          💎 {TRESOR.gemmes}
-        </button>
-      </div>
 
       <p className="discret">{t('Astuce : les gemmes paient aussi n’importe quelle amélioration (le bouton violet 💎, à côté du prix).')}</p>
     </Fenetre>
