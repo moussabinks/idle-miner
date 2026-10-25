@@ -29,25 +29,25 @@ Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché 
 
 Chaque ligne d'amélioration (`Amelioration.tsx`) a **deux boutons** : le vert, avec le prix en argent et en minerais, et le **violet 💎**, avec le prix en gemmes. Payer en gemmes ne prend **ni argent, ni minerais**. Les conditions restent les mêmes : il faut le **palier de la mine** (ou le niveau du joueur) qu'il faut pour cette amélioration.
 
-**Le prix en gemmes** (`prixEnGemmes`) dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
+**Le prix en gemmes** (`prixEnGemmes`, revu le 25/10 à la demande du propriétaire) va de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
 
 ```
-prix en gemmes = arrondi( racine carrée(valeur en $) ÷ 5 ), au moins 1
+prix en gemmes = arrondi( 3 + 2 × (log10(valeur en $) − 2) ), entre 3 et 10
 ```
 
-La racine carrée fait que les gros achats coûtent **beaucoup moins de gemmes, en proportion**, que les petits : une gemme vaut environ 25 $ au début, et plus de 2 000 $ à la fin.
+Autrement dit : 2 gemmes de plus chaque fois que le prix est multiplié par 10. Avant, le prix suivait la racine carrée de la valeur et dépassait 100 gemmes en fin de partie.
 
 | Achat | Valeur | Prix en gemmes |
 |---|---:|---:|
-| Premier mineur | 50 $ | 1 💎 |
-| Coffre de 300 places (200 $ + 40 pierre) | 240 $ | 3 💎 |
-| Pioche en fer (300 $ + 20 fer) | 540 $ | 5 💎 |
-| Une amélioration à 1 000 $ | 1 000 $ | 6 💎 |
-| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 7 💎 |
-| Mine niveau 3 (12 000 $ + 100 fer + 40 redstone) | 13 800 $ | 23 💎 |
-| Une amélioration à 80 000 $ | 80 000 $ | 57 💎 |
-| Générateur niveau 5 (100 000 $ + 400 fer + 350 redstone) | 110 050 $ | 66 💎 |
-| Mine niveau 5 (320 000 $ + 90 or + 35 émeraudes) | 325 950 $ | 114 💎 |
+| Premier mineur | 50 $ | 3 💎 |
+| Coffre de 300 places (200 $ + 40 pierre) | 240 $ | 4 💎 |
+| Pioche en fer (300 $ + 20 fer) | 540 $ | 4 💎 |
+| Une amélioration à 1 000 $ | 1 000 $ | 5 💎 |
+| Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 5 💎 |
+| Mine niveau 3 (12 000 $ + 100 fer + 40 redstone) | 13 800 $ | 7 💎 |
+| Une amélioration à 80 000 $ | 80 000 $ | 9 💎 |
+| Générateur niveau 5 (100 000 $ + 400 fer + 350 redstone) | 110 050 $ | 9 💎 |
+| Mine niveau 5 (320 000 $ + 90 or + 35 émeraudes) | 325 950 $ | 10 💎 |
 
 Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) est lancée dans `acheterAvecGemmes(() => action)` (`mineur.ts`) : pendant ce temps, `payer` retire des gemmes au lieu de l'argent et des minerais. `peutPayerEnGemmes` dit si on en a assez.
 

@@ -7,7 +7,7 @@
 //     tous les jours : la série).
 // On s'en sert :
 //   - pour payer n'importe quelle amélioration sans argent ni minerais (le prix en gemmes dépend
-//     de ce qu'elle vaut, voir prixEnGemmes) ;
+//     de ce qu'elle vaut, de 3 à 10 gemmes, voir prixEnGemmes) ;
 //   - à la boutique des gemmes : des bonus pour un temps (production × 2, ventes × 2...).
 //
 // Ce fichier ne dépend que des données : la partie (EtatJeu) est décrite dans mineur.ts.
@@ -64,10 +64,17 @@ export function valeurEnDollars(cout: Cout): number {
   return (cout.argent ?? 0) + Object.entries(cout.materiaux).reduce((total, [bloc, n]) => total + (n ?? 0) * BLOCS[bloc as IdBloc].prix, 0)
 }
 
-// Le prix en gemmes d'un achat : il grandit moins vite que son prix en dollars (une amélioration
-// de 1 000 $ coûte 6 gemmes, une de 80 000 $ coûte environ 57 gemmes), au moins 1 gemme.
+// (25/10, demandé par le propriétaire) Le prix en gemmes d'un achat : de 3 gemmes (une petite
+// amélioration) à 10 gemmes (la plus grosse), soit 3 à 10 publicités. Avant, il suivait la racine
+// carrée du prix et montait à plus de 100 gemmes en fin de partie.
+// Il compte les chiffres du prix en dollars : 2 gemmes de plus chaque fois que le prix est
+// multiplié par 10 (100 $ → 3, 1 000 $ → 5, 10 000 $ → 7, 100 000 $ → 9, 300 000 $ → 10).
+export const GEMMES_MIN = 3
+export const GEMMES_MAX = 10
 export function prixEnGemmes(cout: Cout): number {
-  return Math.max(1, Math.round(Math.sqrt(valeurEnDollars(cout)) / 5))
+  const valeur = Math.max(1, valeurEnDollars(cout))
+  const prix = Math.round(GEMMES_MIN + 2 * (Math.log10(valeur) - 2))
+  return Math.min(GEMMES_MAX, Math.max(GEMMES_MIN, prix))
 }
 
 // ---------------------------------------------------------------------------
