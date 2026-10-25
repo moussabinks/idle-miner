@@ -239,6 +239,17 @@
   text-align: center;
 }
 
+/* Le bonus de combo gagné (Fortune...) : une étiquette jaune qui saute, à la place du texte. */
+.bonus-combo-actif {
+  align-self: center;
+  padding: 0 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  font-weight: 900;
+  animation: hud-saute 0.3s ease-out;
+}
+
 .compteurs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
