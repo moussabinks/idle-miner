@@ -1,7 +1,7 @@
 // Les nouveautés du 30/10 : bonus de combo, rails remboursés, missions qui ne changent plus
 // d'un coup, résumé de l'absence.
 import { describe, expect, it } from 'vitest'
-import { doublerAbsence, photoPartie, resumerAbsence } from './absence'
+import { doublerAbsence, photoPartie, resumerAbsence, vendreCoffreAuRetour } from './absence'
 import { aleatoireAvecGraine } from './aleatoire'
 import { construireBatiment, poserSol, raisonSolImpossible, retirerSol } from './batiments'
 import { embaucher } from './employes'
@@ -67,8 +67,34 @@ describe('l’absence', () => {
     expect(resume?.blocsMineurs).toBeGreaterThan(0)
     expect(resume?.secondes).toBe(600)
     expect(resume?.absenceMax).toBeNull() // (23/10) pas de manager
-    // (25/10) Les gains : ce qui attend dans le coffre (rien n'a été vendu).
-    expect(resume?.gains).toBe(valeurDe(etat.coffre.contenu))
+    // (25/10) Les gains : le bénéfice net (l'argent en plus en poche, salaires déduits).
+    expect(resume?.gains).toBe(Math.max(0, resume!.net))
+  })
+
+  it('(25/10) au retour, le coffre est vendu, et le grand chiffre est le bénéfice net (salaires déduits)', () => {
+    const hasard = aleatoireAvecGraine(1)
+    const etat = partieDeTest(hasard)
+    etat.argent = 10_000
+    construireBatiment(etat, 'employes', 9, 21)
+    embaucher(etat, hasard)
+    const avant = photoPartie(etat)
+    avancerTemps(etat, 1200, hasard)
+    const dansLeCoffre = valeurDe(etat.coffre.contenu)
+    const venteCoffre = vendreCoffreAuRetour(etat)
+    expect(venteCoffre).toBe(Math.round(dansLeCoffre))
+    expect(etat.coffre.contenu).toEqual({})
+    const resume = resumerAbsence(avant, etat, 1200, venteCoffre)!
+    expect(resume.venteCoffre).toBe(venteCoffre)
+    // Le bénéfice net = exactement l'argent en plus dans la poche.
+    expect(resume.net).toBe(Math.round(etat.argent - avant.argent))
+    // Un salaire payé pendant l'absence est déduit du bénéfice.
+    etat.argent -= 50
+    etat.stats.salairesPayes += 50
+    const avecSalaire = resumerAbsence(avant, etat, 1200, venteCoffre)!
+    expect(avecSalaire.salaires).toBe(resume.salaires + 50)
+    expect(avecSalaire.net).toBe(resume.net - 50)
+    // Les lignes de la fenêtre tombent juste : ventes + coffre + autres − salaires = bénéfice net.
+    expect(avecSalaire.ventesWagonnets + avecSalaire.venteCoffre + avecSalaire.autres - avecSalaire.salaires).toBe(avecSalaire.net)
   })
 
   it('(25/10) doubler l’absence redonne ses gains en argent', () => {
@@ -76,12 +102,13 @@ describe('l’absence', () => {
     const etat = partieDeTest(hasard)
     const avant = photoPartie(etat)
     avancerTemps(etat, 300, hasard)
-    const resume = resumerAbsence(avant, etat, 300)!
+    const resume = resumerAbsence(avant, etat, 300, vendreCoffreAuRetour(etat))!
     expect(resume.gains).toBeGreaterThan(0)
     const argent = etat.argent
     expect(doublerAbsence(etat, resume)[0]).toContain('doublés')
     expect(etat.argent).toBe(argent + resume.gains)
-    expect(etat.stats.argentGagne).toBe(resume.gains)
+    // (la vente du coffre au retour, puis le doublement : deux fois le bénéfice)
+    expect(etat.stats.argentGagne).toBe(2 * resume.gains)
     // Rien à doubler : rien ne se passe.
     expect(doublerAbsence(etat, { ...resume, gains: 0 })).toEqual([])
   })

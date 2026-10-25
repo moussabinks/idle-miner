@@ -71,7 +71,7 @@ les mineurs creusent ┘          │
 6. **Niveau 2 de la mine** (800 $ + 40 fer, au niveau 3 du joueur) : la redstone arrive, avec la **foreuse** et le **générateur**, et le **palier 2** : coffre de 300 places, pioche en fer, ascenseur 2, mineurs en pioche de fer, etc. Le générateur brûle la redstone (1 redstone = 30 s) et électrifie un cercle de 12 cases autour de lui : si **tous les rails d'un trajet** sont dedans, son pousseur va plus vite.
 7. **Niveaux 3, 4 et 5** : or (et le **manager**, qui paie les salaires tout seul), émeraudes (et le **recruteur**, pour des mineurs rares), diamants. Chaque niveau permet **1 mineur de plus** (1 au niveau 1, 5 au niveau 5) et débloque le palier suivant.
 
-Pendant ce temps, la **mine toute seule**, les **mineurs** (tant qu'on paie leur salaire), la **foreuse** (tant qu'elle a du charbon) et les **wagonnets** (avec leur pousseur) continuent quand le jeu est fermé (rattrapage de **8 h au plus**). Les clics, eux, non. Au retour, la fenêtre **« Bon retour, mineur ! »** montre tout ce que l'absence a rapporté, avec **📺 Doubler** (une publicité). Les bonus de la boutique s'usent aussi pendant l'absence.
+Pendant ce temps, la **mine toute seule**, les **mineurs** (tant qu'on paie leur salaire), la **foreuse** (tant qu'elle a du charbon) et les **wagonnets** (avec leur pousseur) continuent quand le jeu est fermé (rattrapage de **8 h au plus**). Les clics, eux, non. Au retour, la fenêtre **« Bon retour, mineur ! »** vend tout seul le coffre de la mine et montre le **bénéfice net** de l'absence (salaires déduits), avec **📺 Doubler** (une publicité). Les bonus de la boutique s'usent aussi pendant l'absence.
 
 ## La progression, niveau de mine par niveau de mine
 

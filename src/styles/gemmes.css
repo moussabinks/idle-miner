@@ -420,6 +420,11 @@
   padding: 8px 12px;
 }
 
+/* (25/10) Une dépense (les salaires) : en rouge */
+.absence-depense strong {
+  color: #d6455d;
+}
+
 .absence-gains {
   display: flex;
   flex-direction: column;
