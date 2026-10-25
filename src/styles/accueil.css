@@ -591,6 +591,11 @@
   font-size: 0.7rem;
 }
 
+/* Le navigateur refuse la sauvegarde : un avertissement rose, avant le numéro de version. */
+.accueil-sans-sauvegarde {
+  color: var(--rose-fonce);
+}
+
 /* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */
 
 @media (max-width: 1240px) {

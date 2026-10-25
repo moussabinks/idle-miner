@@ -862,4 +862,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Coffre de la mine : {dans} / {capacite}': 'Mine chest: {dans} / {capacite}',
   'Le village vu du ciel': 'The village from above',
   'Pioche de {nom}': '{nom}’s pickaxe',
+  // src/composants/Accueil.tsx (avertissement de sauvegarde)
+  'Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page.': 'This browser doesn’t keep your games: they will be lost when you close the page.',
 }

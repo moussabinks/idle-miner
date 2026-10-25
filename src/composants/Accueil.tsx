@@ -27,7 +27,7 @@ import {
 import { choisirLangue } from '../langueNavigateur'
 import { nombreAbrege } from '../nombres'
 import { AVEC_COMPTES, AVEC_INSTALLATION } from '../portail'
-import { stockage } from '../stockage'
+import { stockage, stockagePersistant } from '../stockage'
 import type { Compte } from '../useCompte'
 import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { CarteClassement } from './CarteClassement'
@@ -371,7 +371,11 @@ export function Accueil({ compte, onJouer, onLangue }: Props) {
       )}
 
       {/* La version en ligne (commit et date du build) : pour vérifier que Vercel est à jour. */}
-      <p className="accueil-version">{t('Version {v}', { v: __VERSION_JEU__ })}</p>
+      <p className="accueil-version">
+        {/* Le navigateur refuse la sauvegarde (navigation privée, site dans un cadre...) : on prévient. */}
+        {!stockagePersistant && <strong className="accueil-sans-sauvegarde">⚠️ {t('Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page.')} </strong>}
+        {t('Version {v}', { v: __VERSION_JEU__ })}
+      </p>
 
       {compteOuvert && AVEC_COMPTES && (
         <Fenetre titre={t('Ton compte')} icone="👤" couleur="bleu" taille="petite" onFermer={() => setCompteOuvert(false)}>
