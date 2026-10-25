@@ -188,7 +188,7 @@ La clairière de 40 × 40 cases vue du ciel (isométrique) : le décor, la mine 
 **Par-dessus la carte** :
 - **Les bulles de notification** au-dessus des bâtiments (§ 11) ; les toucher ouvre le bâtiment.
 - **La bulle « 🛤️ Automatiser »** (orange, avec des étincelles), au milieu de rails qui relient deux bâtiments sans trajet : la toucher ouvre la fenêtre **Automatiser**.
-- **La jauge du coffre**, toujours au-dessus de la mine : 📦 « 120 / 300 », orange à 75 %, rouge et clignotante quand il est plein ; avec « 👷 *n* » les mineurs au fond.
+- (25/10 : plus de jauge du coffre au-dessus de la mine : le bandeau du haut montre déjà 📦 *n* / *capacité*, et la bulle « Plein ! » prévient quand il faut vendre.)
 - **Des mini-jauges** quand un bâtiment travaille : la forge (« 🔨 Pioche de … »), la foreuse (« ⚙️ Forage »), le générateur (« ⚡ Courant »), et la caisse de l'ascenseur qui se décharge.
 - **Le rayon du générateur** : un cercle jaune, seulement quand sa fenêtre est ouverte ou qu'on le place.
 - Un nouveau mineur arrive avec une bulle « ✨ Nouveau ! » ; un mineur pas payé a un 😠 au-dessus de la tête.

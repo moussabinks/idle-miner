@@ -16,7 +16,7 @@
   - **😠 « Payer ! »** quand des employés attendent leur salaire (la même alerte est au Personnel) ;
   - **🚧 « Rails coupés »** (alerte rouge) quand un trajet qui part de la mine (ou qui y arrive) n'a plus de rails complets ;
   - **⬆️ « Achetable »** quand une amélioration de la mine est payable tout de suite, **seulement pendant le tutoriel**.
-- **La jauge du coffre** : au-dessus de la mine, une petite barre toujours visible, « 📦 *n* / *capacité* » (en court : « 1,2 k »), verte, orange dès 75 %, rouge quand le coffre est plein.
+- (25/10 : plus de jauge du coffre au-dessus de la mine : le bandeau du haut montre déjà 📦 *n* / *capacité*, et la bulle « Plein ! » prévient quand il faut vendre.)
 
 ## Ce qu'on peut y faire
 
@@ -190,5 +190,5 @@ Total : 83 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'élect
 - `src/jeu/production.ts` : la production (`production`) et les goulots (`analyseAscenseur`, `analyseWagonnet`), testés dans `production.test.ts`.
 - `src/composants/PanneauMine.tsx` : le panneau (bloc à cliquer, coffre, onglet Améliorer, wagonnets, production) ; `src/composants/StockMinerais.tsx` : le coffre à vendre (Tout vendre, Vendre, punaise 📌) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur ; `src/composants/Amelioration.tsx` : les lignes d'amélioration (argent ou 💎) ; `src/composants/AlerteChariot.tsx` : le chariot trop petit.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.
-- `src/composants/DessinsVillage.tsx`, `src/composants/VueVillage.tsx` : la caisse de l'ascenseur, le panneau du niveau, la jauge du coffre au-dessus de la mine.
+- `src/composants/DessinsVillage.tsx`, `src/composants/VueVillage.tsx` : la caisse de l'ascenseur, le panneau du niveau.
 - `src/styles/mine.css` : le style du panneau de la mine (25/10).

@@ -173,7 +173,7 @@ Au-dessus des bâtiments posés, des **bulles** sautillent pour dire qu'il y a q
 | ✨ | Personnel | le manager (niveau 3) ou le recruteur (niveau 4) vient de se débloquer, pas encore vu | nouveau (bleu) |
 | ⬆️ | le bâtiment concerné | une amélioration est achetable (**seulement pendant le tutoriel** : sinon il y aurait presque toujours une bulle, et la liste des tâches propose déjà les achats) | achat (vert) |
 
-La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la mine, les bulles sont un peu plus haut (128 px), pour passer au-dessus de la jauge du coffre (§ 9).
+La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la mine, les bulles sont un peu plus haut (128 px).
 
 ## 9. La mine sur la carte
 
@@ -181,7 +181,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 - **Le dessin de la mine** (`public/images/batiments/mine.svg`, 25/10 : le puits, le chevalement, la montagne de rochers), posée comme les autres bâtiments sur ses 10 × 10 cases (`CALAGES.puits`). Par-dessus, le jeu dessine ce qui **évolue** (`DessinEvolutionMine`, placé à partir de points de l'image, `POINTS_MINE`, miroir compris) :
   - **la caisse de l'ascenseur** (25/10 : `caisse-ascenseur-0.svg` vide, puis `-1` à `-4` pleines des minerais du niveau de la mine : pierre-charbon-fer, + redstone (niveaux 2 et 3), + or et émeraude (niveau 4), + diamant (niveau 5)), pendue aux deux câbles du treuil. Depuis le 23/10 (bis), **elle fait des allers-retours sans cesse** tant que des mineurs travaillent au fond (`avancerNavette` dans `employes.ts`) : elle descend vide, se charge 1 s au fond, **remonte pleine tout en haut**, sous le treuil, s'y vide dans le coffre (2 s), puis repart, pleine ou pas. `MineAnimee` la dessine là où elle est (`hauteurNavette`), en glissant doucement. Les mineurs restent au fond : on ne voit un mineur dans la caisse que quand il **arrive** (il attend la caisse en haut, au bout de son chemin, puis descend dedans) ou quand il **remonte parce qu'il n'est plus payé**. Sans mineur, elle attend vide en haut. Elle descend dans le puits et disparaît sous son bord de devant (`bordDuPuits`), les poutres de devant du puits (`mine-devant.svg`) passent devant ; les torons des câbles défilent quand elle bouge. Une mini-jauge (23/10 : seulement pendant le déchargement) dit « 📦 Déchargement · *n* » (« 📦 Coffre plein ! » si elle ne peut pas se vider). Sans ascenseur (une vieille partie, avant sa conversion), les câbles pendent au fond ;
   - **un panneau en bois** devant la galerie affiche le niveau de la mine (« Niv. 3 »).
-- **La jauge du coffre** (27/10) : au-dessus de la mine, toujours visible, une petite barre « 📦 *n* / *capacité* » (nombres en court : « 1,2 k », « 12 k », `nombreAbrege` dans `src/nombres.ts`). Verte, puis **orange** dès 75 %, **rouge** quand le coffre est plein (elle pulse alors). On voit tout de suite s'il faut le vider.
+- (25/10 : plus de jauge du coffre au-dessus de la mine : le bandeau du haut montre déjà 📦 *n* / *capacité*, et la bulle « Plein ! » prévient quand il faut vendre.)
 
 ## 10. Les anciennes parties
 
