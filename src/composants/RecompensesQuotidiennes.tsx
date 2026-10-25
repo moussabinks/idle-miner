@@ -26,7 +26,11 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
   function ouvrir() {
     const recompense = RECOMPENSES_QUOTIDIENNES[jour - 1]
     setOuvert({ jour, recompense, argent: argentRecompense(etat, recompense) })
-    jouer((e) => recupererQuotidien(e, aujourdhui))
+    // (pas de message en bas : la fenêtre montre déjà ce qu'on a gagné)
+    jouer((e) => {
+      recupererQuotidien(e, aujourdhui)
+      return []
+    })
     sons.niveauGagne()
   }
 
