@@ -61,15 +61,15 @@ describe('les goulots : ascenseur et wagonnet', () => {
   it('le wagonnet : personne pour le pousser, puis un débit qui dépend de sa taille', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     expect(analyseWagonnet(etat)).toBeNull() // pas de trajet
-    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
-    etat.inventaire = { fer: 300 }
-    for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false })
+    etat.coffre.contenu = { fer: 300 }
+    for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
     creerTrajet(etat, 'mine-marche')
     const seul = analyseWagonnet(etat)
     expect(seul).toMatchObject({ moteur: 'personne', debitMax: 0 })
     expect(seul?.surplus).toBeCloseTo(seul?.apport ?? -1)
     etat.argent = 1_000_000
-    etat.village.batiments.push({ id: 'employes', x: 19, y: 31, miroir: false })
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
     embaucherPousseur(etat, aleatoireAvecGraine(3), 'mine-marche')
     const pousse = analyseWagonnet(etat)
     expect(pousse?.moteur).toBe('pousseur')

@@ -6,6 +6,7 @@
 // - iPhone / iPad (Safari) : pas d'invitation possible, on explique comment faire à la main.
 
 import { useEffect, useState } from 'react'
+import { AVEC_INSTALLATION } from './portail'
 
 // L'invitation du navigateur (elle n'existe pas dans les types TypeScript de base).
 type InvitationInstallation = Event & { prompt: () => Promise<void> }
@@ -28,9 +29,10 @@ if (typeof window !== 'undefined') {
 
 // Seulement pour le site en ligne : en développement, le cache gênerait les modifications.
 export function enregistrerServiceWorker(): void {
-  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return
+  // (25/10) Ni service worker ni installation dans la version CrazyGames (voir portail.ts).
+  if (!import.meta.env.PROD || !AVEC_INSTALLATION || !('serviceWorker' in navigator)) return
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' }).catch(() => {
       // Pas de service worker (navigation privée...) : le jeu marche quand même, sans hors ligne.
     })
   })

@@ -1,128 +1,96 @@
-// Les trajets des wagonnets qui partent d'un bâtiment (24/10), dans son panneau (la mine, la
-// foreuse). Pour chaque arrivée possible :
-//   - pas encore de rails jusque-là : on explique comment faire ;
-//   - des rails, mais pas de trajet : on le crée avec la bulle « 🛤️ Automatiser » sur les rails ;
-//   - un trajet : où en est son wagonnet, le pousser soi-même, ou arrêter le trajet.
-// (23/10 : la taille d'un wagonnet, c'est le chariot de son pousseur, au Personnel.)
+// Les trajets des wagonnets d'un bâtiment (24/10, refait le 25/10), dans son panneau : ceux qui
+// en partent (la mine, la foreuse) et/ou ceux qui y arrivent (le marché, la foreuse).
+// Une ligne par trajet, avec une seule chose à faire :
+//   - pas encore de rails : « Pas de rails » (on les pose avec 🏗️ Construire) ;
+//   - des rails, mais pas de trajet : « Automatiser » (ouvre la fenêtre du trajet) ;
+//   - un trajet : où en est son wagonnet, « Pousser » si personne ne le pousse, et « Régler ».
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
-import { BATIMENTS, LIAISONS, type IdBatiment, type IdLiaison } from '../jeu/donnees'
-import {
-  aCharger,
-  aUnPousseur,
-  capaciteTrajet,
-  distanceDepuisLeDepart,
-  enRoute,
-  ligneDe,
-  liaisonsDepuis,
-  longueurTrajet,
-  peutPousser,
-  pousserTrajet,
-  supprimerTrajet,
-  trajetDe,
-  trajetElectrique,
-} from '../jeu/wagonnet'
+import { BATIMENTS, LIAISONS, LISTE_LIAISONS, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { nombre, t } from '../jeu/langue'
+import { batimentPose } from '../jeu/village'
+import { aCharger, aUnPousseur, capaciteTrajet, distanceDepuisLeDepart, enRoute, ligneDe, longueurTrajet, peutPousser, pousserTrajet, trajetDe, trajetElectrique } from '../jeu/wagonnet'
 import { Barre } from './Barre'
+import { useJeu } from './contexteJeu'
+import { nomTrajet } from './nomTrajet'
 import type { PropsPanneau } from './Panneaux'
 
-// Les bâtiments des trajets, avec leur article (« la mine », « le marché »...).
-const NOMS: Partial<Record<IdBatiment, { le: string; au: string }>> = {
-  puits: { le: 'la mine', au: 'à la mine' },
-  marche: { le: 'le marché', au: 'au marché' },
-  foreuse: { le: 'la foreuse', au: 'à la foreuse' },
-  generateur: { le: 'le générateur', au: 'au générateur' },
-}
-const le = (id: IdBatiment) => NOMS[id]?.le ?? BATIMENTS[id].nom
-const au = (id: IdBatiment) => NOMS[id]?.au ?? BATIMENTS[id].nom
-
-function Trajet({ etat, jouer, liaison, onReglerTrajet }: PropsPanneau & { liaison: IdLiaison }) {
+// Une ligne : le nom du trajet, son état, et le bouton.
+export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; onReglerTrajet?: (liaisons: IdLiaison[]) => void }) {
+  const { etat, jouer } = useJeu()
   const info = LIAISONS[liaison]
-  const depart = BATIMENTS[info.depart]
-  const arrivee = BATIMENTS[info.arrivee]
   const ligne = ligneDe(etat, liaison)
   const trajet = trajetDe(etat, liaison)
-  const titre = (
-    <strong>
-      {info.emoji} {depart.nom} → {arrivee.nom}
-    </strong>
-  )
 
+  let etiquette: { texte: string; classe: string }
+  let detail: string
   if (!ligne) {
-    // Une seule ligne (27/10) : l'explication complète est dans la bulle d'aide.
-    return (
-      <div
-        className="ligne-achat trajet trajet-sans-rails"
-        title={`Relie ${le(info.depart)} ${au(info.arrivee)} avec des rails (menu Bâtiments, 3 fer la case), puis touche la bulle 🛤️ sur les rails : un wagonnet ${info.description}.`}
-      >
-        <div className="ligne-titre">
-          {titre}
-          <span className="discret">🛤️ Pas encore de rails</span>
-        </div>
-      </div>
-    )
+    etiquette = { texte: t('Pas de rails'), classe: '' }
+    detail = t('Relie les deux bâtiments avec des rails (🏗️ Construire).')
+  } else if (!trajet) {
+    etiquette = { texte: t('Rails posés'), classe: 'etiquette-jaune' }
+    detail = t('Un wagonnet {action}.', { action: t(info.description) })
+  } else if (enRoute(trajet)) {
+    etiquette = { texte: trajetElectrique(etat, liaison) ? `⚡ ${t('En route')}` : t('En route'), classe: 'etiquette-vert' }
+    detail = trajet.etape === 'aller' ? `→ ${t(BATIMENTS[info.arrivee].nom)}` : `← ${t(BATIMENTS[info.depart].nom)}`
+  } else if (!aUnPousseur(etat, liaison)) {
+    etiquette = { texte: t('Pas de pousseur'), classe: 'etiquette-rose' }
+    detail = t('Embauche un pousseur au Personnel, ou pousse-le toi-même.')
+  } else {
+    etiquette = { texte: t('Au quai'), classe: 'etiquette-bleu' }
+    detail = aCharger(etat, liaison) === 0 ? t('Rien à emporter pour l’instant.') : t('Son pousseur va repartir.')
   }
 
-  if (!trajet) {
-    // Le trajet se crée sur la carte (27/10) : la bulle « 🛤️ Automatiser » au milieu des rails.
-    return (
-      <div className="ligne-achat trajet">
-        {titre}
-        <span className="discret">Les rails sont posés ! Touche la bulle 🛤️ Automatiser sur les rails pour lancer le wagonnet ({info.description}).</span>
-      </div>
-    )
-  }
-
-  const electrique = trajetElectrique(etat, liaison)
-  const pousseur = trajet.pousseur === 'joueur' ? 'toi' : trajet.pousseur === 'electricite' ? 'l’électricité ⚡' : trajet.pousseur
-  const aPorter = aCharger(etat, liaison)
+  const aPorter = Math.min(capaciteTrajet(etat, liaison), aCharger(etat, liaison))
   return (
-    <div className="ligne-achat trajet trajet-actif">
-      <div className="ligne-titre">
-        {titre}
-        {electrique && <span className="badge badge-vert">⚡ Électrique</span>}
-      </div>
-      <span className="discret">
-        {enRoute(trajet)
-          ? `${trajet.etape === 'aller' ? `En route vers ${le(info.arrivee)}` : `Revient ${au(info.depart)}`}, poussé par ${pousseur}.`
-          : !aUnPousseur(etat, liaison)
-            ? 'Pas de pousseur : embauche-en un pour ce trajet au Personnel (ou pousse-le toi-même).'
-            : aPorter === 0
-              ? 'Au quai : rien à porter pour l’instant.'
-              : electrique
-                ? 'Son pousseur va le pousser, plus vite grâce aux rails électriques ⚡.'
-                : 'Son pousseur va le pousser.'}
+    <div className="ligne-amelioration ligne-wagonnet">
+      <span className="ligne-wagonnet-icone" aria-hidden="true">
+        {info.emoji}
       </span>
-      {enRoute(trajet) && (
-        <Barre valeur={distanceDepuisLeDepart(etat, trajet)} max={longueurTrajet(ligne)} texte={trajet.etape === 'aller' ? `→ ${arrivee.nom}` : `← ${depart.nom}`} couleur="or" />
-      )}
-      <div className="boutons">
-        <button className="bouton bouton-petit bouton-voyage" disabled={!peutPousser(etat, liaison)} onClick={() => jouer((e) => pousserTrajet(e, liaison))}>
-          🛤️ Pousser ({Math.min(capaciteTrajet(etat, liaison), aPorter)} objets)
-        </button>
-        {/* La fenêtre des trajets : les objets à envoyer, l'aperçu des voyages (27/10). */}
-        {onReglerTrajet && (
-          <button className="bouton bouton-petit bouton-neutre" title="Choisir les objets à envoyer" onClick={() => onReglerTrajet([liaison])}>
-            ⚙️ Régler
-          </button>
+      <div className="ligne-amelioration-texte">
+        <span className="ligne-amelioration-nom">
+          {nomTrajet(liaison)} <span className={`etiquette ${etiquette.classe}`}>{etiquette.texte}</span>
+        </span>
+        {trajet && ligne && enRoute(trajet) ? (
+          <Barre valeur={distanceDepuisLeDepart(etat, trajet)} max={longueurTrajet(ligne)} texte={detail} couleur="or" />
+        ) : (
+          <span className="ligne-amelioration-effet">{detail}</span>
         )}
-        <button className="bouton bouton-petit bouton-stop" title="Arrêter ce trajet (les rails restent)" onClick={() => jouer((e) => supprimerTrajet(e, liaison))}>
-          ✖ Arrêter
-        </button>
       </div>
+      {ligne && (
+        <span className="ligne-amelioration-boutons">
+          {/* Personne ne le pousse : le joueur peut le pousser lui-même. */}
+          {trajet && !aUnPousseur(etat, liaison) && (
+            <button className="btn btn-jaune btn-petit" disabled={!peutPousser(etat, liaison)} onClick={() => jouer((e) => pousserTrajet(e, liaison))}>
+              <span>🛒 {t('Pousser')}</span>
+              {aPorter > 0 && <span className="prix">{t('{n} blocs', { n: nombre(aPorter) })}</span>}
+            </button>
+          )}
+          {onReglerTrajet && (
+            <button className={`btn btn-petit ${trajet ? 'btn-bleu' : 'btn-vert'}`} onClick={() => onReglerTrajet([liaison])}>
+              {trajet ? `⚙️ ${t('Régler')}` : `🛤️ ${t('Automatiser')}`}
+            </button>
+          )}
+        </span>
+      )}
     </div>
   )
 }
 
-export function PanneauTrajets({ etat, jouer, depart, onReglerTrajet }: PropsPanneau & { depart: IdBatiment }) {
-  const liaisons = liaisonsDepuis(etat, depart)
-  if (liaisons.length === 0) return null
+// Les trajets qui partent de « depart » et/ou arrivent à « arrivee » (les deux bâtiments construits).
+export function PanneauTrajets({ depart, arrivee, onReglerTrajet }: Partial<PropsPanneau> & { depart?: IdBatiment; arrivee?: IdBatiment }) {
+  const { etat } = useJeu()
+  const liaisons = LISTE_LIAISONS.filter((l) => {
+    const info = LIAISONS[l]
+    const concerne = info.depart === depart || info.arrivee === arrivee
+    return concerne && batimentPose(etat.village, info.depart) !== null && batimentPose(etat.village, info.arrivee) !== null
+  })
+  if (liaisons.length === 0) return <p className="discret">{t('Aucun trajet possible pour l’instant : construis le bâtiment d’arrivée.')}</p>
   return (
-    <>
-      <h4 className="titre-trajets">🛤️ Wagonnets</h4>
+    <div className="liste-lignes">
       {liaisons.map((liaison) => (
-        <Trajet key={liaison} etat={etat} jouer={jouer} liaison={liaison} onReglerTrajet={onReglerTrajet} />
+        <LigneTrajet key={liaison} liaison={liaison} onReglerTrajet={onReglerTrajet} />
       ))}
-      {/* (23/10) Plus de « taille des wagonnets » ici : chaque pousseur a son chariot, au Personnel. */}
-    </>
+    </div>
   )
 }

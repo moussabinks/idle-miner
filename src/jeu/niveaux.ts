@@ -1,6 +1,9 @@
 // Le niveau du joueur (29/10) : on gagne de l'XP en jouant (casser des blocs, construire, poser
-// des rails, automatiser, embaucher, améliorer...), et chaque niveau débloque de nouveaux
-// bâtiments et de nouveaux niveaux d'amélioration (qu'il faut ensuite payer).
+// des rails, automatiser, embaucher, améliorer...).
+// (25/10) Les paliers : le niveau du joueur débloque les rails et les niveaux de la mine ; le
+// niveau de la mine (le palier) débloque le même niveau de toutes les améliorations. Au palier 3,
+// tout peut monter au niveau 3 : on améliore un niveau de chaque chose, puis on descend la mine.
+// Chaque niveau du joueur gagné rapporte aussi des gemmes.
 //
 // Comment on compte l'XP : on regarde des « compteurs » de la partie (blocs cassés, bâtiments
 // posés, cases de rails...) et on garde le plus haut chiffre déjà vu de chacun (etat.recordsXp).
@@ -24,9 +27,9 @@ import {
   NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAU_JOUEUR_MAX,
   NIVEAU_JOUEUR_POUR,
+  PALIER_CHEF,
   PIOCHES,
   PRIX_MANAGER,
-  SACS,
   XP_PAR,
   VALEUR_PAR_XP,
   BLOCS_PAR_XP,
@@ -35,7 +38,9 @@ import {
   type IdBatiment,
   type IdBloc,
 } from './donnees'
+import { GEMMES_PAR_NIVEAU, gagnerGemmes } from './gemmes'
 import type { EtatJeu } from './mineur'
+import { t } from './langue'
 
 // ---------------------------------------------------------------------------
 // Le niveau à partir de l'XP
@@ -70,12 +75,12 @@ export function progressionNiveau(etat: EtatJeu): { niveau: number; xp: number; 
 // Ce qui est débloqué
 // ---------------------------------------------------------------------------
 
-// Les choses qui se débloquent par niveau, avec un tableau (case i : le niveau qu'il faut pour
-// en acheter le niveau i).
-export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'sacs' | 'ascenseur' | 'equipement' | 'pousseur' | 'chariotPousseur' | 'tempsManager' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
+// Les choses qui ont des niveaux. « mine » se débloque avec le niveau du joueur ; les chefs
+// (recruteur, tempsManager) à un palier fixe (PALIER_CHEF) ; tout le reste avec le palier.
+export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'ascenseur' | 'equipement' | 'pousseur' | 'chariotPousseur' | 'tempsManager' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
 
-// Le niveau du joueur qu'il faut pour acheter le niveau « index » de cette chose.
-export function niveauRequis(chose: ChoseANiveaux, index: number): number {
+// Le niveau du joueur qu'il faut pour descendre la mine au niveau « index + 1 ».
+export function niveauRequis(chose: 'mine', index: number): number {
   const liste = NIVEAU_JOUEUR_POUR[chose]
   return liste[Math.max(0, Math.min(index, liste.length - 1))]
 }
@@ -84,19 +89,32 @@ export function niveauAtteint(etat: EtatJeu, requis: number): boolean {
   return niveauJoueur(etat) >= requis
 }
 
+// Le palier de la mine qu'il faut pour le niveau « index » d'une chose (index 0 : ce qu'on a au
+// départ, ou l'embauche d'un chef). null pour la mine elle-même (elle demande un niveau du joueur).
+export function palierRequis(chose: ChoseANiveaux, index: number): number | null {
+  if (chose === 'mine') return null
+  if (chose === 'recruteur') return PALIER_CHEF.recruteur[Math.max(0, Math.min(index, PALIER_CHEF.recruteur.length - 1))]
+  if (chose === 'tempsManager') return PALIER_CHEF.manager[Math.max(0, Math.min(index, PALIER_CHEF.manager.length - 1))]
+  return index + 1
+}
+
 // Peut-on acheter le niveau « index » de cette chose (sans compter le prix) ?
 export function debloque(etat: EtatJeu, chose: ChoseANiveaux, index: number): boolean {
-  return niveauAtteint(etat, niveauRequis(chose, index))
+  if (chose === 'mine') return niveauAtteint(etat, niveauRequis('mine', index))
+  return etat.niveauMine >= (palierRequis(chose, index) ?? 1)
 }
 
 // Le texte du cadenas (« ⭐ 7 » : le niveau du joueur qu'il faut, avec l'étoile de la barre du
-// haut, pour ne pas le confondre avec le niveau de la mine, 23/10) ou null si c'est débloqué.
+// haut) ou null si c'est débloqué.
 export function verrouNiveau(etat: EtatJeu, requis: number): string | null {
   return niveauAtteint(etat, requis) ? null : `⭐ ${requis}`
 }
 
+// Le cadenas d'un niveau d'amélioration : « 🕳️ Mine 3 » (le palier qu'il faut) ou « ⭐ 6 ».
 export function verrou(etat: EtatJeu, chose: ChoseANiveaux, index: number): string | null {
-  return verrouNiveau(etat, niveauRequis(chose, index))
+  if (chose === 'mine') return verrouNiveau(etat, niveauRequis('mine', index))
+  const palier = palierRequis(chose, index) ?? 1
+  return etat.niveauMine >= palier ? null : t('🕳️ Mine {n}', { n: palier })
 }
 
 export function niveauPourBatiment(id: IdBatiment): number {
@@ -107,42 +125,18 @@ export function railsDebloques(etat: EtatJeu): boolean {
   return niveauAtteint(etat, NIVEAU_JOUEUR_POUR.rails)
 }
 
-// « 30 min », « 2 h »
-function dureeTexte(minutes: number): string {
-  return minutes < 60 ? `${minutes} min` : `${minutes / 60} h`
-}
-
-// Tout ce qui se débloque à un niveau donné, en mots (pour la fête du passage de niveau, et
-// pour dire au joueur ce qui l'attend).
+// Tout ce qui se débloque à un niveau du joueur, en mots (pour la fête du passage de niveau, et
+// pour dire au joueur ce qui l'attend). (25/10) Les améliorations suivent les paliers de la
+// mine : un niveau du joueur débloque seulement des bâtiments, les rails ou un palier.
 export function deblocagesDuNiveau(niveau: number): string[] {
   const liste: string[] = []
   for (const [id, requis] of Object.entries(NIVEAU_JOUEUR_POUR.batiments)) {
-    if (requis === niveau && niveau > 1) liste.push(`${BATIMENTS[id as IdBatiment].emoji} ${BATIMENTS[id as IdBatiment].nom}`)
+    if (requis === niveau && niveau > 1) liste.push(`${BATIMENTS[id as IdBatiment].emoji} ${t(BATIMENTS[id as IdBatiment].nom)}`)
   }
-  if (NIVEAU_JOUEUR_POUR.rails === niveau) liste.push('🛤️ Les rails et les wagonnets')
-  if (NIVEAU_JOUEUR_POUR.manager === niveau) liste.push('💼 Le manager')
-  const parNiveau: [ChoseANiveaux, (i: number) => string][] = [
-    ['mine', (i) => `⛏️ Mine niveau ${NIVEAUX_MINE[i].niveau} : ${NIVEAUX_MINE[i].nom}`],
-    ['pioches', (i) => `⛏️ Pioche en ${PIOCHES[i].nom}`],
-    ['coffre', (i) => `📦 Coffre de ${NIVEAUX_COFFRE[i].capacite.toLocaleString('fr-FR')} places`],
-    ['sacs', (i) => `🎒 Sac de ${SACS[i].taille.toLocaleString('fr-FR')} places`],
-    ['ascenseur', (i) => (i === 0 ? '🛗 L’ascenseur' : `🛗 Ascenseur niveau ${NIVEAUX_ASCENSEUR[i].niveau}`)],
-    ['equipement', (i) => `👷 Pioche en ${NIVEAUX_EMPLOYE[i].nom} pour les mineurs`],
-    ['pousseur', (i) => `🛤️ Pousseur ${NIVEAUX_POUSSEUR[i].nom.toLowerCase()} (vitesse ×${NIVEAUX_POUSSEUR[i].vitesse.toLocaleString('fr-FR')})`],
-    ['chariotPousseur', (i) => `🛒 Chariot des pousseurs : ${NIVEAUX_CHARIOT_POUSSEUR[i].places} places`],
-    ['tempsManager', (i) => `💼 Manager : éveillé ${dureeTexte(NIVEAUX_MANAGER[i].minutesEveil)}`],
-    ['generateur', (i) => `⚡ Générateur : rayon ${NIVEAUX_GENERATEUR[i].rayon} cases`],
-    ['forage', (i) => `⚙️ Forage ${NIVEAUX_FORAGE[i].vitesse} blocs/s`],
-    ['chariot', (i) => `🛒 Chariot de la foreuse : ${NIVEAUX_CHARIOT[i].capacite.toLocaleString('fr-FR')} places`],
-    ['recruteur', (i) => (i === 0 ? '🎩 Le recruteur' : `🎩 Recruteur niveau ${i + 1}`)],
-  ]
-  for (const [chose, nom] of parNiveau) {
-    NIVEAU_JOUEUR_POUR[chose].forEach((requis, i) => {
-      // (la case 0 est ce qu'on a au départ, sauf pour l'ascenseur et le recruteur, qui s'achètent)
-      const achete = i > 0 || chose === 'ascenseur' || chose === 'recruteur'
-      if (requis === niveau && achete && niveau > 1) liste.push(nom(i))
-    })
-  }
+  if (NIVEAU_JOUEUR_POUR.rails === niveau) liste.push(t('🛤️ Les rails et les wagonnets'))
+  NIVEAU_JOUEUR_POUR.mine.forEach((requis, i) => {
+    if (requis === niveau && i > 0) liste.push(t('⛏️ Mine niveau {n} : {nom}', { n: NIVEAUX_MINE[i].niveau, nom: t(NIVEAUX_MINE[i].nom) }))
+  })
   return liste
 }
 
@@ -181,7 +175,6 @@ export function valeurInvestie(etat: EtatJeu): number {
   total += valeurNiveaux(NIVEAUX_MINE, etat.niveauMine - 1)
   total += valeurNiveaux(NIVEAUX_COFFRE, etat.coffre.niveau)
   total += valeurNiveaux(PIOCHES, etat.meilleure)
-  total += SACS.slice(1, etat.niveauSac + 1).reduce((somme, sac) => somme + sac.prix, 0)
   total += valeurNiveaux(NIVEAUX_ASCENSEUR, etat.ascenseur.niveau - 1)
   total += valeurNiveaux(NIVEAUX_FORAGE, etat.foreuse.niveauVitesse)
   total += valeurNiveaux(NIVEAUX_CHARIOT, etat.foreuse.niveauChariot)
@@ -209,7 +202,6 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
     amelioration:
       etat.coffre.niveau +
       etat.meilleure +
-      etat.niveauSac +
       etat.ascenseur.niveau +
       etat.foreuse.niveauVitesse +
       etat.foreuse.niveauChariot +
@@ -248,8 +240,16 @@ export function mettreAJourXp(etat: EtatJeu): string[] {
   const apres = niveauJoueur(etat)
   const messages: string[] = []
   for (let n = avant + 1; n <= apres; n++) {
+    // (25/10) Chaque niveau gagné rapporte des gemmes.
+    gagnerGemmes(etat, GEMMES_PAR_NIVEAU)
     const choses = deblocagesDuNiveau(n)
-    messages.push(`🎉 Niveau ${n} !${choses.length > 0 ? ` Débloqué : ${choses.join(', ')}.` : ''}`)
+    // (25/10) Le message commence toujours par « 🎉 » : l'interface le reconnaît ainsi (usePartie.ts),
+    // dans toutes les langues.
+    messages.push(
+      choses.length > 0
+        ? t('🎉 Niveau {n} ! +{gemmes} 💎 Débloqué : {choses}.', { n, gemmes: GEMMES_PAR_NIVEAU, choses: choses.join(', ') })
+        : t('🎉 Niveau {n} ! +{gemmes} 💎', { n, gemmes: GEMMES_PAR_NIVEAU }),
+    )
   }
   return messages
 }
@@ -262,26 +262,9 @@ export function mettreAJourXp(etat: EtatJeu): string[] {
 // pour que rien de ce qu'elle a ne soit « trop en avance ».
 export function niveauPourCeQuOnA(etat: EtatJeu): number {
   const niveaux = [1]
-  const pour = (chose: ChoseANiveaux, index: number) => {
-    if (index > 0) niveaux.push(niveauRequis(chose, index))
-  }
   for (const b of etat.village.batiments) niveaux.push(niveauPourBatiment(b.id))
   if (etat.village.rails.length > 0) niveaux.push(NIVEAU_JOUEUR_POUR.rails)
-  pour('mine', etat.niveauMine - 1)
-  pour('coffre', etat.coffre.niveau)
-  pour('pioches', etat.meilleure)
-  pour('sacs', etat.niveauSac)
-  if (etat.ascenseur.niveau > 0) niveaux.push(niveauRequis('ascenseur', etat.ascenseur.niveau - 1))
-  for (const e of etat.employes) {
-    pour(e.role === 'pousseur' ? 'pousseur' : 'equipement', e.niveau)
-    if (e.role === 'pousseur') pour('chariotPousseur', e.chariot ?? 0)
-  }
-  pour('generateur', etat.generateur.niveau)
-  pour('forage', etat.foreuse.niveauVitesse)
-  pour('chariot', etat.foreuse.niveauChariot)
-  if (etat.recruteur > 0) niveaux.push(niveauRequis('recruteur', etat.recruteur - 1))
-  if (etat.manager.embauche) niveaux.push(NIVEAU_JOUEUR_POUR.manager)
-  pour('tempsManager', etat.manager.niveau ?? 0)
+  if (etat.niveauMine > 1) niveaux.push(niveauRequis('mine', etat.niveauMine - 1))
   return Math.max(...niveaux)
 }
 

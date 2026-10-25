@@ -9,7 +9,7 @@ import { bordsDeVoie, formeDuRail, viragesDoux } from './village'
 
 function partie(): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
-  etat.inventaire = { fer: 300 }
+  etat.coffre.contenu = { fer: 300 }
   etat.argent = 100000
   return etat
 }
@@ -38,9 +38,9 @@ describe('la voie large de deux cases', () => {
 
   it('ni un rail dont la voie passerait sur un bâtiment', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'bazar', x: 21, y: 6, miroir: false })
+    etat.village.batiments.push({ id: 'forgeron', x: 21, y: 6, miroir: false })
     poserSol(etat, 'rail', 20, 5)
-    // Un rail en (20, 6) ferait une ligne nord – sud : son bord est (21, 6), où est le bazar.
+    // Un rail en (20, 6) ferait une ligne nord – sud : son bord est (21, 6), où est le forgeron.
     expect(placePourUnRail(etat.village, 20, 6)).toBe('bords')
     expect(poserSol(etat, 'rail', 20, 6)[0]).toContain('Pas la place')
     // De l'autre côté, c'est libre.
@@ -83,11 +83,11 @@ describe('les virages doux', () => {
 describe('les bulles des rails', () => {
   it('rails coupés : une bulle sur les deux bâtiments du trajet', () => {
     const etat = partie()
-    etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
-    for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false })
+    for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
     creerTrajet(etat, 'mine-marche')
     expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBeFalsy()
-    retirerSol(etat, 'rail', 30, 37)
+    retirerSol(etat, 'rail', 20, 27)
     expect(notificationsBatiments(etat).puits?.some((n) => n.court === 'Rails coupés')).toBe(true)
     expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBe(true)
   })

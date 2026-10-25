@@ -12,6 +12,7 @@ import { BATIMENTS, NIVEAUX_GENERATEUR, SECONDES_PAR_REDSTONE, type IdBatiment }
 import { disponible, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
 import { batimentPose, type BatimentPose, type Case } from './village'
 import { debloque } from './niveaux'
+import { t } from './langue'
 
 export function generateurPose(etat: EtatJeu): BatimentPose | null {
   return batimentPose(etat.village, 'generateur')
@@ -98,20 +99,20 @@ export function ascenseurAlimente(etat: EtatJeu): boolean {
 // Actions
 // ---------------------------------------------------------------------------
 
-// Met de la redstone (du sac, puis du coffre) dans le générateur. nombre = Infinity : tout.
+// Met de la redstone (du coffre de la mine) dans le générateur. nombre = Infinity : tout.
 export function remplirGenerateur(etat: EtatJeu, nombre: number): string[] {
   if (!generateurPose(etat)) return []
   const mis = Math.min(nombre, disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
-  if (mis <= 0) return placeRedstoneGenerateur(etat) === 0 && disponible(etat, 'redstone') > 0 ? ['⚡ La réserve du générateur est pleine.'] : ['🔴 Il te faut de la redstone (niveau 2 de la mine).']
+  if (mis <= 0) return placeRedstoneGenerateur(etat) === 0 && disponible(etat, 'redstone') > 0 ? [t('⚡ La réserve du générateur est pleine.')] : [t('🔴 Il te faut de la redstone (niveau 2 de la mine).')]
   payerMateriaux(etat, { redstone: mis })
   etat.generateur.carburant += mis * SECONDES_PAR_REDSTONE
-  return [`⚡ +${mis} redstone dans le générateur.`]
+  return [t('⚡ +{n} redstone dans le générateur.', { n: mis })]
 }
 
 export function basculerGenerateur(etat: EtatJeu): string[] {
   if (!generateurPose(etat)) return []
   etat.generateur.allume = !etat.generateur.allume
-  return [etat.generateur.allume ? '⚡ Générateur allumé.' : '⚡ Générateur éteint : il garde sa redstone.']
+  return [etat.generateur.allume ? t('⚡ Générateur allumé.') : t('⚡ Générateur éteint : il garde sa redstone.')]
 }
 
 export function prochainNiveauGenerateur(etat: EtatJeu) {
@@ -123,7 +124,14 @@ export function ameliorerGenerateur(etat: EtatJeu): string[] {
   if (!generateurPose(etat) || prochain === null || !debloque(etat, 'generateur', etat.generateur.niveau + 1) || !peutPayer(etat, prochain.cout)) return []
   payer(etat, prochain.cout)
   etat.generateur.niveau += 1
-  return [`⚡ Générateur niveau ${etat.generateur.niveau + 1} : rayon de ${prochain.rayon} cases, ${texteBonusGenerateur(prochain.bonus)} de vitesse dans son rayon, ${prochain.reserveMinutes} min de réserve.`]
+  return [
+    t('⚡ Générateur niveau {n} : rayon de {rayon} cases, {bonus} de vitesse dans son rayon, {minutes} min de réserve.', {
+      n: etat.generateur.niveau + 1,
+      rayon: prochain.rayon,
+      bonus: texteBonusGenerateur(prochain.bonus),
+      minutes: prochain.reserveMinutes,
+    }),
+  ]
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +143,6 @@ export function avancerGenerateur(etat: EtatJeu, secondes: number): string[] {
   if (!generateurPose(etat) || !g.allume) return []
   if (g.carburant <= 0) return []
   g.carburant = Math.max(0, g.carburant - secondes)
-  if (g.carburant === 0) return ['⚡ Le générateur n’a plus de redstone : les rails ne sont plus électriques.']
+  if (g.carburant === 0) return [t('⚡ Le générateur n’a plus de redstone : les rails ne sont plus électriques.')]
   return []
 }

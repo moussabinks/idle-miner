@@ -40,6 +40,7 @@ import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, livrerRedstone, multiplicateurGenerateur, placeRedstoneGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
 import { batimentPose, railsEntre, type Case } from './village'
+import { nombre, t } from './langue'
 
 // ---------------------------------------------------------------------------
 // Les lignes de rails et les trajets
@@ -59,7 +60,7 @@ export function liaisonsDepuis(etat: EtatJeu, depart: IdBatiment): IdLiaison[] {
 }
 
 export function trajetDe(etat: EtatJeu, liaison: IdLiaison): Trajet | null {
-  return etat.trajets.find((t) => t.liaison === liaison) ?? null
+  return etat.trajets.find((trajet) => trajet.liaison === liaison) ?? null
 }
 
 // La longueur d'un trajet, en cases (on part du bord du départ et on arrive au bord de l'arrivée).
@@ -75,7 +76,7 @@ export function peutCreerTrajet(etat: EtatJeu, liaison: IdLiaison): boolean {
 export function creerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
   if (!peutCreerTrajet(etat, liaison)) return []
   etat.trajets.push(nouveauTrajet(liaison))
-  return [`🛤️ Nouveau trajet : un wagonnet ${LIAISONS[liaison].description}.`]
+  return [t('🛤️ Nouveau trajet : un wagonnet {description}.', { description: t(LIAISONS[liaison].description) })]
 }
 
 // ---------------------------------------------------------------------------
@@ -114,13 +115,7 @@ export function reglerTrajet(etat: EtatJeu, liaison: IdLiaison, reglage: Reglage
   const trajet = trajetDe(etat, liaison)
   if (!trajet) return messages
   trajet.exclus = exclus
-  // Un objet envoyé depuis la mine n'est plus « gardé » au marché non plus (sinon le wagonnet le
-  // laisserait quand même dans le coffre).
-  if (LIAISONS[liaison].depart === 'puits') {
-    const auChoix = objetsAuChoix(etat, liaison)
-    etat.nonAVendre = etat.nonAVendre.filter((b) => !auChoix.includes(b) || exclus.includes(b))
-  }
-  return messages.length > 0 ? messages : ['🛤️ Trajet réglé.']
+  return messages.length > 0 ? messages : [t('🛤️ Trajet réglé.')]
 }
 
 // Les objets décochés de ce trajet, tels que la fenêtre du trajet les montre au départ.
@@ -144,7 +139,7 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   const places = capaciteTrajet(etat, liaison)
   const objets = repartir(aEmporter(etat, liaison, exclus), places)
   const versLeMarche = LIAISONS[liaison].arrivee === 'marche'
-  const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets)) : 0
+  const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets), etat) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
   const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
   const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * niveauPousseur(pousseur).vitesse * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
@@ -152,11 +147,9 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
 
-// Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet, ou
-// « gardé » au marché pour le trajet de la mine.)
+// Le wagonnet de ce trajet emporte-t-il ce minerai ? (Non s'il est décoché pour ce trajet.)
 export function objetEnvoye(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc): boolean {
-  if (exclusDe(etat, liaison).includes(bloc)) return false
-  return !(LIAISONS[liaison].depart === 'puits' && etat.nonAVendre.includes(bloc))
+  return !exclusDe(etat, liaison).includes(bloc)
 }
 
 // Cocher ou décocher un minerai pour le wagonnet d'un trajet (au panneau de la mine).
@@ -165,8 +158,6 @@ export function envoyerObjet(etat: EtatJeu, liaison: IdLiaison, bloc: IdBloc, en
   if (!trajet) return []
   const exclus = (trajet.exclus ?? []).filter((b) => b !== bloc)
   trajet.exclus = envoyer ? exclus : [...exclus, bloc]
-  // Envoyé : il n'est plus « gardé » non plus (sinon le wagonnet le laisserait quand même).
-  if (envoyer && LIAISONS[liaison].depart === 'puits') etat.nonAVendre = etat.nonAVendre.filter((b) => b !== bloc)
   return []
 }
 
@@ -215,8 +206,8 @@ export function supprimerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
   const trajet = trajetDe(etat, liaison)
   if (!trajet) return []
   rentrerAuQuai(etat, trajet)
-  etat.trajets = etat.trajets.filter((t) => t !== trajet)
-  return ['🛤️ Trajet arrêté.']
+  etat.trajets = etat.trajets.filter((autre) => autre !== trajet)
+  return [t('🛤️ Trajet arrêté.')]
 }
 
 // ---------------------------------------------------------------------------
@@ -264,7 +255,7 @@ export function enRoute(trajet: Trajet): boolean {
 
 // Le trajet que le joueur est en train de pousser (il fait l'aller-retour avec lui).
 export function trajetDuJoueur(etat: EtatJeu): Trajet | null {
-  return etat.trajets.find((t) => enRoute(t) && t.pousseur === 'joueur') ?? null
+  return etat.trajets.find((trajet) => enRoute(trajet) && trajet.pousseur === 'joueur') ?? null
 }
 
 export function joueurPousse(etat: EtatJeu): boolean {
@@ -280,7 +271,7 @@ export function trajetElectrique(etat: EtatJeu, liaison: IdLiaison): boolean {
 
 // Au moins un trajet est électrique (l'éclair du bandeau, le succès « Électricien »).
 export function railsAlimentes(etat: EtatJeu): boolean {
-  return etat.trajets.some((t) => trajetElectrique(etat, t.liaison))
+  return etat.trajets.some((trajet) => trajetElectrique(etat, trajet.liaison))
 }
 
 // La vitesse d'un wagonnet en ce moment (cases par seconde). (23/10) Il est toujours poussé : sur
@@ -335,13 +326,13 @@ function besoinRedstone(etat: EtatJeu): number {
   return placeRedstoneGenerateur(etat)
 }
 
-// Ce que le wagonnet du marché laisse dans le coffre : les objets « gardés » au marché (le fer
-// pour les rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la
-// foreuse, la redstone du générateur).
-// « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet et les objets
-// gardés au marché ; la fenêtre du trajet en donne d'autres pour son aperçu).
+// Ce que le wagonnet du marché laisse dans le coffre : les « 📌 Garder N » (le fer pour les
+// rails, par exemple), et ce dont les autres trajets ont besoin (le charbon de la foreuse, la
+// redstone du générateur).
+// « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet ; la fenêtre du
+// trajet en donne d'autres pour son aperçu).
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
-  const garde = exclus ? exclus.includes(bloc) : etat.nonAVendre.includes(bloc) || exclusDe(etat, 'mine-marche').includes(bloc)
+  const garde = exclus ? exclus.includes(bloc) : exclusDe(etat, 'mine-marche').includes(bloc)
   if (garde) return Infinity
   // (23/10) On ne garde le charbon ou la redstone pour la foreuse ou le générateur que si leur
   // wagonnet a un pousseur embauché : sinon, rien ne les emporterait, et ils restaient bloqués
@@ -414,10 +405,10 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
   trajet.chargement = {}
   etat.stats.voyagesWagonnet += 1
   if (LIAISONS[trajet.liaison].arrivee === 'marche') {
-    const gain = valeurDe(chargement)
+    const gain = valeurDe(chargement, etat)
     encaisser(etat, gain)
     etat.stats.argentWagonnet += gain
-    return trajet.pousseur === 'joueur' && gain > 0 ? [`🛤️ Le wagonnet a tout vendu au marché : +${gain} $`] : []
+    return trajet.pousseur === 'joueur' && gain > 0 ? [t('🛤️ Le wagonnet a tout vendu au marché : +{gain} $', { gain: nombre(gain) })] : []
   }
   if (trajet.liaison === 'mine-foreuse') {
     // Le réservoir, puis le chariot ; ce qui ne rentre nulle part repart avec le wagonnet.
@@ -429,7 +420,9 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
     const reste = livrerRedstone(etat, chargement.redstone ?? 0)
     if (reste > 0) trajet.chargement = { redstone: reste }
   }
-  return trajet.pousseur === 'joueur' ? [`🛤️ Livré : ${totalObjets(chargement)} ${trajet.liaison === 'mine-foreuse' ? 'charbon' : 'redstone'}.`] : []
+  if (trajet.pousseur !== 'joueur') return []
+  const livres = totalObjets(chargement)
+  return [trajet.liaison === 'mine-foreuse' ? t('🛤️ Livré : {n} charbon.', { n: livres }) : t('🛤️ Livré : {n} redstone.', { n: livres })]
 }
 
 // Le chargement retourne d'où il vient (trajet arrêté, ou rails coupés en route).
@@ -472,7 +465,7 @@ export function pousserTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
   const trajet = trajetDe(etat, liaison)
   if (!trajet || !peutPousser(etat, liaison)) return []
   partir(etat, trajet, 'joueur')
-  return ['🛤️ Tu pousses le wagonnet !']
+  return [t('🛤️ Tu pousses le wagonnet !')]
 }
 
 // ---------------------------------------------------------------------------

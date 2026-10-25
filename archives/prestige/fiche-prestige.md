@@ -8,7 +8,7 @@
 - **Déblocage** : disponible **dès le prestige 0** (jamais de cadenas). La partie « Arbre de prestige » (bouton « Ouvrir l'arbre ») n'apparaît dans le panneau qu'à partir du **prestige 1**.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) l'arbre : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
-- **Dessin au village** : une image en vue isométrique (`public/images/batiments/prestige.webp`) : un grand cerisier rose aux cristaux qui brillent, sur une estrade en pierre avec un tapis rouge, des bannières et des lanternes. Il brille en doré au survol et quand son panneau est ouvert.
+- **Dessin au village** : une image en vue isométrique (`prestige.webp`, supprimé le 25/10) : un grand cerisier rose aux cristaux qui brillent, sur une estrade en pierre avec un tapis rouge, des bannières et des lanternes. Il brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Passe prestige et choisis tes talents dans l'arbre. »
 - **Bulles au-dessus** (`notifications.ts`, bulles roses « prêt ») :
   - **⭐ « Prêt pour le prestige ! »** quand toutes les conditions du prestige sont remplies ;
@@ -140,7 +140,7 @@ Ce que le prestige actuel permet (donc ce qu'il faut atteindre pour passer au su
 - `src/composants/Hud.tsx` : bouton ⭐ du bandeau qui ouvre l'arbre.
 - `src/composants/MenuConstruction.tsx` : la carte de l'arbre dans le menu Bâtiments.
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.
-- `public/images/batiments/prestige.webp` : le dessin du cerisier.
+- (`prestige.webp`, le dessin du cerisier, supprimé le 25/10.)
 - `src/jeu/conditionsPrestige.ts` : les conditions du prestige.
 - `src/jeu/talents.ts` : les 20 talents, les points, les bonus.
 - `src/jeu/mineur.ts` : `prestige()`, `creerPartie()` et ce qui est gardé (`Heritage` : village et tenues compris).

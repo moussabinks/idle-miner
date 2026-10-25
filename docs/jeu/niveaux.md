@@ -1,9 +1,9 @@
-# ⭐ Le niveau du joueur
+# ⭐ Le niveau du joueur et les paliers
 
-> Depuis le 29/10, le joueur a un **niveau** (de 1 à 30) : en jouant, il gagne de l'**XP** (des points d'expérience), et chaque niveau **débloque** de nouveaux bâtiments, les rails et de nouveaux niveaux d'amélioration. Une fois débloqué, il faut **quand même payer**.
-> Écrit d'après le code au 29/10 (déblocages revus le 30/10 : la foreuse avant le générateur, l'ascenseur dès le début) : la logique est dans `src/jeu/niveaux.ts`, les chiffres à la fin de `src/jeu/donnees.ts` (`XP_PAR`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX`, `NIVEAU_JOUEUR_POUR`). Le niveau du joueur n'a rien à voir avec le **niveau de la mine** (1 à 5, qu'on achète au panneau de la mine) : voir [mine-et-minage.md](mine-et-minage.md).
+> Le joueur a un **niveau** (de 1 à **15**) : en jouant, il gagne de l'**XP** (des points d'expérience). Depuis la grande mise à jour du 25/10, le niveau du joueur ne débloque plus que **les rails** et **les niveaux de la mine** ; tout le reste suit les **paliers** : descendre la mine au niveau N permet d'améliorer **toutes** les autres choses jusqu'à leur niveau N. Et **chaque niveau gagné rapporte 3 gemmes**.
+> Écrit d'après le code au 25/10 : la logique est dans `src/jeu/niveaux.ts`, les chiffres à la fin de `src/jeu/donnees.ts` (`XP_PAR`, `VALEUR_PAR_XP`, `BLOCS_PAR_XP`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX`, `NIVEAU_JOUEUR_POUR`, `NIVEAUX_PAR_AMELIORATION`, `PALIER_CHEF`) et `GEMMES_PAR_NIVEAU` dans `src/jeu/gemmes.ts`. Le niveau du joueur n'est pas le **niveau de la mine** (1 à 5, qu'on achète au panneau de la mine) : voir [mine-et-minage.md](mine-et-minage.md).
 
-Pourquoi ? Le jeu allait trop vite, et le joueur voyait tout d'un coup (29/10). Avec les niveaux, les choses arrivent une à une, et chaque niveau gagné est une petite fête. Les prix ont aussi été augmentés le même jour (voir [equilibrage.md](equilibrage.md)).
+Pourquoi deux systèmes ? Le niveau du joueur récompense **tout ce qu'on fait** et rythme la descente de la mine. Les paliers (25/10) rangent les améliorations : avant, chacune avait son propre niveau du joueur (jusqu'à 10 niveaux pour l'ascenseur), et le joueur ne savait plus quoi acheter. Maintenant, la règle tient en une phrase : **on améliore un niveau de chaque chose, puis on descend la mine.**
 
 ---
 
@@ -13,22 +13,22 @@ Presque tout ce qu'on fait rapporte de l'XP (`XP_PAR`) :
 
 | Ce qu'on fait | XP |
 |---|---:|
-| ⛏️ Casser des blocs **en cliquant** (pas la mine toute seule, ni les mineurs, ni la foreuse ; 23/10 : 1 XP pour 3 blocs, `BLOCS_PAR_XP`, avant 1 par bloc) | 1 pour 3 |
-| 🏗️ Poser un bâtiment (23/10 : avant 40) | 70 |
+| ⛏️ Casser des blocs **en cliquant** (pas la mine toute seule, ni les mineurs, ni la foreuse) | 1 pour 3 blocs (`BLOCS_PAR_XP`) |
+| 🏗️ Poser un bâtiment | 70 |
 | 🛤️ Poser une case de rails | 3 |
 | 🚃 Créer un trajet de wagonnet | 30 |
-| 👷 Embaucher un employé (mineur ou pousseur ; 23/10 : avant 25) | 40 |
-| ⬆️ Acheter un niveau d'amélioration (coffre, pioche, sac, ascenseur, chariot et vitesse des pousseurs, forage, chariot, générateur, recruteur, manager, pioche d'un mineur) | 30 |
+| 👷 Embaucher un employé (mineur ou pousseur) | 40 |
+| ⬆️ Acheter un niveau d'amélioration (coffre, pioche, ascenseur, forage, chariot de la foreuse, générateur, pioche d'un mineur, vitesse et chariot d'un pousseur, recruteur, manager) | 30 |
 | ⬇️ Descendre la mine d'un niveau | 150 |
-| 💰 **Tout ce qu'on achète, selon son prix** (23/10, `valeurInvestie`) : bâtiments, niveaux de la mine, améliorations, pioches des employés, chefs. Le prix compte l'argent et les minerais à leur prix au marché. En plus des lignes ci-dessus | 1 par 25 $ (`VALEUR_PAR_XP`, 23/10 bis ; avant 80) |
+| 💰 **Tout ce qu'on achète, selon son prix** (`valeurInvestie`) : bâtiments, niveaux de la mine, améliorations, pioches des employés, chefs. Le prix compte l'argent et les minerais à leur prix au marché. En plus des lignes ci-dessus | 1 par 25 $ (`VALEUR_PAR_XP`) |
 
-**Pourquoi (23/10)** : avant, une amélioration rapportait 30 XP qu'elle coûte 1 000 $ ou 300 000 $, et l'XP venait surtout des clics. Un joueur qui avait tout acheté à son niveau restait bloqué : seul le minage à la main le faisait avancer. Maintenant, une amélioration chère rapporte bien plus (agrandir les wagonnets : ~55 XP pour le 2e niveau, ~135 pour le 3e, ~380 pour le 4e ; un mineur en pioche de diamant : ~780), et l'argent gagné en rapporte un peu : chaque niveau débloque des achats qui rapportent de quoi approcher le suivant. Le bot (qui clique sans arrêt) gagne environ 45 000 XP en clics et 28 000 XP sans clic sur une partie : un joueur qui laisse tourner arrive vers le niveau 13 quand il peut payer la mine niveau 5, un joueur qui clique beaucoup est loin devant. Une partie d'avant ce changement reçoit l'XP de tout ce qu'elle a déjà acheté (au premier chargement), ce qui débloque ceux qui étaient coincés.
-
-**Rester AFK ne rapporte plus d'XP (23/10, bis)** : plus d'XP pour les voyages des wagonnets ni pour l'argent gagné ; il faut acheter (ou cliquer) pour avancer. L'XP vient surtout des achats (1 par 25 $, plus les XP fixes), et un peu des clics (1 pour 3 blocs). Mesuré avec le bot (qui clique sans arrêt) : ~35 000 XP d'achats et ~15 000 de clics sur une partie ; niveau 3 (les rails) vers 3 min, niveau 10 vers 2 h 40, niveau 13 vers 4 h 25, quand la mine niveau 5 se paie vers 6 h 20 : le joueur n'est presque jamais bloqué par son niveau, sans être très en avance. Une partie d'avant reçoit l'XP de ses achats au nouveau taux, et les clics repartent de ses blocs actuels.
+- **Rester AFK ne rapporte pas d'XP** : ni les voyages des wagonnets, ni l'argent gagné. Il faut acheter (ou cliquer) pour avancer.
+- **Un achat payé en gemmes** rapporte la même XP que payé en argent (c'est ce qu'on possède qui compte).
+- Mesuré avec le bot (qui clique 2 fois par seconde) : niveau 3 vers 30 s, niveau 5 vers 15 min, niveau 7 vers 42 min, niveau 9 vers 1 h 39, niveau 10 vers 1 h 47, niveau 12 vers 3 h 33 ; il finit au niveau 14 quand il descend la mine au niveau 5 (vers 4 h). Le niveau du joueur n'a **jamais bloqué** le bot : c'est l'argent qui décide du rythme.
 
 ### Une chose ne rapporte qu'une fois
 
-Le jeu ne donne pas l'XP au moment de l'action : il regarde des **compteurs** de la partie (blocs cassés, bâtiments posés, cases de rails, trajets, employés, total des niveaux d'amélioration, niveau de la mine, voyages de wagonnet) et garde **le plus haut chiffre déjà vu** de chacun (`etat.recordsXp`). Quand un compteur dépasse son record, la différence rapporte de l'XP (`mettreAJourXp`, appelée par `avancerTemps` à chaque tic).
+Le jeu ne donne pas l'XP au moment de l'action : il regarde des **compteurs** de la partie (blocs cassés, bâtiments posés, cases de rails, trajets, employés, total des niveaux d'amélioration, niveau de la mine, valeur investie) et garde **le plus haut chiffre déjà vu** de chacun (`etat.recordsXp`). Quand un compteur dépasse son record, la différence rapporte de l'XP (`mettreAJourXp`, appelée par `avancerTemps` à chaque tic).
 
 Ainsi :
 
@@ -39,87 +39,67 @@ Au début de la partie, les records sont ce qu'on a déjà (la mine posée, au n
 
 ## 2. La courbe d'XP
 
-Il faut de plus en plus d'XP pour passer un niveau : `xpPourPasser(n) = 60 × n^1,8`, arrondi à la dizaine. Le niveau se calcule à partir de l'XP totale (`niveauDeXp`). Le **niveau maximum** est **30** (`NIVEAU_JOUEUR_MAX`).
+Il faut de plus en plus d'XP pour passer un niveau : `xpPourPasser(n) = 60 × n^1,8`, arrondi à la dizaine. Le niveau se calcule à partir de l'XP totale (`niveauDeXp`). Le **niveau maximum** est **15** (`NIVEAU_JOUEUR_MAX`, 25/10 ; avant 30, mais plus rien ne se débloquait après le 15).
 
-| Niveau | XP pour passer au suivant | XP totale pour y arriver |
-|---:|---:|---:|
-| 1 | 60 | 0 |
-| 2 | 210 | 60 |
-| 3 | 430 | 270 |
-| 4 | 730 | 700 |
-| 5 | 1 090 | 1 430 |
-| 6 | 1 510 | 2 520 |
-| 7 | 1 990 | 4 030 |
-| 8 | 2 530 | 6 020 |
-| 9 | 3 130 | 8 550 |
-| 10 | 3 790 | 11 680 |
-| 11 | 4 490 | 15 470 |
-| 12 | 5 260 | 19 960 |
-| 13 | 6 070 | 25 220 |
-| 14 | 6 940 | 31 290 |
-| 15 | 7 850 | 38 230 |
-| 20 | 13 180 | 87 670 |
-| 30 | — (maximum) | 279 500 |
+| Niveau | XP pour passer au suivant | XP totale pour y arriver | Ce qu'il débloque |
+|---:|---:|---:|---|
+| 1 | 60 | 0 | tout le départ (voir plus bas) |
+| 2 | 210 | 60 | 🛤️ **les rails et les wagonnets** |
+| 3 | 430 | 270 | ⛏️ **Mine niveau 2** (Veine de redstone) |
+| 4 | 730 | 700 | — |
+| 5 | 1 090 | 1 430 | ⛏️ **Mine niveau 3** (Filon d'or) |
+| 6 | 1 510 | 2 520 | — |
+| 7 | 1 990 | 4 030 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) |
+| 8 | 2 530 | 6 020 | — |
+| 9 | 3 130 | 8 550 | ⛏️ **Mine niveau 5** (Cœur de diamant) |
+| 10 | 3 790 | 11 680 | — |
+| 11 | 4 490 | 15 470 | — |
+| 12 | 5 260 | 19 960 | — |
+| 13 | 6 070 | 25 220 | — |
+| 14 | 6 940 | 31 290 | — |
+| 15 | — (maximum) | 38 230 | — |
 
-Pour se faire une idée : le premier niveau, ce sont 60 blocs cliqués (ou le marché et 20 blocs). Le bot de simulation arrive au **niveau 5 après au moins 8 minutes** et au **niveau 10 après au moins 1 heure** (médianes, vérifié par `bot.test.ts`, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)).
+**Chaque niveau gagné rapporte 3 gemmes** 💎 (`GEMMES_PAR_NIVEAU`), même ceux qui ne débloquent rien : 42 gemmes du niveau 2 au niveau 15. Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md).
 
-## 3. Ce que débloque chaque niveau
+`NIVEAU_JOUEUR_POUR` (`donnees.ts`) :
 
-`NIVEAU_JOUEUR_POUR` donne le niveau qu'il faut pour chaque chose. Pour les améliorations, c'est un tableau qui suit celui des données : la case *i* est le niveau qu'il faut pour acheter le niveau *i* (la case 0 est ce qu'on a au départ). Certaines choses demandent **aussi** un niveau de la mine : la foreuse et le générateur (mine niveau 2), le manager (mine niveau 3), le recruteur (mine niveau 4 ; inversés le 23/10). Comme descendre la mine demande lui-même un niveau du joueur, ces deux conditions vont ensemble.
-
-| Niveau | Ce qui se débloque |
-|---:|---|
-| 1 | 💰 Marché, ⚒️ Forgeron ; tout ce qu'on a au départ (pioche en pierre, sac de 32, coffre de 100, 🛗 ascenseur niveau 1 dans la mine depuis le 30/10, wagonnets de 20…) |
-| 2 | 👷 **Personnel** ; 📦 coffre de 250 places |
-| 3 | 🎒 **Bazar** ; 🛤️ **les rails et les wagonnets** ; 🎒 sac de 64 places ; 🛗 ascenseur niveau 2 (23/10 bis) |
-| 4 | ⛏️ **Mine niveau 2** (Veine de redstone) ; ⛏️ pioche en fer ; 👷 pioche en pierre pour les mineurs |
-| 5 | ⚙️ **Foreuse** (30/10 : avant le générateur) ; 📦 coffre de 600 places ; 🎒 sac de 128 places ; 🛗 ascenseur niveau 3 |
-| 6 | ⚡ **Générateur** ; 👷 pioche en fer pour les mineurs ; 🚃 wagonnets de 40 places ; ⚙️ forage 0,8 bloc/s ; 🛒 chariot de 40 places |
-| 7 | ⛏️ **Mine niveau 3** (Filon d'or) ; ⛏️ pioche en or ; 🛗 ascenseur niveau 4 |
-| 8 | 📦 coffre de 1 500 places ; 🎒 sac de 256 places ; ⚡ générateur rayon 20 |
-| 9 | 💼 **le manager** ; 🛗 ascenseur niveau 5 ; 👷 pioche en or pour les mineurs ; 🚃 wagonnets de 70 places ; ⚙️ forage 1,2 ; 🛒 chariot de 60 |
-| 10 | ⛏️ **Mine niveau 4** (Grotte aux émeraudes) ; 💚 pioche en émeraude, pour toi et (👷) pour les mineurs (23/10) ; 🛗 ascenseur niveau 6 ; ⚡ générateur rayon 26 |
-| 11 | 🎩 **le recruteur** ; 🛗 ascenseur niveau 7 ; 🎒 sac de 512 places ; ⚙️ forage 1,8 ; 🛒 chariot de 90 ; 💼 manager éveillé 30 min |
-| 12 | 🎩 recruteur niveau 2 ; 💼 manager éveillé 45 min ; 📦 coffre de 4 000 places ; ⛏️ pioche en diamant ; 👷 pioche en diamant pour les mineurs ; 🚃 wagonnets de 120 places |
-| 13 | ⛏️ **Mine niveau 5** (Cœur de diamant) ; 🛗 ascenseur niveau 8 ; ⚡ générateur rayon 33 ; 🎩 recruteur niveau 3 ; 💼 manager éveillé 1 h |
-| 14 | 💼 manager éveillé 1 h 30 ; 🛗 ascenseur niveau 9 ; 🎒 sac de 1 024 places ; ⚙️ forage 2,6 ; 🛒 chariot de 130 |
-| 15 | 🎒 sac de 2 048 places ; 🛗 ascenseur niveau 10 ; ⚡ générateur rayon 40 ; ⚙️ forage 3,6 ; 🛒 chariot de 180 ; 🎩 recruteur niveau 4 |
-| 16 à 30 | rien de nouveau pour l'instant : tout est débloqué au niveau 15 |
-
-Le même tableau, rangé par chose (`NIVEAU_JOUEUR_POUR` dans `donnees.ts`) :
-
-| Chose | Niveau du joueur pour chaque niveau |
+| Chose | Niveau du joueur |
 |---|---|
-| Bâtiments | Marché 1, Forgeron 1, Personnel 2, Bazar 3, Foreuse 5, Générateur 6 (30/10 ; avant, Générateur 5 et Foreuse 6 ; la mine est posée d'office) |
-| Rails (et donc les trajets) | 3 |
-| Mine (niveaux 2 à 5) | 4, 7, 10, 13 |
-| Coffre (250 → 4 000) | 2, 5, 8, 12 |
-| Pioches (fer, or, émeraude, diamant) | 4, 7, 10, 12 |
-| Sacs (64 → 2 048) | 3, 5, 8, 11, 14, 15 |
-| Ascenseur (niveaux 2 à 6) | 5, 8, 10, 13, 15 (le niveau 1 est dans la mine dès le début, 30/10) |
-| Pioche des mineurs (pierre, fer, or, émeraude, diamant) | 4, 6, 9, 10, 12 |
-| Chariot de chaque pousseur (35, 55, 80, 115, 160, 220 places ; 23/10) | 4, 6, 8, 10, 12, 14 |
-| Générateur (rayon 20 → 40) | 8, 10, 13, 15 |
-| Forage de la foreuse (0,8 → 3,6) | 6, 9, 11, 14, 15 |
-| Chariot de la foreuse (40 → 180) | 6, 9, 11, 14, 15 |
-| Recruteur (niveaux 1 à 4) | 11, 12, 13, 15 (23/10 ; avant : 9, 11, 13, 15) |
-| Manager | 9 (23/10 ; avant : 11), puis le temps qu'il reste éveillé (23/10) : 11, 12, 13, 14 |
+| Bâtiments | tous au niveau 1 (la foreuse et le générateur demandent aussi la **mine niveau 2**) |
+| Rails (et donc les trajets) | 2 |
+| Mine (niveaux 1 à 5) | 1, 3, 5, 7, 9 |
 
-Les règles qui vérifient ces cadenas : `debloque(etat, chose, index)` et `niveauAtteint`, appelées par chaque achat (`prochainNiveauMine`, `prochainNiveauCoffre`, `peutAcheterPioche`…), par `batimentDebloque` (`batiments.ts`), par la pose des rails (`peutPoserSol`, `railsDebloques`) et par la liste des achats possibles (`objectifs.ts`) : une chose sous cadenas ne fait ni bulle ni mission d'amélioration.
+Une fois débloqué, il faut quand même **payer** (en argent et minerais, ou en gemmes).
+
+## 3. Les paliers de la mine
+
+`NIVEAUX_PAR_AMELIORATION = 5` : **toutes les améliorations ont 5 niveaux**, comme la mine. Le niveau N d'une amélioration demande la **mine au niveau N** (`palierRequis(chose, index) = index + 1`, `debloque`). Le niveau 1 est celui du départ (ou l'embauche).
+
+| Palier (mine) | Ce qui peut monter au même niveau |
+|---:|---|
+| 1 | le départ : coffre de 100, pioche en pierre, ascenseur 1, mineurs en pioche de bois, pousseurs débutants avec un chariot de 20 places |
+| 2 | 📦 coffre de 300 · ⛏️ pioche en fer · 🛗 ascenseur 2 · 👷 pioche en fer des mineurs · 🛤️ pousseur « Costaud » et chariot de 40 · ⚙️ foreuse (forage 1 bloc/s, chariot de 50) · ⚡ générateur rayon 16 |
+| 3 | 📦 coffre de 800 · pioche en or · ascenseur 3 · mineurs en or · pousseur « Robuste », chariot de 70 · forage 1,6, chariot de 90 · générateur rayon 20 · 💼 **embauche du manager** |
+| 4 | 📦 coffre de 2 000 · pioche en émeraude · ascenseur 4 · mineurs en émeraude · pousseur « Expert », chariot de 110 · forage 2,4, chariot de 140 · générateur rayon 25 · 🎩 **embauche du recruteur** · 💼 manager niveau 2 |
+| 5 | 📦 coffre de 5 000 · pioche en diamant · ascenseur 5 · mineurs en diamant · pousseur « Champion », chariot de 170 · forage 3,4, chariot de 200 · générateur rayon 30 · 🎩 recruteur niveaux 2 et 3 · 💼 manager niveau 3 |
+
+**Les chefs** (manager et recruteur) ont **3 niveaux** chacun (`PALIER_CHEF`) : le manager s'embauche au palier 3, puis monte aux paliers 4 et 5 ; le recruteur s'embauche au palier 4, puis ses niveaux 2 et 3 demandent le palier 5.
+
+Une amélioration sous cadenas affiche **« 🕳️ Mine *N* »** (le palier qu'il faut, `verrou`) à la place de son bouton ; le prochain niveau de la mine affiche **« ⭐ *N* »** (le niveau du joueur qu'il faut, `verrouNiveau`). Une chose sous cadenas ne fait ni bulle ni mission d'amélioration.
+
+Les règles qui vérifient ces cadenas : `debloque(etat, chose, index)`, `palierRequis`, `niveauRequis` et `niveauAtteint`, appelées par chaque achat (`peutDescendre`, `agrandirCoffre`, `ameliorerAscenseur`, `peutAcheterPioche`, `peutAmeliorerEmploye`…), par `batimentDebloque` (`batiments.ts`), par la pose des rails (`peutPoserSol`, `railsDebloques`) et par la liste des achats possibles (`objectifs.ts`).
 
 ## 4. Où on le voit
 
-- **Le bandeau en haut à gauche** (`Hud.tsx`) : une **⭐** avec le niveau dans un badge violet (qui saute quand on gagne un niveau), et une petite **jauge violette** d'XP (« 120/430 », « Max » au niveau 30). La bulle d'aide dit combien d'XP il manque et ce que débloque le prochain niveau qui apporte quelque chose.
-- **Les cadenas** : dans les panneaux, une amélioration pas encore débloquée affiche « 🔒 … · au niveau N » (`verrou`) au lieu de son bouton ; dans le menu 🏗️ Bâtiments, la carte d'un bâtiment affiche « 🔒 Niveau N » (ou « 🔒 Mine niveau 2 » si c'est la mine qui manque), et la carte des rails « 🔒 Niveau 3 ».
-- **Le passage de niveau** (23/10, `FeteNiveau.tsx`) : une **grande fenêtre** surgit en rebondissant : « Niveau supérieur ! », une grosse **⭐** tombe avec l'ancien niveau, le **chiffre monte** jusqu'au nouveau (un « tic » par niveau gagné, `sons.ticNiveau`), puis des **rayons** tournent derrière et des **confettis** éclatent avec une fanfare (`sons.niveauGagne`). Ensuite, **tout ce qu'on débloque** arrive ligne par ligne, chacun avec son **icône** qui rebondit, un badge « Nouveau ! » et un petit « ding » qui monte (`sons.ligneDeblocage`) : bâtiments, niveaux de la mine, pioches, sacs, ascenseur, pousseurs… (`deblocagesDuNiveau`, tous les niveaux gagnés d'un coup). En bas : ce qui attend au prochain niveau, et **🎉 Génial !**. (Avant le 23/10 : une simple notification dorée.)
-- **Toute l'attention sur la fête** (23/10) : passer un niveau **ferme tout ce qui est ouvert** (le panneau du bâtiment, le menu Bâtiments, l'aide, les réglages, les succès, les statistiques, le bilan, la fenêtre des trajets), et la fenêtre **ne se ferme pas pendant 1 seconde** : le bouton « 🎉 Génial ! » est grisé et se remplit d'une barre blanche, les clics à côté ne font rien. Avant, un joueur qui cliquait vite sur la mine la fermait sans la voir.
-- **Les missions** (en haut à droite, `missions.ts`) : une mission « ⭐ Niveau N : … » montre le prochain niveau qui débloque quelque chose (deux choses au plus, puis « ... ») et la jauge d'XP vers le niveau suivant. Si ce niveau est plus loin que le suivant, elle le dit : « Niveau 9 (tu es 7) : … ».
-- **Le tutoriel** se termine en expliquant les niveaux (« ⭐ Tout ce que tu fais rapporte de l'XP… », « 🔓 Chaque niveau débloque des bâtiments et des améliorations »).
+- **Le bandeau en haut à gauche** (`Hud.tsx`) : une **⭐** avec le niveau, et une petite jauge d'XP (« 120/430 », « Max » au niveau 15).
+- **Le passage de niveau** (`FeteNiveau.tsx`) : une grande fenêtre « Niveau supérieur ! » (le chiffre qui monte, des confettis, une fanfare), ce qu'on débloque ligne par ligne (`deblocagesDuNiveau` : les rails, un niveau de la mine), et les **+3 💎**. La fête **attend** qu'aucune fenêtre ne soit ouverte (elle ne ferme plus le panneau en cours). Le message du niveau commence toujours par « 🎉 » (« 🎉 Niveau 3 ! +3 💎 Débloqué : ⛏️ Mine niveau 2 : Veine de redstone. ») : l'interface le reconnaît ainsi, dans les deux langues.
+- **Les missions** (en haut à droite, `missions.ts`) : une mission « ⭐ Niveau *N* : … » montre le prochain niveau qui débloque quelque chose (`prochainDeblocage`) et la jauge d'XP vers le niveau suivant. Si ce niveau est plus loin que le suivant : « Niveau 9 (tu es 7) : … ».
 
-Les nouvelles icônes ⭐ / 🌟 (le niveau) et 🎉 (le passage de niveau) sont dessinées dans `outils/icones/dessins.py`.
+(L'écran a été refait le 25/10 : voir [interface.md](interface.md).)
 
 ## 5. Sauvegarde et anciennes parties
 
-- L'état garde deux champs (depuis la version de sauvegarde **24** ; la version actuelle est la **25**, voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md)) : `xp` (l'XP totale gagnée) et `recordsXp` (le plus haut chiffre de chaque compteur). Le niveau n'est pas rangé : il se recalcule à partir de l'XP.
-- Une partie de la **version 23** (d'avant les niveaux) est convertie au chargement (`convertirVersion23` dans `sauvegarde.ts`) : elle reçoit **l'XP du niveau qu'il faut pour tout ce qu'elle possède déjà** (`niveauPourCeQuOnA`, `donnerXpAVieillePartie` : ses bâtiments, ses rails, son niveau de mine, ses améliorations, son recruteur, son manager…), et ses records partent de ce qu'elle a. Rien de ce qu'elle a n'est donc « trop en avance », et la suite se gagne en jouant.
-- Pour les tests, `partieDeTest(aleatoire)` (`src/jeu/partieDeTest.ts`) crée une partie déjà au niveau 30, pour tester une règle sans les cadenas ; les cadenas eux-mêmes sont testés dans `niveaux.test.ts`.
+- L'état garde `xp` (l'XP totale gagnée) et `recordsXp` (le plus haut chiffre de chaque compteur). Le niveau n'est pas rangé : il se recalcule à partir de l'XP (au plus 15).
+- Une partie de la **version 23** (d'avant les niveaux) reçoit **l'XP du niveau qu'il faut pour tout ce qu'elle possède déjà** (`niveauPourCeQuOnA`, `donnerXpAVieillePartie` : ses bâtiments, ses rails, son niveau de mine).
+- Une partie de la **version 28** (d'avant le 25/10) garde son XP, mais ses **records repartent de ce qu'elle a** (`recordsDeDepart`) : les prix ont changé, seul ce qu'elle fera ensuite rapporte de l'XP. Ses améliorations sont ramenées à 5 niveaux (voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md)). Un joueur qui était au-delà du niveau 15 est affiché au niveau 15.
+- Pour les tests, `partieDeTest(aleatoire)` (`src/jeu/partieDeTest.ts`) crée une partie déjà au niveau maximum, pour tester une règle sans le cadenas du niveau du joueur ; les cadenas eux-mêmes sont testés dans `niveaux.test.ts`.

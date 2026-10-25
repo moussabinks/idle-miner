@@ -1,6 +1,6 @@
 // La foreuse (niveau 2 de la mine) : un bâtiment qui creuse tout seul.
 // On la remplit de charbon ; tant qu'elle en a, elle fore des blocs du niveau de la mine et les
-// met dans son chariot, qu'on vient vider (vendre, ou mettre dans le sac). Dans le rayon du
+// met dans son chariot, qu'on vend d'un clic (ou qu'un wagonnet emporte au marché). Dans le rayon du
 // générateur allumé, elle fore plus vite (22/10).
 
 import type { Aleatoire } from './aleatoire'
@@ -12,7 +12,9 @@ import {
 } from './donnees'
 import { foreuseAlimentee, multiplicateurGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, parPrix, payer, payerMateriaux, peutPayer, placeLibre, ramasser, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, encaisser, payer, payerMateriaux, peutPayer, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { multiplicateurProduction } from './gemmes'
+import { nombre, t } from './langue'
 import { batimentPose } from './village'
 import { debloque } from './niveaux'
 
@@ -30,9 +32,10 @@ export function vitesseForageDeBase(etat: EtatJeu): number {
 }
 
 // La vitesse en ce moment : plus vite dans le rayon du générateur allumé (+ 30 % à + 75 %).
+// (25/10) Et deux fois plus vite avec le bonus « production » de la boutique.
 export function vitesseForage(etat: EtatJeu): number {
   const bonus = foreuseAlimentee(etat) ? multiplicateurGenerateur(etat) : 1
-  return vitesseForageDeBase(etat) * bonus
+  return vitesseForageDeBase(etat) * bonus * multiplicateurProduction(etat)
 }
 
 export function capaciteChariot(etat: EtatJeu): number {
@@ -77,24 +80,19 @@ export function foreuseEnMarche(etat: EtatJeu): boolean {
   return foreusePosee(etat) && etat.foreuse.carburant > 0 && !chariotPlein(etat)
 }
 
-// Combien de temps elle met pour remplir son chariot vide (pour voir si chariot et forage vont ensemble).
-export function secondesPourRemplir(etat: EtatJeu, niveauChariot = etat.foreuse.niveauChariot): number {
-  return NIVEAUX_CHARIOT[niveauChariot].capacite / vitesseForage(etat)
-}
-
 // ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
 
-// Met du charbon (du sac, puis du coffre de la mine) dans la foreuse (nombre = Infinity : tout),
+// Met du charbon (du coffre de la mine) dans la foreuse (nombre = Infinity : tout),
 // sans dépasser son réservoir.
 export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   if (!foreusePosee(etat)) return []
   const mis = Math.min(nombre, disponible(etat, 'charbon'), placeCharbonForeuse(etat))
-  if (mis <= 0) return placeCharbonForeuse(etat) === 0 && disponible(etat, 'charbon') > 0 ? ['🔥 Le réservoir de la foreuse est plein.'] : []
+  if (mis <= 0) return placeCharbonForeuse(etat) === 0 && disponible(etat, 'charbon') > 0 ? [t('🔥 Le réservoir de la foreuse est plein.')] : []
   payerMateriaux(etat, { charbon: mis })
   etat.foreuse.carburant += mis * SECONDES_PAR_CHARBON
-  return [`🔥 +${mis} charbon dans la foreuse.`]
+  return [t('🔥 +{n} charbon dans la foreuse.', { n: mis })]
 }
 
 export function prochainNiveauForage(etat: EtatJeu) {
@@ -120,7 +118,7 @@ export function ameliorerForage(etat: EtatJeu): string[] {
   if (prochain === null || !peutAmeliorerForage(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauVitesse += 1
-  return [`⚙️ Foreuse plus rapide : ${prochain.vitesse} blocs par seconde, ${prochain.reservoir} charbons de réservoir.`]
+  return [t('⚙️ Foreuse plus rapide : {vitesse} blocs par seconde, {reservoir} charbons de réservoir.', { vitesse: prochain.vitesse, reservoir: prochain.reservoir })]
 }
 
 export function ameliorerChariot(etat: EtatJeu): string[] {
@@ -128,34 +126,30 @@ export function ameliorerChariot(etat: EtatJeu): string[] {
   if (prochain === null || !peutAmeliorerChariot(etat)) return []
   payer(etat, prochain.cout)
   etat.foreuse.niveauChariot += 1
-  return [`🛒 Chariot de la foreuse plus grand : ${prochain.capacite} places.`]
+  return [t('🛒 Chariot de la foreuse plus grand : {places} places.', { places: prochain.capacite })]
 }
 
-// Le chariot ne se vend plus sur place (27/10) : on met ce qu'on veut dans son sac (comme le
-// coffre de la mine), ou un wagonnet Foreuse → Marché l'emporte. « lot » : combien de chaque
-// objet (sans lot, tout), les plus chers d'abord, tant qu'il y a de la place dans le sac.
-export function prendreDuChariot(etat: EtatJeu, lot?: Inventaire): string[] {
-  let pris = 0
-  for (const [bloc, nombre] of parPrix(etat.foreuse.chariot)) {
-    const voulu = lot ? Math.min(nombre, Math.floor(lot[bloc] ?? 0)) : nombre
-    const aPrendre = Math.min(voulu, placeLibre(etat))
-    if (aPrendre <= 0) continue
-    ramasser(etat, bloc, aPrendre)
-    retirerDuChariot(etat, bloc, aPrendre)
-    pris += aPrendre
+// (25/10) Le chariot se vend sur place, d'un clic, au prix du marché (« lot » : combien de
+// chaque objet ; sans lot, tout). Un wagonnet Foreuse → Marché le vend aussi tout seul.
+export function vendreChariot(etat: EtatJeu, lot?: Inventaire): string[] {
+  const vendus: Inventaire = {}
+  for (const [id, nombre] of Object.entries(etat.foreuse.chariot)) {
+    const bloc = id as IdBloc
+    const n = Math.min(nombre ?? 0, lot ? Math.floor(lot[bloc] ?? 0) : Infinity)
+    if (n > 0) vendus[bloc] = n
   }
-  if (pris === 0) return placeLibre(etat) === 0 ? ['🎒 Ton sac est plein : va d’abord vendre au marché.'] : []
-  return [`🎒 ${pris} objet${pris > 1 ? 's' : ''} du chariot dans ton sac : va les vendre au marché !`]
+  const gain = valeurDe(vendus, etat)
+  if (gain <= 0) return []
+  for (const [bloc, n] of Object.entries(vendus)) retirerDuChariot(etat, bloc as IdBloc, n ?? 0)
+  encaisser(etat, gain)
+  etat.stats.argentForeuse += gain
+  return [t('💰 Chariot de la foreuse vendu : +{gain} $', { gain: nombre(gain) })]
 }
 
 export function retirerDuChariot(etat: EtatJeu, bloc: IdBloc, nombre: number): void {
   const reste = (etat.foreuse.chariot[bloc] ?? 0) - nombre
   if (reste > 0) etat.foreuse.chariot[bloc] = reste
   else delete etat.foreuse.chariot[bloc]
-}
-
-export function valeurChariot(etat: EtatJeu): number {
-  return valeurDe(etat.foreuse.chariot)
 }
 
 // ---------------------------------------------------------------------------
@@ -187,8 +181,8 @@ export function avancerForeuse(etat: EtatJeu, secondes: number, aleatoire: Aleat
   }
   if (chariotPlein(etat)) {
     foreuse.progression = 0
-    return ['🛒 Le chariot de la foreuse est plein : viens le vider.']
+    return [t('🛒 Le chariot de la foreuse est plein : viens le vider.')]
   }
-  if (foreuse.carburant <= 0) return ['🔥 La foreuse n’a plus de charbon.']
+  if (foreuse.carburant <= 0) return [t('🔥 La foreuse n’a plus de charbon.')]
   return []
 }

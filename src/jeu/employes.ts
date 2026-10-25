@@ -24,9 +24,7 @@ import {
   NIVEAUX_MANAGER,
   NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAUX_POUSSEUR,
-  NIVEAU_MINE_POUR_EQUIPEMENT,
   NIVEAUX_RECRUTEUR,
-  NIVEAU_JOUEUR_POUR,
   NIVEAU_MINE_MANAGER,
   NIVEAU_MINE_RECRUTEUR,
   LIAISONS,
@@ -34,7 +32,6 @@ import {
   NOMS_EMPLOYES,
   PART_INDEMNITES,
   PART_REMPLACEMENT,
-  PRIX_POUSSEUR_PAR_NIVEAU,
   PRIX_REMPLACEMENT_PAR_NIVEAU,
   PRIX_EMBAUCHE,
   PRIX_EMBAUCHE_POUSSEUR,
@@ -56,7 +53,9 @@ import {
   type IdRarete,
   type Rarete,
 } from './donnees'
-import { debloque, niveauAtteint, niveauJoueur } from './niveaux'
+import { debloque, niveauJoueur, verrou } from './niveaux'
+import { multiplicateurProduction } from './gemmes'
+import { nombre, t } from './langue'
 import { tirerBloc } from './mine'
 import {
   ajouterA,
@@ -76,7 +75,7 @@ import {
   type Navette,
   type RoleEmploye,
 } from './mineur'
-import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, secondesAPied, trouverChemin, type Case } from './village'
+import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, trouverChemin, type Case } from './village'
 import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
@@ -169,10 +168,6 @@ export function blocsParSecondeEmploye(etat: EtatJeu, employe: Employe): number 
   return vitesseEmploye(employe) * partRemontee(etat)
 }
 
-export function secondesMarcheEmploye(etat: EtatJeu, de: IdBatiment, vers: IdBatiment): number {
-  return secondesAPied(etat.village, de, vers)
-}
-
 // La case où un pousseur attend son wagonnet (23/10) : à côté du premier rail de son trajet,
 // sur le bord de la voie (une case libre). null si le trajet n'a pas de rails.
 export function caseQuai(etat: EtatJeu, liaison: IdLiaison): Case | null {
@@ -233,53 +228,28 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
   }
 }
 
-// Ce que rapporte sa prochaine pioche (23/10) : ce qu'il creuse par seconde, avant et après.
-// null s'il a déjà la meilleure pioche (ou si c'est un pousseur).
-export function gainAmeliorationEmploye(employe: Employe): { avant: number; apres: number } | null {
-  if (employe.role === 'pousseur' || !NIVEAUX_EMPLOYE[employe.niveau + 1]) return null
-  return { avant: vitesseEmploye(employe), apres: vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) }
-}
-
 // Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
 // un pousseur (il pousse son wagonnet plus vite ; son chariot, c'est coutChariotPousseur).
-export function coutAmeliorationEmploye(etat: EtatJeu, employe: Employe): Cout | null {
-  if (employe.role === 'pousseur') {
-    const cout = NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout
-    return cout ? coutSelonNiveau(etat, cout) : null
-  }
+export function coutAmeliorationEmploye(_etat: EtatJeu, employe: Employe): Cout | null {
+  if (employe.role === 'pousseur') return NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout ?? null
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
 
-// (23/10, bis) Les améliorations d'un pousseur coûtent plus cher à mesure que le joueur monte de
-// niveau (voir PRIX_POUSSEUR_PAR_NIVEAU), argent et minerais.
-export function multiplicateurPrixPousseur(etat: EtatJeu): number {
-  return 1 + PRIX_POUSSEUR_PAR_NIVEAU * Math.max(0, niveauJoueur(etat) - 1)
-}
-
-function coutSelonNiveau(etat: EtatJeu, cout: Cout): Cout {
-  const k = multiplicateurPrixPousseur(etat)
-  const materiaux = Object.fromEntries(Object.entries(cout.materiaux).map(([bloc, n]) => [bloc, Math.round((n ?? 0) * k)]))
-  return { argent: cout.argent === undefined ? undefined : arrondiPrix(cout.argent * k), materiaux }
-}
-
-// (23/10) La prochaine pioche d'un mineur demande aussi un niveau de la mine (l'or au niveau 3,
-// l'émeraude au 4, le diamant au 5) : « 🔒 Mine niveau 5 », ou null si c'est bon.
+// (25/10) Le cadenas de son prochain niveau : « 🕳️ Mine 3 » (le palier de la mine qu'il faut),
+// ou null si c'est débloqué.
 export function verrouMinePioche(etat: EtatJeu, employe: Employe): string | null {
-  if (employe.role !== 'mineur') return null
-  const requis = NIVEAU_MINE_POUR_EQUIPEMENT[employe.niveau + 1] ?? 1
-  return etat.niveauMine >= requis ? null : `🕳️ Mine niveau ${requis}`
+  return verrou(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1)
 }
 
 export function peutAmeliorerEmploye(etat: EtatJeu, employe: Employe): boolean {
   const cout = coutAmeliorationEmploye(etat, employe)
-  return cout !== null && verrouMinePioche(etat, employe) === null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
+  return cout !== null && debloque(etat, employe.role === 'pousseur' ? 'pousseur' : 'equipement', employe.niveau + 1) && peutPayer(etat, cout)
 }
 
-// (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer, de plus en plus cher).
-export function coutChariotPousseur(etat: EtatJeu, employe: Employe): Cout | null {
+// (23/10) Le chariot d'un pousseur : sa deuxième amélioration (argent et fer).
+export function coutChariotPousseur(_etat: EtatJeu, employe: Employe): Cout | null {
   if (employe.role !== 'pousseur') return null
-  const cout = NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout
-  return cout ? coutSelonNiveau(etat, cout) : null
+  return NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1]?.cout ?? null
 }
 
 export function peutAgrandirChariot(etat: EtatJeu, employe: Employe): boolean {
@@ -294,7 +264,7 @@ export function agrandirChariot(etat: EtatJeu, index: number): string[] {
   if (cout === null || !peutAgrandirChariot(etat, employe)) return []
   payer(etat, cout)
   employe.chariot = (employe.chariot ?? 0) + 1
-  return [`🛒 Le chariot de ${employe.nom} porte maintenant ${NIVEAUX_CHARIOT_POUSSEUR[employe.chariot].places} places.`]
+  return [t('🛒 Le chariot de {nom} porte maintenant {places} places.', { nom: employe.nom, places: NIVEAUX_CHARIOT_POUSSEUR[employe.chariot].places })]
 }
 
 // ---------------------------------------------------------------------------
@@ -352,7 +322,7 @@ export function payerSalaires(etat: EtatJeu, secondes: number): string[] {
   }
   etat.argent -= paye
   etat.stats.salairesPayes += paye
-  return [`💵 Salaires payés (${paye.toLocaleString('fr-FR')} $) : tes mineurs travaillent encore ${Math.ceil(tempsPayeMin(etat) / 60)} min.`]
+  return [t('💵 Salaires payés ({paye} $) : tes mineurs travaillent encore {minutes} min.', { paye: nombre(paye), minutes: Math.ceil(tempsPayeMin(etat) / 60) })]
 }
 
 // (23/10) Payer un seul employé : il est complété jusqu'à 5 minutes payées, comme avec « Payer »
@@ -376,14 +346,14 @@ export function payerEmploye(etat: EtatJeu, index: number, secondes = SECONDES_P
   employe.tempsPaye += temps
   etat.argent -= paye
   etat.stats.salairesPayes += paye
-  return [`💵 ${employe.nom} est payé(e) (${paye.toLocaleString('fr-FR')} $) : encore ${Math.ceil(employe.tempsPaye / 60)} min de travail.`]
+  return [t('💵 {nom} est payé(e) ({paye} $) : encore {minutes} min de travail.', { nom: employe.nom, paye: nombre(paye), minutes: Math.ceil(employe.tempsPaye / 60) })]
 }
 
 export function alerteSalaires(etat: EtatJeu): string | null {
   const sansSalaire = nbSansSalaire(etat)
-  if (managerEndormi(etat)) return '💤 Ton manager dort : réveille-le au Personnel !'
-  if (managerActif(etat) && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return '💼 Plus assez d’argent : personne n’est payé !'
-  if (sansSalaire > 0) return sansSalaire === 1 ? '😠 1 mineur attend son salaire !' : `😠 ${sansSalaire} mineurs attendent leur salaire !`
+  if (managerEndormi(etat)) return t('💤 Ton manager dort : réveille-le au Personnel !')
+  if (managerActif(etat) && (etat.manager.tempsPaye <= 0 || sansSalaire > 0)) return t('💼 Plus assez d’argent : personne n’est payé !')
+  if (sansSalaire > 0) return sansSalaire === 1 ? t('😠 1 mineur attend son salaire !') : t('😠 {n} mineurs attendent leur salaire !', { n: sansSalaire })
   return null
 }
 
@@ -392,7 +362,7 @@ export function alerteSalaires(etat: EtatJeu): string | null {
 // ---------------------------------------------------------------------------
 
 export function managerDebloque(etat: EtatJeu): boolean {
-  return etat.niveauMine >= NIVEAU_MINE_MANAGER && niveauAtteint(etat, NIVEAU_JOUEUR_POUR.manager)
+  return etat.niveauMine >= NIVEAU_MINE_MANAGER
 }
 
 // (23/10) Le manager est une option : on peut l'arrêter et le remettre au travail. Arrêté, il ne
@@ -404,7 +374,7 @@ export function managerActif(etat: EtatJeu): boolean {
 export function basculerManager(etat: EtatJeu): string[] {
   if (!etat.manager.embauche) return []
   etat.manager.actif = !managerActif(etat)
-  return [etat.manager.actif ? '💼 Ton manager reprend le travail : il paie les salaires tout seul.' : '💼 Manager arrêté : tu paies les salaires toi-même.']
+  return [etat.manager.actif ? t('💼 Ton manager reprend le travail : il paie les salaires tout seul.') : t('💼 Manager arrêté : tu paies les salaires toi-même.')]
 }
 
 // (23/10) La fatigue : il reste éveillé secondesEveilManager (15 min au niveau 1), jeu ouvert
@@ -436,7 +406,7 @@ export function reveillerManager(etat: EtatJeu): string[] {
   if (!etat.manager.embauche) return []
   const dormait = managerEndormi(etat)
   etat.manager.fatigue = 0
-  return [dormait ? '☕ Ton manager est réveillé : il reprend les salaires !' : '☕ Ton manager est en pleine forme.']
+  return [dormait ? t('☕ Ton manager est réveillé : il reprend les salaires !') : t('☕ Ton manager est en pleine forme.')]
 }
 
 export function managerAuTravail(etat: EtatJeu): boolean {
@@ -462,14 +432,16 @@ export function ameliorerManager(etat: EtatJeu): string[] {
   payer(etat, prochain.cout)
   etat.manager.niveau = (etat.manager.niveau ?? 0) + 1
   const m = prochain.minutesEveil
-  return [`💼 Ton manager reste maintenant éveillé ${m < 60 ? `${m} min` : `${(m / 60).toLocaleString('fr-FR')} h`} (jeu ouvert ou fermé).`]
+  const duree = m < 60 ? t('{n} min', { n: m }) : t('{n} h', { n: nombre(m / 60, 3) })
+  return [t('💼 Ton manager reste maintenant éveillé {duree} (jeu ouvert ou fermé).', { duree })]
 }
 
 export function embaucherManager(etat: EtatJeu): string[] {
-  if (!managerDebloque(etat) || etat.manager.embauche || etat.argent < PRIX_MANAGER) return []
-  etat.argent -= PRIX_MANAGER
+  const cout = { argent: PRIX_MANAGER, materiaux: {} }
+  if (!managerDebloque(etat) || etat.manager.embauche || !peutPayer(etat, cout)) return []
+  payer(etat, cout)
   etat.manager = { embauche: true, tempsPaye: SECONDES_PAR_PAIE, niveau: 0, fatigue: 0 }
-  return ['💼 Manager embauché ! Il paiera les salaires tout seul, avec ton argent.']
+  return [t('💼 Manager embauché ! Il paiera les salaires tout seul, avec ton argent.')]
 }
 
 export function depensesParPaie(etat: EtatJeu): number {
@@ -519,8 +491,8 @@ export function ameliorerRecruteur(etat: EtatJeu): string[] {
   if (prochain === null || !peutAmeliorerRecruteur(etat)) return []
   payer(etat, prochain.cout)
   etat.recruteur += 1
-  if (etat.recruteur === 1) return ['🎩 Recruteur embauché ! Tes prochaines embauches peuvent être rares, épiques... ou mythiques !']
-  return [`🎩 Recruteur niveau ${etat.recruteur} : plus de chances de trouver des mineurs rares !`]
+  if (etat.recruteur === 1) return [t('🎩 Recruteur embauché ! Tes prochaines embauches peuvent être rares, épiques... ou mythiques !')]
+  return [t('🎩 Recruteur niveau {n} : plus de chances de trouver des mineurs rares !', { n: etat.recruteur })]
 }
 
 export function chancesRecrutement(etat: EtatJeu): Record<IdRarete, number> {
@@ -561,8 +533,9 @@ export function maisonDe(etat: EtatJeu, employe: Employe): IdBatiment {
 // Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
-  if (prix === null || etat.argent < prix) return []
-  etat.argent -= prix
+  // (25/10) payer() : en argent, ou en gemmes (acheterAvecGemmes)
+  if (prix === null || !peutPayer(etat, { argent: prix, materiaux: {} })) return []
+  payer(etat, { argent: prix, materiaux: {} })
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
   // (23/10) Il sort du Personnel et marche jusqu'à la mine, puis il y descend dans la caisse
@@ -585,15 +558,15 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
     forgeEnAttente: false,
     enCabine: false,
   })
-  const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
-  return [`👷 ${nom}${titre} est embauché(e) ! Il part à la mine.`]
+  if (rarete === 'commun') return [t('👷 {nom} est embauché(e) ! Il part à la mine.', { nom })]
+  return [t('👷 {nom} ({rarete} !) est embauché(e) ! Il part à la mine.', { nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
 }
 
 // Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
 export function peutEmbaucherPousseur(etat: EtatJeu, liaison: IdLiaison): boolean {
   const prix = prixEmbauche(etat, 'pousseur')
   // (23/10) Un seul pousseur par trajet : on n'en embauche pas un deuxième.
-  return prix !== null && etat.argent >= prix && ligneDe(etat, liaison) !== null && !trajetPris(etat, liaison)
+  return prix !== null && peutPayer(etat, { argent: prix, materiaux: {} }) && ligneDe(etat, liaison) !== null && !trajetPris(etat, liaison)
 }
 
 // Ce trajet a-t-il déjà son pousseur ?
@@ -606,7 +579,7 @@ export function trajetPris(etat: EtatJeu, liaison: IdLiaison): boolean {
 export function embaucherPousseur(etat: EtatJeu, aleatoire: Aleatoire, liaison: IdLiaison): string[] {
   const prix = prixEmbauche(etat, 'pousseur')
   if (prix === null || !peutEmbaucherPousseur(etat, liaison)) return []
-  etat.argent -= prix
+  payer(etat, { argent: prix, materiaux: {} })
   if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
@@ -627,15 +600,21 @@ export function embaucherPousseur(etat: EtatJeu, aleatoire: Aleatoire, liaison: 
     depuis: personnel ? 'employes' : depart,
     forgeEnAttente: false,
   })
-  return [`🛤️ ${nom} est embauché(e) : il va pousser le wagonnet ${NOMS_TRAJETS[liaison]}.`]
+  return [t('🛤️ {nom} est embauché(e) : il va pousser le wagonnet {trajet}.', { nom, trajet: nomTrajet(liaison) })]
 }
 
-// « de la mine au marché »...
-const NOMS_TRAJETS: Record<IdLiaison, string> = {
-  'mine-marche': 'de la mine au marché',
-  'mine-foreuse': 'de la mine à la foreuse',
-  'mine-generateur': 'de la mine au générateur',
-  'foreuse-marche': 'de la foreuse au marché',
+// « de la mine au marché »... (une fonction, pour que le texte soit dans la langue du moment)
+function nomTrajet(liaison: IdLiaison): string {
+  switch (liaison) {
+    case 'mine-marche':
+      return t('de la mine au marché')
+    case 'mine-foreuse':
+      return t('de la mine à la foreuse')
+    case 'mine-generateur':
+      return t('de la mine au générateur')
+    case 'foreuse-marche':
+      return t('de la foreuse au marché')
+  }
 }
 
 // (23/10) Remplacer un mineur (avec le recruteur) : une nouvelle recrue tirée au hasard (nom et
@@ -662,8 +641,8 @@ export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoi
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
   etat.employes[index] = { ...ancien, nom, rarete, blocsCasses: 0 }
-  const titre = rarete === 'commun' ? '' : ` (${RARETES[rarete].nom.toLowerCase()} !)`
-  return [`🔄 ${ancien.nom} est parti(e) : ${nom}${titre} prend sa place, avec sa pioche.`]
+  if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend sa place, avec sa pioche.', { ancien: ancien.nom, nom })]
+  return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend sa place, avec sa pioche.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
 }
 
 export function licencier(etat: EtatJeu, index: number): string[] {
@@ -672,7 +651,7 @@ export function licencier(etat: EtatJeu, index: number): string[] {
   if (!employe || etat.argent < prix || employe.etape === 'pousse') return []
   etat.argent -= prix
   etat.employes.splice(index, 1)
-  return [`👋 ${employe.nom} est parti(e). Indemnités : ${prix.toLocaleString('fr-FR')} $.`]
+  return [t('👋 {nom} est parti(e). Indemnités : {prix} $.', { nom: employe.nom, prix: nombre(prix) })]
 }
 
 export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
@@ -684,13 +663,13 @@ export function ameliorerEmploye(etat: EtatJeu, index: number): string[] {
   employe.niveau += 1
   if (employe.role === 'pousseur') {
     const niveau = NIVEAUX_POUSSEUR[employe.niveau]
-    return [`🛤️ ${employe.nom} est maintenant pousseur ${niveau.nom.toLowerCase()} : il pousse ×${niveau.vitesse.toLocaleString('fr-FR')} plus vite.`]
+    return [t('🛤️ {nom} est maintenant pousseur {niveau} : il pousse ×{vitesse} plus vite.', { nom: employe.nom, niveau: t(niveau.nom).toLowerCase(), vitesse: nombre(niveau.vitesse, 3) })]
   }
   if (batimentPose(etat.village, 'forgeron')) {
     employe.forgeEnAttente = true
-    return [`⛏️ Le forgeron fait une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom} pour ${employe.nom} : elle lui descendra par l'ascenseur.`]
+    return [t("⛏️ Le forgeron fait une pioche en {pioche} pour {nom} : elle lui descendra par l'ascenseur.", { pioche: t(NIVEAUX_EMPLOYE[employe.niveau].nom), nom: employe.nom })]
   }
-  return [`⛏️ ${employe.nom} a maintenant une pioche en ${NIVEAUX_EMPLOYE[employe.niveau].nom}.`]
+  return [t('⛏️ {nom} a maintenant une pioche en {pioche}.', { nom: employe.nom, pioche: t(NIVEAUX_EMPLOYE[employe.niveau].nom) })]
 }
 
 // Changer le trajet d'un pousseur. S'il est en train de pousser, il finit d'abord son voyage ;
@@ -700,7 +679,7 @@ export function changerTrajet(etat: EtatJeu, index: number, liaison: IdLiaison):
   if (!employe || employe.role !== 'pousseur' || employe.trajet === liaison || ligneDe(etat, liaison) === null || trajetPris(etat, liaison)) return []
   if (!trajetDe(etat, liaison)) creerTrajet(etat, liaison)
   employe.trajet = liaison
-  return [`🛤️ ${employe.nom} va pousser le wagonnet ${NOMS_TRAJETS[liaison]}.`]
+  return [t('🛤️ {nom} va pousser le wagonnet {trajet}.', { nom: employe.nom, trajet: nomTrajet(liaison) })]
 }
 
 // ---------------------------------------------------------------------------
@@ -726,7 +705,7 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
       return []
     }
     partir(employe, ici, 'employes')
-    return [`😠 ${employe.nom} n’est plus payé(e) : il va attendre son salaire devant le Personnel.`]
+    return [t('😠 {nom} n’est plus payé(e) : il va attendre son salaire devant le Personnel.', { nom: employe.nom })]
   }
   // Sa nouvelle pioche (27/10) : il ne va plus la chercher, il reste où il est (au fond de la
   // mine) le temps que le forgeron la fasse ; elle lui descend par l'ascenseur. Un mineur ne
@@ -830,7 +809,8 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
         }
         employe.forgeEnAttente = false
       }
-      const vitesse = vitesseEmploye(employe)
+      // (25/10) le bonus « production » de la boutique : il creuse deux fois plus vite
+      const vitesse = vitesseEmploye(employe) * multiplicateurProduction(etat)
       const place = tailleSacEmploye(employe) - nbDansSacEmploye(employe)
       // Son sac est plein : il attend que la caisse passe le prendre. (23/10) Si c'est parce que
       // le coffre de la mine est plein, ce temps d'attente n'use pas son salaire.
@@ -1048,11 +1028,11 @@ function travaillerManager(etat: EtatJeu, secondes: number): string[] {
   // (23/10) Endormi (ou arrêté), il ne fait rien : ni fatigue, ni salaire qui passe.
   if (!managerPaieLesSalaires(etat)) return []
   manager.fatigue = (manager.fatigue ?? 0) + secondes
-  if (managerEndormi(etat)) return ['💤 Ton manager s’est endormi : il ne paie plus les salaires. Réveille-le au Personnel !']
+  if (managerEndormi(etat)) return [t('💤 Ton manager s’est endormi : il ne paie plus les salaires. Réveille-le au Personnel !')]
   if (manager.tempsPaye <= 0) return []
   manager.tempsPaye = Math.max(0, manager.tempsPaye - secondes)
   if (manager.tempsPaye > 0) return []
-  return ['💼 Ton manager n’est plus payé : tu n’as plus assez d’argent pour les salaires !']
+  return [t('💼 Ton manager n’est plus payé : tu n’as plus assez d’argent pour les salaires !')]
 }
 
 // (23/10) Jeu ouvert ou fermé, le manager paie tant qu'il est éveillé (voir la fatigue).
@@ -1077,37 +1057,46 @@ export function avancerEmployes(etat: EtatJeu, secondes: number, aleatoire: Alea
 // Pour l'affichage
 // ---------------------------------------------------------------------------
 
-const DESTINATIONS: Partial<Record<IdBatiment, string>> = {
-  puits: 'retourne à la mine',
-  foreuse: 'va au quai de la foreuse',
-  forgeron: 'va chercher sa pioche à la forge',
-  employes: 'va attendre son salaire au Personnel',
+// Où va un employé qui marche (une fonction, pour que le texte soit dans la langue du moment).
+function destination(lieu: IdBatiment): string {
+  switch (lieu) {
+    case 'puits':
+      return t('retourne à la mine')
+    case 'foreuse':
+      return t('va au quai de la foreuse')
+    case 'forgeron':
+      return t('va chercher sa pioche à la forge')
+    case 'employes':
+      return t('va attendre son salaire au Personnel')
+    default:
+      return t('se promène')
+  }
 }
 
 export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
   const secondes = Math.ceil(secondesRestantesEmploye(etat, employe))
   switch (employe.etape) {
     case 'attend':
-      return '😠 attend son salaire devant le Personnel'
+      return t('😠 attend son salaire devant le Personnel')
     case 'creuse':
       if (nbDansSacEmploye(employe) >= tailleSacEmploye(employe)) {
-        return placeCoffre(etat) === 0 ? '📦 attend : le coffre de la mine est plein !' : '🎒 sac plein : attend la caisse de l’ascenseur'
+        return placeCoffre(etat) === 0 ? t('📦 attend : le coffre de la mine est plein !') : t('🎒 sac plein : attend la caisse de l’ascenseur')
       }
-      return '⛏️ creuse au fond de la mine'
+      return t('⛏️ creuse au fond de la mine')
     case 'monte':
-      return employe.enCabine ? `😠 plus payé : remonte au village dans la caisse (${secondes} s)` : '😠 plus payé : attend la caisse pour remonter'
+      return employe.enCabine ? t('😠 plus payé : remonte au village dans la caisse ({secondes} s)', { secondes }) : t('😠 plus payé : attend la caisse pour remonter')
     case 'vide':
-      return '⛏️ creuse au fond de la mine'
+      return t('⛏️ creuse au fond de la mine')
     case 'descend':
-      return employe.enCabine ? `⏬ descend dans la mine (${secondes} s)` : '⏳ attend la caisse en haut de la mine'
+      return employe.enCabine ? t('⏬ descend dans la mine ({secondes} s)', { secondes }) : t('⏳ attend la caisse en haut de la mine')
     case 'quai':
-      return employe.trajet && !trajetDe(etat, employe.trajet) ? '🛤️ attend : son trajet est arrêté' : '🛤️ attend son wagonnet au quai'
+      return employe.trajet && !trajetDe(etat, employe.trajet) ? t('🛤️ attend : son trajet est arrêté') : t('🛤️ attend son wagonnet au quai')
     case 'pousse':
-      return '🛤️ pousse le wagonnet'
+      return t('🛤️ pousse le wagonnet')
     case 'forge':
-      return `🔨 attend sa nouvelle pioche du forgeron (${secondes} s)`
+      return t('🔨 attend sa nouvelle pioche du forgeron ({secondes} s)', { secondes })
     default:
-      return `🚶 ${DESTINATIONS[employe.lieu] ?? 'se promène'} (${secondes} s)`
+      return t('🚶 {destination} ({secondes} s)', { destination: destination(employe.lieu), secondes })
   }
 }
 

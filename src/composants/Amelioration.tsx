@@ -1,94 +1,100 @@
 // Les lignes d'achat et d'amélioration, les mêmes partout (mine, coffre, ascenseur, foreuse,
-// générateur, mineurs, sac) pour que le jeu se lise d'un coup d'œil :
-//   - des petits carrés pour les niveaux : pleins = déjà achetés, vides = à acheter ;
-//   - ce qu'on a maintenant, puis le prix et le bouton du niveau suivant ;
-//   - ou « 🔒 ... » si ce n'est pas encore débloqué, ou « ✔ Niveau max ».
+// générateur, mineurs, pioches...) pour que le jeu se lise d'un coup d'œil (25/10, nouveau style) :
+//
+//   [ Coffre  niv. 2  ■■□□□ ]                         [ 💵 Améliorer ] [ 💎 6 ]
+//   [ 300 places → 800 places ]                          3 000 $ · 80 🔩
+//
+//   - à gauche : le nom, le niveau (petits carrés), et ce que ça change (maintenant → après) ;
+//   - à droite : le bouton vert avec le prix, et le bouton violet pour payer en gemmes ;
+//   - ou « 🔒 Mine 3 » si ce n'est pas encore débloqué, ou « MAX ».
+//
+// « action » est l'action du jeu (par exemple agrandirCoffre) : le bouton vert la fait en payant
+// en argent et minerais, le violet la fait en payant en gemmes (acheterAvecGemmes).
 
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import type { Cout } from '../jeu/donnees'
-import type { EtatJeu } from '../jeu/mineur'
+import { prixEnGemmes } from '../jeu/gemmes'
+import { t } from '../jeu/langue'
+import { acheterAvecGemmes, possibleEnGemmes, type EtatJeu } from '../jeu/mineur'
+import type { Action } from '../usePartie'
+import { useJeu } from './contexteJeu'
 import { PrixCout } from './PrixCout'
 
 type Props = {
-  etat: EtatJeu
-  actuel: ReactNode // ce qu'on a maintenant (« 0,5 bloc/s », « 200 places »...)
-  niveau: number // le nombre de niveaux achetés (pour les carrés)
-  niveauMax: number // le nombre de niveaux en tout
-  // Le niveau suivant : son prix et ce que dit le bouton (null = niveau maximum atteint).
-  suivant: { cout: Cout; texte: ReactNode } | null
-  verrou?: string | null // ce qu'il faut pour débloquer le niveau suivant (« au niveau 3 de la mine »)
-  possible: boolean // on a de quoi payer (et rien d'autre ne l'empêche)
-  onAmeliorer: () => void
-  genre?: 'ameliorer' | 'acheter'
+  titre: ReactNode // « Coffre », « Pioche en fer », « Ascenseur »
+  niveau?: number // le nombre de niveaux achetés (pour les carrés)
+  niveauMax?: number
+  effet?: ReactNode // ce que ça change : « 300 places → 800 places »
+  cout: Cout | null // le prix du niveau suivant (null : niveau maximum)
+  verrou?: string | null // ce qu'il faut pour débloquer le niveau suivant (« 🕳️ Mine 3 »)
+  possible: boolean // on peut le faire en payant en argent (débloqué, payable, rien ne l'empêche)
+  action: Action
+  texte?: string // le mot du bouton (« Améliorer » par défaut)
+  icone?: string // une icône devant le titre
+  classe?: string
 }
 
-export function Amelioration({
-  etat,
-  actuel,
-  niveau,
-  niveauMax,
-  suivant,
-  verrou = null,
-  possible,
-  onAmeliorer,
-  genre = 'ameliorer',
-}: Props) {
+export function Amelioration({ titre, niveau, niveauMax, effet, cout, verrou = null, possible, action, texte, icone, classe = '' }: Props) {
+  const { etat } = useJeu()
   return (
-    <div className="amelioration">
-      <div className="amelioration-haut">
-        <span className="amelioration-actuel">{actuel}</span>
-        <span className="niveaux" aria-label={`Niveau ${niveau} sur ${niveauMax}`}>
-          {Array.from({ length: niveauMax }, (_, i) => (
-            <i key={i} className={i < niveau ? 'niveau-achete' : 'niveau-libre'} />
-          ))}
+    <div className={`ligne-amelioration ${classe}`}>
+      <div className="ligne-amelioration-texte">
+        <span className="ligne-amelioration-nom">
+          {icone && <span aria-hidden="true">{icone}</span>}
+          {titre}
+          {niveau !== undefined && niveauMax !== undefined && <Niveaux niveau={niveau} max={niveauMax} />}
         </span>
+        {effet && <span className="ligne-amelioration-effet">{effet}</span>}
       </div>
-      {suivant === null ? (
-        <span className="amelioration-max">✔ Niveau max</span>
+      {cout === null ? (
+        <span className="etiquette etiquette-jaune">{t('MAX')}</span>
       ) : verrou !== null ? (
-        <span className="amelioration-verrou">
-          🔒 {suivant.texte} <BadgeXp texte={verrou} />
+        <span className="verrou" title={t('Descends la mine pour débloquer ce niveau')}>
+          🔒 {verrou}
         </span>
       ) : (
-        <Achat etat={etat} cout={suivant.cout} texte={suivant.texte} possible={possible} onAcheter={onAmeliorer} genre={genre} />
+        <BoutonsAchat etat={etat} cout={cout} possible={possible} action={action} texte={texte ?? t('Améliorer')} />
       )}
     </div>
   )
 }
 
-// (23/10) Le niveau du joueur qu'il faut, en pastille violette avec l'étoile, comme dans la
-// barre du haut : « ⭐ 4 requis ». On ne le confond plus avec le niveau de la mine.
-export function BadgeXp({ texte }: { texte: string }) {
+// Les petits carrés des niveaux (pleins : achetés).
+export function Niveaux({ niveau, max }: { niveau: number; max: number }) {
   return (
-    <span className="badge-xp" title={`Il faut atteindre le niveau ${texte.replace('⭐ ', '')} (l’étoile en haut à gauche) : gagne de l’XP en jouant`}>
-      {texte} requis
+    <span className="niveaux" aria-label={t('Niveau {n} sur {max}', { n: niveau, max })}>
+      {Array.from({ length: max }, (_, i) => (
+        <i key={i} className={i < niveau ? 'plein' : ''} />
+      ))}
     </span>
   )
 }
 
-// Un achat simple, présenté partout de la même façon : le prix à gauche (en vert ce qu'on
-// a, en rouge ce qui manque), le bouton à droite avec ce qu'il fait.
-export function Achat({
-  etat,
-  cout,
-  texte,
-  possible,
-  onAcheter,
-  genre = 'acheter',
-}: {
-  etat: EtatJeu
-  cout: Cout
-  texte: ReactNode
-  possible: boolean
-  onAcheter: () => void
-  genre?: 'ameliorer' | 'acheter' | 'reparer' | 'recruter' | 'payer'
-}) {
+// Le bouton vert (argent et minerais, avec le prix dessous) et le bouton violet (gemmes).
+export function BoutonsAchat({ etat, cout, possible, action, texte }: { etat: EtatJeu; cout: Cout; possible: boolean; action: Action; texte: string }) {
+  const { jouer } = useJeu()
+  const gemmes = prixEnGemmes(cout)
+  // (on ne refait l'essai que quand la partie change)
+  const enGemmes = useMemo(() => possibleEnGemmes(etat, action), [etat, action])
   return (
-    <div className="module-ligne">
-      <PrixCout etat={etat} cout={cout} />
-      <button className={`bouton bouton-petit bouton-${genre}`} disabled={!possible} onClick={onAcheter}>
-        {texte}
+    <span className="ligne-amelioration-boutons">
+      <button className="btn btn-vert btn-petit" disabled={!possible} onClick={() => jouer(action)}>
+        <span>{texte}</span>
+        <PrixCout etat={etat} cout={cout} />
       </button>
-    </div>
+      <button
+        className="btn btn-gemmes btn-petit"
+        disabled={!enGemmes}
+        onClick={() => jouer((e) => acheterAvecGemmes(() => action(e)))}
+        title={t('Payer en gemmes, sans argent ni minerais')}
+      >
+        <span>💎 {gemmes}</span>
+      </button>
+    </span>
   )
+}
+
+// Un achat simple (embaucher, construire...) : les mêmes deux boutons, sans niveaux.
+export function Achat({ titre, effet, cout, possible, action, texte, icone, verrou = null }: Omit<Props, 'niveau' | 'niveauMax'> & { cout: Cout }) {
+  return <Amelioration titre={titre} effet={effet} cout={cout} possible={possible} action={action} texte={texte ?? t('Acheter')} icone={icone} verrou={verrou} />
 }

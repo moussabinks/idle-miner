@@ -2,12 +2,13 @@
 // de l'image de fond, et inversement. C'est seulement de l'affichage : la logique du jeu ne
 // connaît que les cases (src/jeu/village.ts).
 //
-// Le monde est mesuré en pixels : la clairière y est un losange (60 × 60 cases), son coin du haut
-// (la case 0, 0) est en (1131 ; 57), et une case fait 33 pixels de large sur 19 de haut. Le sol
+// Le monde est mesuré en pixels : la clairière y est un losange (40 × 40 cases depuis le 25/10),
+// son coin du haut (la case 0, 0) est en (801 ; 57), et une case fait 33 pixels de large sur 19 de haut. Le sol
 // en damier et la forêt autour sont dessinés par le jeu (TerrainVillage, ForetVillage).
 
 import { TAILLE_GRILLE, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import { batimentPose, cleCase, empriseBatiment, porte, porteAGauche, viragesDoux, type BatimentPose, type Case, type Village } from '../jeu/village'
+import { cheminPublic } from '../chemins'
 
 // La moitié de la largeur et de la hauteur d'une case à l'écran (la taille des images des
 // bâtiments est calée dessus : elle ne change pas si la clairière grandit).
@@ -18,8 +19,8 @@ const MARGE = { x: 141, y: 57.2 }
 const ORIGINE = { x: MARGE.x + TAILLE_GRILLE * DEMI_LARGEUR, y: MARGE.y }
 // La taille du monde (la clairière et ses marges), en pixels. Les mêmes chiffres sont dans
 // village.css (.monde-village) : les changer ensemble.
-export const LARGEUR_MONDE = 2262
-export const HAUTEUR_MONDE = 1407
+export const LARGEUR_MONDE = Math.round(2 * MARGE.x + 2 * TAILLE_GRILLE * DEMI_LARGEUR) // 1 602
+export const HAUTEUR_MONDE = Math.round(MARGE.y + 2 * TAILLE_GRILLE * DEMI_HAUTEUR + 201.4) // 1 024
 
 export type Point = { x: number; y: number }
 
@@ -53,7 +54,8 @@ export function profondeur(x: number, y: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Les dessins des bâtiments (des images en vue isométrique, upscalées par IA le 21/10)
+// Les dessins des bâtiments (25/10 : des dessins SVG au style cartoon, fabriqués par
+// outils/art/fabriquer.mjs, voir son LISEZMOI)
 // ---------------------------------------------------------------------------
 
 // Pour chaque image : sa taille, et les trois coins du sol de son dessin (gauche, bas, droite),
@@ -62,24 +64,58 @@ export function profondeur(x: number, y: number): number {
 // bâtiment ne déborde pas de ses 5 × 5 cases, comme dans Clash of Clans).
 type Calage = { largeur: number; hauteur: number; gauche: Point; bas: Point; droite: Point; retrait?: number }
 
-// De combien de cases on rentre un bâtiment de 5 × 5 dans son emprise. Depuis le 22/10, les dessins
-// de l'équipe sont posés sur une dalle de 5 × 5 pavés : le pied de cette dalle tombe pile sur le
-// bord de l'emprise, sans retrait ni débordement sur les cases voisines.
+// De combien de cases on rentre un bâtiment de 5 × 5 dans son emprise. Les dessins sont posés sur
+// une dalle de 5 × 5 pavés : le pied de cette dalle tombe pile sur le bord de l'emprise, sans
+// retrait ni débordement sur les cases voisines.
 export const RETRAIT_BATIMENT = 0
 
-// Les coins mesurés sont ceux du pied de la dalle de pavés (là où elle touche l'herbe), mesurés
-// par un script sur les images détourées (22/10).
+// Les coins du pied de la dalle (là où elle touche l'herbe). Les dessins sont faits exactement à
+// l'angle des cases, deux fois plus grands que le monde : une case y fait 66 pixels de large.
+// Ces chiffres sont affichés par « node outils/art/fabriquer.mjs » : les recopier s'ils changent.
 export const CALAGES: Record<IdBatiment, Calage> = {
-  // La mine (10 × 10, 22/10) : le dessin de l'équipe, vu plus d'en haut que les autres, remis à
-  // l'angle du jeu par un script (le sol est ramené à l'angle des cases, les poteaux et les murs
-  // du puits gardent leur hauteur). Le pied de son losange tombe pile sur ses 10 × 10 cases.
-  puits: { largeur: 1233, hauteur: 774, gauche: { x: 3, y: 403.4 }, bas: { x: 625, y: 765.4 }, droite: { x: 1225, y: 418.6 } },
-  bazar: { largeur: 1037, hauteur: 945, gauche: { x: 2, y: 652 }, bas: { x: 520, y: 942 }, droite: { x: 1034, y: 653 } },
-  employes: { largeur: 1074, hauteur: 1046, gauche: { x: 2, y: 724 }, bas: { x: 530, y: 1043 }, droite: { x: 1071, y: 726 } },
-  foreuse: { largeur: 971, hauteur: 913, gauche: { x: 2, y: 608 }, bas: { x: 483, y: 910 }, droite: { x: 968, y: 612 } },
-  forgeron: { largeur: 1091, hauteur: 994, gauche: { x: 2, y: 670 }, bas: { x: 546, y: 991 }, droite: { x: 1088, y: 673 } },
-  generateur: { largeur: 1107, hauteur: 1040, gauche: { x: 2, y: 708 }, bas: { x: 553, y: 1037 }, droite: { x: 1104, y: 711 } },
-  marche: { largeur: 1089, hauteur: 1027, gauche: { x: 2, y: 703 }, bas: { x: 512, y: 1024 }, droite: { x: 1073, y: 702 } },
+  // La mine (10 × 10) : le puits, son chevalement et la petite montagne de rochers.
+  puits: { largeur: 684, hauteur: 570, gauche: { x: 12, y: 366.4 }, bas: { x: 342, y: 557.8 }, droite: { x: 672, y: 366.4 } },
+  employes: { largeur: 354, hauteur: 383, gauche: { x: 12, y: 275.7 }, bas: { x: 177, y: 371.4 }, droite: { x: 342, y: 275.7 } },
+  foreuse: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
+  forgeron: { largeur: 354, hauteur: 403, gauche: { x: 12, y: 295.7 }, bas: { x: 177, y: 391.4 }, droite: { x: 342, y: 295.7 } },
+  generateur: { largeur: 354, hauteur: 403, gauche: { x: 12, y: 295.7 }, bas: { x: 177, y: 391.4 }, droite: { x: 342, y: 295.7 } },
+  marche: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
+}
+
+// Les points utiles de l'image de la mine (pour ce que DessinsVillage dessine par-dessus : la
+// caisse de l'ascenseur, ses câbles, le panneau du niveau), en pixels de l'image. Ils sont affichés par
+// « node outils/art/fabriquer.mjs » : les recopier si on change le dessin de la mine.
+export const POINTS_MINE = {
+  // où est posée la caisse (son image), à sa hauteur de référence (décalage 0 : posée au sol)
+  caisse: { x: 282, y: 215, largeur: 120, hauteur: 177 },
+  // où les deux câbles sortent du treuil, et où ils s'accrochent à la caisse
+  treuil: [
+    [292.5, 210.4],
+    [391.5, 210.4],
+  ] as [number, number][],
+  accroches: [
+    [292.5, 302.4],
+    [391.5, 302.4],
+  ] as [number, number][],
+  // où se tient un mineur dans la caisse (ses pieds), et le bord de devant de la caisse (de
+  // droite à gauche) : on ne le voit qu'au-dessus de ce bord
+  piedDansLaCaisse: [342, 350.4] as [number, number],
+  bordCaisse: [
+    [391.5, 304.4],
+    [342, 333.1],
+    [292.5, 304.4],
+  ] as [number, number][],
+  // le bord de devant du puits (là où le sol s'arrête), de gauche à droite : la caisse ne se voit
+  // qu'au-dessus de ce bord (en dessous, elle est dans le puits)
+  bordDuPuits: [
+    [236.4, 354.4],
+    [342, 415.6],
+    [447.6, 354.4],
+  ] as [number, number][],
+  // le pied du panneau du niveau de la mine, sur le sol de devant à gauche
+  panneau: [124.2, 388.9] as [number, number],
+  // au-dessus de la roue du chevalement et de la jauge du coffre (pour la mini-jauge du déchargement)
+  dessus: [342, -24] as [number, number],
 }
 
 // La transformation CSS (matrix) qui pose l'image sur l'emprise (x, y, taille), SANS la déformer
@@ -121,25 +157,18 @@ export function pointSurSprite(calage: Calage, x: number, y: number, taille: num
 }
 
 export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
-  puits: '/images/batiments/mine.webp',
-  bazar: '/images/batiments/bazar.webp',
-  foreuse: '/images/batiments/foreuse.webp',
-  forgeron: '/images/batiments/forgeron.webp',
-  marche: '/images/batiments/marche.webp',
-  employes: '/images/batiments/employes.webp',
-  generateur: '/images/batiments/generateur.webp',
+  puits: cheminPublic('/images/batiments/mine.svg'),
+  foreuse: cheminPublic('/images/batiments/foreuse.svg'),
+  forgeron: cheminPublic('/images/batiments/forgeron.svg'),
+  marche: cheminPublic('/images/batiments/marche.svg'),
+  employes: cheminPublic('/images/batiments/employes.svg'),
+  generateur: cheminPublic('/images/batiments/generateur.svg'),
 }
 
-// Pour un bâtiment retourné (miroir) qui a des écritures : la même image, mais avec ses panneaux
-// déjà retournés, pour qu'ils se lisent à l'endroit une fois toute l'image retournée
-// (fabriquée par outils/batiments/textes_miroir.py).
-export const IMAGES_BATIMENTS_MIROIR: Partial<Record<IdBatiment, string>> = {
-  employes: '/images/batiments/employes-miroir.webp',
-}
-
-// L'image à afficher pour un bâtiment, selon qu'il est retourné ou non.
-export function imageBatiment(id: IdBatiment, miroir: boolean): string {
-  return (miroir && IMAGES_BATIMENTS_MIROIR[id]) || IMAGES_BATIMENTS[id]
+// L'image à afficher pour un bâtiment. (25/10 : les dessins n'ont plus d'écritures, un bâtiment
+// retourné (miroir) utilise donc la même image, simplement retournée.)
+export function imageBatiment(id: IdBatiment): string {
+  return IMAGES_BATIMENTS[id]
 }
 
 // La hauteur (en pixels) de ce qui dépasse au-dessus d'une décoration (pour sa boîte SVG).

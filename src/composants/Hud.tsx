@@ -1,163 +1,119 @@
-// Le bandeau du haut, compact (23/10) : une rangée de petites cases arrondies, une par info utile.
-//   ⭐ le niveau du joueur et son XP (29/10) ;
-//   💵 l'argent et ce que la mine produit par seconde ;
-//   📦 le coffre de la mine (avec le niveau de la mine en petit badge) ;
-//   ⛏️ la pioche (sa durabilité) ;
-//   🎒 le sac ;
-//   et, s'il y en a, les mineurs et l'éclair des rails électriques.
-// Le détail de chaque case est dans son info-bulle. Une case clignote en rouge quand il faut
-// agir (coffre plein, pioche cassée, sac plein).
+// Le bandeau du haut (25/10, nouveau style) : des pastilles sombres au gros contour, comme le
+// « portefeuille » du jeu d'inspiration. Seulement l'essentiel, et chaque case apparaît quand
+// elle sert (le nouveau joueur ne voit que l'argent et le coffre) :
+//   ⭐ le niveau du joueur et son XP ;
+//   💵 l'argent et ce que tout produit par seconde (le toucher ouvre le bilan) ;
+//   💎 les gemmes (le toucher ouvre la boutique des gemmes) ;
+//   📦 le coffre de la mine, avec le niveau de la mine (le palier) ;
+//   👷 les employés et le prochain salaire (ou le manager), quand on en a ;
+//   et dessous, les bonus de la boutique en cours, avec leur temps.
 
-import { infoNiveauMine } from '../jeu/mine'
-import { railsAlimentes } from '../jeu/wagonnet'
+import { BOOSTS, LISTE_BOOSTS, secondesBoost } from '../jeu/gemmes'
+import { nombre, t } from '../jeu/langue'
 import { managerEndormi, managerPaieLesSalaires, nbSansSalaire, secondesAvantSommeil, tempsPayeMin } from '../jeu/employes'
-import { capaciteCoffre, coffrePlein, durabiliteRestante, estCassee, nbDansCoffre, nbDansSac, piocheEnMain, sacPlein, tailleSac, type EtatJeu } from '../jeu/mineur'
-import { progressionNiveau, prochainDeblocage } from '../jeu/niveaux'
+import { capaciteCoffre, coffrePlein, nbDansCoffre, type EtatJeu } from '../jeu/mineur'
+import { progressionNiveau } from '../jeu/niveaux'
 import { revenuParSeconde } from '../jeu/revenu'
+import { etapeTutoriel } from '../jeu/tutoriel'
+import { minutesSecondes, nombreAbrege } from '../nombres'
 import { useCompteur } from '../useCompteur'
 
 type Props = {
   etat: EtatJeu
   nbVentes: number // change à chaque vente, pour faire sauter le compteur d'argent
-  onOuvrirBilan?: () => void // (23/10) toucher l'argent ouvre le bilan (gains et salaires par minute)
+  onOuvrirBilan: () => void
+  onOuvrirBoutique: () => void
 }
 
-// « 0,8/s », « 12/s », « 1 250/s ».
+// « +0,8/s », « +12/s ».
 function texteRevenu(parSeconde: number): string {
   const arrondi = Math.abs(parSeconde) < 10 ? Math.round(parSeconde * 10) / 10 : Math.round(parSeconde)
-  return `${arrondi > 0 ? '+' : ''}${arrondi.toLocaleString('fr-FR')}/s`
+  return `${arrondi > 0 ? '+' : ''}${nombre(arrondi, 1)}/s`
 }
 
-// « 950 », « 12,5 k », « 3,2 M » : les grands nombres en court.
-function nombreCourt(n: number): string {
-  const valeur = Math.floor(n)
-  if (valeur < 10_000) return valeur.toLocaleString('fr-FR')
-  if (valeur < 1_000_000) return `${(valeur / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} k`
-  return `${(valeur / 1_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} M`
-}
-
-// « 4:05 » : un temps en minutes et secondes.
-function minutesSecondes(secondes: number): string {
-  const s = Math.max(0, Math.ceil(secondes))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
-
-// Une petite jauge sous une valeur.
-// « teinte » (30/10, la pioche) : la couleur va du rouge (0) au vert (120) selon ce qu'il reste.
-function JaugeMini({ valeur, max, couleur, teinte }: { valeur: number; max: number; couleur: 'or' | 'vert' | 'rouge' | 'bleu' | 'violet'; teinte?: number }) {
-  const pourcentage = max > 0 ? Math.min(100, (valeur / max) * 100) : 0
-  const style = teinte === undefined ? { width: `${pourcentage}%` } : { width: `${pourcentage}%`, background: `hsl(${teinte} 78% 50%)` }
-  return (
-    <span className="jauge-mini" aria-hidden="true">
-      <i className={`jauge-mini-${couleur}`} style={style} />
-    </span>
-  )
-}
-
-export function Hud({ etat, nbVentes, onOuvrirBilan }: Props) {
-  const plein = sacPlein(etat)
-  const coffreRempli = coffrePlein(etat)
-  const pioche = piocheEnMain(etat)
-  const cassee = estCassee(etat)
-  const niveau = infoNiveauMine(etat.niveauMine)
-  const revenu = revenuParSeconde(etat)
-  const sansSalaire = nbSansSalaire(etat)
-  const tempsPaye = tempsPayeMin(etat)
-  // Le compteur d'argent défile jusqu'à la nouvelle somme (plus satisfaisant qu'un saut).
+export function Hud({ etat, nbVentes, onOuvrirBilan, onOuvrirBoutique }: Props) {
   const argentAffiche = useCompteur(Math.floor(etat.argent))
-
-  const niveauJoueur = progressionNiveau(etat)
-  const deblocage = prochainDeblocage(etat)
+  const niveau = progressionNiveau(etat)
+  const revenu = revenuParSeconde(etat)
+  const plein = coffrePlein(etat)
+  const coffre = nbDansCoffre(etat)
+  const capacite = capaciteCoffre(etat)
+  const sansSalaire = nbSansSalaire(etat)
+  const dort = managerEndormi(etat)
+  const manager = managerPaieLesSalaires(etat)
+  // Les gemmes n'apparaissent qu'après le tutoriel (le nouveau joueur a assez à regarder).
+  const avecGemmes = etapeTutoriel(etat) === null || etat.gemmes > 0
+  const boosts = LISTE_BOOSTS.filter((id) => secondesBoost(etat, id) > 0)
 
   return (
-    <header className="bandeau">
-      <div
-        className="info-bandeau bandeau-niveau"
-        title={`Niveau ${niveauJoueur.niveau}${niveauJoueur.pourSuivant ? ` · ${niveauJoueur.xp.toLocaleString('fr-FR')} / ${niveauJoueur.pourSuivant.toLocaleString('fr-FR')} XP pour le niveau ${niveauJoueur.niveau + 1}` : ' (maximum)'}${deblocage ? ` · au niveau ${deblocage.niveau} : ${deblocage.choses.join(', ')}` : ''}. Gagne de l'XP en cassant des blocs, en construisant, en posant des rails, en embauchant et en améliorant.`}
-      >
-        <span className="bandeau-icone">
-          ⭐<b key={niveauJoueur.niveau} className="bandeau-badge badge-niveau">{niveauJoueur.niveau}</b>
-        </span>
-        <span className="bandeau-valeurs">
-          <small>{niveauJoueur.pourSuivant ? `${niveauJoueur.xp}/${niveauJoueur.pourSuivant}` : 'Max'}</small>
-          <JaugeMini valeur={niveauJoueur.xp} max={niveauJoueur.pourSuivant ?? 1} couleur="violet" />
-        </span>
-      </div>
+    <header className="hud">
+      <div className="hud-ligne">
+        <div className="hud-case hud-niveau" title={t('Niveau {n} · gagne de l’XP en creusant, en construisant et en améliorant', { n: niveau.niveau })}>
+          <span className="hud-medaille">{niveau.niveau}</span>
+          <span className="jauge jauge-violet hud-jauge" aria-hidden="true">
+            <i style={{ width: `${niveau.pourSuivant ? Math.min(100, (niveau.xp / niveau.pourSuivant) * 100) : 100}%` }} />
+          </span>
+        </div>
 
-      {/* (23/10) Un bouton : le toucher ouvre le bilan (ce qu'on gagne et ce qu'on paie). */}
-      <button
-        type="button"
-        className="info-bandeau bandeau-argent bandeau-bouton"
-        onClick={onOuvrirBilan}
-        title={`Touche pour voir ton bilan · ce que ta mine produit par seconde (en moyenne, à vendre) : mine ${texteRevenu(revenu.mine)} · mineurs ${texteRevenu(revenu.mineurs)} · foreuse ${texteRevenu(revenu.foreuse)}`}
-      >
-        <span className="bandeau-icone">💵</span>
-        <span className="bandeau-valeurs">
-          <strong key={nbVentes} className={nbVentes > 0 ? 'argent-saute' : ''}>
-            {nombreCourt(argentAffiche)} $
-          </strong>
-          <small className={revenu.total > 0 ? 'revenu-positif' : 'revenu-nul'}>{texteRevenu(revenu.total)}</small>
-        </span>
-        <span className="bandeau-loupe" aria-hidden="true">
-          ›
-        </span>
-      </button>
+        <button type="button" className="hud-case hud-bouton" onClick={onOuvrirBilan} title={t('Ton bilan : ce que tu gagnes et ce que tu paies')}>
+          <span className="hud-icone" aria-hidden="true">
+            💵
+          </span>
+          <span className="hud-valeurs">
+            <strong key={nbVentes} className={nbVentes > 0 ? 'hud-saute' : ''}>
+              {nombreAbrege(argentAffiche)} $
+            </strong>
+            <small className={revenu.total > 0 ? 'hud-positif' : ''}>{texteRevenu(revenu.total)}</small>
+          </span>
+        </button>
 
-      <div
-        className={`info-bandeau ${coffreRempli ? 'bandeau-alerte' : ''}`}
-        title={`Mine niveau ${etat.niveauMine} (${niveau.nom}) · coffre ${nbDansCoffre(etat)} / ${capaciteCoffre(etat)}${coffreRempli ? ' : plein, la mine s’arrête !' : ''}`}
-      >
-        <span className="bandeau-icone">
-          📦<b className="bandeau-badge">{etat.niveauMine}</b>
-        </span>
-        <span className="bandeau-valeurs">
-          <small>
-            {nbDansCoffre(etat)}/{capaciteCoffre(etat)}
-          </small>
-          <JaugeMini valeur={nbDansCoffre(etat)} max={capaciteCoffre(etat)} couleur={coffreRempli ? 'rouge' : 'or'} />
-        </span>
-      </div>
+        {avecGemmes && (
+          <button type="button" className="hud-case hud-bouton hud-gemmes" onClick={onOuvrirBoutique} title={t('Tes gemmes : la boutique')}>
+            <span className="hud-icone" aria-hidden="true">
+              💎
+            </span>
+            <strong>{nombre(etat.gemmes)}</strong>
+            <span className="hud-plus" aria-hidden="true">
+              +
+            </span>
+          </button>
+        )}
 
-      {/* (23/10) Cassée : la case tremble à chaque clic (la clé change), pour prévenir. */}
-      <div
-        key={cassee ? etat.stats.blocsCasses * 2 + etat.clics : 'pioche'}
-        className={`info-bandeau ${cassee || durabiliteRestante(etat) < pioche.durabilite * 0.15 ? 'bandeau-alerte' : ''} ${cassee ? 'bandeau-pioche-cassee' : ''}`}
-        title={cassee ? `Pioche en ${pioche.nom} cassée : 2 clics par bloc, fais-la réparer au forgeron` : `Pioche en ${pioche.nom} : ${Math.round(pioche.doublement * 100)} % de doubler un minerai`}
-      >
-        <span className="bandeau-icone">{cassee ? '💥' : '⛏️'}</span>
-        <span className="bandeau-valeurs">
-          <small>{cassee ? 'Cassée' : `${durabiliteRestante(etat)}/${pioche.durabilite}`}</small>
-          <JaugeMini valeur={durabiliteRestante(etat)} max={pioche.durabilite} couleur={cassee ? 'rouge' : 'vert'} teinte={Math.round((durabiliteRestante(etat) / pioche.durabilite) * 120)} />
-        </span>
-      </div>
+        <div className={`hud-case ${plein ? 'hud-alerte' : ''}`} title={t('Le coffre de la mine (mine niveau {n})', { n: etat.niveauMine })}>
+          <span className="hud-icone" aria-hidden="true">
+            📦<b className="hud-badge">{etat.niveauMine}</b>
+          </span>
+          <span className="hud-valeurs">
+            <small>
+              {nombreAbrege(coffre)}/{nombreAbrege(capacite)}
+            </small>
+            <span className={`jauge ${plein ? 'jauge-rose' : 'jauge-jaune'} hud-jauge`} aria-hidden="true">
+              <i style={{ width: `${Math.min(100, (coffre / Math.max(1, capacite)) * 100)}%` }} />
+            </span>
+          </span>
+        </div>
 
-      <div className={`info-bandeau ${plein ? 'bandeau-alerte' : ''}`} title={plein ? 'Sac plein : va vendre au marché !' : 'Ton sac à dos'}>
-        <span className="bandeau-icone">🎒</span>
-        <span className="bandeau-valeurs">
-          <small>
-            {nbDansSac(etat)}/{tailleSac(etat)}
-          </small>
-          <JaugeMini valeur={nbDansSac(etat)} max={tailleSac(etat)} couleur={plein ? 'rouge' : 'bleu'} />
-        </span>
-      </div>
-
-      {(etat.employes.length > 0 || railsAlimentes(etat)) && (
-        <div className={`info-bandeau bandeau-petite ${sansSalaire > 0 || managerEndormi(etat) ? 'bandeau-alerte' : ''}`} title={sansSalaire > 0 ? `${sansSalaire} mineur(s) sans salaire !` : managerEndormi(etat) ? 'Ton manager dort : réveille-le au Personnel' : managerPaieLesSalaires(etat) ? `Tes employés : le manager paie leurs salaires (il s'endort dans ${minutesSecondes(secondesAvantSommeil(etat))})` : `Tes employés : prochain salaire à payer dans ${minutesSecondes(tempsPaye)}`}>
-          {etat.employes.length > 0 && (
-            <span>
+        {etat.employes.length > 0 && (
+          <div
+            className={`hud-case ${sansSalaire > 0 || dort ? 'hud-alerte' : ''}`}
+            title={sansSalaire > 0 ? t('Des employés attendent leur salaire !') : dort ? t('Ton manager dort : réveille-le au Personnel') : manager ? t('Le manager paie les salaires') : t('Prochain salaire à payer')}
+          >
+            <span className="hud-icone" aria-hidden="true">
               {sansSalaire > 0 ? '😠' : '👷'}
-              <strong>{etat.employes.length}</strong>
             </span>
-          )}
-          {/* (23/10) Dans combien de temps il faut payer (le premier qui n'aura plus de salaire). Avec
-              le manager, c'est lui qui paie : « 💼 auto ». */}
-          {etat.employes.length > 0 && (
-            <span className={`minuteur-salaires ${sansSalaire > 0 || managerEndormi(etat) ? 'minuteur-paie' : (managerPaieLesSalaires(etat) ? secondesAvantSommeil(etat) : tempsPaye) < 60 ? 'minuteur-bientot' : ''}`}>
-              {managerEndormi(etat) ? '💤' : managerPaieLesSalaires(etat) ? '💼' : sansSalaire > 0 ? '💵' : '⏳'}
-              <strong>{managerEndormi(etat) ? 'Réveille !' : managerPaieLesSalaires(etat) ? minutesSecondes(secondesAvantSommeil(etat)) : sansSalaire > 0 ? 'Payer !' : minutesSecondes(tempsPaye)}</strong>
+            <strong>{etat.employes.length}</strong>
+            <small className="hud-minuteur">{dort ? '💤' : sansSalaire > 0 ? t('Payer !') : `${manager ? '💼' : '⏳'} ${minutesSecondes(manager ? secondesAvantSommeil(etat) : tempsPayeMin(etat))}`}</small>
+          </div>
+        )}
+      </div>
+
+      {boosts.length > 0 && (
+        <div className="hud-ligne hud-boosts">
+          {boosts.map((id) => (
+            <span key={id} className="etiquette etiquette-violet" title={BOOSTS[id].description}>
+              {BOOSTS[id].emoji} {t(BOOSTS[id].nom)} · {minutesSecondes(secondesBoost(etat, id))}
             </span>
-          )}
-          {railsAlimentes(etat) && <span className="eclair-actif">⚡</span>}
+          ))}
         </div>
       )}
     </header>

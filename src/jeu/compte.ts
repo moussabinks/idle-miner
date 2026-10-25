@@ -6,6 +6,7 @@
 
 import type { SauvegardeComplete, Stockage } from './sauvegarde'
 import { mondesDeLaCopie } from './sauvegarde'
+import { t } from './langue'
 
 export const PSEUDO_MIN = 3
 export const PSEUDO_MAX = 16
@@ -19,14 +20,14 @@ export const DOMAINE_COMPTES = 'joueurs.idle-miner.app'
 // Lettres sans accent, chiffres, « _ » et « - » seulement : il doit tenir dans une adresse email.
 export function erreurPseudo(pseudo: string): string | null {
   const propre = pseudo.trim()
-  if (propre.length < PSEUDO_MIN) return `Ton pseudo doit faire au moins ${PSEUDO_MIN} caractères.`
-  if (propre.length > PSEUDO_MAX) return `Ton pseudo doit faire au plus ${PSEUDO_MAX} caractères.`
-  if (!/^[A-Za-z0-9_-]+$/.test(propre)) return 'Ton pseudo ne peut contenir que des lettres sans accent, des chiffres, « _ » et « - ».'
+  if (propre.length < PSEUDO_MIN) return t('Ton pseudo doit faire au moins {n} caractères.', { n: PSEUDO_MIN })
+  if (propre.length > PSEUDO_MAX) return t('Ton pseudo doit faire au plus {n} caractères.', { n: PSEUDO_MAX })
+  if (!/^[A-Za-z0-9_-]+$/.test(propre)) return t('Ton pseudo ne peut contenir que des lettres sans accent, des chiffres, « _ » et « - ».')
   return null
 }
 
 export function erreurMotDePasse(motDePasse: string): string | null {
-  if (motDePasse.length < MOT_DE_PASSE_MIN) return `Ton mot de passe doit faire au moins ${MOT_DE_PASSE_MIN} caractères.`
+  if (motDePasse.length < MOT_DE_PASSE_MIN) return t('Ton mot de passe doit faire au moins {n} caractères.', { n: MOT_DE_PASSE_MIN })
   return null
 }
 

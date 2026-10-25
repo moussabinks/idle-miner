@@ -10,7 +10,7 @@
 import { memo, type ReactNode } from 'react'
 import { aleatoireAvecGraine } from '../jeu/aleatoire'
 import { TAILLE_GRILLE } from '../jeu/donnees'
-import { ARBRES } from './arbres'
+import { PALMIER } from './arbres'
 import { DessinDecoration, TouffeHerbe } from './DessinsVillage'
 import { ImageFigee } from './ImageFigee'
 import { Rocher } from './Rochers'
@@ -45,6 +45,13 @@ function ligne(courbe: (x: number) => number, x0: number, x1: number, pas = 0.4)
 }
 
 const LOIN = 90 // la mer va jusque-là (bien au-delà de ce que montre la caméra)
+
+// Les couleurs de la plage (25/10, le style cartoon : des aplats, un contour bleu nuit).
+const ENCRE = '#2a2140'
+const MER = '#8cc8f5'
+const MER_CLAIRE = '#b3dcf9'
+const SABLE = '#f3dca0'
+const SABLE_MOUILLE = '#ead08e'
 
 // ---------------------------------------------------------------------------
 // Le sol : le sable, la mer, l'écume (dessinés dans le terrain, sous tout le reste)
@@ -86,56 +93,28 @@ export const SolPlage = memo(function SolPlage() {
       <svg className="terrain-village sol-plage" style={{ left: x0, top: y0, width: x1 - x0, height: y1 - y0 }} viewBox={`${x0} ${y0} ${x1 - x0} ${y1 - y0}`} aria-hidden="true">
         <defs>
           <TouffeHerbe />
-          <filter id="flou-plage" x="-5%" y="-5%" width="110%" height="110%">
-            <feGaussianBlur stdDeviation="3.5" />
-          </filter>
-          <filter id="flou-eau" x="-10%" y="-10%" width="120%" height="120%">
-            <feGaussianBlur stdDeviation="9" />
-          </filter>
-          {/* La texture du sable (grains et ondulations, sans couture, sable.webp). */}
-          <pattern id="motif-sable" patternUnits="userSpaceOnUse" width="256" height="256">
-            <image href="/images/sol/sable.webp" width="256" height="256" />
-          </pattern>
           <clipPath id="cadre-plage">
             <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} />
           </clipPath>
         </defs>
         <g clipPath="url(#cadre-plage)">
-          {/* La mer : du bleu profond au loin, turquoise près du bord. */}
-          <polygon points={bande((x) => rivage(x) - 0.2, () => LOIN)} fill="#1d5fa8" />
-          <polygon points={bande((x) => rivage(x) + 3.5, (x) => rivage(x) + 14)} fill="#2777c0" filter="url(#flou-eau)" />
-          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 5)} fill="#2fa6c9" filter="url(#flou-eau)" />
-          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 1.7)} fill="#58d3d6" filter="url(#flou-plage)" />
-          {/* Les récifs sous l'eau (les reflets qui scintillent sont dans EauPlage). */}
+          {/* La mer : tout à plat (25/10), avec une bande plus claire le long du rivage. */}
+          <polygon points={bande((x) => rivage(x) - 0.2, () => LOIN)} fill={MER} />
+          <polygon points={bande((x) => rivage(x) - 0.2, (x) => rivage(x) + 1.1)} fill={MER_CLAIRE} />
+          {/* Les récifs sous l'eau : des taches à peine plus foncées. */}
           {RECIFS.map((r, i) => {
             const e = ecran(r.x, r.d)
-            return <ellipse key={`r${i}`} cx={e.x} cy={e.y} rx={r.r} ry={r.r * 0.55} fill={r.teinte < 0.5 ? '#1a6f8f' : '#227f8a'} opacity="0.55" filter="url(#flou-plage)" />
+            return <ellipse key={`r${i}`} cx={e.x} cy={e.y} rx={r.r} ry={r.r * 0.55} fill="#7fbdee" />
           })}
-          {/* Le sable : sec près de l'herbe, plus foncé et mouillé près de l'eau. */}
-          <polygon points={bande(sable, rivage)} fill="#efd59a" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => sable(x) + 0.35, (x) => rivage(x) - 0.25)} fill="#f6e2ad" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => rivage(x) - 0.75, (x) => rivage(x) + 0.05)} fill="#d9b874" filter="url(#flou-plage)" />
-          <polygon points={bande(sable, rivage)} fill="url(#motif-sable)" />
-          {/* Les ondulations du sable sec, que le vent dessine parallèles au rivage. */}
-          {[0.9, 1.45, 2.05, 2.7].map((k, i) => (
-            <path
-              key={`o${i}`}
-              d={ligne((x) => Math.min(rivage(x) - 1.1, sable(x) + k + 0.18 * Math.sin(x * 0.9 + i)), -45, N + 40)}
-              stroke={i % 2 ? '#e2c27e' : '#d8b46e'}
-              strokeWidth="1.3"
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={`${18 + i * 6} ${10 + i * 4}`}
-              opacity="0.55"
-            />
-          ))}
-          {/* Le sable mouillé : une bande plus sombre et brillante juste avant l'écume. */}
-          <polygon points={bande((x) => rivage(x) - 1.1, (x) => rivage(x) + 0.05)} fill="#c9a160" opacity="0.35" filter="url(#flou-plage)" />
-          <polygon points={bande((x) => rivage(x) - 0.45, (x) => rivage(x) + 0.05)} fill="#fff6dc" opacity="0.3" filter="url(#flou-plage)" />
-          {GRAINS.map((g, i) => {
+          {/* Le sable : à plat, un peu plus foncé (mouillé) juste avant l'eau, quelques grains. */}
+          <polygon points={bande(sable, rivage)} fill={SABLE} />
+          <polygon points={bande((x) => rivage(x) - 0.55, rivage)} fill={SABLE_MOUILLE} />
+          {GRAINS.filter((_, i) => i % 3 === 0).map((g, i) => {
             const e = ecran(g.x, g.d)
-            return <circle key={`g${i}`} cx={e.x} cy={e.y} r={g.r} fill={g.teinte < 0.5 ? '#c9a462' : '#fff4cf'} opacity="0.7" />
+            return <circle key={`g${i}`} cx={e.x} cy={e.y} r={g.r} fill="#e2c27e" />
           })}
+          {/* Le trait de côte, épais et bleu nuit, comme le contour de tout le reste. */}
+          <path d={ligne(rivage, -45, N + 40)} stroke={ENCRE} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </g>
         {/* Une frange d'herbe le long du sable, pour passer doucement du damier à la plage. */}
         {Array.from({ length: Math.round(N / 0.45) }, (_, i) => {
@@ -170,18 +149,17 @@ export const EauPlage = memo(function EauPlage() {
               key={`f${i}`}
               className="reflet-mer"
               style={{ animationDelay: `${(r.teinte * 4).toFixed(2)}s` }}
-              d={`M${e.x - r.r} ${e.y} Q${e.x} ${e.y - r.r * 0.35} ${e.x + r.r} ${e.y}`}
-              stroke="#e8fbff"
-              strokeWidth="1.4"
+              d={`M${e.x - r.r} ${e.y} q${r.r / 2} ${-r.r * 0.45} ${r.r} 0 t${r.r} 0`}
+              stroke="#ffffff"
+              strokeWidth="1.8"
               fill="none"
               strokeLinecap="round"
             />
           )
         })}
-        {/* L'écume : une ligne blanche qui suit le rivage, et une vague qui va et vient. */}
-        <path className="ecume" d={ligne((x) => rivage(x) - 0.08, -45, N + 40)} stroke="#ffffff" strokeWidth="3.2" fill="none" strokeLinecap="round" opacity="0.92" />
-        <path className="vague" d={ligne((x) => rivage(x) + 0.55, -45, N + 40)} stroke="#e6fbff" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="22 14" />
-        <path className="vague vague-2" d={ligne((x) => rivage(x) + 1.3, -45, N + 40)} stroke="#d7f6ff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeDasharray="12 22" />
+        {/* Les vagues : des traits blancs pointillés, parallèles au rivage. */}
+        <path className="vague" d={ligne((x) => rivage(x) + 0.6, -45, N + 40)} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="18 16" />
+        <path className="vague vague-2" d={ligne((x) => rivage(x) + 1.6, -45, N + 40)} stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeDasharray="10 26" opacity="0.8" />
       </g>
     </svg>
   )
@@ -205,8 +183,8 @@ function Ponton() {
       const dansLEau = d > distanceRivage(cx) - 0.3
       morceaux.push(
         <g key={`p${cx}-${d}`}>
-          {dansLEau && <ellipse cx={e.x} cy={e.y + 10} rx="6" ry="2.4" fill="none" stroke="#e8fbff" strokeWidth="1.2" opacity="0.8" />}
-          <rect x={e.x - 2.6} y={e.y - 2} width="5.2" height={dansLEau ? 13 : 7} rx="1.2" fill="#6d4321" stroke="#3a2210" strokeWidth="1" />
+          {dansLEau && <ellipse cx={e.x} cy={e.y + 10} rx="6" ry="2.4" fill="none" stroke="#ffffff" strokeWidth="1.4" />}
+          <rect x={e.x - 2.6} y={e.y - 2} width="5.2" height={dansLEau ? 13 : 7} rx="1.2" fill="#9a6237" stroke={ENCRE} strokeWidth="1.3" />
         </g>,
       )
     }
@@ -219,11 +197,11 @@ function Ponton() {
     const b = ecran(x + largeur, d)
     const c = ecran(x + largeur, d2)
     const e = ecran(x, d2)
-    const teinte = Math.round(d * 2) % 3 === 0 ? '#c98d52' : Math.round(d * 2) % 3 === 1 ? '#bd8248' : '#d39a5c'
+    const teinte = Math.round(d * 2) % 2 === 0 ? '#c98a55' : '#d39a62'
     planches.push(
       <g key={`l${d}`}>
-        <polygon points={`${e.x},${e.y} ${c.x},${c.y} ${c.x},${c.y + epaisseur} ${e.x},${e.y + epaisseur}`} fill="#7a4a24" />
-        <polygon points={`${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y} ${e.x},${e.y}`} fill={teinte} stroke="#5b3618" strokeWidth="0.8" />
+        <polygon points={`${e.x},${e.y} ${c.x},${c.y} ${c.x},${c.y + epaisseur} ${e.x},${e.y + epaisseur}`} fill="#9a6237" stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />
+        <polygon points={`${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y} ${e.x},${e.y}`} fill={teinte} stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />
       </g>,
     )
   }
@@ -234,7 +212,7 @@ function Ponton() {
   return (
     <g className="ponton">
       {morceaux}
-      <polygon points={`${debD.x},${debD.y} ${finD.x},${finD.y} ${finD.x},${finD.y + epaisseur} ${debD.x},${debD.y + epaisseur}`} fill="#6a3f1d" />
+      <polygon points={`${debD.x},${debD.y} ${finD.x},${finD.y} ${finD.x},${finD.y + epaisseur} ${debD.x},${debD.y + epaisseur}`} fill="#9a6237" stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />
       {planches}
       <Lanterne p={finG} />
       <Lanterne p={finD} />
@@ -245,10 +223,10 @@ function Ponton() {
 function Lanterne({ p }: { p: { x: number; y: number } }) {
   return (
     <g className="lanterne-plage">
-      <circle cx={p.x} cy={p.y - 26} r="11" fill="#ffd36b" opacity="0.28" className="lueur-lanterne" />
-      <rect x={p.x - 1.6} y={p.y - 24} width="3.2" height="24" fill="#5b3618" stroke="#2a1608" strokeWidth="0.7" />
-      <rect x={p.x - 4.5} y={p.y - 32} width="9" height="9" rx="1.5" fill="#ffd36b" stroke="#3a2210" strokeWidth="1.1" />
-      <path d={`M${p.x - 5.5} ${p.y - 32} L${p.x} ${p.y - 37} L${p.x + 5.5} ${p.y - 32} Z`} fill="#3d434a" stroke="#1a1d21" strokeWidth="0.8" />
+      <circle cx={p.x} cy={p.y - 26} r="11" fill="#f9d65a" opacity="0.3" className="lueur-lanterne" />
+      <rect x={p.x - 1.8} y={p.y - 24} width="3.6" height="24" rx="1" fill="#c98a55" stroke={ENCRE} strokeWidth="1.2" />
+      <rect x={p.x - 4.5} y={p.y - 32} width="9" height="9" rx="2" fill="#f9d65a" stroke={ENCRE} strokeWidth="1.3" />
+      <path d={`M${p.x - 6} ${p.y - 32} L${p.x} ${p.y - 37} L${p.x + 6} ${p.y - 32} Z`} fill="#3d3a46" stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />
     </g>
   )
 }
@@ -264,15 +242,15 @@ function Barque({ x, d, surLEau }: { x: number; d: number; surLEau?: boolean }) 
   const bord = `M${arriere.x} ${arriere.y} Q${gauche.x} ${gauche.y - 3} ${avant.x} ${avant.y} Q${droite.x} ${droite.y + 3} ${arriere.x} ${arriere.y} Z`
   return (
     <g className={surLEau ? 'barque barque-flotte' : 'barque'}>
-      <ellipse cx={c.x} cy={c.y + 6} rx="30" ry="8" fill={surLEau ? 'rgb(10 60 90 / 0.35)' : 'rgb(80 50 20 / 0.25)'} />
+      <ellipse cx={c.x} cy={c.y + 6} rx="30" ry="8" fill={surLEau ? '#7fbdee' : '#e2c27e'} />
       {/* la coque vue de côté, puis le dessus */}
-      <path d={`M${arriere.x} ${arriere.y} Q${droite.x} ${droite.y + 3} ${avant.x} ${avant.y} L${avant.x - 2} ${avant.y + 6} Q${droite.x} ${droite.y + 12} ${arriere.x + 2} ${arriere.y + 6} Z`} fill="#c8473c" stroke="#5a1d17" strokeWidth="1.2" />
-      <path d={`M${arriere.x + 1} ${arriere.y + 3} Q${droite.x} ${droite.y + 8} ${avant.x - 1} ${avant.y + 3}`} stroke="#f4eee0" strokeWidth="2" fill="none" />
-      <path d={bord} fill="#b57a45" stroke="#4a2c12" strokeWidth="1.4" />
-      <path d={`M${gauche.x - 2} ${gauche.y + 2} L${droite.x - 2} ${droite.y - 2} M${gauche.x + 9} ${gauche.y + 4} L${droite.x + 9} ${droite.y}`} stroke="#7a4a22" strokeWidth="3" />
+      <path d={`M${arriere.x} ${arriere.y} Q${droite.x} ${droite.y + 3} ${avant.x} ${avant.y} L${avant.x - 2} ${avant.y + 6} Q${droite.x} ${droite.y + 12} ${arriere.x + 2} ${arriere.y + 6} Z`} fill="#ee6b6b" stroke={ENCRE} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d={`M${arriere.x + 1} ${arriere.y + 3} Q${droite.x} ${droite.y + 8} ${avant.x - 1} ${avant.y + 3}`} stroke="#fdf6e3" strokeWidth="2.2" fill="none" />
+      <path d={bord} fill="#c98a55" stroke={ENCRE} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d={`M${gauche.x - 2} ${gauche.y + 2} L${droite.x - 2} ${droite.y - 2} M${gauche.x + 9} ${gauche.y + 4} L${droite.x + 9} ${droite.y}`} stroke="#9a6237" strokeWidth="3" />
       {/* une rame posée dedans */}
       <path d={`M${arriere.x + 8} ${arriere.y - 4} L${avant.x - 4} ${avant.y + 1}`} stroke="#d9a46a" strokeWidth="2.2" strokeLinecap="round" />
-      <ellipse cx={avant.x - 4} cy={avant.y + 1} rx="4" ry="2" fill="#d9a46a" stroke="#4a2c12" strokeWidth="0.8" />
+      <ellipse cx={avant.x - 4} cy={avant.y + 1} rx="4" ry="2" fill="#d9a46a" stroke={ENCRE} strokeWidth="1" />
     </g>
   )
 }
@@ -289,16 +267,16 @@ function CoinDetente({ x, d }: { x: number; d: number }) {
     const a2 = ((i + 1) / parts) * Math.PI * 2
     const p1 = { x: haut.x + Math.cos(a1) * 30, y: haut.y + 8 + Math.sin(a1) * 12 }
     const p2 = { x: haut.x + Math.cos(a2) * 30, y: haut.y + 8 + Math.sin(a2) * 12 }
-    toile.push(<path key={i} d={`M${haut.x} ${haut.y} L${p1.x} ${p1.y} Q${(p1.x + p2.x) / 2} ${(p1.y + p2.y) / 2 + 4} ${p2.x} ${p2.y} Z`} fill={i % 2 ? '#f4eee0' : '#e5534b'} stroke="#7a2a22" strokeWidth="0.8" />)
+    toile.push(<path key={i} d={`M${haut.x} ${haut.y} L${p1.x} ${p1.y} Q${(p1.x + p2.x) / 2} ${(p1.y + p2.y) / 2 + 4} ${p2.x} ${p2.y} Z`} fill={i % 2 ? '#fdf6e3' : '#ee6b6b'} stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />)
   }
   return (
     <g className="coin-detente">
-      <polygon points={serviette.map((p) => `${p.x},${p.y}`).join(' ')} fill="#4a8af0" stroke="#2457b8" strokeWidth="1" />
+      <polygon points={serviette.map((p) => `${p.x},${p.y}`).join(' ')} fill="#8cc8f5" stroke={ENCRE} strokeWidth="1.2" strokeLinejoin="round" />
       <path d={`M${serviette[0].x + 6} ${serviette[0].y + 4} L${serviette[3].x + 6} ${serviette[3].y - 4}`} stroke="#ffffff" strokeWidth="2" opacity="0.8" />
-      <ellipse cx={pied.x + 4} cy={pied.y + 3} rx="26" ry="9" fill="rgb(80 50 20 / 0.2)" />
-      <rect x={pied.x - 1.4} y={haut.y} width="2.8" height="44" fill="#d9d4c8" stroke="#5a554c" strokeWidth="0.7" />
+      <ellipse cx={pied.x + 4} cy={pied.y + 3} rx="26" ry="9" fill="#e2c27e" />
+      <rect x={pied.x - 1.6} y={haut.y} width="3.2" height="44" fill="#fdf6e3" stroke={ENCRE} strokeWidth="1.1" />
       {toile}
-      <circle cx={haut.x} cy={haut.y} r="2.6" fill="#f2b33d" stroke="#7a4a12" strokeWidth="0.8" />
+      <circle cx={haut.x} cy={haut.y} r="2.8" fill="#f9d65a" stroke={ENCRE} strokeWidth="1.1" />
     </g>
   )
 }
@@ -313,29 +291,30 @@ function FeuDeCamp({ x, d }: { x: number; d: number }) {
   const buche = (dx: number) => ecran(x + dx, d + 1.15)
   return (
     <g className="feu-de-camp">
-      <ellipse cx={c.x} cy={c.y} rx="40" ry="16" fill="#ffb347" opacity="0.22" className="lueur-feu" />
+      <ellipse cx={c.x} cy={c.y} rx="40" ry="16" fill="#f9d65a" opacity="0.3" className="lueur-feu" />
       {pierres
         .filter((p) => p.y <= c.y)
         .map((p, i) => (
-          <Rocher key={`a${i}`} x={p.x} y={p.y + 1.5} largeur={8.5} hauteur={5.5} graine={40 + i} couleur="#8f8a82" ombre={false} />
+          <Rocher key={`a${i}`} x={p.x} y={p.y + 1.5} largeur={8.5} hauteur={5.5} graine={40 + i} couleur="#c9ccd6" ombre={false} />
         ))}
-      <path d={`M${c.x - 9} ${c.y + 1} L${c.x + 8} ${c.y - 4} M${c.x - 8} ${c.y - 4} L${c.x + 9} ${c.y + 1}`} stroke="#6d4321" strokeWidth="4.5" strokeLinecap="round" />
+      <path d={`M${c.x - 9} ${c.y + 1} L${c.x + 8} ${c.y - 4} M${c.x - 8} ${c.y - 4} L${c.x + 9} ${c.y + 1}`} stroke={ENCRE} strokeWidth="6.5" strokeLinecap="round" />
+      <path d={`M${c.x - 9} ${c.y + 1} L${c.x + 8} ${c.y - 4} M${c.x - 8} ${c.y - 4} L${c.x + 9} ${c.y + 1}`} stroke="#9a6237" strokeWidth="3.6" strokeLinecap="round" />
       <g className="flamme">
-        <path d={`M${c.x - 7} ${c.y - 1} Q${c.x - 9} ${c.y - 12} ${c.x - 1} ${c.y - 24} Q${c.x + 1} ${c.y - 14} ${c.x + 5} ${c.y - 18} Q${c.x + 9} ${c.y - 8} ${c.x + 7} ${c.y - 1} Z`} fill="#ff8a1f" />
-        <path d={`M${c.x - 3.5} ${c.y - 1} Q${c.x - 4.5} ${c.y - 9} ${c.x} ${c.y - 15} Q${c.x + 4} ${c.y - 8} ${c.x + 3.5} ${c.y - 1} Z`} fill="#ffd84a" />
+        <path d={`M${c.x - 7} ${c.y - 1} Q${c.x - 9} ${c.y - 12} ${c.x - 1} ${c.y - 24} Q${c.x + 1} ${c.y - 14} ${c.x + 5} ${c.y - 18} Q${c.x + 9} ${c.y - 8} ${c.x + 7} ${c.y - 1} Z`} fill="#f6a04d" stroke={ENCRE} strokeWidth="1.4" strokeLinejoin="round" />
+        <path d={`M${c.x - 3.5} ${c.y - 1} Q${c.x - 4.5} ${c.y - 9} ${c.x} ${c.y - 15} Q${c.x + 4} ${c.y - 8} ${c.x + 3.5} ${c.y - 1} Z`} fill="#f9d65a" />
       </g>
       {pierres
         .filter((p) => p.y > c.y)
         .map((p, i) => (
-          <Rocher key={`b${i}`} x={p.x} y={p.y + 1.5} largeur={9} hauteur={6} graine={60 + i} couleur="#9b968e" ombre={false} />
+          <Rocher key={`b${i}`} x={p.x} y={p.y + 1.5} largeur={9} hauteur={6} graine={60 + i} couleur="#c9ccd6" ombre={false} />
         ))}
       {/* deux bûches pour s'asseoir */}
       {[-0.6, 0.6].map((dx) => {
         const b = buche(dx)
         return (
           <g key={dx}>
-            <rect x={b.x - 11} y={b.y - 8} width="22" height="8" rx="4" fill="#8a5a2e" stroke="#3a2210" strokeWidth="1" />
-            <ellipse cx={b.x + 11} cy={b.y - 4} rx="3" ry="4" fill="#d9a46a" stroke="#3a2210" strokeWidth="0.8" />
+            <rect x={b.x - 11} y={b.y - 8} width="22" height="8" rx="4" fill="#c98a55" stroke={ENCRE} strokeWidth="1.3" />
+            <ellipse cx={b.x + 11} cy={b.y - 4} rx="3" ry="4" fill="#e3c08f" stroke={ENCRE} strokeWidth="1.1" />
           </g>
         )
       })}
@@ -352,12 +331,11 @@ function Coquillage({ x, d, etoile, couleur }: { x: number; d: number; etoile: b
       const r = i % 2 === 0 ? 5 : 2.2
       return `${(c.x + Math.cos(a) * r).toFixed(1)},${(c.y + Math.sin(a) * r * 0.6).toFixed(1)}`
     })
-    return <polygon points={branches.join(' ')} fill={couleur} stroke="rgb(0 0 0 / 0.3)" strokeWidth="0.6" />
+    return <polygon points={branches.join(' ')} fill={couleur} stroke={ENCRE} strokeWidth="0.8" strokeLinejoin="round" />
   }
   return (
     <g>
-      <path d={`M${c.x - 4} ${c.y} Q${c.x} ${c.y - 6} ${c.x + 4} ${c.y} Z`} fill={couleur} stroke="rgb(0 0 0 / 0.3)" strokeWidth="0.6" />
-      <path d={`M${c.x} ${c.y} L${c.x} ${c.y - 3.5} M${c.x - 2} ${c.y} L${c.x - 1} ${c.y - 3} M${c.x + 2} ${c.y} L${c.x + 1} ${c.y - 3}`} stroke="rgb(0 0 0 / 0.25)" strokeWidth="0.5" />
+      <path d={`M${c.x - 4} ${c.y} Q${c.x} ${c.y - 6} ${c.x + 4} ${c.y} Z`} fill={couleur} stroke={ENCRE} strokeWidth="0.8" strokeLinejoin="round" />
     </g>
   )
 }
@@ -368,10 +346,10 @@ function RocherDansLEau({ x, d, taille }: { x: number; d: number; taille: number
   const r = 12 * taille
   return (
     <g className="rocher-eau">
-      <ellipse cx={c.x} cy={c.y + 1} rx={r + 5} ry={(r + 5) * 0.42} fill="none" stroke="#eafcff" strokeWidth="2" opacity="0.85" className="ecume-rocher" />
-      <Rocher x={c.x} y={c.y + 1} largeur={r * 2.1} hauteur={r * 1.35} graine={Math.round(x * 13 + d * 7)} couleur="#8e8a83" mousse mouille ombre={false} />
+      <ellipse cx={c.x} cy={c.y + 1} rx={r + 5} ry={(r + 5) * 0.42} fill="none" stroke="#ffffff" strokeWidth="2" className="ecume-rocher" />
+      <Rocher x={c.x} y={c.y + 1} largeur={r * 2.1} hauteur={r * 1.35} graine={Math.round(x * 13 + d * 7)} couleur="#c9ccd6" mousse mouille ombre={false} />
       {/* L'eau qui lèche le pied du rocher, par-devant. */}
-      <path d={`M${c.x - r - 3} ${c.y + 1} Q${c.x} ${c.y + r * 0.5} ${c.x + r + 3} ${c.y + 1}`} stroke="#eafcff" strokeWidth="1.6" fill="none" opacity="0.8" strokeLinecap="round" />
+      <path d={`M${c.x - r - 3} ${c.y + 1} Q${c.x} ${c.y + r * 0.5} ${c.x + r + 3} ${c.y + 1}`} stroke="#ffffff" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </g>
   )
 }
@@ -387,7 +365,7 @@ function Algues({ x, d, graine }: { x: number; d: number; graine: number }) {
   return (
     <g className="algues">
       {brins.map((b, i) => (
-        <path key={i} d={b} stroke={i % 2 ? '#3f7a3a' : '#2f6a4a'} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        <path key={i} d={b} stroke={i % 2 ? '#4aa65a' : '#3e9254'} strokeWidth="1.8" fill="none" strokeLinecap="round" />
       ))}
     </g>
   )
@@ -398,11 +376,11 @@ function BoisFlotte({ x, d, angle }: { x: number; d: number; angle: number }) {
   const c = ecran(x, d)
   return (
     <g transform={`translate(${c.x} ${c.y}) rotate(${angle})`}>
-      <ellipse cx="2" cy="2.5" rx="16" ry="3" fill="rgb(80 50 20 / 0.22)" />
-      <rect x="-14" y="-3.5" width="28" height="6" rx="3" fill="#c9b79a" stroke="#6e5a40" strokeWidth="0.9" />
-      <path d="M-10 -1.5 H6 M-6 1 H10" stroke="#a8946f" strokeWidth="0.7" />
-      <path d="M6 -3 l5 -5" stroke="#c9b79a" strokeWidth="2.4" strokeLinecap="round" />
-      <ellipse cx="14" cy="-0.5" rx="1.6" ry="3" fill="#e0d2b8" stroke="#6e5a40" strokeWidth="0.7" />
+      <ellipse cx="2" cy="2.5" rx="16" ry="3" fill="#e2c27e" />
+      <path d="M6 -3 l5 -5" stroke={ENCRE} strokeWidth="4.4" strokeLinecap="round" />
+      <path d="M6 -3 l5 -5" stroke="#d9c7a6" strokeWidth="2.2" strokeLinecap="round" />
+      <rect x="-14" y="-3.5" width="28" height="6" rx="3" fill="#d9c7a6" stroke={ENCRE} strokeWidth="1.2" />
+      <ellipse cx="14" cy="-0.5" rx="1.6" ry="3" fill="#efe3cc" stroke={ENCRE} strokeWidth="1" />
     </g>
   )
 }
@@ -417,7 +395,7 @@ function TracesDePas({ de, vers }: { de: [number, number]; vers: [number, number
     const d = de[1] + (vers[1] - de[1]) * t + Math.sin(t * Math.PI) * 0.8
     const cote = i % 2 === 0 ? 0.12 : -0.12
     const c = ecran(x, d + cote)
-    pas.push(<ellipse key={i} cx={c.x} cy={c.y} rx="2" ry="1.1" fill="#c9a462" opacity="0.6" />)
+    pas.push(<ellipse key={i} cx={c.x} cy={c.y} rx="2" ry="1.1" fill="#e2c27e" />)
   }
   return <g className="traces-de-pas">{pas}</g>
 }
@@ -428,21 +406,19 @@ function Crabe({ x, d, retard }: { x: number; d: number; retard: number }) {
   return (
     <g transform={`translate(${c.x} ${c.y})`}>
       <g className="crabe" style={{ animationDelay: `${retard}s` }}>
-        <ellipse cx="0" cy="1" rx="5" ry="1.6" fill="rgb(80 50 20 / 0.25)" />
-        <path d="M-4 -1 l-2.5 2 M-3 0 l-2 2.4 M4 -1 l2.5 2 M3 0 l2 2.4" stroke="#b8322a" strokeWidth="0.9" strokeLinecap="round" />
-        <ellipse cx="0" cy="-1.6" rx="4.4" ry="2.8" fill="#e5534b" stroke="#7a1a14" strokeWidth="0.8" />
-        <ellipse cx="-1" cy="-2.6" rx="1.8" ry="0.8" fill="#ff8a7a" />
-        <circle cx="-5.6" cy="-3.6" r="1.7" fill="#e5534b" stroke="#7a1a14" strokeWidth="0.7" />
-        <circle cx="5.6" cy="-3.6" r="1.7" fill="#e5534b" stroke="#7a1a14" strokeWidth="0.7" />
-        <circle cx="-1.4" cy="-4.6" r="0.8" fill="#fff" stroke="#222" strokeWidth="0.4" />
-        <circle cx="1.4" cy="-4.6" r="0.8" fill="#fff" stroke="#222" strokeWidth="0.4" />
+        <ellipse cx="0" cy="1" rx="5" ry="1.6" fill="#e2c27e" />
+        <path d="M-4 -1 l-2.5 2 M-3 0 l-2 2.4 M4 -1 l2.5 2 M3 0 l2 2.4" stroke={ENCRE} strokeWidth="1" strokeLinecap="round" />
+        <ellipse cx="0" cy="-1.6" rx="4.4" ry="2.8" fill="#ee6b6b" stroke={ENCRE} strokeWidth="0.9" />
+        <circle cx="-5.6" cy="-3.6" r="1.7" fill="#ee6b6b" stroke={ENCRE} strokeWidth="0.8" />
+        <circle cx="5.6" cy="-3.6" r="1.7" fill="#ee6b6b" stroke={ENCRE} strokeWidth="0.8" />
+        <circle cx="-1.4" cy="-4.6" r="0.9" fill="#fff" stroke={ENCRE} strokeWidth="0.5" />
+        <circle cx="1.4" cy="-4.6" r="0.9" fill="#fff" stroke={ENCRE} strokeWidth="0.5" />
       </g>
     </g>
   )
 }
 
-// Un palmier : l'image des arbres de la forêt (le palmier), posé sur le sable.
-const PALMIER = ARBRES[9]
+// Un palmier : l'image du palmier (arbres.ts), posé sur le sable.
 function Palmier({ x, d, taille, miroir }: { x: number; d: number; taille: number; miroir: boolean }) {
   const p = ecran(x, d)
   const echelle = (taille * 2 * DEMI_LARGEUR) / PALMIER.largeurPied
@@ -514,7 +490,7 @@ function objetsDeLaPlage(): ObjetPlage[] {
     const x = 1 + g() * (N - 2)
     const d = distanceSable(x) + 0.5 + g() * (distanceRivage(x) - distanceSable(x) - 0.8)
     const taille = 4 + g() * 6
-    ajouter(x, d, <Rocher key={`galet${i}`} x={ecran(x, d).x} y={ecran(x, d).y} largeur={taille} hauteur={taille * 0.6} graine={500 + i} couleur={g() < 0.5 ? '#a8a296' : '#8f8a80'} />)
+    ajouter(x, d, <Rocher key={`galet${i}`} x={ecran(x, d).x} y={ecran(x, d).y} largeur={taille} hauteur={taille * 0.6} graine={500 + i} couleur={g() < 0.5 ? '#c9ccd6' : '#b9bdc9'} />)
   }
   for (let i = 0; i < 9; i++) {
     const x = 2 + g() * (N - 4)
@@ -542,7 +518,7 @@ function objetsDeLaPlage(): ObjetPlage[] {
     const x = 1 + h() * (N - 2)
     const d = distanceRivage(x) - 0.3 - h() * 1.4
     const etoile = h() < 0.4
-    const couleur = etoile ? (h() < 0.5 ? '#ff8a5c' : '#f2b33d') : h() < 0.5 ? '#fff0e0' : '#f6c6d0'
+    const couleur = etoile ? (h() < 0.5 ? '#f6a04d' : '#f9d65a') : h() < 0.5 ? '#fdf6e3' : '#f39aa8'
     ajouter(x, d, <Coquillage key={`c${i}`} x={x} d={d} etoile={etoile} couleur={couleur} />)
   }
   // Du fond vers l'avant.

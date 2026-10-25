@@ -1,522 +1,384 @@
 # L'interface de Mega Digger
 
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
-> Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10 ; missions, bandeau à gauche, onglets et zoom le 27/10 ; niveau du joueur, tutoriel du forgeron, zoom plus doux et clic à côté des bâtiments le 29/10 ; onglet « Améliorer » de la mine, bonus de combo, fenêtres du rail et du retour, zoom fluide, panneaux plus larges le 30/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
+> Réécrit d'après le code après la grande mise à jour du style du 25/10 (`src/App.tsx`, `src/composants/*.tsx`, `src/styles/*.css`, `src/village.css`). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; les dessins, animations et sons dans [visuel-et-sons.md](visuel-et-sons.md).
 
-Tout le texte du jeu est en français et tutoie le joueur. Les montants s'affichent au format français (`1 250 $`).
+Tout le texte du jeu tutoie le joueur, en français ou en anglais (voir § 15). Les montants passent par `nombre()` et `nombreAbrege()` (`src/nombres.ts`, `src/jeu/langue.ts`) : `1 250 $` en français, `1,250 $` en anglais.
+
+**Ce qui a changé le 25/10.** Avant, chaque panneau avait ses propres boutons, couleurs et façons de s'ouvrir. Tout a été **homogénéisé** : une seule fenêtre (`Fenetre.tsx`) partout, avec le même ✖, Échap et clic à côté ; **une couleur par sorte d'action** (§ 14) ; la même ligne d'amélioration (`Amelioration.tsx`) dans tous les bâtiments ; les mêmes onglets, jauges, étiquettes et pastilles (`src/styles/theme.css`). Le style : cartoon coloré, contours bleu nuit épais (`#2a2140`), ombres dures, fenêtres crème, aplats pastel, ni dégradés ni flous.
 
 ## Sommaire
 
-1. [Vue d'ensemble : les deux écrans](#1-vue-densemble--les-deux-écrans)
-2. [L'écran d'accueil](#2-lécran-daccueil-accueiltsx)
+1. [Les écrans](#1-les-écrans)
+2. [L'accueil](#2-laccueil-accueiltsx)
 3. [L'écran de jeu : la mise en page](#3-lécran-de-jeu--la-mise-en-page)
-4. [Les boutons du coin et le bandeau (HUD)](#4-les-boutons-du-coin-et-le-bandeau-hud)
-5. [Les missions](#5-les-missions-missionstsx)
+4. [Le bandeau du haut (HUD) et les boutons du coin](#4-le-bandeau-du-haut-hud-et-les-boutons-du-coin)
+5. [Les tâches](#5-les-tâches-missionstsx)
 6. [La carte du village](#6-la-carte-du-village-vuevillagetsx)
 7. [Les boutons du bas](#7-les-boutons-du-bas)
-8. [Le panneau d'un bâtiment](#8-le-panneau-dun-bâtiment)
-9. [Les composants partagés des panneaux](#9-les-composants-partagés-des-panneaux)
-10. [Les fenêtres (popups)](#10-les-fenêtres-popups)
-11. [Les notifications et retours visuels](#11-les-notifications-et-retours-visuels)
+8. [La fenêtre d'un bâtiment](#8-la-fenêtre-dun-bâtiment)
+9. [Les composants partagés](#9-les-composants-partagés)
+10. [Les autres fenêtres](#10-les-autres-fenêtres)
+11. [Les notifications](#11-les-notifications)
 12. [Les contrôles : clavier, souris, tactile](#12-les-contrôles--clavier-souris-tactile)
-13. [Téléphone ou ordinateur : la mise en page](#13-téléphone-ou-ordinateur--la-mise-en-page)
+13. [Téléphone ou ordinateur](#13-téléphone-ou-ordinateur)
 14. [Les couleurs des boutons](#14-les-couleurs-des-boutons)
+15. [Les deux langues](#15-les-deux-langues)
 
 ---
 
-## 1. Vue d'ensemble : les deux écrans
+## 1. Les écrans
 
-`App.tsx` n'a que deux états :
+`App` (`src/App.tsx`) n'a que deux écrans :
 
 | Écran | Quand | Composant |
 |---|---|---|
-| **Accueil** | au lancement, et après « 🌍 *nom du monde* » dans les boutons du coin | `Accueil` |
+| **Accueil** | au lancement, et après « 🌍 Changer de monde » dans les réglages | `Accueil` |
 | **Jeu** | après avoir choisi (ou créé) un monde | `Jeu` (dans `App.tsx`) |
 
-- Le compte en ligne (`useCompte`) reste ouvert pendant la partie : il recopie les mondes toutes les **20 s** s'ils ont changé, et une dernière fois quand la page passe en arrière-plan.
-- En quittant le jeu pour l'accueil, la partie part **tout de suite** en ligne (`envoyerMaintenant`).
-- Changer de monde recrée entièrement le jeu (`key={monde.id}`) : rien de l'ancien monde ne reste à l'écran.
-- La partie est sauvegardée dans `localStorage` **au plus une fois par seconde** (l'horloge change l'état sans arrêt) et en quittant la page (`usePartie`).
+- Le compte (`useCompte`) reste ouvert pendant la partie. En quittant le jeu, la partie part tout de suite en ligne (`envoyerMaintenant`).
+- Changer de monde recrée le jeu (`key={monde.id}`) : rien de l'ancien monde ne reste.
+- Changer de langue redessine tout (`onLangue`).
+- La fenêtre « Quels mondes garder ? » (§ 10) peut s'ouvrir par-dessus les deux écrans.
 
 ---
 
-## 2. L'écran d'accueil (`Accueil.tsx`)
-
-**Depuis le 23/10, un menu en plein écran : tout tient sans faire défiler** (`.menu-plein-ecran` dans `src/accueil.css`). Avant, l'accueil était une colonne de 1 100 px au centre, à faire défiler, avec les bords gauche et droit vides.
+## 2. L'accueil (`Accueil.tsx`)
 
 ### 2.1 La mise en page
 
-- **Au fond, tout l'écran** : le petit village vivant (`SceneAccueil`, la même vue du ciel que dans le jeu, avec ses hamsters et son wagonnet) : c'est l'aperçu du jeu. Il se cale au milieu de la place laissée par les deux panneaux (`marges`, 400 px à gauche et 420 px à droite) ; les bords sont un peu assombris.
-- **À gauche** (380 px) : le logo **MEGA DIGGER** sur son panneau de bois, « Creuse. Construis. **Deviens riche.** », le gros bouton doré **▶ Jouer** (le dernier monde joué : nom, 🕳️ niveau, argent) ou **⛏️ Commencer** (« Pépite te guide pas à pas ») pour un premier monde, puis **🌍 Tes mondes** (*n*/5). Un nouveau joueur voit à la place le jeu en quelques mots. Enfin, la carte « Installer » s'il y a lieu.
-- **Au milieu, en bas** : le jeu en 4 pastilles (1. Creuse, 2. Construis, 3. Embauche, 4. Automatise), avec leur dessin ; le texte complet en survol. Sur deux lignes sous 1 400 px de large.
-- **À droite** (400 px) : la carte du compte, puis le classement, qui prend toute la hauteur qui reste.
-- Les panneaux arrivent en glissant des côtés, les pastilles en sautant.
-- **Écran peu haut** (moins de 820 px) : logo et bouton plus petits. **Écran moyen** (moins de 1 180 px) : panneaux de 330 et 350 px.
-- **Téléphone** (moins de 900 px) : le village en fond, et **un panneau à la fois**, choisi avec une **barre d'onglets en bas** : ⛏️ **Jouer** (logo, Jouer, mondes), 🏆 **Classement**, 👤 **Compte**. L'onglet actif est doré.
+- **Au fond** : le petit village vivant (`SceneAccueil.tsx`), la même vue du ciel que dans le jeu, avec des taupes et un wagonnet. Ce n'est qu'une image qui bouge ; elle se cale au milieu de la place laissée par les panneaux (420 px à gauche, 400 px à droite).
+- **En haut, un bandeau crème** : ⛏️ le logo « Mega Digger », la phrase « Creuse jusqu'au cœur de diamant. Embauche. Automatise. », puis à droite le choix de la langue (§ 2.3) et le bouton blanc **👤 Mon compte** (ou le pseudo, si connecté).
+- **À gauche** : le gros bouton jaune et ses mondes (§ 2.2), puis la carte « Installer » (§ 2.5).
+- **À droite** : le classement (§ 2.6).
+- **En bas au milieu** (si on a déjà un monde) : le jeu en 4 étapes (`etapesDuJeu.ts`, les mêmes que dans l'aide et le tutoriel) : ⛏️ Creuse, 👷 Embauche, 🛤️ Automatise, 💎 Descends. Cachées sous 1 240 px de large.
+- **Tout en bas à droite** : « Version … » (pour vérifier que Vercel est à jour) et, si le navigateur ne garde rien (navigation privée), « ⚠️ Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page. »
 
-### 2.2 Les mondes (jusqu'à 5)
+### 2.2 Le gros bouton et les mondes (jusqu'à 5)
 
-- Une **ligne par monde** (`LigneMonde`), sur papier crème, avec un liseré de sa couleur : 🌍, le nom, puis 🕳️ niveau, 💵 argent, 👷 mineurs et « il y a 5 min ». À droite, **⋯** (déplie Renommer, Dupliquer, Supprimer) et **▶** (jouer ; celui du dernier monde joué respire).
-- Une partie d'une ancienne version : « 🏡 ancienne version : repart de zéro » ; illisible : « partie illisible : repart de zéro ».
-- **✨ Nouveau monde** (bleu) : un champ pour son nom et **⛏️ Créer** (on joue tout de suite). Avec 5 mondes : « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
-- La liste défile à l'intérieur de son panneau si elle ne tient pas.
-- Pendant la synchronisation du compte, les boutons Jouer sont grisés.
+- **▶ Jouer** (jaune, grand) : reprend le dernier monde joué, avec son nom, 🕳️ niveau et argent.
+- Un **nouveau joueur** voit à la place le jeu en 4 étapes, puis **⛏️ Commencer** (« Pépite la taupe te guide pas à pas »), qui crée le premier monde et lance la partie.
+- **Tes mondes** *n* / 5 : une ligne par monde (`LigneMonde`), avec un liseré de sa couleur pastel : 🌍, le nom, 🕳️ niveau, 💵 argent, 👷 employés, « il y a 5 min ». À droite, **⋯** (blanc, déplie les réglages du monde) et **▶** (jaune, jouer).
+  - Les réglages : **✏️ Renommer** (blanc : un champ et **OK**), **📄 Dupliquer** (vert, grisé avec 5 mondes), **🗑️ Supprimer** (rose, avec une confirmation : « Le monde « … » sera perdu pour toujours. »).
+  - Une partie trop ancienne : « Ancienne version : repart de zéro » ; illisible : « Partie illisible : repart de zéro ».
+- **✨ Nouveau monde** (vert) : un champ pour son nom (« Monde 3 » par défaut) et **Créer** ; on joue tout de suite. Avec 5 mondes : « 5 mondes au maximum : supprime-en un pour en créer un nouveau. »
+- Pendant un échange avec le compte (au plus 8 s si le serveur ne répond pas), les boutons Jouer sont grisés.
 
-### 2.4 La carte du compte (`CarteCompte.tsx`)
+### 2.3 La langue
 
-Le compte est facultatif (pseudo + mot de passe, sans email).
+Deux pilules dans le bandeau : **Français** et **English** (des onglets, `.onglets`). Voir § 15.
+
+### 2.4 Le compte (`CarteCompte.tsx`, hors CrazyGames)
+
+Dans une fenêtre bleue « 👤 Ton compte », ouverte par le bouton du bandeau ou **Entrer** dans le classement.
 
 | État | Affichage |
 |---|---|
 | Chargement | « ☁️ Recherche de ton compte… » |
-| Pas connecté | « 👤 Ton compte · Facultatif : pour retrouver tes mondes sur un autre appareil. », champs **Pseudo** et **Mot de passe**, boutons **Se connecter** (or, aussi avec Entrée) et **Créer un compte** (bleu). Dessous : le message d'erreur en rouge s'il y en a un, et « ⚠️ Il n'y a pas d'email : un mot de passe oublié ne peut pas être récupéré. » |
-| Connecté | « 👤 *pseudo* », l'état de la sauvegarde, et le lien **Se déconnecter** |
+| Pas connecté | « Facultatif : pour retrouver tes mondes sur un autre appareil, et entrer au classement. », les champs **Pseudo** et **Mot de passe**, **Se connecter** (jaune, aussi avec Entrée) et **Créer un compte** (vert). L'erreur en rouge, et « ⚠️ Il n'y a pas d'email : un mot de passe oublié ne peut pas être récupéré. » |
+| Connecté | 👤 le pseudo, l'état de la sauvegarde, et **Se déconnecter** (blanc) |
 
-États de la sauvegarde en ligne (connecté) : « ☁️ Synchronisation de tes mondes… », « ☁️ Mondes sauvegardés en ligne (dernier envoi : 14:05) », « ☁️ Tes mondes sont sauvegardés en ligne. », et en rouge « ⚠️ Serveur injoignable : tes mondes restent dans ce navigateur, on réessaie tout seul. »
-
-À la connexion, si le compte et le navigateur ont des mondes différents, une boîte de confirmation du navigateur demande lesquels garder (OK = ceux du compte, Annuler = ceux du navigateur).
+L'état de la sauvegarde : « Synchronisation de tes mondes… », « Mondes sauvegardés en ligne (dernier envoi : 14:05). », « Tes mondes sont sauvegardés en ligne. », ou en rouge « ⚠️ Serveur injoignable : tes mondes restent dans ce navigateur, on réessaie tout seul. »
 
 ### 2.5 La carte « Installer » (`CarteInstallation.tsx`)
 
-Avec l'icône du jeu et « 📲 Installe Mega Digger » :
-- **Android / Chrome / Edge** : « Une icône sur ton écran d'accueil, le jeu en plein écran, même sans réseau. » + bouton **Installer** (bleu) ;
-- **iPhone / iPad** : « Dans Safari, touche **Partager** (le carré avec une flèche ↑), puis **Sur l'écran d'accueil**. » ;
-- le lien **Plus tard** la cache pour toujours (`localStorage`, clé `idle-miner-installation-masquee`).
+L'icône du jeu et « 📲 Installe Mega Digger » :
+- Android, Chrome, Edge : « Une icône sur ton écran d'accueil, même sans réseau. » + **Installer** (vert) ;
+- iPhone, iPad : « Dans Safari : Partager (le carré avec une flèche ↑), puis « Sur l'écran d'accueil ». » ;
+- **Plus tard** (blanc) la cache pour toujours (réglage `idle-miner-installation-masquee`).
 
-Elle n'apparaît pas si le jeu est déjà installé, ou si le navigateur ne sait pas installer. Détails : [visuel-et-sons.md § 10](visuel-et-sons.md#10-lapplication-installable-pwa).
+Absente si le jeu est déjà installé, si le navigateur ne sait pas installer, et dans la version CrazyGames.
 
 ### 2.6 Le classement (`CarteClassement.tsx`)
 
-À droite (ou dans l'onglet 🏆 sur téléphone), visible par tout le monde (même sans compte). **Depuis le 23/10, un seul classement : l'argent gagné** ; le niveau de la mine est affiché, mais il ne compte pas.
+Visible par tout le monde (hors CrazyGames). Classé à l'**argent gagné en tout** (le meilleur monde de chaque joueur).
 
-- En haut : « 🏆 Classement », l'étiquette dorée « 💰 Argent en poche » (23/10 bis : l'argent actuel du portefeuille, mis à jour toutes les 5 minutes), et 🔄 pour le relire.
-- Un **podium** pour les 3 premiers : le 1er au milieu, sur la plus haute marche dorée qui brille, avec 🥇 et une 👑 qui se dandine ; 🥈 à gauche (marche argentée), 🥉 à droite (marche bronze). Pseudo, argent en or (« 2,45 M$ »), 🕳️ niveau. Les marches montent en rebondissant.
-- Puis **les 7 suivants** (le top 10 en tout, 23/10 ter ; avant, jusqu'à 1 000 joueurs) (« 4 Rayan 🕳️ 3 150 k$ »). La ligne du joueur connecté est verte.
-- **En bas, ta place** (toujours visible) : « #7 · Toi · 12 k$ » et « 🔥 Encore **3 k$** pour dépasser **Jade** » (vert). Sans compte, un bandeau doré qui respire : « Avec 12 k$, tu serais 7e ! » (le meilleur argent gagné des mondes de ce navigateur) et le bouton **Entrer**, qui ouvre le formulaire du compte. Le 1er : « 👑 Tu es le numéro 1 ! ».
-- Messages : « Chargement du classement… », « Personne n'est encore classé : à toi d'être le premier ! », « Impossible de charger le classement. Vérifie ta connexion. » (rouge).
-- Il se relit avec 🔄, après chaque envoi de la sauvegarde, et tout seul toutes les 5 minutes (23/10 ter).
+- En haut : « 🏆 Classement », l'étiquette verte « 💵 Argent gagné », et 🔄 (blanc, rond) pour le relire. Il se relit aussi tout seul toutes les 5 minutes.
+- **Le top 10** : une ligne par joueur, 🥇 🥈 🥉 pour les trois premiers, puis #4… ; le pseudo, 🕳️ le niveau de sa mine (affiché, mais il ne compte pas) et l'argent. Ta ligne est mise en avant.
+- **En bas, ta place** : « #7 » et « Toi · 12 k $ », puis « 🔥 Encore 3 k $ pour dépasser Jade », ou « 👑 Tu es le numéro 1 ! ». Sans compte : « Avec 12 k $, tu serais 7e ! » (ou « Joue pour entrer dans le classement ! ») et le bouton vert **Entrer**.
+- Messages : « Chargement du classement… », « ☁️ Classement hors ligne » (pas de réponse en 6 s), « Personne n'est encore classé : à toi d'être le premier ! ».
 
-### 2.7 La version
+### 2.7 Sur téléphone (moins de 760 px)
 
-« Version *commit* · *date du build* » (toute petite, en bas au milieu ; cachée sur téléphone), pour vérifier que Vercel est à jour.
+Tout s'empile et on fait défiler : le village en haut, le bandeau, puis les cartes l'une sous l'autre (`src/styles/accueil.css`).
 
 ---
 
 ## 3. L'écran de jeu : la mise en page
 
-Un seul mode (classe `jeu plein-ecran mode-village`) : le **village vu du ciel** (`VueVillage.tsx`), une carte isométrique où l'on se promène, où l'on pose ses bâtiments et où l'on ouvre leurs panneaux (la mine comprise : c'est là qu'on creuse).
-
-**Plein écran** (`src/plein-ecran.css`, comme Clash of Clans) : la scène (`main.scene`) prend **tout l'écran**, et l'interface (`.interface`) est posée **par-dessus**. Le calque de l'interface laisse passer les clics vers la carte, sauf sur les boutons et les panneaux.
+Le village prend **tout l'écran** ; l'interface est posée par-dessus et laisse passer les clics vers la carte, sauf sur ses boutons (`src/styles/jeu.css`).
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│[⭐ 7][Argent $/s][Mine · coffre][Pioche][Sac][👷 ⚡] ┌ MISSIONS ─┐ │  bandeau (HUD)
-│[📊]                                              └─────────────┘ │
-│[🏅]                                        ┌───────────────┐     │
-│[❔]        LA CARTE (village vu du ciel)   │ PANNEAU       │     │
-│[⚙️]        sur tout l'écran                │ du bâtiment   │     │
-│                                            │ (la mine : le │     │
-│                 messages (toasts)          │ bloc à cliquer)│    │
-│ (⛏️)          ← ↑ → ↓ pour marcher           (✏️) (🏗️)     │  boutons ronds
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ [⭐3 ▬] [💵 1,2 k $ +4/s] [💎 5 +] [📦2 120/300] [👷 3 ⏳4:12] │
+│ [🍀 Fortune · 2:40]                       🎁 📊 🏅 ⚙️   │
+│                                       ┌─ ☑️ Tâches ▴ ─┐│
+│                                       │ 🪨 … [Voir]   ││
+│              (le village vu du ciel)  └───────────────┘│
+│                   messages (au milieu en haut)          │
+│                                                          │
+│ (⛏️ Mine)      ← ↑ → ↓ pour marcher       (✏️) (🏗️ Bâtiments)│
+└──────────────────────────────────────────────────────────┘
 ```
 
-- **En haut à gauche** : le bandeau (§ 4.2), et **dessous** la colonne de petits boutons carrés en bois (`boutons-coin`, § 4.1). Depuis le 27/10, le bandeau est à gauche, au-dessus des boutons (avant, il était en haut à droite).
-- **En haut à droite** (`colonne-droite`, 27/10) : les **missions** (§ 5), et dessous le panneau du bâtiment ouvert.
-- **Le panneau** (`panneau-flottant`) : sur ordinateur, une carte de 400 px (350 px sur un écran moyen) à droite ; depuis le 30/10, les panneaux qui ont beaucoup d'options (mine, Personnel, foreuse, générateur : `PANNEAUX_LARGES`, classe `panneau-large`) font **480 px** sur un grand écran (1 100 px et plus) ; depuis le 27/10, la caméra **ne bouge plus** quand il s'ouvre (avant, elle se décalait de 210 px vers la gauche) : le joueur garde sa vue. Il se place **sous les missions**, dans la colonne de droite. Sur téléphone, il monte du bas, au-dessus des boutons (55 % de la hauteur au plus).
-- **En bas** : de **gros boutons ronds** : ⛏️ Mine en bas à gauche, ✏️ Modifier et 🏗️ Bâtiments en bas à droite (§ 7).
-- La page a la classe `avec-mineurs` dès qu'on a au moins un mineur employé, et `avec-panneau` quand un panneau est ouvert.
+- **En haut à gauche** : le bandeau (§ 4). **En haut à droite** : les boutons ronds du coin, et dessous les tâches (§ 5).
+- **En bas** : les gros boutons ronds (§ 7), ou la barre de construction quand on pose quelque chose.
+- **Les messages** (§ 11) : en haut au milieu.
+- **Les fenêtres** (§ 8 et § 10) : au milieu de l'écran (en bas sur téléphone).
 
 ---
 
-## 4. Les boutons du coin et le bandeau (HUD)
+## 4. Le bandeau du haut (HUD) et les boutons du coin
 
-### 4.1 Les boutons du coin (`App.tsx`)
+### 4.1 Le bandeau (`Hud.tsx`)
 
-Une colonne de petits boutons carrés en bois, en haut à gauche, **sans texte** (42 px, 38 px sur téléphone ; le nom est dans l'info-bulle). Depuis le 23/10, il y en a 4 :
+Des cases bleu nuit au gros contour. Chacune n'apparaît que quand elle sert : un nouveau joueur ne voit que le niveau, l'argent et le coffre.
 
-| Bouton | Effet |
-|---|---|
-| **📊** | ouvre la [fenêtre des statistiques](#102-les-statistiques-statistiquestsx) |
-| **🏅** (avec un badge doré : le nombre de succès) | ouvre la [fenêtre des succès](#101-les-succès) |
-| **❔** | ouvre ou ferme le panneau « 🏡 Ton village » (comment se déplacer, creuser, vendre, poser des rails, construire) |
-| **⚙️** | ouvre un petit menu : le nom du monde, **🌍 Changer de monde**, **🔊 Son : oui / non**, **🎵 Musique : oui / non** et **🔄 Recommencer à zéro** (confirmation « Effacer la partie du monde « … » et tout recommencer (village et succès compris) ? ») |
-
-### 4.2 Le bandeau (`Hud.tsx`, styles dans `src/interface.css`)
-
-Depuis le 27/10, il est **en haut à gauche**, au-dessus des petits boutons du coin (`.interface-haut` en colonne).
-
-Depuis le 23/10, une rangée de **petites cases arrondies** (40 px de haut, 34 px sur téléphone, sur deux lignes si besoin). Chaque case a une icône dans un rond, une valeur et une mini-jauge ; le détail est dans l'info-bulle. Une case **rougit et palpite** quand il faut agir.
-
-| Case | Contenu | Alerte |
+| Case | Ce qu'elle montre | La toucher |
 |---|---|---|
-| **⭐ Niveau** (29/10, la première case ; badge violet : le niveau du joueur, qui **saute** quand on gagne un niveau) | « *xp*/*il en faut* » (« Max » au niveau 30) et une jauge violette. Info-bulle : l'XP qu'il manque, ce que débloque le prochain niveau qui apporte quelque chose, et comment gagner de l'XP. Voir [niveaux.md](niveaux.md) | — |
-| **💵 Argent** | le montant en or (en court au-delà de 10 000 : « 12,5 k », « 3,2 M » ; il **défile** jusqu'à la nouvelle valeur et **saute** à chaque vente), dessous « +*x*/s » : ce que la mine produit par seconde (`revenuParSeconde`), en vert s'il est positif. Info-bulle : le détail mine / mineurs / foreuse | — |
-| **📦 Coffre** (badge doré : le niveau de la mine) | « *n*/*capacité* » et une jauge dorée | coffre plein |
-| **⛏️ Pioche** | « *reste*/*max* » et une jauge dont la couleur passe peu à peu du vert (neuve) au rouge (presque cassée) depuis le 30/10 (« 💥 Cassée ») | pioche cassée, ou sous 15 % (30/10) |
-| **🎒 Sac** | « *n*/*taille* » et une jauge bleue | sac plein |
-| **👷 / ⚡** (si on a des mineurs ou des rails électriques) | « 👷 *n* » (« 😠 » si quelqu'un n'est pas payé), puis le **minuteur des salaires** (23/10) : « ⏳ *m:ss* » avant le prochain salaire à payer (orange et clignotant sous 1 min), « 💵 Payer ! » en rouge si quelqu'un n'est plus payé, « 💼 *m:ss* » avant que le manager s'endorme quand c'est lui qui paie, « 💤 Réveille ! » en rouge quand il dort (23/10) ; « ⚡ » qui brille si au moins un trajet est électrique | mineurs sans salaire |
+| ⭐ **Niveau** | une médaille violette avec le niveau du joueur, et sa jauge d'XP | — |
+| 💵 **Argent** | l'argent (il saute à chaque vente) et ce que tout produit par seconde (« +4/s », en vert s'il est positif) | ouvre **Mon bilan** (§ 10) |
+| 💎 **Gemmes** | le nombre de gemmes et un « + » ; seulement après le tutoriel (ou dès qu'on en a) | ouvre la **Boutique des gemmes** |
+| 📦 **Coffre** | le niveau de la mine en badge, « 120/300 » et une jauge (jaune, rose quand il est plein : la case rougit) | — |
+| 👷 **Personnel** | le nombre d'employés, puis ⏳ le prochain salaire ; 💼 et le temps avant que le manager s'endorme ; 💤 s'il dort ; 😠 « Payer ! » si quelqu'un attend son salaire (la case rougit) | — |
 
-**Le bilan** (23/10, `FenetreBilan.tsx`, règles dans `bilanParMinute` de `src/jeu/revenu.ts`) : la case **💵 Argent** est un **bouton** (avec « › ») ; la toucher ouvre **💰 Mon bilan** : en moyenne, chaque minute, en ce moment. En grand, le **solde par minute** (« +3 $/min ») avec une **mascotte** qui se balance et un verdict coloré : 🤑 **Rentable !** (vert), 🙂 **Tout juste rentable** (jaune, moins d'un quart des gains restent), 😬 **Tu perds de l'argent** (rouge), 😴 **Rien ne tourne**. Dessous, une jauge « *N* % de tes gains partent en salaires », puis deux colonnes de barres qui se remplissent : **Ce que tu gagnes** (vert : ⛏️ la mine, 👷 les mineurs « *n* au travail sur *m* », ⚙️ la foreuse) et **Ce que tu paies** (rouge : salaires des mineurs, des pousseurs, du manager). En bas, un conseil (« une meilleure pioche ferait la différence »…) et une note : les gains sont la valeur des blocs, à vendre ; les clics ne comptent pas. Les chiffres bougent en direct.
+Dessous, une ligne d'étiquettes violettes pour les **bonus de la boutique** en cours, avec leur temps (« 🍀 … · 2:40 »).
 
-Le son et la musique se coupent dans le menu ⚙️. Voir [visuel-et-sons.md § 9](visuel-et-sons.md#9-les-boutons--et-).
+### 4.2 Les boutons du coin (`App.tsx`)
+
+Quatre boutons ronds, en haut à droite :
+
+| Bouton | Couleur | Ouvre |
+|---|---|---|
+| 🎁 | jaune ; il respire, avec une pastille « 1 », quand le cadeau du jour attend. Caché pendant le tutoriel | **Cadeau du jour** |
+| 📊 | blanc | **Statistiques** |
+| 🏅 | blanc | **Succès** |
+| ⚙️ | blanc | **Réglages** |
+
+Le cadeau du jour s'ouvre aussi tout seul une fois par partie, au retour, s'il est disponible (après le tutoriel et la fenêtre du retour).
 
 ---
 
-## Le tutoriel (`Tutoriel.tsx`, 27/10)
+## 5. Les tâches (`Missions.tsx`)
 
-Un **nouveau monde** commence par un tutoriel (règles dans `src/jeu/tutoriel.ts`, testées ; `etat.tutoriel` = l'étape ; une vieille partie n'a pas le champ et n'a pas de tutoriel). **Pépite**, un hamster mineur, accompagne le joueur :
+Sous les boutons du coin : « ☑️ Tâches », une à trois choses à faire (les règles sont dans `src/jeu/missions.ts`). Elles n'apparaissent qu'à la fin du tutoriel.
 
-- **Au début, une grande fenêtre** (fond assombri) : Pépite se présente et explique **le but** : devenir le plus riche des mineurs et creuser jusqu'au cœur de diamant, en 4 médailles qui arrivent l'une après l'autre (⛏️ Creuse, 💰 Vends, 🏗️ Construis, ⚡ Automatise). Gros bouton qui pulse « C'est parti ! », et « Je connais déjà : passer le tutoriel ».
-- **À chaque étape**, une carte crème en haut de l'écran (qui brille et rebondit à chaque nouvelle consigne) : « Étape *n* / 5 » (4 avant le 29/10) et ses points, le titre, la consigne, et **pourquoi** (💡 « Les blocs et les minerais se vendent au marché. »).
-- **Ce qu'il faut toucher est mis en scène** : le reste de l'écran s'assombrit nettement, un cercle doré pulse autour, **trois ondes dorées** en partent sans arrêt, une **grosse flèche** rebondit avec une étiquette « Touche ici ! » / « Clique vite ! » / « Pose-le ! » qui se dandine, et **la cible elle-même palpite et brille** (attribut `data-tuto-actif` posé sur l'élément ; un bâtiment s'illumine d'un halo doré, et la flèche montre son milieu). La cible est trouvée par son attribut (`data-tuto="bloc"`, `data-cible="batiment:puits"`...) et suivie à chaque image ; un bouton dans un panneau défile jusqu'à lui. Sur téléphone, la flèche montre les gros boutons ronds (⛏️ Mine, 💰 Vendre) plutôt que les bâtiments, souvent cachés par le panneau.
-- **Chaque étape réussie** fait jaillir au milieu de l'écran une médaille verte ✔ et « Bravo ! », avec des confettis et une fanfare.
-- **À la fin, une grande fenêtre « Tutoriel terminé ! »** (confettis, 23/10) : « À partir de maintenant, tu es libre : plus rien n'est obligatoire. » Un encadré doré avec une flèche ↗ montre les **quêtes conseillées en haut à droite**, à suivre si on veut, **dans l'ordre qu'on veut**. La liste des quêtes est entourée d'un anneau doré, avec la flèche « Tes quêtes conseillées » (par-dessus le voile). Puis la suite en trois lignes (⭐ XP, 🔓 niveaux, 👷 🛤️ ⚡ automatisation) et « À moi de jouer ! ». Sur grand écran, la fenêtre se met à gauche pour laisser voir les quêtes. Ensuite, le joueur **avance seul** : la liste des tâches lui propose quoi faire, sans l'obliger à rien.
-
-On ne passe à l'étape suivante **qu'en faisant l'action** : aller à la mine et casser 10 blocs ; construire le marché (menu Bâtiments, « Poser », « Construire ici ») ; mettre le coffre dans le sac ; aller au marché et vendre ; puis (29/10) **construire le forgeron** (20 $ + 10 pierre depuis le 30/10 ; sinon menu Bâtiments, « Pose-le ! », « Choisis sa place »). Depuis le 30/10, Pépite dit **ce qui manque** : « Récupère 10 pierre : *n* / 10 » (creuse, la pierre va dans le coffre), ou « Gagne 20 $ : *n* / 20 » (va vendre ton sac au marché, ou mets du charbon et du fer dans ton sac en gardant la pierre). **Dès qu'on a de quoi le payer, le panneau de la mine se ferme tout seul** (une fois), pour que la flèche montre le menu Bâtiments. Sur ordinateur, quand un panneau est ouvert à droite, la carte du tutoriel se met **au milieu de la place qui reste à gauche** (elle ne cache plus le bloc de la mine). « Passer le tutoriel » (avec confirmation) l'arrête : depuis le 29/10, sa fenêtre de confirmation passe **devant** le tutoriel (`voile-devant`, avant elle restait cachée derrière la fenêtre de bienvenue et le bouton semblait ne rien faire). Une étape déjà faite est sautée.
-
-## 5. Les missions (`Missions.tsx`)
-
-Depuis le 27/10, la barre « prochain objectif » est **remplacée par les missions** (en haut à droite) : **une à trois** choses à faire, pour guider le joueur du marché jusqu'à l'automatisation. Depuis le 27/10 c'est une **liste de tâches à cocher** : un panneau de bois titré « ☑️ Tâches », et pour chaque tâche une ligne claire (papier) avec une **case ronde**, l'**icône**, la **consigne** en gras (un verbe d'action) et, quand il y a quelque chose à compter, une **barre de progression** avec son chiffre (« 🪨 12/25 »), puis un **bouton d'action** à droite : « Aller » ou « Construire » (bleu), « **Go !** » (vert, qui pulse) quand on peut la faire tout de suite. La **première est plus grande**. Une tâche faite se **coche** (case verte qui rebondit, texte barré, « Fait ! ») puis s'en va. **Pendant le tutoriel**, la liste est cachée (elle arrive au « Bravo »). Règles dans `src/jeu/missions.ts` (testées dans `objectifs.test.ts`), dans cet ordre :
-
-1. **les urgences** : « Paie ton mineur au Personnel » (ou « Paie tes *n* mineurs ») et « Le coffre est plein : vide-le ! » ;
-2. **les premiers pas** : « Construis le marché (gratuit) », « Casse 10 blocs à la mine » (« ⛏️ 3/10 »), « Mets les blocs du coffre dans ton sac », « Vends ton sac au marché » ;
-3. **le prochain bâtiment** à construire (dans l'ordre du menu, qui est depuis le 29/10 celui des déblocages : marché, forgeron, Personnel, bazar, foreuse, générateur depuis le 30/10) : « Construis : *bâtiment* » avec, **dès le début, la liste de tout ce qu'il faut** (23/10) : une ligne et une jauge par élément (« 💵 100/150 $ », « 🪨 12/30 pierre »), qui passe au vert avec un ✔ quand on l'a (`elements` dans `missions.ts`). Avant, le texte changeait en chemin (« Gagne 150 $ », puis « Récupère 30 pierre ») ; les améliorations (§ 5 ci-dessous) ont la même liste ;
-4. **l'automatisation**, étape par étape (à partir du niveau 3 du joueur, quand les rails sont débloqués) : « Pose des rails de la mine au marché (3 fer la case) » (29/10 : elle ne dit plus combien de fer récupérer, ça dépend du chemin choisi ; « Go ! » dès qu'on a 3 fer), « Envoie un wagonnet vers le marché », « Embauche un pousseur pour le wagonnet » (sans électricité), « Embauche un mineur au Personnel », puis les étapes du générateur (« Mets de la redstone dans le générateur », « Mets tous les rails dans le rayon du générateur ») et de la foreuse (« Relie la foreuse à la mine (rails) », « Envoie du charbon à la foreuse ») ;
-5. **les améliorations les plus proches** : celles dont on a déjà la plus grande part de l'argent (pioche, niveau de la mine, coffre, sac...), seulement celles qui sont débloquées par le niveau du joueur ;
-6. (29/10) **le prochain niveau du joueur**, glissé après la première amélioration : « ⭐ Niveau *N* : *ce qu'il débloque* » (deux choses au plus, puis « ... » ; « Niveau 9 (tu es 7) : … » si le niveau qui débloque quelque chose est plus loin que le suivant), avec la jauge d'XP vers le niveau suivant (« ⭐ 120/430 »). Voir [niveaux.md](niveaux.md).
-
-On ne garde jamais deux fois la même mission, et au plus **trois** à la fois. Depuis le 30/10, **une mission affichée garde sa place jusqu'à ce qu'elle soit faite** (`missions(etat, avant)` : `Missions.tsx` retient la liste affichée) : la liste ne change plus d'un coup en pleine tâche (« économise pour le sac » qui devenait « récupère 40 fer »). Les nouvelles missions ne prennent que les places libres ; seules les urgences (salaires, coffre plein) passent toujours devant.
-
-**Clic** : pour une construction (ou les rails), ouvre le **menu Bâtiments** ; sinon le hamster marche jusqu'au bon bâtiment (le panneau s'ouvre en arrivant).
-
-**Mission accomplie** : elle reste un instant avec un **✔ et le texte barré**, avec le son de succès, avant de laisser la place à la suivante. (Une urgence qui s'en va, comme « Paie ton mineur », ne compte pas comme accomplie.)
-
-**Quand un panneau de bâtiment est ouvert** : sur ordinateur, **seule la première mission** reste affichée, au-dessus du panneau ; sur téléphone, les missions sont **cachées** (le panneau prend la moitié de l'écran). Sans panneau, un téléphone montre **2 missions au plus**.
+- Chaque tâche : son icône, son texte, et sa progression en petites jauges (« 🪨 12/25 », une jauge par chose à réunir : l'argent, puis chaque minerai ; ✔ quand c'est bon).
+- Le bouton : **Voir** (bleu) ouvre le bon bâtiment ou le menu Bâtiments ; **Go !** (jaune) quand on peut le faire tout de suite.
+- Les **urgences** (salaires, coffre plein) passent devant, avec un fond à part.
+- Une tâche accomplie se coche (✔) avec un petit son, puis laisse la place.
+- Le titre replie ou déplie la liste (▴ / ▾). Sur téléphone, on ne voit que la première tâche.
 
 ---
 
 ## 6. La carte du village (`VueVillage.tsx`)
 
-Une carte **isométrique** : un sol en damier entouré de forêt et d'une plage, une **grille de 60 × 60 cases** (tracée seulement quand on construit), la **mine** au milieu, et tout ce que le joueur a posé. Les règles (où poser, prix, rails) sont dans [village.md](village.md) ; le dessin dans [visuel-et-sons.md § 7](visuel-et-sons.md#7-le-décor-du-village-vue-du-ciel).
+La clairière de 40 × 40 cases vue du ciel (isométrique) : le décor, la mine au milieu, et tout ce que le joueur a posé. On y voit le personnage du joueur, les mineurs, le manager et le recruteur devant le Personnel, les wagonnets sur leurs rails (avec celui qui les pousse).
 
-**La caméra** :
-- elle **suit le joueur** en douceur, ou le **wagonnet** que pousse le joueur : à chaque image de l'écran, elle rattrape une partie de l'écart (environ 90 % en 0,25 s), sans transition CSS (23/10 : plus de saccades) ; le zoom de départ dépend de la largeur de la vue ;
-- **faire glisser** la carte (souris ou doigt) la déplace : la caméra reste là où on l'a mise, jusqu'à ce que le joueur se remette à marcher ;
-- **zoomer** : molette (autour du point sous la souris ; le 27/10, un cran zoomait presque du double, c'était trop : depuis le 29/10, **un cran change le zoom d'environ 15 %** (`FORCE_MOLETTE` = 0,0016), et un cran compte au plus 120 pixels (`CRAN_MAX`, certaines souris envoient de très grands défilements d'un coup) ; le mode « lignes » de Firefox est géré) ou **pincer** à deux doigts (plus fort depuis le 27/10 : `FORCE_PINCEMENT` = 2,4, un petit geste suffit), entre le zoom minimum (la carte remplit toujours la vue) et ×2,6. Le **pincement du pavé tactile** (qui arrive comme Ctrl + molette, en tout petits pas) est **5 fois plus fort** depuis le 30/10 ;
-- **un zoom fluide** (30/10) : pendant un geste (molette, pavé tactile, pincement, carte qu'on fait glisser), la caméra voulue est gardée hors de React, et l'image la rattrape un peu plus vite (90 % en 0,15 s) ; quand le geste s'arrête, elle est recopiée une seule fois dans l'état. Avant, chaque cran redessinait tout le village, et ça saccadait.
+**Toucher la carte** (`toucherCarte` dans `App.tsx`) :
 
-**Ce qu'on voit** :
-- les **bâtiments** (de vraies images, calées sur leur emprise). Depuis le 29/10, leur image ne change **jamais** (plus de filtre, de déplacement ni d'animation : le navigateur la redessinait à une autre échelle que la carte zoomée, et elle devenait floue ; la foreuse ne vibre plus, le générateur n'a plus de lueur sur l'image, seulement ses petits éclairs). Le bâtiment **survolé** à la souris (ou juste à côté) est montré **au sol** par un losange blanc doré sur son emprise (`.emprise-survol`, et le curseur devient une main) ; le losange du bâtiment **ouvert** est doré, entouré de tirets dorés qui défilent (`.emprise-active`). Sur la mine : la **cabine de l'ascenseur** qui suit les mineurs et le **panneau du niveau** ; un bâtiment retourné garde ses écritures à l'endroit (27/10 : l'enseigne « HIRING » du Personnel) ;
-- au **Personnel**, quand on embauche un pousseur pour un trajet : une **ligne jaune épaisse** en surbrillance (halo qui pulse) relie les deux bâtiments en suivant les rails, et leurs emprises sont entourées d'or ;
-- le **joueur** : l'image du hamster mineur (casque jaune), vue selon où il marche ; quand il pousse un wagonnet, il est derrière lui sur les rails ;
-- les **employés** quand ils sont dehors : en marche (vers la forge, le Personnel, la mine ou le quai de leur trajet), devant la forge, au quai (les pousseurs, au bord de la voie, au début des rails de leur trajet), derrière le wagonnet qu'ils poussent, ou devant le Personnel quand ils attendent leur salaire (bulle 😠, ils tapent du pied). Chacun a une étiquette à son prénom, bordée de la couleur de sa rareté ;
-- le **manager** et le **recruteur** (s'ils sont embauchés), devant le Personnel, avec une étiquette dorée ;
-- les **wagonnets** sur les rails, un par trajet, **en 3D** (26/10) : remplis de minerais à facettes selon ce qu'ils portent vraiment (vides, à moitié pleins ou pleins), vides au retour, avec une lueur jaune quand ils sont électriques ; ils tournent en douceur dans les virages. Au bout d'une ligne, un **butoir** rouge et blanc ;
-- le **trajet en surbrillance**, quand on embauche un pousseur au Personnel : ses rails brillent en or, ses deux bâtiments sont entourés d'un pointillé doré qui tourne ;
-- le **rayon du générateur** : un cercle en pointillés jaunes (bien visible quand on est devant le générateur ou qu'on le pose, discret quand il donne du courant) ;
-- les **bulles de notification** au-dessus des bâtiments ;
-- **la jauge du coffre** (27/10), toujours au-dessus de la mine : « 📦 *n* / *capacité* » (en court : « 1,2 k », « 12 k »), une barre verte, **orange** dès 75 %, **rouge** et qui pulse quand le coffre est plein. Les bulles de la mine sont un peu plus haut pour passer au-dessus ;
-- **les ventes des wagonnets au marché** (27/10) : un « +X $ » doré jaillit **juste au-dessus du wagonnet**, par-dessus le marché, **quand il a fini de décharger** (la jauge « 💰 Vente » finie : c'est là que l'argent arrive). Il compte de 0 jusqu'au montant, puis claque (rebond, éclair blanc), avec une onde dorée, des étoiles, les 3 minerais vendus les plus chers qui sautent, et une fontaine de 12 pièces qui monte puis retombe (2 s). Plus grand avec un halo à partir de 500 $. Le compteur d'argent du bandeau saute aussi (`VenteWagonnet` dans `WagonnetVillage.tsx`).
+| On touche… | Il se passe… |
+|---|---|
+| un bâtiment (son image, ses cases, ou juste à côté) | sa fenêtre s'ouvre **tout de suite** ; le personnage y marche quand même |
+| un chemin juste à côté d'un bâtiment | la fenêtre du bâtiment s'ouvre |
+| un rail qui fait partie d'un trajet | la fenêtre **Trajet** (§ 10), avec en bas ✏️ Déplacer / 🗑️ Retirer ce rail |
+| un rail qui ne relie rien | la petite fenêtre **Rail** (§ 10) |
+| le sol | le personnage y marche (sauf pendant qu'il pousse un wagonnet) |
 
-**La plage hors de l'écran** (27/10) : quand la caméra ne voit pas la plage, ses animations (l'eau, les objets) sont mises en pause (`plage-cachee`), pour ne pas faire travailler le navigateur pour rien.
-
-**Toucher la carte** (un appui court, sans glisser) : un **bâtiment** → le hamster y marche (en contournant ce qui gêne), puis son panneau s'ouvre ; un **rail** → sa fenêtre s'ouvre (23/10 : **le rail passe avant le bâtiment**, même juste à côté de lui ou sous son image : avant, un rail près de la mine ouvrait la mine) (30/10 : les trajets qui y passent, ou « 🛤️ Rail » s'il ne relie encore rien, avec « ✏️ Déplacer ce rail » et « 🗑️ Retirer (+3 🔩 fer) », § 10) ; une **case** → il y marche. Pendant qu'il pousse un wagonnet, les touchers ne font rien.
-
-**Les bulles de notification** (`src/jeu/notifications.ts`, refaites le 23/10 puis le 27/10, **30 % plus petites** depuis le 28/10 : médaille de 35 pixels) : au-dessus du bâtiment, comme dans les jeux mobiles, une **médaille ronde et brillante** (bord blanc épais, reflet en demi-lune, un éclat qui passe, l'icône cartoon en grand), un **ruban** de couleur aux bouts fourchus en travers du bas avec **deux mots** (« Plein ! », « Salaires ! », « Achetable »…), une **pointe** blanche vers le bâtiment, et une pastille rouge « +*n* » s'il y a d'autres choses à faire là-bas. Elle arrive en rebondissant (écrasée puis étirée), flotte doucement, et son icône se dandine toutes les 3 secondes. Les **alertes** (rouge) tremblent et lancent une onde rouge ; les **achats** (vert) ont une lueur qui respire et des étincelles dorées ; rose = prêt, bleu = nouveau, jaune = trajet à créer (« 🛤️ Automatiser » sur les rails). Survol : elle grossit ; clic : on y va.
-
-| Sorte (couleur) | Icône · mots | Bâtiment | Quand |
-|---|---|---|---|
-| alerte (rouge) | 😠 · Salaires ! | Personnel | des mineurs ne sont pas payés |
-| alerte (rouge) | 🚧 · Rails coupés | les deux bâtiments du trajet | les rails d'un trajet sont coupés : son wagonnet attend |
-| alerte (rouge) | 🛤️ · Sans trajet | Personnel | des pousseurs n'ont plus de trajet en service |
-| alerte (rouge) | 🛒 · Plein ! / 🔥 · Charbon ? | Foreuse | chariot plein / plus de charbon |
-| alerte (rouge) | 🔴 · Redstone ? | Générateur | allumé, plus de redstone |
-| alerte (rouge) | 🔧 · Réparer | Forgeron | ta pioche est cassée |
-| alerte (rouge) | 🎒 · Vendre ! | Marché | ton sac est plein |
-| alerte (rouge) | 📦 · Plein ! | Mine | le coffre est plein |
-| nouveau (bleu) | ✨ · Nouveau | Personnel | le recruteur ou le manager vient de se débloquer, pas encore vu |
-| achat (vert) | ⬆️ · Achetable | tous | une amélioration y est payable tout de suite ; **seulement pendant le tutoriel** depuis le 30/10 (ensuite il y en aurait presque toujours une, et la liste des tâches propose déjà les achats) |
-
-**En construction** (placement, pinceau, Modifier) : la grille s'affiche, et ce qu'on pose est un **fantôme** un peu transparent qui pulse, sur un losange **vert** (libre) ou **rouge** (occupé). Voir [§ 7](#7-les-boutons-du-bas).
-
-**Les petits gains** : pour l'argent qui n'est ni une vente ni une vente de wagonnet, un petit « +*X* $ » doré monte en haut au milieu de l'écran (`Gains.tsx`). Depuis le 27/10, les ventes des wagonnets ne l'affichent plus : elles ont leur « +*X* $ » au-dessus du wagonnet (voir plus haut). Une vente au marché ou du chariot fait la grosse animation (§ 11).
+**Par-dessus la carte** :
+- **Les bulles de notification** au-dessus des bâtiments (§ 11) ; les toucher ouvre le bâtiment.
+- **La bulle « 🛤️ Automatiser »** (orange, avec des étincelles), au milieu de rails qui relient deux bâtiments sans trajet : la toucher ouvre la fenêtre **Automatiser**.
+- (25/10 : plus de jauge du coffre au-dessus de la mine : le bandeau du haut montre déjà 📦 *n* / *capacité*, et la bulle « Plein ! » prévient quand il faut vendre.)
+- **Des mini-jauges** quand un bâtiment travaille : la forge (« 🔨 Pioche de … »), la foreuse (« ⚙️ Forage »), le générateur (« ⚡ Courant »), et la caisse de l'ascenseur qui se décharge.
+- **Le rayon du générateur** : un cercle jaune, seulement quand sa fenêtre est ouverte ou qu'on le place.
+- Un nouveau mineur arrive avec une bulle « ✨ Nouveau ! » ; un mineur pas payé a un 😠 au-dessus de la tête.
+- Le bâtiment sous la souris est entouré au sol.
 
 ---
 
 ## 7. Les boutons du bas
 
-**Au village** (`actions-village`, de gros boutons ronds et brillants comme dans Clash of Clans, avec un reflet en haut ; ils se soulèvent au survol et s'enfoncent au clic) :
+### 7.1 Au village (`.barre-village`)
 
-| Bouton | Couleur | Effet |
+| Bouton | Où | Ce qu'il fait |
 |---|---|---|
-| **⛏️ Mine** (en bas à gauche) | doré, avec un **anneau qui se remplit comme le coffre** | le hamster marche jusqu'à la mine et son panneau s'ouvre (le bloc à cliquer). Coffre plein : badge « ! » et le bouton respire. Pendant qu'il pousse un wagonnet : grisé, « Wagonnet… » |
-| **💰 Vendre** (à côté de la Mine) | vert, avec un badge : ce que vaut le sac | n'apparaît que si le marché est posé et que le sac n'est pas vide : le hamster va au marché. Sac plein : le bouton respire |
-| **✏️ Modifier** (plus petit) | gris | passe en mode Modifier (déplacer, retourner, enlever ce qui est posé) |
-| **🏗️ Bâtiments** | brique | ouvre le menu Bâtiments (et marque les nouveautés comme vues). Une **pastille rouge** compte les bâtiments **nouveaux** ou **constructibles tout de suite**, et le bouton respire |
+| **⛏️ Mine** (gros rond jaune, 88 px) | en bas à gauche | ouvre la fenêtre de la mine. Son anneau orange se remplit comme le coffre ; il respire quand le coffre est plein |
+| **✏️ Modifier** (rond blanc, plus petit) | en bas à droite | passe en mode Modifier (§ 7.2) |
+| **🏗️ Bâtiments** (gros rond vert) | en bas à droite | ouvre le menu **Construire** (§ 10). Une pastille dit combien de bâtiments sont nouveaux ou constructibles ; il respire alors |
 
-**Pendant qu'on pose quelque chose** (`actions-edition`) :
+Au milieu, tant qu'on ne s'en est pas servi : « ← ↑ → ↓ pour marcher » (caché sur écran tactile).
 
-| Bouton | Couleur | Effet |
+### 7.2 Pendant qu'on pose ou déplace quelque chose (`.barre-edition`)
+
+Une barre crème remplace les gros boutons, avec une consigne et des boutons :
+
+| Mode | Consigne | Boutons |
 |---|---|---|
-| **✔ Construire ici** / **✔ Poser ici** | vert | pose le fantôme : « Construire ici » pour un nouveau bâtiment (on le paie), « Poser ici » pour un élément qu'on déplace (gratuit) ; grisé si la place n'est pas libre |
-| **↔ Retourner** | gris | le met en **miroir** ; pas pour les rails et les pavés |
-| **🗑️ Enlever** | rouge | seulement pour un rail ou un pavé déjà posé, **remboursé** depuis le 30/10 (3 fer pour un rail, 5 $ pour un pavé ; avant, sans remboursement) |
-| **✖ Annuler** | rouge | laisse tout comme avant |
+| **Placer un bâtiment** (ou déplacer un bâtiment, un rail, un chemin) | « 👆 Touche la carte pour placer, puis valide. Glisse pour déplacer la carte. » (jusqu'au premier toucher) | **✖ Annuler** (blanc), **↔ Retourner** (blanc, bâtiments seulement), **🗑️ Enlever** (rose, un rail ou chemin déjà posé), **✔ Construire ici** / **✔ Poser ici** (vert, grisé si la place est prise) |
+| **Poser des rails** | « Touche le sol là où commence ta voie… », puis « Le rail doré montre où il sera posé… », puis « Choisis où va le prochain rail avec les flèches, puis pose-le. » (3 🔩 fer le rail ; en rouge, pourquoi on ne peut pas) | **↰ Gauche**, **⬆ Tout droit**, **↱ Droite** (le sens choisi est jaune), **↩ Retirer le dernier** (rose), **✔ Poser ce rail** (vert), **Terminé** (jaune) |
+| **Poser des chemins** | « 🪨 Touche le sol pour poser un chemin (… $ la case). » | **Terminé** (jaune) |
+| **Modifier** | « ✏️ Touche un bâtiment, un rail ou un chemin pour le déplacer. » | **Terminé** (jaune) |
 
-Pour placer le fantôme (en deux temps) : il apparaît sur une place libre près du joueur et **suit la souris** (consigne « 👆 Clique (ou touche) la carte pour placer, puis valide. Glisse pour déplacer la carte. ») ; **un clic sur la carte le fixe**, sans le construire. Un autre clic le déplace, on peut aussi le faire glisser. Depuis le 27/10, **glisser déplace la carte** tant que le fantôme suit la souris (avant, le fantôme était toujours sous le curseur et on ne pouvait plus bouger la carte) ; une fois fixé, glisser sur lui le déplace, ailleurs la carte.
-
-**Poser des rails, pas à pas** (23/10, `traceRail.ts`) : avec des rails en main, **glisser déplace la carte** (avant, ça posait des rails partout). 1. « 🛤️ Touche le sol là où commence ta voie, juste à côté d’un bâtiment. » 2. La case touchée montre le **rail proposé**, doré (losange doré qui brille, rouge s'il ne peut pas aller là, avec la raison) : « ✔ Poser ce rail » (bleu) le pose. 3. Un nouveau rail doré est proposé **juste après, dans le même sens** ; trois grosses flèches **↰ Gauche · ⬆ Tout droit · ↱ Droite** le font tourner (vu à l'écran ; la flèche choisie est entourée d'or), « ✔ Poser ce rail » le pose, **↩ Retirer le dernier** reprend le dernier rail (fer rendu), **✔ Terminé** pour finir. Toucher une autre case y déplace le rail proposé (juste à côté du dernier rail : la voie tourne vers elle). **Chemin de pavés** : « 🪨 Touche le sol pour poser un chemin (glisse pour déplacer la carte) » et **✔ Terminé** (vert). Depuis le 30/10, à la souris, un **aperçu** du rail (ou du pavé) suit le pointeur, sur un losange vert (on peut le poser) ou rouge. Quand on ne peut pas poser, un toast dit pourquoi (`raisonSolImpossible`) : « 🔩 Plus de fer : un rail coûte 3 fer (sac + coffre de la mine). Va creuser ! », « 💵 Pas assez d'argent… », ou « 🔁 Pas de boucle : les rails vont d’un bâtiment à un autre. ». **Dès que les rails relient deux bâtiments**, la pose s'arrête (plus de rail « dans la main ») et la **fenêtre du trajet** s'ouvre, pour automatiser tout de suite (§ 10).
-
-**En mode Modifier** : « ✏️ Touche un bâtiment, un rail ou un chemin pour le déplacer. » et **✔ Terminé** (vert).
-
-Un rappel dans une petite pastille : « ← ↑ → ↓ pour marcher · Espace pour sauter » (caché sur écran tactile et sur téléphone).
-
-### 7.1 Le menu Bâtiments (`MenuConstruction.tsx`)
-
-Une grande fenêtre en bois qui monte du bas de l'écran, avec le titre **🏗️ Bâtiments** et un bouton ✖ (clic à côté ou Échap pour fermer). Depuis le 27/10, plus d'onglet Décorations : c'est la seule fenêtre de construction. En haut, le rappel de ce qu'on a (argent, pierre, fer…, en comptant le sac et le coffre de la mine).
-
-Les cartes sont plus claires depuis le 27/10 (bois plus clair, herbe plus vive derrière l'image) : la règle CSS qui rendait la grille de construction de la carte transparente (`.grille-construction`, opacité 0,28) touchait aussi la grille des cartes du menu, qui a le même nom ; elle ne vise plus que le dessin du sol (`g.grille-construction`).
-
-- une carte par bâtiment, dans l'ordre où ils se débloquent (29/10 : Marché, Forgeron, Personnel, Bazar, Générateur, Foreuse) : son image, son nom, sa description, sa taille, puis :
-  - **✔ Construit** (carte bordée de vert) s'il est déjà posé ;
-  - **🔒 Niveau *n*** (le niveau du joueur, 29/10) ou **🔒 Mine niveau *n*** (image grisée avec un gros cadenas) s'il n'est pas encore débloqué ;
-  - sinon son **prix** (« Gratuit ! » pour le marché ; en vert ce qu'on a, en rouge ce qui manque) et **🏗️ Poser** (bleu, grisé si on ne peut pas payer) : le menu se ferme et le fantôme apparaît sur la carte ; si on peut le payer tout de suite, la carte a un **bord doré** (`construction-abordable`) ;
-  - un ruban rouge « Nouveau ! » qui saute sur les bâtiments tout juste débloqués ;
-- la carte **🛤️ Rails** : le nombre de cases posées, le prix (3 🔩 fer la case) et **🛤️ Poser des rails** (mode pinceau) ; avant le niveau 3 du joueur, un cadenas et « 🔒 Niveau 3 » à la place (29/10) ;
-- la carte **🪨 Chemin de pavés** : « Pour relier tes bâtiments. Juste joli ! », 5 $ la case, **🖌️ Poser** (mode pinceau).
-
-Les **décorations** à acheter (fleurs, arbres, fontaine…) sont retirées depuis le 27/10.
+Quand un rail posé relie deux bâtiments, la pose s'arrête et la fenêtre **Automatiser** s'ouvre tout de suite.
 
 ---
 
-## 8. Le panneau d'un bâtiment
+## 8. La fenêtre d'un bâtiment
 
-| Où est le joueur | Panneau |
-|---|---|
-| devant aucun bâtiment | rien (la carte est dégagée) ; le bouton **❔ Aide** ouvre « 🏡 Ton village » |
-| devant un bâtiment | le **panneau du bâtiment** : son icône et son nom, un bouton rond **✖** pour le fermer, sa description, puis son contenu |
-| en train de pousser un wagonnet | rien |
+Une `Fenetre` (§ 9) avec un **voile presque transparent** (on voit le village derrière), l'emoji et le nom du bâtiment dans un bandeau de couleur, puis sa description en petit. La mine et le Personnel ont une grande fenêtre, les autres une moyenne.
 
-**Quand le panneau s'ouvre** : quand le joueur **arrive en marchant** à moins de **1 case** du bâtiment (après l'avoir touché, il y va par le plus court chemin, jusqu'au point de son tour le plus proche à pied), **de n'importe quel côté**, au clavier ou après l'avoir touché (si deux bâtiments sont aussi près, c'est celui qu'on a touché qui s'ouvre). Il ne s'ouvre **pas** quand le joueur y apparaît d'un coup (au chargement de la partie). ✖ le ferme jusqu'à ce qu'on reparte ; toucher le bâtiment le rouvre. Il est fermé pendant qu'on construit ou qu'on modifie.
+| Bâtiment | Bandeau | Onglets | Contenu |
+|---|---|---|---|
+| **Mine** (`PanneauMine.tsx`) | jaune | ⛏️ Creuser · ⬆️ Améliorer · 🚃 Wagonnets · 📊 Production | voir § 8.1 |
+| **Marché** (`PanneauMarche`) | vert | — | « 💰 Vendu par les wagonnets » ; sans rails, « 🛤️ Relie la mine au marché avec des rails » et **🛤️ Poser des rails** (vert, ou 🔒 ⭐ 2) ; avec des rails, les trajets qui y arrivent |
+| **Forgeron** (`PanneauPioches`) | rose | — | **Ta pioche** (jauge de durabilité, Fortune, **🔧 Réparer** ou « ✔ Neuve ») ; **Nouvelle pioche** (Acheter) ; **Tes autres pioches** (**Prendre**, bleu) |
+| **Personnel** (`PanneauEmployes.tsx`) | bleu | 👷 Équipe · ➕ Embaucher · 💼 Chefs | voir § 8.2 |
+| **Foreuse** (`PanneauForeuse`) | orange | 🔥 Charbon · 🛒 Chariot · ⬆️ Améliorer | état, jauge de charbon, **🔥 Remplir** (jaune), ses trajets ; le chariot à vendre (`StockMinerais`) ; Forage et Chariot à améliorer |
+| **Générateur** (`PanneauGenerateur`) | violet | ⚡ Courant · ⬆️ Améliorer | état, jauge de redstone, **Remplir** (jaune), **⏸ Éteindre / ▶ Allumer** (blanc), « Ce qu'il accélère » (✔ / ✖ dans le rayon) ; l'amélioration (rayon, vitesse, réserve) |
 
-### 8.1 Le contenu, bâtiment par bâtiment
+Les onglets portent une **pastille** quand il y a quelque chose à faire : « ! » (coffre plein, la mine peut descendre, un goulot, plus de charbon, salaires…) ou « + » (une amélioration achetable, une embauche possible).
 
-Le détail (chiffres, règles) est dans chaque fiche ; voici ce qu'on voit.
+### 8.1 La mine
 
-| Bâtiment | Panneau | Contenu à l'écran |
+- **⛏️ Creuser** : à gauche, l'étiquette « ⛏️ Niveau 2 · … », le bonus de combo en cours, puis **le gros bloc à cliquer** (chaque clic casse un bloc ; éclats, « +1 🪨 » qui s'envolent, « 🔥 ×12 » pour le combo). Dessous, la jauge du combo (« Clique vite ! ×10 = … »), trois compteurs (🔨 cassés, 🏆 record, 👆 clics/s) et la jauge de la pioche (« Pioche cassée : répare-la au forgeron ! »). Coffre plein : le bloc est grisé, « 📦 Coffre plein : vends-le ! ». À droite, **le coffre** (`StockMinerais`, § 9) et une carte « ⬇️ Mine niveau 3 · … » (Prêt ! / Voir / 🔒) qui mène à l'onglet Améliorer.
+- **⬆️ Améliorer** : une carte crème « ⬇️ Descendre au niveau *N* » avec tout ce que ça débloque (le palier, le nouveau minerai, la mine plus rapide, un mineur de plus, les bâtiments, le manager ou le recruteur), et la ligne **Mine** (bouton **Descendre**) ; puis les lignes **Coffre** et **Ascenseur** (`Ascenseur.tsx`), avec « ⚠️ Ascenseur trop petit… » s'il freine les mineurs.
+- **🚃 Wagonnets** : l'alerte « Le chariot de … est trop petit » (`AlerteChariot.tsx`, bouton bleu **👷 Agrandir**) et les trajets qui partent de la mine (`PanneauTrajets`, § 9).
+- **📊 Production** : le total en blocs/s et ≈ $/min, la part de la mine, des mineurs et de tes clics, puis une ligne par mineur (rareté, jauge, blocs/s ou « 😠 salaire »).
+- Au-dessus des onglets, si des employés attendent leur salaire : « 😠 … ils ne travaillent plus. » et **💵 Payer** (bleu, va au Personnel).
+
+### 8.2 Le Personnel
+
+- **👷 Équipe** : la carte **Salaires** (« 💵 Salaires · … $ / 5 min », **💵 Payer tout le monde**, jaune ; absente si le manager paie), puis une carte par employé, rangés en ⛏️ Mineurs et 🛤️ Pousseurs : nom, rareté, ⏳ temps payé (ou « 😠 Pas payé »), ses chiffres, son trajet (une liste déroulante pour un pousseur), ses améliorations (pioche ; ou vitesse et chariot), et **💵 Payer** (jaune), **🎲 Remplacer** (vert, avec le recruteur), **Licencier** (rose, avec une confirmation qui montre les indemnités). Sans personne : **➕ Embaucher un mineur**.
+- **➕ Embaucher** : la ligne **Mineur** (*n* / max) ; puis **Pousseur** : on choisit un trajet (« Libre », « Pas de rails », ou « ✔ son pousseur ») ; le trajet choisi **brille sur la carte** ; puis **Embaucher**.
+- **💼 Chefs** : le **Manager** (🔒 Mine 3, puis Embaucher ; ensuite un interrupteur « Il paie les salaires / Arrêté », la jauge de fatigue avec **☕ Réveiller**, et son Endurance) et le **Recruteur** (🔒 Mine 4, puis ses niveaux et les chances de chaque rareté), chacun avec son portrait.
+- Une embauche avec le recruteur lance **la révélation** (`RevelationRecrue.tsx`) : la carte tremble pendant 1,6 s (« Le recruteur cherche… »), puis se retourne sur sa rareté (étoiles, confettis) ; un clic accélère ; **Au travail ! / Super ! / Incroyable !** la ferme.
+
+---
+
+## 9. Les composants partagés
+
+| Composant | Où | Ce que c'est |
 |---|---|---|
-| ⛏️ Mine | `PanneauMine` | **quatre onglets** depuis le 30/10 (cinq le 27/10) : **⛏️ Creuser** (le bloc à cliquer de 112 px, 84 sur téléphone, à gauche, avec au-dessus le **bonus de combo** en cours ou « Prochain bonus à ×*N* », et à droite le niveau, le bloc, la jauge de la pioche (du vert au rouge, qui clignote sous 15 %), la chance de doubler, « ⚙️ blocs/s · $/min » ; le **📦 Coffre** : titre et barre sur une ligne, une ligne fine par minerai du niveau même à 0 avec **🚃 Vendre / Garder**, un **curseur « 📌 Garder »** (23/10 : combien en garder dans le coffre ; le wagonnet et 🎒 ne prennent que le reste) et **🎒 *n***, puis **🎒 Tout mettre dans le sac** ; le raccourci « ⬆️ Agrandir le coffre, l’ascenseur, descendre la mine › » (« · 💰 Achetable ! » quand on peut payer quelque chose) ; le rappel du niveau suivant, caché sur téléphone), **⬆️ Améliorer** (30/10 : la grande carte du niveau suivant, la taille du coffre et l'ascenseur, avant dans deux onglets « ⬇️ Niv. *N* » et « ⬆️ Plus » ; pastille « + » dès qu'une de ces trois choses est débloquée et payable), **🚃 Wagons** (`PanneauTrajets` ; un trajet sans rails tient sur une ligne « 🛤️ Pas encore de rails », l'explication en bulle d'aide ; puis **🛒 Taille des wagonnets**), **📊 Prod.** (tableau de production, lignes serrées, et goulots en une ligne, le détail en bulle d'aide ; depuis le 30/10, pas d'alerte « ascenseur trop lent » si son niveau suivant rapporterait moins de 10 % de plus). Fiche : [mine.md](../batiments/mine.md) |
+| `Fenetre.tsx` | partout | la fenêtre : voile (sombre, ou `clair` pour les bâtiments), bandeau de couleur (vert, jaune, bleu, rose, violet, orange, crème) avec icône et titre, ✖ rond blanc, corps qui défile, « pied » pour les boutons du bas. Trois tailles : petite (420 px), moyenne (560 px), grande (760 px). Échap ferme celle du dessus seulement ; un clic à côté ferme. `devant` : au-dessus de tout ; `fermable={false}` : ni ✖, ni Échap, ni clic à côté |
+| `Confirmation.tsx` | supprimer un monde, licencier, recommencer, passer le tutoriel | une petite fenêtre « ❓ » (jaune) ou « ⚠️ » (rose si `danger`) : **Annuler** (blanc) et **Confirmer** (jaune ou rose, grisé si impossible). Remplace la boîte grise du navigateur |
+| `OngletsPanneau.tsx` | mine, Personnel, foreuse, générateur, trajets | une rangée d'onglets en pilule ; l'actif est mis en avant ; une pastille par onglet. À 4 onglets et plus sur un petit téléphone, les onglets non choisis ne montrent que leur icône |
+| `Amelioration.tsx` | toutes les améliorations | la **ligne d'amélioration** : icône, nom, niveaux en petits carrés (pleins = achetés), effet « avant → **après** » ; à droite le bouton **vert** avec le prix et le bouton **violet 💎** (payer en gemmes). Ou « 🔒 Mine 3 », ou « MAX ». `Achat` : la même, sans niveaux (embaucher) |
+| `PrixCout.tsx` | dans les boutons | « 1 500 $ · 3/10 🔩 » ; ce qui manque est en rouge (les minerais viennent du coffre de la mine) |
+| `Barre.tsx` | coffre, durabilité, charbon, fatigue… | une jauge avec son texte par-dessus (« 120 / 300 », « Plein ! ») ; vert, rose, jaune, violet ou bleu |
+| `StockMinerais.tsx` | coffre de la mine, chariot de la foreuse | le titre et sa jauge, le gros **💰 Tout vendre** (jaune, avec « +… $ »), puis une ligne par minerai : nombre, prix pièce, **📌** (garder ce minerai : bleu quand il est gardé, coffre seulement) et **+… $** (jaune, vendre ce minerai) |
+| `PanneauTrajets.tsx` | mine, marché, foreuse | une ligne par trajet : « Pas de rails », « Rails posés », « En route » (avec une jauge), « Pas de pousseur », « Au quai » ; boutons **🛒 Pousser** (jaune, si personne ne le pousse) et **🛤️ Automatiser** (vert) ou **⚙️ Régler** (bleu) |
+| `Interrupteur.tsx` | trajets, manager | un interrupteur gris / vert avec son texte |
+| `AlerteChariot.tsx` | mine, foreuse | le chariot du pousseur est trop petit, avec **👷 Agrandir** |
 
-**La mine, refaite le 23/10** (le panneau le plus utilisé) : c'est le **plus large** : sur grand écran (1 100 px et plus), jusqu'à **920 px**, en **deux colonnes** (`mine-deux-colonnes`) : à gauche le bloc et ses compteurs, à droite l'alerte de l'ascenseur, le coffre, le raccourci et le niveau suivant ; l'onglet Améliorer aussi en deux colonnes (`mine-ameliorer`). **Tout tient sans défiler** (vérifié en 1 280 × 800, 1 440 × 900, 1 920 × 1 080 ; sur un écran peu haut, le bloc passe à 140 px). Sur téléphone, tout reste l'un sous l'autre. L'onglet ⛏️ Creuser commence par une grande zone : le niveau et « 👆 *bloc* » en haut, le **bloc géant** (190 px, 140 sur téléphone), puis la **barre de combo** qui se remplit vers le prochain bonus (« 🔥 ×13 → ×25 : 🍀 Grande fortune », ou « Clique vite ! ×10 = 🍀 Fortune »), **trois compteurs** de même largeur (24/10 : plus de « 💰 ce tour », ses gros chiffres faisaient grandir et rétrécir le panneau) (🔨 blocs cassés, qui sautent à chaque bloc ; 🏆 record de combo, `stats.meilleurCombo`, qui brille quand on le bat ; ⚡ clics/s), la **pioche** (cassée : rouge, elle clignote et **tremble à chaque clic**, comme sa case du bandeau) et une ligne de production. Dessous, le coffre (voir [mine.md](../batiments/mine.md) : la pastille du wagonnet « 🚃 Vend tout / 📌 Garde 40 / 🔒 Garde tout »).
-| 💰 Marché | `PanneauMarche` | les jauges de tout le sac (le plus cher en haut), puis **💰 Vendre la sélection · +*X* $** (vert). Sac vide (30/10) : le marché s'ouvre quand même, avec un message bien visible (🎒 qui se balance, « **Ton sac est vide !** Remplis-le au coffre de la mine (bouton 🎒), puis reviens vendre ici. ») et **💰 Les prix du marché** (un mini-bloc, le nom et le prix de chaque bloc). Une jauge à 0 = objet « gardé ». Fiche : [marche.md](../batiments/marche.md) |
-| ⚒️ Forgeron | `PanneauPioches` | une ligne par pioche : verrouillée, ou nom, badge « Équipée », « 🍀 Fortune *N* % : chance de doubler (23/10)  un minerai · durabilité *D* clics », barre d'usure, **Équiper** (gris), **🔧 Réparer** (orange), **🔓 Débloquer** / **🛒 Racheter neuve** (bleu). Fiche : [forgeron.md](../batiments/forgeron.md) |
-| 🎒 Bazar | `PanneauBazar` | « 🎒 Sac à dos » (« ⬆ *n* places », bleu). Les tenues sont retirées depuis le 27/10. Fiche : [bazar.md](../batiments/bazar.md) |
-| 👷 Personnel | `PanneauEmployes` | (27/10 : l'équipe en **une ligne par employé**, sa fiche en la touchant, voir [personnel.md](../batiments/personnel.md)) salaires (boutons citron vert), manager (il paie avec ton argent), recruteur (avec leur **portrait**), **👷 Embaucher** (bleu) ou **🎲 Recruter** (arc-en-ciel), **🛤️ Embaucher un pousseur** (28/10 : une **liste des trajets à cocher**, chacun avec son état Libre / *n* pousseurs / Pas de rails, la ligne cochée devient dorée, le trajet brille sur la carte, puis **🛤️ Embaucher pour ce trajet** arc-en-ciel) ; l'équipe en deux listes, **⛏️ Mineurs** (une carte compacte chacun : jauges temps payé et sac, pioche, lien Licencier) et **🛤️ Pousseurs** (son trajet, une liste pour le changer, jauge temps payé, lien Licencier). Fiche : [personnel.md](../batiments/personnel.md) |
-| ⚙️ Foreuse | `PanneauForeuse` | **onglets** (27/10) : **⚙️ Forage** (ci-dessous), **🛒 Chariot** (le chariot, ses lignes fines sans défilement interne, « ☑️ Tout / ☐ Aucun »), **⬆️ Améliorer** (vitesse de forage, taille du chariot), **🚃 Wagons** (s'il y a un trajet qui part de la foreuse). État (badge, vitesse, ⚡ si boostée), barre de charbon, **+1 / +10 / Tout** (anthracite), case « Recharge automatique » ; Chariot (barre violette, liste à cocher, **💰 Vendre la sélection**, **🎒 Mettre dans le sac**) ; « ⚙️ Vitesse de forage » et « 🛒 Taille du chariot » ; **🛤️ Wagonnets** (le trajet Foreuse → Marché, comme à la mine). Fiche : [foreuse.md](../batiments/foreuse.md) |
-| ⚡ Générateur | `PanneauGenerateur` | deux **onglets** (27/10) : **⚡ Courant** et **🔌 Rayon et amélioration**. « ⚡ Courant » (badge Allumé / Éteint / Plus de redstone, rayon et puissance, barre de redstone, **+1 / +10 / Tout**, **⏸ Éteindre / ▶ Allumer**, rappel du pousseur Mine → Générateur ; 23/10 : plus de case du puisage) ; « 🔌 Ce qu'il alimente » (chaque trajet : électrique, hors du rayon ou rails coupés ; et la foreuse) ; « ⬆ Améliorer ». Fiche : [generateur.md](../batiments/generateur.md) |
-
-Un bâtiment n'a de panneau qu'une fois **posé**.
-
-### 8.2 Le panneau d'aide « 🏡 Ton village »
-
-« Touche un bâtiment pour y aller (ou marche avec les flèches du clavier, Espace pour sauter). Fais glisser la carte pour la déplacer, pince ou utilise la molette pour zoomer. » ; « Devant la **mine**, clique sur le bloc pour creuser : tout va dans le coffre de la mine. Mets-le dans ton sac et va le vendre au **marché**. Puis relie la mine au marché avec des **rails** et, au panneau de la mine, envoie un **wagonnet** : il fera les voyages pour toi. » ; et le rôle des boutons Bâtiments, Modifier et Mine.
+Les briques CSS (`src/styles/theme.css`) : `.btn` (§ 14), `.fenetre`, `.carte` (blanche) et `.carte-creme`, `.onglets`, `.ligne-amelioration`, `.jauge` (et `.jauge-texte`), `.etiquette` (petite pilule : nuit, jaune, vert, rose, bleu, violet), `.pastille` (le petit rond rouge sur un bouton : « 2 », « ! »), `.verrou` (le cadenas), `.titre-section`, `.champ`.
 
 ---
 
-## 9. Les composants partagés des panneaux
+## 10. Les autres fenêtres
 
-### 9.1 Lignes d'achat et d'amélioration (`Amelioration.tsx`)
-
-Présentées partout de la même façon (mine, coffre, ascenseur, wagonnet, forage, chariot, générateur, sac, mineurs, recruteur) :
-
-- **`Amelioration`** : en haut, ce qu'on a maintenant (« 250 places », « 0,5 bloc/s sans électricité ») et des **petits carrés de niveaux** : pleins turquoise = achetés (le dernier fait un « pop »), vides = à acheter. En dessous, l'un des trois : « ✔ Niveau max » (vert), « 🔒 *texte* · *ce qu'il faut* » (cadre en pointillés : un niveau de la mine, ou depuis le 29/10 le niveau du joueur, « 🔒 Coffre de 600 places · au niveau 5 », texte donné par `verrou` dans `niveaux.ts`), ou une ligne `Achat`.
-- **`Achat`** : le **prix à gauche**, le **bouton à droite**. Bouton grisé si on ne peut pas payer.
-- **`PrixCout`** : « 1 500 $ » puis « 3/10 🔩 Fer » pour chaque minerai, **en vert ce qu'on a, en rouge ce qui manque** (le sac et le coffre comptent).
-
-### 9.2 La barre de progression (`Barre.tsx`)
-
-Une barre avec le texte centré dessus, en plusieurs couleurs : vert (durabilité, temps payé), rouge (cassée, coffre ou sac plein, redstone), or (coffre, sac, charbon, trajet du wagonnet), violet (chariot).
-
-### 9.3 Les jauges (`Jauges.tsx`)
-
-Au marché et au coffre de la mine :
-- **☑️ Tout sélectionner** (gris, au-dessus) : toutes les jauges au maximum ;
-- une ligne par objet : mini-bloc, nom, **curseur** (0 → pile entière), compteur « *choisis*/*total* », valeur en $, bouton **Max** ;
-- au marché, une ligne à 0 est en pointillés (objet **gardé**, retenu par le jeu) ;
-- par défaut, tout est sélectionné sauf les objets gardés ; « Max » suit la pile même si elle grossit ;
-- après une vente ou un « Mettre dans le sac », les jauges reviennent à « tout ».
-
-Les quantités choisies (`src/choix.ts`) restent dans le composant (pas dans la sauvegarde) : pour chaque objet un nombre ou `'max'` ; `lotChoisi` fabrique le lot.
-
----
-
-## 10. Les fenêtres (popups)
-
-Toutes sur un **voile noir** qui couvre l'écran.
-
-| Fenêtre | Ouverture | Fermeture |
+| Fenêtre | Ouverte par | Contenu et boutons |
 |---|---|---|
-| Succès | 🏅 | **Fermer**, ou clic à côté |
-| Statistiques | 📊 Stats | **Fermer**, ou clic à côté |
-| Menu Bâtiments | 🏗️ | ✖, Échap, ou clic à côté |
-| Révélation d'une recrue | embauche avec le recruteur (Personnel) | clic n'importe où une fois dévoilée, ou le bouton |
-| Confirmation | licenciement (Personnel) | ✔/✖, **Échap**, ou clic à côté (= annuler) |
-| Trajets d'un rail (`FenetreTrajet`) | toucher un rail d'un trajet, la bulle « 🛤️ Automatiser », ou (30/10) des rails qui viennent de relier deux bâtiments | ✔ Valider, ✖ Annuler, Échap, clic à côté ; depuis le 30/10, quand on a touché un rail, en bas « Ce rail : ✏️ Déplacer ce rail / 🗑️ Retirer (+3 🔩 fer) » |
-| Rail seul (`FenetreRail`, 30/10) | toucher un rail qui ne relie encore rien | « ✏️ Déplacer ce rail » (il devient un fantôme à reposer), « 🗑️ Retirer (+3 🔩 fer) », ✖, Échap ou clic à côté |
-| **Bon retour, mineur !** (`FenetreAbsence`, 30/10) | à l'ouverture d'un monde, après plus de 30 s d'absence s'il s'est passé quelque chose | (23/10) en grand, **🛤️ Tes pousseurs ont vendu au marché : +*X* $** (l'argent des wagonnets pendant l'absence, `ventesWagonnets`), puis **⏱️ le temps d'absence max** (23/10) : « Temps d'absence max : 15 min : ton manager s'endort après. Réveille-le au Personnel avant de partir… » (le temps que le manager reste éveillé, jeu ouvert ou fermé, `absenceMax` ; en orange si on est parti plus longtemps ; « ton manager est au maximum » au dernier niveau), ou sans manager « Sans manager, tes mineurs s'arrêtent dès que leur salaire est fini… », puis **▶ Continuer** (animation et son d'une vente). L'ancien bouton « 💰 Tout récupérer ! » est retiré : l'argent est déjà dans la caisse. Plus de lignes « Les wagonnets ont fait *X* voyages » ni « En plus dans le coffre » (23/10) |
-| Boîtes du navigateur (`window.confirm`) | Recommencer à zéro, supprimer un monde, choix des mondes à la connexion | OK / Annuler |
+| **🏗️ Construire** (`MenuConstruction.tsx`, orange, grande) | 🏗️ Bâtiments, ou une tâche | ce qu'on a pour payer (💵, pierre, fer, redstone) ; une carte par bâtiment à construire (image, « Nouveau ! », description, **🏗️ Construire** + prix, ou 🔒 Mine *N* / ⭐ *N*) ; **Rails** et **Chemin de pavés** (**Poser** + prix par case ; rails 🔒 ⭐ 2) ; « Déjà construits » |
+| **🛤️ Automatiser / Trajet** (`FenetreTrajet.tsx`, bleue) | un rail, la bulle 🛤️, Automatiser / Régler | un onglet par trajet (s'il y en a plusieurs) ; le dessin départ → wagonnet → arrivée ; l'interrupteur « Automatisation activée / arrêtée » ; « Ce qu'il vend » : une tuile par minerai (vert = emporté, gris = laissé), **Tout** / **Rien** ; ou la réserve qu'il remplit (charbon, redstone) ; le **prochain voyage** (minerais, +… $, durée, $/min) ; qui le pousse. **Annuler** (blanc) et **✔ Valider** (jaune) : rien ne change avant de valider |
+| **🛤️ Rail** (`FenetreRail.tsx`, bleue, petite) | un rail qui ne relie rien | « Ce rail ne relie encore rien… » ; **✏️ Déplacer** (bleu), **🗑️ Retirer · +3 🔩** (rose) |
+| **💎 Boutique des gemmes** (`Boutique.tsx`, violette) | la case 💎, ou `ouvrirBoutique` | le solde ; « 📺 Regarde une publicité » **▶ +1 💎** ; les bonus (production × 2, ventes × 2, clics en or), leur durée et le temps qui reste ; le **Trésor** ; tous les boutons violets |
+| **Publicité** (`Publicite.tsx`) | une pub demandée | fausse pub plein écran : un compte à rebours de 30 s, **✖ Quitter (sans récompense)**, puis **🎁 Récupérer** (violet). Sur CrazyGames, leur vraie pub récompensée (`portail.ts`). La musique et les sons se taisent pendant la pub |
+| **🎁 Cadeau du jour** (`RecompensesQuotidiennes.tsx`, jaune) | 🎁 | les 7 jours (✔ pris, 🎁, 🏆 le 7e : le gros lot) avec 💎, 💵 et bonus ; **🎁 Ouvrir le cadeau du jour *n*** (jaune), ou « ✔ Cadeau pris ! Reviens demain… » |
+| **📊 Statistiques** (`Statistiques.tsx`, bleue, grande) | 📊 | 4 tuiles (argent gagné, blocs cassés, mine, temps de jeu) ; « D'où vient ton argent » (tes ventes, wagonnet, foreuse) ; tes blocs cassés à la main ; six petits chiffres |
+| **🏅 Succès** (`PanneauSucces`, jaune) | 🏅 | la jauge *n* / max, puis une tuile par succès (🔒 tant qu'il n'est pas obtenu) |
+| **💰 Mon bilan** (`FenetreBilan.tsx`, verte) | la case 💵 | le solde par minute avec une mascotte (🤑 Rentable !, ⭐, ⚠️, 💤), la part des gains qui part en salaires, deux colonnes (ce que tu gagnes, ce que tu paies) et un conseil |
+| **⚙️ Réglages** (`Reglages.tsx`, bleue, petite) | ⚙️ | 🌍 le monde ; **🔊 Son : oui/non**, **🎵 Musique : oui/non** (blancs) ; **Français / English** (la langue choisie en jaune) ; **❔ Comment jouer** et **🌍 Changer de monde** (bleus) ; **🔄 Recommencer à zéro** (rose, avec confirmation « Tout effacer ») |
+| **❔ Comment jouer** (`Aide.tsx`, bleue) | Réglages | les 4 étapes du jeu, et les gestes de la carte et du clavier |
+| **☀️ Bon retour, mineur !** (`FenetreAbsence.tsx`, jaune) | le retour sur un monde | ce que l'absence a rapporté (mineurs, mine, foreuse, wagonnets), le total, les salaires en retard, la durée couverte (manager) ; **📺 Doubler · +… $** (violet, une pub) et **Continuer** (jaune) |
+| **⭐ Niveau supérieur !** (`FeteNiveau.tsx`, jaune, petite) | un niveau du joueur gagné | elle attend que les autres fenêtres soient fermées ; l'étoile et le chiffre qui monte, des confettis, « 💎 Gemmes gagnées », chaque chose débloquée (« Nouveau ! »), ce qui attend au niveau suivant ; **🎉 Génial !** (ne se ferme pas pendant la première seconde) |
+| **☁️ Quels mondes garder ?** (`FenetreQuelsMondes.tsx`, bleue) | la connexion, quand compte et navigateur ont des mondes différents | **📲 Garder ceux d'ici** (blanc) ou **☁️ Prendre ceux du compte** (jaune) ; impossible à fermer sans choisir |
 
-L'écran de victoire, la fête du prestige et l'arbre de prestige n'existent plus (archivés dans `archives/prestige/`).
-
-### 10.1 Les succès
-
-« 🏅 Succès », « *n* / 20 succès débloqués. », une grille de cartes : l'emoji (ou 🔒), le titre, la description. Les succès obtenus sont bordés d'or. La liste est dans [mine-et-minage.md § 8](mine-et-minage.md#8-les-succès-srcjeusuccests).
-
-### 10.2 Les statistiques (`Statistiques.tsx`)
-
-- 4 tuiles : 💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ Mine (niveau *N*), ⏱️ Temps de jeu (« 45 s », « 12 min », « 1 h 05 min ») ;
-- « 💰 D'où vient ton argent » : une barre en 3 segments (💰 Toi (marché) `#c4841a`, 🛤️ Wagonnet `#8a5fd4`, ⚙️ Foreuse `#16958a`) et la légende avec montants et pourcentages ;
-- « 🧱 Tes blocs cassés en cliquant (*n* sortes différentes) » : une barre par sorte ;
-- une liste : blocs sortis tout seuls de la mine, blocs creusés par les mineurs, blocs forés par la foreuse, voyages de wagonnet, salaires payés, diamants trouvés.
-
-Il n'y a plus d'onglets (« Cette partie » / « Depuis le début » servaient au prestige).
-
-### 10.3 La confirmation (`Confirmation.tsx`)
-
-Une fenêtre dans le style du jeu : titre, explication, **✔ *Confirmer*** (vert, focus automatique, grisable) et **✖ Annuler** (rouge). Utilisée pour licencier un mineur (« Licencier *nom* ? », équipement, indemnités, « il te manque … » en rouge).
-
-### 10.4 La révélation d'une recrue (`RevelationRecrue.tsx`)
-
-Avec le recruteur (niveau 4 de la mine), chaque embauche est une surprise :
-1. **suspense (1,6 s)** : une carte « 🎩 ? Le recruteur cherche... » qui tremble et grossit, le fond passe par les 5 couleurs de rareté, roulement de tambour. Un clic dévoile tout de suite ;
-2. **révélation** : la carte se retourne (3D) : étoiles (1 à 5), « *Rareté* ! », le prénom, « ⚡ Rendement ×*n* » (ou un petit mot pour un commun), le salaire par 5 min ; rayons, confettis, flash pour légendaire et mythique ;
-3. bouton (arc-en-ciel) : **Au travail !** (commun), **Super !** (rare, épique), **Incroyable !** (légendaire, mythique).
+**Le tutoriel** (`Tutoriel.tsx`) : Pépite la taupe guide le joueur jusqu'au premier mineur embauché.
+- Au début, la fenêtre « Bienvenue, mineur ! » : les 4 étapes, **C'est parti !** (jaune) et **Passer le tutoriel** (blanc, avec confirmation).
+- Puis, à chaque étape, une petite carte (Pépite, des points de progression, la consigne, ✖ pour passer) en haut de l'écran, ou en bas si la cible est en haut. Le reste s'assombrit ; la cible est entourée d'un anneau doré, avec une flèche qui rebondit (« Touche ici ! », « Clique vite ! », « Vends ! »…). Étapes : ouvrir la mine, casser des blocs, tout vendre, construire le Personnel (Bâtiments → Personnel → toucher la carte → Construire ici), l'ouvrir, embaucher un mineur. Chaque étape réussie fait jaillir « ✔ Bravo ! ».
+- À la fin, « Bravo, ta mine tourne ! » et **À moi de jouer !** ; la liste des tâches prend le relais.
 
 ---
 
-## 11. Les notifications et retours visuels
+## 11. Les notifications
 
-### 11.1 Les toasts (`Toasts.tsx`)
+Une règle (`src/jeu/notifications.ts` et CLAUDE.md) : **un état** = une bulle sur le bâtiment ; **un conseil** = la liste des tâches ; **un événement** = un message. On ne signale pas la même chose à plusieurs endroits (les salaires, par exemple, ne sont plus qu'au-dessus du Personnel).
 
-- Sur ordinateur : sous la barre du haut, **toujours au même endroit** depuis le 30/10 (au milieu de la place à gauche d'un panneau, `left: calc((100% - 400px) / 2)`), panneau ouvert ou non : avant, ouvrir ou fermer un panneau les faisait sauter. Sur téléphone : **en haut au centre de l'écran**, plus petits, et seulement les **2 derniers**.
-- Au plus **5** à la fois, chacun **3,5 s** ; un message identique à un toast déjà affiché n'est pas répété.
-- Les messages viennent des actions du jeu (`src/jeu`), plus :
-  - **succès** : « *emoji* Succès : *titre* » (bordure et texte dorés, petite fanfare) ;
-  - **niveau gagné** (29/10) : « 🎉 Niveau *N* ! Débloqué : … » (doré comme un succès, avec la même petite fanfare) ;
-  - **bonus de combo** (30/10) : « 🍀 Combo ×10 : Fortune ! +25 % de fortune pendant 3 s » (voir [mine-et-minage.md](mine-et-minage.md)) ;
-  - **pourquoi on ne peut pas poser** un rail ou un chemin (30/10) : « 🔩 Plus de fer… » ;
-  - le **retour après une absence** n'est plus un toast depuis le 30/10 : c'est la fenêtre « Bon retour, mineur ! » (§ 10 ; 8 h rattrapées au plus, détail dans [sauvegarde-et-en-ligne.md § 1.8](sauvegarde-et-en-ligne.md#18-retour-au-jeu-après-une-absence)).
+**Les bulles** au-dessus des bâtiments : une médaille avec l'icône de la plus urgente, deux mots, et « +*n* » s'il y en a d'autres. Leur couleur dit la sorte (`src/village.css`) :
 
-### 11.2 Les autres signaux
+| Sorte | Couleur | Exemples |
+|---|---|---|
+| alerte | rouge | 😠 « Salaires ! » et 🛤️ « Pousseur ? » / « Sans trajet » (Personnel), 🚧 « Rails coupés » (les deux bâtiments), 🛒 « Plein ! » et 🔥 « Charbon ? » (foreuse), 🔴 « Redstone ? » (générateur), 🔧 « Réparer » (forgeron), 📦 « Plein ! » (mine) |
+| prêt | rose | (prévue dans le code, aucune bulle de cette sorte pour l'instant) |
+| nouveau | bleue | ✨ « Nouveau » (manager, recruteur débloqués ; part quand on ouvre le bâtiment) |
+| achat | verte | ⬆️ « Achetable », seulement pendant le tutoriel |
 
-| Signal | Où |
-|---|---|
-| éclats du bloc, minerai qui s'envole (« +1 ⚫ », « +2 💎 ×2 ! ») | panneau de la mine, à chaque clic |
-| grosse animation « +*X* $ » avec gerbe de pièces | une vente au marché ou du chariot |
-| petit « +*X* $ » en haut | un wagonnet a vendu au marché |
-| compteur d'argent qui défile et saute | bandeau |
-| case Mine (coffre) ou Sac qui clignote en rouge et tremble | bandeau, coffre ou sac plein |
-| mission avec une bordure verte qui pulse | on peut la faire tout de suite |
-| bulles de notification au-dessus des bâtiments | carte ([§ 6](#6-la-carte-du-village-vuevillagetsx)) |
-| pastille rouge sur 🏗️ Bâtiments, ruban « Nouveau ! » dans le menu | bâtiments débloqués ou constructibles |
-| losange doré en tirets sur l'emprise du bâtiment ouvert, losange blanc doré sous le bâtiment survolé | carte |
-| badge ⭐ violet qui saute, toast doré « 🎉 Niveau *N* ! » | bandeau, un niveau du joueur gagné |
-| mineurs qui tapent du pied devant le Personnel (😠) | carte, salaires impayés |
-| gerbe d'étincelles et « 👷 *Nom* arrive ! » au Personnel, puis halo doré et bulle « ✨ Nouveau ! » sur le mineur qui part vers la mine (6 s) | carte, une embauche (30/10) |
-| étiquette dorée au-dessus du bloc (🍀 Fortune, 💥 Double coup…) avec le temps qui reste, bloc qui brille | panneau de la mine, un bonus de combo (30/10) |
-| jauge de la pioche qui clignote, grossit et s'entoure de rouge | panneau de la mine et bandeau, pioche sous 15 % (30/10) |
-| ⚡ dans le bandeau, lueur jaune d'un wagonnet | au moins un trajet électrique |
+**Les messages** (`Toasts.tsx`) : en haut au milieu, **au plus 3 à la fois**, 3,5 s chacun ; jaunes pour un succès, crème sinon. Le même message n'est pas empilé deux fois (`usePartie.ts`).
+
+**Les gains** (`Gains.tsx`) : « +… $ » en grand au milieu avec une gerbe de pièces pour tes ventes, en petit pour le reste (le wagonnet qui vend).
+
+**Les autres signes** : une pastille sur un onglet ou un bouton, un bouton qui respire (`.btn-attention`), une case du bandeau qui rougit.
 
 ---
 
 ## 12. Les contrôles : clavier, souris, tactile
 
-### 12.1 Le clavier (`App.tsx`)
-
-Les touches sont ignorées quand on écrit dans un champ.
-
-| Touche | Effet |
+| Geste | Effet |
 |---|---|
-| ← ↑ → ↓ (maintenues) | marcher (5 cases/s) tant que la touche est appuyée. ↑ va vers le haut de l'écran, → vers la droite, etc. ; deux flèches ensemble = en diagonale. On glisse le long des bâtiments. Sans effet quand le menu Bâtiments est ouvert ou pendant qu'on pousse un wagonnet |
-| Espace | **sauter** (pour le plaisir) |
-| Échap | annuler ce qu'on pose (fantôme, pinceau), quitter le mode Modifier, fermer le menu Bâtiments ; dans une confirmation, annuler |
+| **Flèches** | marcher (on peut les combiner) ; pas dans le menu Construire ni en poussant un wagonnet |
+| **Espace** | sauter (pas quand une fenêtre est ouverte) |
+| **Échap** | ferme la fenêtre du dessus ; sinon, annule la pose en cours et quitte le mode Modifier |
+| **Entrée** | valide un champ (compte, nom d'un monde) |
+| **Clic / toucher** | ouvrir un bâtiment, choisir un rail, marcher (§ 6) ; placer le fantôme |
+| **Glisser** | déplacer la carte ; sur un fantôme déjà placé, le déplacer |
+| **Molette / pincer** | zoomer (environ 15 % par cran, autour du point visé) |
+| **Survol à la souris** | le fantôme suit la souris jusqu'au premier clic ; le bâtiment visé est entouré |
 
-Seul le premier appui compte (la répétition automatique est ignorée). Quand la fenêtre perd le focus, le hamster s'arrête. On **creuse en cliquant** sur le bloc du panneau de la mine (pas au clavier).
-
-Pendant la partie, le navigateur ne zoome pas la page (Ctrl + molette, Ctrl + / Ctrl −, pincement du pavé tactile ou de Safari sont bloqués) : seule la carte zoome.
-
-### 12.2 La souris
-
-- Cliquer un **bâtiment** (son image, son toit qui dépasse de ses cases, ou depuis le 29/10 **juste à côté** : à moins de 1,6 case de son bord, `MARGE_CLIC_BATIMENT`, `batimentProcheDe`) → le hamster y marche, puis le panneau s'ouvre (avant le 29/10, un clic sur le toit ou à côté faisait seulement marcher le joueur : la carte « capture » la souris, et le jeu ne voyait pas l'image du bâtiment ; il cherche maintenant ce qui est vraiment sous le point, `elementsFromPoint`). En mode ✏️ Modifier, toucher un chemin à côté d'un bâtiment choisit le chemin ; cliquer une **case** → il y marche ; cliquer une **bulle** → il va au bâtiment. **Glisser** déplace la carte, la **molette** zoome autour de la souris. En construction, le fantôme suit la souris.
-- Cliquer une **mission** : aller au bon bâtiment, ou ouvrir le menu Bâtiments.
-- Cliquer le **bloc de la mine** : casser un bloc.
-- Bulles (`title`) au survol sur de nombreux éléments ($/s, bulles de notification, cartes des mineurs…).
-
-### 12.3 Le tactile
-
-**Toucher** (appui court sans bouger) = un clic ; **glisser un doigt** = déplacer la carte (ou le fantôme, si on part de lui ; ou peindre en mode pinceau) ; **pincer à deux doigts** = zoomer. Le bloc de la mine se touche aussi vite qu'on veut (`touch-action: manipulation`, pas de reflet bleu). Les champs ont un texte de 16 px (pour que l'iPhone ne zoome pas).
-
-### 12.4 Le hamster au village (`useJoueurVillage.ts`)
-
-Ce n'est que de l'affichage (la logique du jeu ne sait pas où il est) :
-- position `x`, `y` en cases (à virgule) ; il apparaît **devant l'entrée de la mine** (au chargement, ou après « Recommencer à zéro ») ;
-- vitesse **5 cases/s** (`VITESSE_JOUEUR`) ;
-- `fleche(direction, appuyée)` pour le clavier ; `allerVers(case, quandArrive)` pour marcher tout seul en contournant les obstacles ; `sauter()` ;
-- il regarde à droite ou à gauche selon son mouvement, de face quand il vient vers nous et de dos quand il s'éloigne ;
-- si on pose un bâtiment sur lui, il ressort par la case libre la plus proche.
+Pendant la partie, le zoom du navigateur (Ctrl + molette, Ctrl +/−, gestes Safari) est bloqué : seul le zoom de la carte marche (`App.tsx`). Les champs de texte ne déclenchent pas les raccourcis.
 
 ---
 
-## 13. Téléphone ou ordinateur : la mise en page
+## 13. Téléphone ou ordinateur
 
-| Largeur | Ce qui change |
-|---|---|
-| partout | plein écran ; marges `env(safe-area-inset-*)` hors de l'encoche ; seule la carte zoome |
-| **> 860 px** (ordinateur) | le bandeau en haut à gauche et les boutons du coin dessous, les missions en haut à droite avec le panneau dessous (400 px, 350 px entre 861 et 1 180 px ; 480 px dès 1 100 px pour la mine, le Personnel, la foreuse et le générateur depuis le 30/10), les gros boutons ronds en bas, les toasts sous la barre du haut |
-| **≤ 860 px** (tablette, téléphone) | boutons du coin de 44 px sans texte ; bandeau en petites cases ; les missions restent en haut à droite (2 au plus, cachées quand un panneau est ouvert) ; boutons ronds plus petits ; le **panneau d'un bâtiment** monte du bas au-dessus des boutons (55 % de la hauteur au plus) ; le menu Bâtiments prend presque toute la hauteur ; toasts en haut (2 au plus) ; rappel du clavier caché |
-| **≤ 640 px** | statistiques : tuiles sur 2 colonnes |
-| sans survol (`hover: none`) | rappel des flèches caché, champs à 16 px |
+Le jeu se joue au pouce (`@media (max-width: 640px)` dans `theme.css` et `jeu.css`) :
 
-Accueil : sous 860 px « Comment jouer » passe sur 2 colonnes ; sous 760 px, le village du bandeau passe **en haut** et le texte dessous ; un joueur qui a déjà des mondes les voit juste sous le bandeau ; sous 480 px le logo rétrécit et le bouton Jouer prend toute la largeur.
+- **Les fenêtres montent du bas de l'écran** (comme une feuille), sur toute la largeur et au plus 88 % de la hauteur.
+- **Le bandeau** prend la largeur ; **les boutons du coin** passent en colonne à droite (40 px).
+- **Les tâches** passent en bas, au-dessus des gros boutons, en largeur, et ne montrent que la première.
+- **Les gros boutons** : 76 px (56 px pour Modifier).
+- **Les lignes d'amélioration** passent sur deux lignes, les boutons en pleine largeur.
+- **La mine** : le bloc au-dessus du coffre.
+- **Les onglets** : sous 480 px, à 4 onglets et plus, seulement l'icône des onglets non choisis.
+- Le rappel des flèches est caché sur écran tactile (`hover: none`).
+- Les marges tiennent compte de l'encoche et de la barre de l'iPhone (`safe-area-inset`).
+- Les règles de `theme.css` : boutons d'au moins 40 px (44 px en temps normal), texte d'au moins 12 px, aucune info seulement dans un `title=`.
 
 ---
 
 ## 14. Les couleurs des boutons
 
-Une couleur par **sorte d'action** (« Les couleurs des boutons » dans `src/index.css`, plus `bouton-payer` et `bouton-recruter` dans `src/personnel.css`, et `bouton-construire` dans `src/village.css`). Tous les boutons ont une bordure noire, un relief, s'éclaircissent au survol, s'enfoncent au clic, et passent à moitié transparents quand ils sont grisés.
+Une couleur par sorte d'action (`src/styles/theme.css`, « Les boutons ») :
 
-| Classe | Action | Couleur | Exemples |
+| Classe | Couleur | Pour… | Exemples |
 |---|---|---|---|
-| `bouton-creuser` (= `bouton-principal`) | jouer, valider l'essentiel | **or** | ▶ Jouer, Créer et jouer, Se connecter |
-| `bouton-stop` | annuler, supprimer | **rouge** | ✖ Annuler, 🗑️, 🗑️ Enlever, ✖ Arrêter (un trajet) |
-| `bouton-vendre` | vendre, confirmer | **vert** | 💰 Vendre la sélection, ✔ Confirmer, ✔ Construire ici / Poser, ✔ Terminé |
-| `bouton-acheter` | acheter | **bleu** | Débloquer / Racheter une pioche, sac, embaucher, 🏗️ Poser, 🖌️ Poser (chemin), 🛤️ Poser des rails, Dupliquer, Créer un compte, Installer |
-| `bouton-ameliorer` | améliorer (défaut des lignes d'amélioration) | **turquoise** | niveau de la mine, coffre, ascenseur, taille des wagonnets, forage, chariot, générateur, pioche d'un mineur, OK (renommer) |
-| `bouton-reparer` | réparer | **orange** | 🔧 Réparer |
-| `bouton-voyage` | se déplacer, emmener | **bois** | ⛏️ Mine, 🛤️ Pousser (un wagonnet) |
-| `bouton-construire` | construire | **brique** | 🏗️ Bâtiments |
-| `bouton-sac` | mettre dans le sac | **kaki** | 🎒 Mettre dans le sac (coffre, chariot) |
-| `bouton-charbon` | carburant | **anthracite** | +1, +10, Tout (foreuse et générateur) |
-| `bouton-payer` | payer les salaires | **citron vert** | panneau du Personnel |
-| `bouton-recruter` | recruter | **arc-en-ciel** | 🎲 Recruter, 🛤️ Embaucher pour ce trajet (un pousseur), bouton de la révélation |
-| `bouton-neutre` | le reste | **gris** | Équiper, Max, Tout sélectionner, Fermer, Renommer, ✏️ Modifier, ↔ Retourner, ⏸ Éteindre, départ et arrivée d'un pousseur (dorés une fois choisis) |
+| `.btn-vert` | vert `#8fe08f` | acheter, améliorer, construire, embaucher | Améliorer, Acheter, 🏗️ Construire, Embaucher, ✔ Construire ici, ✔ Poser ce rail, Dupliquer, ✨ Nouveau monde, Créer un compte, Entrer |
+| `.btn-jaune` | jaune `#f9d65a` | l'action principale d'un écran : jouer, continuer, vendre, valider | ▶ Jouer, 💰 Tout vendre, Payer, 🛒 Pousser, 🔥 Remplir, ✔ Valider, Terminé, Continuer, Go !, Se connecter |
+| `.btn-violet` / `.btn-gemmes` | violet `#b9a0f5` | les gemmes et les publicités | 💎 *n* à côté d'un prix, ▶ +1 💎, 📺 Doubler, 🎁 Récupérer |
+| `.btn-bleu` | ciel `#8cc8f5` | aller quelque part, voir, régler | Voir, ⚙️ Régler, 💵 Payer (va au Personnel), 👷 Agrandir, Prendre, ✏️ Déplacer, Comment jouer, Changer de monde |
+| `.btn-blanc` | blanc | neutre : annuler, fermer, retourner, options | ✖, Annuler, ↔ Retourner, ⋯, 📊 🏅 ⚙️, Son, Musique, Plus tard, Se déconnecter |
+| `.btn-rose` | rose `#f39aa8` | ce qui détruit ou coûte cher à défaire | Licencier, 🗑️ Supprimer, 🗑️ Enlever / Retirer, ↩ Retirer le dernier, Recommencer à zéro |
 
-Les anciennes classes `bouton-creuser-x10`, `bouton-enchanter`, `bouton-prestige` et `bouton-ascenseur` restent dans `index.css` mais ne servent plus.
+Les tailles : `.btn-petit` (40 px), normal (44 px), `.btn-grand` (56 px, police des titres), `.btn-large` (pleine largeur), `.btn-rond` (44 × 44). Un bouton grisé (`:disabled`) devient gris. Les gros boutons ronds du village (`.gros-rond`, `jeu.css`) suivent la même idée : jaune pour la mine, vert pour construire, blanc pour Modifier.
 
-Autres styles : `bouton-petit` (version compacte des panneaux), `bouton-rond` (les gros boutons ronds du bas), `bouton-mega` (le gros bouton doré de l'accueil), `bouton-mondes`, `bouton-fermer` (le ✖ rond des panneaux), `bouton-coin` (les boutons du coin), `hud-bouton` (🔊, 🎵), `lien` (texte souligné : Licencier, Plus tard, Se déconnecter, Actualiser), `onglet` (classement), et le **bloc de la mine** (`bloc-mine`), un bouton sans fond dessiné comme un bloc. Le focus clavier est entouré d'un trait doré.
+Les bandeaux des fenêtres ont aussi leur couleur : un par bâtiment (§ 8), bleu pour les réglages, l'aide, les statistiques et les trajets, violet pour la boutique, jaune pour les fêtes et le cadeau, rose pour une confirmation dangereuse.
 
-### Le tutoriel, plus clair (23/10)
+---
 
-- **Poser un bâtiment en deux temps** (marché, forgeron) : d'abord « Choisis sa place : touche la carte » (rien n'est assombri, pas de flèche sur le bouton) ; une fois la carte touchée, « Valide sa place » met en avant le bouton « Construire ici ».
-- **Voile plus léger** (0,28 au lieu de 0,55), et **aucun voile** quand la flèche montre un bâtiment de la carte : on voit le hamster faire le trajet. Les grandes fenêtres (bienvenue, fin) sont aussi moins sombres.
-- **Forgeron** : on commence la partie avec **10 $** d'argent de poche, de quoi le payer après la première vente. Avec assez de pierre mais pas assez d'argent, le tutoriel dit d'arrêter de creuser et d'aller vendre le charbon et le fer (en gardant la pierre).
+## 15. Les deux langues
 
-### Clarté (23/10)
+- **Français et anglais** (`src/jeu/langue.ts`). Tout texte affiché passe par `t('Texte en français', { trou: valeur })` ; la traduction anglaise est dans `src/jeu/traductions/en.ts`, avec la phrase française pour clé. Une traduction qui manque laisse le texte en français : rien ne casse (`npm run traductions` liste celles qui manquent).
+- **Au premier lancement**, la langue est celle du navigateur (français pour un navigateur en français, anglais pour tous les autres) ; ensuite, celle choisie la dernière fois (`src/langueNavigateur.ts`, réglage `idle-miner-langue`).
+- **On la change** sur l'accueil (les pilules du bandeau) ou dans les réglages (⚙️) : tout le jeu se redessine.
+- Les nombres suivent la langue (`nombre()` : « 1 250 » ou « 1,250 »).
 
-- **Cadenas** : le niveau du joueur qu'il faut s'affiche en pastille violette avec l'étoile de la barre du haut, « ⭐ 4 requis » (`BadgeXp` dans `Amelioration.tsx`), partout : améliorations, menu Bâtiments, pioches, manager, rappel du niveau de la mine. Le niveau de la mine s'écrit « mine niveau 2 ».
-- **Coffre plein**, panneau de la mine ouvert : « Tout mettre dans le sac » a un liseré doré qui respire doucement (`.bouton-sac-urgent`) ; la jauge au-dessus de la mine pulse à peine (+3 % en 2,2 s).
-- **Bonus de combo** : seulement l'étiquette au-dessus du bloc (plus de message au milieu de l'écran).
-- **Menu Bâtiments** : il ferme le panneau du bâtiment ouvert, l'aide, les réglages et la fenêtre des trajets.
-- **Niveau suivant de la mine** : seulement le nouveau minerai, le débit de la mine et les mineurs en plus ; un bâtiment (ou le recruteur, le manager) n'est annoncé que si le niveau du joueur le permet déjà.
-
+**La version CrazyGames** (`src/portail.ts`, `VITE_PORTAIL=crazygames npm run build`) : pas de bouton 👤 ni de classement sur l'accueil, pas de carte « Installer » ; les publicités sont celles de CrazyGames ; le jeu leur dit quand une fenêtre est ouverte (pause) et quand arrive un grand moment (un bâtiment construit, un niveau gagné).

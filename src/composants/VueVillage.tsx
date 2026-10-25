@@ -12,7 +12,6 @@ import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenera
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
-import { nombreAbrege } from '../nombres'
 import { distanceDepuisLeDepart, ligneDe, longueurTrajet, milieuDeLigne, trajetDuJoueur, trajetsAProposer } from '../jeu/wagonnet'
 import type { Notification } from '../jeu/notifications'
 import {
@@ -28,6 +27,7 @@ import {
 } from '../jeu/village'
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
+import { t } from '../jeu/langue'
 import {
   BoiteSvg,
   CaseChemin,
@@ -46,6 +46,7 @@ import { BOITES_PLAGE } from './plage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
 import {
   CALAGES,
+  POINTS_MINE,
   pointSurSprite,
   HAUTEUR_MONDE,
   LIMITES_CAMERA,
@@ -300,8 +301,8 @@ export function VueVillage({
 
   function dansLeFantome(c: Case): boolean {
     if (!fantome) return false
-    const t = tailleFantome(fantome)
-    return c.x >= fantome.x && c.y >= fantome.y && c.x < fantome.x + t && c.y < fantome.y + t
+    const taille = tailleFantome(fantome)
+    return c.x >= fantome.x && c.y >= fantome.y && c.x < fantome.x + taille && c.y < fantome.y + taille
   }
 
   function pointerDown(e: React.PointerEvent) {
@@ -573,13 +574,13 @@ export function VueVillage({
   if (personnel && etat.manager.embauche) {
     const p = devant(personnel, 1, 0.9)
     objets.push(
-      <Perso key="manager" qui="manager" x={p.x} y={p.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Manager</span>} />,
+      <Perso key="manager" qui="manager" x={p.x} y={p.y} sens={-1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{t('Manager')}</span>} />,
     )
   }
   if (personnel && etat.recruteur > 0) {
     const p = devant(personnel, 0, 0.9)
     objets.push(
-      <Perso key="recruteur" qui="recruteur" x={p.x} y={p.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">Recruteur</span>} />,
+      <Perso key="recruteur" qui="recruteur" x={p.x} y={p.y} sens={1} vue="face" marche={false} classe="perso-poste" etiquette={<span className="etiquette-perso etiquette-chef">{t('Recruteur')}</span>} />,
     )
   }
 
@@ -592,8 +593,8 @@ export function VueVillage({
   for (const b of village.batiments) {
     const liste = notifications[b.id]
     if (!liste || liste.length === 0 || (fantome?.type === 'batiment' && fantome.id === b.id)) continue
-    const t = BATIMENTS[b.id].taille
-    const centre = versEcran(b.x + t / 2, b.y + t / 2)
+    const taille = BATIMENTS[b.id].taille
+    const centre = versEcran(b.x + taille / 2, b.y + taille / 2)
     // (au-dessus de la mine, la bulle passe au-dessus de la jauge du coffre)
     const hauteur = b.id === 'puits' ? 112 : 96
     bulles.push(
@@ -635,14 +636,16 @@ export function VueVillage({
         key={`trajet-${liaison}`}
         className="bulle-notif bulle-trajet"
         style={{ left: p.x, top: p.y - 24 }}
-        title={`Automatiser le trajet ${BATIMENTS[info.depart].nom} → ${BATIMENTS[info.arrivee].nom}`}
+        title={t('Automatiser le trajet {depart} → {arrivee}', { depart: t(BATIMENTS[info.depart].nom), arrivee: t(BATIMENTS[info.arrivee].nom) })}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onOuvrirTrajet?.([liaison])}
       >
         <span className="bulle-medaille">
           <span className="bulle-icone">🛤️</span>
         </span>
-        <span className="bulle-court">{info.emoji} Automatiser</span>
+        <span className="bulle-court">
+          {info.emoji} {t('Automatiser')}
+        </span>
         <span className="bulle-etincelles">
           <i />
           <i />
@@ -652,78 +655,46 @@ export function VueVillage({
     )
   }
 
-  // La jauge du coffre de la mine, toujours au-dessus d'elle (27/10) : on voit d'un coup d'œil
-  // s'il faut le vider. Elle passe à l'orange puis au rouge (et clignote) quand il est plein.
-  const puits = batimentPose(village, 'puits')
-  if (puits) {
-    const t = BATIMENTS.puits.taille
-    const centre = versEcran(puits.x + t / 2, puits.y + t / 2)
-    const dans = nbDansCoffre(etat)
-    const capacite = capaciteCoffre(etat)
-    const part = Math.min(1, dans / Math.max(1, capacite))
-    const niveau = part >= 1 ? 'jauge-pleine' : part >= 0.75 ? 'jauge-haute' : ''
-    const mineursAuFond = mineursDansLaMine(etat)
-    bulles.push(
-      <div key="jauge-coffre" className={`jauge-coffre-mine ${niveau}`} style={{ left: centre.x, top: centre.y - 78 }} title={`Coffre de la mine : ${dans} / ${capacite}`}>
-        <span className="jauge-coffre-icone" aria-hidden="true">
-          📦
-        </span>
-        <span className="jauge-coffre-barre">
-          <i style={{ width: `${Math.round(part * 100)}%` }} />
-          <span className="jauge-coffre-texte">
-            {nombreAbrege(dans)} / {nombreAbrege(capacite)}
-          </span>
-        </span>
-        {/* Les mineurs au travail dans la mine (on ne les voit pas : ils sont au fond). */}
-        {mineursAuFond > 0 && (
-          <span className="jauge-coffre-mineurs" title={`${mineursAuFond} mineur(s) au travail dans la mine`}>
-            👷 {mineursAuFond}
-          </span>
-        )}
-      </div>,
-    )
-  }
+  // (25/10) Plus de jauge du coffre au-dessus de la mine : le bandeau du haut la montre déjà
+  // (📦 339 / 800), et la bulle « Plein ! » prévient quand il faut vendre.
 
   // Les mini-jauges des bâtiments qui travaillent (27/10) : la forge qui fait la pioche d'un
   // mineur, la foreuse qui fore son prochain bloc, le générateur et son courant qui reste.
   const auDessus = (id: IdBatiment) => {
     const b = batimentPose(village, id)
     if (!b) return null
-    const t = BATIMENTS[id].taille
-    const c = versEcran(b.x + t / 2, b.y + t / 2)
+    const taille = BATIMENTS[id].taille
+    const c = versEcran(b.x + taille / 2, b.y + taille / 2)
     return { x: c.x, y: c.y - 70 }
   }
   const forgeron = etat.employes.filter((m) => m.etape === 'forge').sort((a, b) => b.progression - a.progression)[0]
   const pForge = auDessus('forgeron')
   if (forgeron && pForge) {
-    bulles.push(<MiniJauge key="jauge-forge" x={pForge.x} y={pForge.y} texte={`🔨 Pioche de ${forgeron.nom}`} part={forgeron.progression / SECONDES_FORGE_EMPLOYE} secondes={SECONDES_FORGE_EMPLOYE - forgeron.progression} />)
+    bulles.push(<MiniJauge key="jauge-forge" x={pForge.x} y={pForge.y} texte={`🔨 ${t('Pioche de {nom}', { nom: forgeron.nom })}`} part={forgeron.progression / SECONDES_FORGE_EMPLOYE} secondes={SECONDES_FORGE_EMPLOYE - forgeron.progression} />)
   }
   const pForeuse = auDessus('foreuse')
   if (pForeuse && foreuseEnMarche(etat)) {
     const vitesse = vitesseForage(etat)
-    bulles.push(<MiniJauge key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte="⚙️ Forage" part={etat.foreuse.progression} secondes={(1 - etat.foreuse.progression) / Math.max(0.01, vitesse)} />)
+    bulles.push(<MiniJauge key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte={`⚙️ ${t('Forage')}`} part={etat.foreuse.progression} secondes={(1 - etat.foreuse.progression) / Math.max(0.01, vitesse)} />)
   }
   const pGenerateur = auDessus('generateur')
   if (pGenerateur && generateurEnMarche(etat)) {
     bulles.push(
-      <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte="⚡ Courant" part={etat.generateur.carburant / reserveMaxGenerateur(etat)} secondes={etat.generateur.carburant} />,
+      <MiniJauge key="jauge-generateur" x={pGenerateur.x} y={pGenerateur.y} texte={`⚡ ${t('Courant')}`} part={etat.generateur.carburant / reserveMaxGenerateur(etat)} secondes={etat.generateur.carburant} />,
     )
   }
 
   // Le sol : chemins, rails, grille, emprises.
   const sol = (
     <svg className="sol-village" viewBox={`0 0 ${LARGEUR_MONDE} ${HAUTEUR_MONDE}`} aria-hidden="true">
-      {/* Une ombre douce sous chaque bâtiment (la lumière vient d'en haut à gauche) : il est posé
-          sur le sol, pas collé dessus. Trois losanges transparents l'un sur l'autre, du plus grand
-          au plus petit : le bord est doux sans flou (un flou faisait ramer le jeu). */}
+      {/* Une ombre plate sous chaque bâtiment (25/10, le style cartoon : une ombre dure, d'un vert
+          un peu plus sombre que l'herbe), décalée vers la droite (la lumière vient d'en haut à
+          gauche) : il est posé sur le sol, pas collé dessus. */}
       {village.batiments
         .filter((b) => b.id !== 'puits')
-        .flatMap((b) =>
-          [0.6, 0, -0.6].map((marge) => {
-            const taille = BATIMENTS[b.id].taille - 0.5 + marge
-            return <polygon key={`ombre-${b.id}-${marge}`} className="ombre-batiment" points={losange(b.x + 0.6 - marge / 2, b.y + 0.2 - marge / 2, taille)} />
-          }),
-        )}
+        .map((b) => (
+          <polygon key={`ombre-${b.id}`} className="ombre-batiment" points={losange(b.x + 0.45, b.y + 0.1, BATIMENTS[b.id].taille)} />
+        ))}
       {(fantome || pinceau) && <GrilleConstruction />}
       {village.chemins.map((cle) => {
         const c = lireCle(cle)
@@ -864,7 +835,7 @@ export function VueVillage({
       onPointerUp={pointerUp}
       onPointerCancel={pointerUp}
       onWheel={molette}
-      aria-label="Le village vu du ciel"
+      aria-label={t('Le village vu du ciel')}
     >
       <div ref={mondeRef} className={`monde-village ${coucheRapide ? 'couche-rapide' : ''} ${plageVisible ? '' : 'plage-cachee'} ${zonesRails ? 'batiments-transparents' : ''}`}>
         <TerrainVillage />
@@ -925,7 +896,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
   const auTravail = mineursDansLaMine(etat) > 0 || charge > 0
   const enHaut = caisse.etape === 'haut'
   const calage = CALAGES.puits
-  const dessus = pointSurSprite(calage, x, y, 10, miroir, 640, 330)
+  const dessus = pointSurSprite(calage, x, y, 10, miroir, ...POINTS_MINE.dessus)
   return (
     <>
       <BoiteSvg x={x} y={y} taille={10} hauteur={130} classe="dessus-batiment" style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
@@ -935,7 +906,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
         <MiniJauge
           x={dessus.x}
           y={dessus.y}
-          texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? '📦 Coffre plein !' : `📦 Déchargement · ${charge}`}
+          texte={nbDansCoffre(etat) >= capaciteCoffre(etat) ? `📦 ${t('Coffre plein !')}` : `📦 ${t('Déchargement · {n}', { n: charge })}`}
           part={caisse.progression / secondesVidageAscenseur(etat)}
           secondes={secondesVidageAscenseur(etat) - caisse.progression}
         />
@@ -954,8 +925,8 @@ function mineursDansLaMine(etat: EtatJeu): number {
 function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; batimentActif: IdBatiment | null; fantome: Fantome | null }) {
   // En plaçant le générateur, on voit le rayon autour du fantôme.
   const place = fantome?.type === 'batiment' && fantome.id === 'generateur'
-  const t = BATIMENTS.generateur.taille
-  const centre = place ? { x: fantome.x + t / 2, y: fantome.y + t / 2 } : centreGenerateur(etat)
+  const taille = BATIMENTS.generateur.taille
+  const centre = place ? { x: fantome.x + taille / 2, y: fantome.y + taille / 2 } : centreGenerateur(etat)
   if (!centre) return null
   const enVue = place || batimentActif === 'generateur'
   const allume = generateurEnMarche(etat)

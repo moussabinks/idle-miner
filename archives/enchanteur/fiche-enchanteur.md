@@ -8,7 +8,7 @@
 - **Déblocage** : ouvert dès le prestige 0 (niveau I des trois enchantements), sans cadenas.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) l'enchanteur : le hamster marche jusqu'à sa porte, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre quand on arrive devant (à moins de 1,4 case de la porte).
-- **Dessin au village** : une image en vue isométrique (`public/images/batiments/enchanteur.webp`) : une tour violette avec un cristal qui flotte, un livre d'enchantement, des pioches et des gemmes. Elle brille en doré au survol et quand son panneau est ouvert.
+- **Dessin au village** : une image en vue isométrique (`enchanteur.webp`, supprimé le 25/10) : une tour violette avec un cristal qui flotte, un livre d'enchantement, des pioches et des gemmes. Elle brille en doré au survol et quand son panneau est ouvert.
 - **Description** (en haut du panneau) : « Enchante tes pioches avec lapis et émeraudes. »
 - **Bulles au-dessus** (`notifications.ts`) :
   - **💰 « Une amélioration est achetable ! »** quand au moins un enchantement est permis par le prestige et payable tout de suite ;
@@ -101,6 +101,6 @@ Total : 4 200 $, 18 lapis, 6 émeraudes.
 - `src/composants/Amelioration.tsx` : la ligne d'amélioration (carrés, cadenas, bouton).
 - `src/composants/MenuConstruction.tsx` : la carte de l'enchanteur dans le menu Bâtiments.
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille et ses bulles.
-- `public/images/batiments/enchanteur.webp` : le dessin de l'enchanteur.
+- (`enchanteur.webp`, le dessin de l'enchanteur, supprimé le 25/10.)
 - `src/composants/Hud.tsx` : la liste des enchantements dans le bandeau.
 - `src/index.css` : le bouton violet `bouton-enchanter`.

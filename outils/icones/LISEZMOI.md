@@ -2,15 +2,14 @@
 
 Le jeu écrit ses icônes avec des emojis (⛏️, 📦, 💰, ⚡...). Sur chaque téléphone ils étaient
 dessinés différemment (Apple, Google, Windows). Maintenant, une **police d'icônes** les remplace
-tous par nos propres dessins, dans le style cartoon du jeu : un gros contour brun foncé, une
-petite ombre, des couleurs franches avec un bord clair en haut à gauche, un bord foncé en bas à
-droite, et un reflet.
+tous par nos propres dessins, dans le style plat du jeu (25/10) : un gros contour d'encre
+(#2a2140), des couleurs franches à plat, et une seule ombre plate en bas à droite.
 
 C'est une police **en couleur** (format COLR, lu par tous les navigateurs) : il n'y a rien à
 changer dans le code. Partout où un emoji est écrit (boutons, panneaux, messages, bulles du
 village), le navigateur prend notre dessin. Elle est déclarée dans `src/icones.css` avec un
 `unicode-range` : elle ne sert qu'à ces caractères, le reste du texte garde sa police. Elle est
-en tête de `font-family` dans `src/index.css` et `src/accueil.css`.
+en tête de `font-family` dans `src/styles/theme.css`.
 
 ## Les fichiers
 

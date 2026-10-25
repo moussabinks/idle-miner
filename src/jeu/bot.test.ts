@@ -13,18 +13,18 @@ describe('bot de simulation (équilibrage)', () => {
     for (const partie of parties) expect(partie.etat.niveauMine).toBe(NIVEAU_MINE_MAX)
   })
 
-  // (29/10 : le jeu est plus lent, avec des prix plus chers et le niveau du joueur)
-  it('arrive au niveau 2 de la mine en 15 à 40 minutes (médiane)', () => {
+  // (25/10 : un début bien plus rapide, le jeu doit tourner tout seul en quelques minutes)
+  it('arrive au niveau 2 de la mine en 2 à 10 minutes (médiane)', () => {
     const m = mediane(parties.map((p) => minutes(p.tempsNiveaux[2])))
-    expect(m).toBeGreaterThanOrEqual(15)
-    expect(m).toBeLessThanOrEqual(40)
+    expect(m).toBeGreaterThanOrEqual(2)
+    expect(m).toBeLessThanOrEqual(10)
   })
 
-  // (30/10 : salaires, embauches et améliorations bien plus chers : il faut farmer)
-  it('arrive au niveau 5 en 6 h à 9 h (médiane)', () => {
+  // (25/10 : les paliers ; le bot joue mieux qu'un joueur, qui mettra plutôt 5 à 8 h)
+  it('arrive au niveau 5 en 3 h à 6 h (médiane)', () => {
     const m = mediane(parties.map((p) => minutes(p.temps)))
-    expect(m).toBeGreaterThanOrEqual(6 * 60)
-    expect(m).toBeLessThanOrEqual(9 * 60)
+    expect(m).toBeGreaterThanOrEqual(3 * 60)
+    expect(m).toBeLessThanOrEqual(6 * 60)
   })
 
   it('monte de niveau petit à petit : niveau 5 après 8 minutes, niveau 10 après 1 heure (médiane)', () => {
@@ -54,7 +54,7 @@ describe('bot de simulation (équilibrage)', () => {
     }
   })
 
-  it('va vendre à pied au marché au début', () => {
+  it('vend le coffre à la main au début (avant le wagonnet)', () => {
     for (const partie of parties) expect(partie.allersRetours).toBeGreaterThan(3)
   })
 })

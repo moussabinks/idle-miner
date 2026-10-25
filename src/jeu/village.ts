@@ -13,7 +13,6 @@ import {
   BATIMENTS,
   BATIMENTS_DES_RAILS,
   TAILLE_GRILLE,
-  VITESSE_MARCHE,
   type IdBatiment,
 } from './donnees'
 
@@ -368,11 +367,6 @@ export function cheminEntre(village: Village, de: IdBatiment, vers: IdBatiment):
 export function distanceEntre(village: Village, de: IdBatiment, vers: IdBatiment): number {
   const chemin = cheminEntre(village, de, vers)
   return chemin === null ? 0 : longueurChemin(chemin)
-}
-
-// Le temps pour aller à pied d'un bâtiment à un autre (en secondes).
-export function secondesAPied(village: Village, de: IdBatiment, vers: IdBatiment): number {
-  return distanceEntre(village, de, vers) / VITESSE_MARCHE
 }
 
 // ---------------------------------------------------------------------------

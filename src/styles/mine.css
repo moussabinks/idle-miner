@@ -1,0 +1,486 @@
+/* =========================================================================
+   La fenêtre de la mine (PanneauMine.tsx) : le bloc à cliquer à gauche, le coffre à droite.
+   Et les stocks à vendre (StockMinerais.tsx), aussi utilisés par la foreuse.
+   ========================================================================= */
+
+.panneau-mine {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mine-colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.mine-droite {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Une alerte (salaires, ascenseur trop petit...) : une bande rose. */
+.alerte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: #ffe1e5;
+  font-size: 0.92rem;
+}
+
+/* --- Le bloc à cliquer ------------------------------------------------------ */
+
+.zone-bloc {
+  overflow: hidden; /* (les éclats et les minerais qui s'envolent ne font pas déborder la fenêtre) */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 20px;
+  background: var(--ciel);
+}
+
+.zone-bloc-entete {
+  position: relative;
+  z-index: 2; /* les minerais qui s'envolent passent dessous */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.bloc-a-cliquer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 210px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bloc-a-cliquer:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.bloc-pousse {
+  display: block;
+  width: 190px;
+  height: 190px;
+  animation: bloc-pousse 0.16s ease-out;
+}
+
+/* Chaque nouveau bloc arrive en s'écrasant un peu, comme frappé. */
+@keyframes bloc-pousse {
+  0% {
+    transform: scale(0.82, 0.78) translateY(10px);
+  }
+  60% {
+    transform: scale(1.06, 0.96);
+  }
+}
+
+.bloc-a-cliquer:active .bloc-pousse {
+  transform: scale(0.94);
+}
+
+.bloc-dessin {
+  width: 100%;
+  height: 100%;
+}
+
+/* Un minerai rare brille. */
+.bloc-brille {
+  animation: bloc-brille 1.4s ease-in-out infinite;
+}
+
+@keyframes bloc-brille {
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
+/* Le combo en feu : le fond du bloc passe à l'orange. */
+.zone-en-feu {
+  background: var(--orange);
+}
+
+.bloc-plein {
+  position: absolute;
+  bottom: 6px;
+  padding: 4px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 12px;
+  background: var(--rose);
+  font-size: 0.9rem;
+}
+
+/* Les éclats du bloc qui casse. */
+.eclats {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  pointer-events: none;
+}
+
+.eclats i {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 3px;
+  background: #b4b8c6;
+  animation: eclat 0.55s ease-out forwards;
+}
+
+.eclats i:nth-child(1) {
+  --dx: -70px;
+  --dy: -50px;
+}
+.eclats i:nth-child(2) {
+  --dx: 70px;
+  --dy: -60px;
+}
+.eclats i:nth-child(3) {
+  --dx: -50px;
+  --dy: 40px;
+}
+.eclats i:nth-child(4) {
+  --dx: 60px;
+  --dy: 30px;
+}
+.eclats i:nth-child(5) {
+  --dx: 0;
+  --dy: -80px;
+}
+
+@keyframes eclat {
+  to {
+    transform: translate(var(--dx), var(--dy)) rotate(200deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Le minerai trouvé s'envole. */
+.trouvaille {
+  position: absolute;
+  top: 32%;
+  padding: 2px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  font-size: 1.05rem;
+  pointer-events: none;
+  animation: trouvaille 1.4s ease-out forwards;
+}
+
+.trouvaille-double {
+  background: var(--jaune);
+  font-size: 1.25rem;
+}
+
+@keyframes trouvaille {
+  0% {
+    transform: translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-70px);
+    opacity: 0;
+  }
+}
+
+.combo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--orange);
+  font-family: var(--police-titre);
+  font-size: 1.2rem;
+  animation: hud-saute 0.2s ease-out;
+}
+
+.combo-gros {
+  background: var(--rose-fonce);
+  color: var(--blanc);
+  font-size: 1.5rem;
+}
+
+.combo-barre {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combo-texte {
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.compteurs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.compteur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 12px;
+  background: var(--blanc);
+}
+
+.compteur strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+
+.compteur small {
+  font-size: 0.75rem;
+  color: var(--encre-douce);
+}
+
+.pioche {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pioche .jauge {
+  flex: 1;
+}
+
+.pioche-cassee {
+  animation: hud-alerte 1s ease-in-out infinite;
+}
+
+/* --- Le coffre, et tout stock à vendre (StockMinerais.tsx) ------------------ */
+
+.stock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-entete strong {
+  white-space: nowrap;
+}
+
+.stock-entete .jauge {
+  flex: 1;
+}
+
+.stock-gain {
+  padding: 0 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--blanc);
+  font-family: var(--police);
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+.stock-lignes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stock-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 14px;
+  background: var(--blanc);
+}
+
+.stock-ligne.vide {
+  opacity: 0.55;
+}
+
+.stock-ligne.gardee {
+  background: #e3f1fd;
+}
+
+.stock-icone {
+  font-size: 1.3rem;
+}
+
+.stock-nom {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.stock-nom small {
+  font-size: 0.75rem;
+  color: var(--encre-douce);
+}
+
+.stock-nombre {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.15rem;
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.stock-punaise {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.stock-vendre {
+  min-width: 78px;
+}
+
+/* --- Le niveau suivant de la mine ------------------------------------------ */
+
+.prochain-niveau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--ombre-petite);
+}
+
+.prochain-niveau-pret {
+  background: var(--vert);
+  animation: btn-respire 1.6s ease-in-out infinite;
+}
+
+.liste-ameliorations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.carte-palier {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.carte-palier h3 {
+  font-size: 1.2rem;
+}
+
+.carte-palier-prete {
+  background: #e3f7d9;
+}
+
+.gains-niveau {
+  margin: 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.9rem;
+}
+
+.gain-fort {
+  font-weight: 900;
+}
+
+/* --- La production ---------------------------------------------------------- */
+
+.production {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.production-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.production-total strong {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.8rem;
+}
+
+.production-mineurs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.production-mineurs li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-left: 8px solid var(--rarete, var(--gris));
+}
+
+.etiquette-rarete {
+  background: var(--rarete, var(--gris));
+}
+
+/* --- Téléphone : le bloc au-dessus du coffre -------------------------------- */
+
+@media (max-width: 640px) {
+  .mine-colonnes {
+    grid-template-columns: 1fr;
+  }
+
+  .bloc-a-cliquer {
+    height: 160px;
+  }
+
+  .bloc-pousse {
+    width: 150px;
+    height: 150px;
+  }
+}

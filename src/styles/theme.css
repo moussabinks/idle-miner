@@ -1,0 +1,818 @@
+/* =========================================================================
+   Le style du jeu (25/10, la grande mise à jour) : du cartoon tout simple et coloré, avec des
+   contours bleu nuit épais partout (boutons, fenêtres, pastilles, icônes), des ombres « dures »
+   (décalées, sans flou), du crème pour les fenêtres et des couleurs pastel franches.
+
+   Ce fichier contient les BRIQUES communes à tout le jeu : les couleurs, les polices, les
+   boutons, les fenêtres, les cartes, les onglets, les lignes d'amélioration, les prix, les
+   jauges, les pastilles et les messages. Les autres fichiers de src/styles/ ne font que les
+   placer (le bandeau du haut, les panneaux des bâtiments, l'accueil...).
+
+   Les règles d'or :
+     - une couleur par sorte de bouton (voir « Les boutons ») ;
+     - jamais de texte sous 12 px, jamais de bouton plus petit que 40 px de haut au doigt ;
+     - pas de dégradés ni de flous : des aplats, un contour, une ombre dure.
+   ========================================================================= */
+
+:root {
+  /* --- Les couleurs --- */
+  --encre: #2a2140; /* tous les contours et le texte */
+  --encre-douce: #5d5677; /* le texte secondaire */
+  --creme: #fdf6e3; /* le fond des fenêtres */
+  --creme-fonce: #f3e8c9; /* les lignes alternées, les zones en creux */
+  --blanc: #ffffff;
+  --ciel: #8cc8f5;
+  --ciel-fonce: #5ea9e6;
+  --jaune: #f9d65a;
+  --jaune-fonce: #e9b931;
+  --vert: #8fe08f;
+  --vert-fonce: #4fbf5f;
+  --vert-texte: #2f9a45;
+  --rose: #f39aa8;
+  --rose-fonce: #e2687c;
+  --rouge-texte: #d0384f;
+  --violet: #b9a0f5;
+  --violet-fonce: #8f6be8;
+  --orange: #f6a04d;
+  --gris: #d8d6e0;
+  --gris-fonce: #a9a6b8;
+  --nuit: #2a2140; /* les pastilles sombres du bandeau (comme « Portefeuille crypto ») */
+
+  /* --- Les traits --- */
+  --trait: 3px; /* le contour normal */
+  --trait-fin: 2px;
+  --arrondi: 16px;
+  --arrondi-petit: 10px;
+  --ombre: 0 4px 0 var(--encre); /* l'ombre dure sous les boutons et les cartes */
+  --ombre-petite: 0 3px 0 var(--encre);
+
+  /* --- Les polices --- */
+  --police-titre: 'Lilita One', 'Icones Mega', system-ui, sans-serif;
+  --police: 'Icones Mega', 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font-family: var(--police);
+  font-weight: 700;
+  color: var(--encre);
+  color-scheme: light;
+  background: #8fd36f;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #8fd36f;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  margin: 0;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+
+p {
+  margin: 0;
+}
+
+/* Sur écran tactile : pas de zoom au double appui, pas de reflet bleu au toucher. */
+button,
+a,
+input,
+label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Une touche du clavier, dessinée comme une petite touche. */
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.35em;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 6px;
+  background: var(--blanc);
+  box-shadow: 0 2px 0 var(--encre);
+  font: inherit;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.discret {
+  color: var(--encre-douce);
+  font-size: 0.9rem;
+}
+
+.texte-ok {
+  color: var(--vert-texte);
+}
+
+.texte-alerte {
+  color: var(--rouge-texte);
+}
+
+/* =========================================================================
+   Les boutons : une couleur par sorte d'action
+     .btn-vert   : acheter, améliorer, construire, embaucher (dépenser pour progresser) ;
+     .btn-jaune  : l'action principale d'un écran (jouer, continuer, vendre, valider) ;
+     .btn-violet : les gemmes et les publicités ;
+     .btn-bleu   : aller quelque part, voir, régler ;
+     .btn-blanc  : neutre (annuler, fermer, retourner, options) ;
+     .btn-rose   : ce qui détruit ou coûte cher à défaire (licencier, supprimer, recommencer).
+   ========================================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  min-height: 44px;
+  padding: 0.45em 1em;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: var(--blanc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
+  font-family: var(--police);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.1;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 var(--encre);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--encre);
+}
+
+.btn:disabled {
+  cursor: default;
+  background: var(--gris);
+  color: var(--encre-douce);
+  box-shadow: 0 3px 0 var(--gris-fonce);
+  border-color: var(--gris-fonce);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--ciel-fonce);
+  outline-offset: 2px;
+}
+
+.btn-vert {
+  background: var(--vert);
+}
+
+.btn-jaune {
+  background: var(--jaune);
+}
+
+.btn-violet {
+  background: var(--violet);
+}
+
+.btn-bleu {
+  background: var(--ciel);
+}
+
+.btn-blanc {
+  background: var(--blanc);
+}
+
+.btn-rose {
+  background: var(--rose);
+}
+
+/* Les tailles. */
+.btn-petit {
+  min-height: 40px;
+  padding: 0.3em 0.75em;
+  font-size: 0.9rem;
+  border-radius: 12px;
+}
+
+.btn-grand {
+  min-height: 56px;
+  padding: 0.5em 1.4em;
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.35rem;
+  border-radius: 18px;
+}
+
+.btn-large {
+  width: 100%;
+}
+
+/* Un bouton rond avec une seule icône (fermer ✖, réglages ⚙️...). */
+.btn-rond {
+  width: 44px;
+  height: 44px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.25rem;
+}
+
+/* Quelque chose attend sur ce bouton : il respire doucement. */
+.btn-attention {
+  animation: btn-respire 1.6s ease-in-out infinite;
+}
+
+@keyframes btn-respire {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+/* Le prix en gemmes, à côté d'un bouton d'achat : « 💎 12 ». */
+.btn-gemmes {
+  background: var(--violet);
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   Les pastilles et étiquettes
+   ========================================================================= */
+
+/* Une petite étiquette arrondie : « niv. 3 », « Rare », « MAX »... */
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.1em 0.55em;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--blanc);
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.etiquette-nuit {
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.etiquette-jaune {
+  background: var(--jaune);
+}
+
+.etiquette-vert {
+  background: var(--vert);
+}
+
+.etiquette-rose {
+  background: var(--rose);
+}
+
+.etiquette-bleu {
+  background: var(--ciel);
+}
+
+.etiquette-violet {
+  background: var(--violet);
+}
+
+/* Le petit rond rouge sur un bouton (« 2 », « ! »). */
+.pastille {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--rose-fonce);
+  color: var(--blanc);
+  font-size: 0.8rem;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+/* =========================================================================
+   Les fenêtres (Fenetre.tsx) : une seule façon de faire partout
+     - un voile (sombre pour les fenêtres importantes, transparent pour les bâtiments) ;
+     - une carte crème au gros contour, avec un bandeau de couleur en haut (le titre) ;
+     - un bouton ✖ rond en haut à droite ; Échap et un clic à côté ferment aussi.
+   Sur téléphone, elle monte du bas de l'écran (comme une feuille).
+   ========================================================================= */
+
+.voile {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(42 33 64 / 0.55);
+  animation: voile-arrive 0.15s ease-out;
+}
+
+.voile-clair {
+  background: rgb(42 33 64 / 0.12);
+}
+
+/* Au-dessus de tout (le tutoriel, une confirmation pendant une autre fenêtre). */
+.voile-devant {
+  z-index: 80;
+}
+
+@keyframes voile-arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+.fenetre {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 32px);
+  border: 4px solid var(--encre);
+  border-radius: 24px;
+  background: var(--creme);
+  box-shadow: 0 6px 0 var(--encre);
+  overflow: hidden;
+  animation: fenetre-arrive 0.18s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.fenetre-petite {
+  width: min(420px, 100%);
+}
+
+.fenetre-grande {
+  width: min(760px, 100%);
+}
+
+@keyframes fenetre-arrive {
+  from {
+    transform: scale(0.92) translateY(10px);
+    opacity: 0;
+  }
+}
+
+.fenetre-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 12px 18px;
+  border-bottom: 4px solid var(--encre);
+  background: var(--vert);
+}
+
+.fenetre-entete h2 {
+  flex: 1;
+  font-size: 1.6rem;
+  min-width: 0;
+}
+
+.fenetre-entete-jaune {
+  background: var(--jaune);
+}
+
+.fenetre-entete-bleu {
+  background: var(--ciel);
+}
+
+.fenetre-entete-rose {
+  background: var(--rose);
+}
+
+.fenetre-entete-violet {
+  background: var(--violet);
+}
+
+.fenetre-entete-orange {
+  background: var(--orange);
+}
+
+.fenetre-entete-creme {
+  background: var(--creme-fonce);
+}
+
+.fenetre-icone {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.fenetre-corps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Rien ne se fait écraser dans une fenêtre (une jauge seule devenait un trait) : elle défile. */
+.fenetre-corps > * {
+  flex-shrink: 0;
+}
+
+.fenetre-pied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  padding: 12px 16px 16px;
+  border-top: 3px dashed var(--creme-fonce);
+}
+
+@media (max-width: 640px) {
+  .voile {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .fenetre,
+  .fenetre-petite,
+  .fenetre-grande {
+    width: 100%;
+    max-height: 88dvh;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    box-shadow: none;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: fenetre-monte 0.2s ease-out;
+  }
+
+  .fenetre-entete h2 {
+    font-size: 1.35rem;
+  }
+
+  .fenetre-corps {
+    padding: 12px;
+  }
+}
+
+@keyframes fenetre-monte {
+  from {
+    transform: translateY(40%);
+  }
+}
+
+/* =========================================================================
+   Les cartes : une boîte blanche au contour fin, pour ranger une info ou une ligne
+   ========================================================================= */
+
+.carte {
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: var(--blanc);
+  padding: 12px 14px;
+}
+
+.carte-creme {
+  background: var(--creme-fonce);
+}
+
+/* Un titre de section dans une fenêtre : en couleur, en capitales espacées. */
+.titre-section {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--violet-fonce);
+}
+
+/* Une rangée de boutons. */
+.rangee {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rangee-centre {
+  justify-content: center;
+}
+
+/* =========================================================================
+   Les onglets (OngletsPanneau.tsx) : des pilules, l'onglet ouvert en jaune
+   ========================================================================= */
+
+.onglets {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme-fonce);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.onglet {
+  position: relative;
+  flex: 1;
+  min-height: 40px;
+  padding: 0.3em 0.9em;
+  border: var(--trait-fin) solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 900;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.onglet.actif {
+  border-color: var(--encre);
+  background: var(--jaune);
+  box-shadow: 0 2px 0 var(--encre);
+}
+
+.onglet .pastille {
+  top: -6px;
+  right: -2px;
+}
+
+/* Petit téléphone et 4 onglets ou plus : les onglets non choisis ne montrent que leur icône. */
+@media (max-width: 480px) {
+  .onglets-nombreux .onglet:not(.actif) {
+    flex: 0 0 auto;
+    padding-inline: 0.7em;
+  }
+
+  .onglets-nombreux .onglet:not(.actif) .onglet-texte {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   Une ligne d'amélioration (Amelioration.tsx), la même partout
+     [ nom  niv. 2 ]                        [ 💵 1 200 $ · 40 🔩 ] [ 💎 6 ]
+     [ ce que ça fait maintenant → après ]
+   ========================================================================= */
+
+.ligne-amelioration {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: var(--blanc);
+}
+
+.ligne-amelioration-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ligne-amelioration-nom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+.ligne-amelioration-effet {
+  color: var(--encre-douce);
+  font-size: 0.88rem;
+}
+
+.ligne-amelioration-effet strong {
+  color: var(--vert-texte);
+}
+
+.ligne-amelioration-boutons {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.ligne-amelioration-boutons .btn {
+  flex-direction: column;
+  gap: 2px;
+  min-width: 92px;
+  font-size: 0.9rem;
+}
+
+/* Le cadenas : ce qu'il faut pour débloquer le niveau suivant. */
+.verrou {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.35em 0.8em;
+  border: var(--trait-fin) dashed var(--encre-douce);
+  border-radius: 12px;
+  color: var(--encre-douce);
+  font-size: 0.85rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Les carrés des niveaux : pleins = achetés, vides = à acheter. */
+.niveaux {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.niveaux i {
+  width: 12px;
+  height: 12px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 4px;
+  background: var(--blanc);
+}
+
+.niveaux i.plein {
+  background: var(--jaune);
+}
+
+@media (max-width: 640px) {
+  .ligne-amelioration {
+    flex-wrap: wrap;
+  }
+
+  .ligne-amelioration-boutons {
+    width: 100%;
+  }
+
+  .ligne-amelioration-boutons .btn {
+    flex: 1;
+  }
+}
+
+/* =========================================================================
+   Les prix (PrixCout.tsx) : « 1 200 $ · 12/40 🔩 », en rouge ce qui manque
+   ========================================================================= */
+
+.prix {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.prix .manque {
+  color: var(--rouge-texte);
+}
+
+/* Dans un bouton désactivé, le manque reste lisible. */
+.btn:disabled .prix .manque {
+  color: var(--rouge-texte);
+}
+
+/* =========================================================================
+   Les jauges : un tube au contour fin, rempli d'une couleur
+   ========================================================================= */
+
+.jauge {
+  position: relative;
+  height: 14px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--blanc);
+  overflow: hidden;
+}
+
+.jauge > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--vert-fonce);
+  transition: width 0.25s;
+}
+
+.jauge-jaune > i {
+  background: var(--jaune-fonce);
+}
+
+.jauge-rose > i {
+  background: var(--rose-fonce);
+}
+
+.jauge-violet > i {
+  background: var(--violet-fonce);
+}
+
+.jauge-bleu > i {
+  background: var(--ciel-fonce);
+}
+
+/* Une jauge avec son texte par-dessus (« 120 / 300 »). */
+.jauge-texte {
+  height: 22px;
+}
+
+.jauge-texte > span {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 18px;
+}
+
+/* =========================================================================
+   Les messages (Toasts.tsx) : au plus 3, en haut au milieu
+   ========================================================================= */
+
+.messages {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.message {
+  padding: 8px 14px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: var(--creme);
+  box-shadow: var(--ombre-petite);
+  font-size: 0.95rem;
+  text-align: center;
+  animation: message-arrive 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.message-succes {
+  background: var(--jaune);
+}
+
+@keyframes message-arrive {
+  from {
+    transform: translateY(-10px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* =========================================================================
+   Les champs de texte
+   ========================================================================= */
+
+.champ {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4em 0.8em;
+  border: var(--trait) solid var(--encre);
+  border-radius: 12px;
+  background: var(--blanc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 16px; /* (Safari zoome sur un champ dont le texte fait moins de 16 px) */
+}
+
+.champ:focus {
+  outline: 3px solid var(--ciel);
+}
+
+/* Moins de mouvement si le joueur le demande. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

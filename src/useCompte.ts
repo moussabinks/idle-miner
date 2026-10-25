@@ -11,7 +11,6 @@ import {
   erreurMotDePasse,
   erreurPseudo,
   lireDerniereSynchro,
-  type SauvegardeEnLigne,
 } from './jeu/compte'
 import { meilleurScore } from './jeu/classement'
 import { exporterTout, importerTout, mondesDeLaCopie, type SauvegardeComplete } from './jeu/sauvegarde'
@@ -25,6 +24,7 @@ import {
   telechargerMondes,
   type Joueur,
 } from './enLigne'
+import { stockage } from './stockage'
 
 // Toutes les 20 s, on envoie les mondes s'ils ont changé.
 const INTERVALLE_ENVOI = 20_000 // ms
@@ -38,16 +38,13 @@ export type StatutCompte =
   | 'a-jour'
   | 'hors-ligne' // le serveur ne répond pas : on réessaie tout seul
 
-// La question posée quand le compte et le navigateur ont chacun des mondes différents.
-function questionRemplacer(enLigne: SauvegardeEnLigne): string {
-  const nb = mondesDeLaCopie(enLigne.parties).length
-  const date = new Date(enLigne.envoyeeLe).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
-  return (
-    `Ton compte a déjà ${nb} monde${nb > 1 ? 's' : ''} en ligne (sauvegardé${nb > 1 ? 's' : ''} le ${date}), ` +
-    `et ce navigateur a d'autres mondes.\n\n` +
-    `OK : jouer avec les mondes de ton compte (ceux de ce navigateur seront remplacés).\n` +
-    `Annuler : garder les mondes de ce navigateur (ils remplaceront ceux de ton compte).`
-  )
+// La question posée quand le compte et le navigateur ont chacun des mondes différents (25/10 : une
+// fenêtre du jeu, FenetreQuelsMondes.tsx, au lieu de la boîte grise du navigateur, qui est bloquée
+// quand le jeu est dans la page d'un autre site).
+export type QuestionMondes = {
+  nombre: number // le nombre de mondes du compte
+  envoyeeLe: number // la date de leur sauvegarde en ligne
+  repondre: (recuperer: boolean) => void // true : prendre ceux du compte ; false : garder ceux du navigateur
 }
 
 export function useCompte() {
@@ -56,6 +53,8 @@ export function useCompte() {
   const [envoyeeLe, setEnvoyeeLe] = useState<number | null>(null)
   // Change quand les mondes du navigateur ont été remplacés par ceux du compte (l'accueil se redessine).
   const [versionMondes, setVersionMondes] = useState(0)
+  // La question en attente de réponse (null : pas de question).
+  const [question, setQuestion] = useState<QuestionMondes | null>(null)
 
   // Le texte des mondes au dernier échange : on n'envoie rien tant qu'il n'a pas changé.
   const dernierEnvoi = useRef('')
@@ -84,14 +83,14 @@ export function useCompte() {
   }, [])
 
   const envoyer = useCallback(async (j: Joueur) => {
-    const parties = exporterTout(window.localStorage)
+    const parties = exporterTout(stockage)
     const texte = JSON.stringify(parties)
     if (texte === dernierEnvoi.current) return
     let date: number
     try {
       date = await envoyerMondes(j, parties)
       dernierEnvoi.current = texte
-      ecrireDerniereSynchro(window.localStorage, { joueur: j.id, envoyeeLe: date })
+      ecrireDerniereSynchro(stockage, { joueur: j.id, envoyeeLe: date })
     } catch {
       setStatut('hors-ligne')
       return
@@ -110,15 +109,22 @@ export function useCompte() {
       setStatut('synchro')
       try {
         const enLigne = await telechargerMondes(j)
-        const local = exporterTout(window.localStorage)
-        let choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(window.localStorage))
-        if (choix === 'demander' && enLigne) choix = window.confirm(questionRemplacer(enLigne)) ? 'recuperer' : 'envoyer'
+        const local = exporterTout(stockage)
+        let choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(stockage))
+        if (choix === 'demander' && enLigne) {
+          // On attend que le joueur réponde dans la fenêtre.
+          const recuperer = await new Promise<boolean>((repondre) =>
+            setQuestion({ nombre: mondesDeLaCopie(enLigne.parties).length, envoyeeLe: enLigne.envoyeeLe, repondre }),
+          )
+          setQuestion(null)
+          choix = recuperer ? 'recuperer' : 'envoyer'
+        }
         pret.current = true
 
         if (choix === 'recuperer' && enLigne) {
-          importerTout(window.localStorage, enLigne.parties)
-          dernierEnvoi.current = JSON.stringify(exporterTout(window.localStorage))
-          ecrireDerniereSynchro(window.localStorage, { joueur: j.id, envoyeeLe: enLigne.envoyeeLe })
+          importerTout(stockage, enLigne.parties)
+          dernierEnvoi.current = JSON.stringify(exporterTout(stockage))
+          ecrireDerniereSynchro(stockage, { joueur: j.id, envoyeeLe: enLigne.envoyeeLe })
           setEnvoyeeLe(enLigne.envoyeeLe)
           setVersionMondes((v) => v + 1)
           setStatut('a-jour')
@@ -206,7 +212,7 @@ export function useCompte() {
     if (joueur && pret.current && !occupe.current) void envoyer(joueur)
   }, [joueur, envoyer])
 
-  return { joueur, statut, envoyeeLe, versionMondes, connecter, deconnecter, envoyerMaintenant }
+  return { joueur, statut, envoyeeLe, versionMondes, question, connecter, deconnecter, envoyerMaintenant }
 }
 
 export type Compte = ReturnType<typeof useCompte>

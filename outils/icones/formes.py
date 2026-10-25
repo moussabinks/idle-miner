@@ -199,18 +199,19 @@ def eclat(cx, cy, r, epais=None):
 
 
 def relief(forme, base, clair, fonce, d=4.5, brillance=None):
-    """Une forme « en relief », comme dans les jeux mobiles : sa couleur, un bord clair en haut à
-    gauche, un bord foncé en bas à droite (et un petit reflet blanc si on veut)."""
+    """Une forme à plat, dans le style cartoon du jeu (25/10) : sa couleur et une seule ombre plus
+    foncée en bas à droite (plus de bord clair : le style est plus simple). « clair » est gardé
+    pour ne pas changer tous les dessins."""
+    del clair
     couches = [
         (base, forme),
         (fonce, moins(forme, deplace(forme, -d * 0.6, -d))),
-        (clair, moins(forme, deplace(forme, d * 0.45, d * 0.75))),
     ]
     if brillance:
         couches.append(brillance)
     return couches
 
 
-def reflet(forme, cx, cy, rx, ry, angle=-30, couleur='#ffffffb0'):
+def reflet(forme, cx, cy, rx, ry, angle=-30, couleur='#ffffff80'):
     """Un petit reflet blanc (une ellipse), coupé au bord de la forme."""
     return (couleur, inter(forme, ellipse(cx, cy, rx, ry, angle)))

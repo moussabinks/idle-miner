@@ -1,0 +1,63 @@
+// Fabrique tous les dessins du village en SVG (25/10, le style cartoon) : les bâtiments, la mine
+// et ses calques, les caisses de l'ascenseur, l'icône des rails et les arbres.
+//
+// Lancer depuis la racine du projet :   node outils/art/fabriquer.mjs
+//
+// Le script écrit les fichiers dans public/images/, puis affiche les « calages » (la taille de
+// chaque dessin et les coins de son emprise au sol) : s'ils ont changé, les recopier dans
+// src/composants/iso.ts (CALAGES), src/composants/arbres.ts (ARBRES) et, pour la mine, dans
+// src/composants/DessinsVillage.tsx (POINTS_MINE, CAISSE...). Voir LISEZMOI.md.
+
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { employes, forgeron, foreuse, generateur, iconeRails, marche } from './batiments.mjs'
+import { mine } from './mine.mjs'
+import { arbres } from './arbres.mjs'
+
+const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const BATIMENTS = join(RACINE, 'public/images/batiments')
+const ARBRES = join(RACINE, 'public/images/village/arbres')
+
+function ecrire(dossier, nom, contenu) {
+  mkdirSync(dossier, { recursive: true })
+  writeFileSync(join(dossier, nom), contenu)
+}
+
+// Les bâtiments de 5 × 5 cases.
+const calages = {}
+for (const [id, fichier, dessiner] of [
+  ['marche', 'marche.svg', marche],
+  ['forgeron', 'forgeron.svg', forgeron],
+  ['employes', 'employes.svg', employes],
+  ['foreuse', 'foreuse.svg', foreuse],
+  ['generateur', 'generateur.svg', generateur],
+]) {
+  const toile = dessiner()
+  ecrire(BATIMENTS, fichier, toile.svg())
+  calages[id] = toile.calage()
+}
+ecrire(BATIMENTS, 'rails.svg', iconeRails().svg())
+
+// La mine, son calque de devant et les caisses de l'ascenseur.
+const laMine = mine()
+ecrire(BATIMENTS, 'mine.svg', laMine.fond.svg())
+ecrire(BATIMENTS, 'mine-devant.svg', laMine.devant.svg())
+laMine.caisses.forEach((svg, n) => ecrire(BATIMENTS, `caisse-ascenseur-${n}.svg`, svg))
+calages.puits = laMine.fond.calage()
+
+// Les arbres.
+const lesArbres = arbres()
+for (const arbre of lesArbres) ecrire(ARBRES, `${arbre.nom}.svg`, arbre.svg)
+
+// Les chiffres à recopier dans le jeu.
+console.log('CALAGES (src/composants/iso.ts) :')
+for (const [id, c] of Object.entries(calages)) {
+  console.log(`  ${id}: { largeur: ${c.largeur}, hauteur: ${c.hauteur}, gauche: { x: ${c.gauche.x}, y: ${c.gauche.y} }, bas: { x: ${c.bas.x}, y: ${c.bas.y} }, droite: { x: ${c.droite.x}, y: ${c.droite.y} } },`)
+}
+console.log('\nLA MINE (src/composants/DessinsVillage.tsx) :')
+console.log(JSON.stringify(laMine.points, null, 1).replace(/\n\s*/g, ' '))
+console.log('\nARBRES (src/composants/arbres.ts) :')
+for (const a of lesArbres) {
+  console.log(`  { nom: '${a.nom}', largeur: ${a.largeur}, hauteur: ${a.hauteur}, pied: { x: ${a.pied.x}, y: ${a.pied.y} }, largeurPied: ${a.largeurPied} },`)
+}

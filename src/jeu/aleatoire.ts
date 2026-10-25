@@ -20,11 +20,6 @@ export function aleatoireAvecGraine(graine: number): Aleatoire {
   }
 }
 
-// Entier au hasard entre min et max (les deux inclus), comme randint en Python.
-export function entierEntre(aleatoire: Aleatoire, min: number, max: number): number {
-  return min + Math.floor(aleatoire() * (max - min + 1))
-}
-
 // Choisit un élément au hasard dans une liste.
 export function choisir<T>(aleatoire: Aleatoire, liste: T[]): T {
   return liste[Math.floor(aleatoire() * liste.length)]

@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { BLOCS, LISTE_BLOCS, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_MINE, NIVEAU_MINE_MAX, PIOCHES } from './donnees'
+import {
+  BLOCS,
+  LISTE_BLOCS,
+  NIVEAUX_ASCENSEUR,
+  NIVEAUX_CHARIOT,
+  NIVEAUX_CHARIOT_POUSSEUR,
+  NIVEAUX_COFFRE,
+  NIVEAUX_EMPLOYE,
+  NIVEAUX_FORAGE,
+  NIVEAUX_GENERATEUR,
+  NIVEAUX_MANAGER,
+  NIVEAUX_MINE,
+  NIVEAUX_PAR_AMELIORATION,
+  NIVEAUX_POUSSEUR,
+  NIVEAUX_RECRUTEUR,
+  NIVEAU_MINE_MAX,
+  PIOCHES,
+  TAILLE_GRILLE,
+} from './donnees'
 
 describe('les données du jeu', () => {
   it('7 blocs : plus de lapis ni de netherite', () => {
@@ -24,11 +42,21 @@ describe('les données du jeu', () => {
     expect(NIVEAUX_MINE[4].poids.pierre ?? 0).toBeLessThan(NIVEAUX_MINE[0].poids.pierre ?? 0)
   })
 
-  it('le générateur commence avec un rayon de 15 cases, et grandit', () => {
-    expect(NIVEAUX_GENERATEUR[0].rayon).toBe(15)
+  it('le générateur commence avec un rayon de 12 cases, et grandit sans dépasser la clairière (25/10)', () => {
+    expect(NIVEAUX_GENERATEUR[0].rayon).toBe(12)
     NIVEAUX_GENERATEUR.forEach((n, i) => {
       if (i > 0) expect(n.rayon).toBeGreaterThan(NIVEAUX_GENERATEUR[i - 1].rayon)
     })
+    expect(NIVEAUX_GENERATEUR[NIVEAUX_GENERATEUR.length - 1].rayon).toBeLessThanOrEqual(TAILLE_GRILLE)
+  })
+
+  it('(25/10) toutes les améliorations ont 5 niveaux, comme la mine ; les chefs en ont 3', () => {
+    expect(NIVEAUX_PAR_AMELIORATION).toBe(NIVEAU_MINE_MAX)
+    for (const liste of [NIVEAUX_COFFRE, PIOCHES, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT]) {
+      expect(liste).toHaveLength(NIVEAUX_PAR_AMELIORATION)
+    }
+    expect(NIVEAUX_MANAGER).toHaveLength(3)
+    expect(NIVEAUX_RECRUTEUR).toHaveLength(3)
   })
 
   it('l’équipement des mineurs se paie seulement en argent', () => {
@@ -38,20 +66,21 @@ describe('les données du jeu', () => {
     }
   })
 
-  // (23/10 bis) L'ascenseur doit suivre les mineurs : avant, son niveau 4 sur 6 suffisait même à
-  // la fin du jeu.
-  it("l'ascenseur a 10 niveaux, de plus en plus chers, et son débit suit les mineurs", () => {
+  // (23/10 bis) L'ascenseur doit suivre les mineurs. (25/10) 5 niveaux : son débit double à peu
+  // près à chaque palier (1 ; 2,1 ; 4,3 ; 8,6 ; 17 blocs/s).
+  it("l'ascenseur a 5 niveaux, de plus en plus chers, et son débit suit les mineurs", () => {
     const debit = (n: (typeof NIVEAUX_ASCENSEUR)[number]) => n.capacite / (2 * n.secondesTrajet + n.secondesChargement + n.secondesVidage)
-    expect(NIVEAUX_ASCENSEUR).toHaveLength(10)
+    expect(NIVEAUX_ASCENSEUR).toHaveLength(5)
     NIVEAUX_ASCENSEUR.forEach((n, i) => {
       expect(n.niveau).toBe(i + 1)
       if (i === 0) return
-      expect(debit(n)).toBeGreaterThan(debit(NIVEAUX_ASCENSEUR[i - 1]) * 1.3)
+      expect(debit(n)).toBeGreaterThan(debit(NIVEAUX_ASCENSEUR[i - 1]) * 1.8)
       expect(n.cout.argent ?? 0).toBeGreaterThan(NIVEAUX_ASCENSEUR[i - 1].cout.argent ?? 0)
     })
-    // 5 mineurs communs avec une pioche en diamant : le niveau 4 ne suit plus du tout.
+    // 5 mineurs communs avec une pioche en diamant : le niveau 3 ne suit plus du tout, le 5 suit
+    // avec de la marge (pour les mineurs rares).
     const cinqMineursDiamant = 5 * NIVEAUX_EMPLOYE[NIVEAUX_EMPLOYE.length - 1].vitesse
-    expect(debit(NIVEAUX_ASCENSEUR[3])).toBeLessThan(cinqMineursDiamant / 1.5)
-    expect(debit(NIVEAUX_ASCENSEUR[9])).toBeGreaterThan(cinqMineursDiamant * 3)
+    expect(debit(NIVEAUX_ASCENSEUR[2])).toBeLessThan(cinqMineursDiamant / 1.5)
+    expect(debit(NIVEAUX_ASCENSEUR[4])).toBeGreaterThan(cinqMineursDiamant * 2)
   })
 })

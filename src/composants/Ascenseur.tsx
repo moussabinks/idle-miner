@@ -1,30 +1,36 @@
 // L'ascenseur de la mine : sa caisse fait des allers-retours sans cesse (23/10) et remonte ce que
 // les mineurs creusent. L'améliorer : une caisse plus grande et plus rapide, chargée et vidée plus
-// vite.
-// Le bloc pour l'améliorer est dans le panneau de la mine.
+// vite. La ligne d'amélioration est dans le panneau de la mine.
 
 import { NIVEAUX_ASCENSEUR } from '../jeu/donnees'
-import { ameliorerAscenseur, capaciteAscenseur, debitAscenseur, niveauAscenseur, peutPayer, prochainNiveauAscenseur, secondesChargementAscenseur, secondesVidageAscenseur, type EtatJeu } from '../jeu/mineur'
-import type { Action } from '../usePartie'
-import { Amelioration } from './Amelioration'
+import { nombre, t } from '../jeu/langue'
+import { ameliorerAscenseur, debitAscenseur, peutPayer, prochainNiveauAscenseur, type EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
+import { Amelioration } from './Amelioration'
 
-const parSeconde = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
-
-export function AmeliorationAscenseur({ etat, jouer }: { etat: EtatJeu; jouer: (action: Action) => void }) {
-  const niveau = niveauAscenseur(etat)
+export function AmeliorationAscenseur({ etat }: { etat: EtatJeu }) {
   const prochain = prochainNiveauAscenseur(etat)
   const avecProchain = prochain ? { ...etat, ascenseur: { ...etat.ascenseur, niveau: prochain.niveau } } : null
+  const debit = (e: EtatJeu) => nombre(debitAscenseur(e), 1)
   return (
     <Amelioration
-      etat={etat}
-      actuel={`Caisse de ${capaciteAscenseur(etat)} blocs · charge ${parSeconde(secondesChargementAscenseur(etat))} s, vide ${parSeconde(secondesVidageAscenseur(etat))} s · ${parSeconde(debitAscenseur(etat))} bloc/s au plus`}
+      icone="🛗"
+      titre={t('Ascenseur')}
       niveau={etat.ascenseur.niveau}
       niveauMax={NIVEAUX_ASCENSEUR.length}
-      suivant={prochain && avecProchain && { cout: prochain.cout, texte: niveau ? `⬆ ${prochain.capacite} blocs · charge ${parSeconde(prochain.secondesChargement)} s, vide ${parSeconde(prochain.secondesVidage)} s · ${parSeconde(debitAscenseur(avecProchain))} bloc/s` : '🔨 Construire' }}
+      effet={
+        avecProchain ? (
+          <>
+            {t('{n} blocs/s', { n: debit(etat) })} → <strong>{t('{n} blocs/s', { n: debit(avecProchain) })}</strong>
+          </>
+        ) : (
+          t('{n} blocs/s', { n: debit(etat) })
+        )
+      }
+      cout={prochain?.cout ?? null}
       verrou={verrou(etat, 'ascenseur', etat.ascenseur.niveau)}
-      possible={prochain !== null && peutPayer(etat, prochain.cout)}
-      onAmeliorer={() => jouer(ameliorerAscenseur)}
+      possible={prochain !== null && verrou(etat, 'ascenseur', etat.ascenseur.niveau) === null && peutPayer(etat, prochain.cout)}
+      action={ameliorerAscenseur}
     />
   )
 }

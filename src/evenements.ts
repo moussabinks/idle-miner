@@ -15,7 +15,7 @@ export type Evenement =
   | { type: 'piocheCassee' }
   | { type: 'wagonnet'; montant: number } // le wagonnet a vendu le coffre au marché
   | { type: 'electricite' } // on a mis de la redstone dans le générateur
-  | { type: 'amelioration' } // un niveau de plus : mine, coffre, ascenseur, foreuse, mineur, sac, pioche...
+  | { type: 'amelioration' } // un niveau de plus : mine, coffre, ascenseur, foreuse, mineur, pioche...
 
 // Un seul nombre qui grandit à chaque amélioration achetée (pour la repérer facilement).
 function totalNiveaux(etat: EtatJeu): number {
@@ -26,7 +26,6 @@ function totalNiveaux(etat: EtatJeu): number {
     etat.foreuse.niveauVitesse +
     etat.foreuse.niveauChariot +
     etat.generateur.niveau +
-    etat.niveauSac +
     etat.meilleure +
     etat.recruteur
   for (const mineur of etat.employes) total += mineur.niveau + (mineur.chariot ?? 0)

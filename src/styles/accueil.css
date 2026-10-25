@@ -1,0 +1,700 @@
+/* =========================================================================
+   L'écran d'accueil (Accueil.tsx, 25/10) : clair et coloré, comme une carte du monde.
+     - au fond, le village vivant (SceneAccueil) ;
+     - en haut, un bandeau crème au gros contour : le logo, la phrase, la langue, le compte ;
+     - à gauche, la carte « Jouer » et les mondes ; à droite, le classement ;
+     - en bas au milieu, le jeu en 4 étapes.
+   Sur téléphone, tout s'empile (on fait défiler) : le village en haut, puis les cartes.
+   On se sert des briques de theme.css (.btn, .carte, .etiquette, .champ, .onglets...).
+   La place des panneaux (420 px à gauche, 400 px à droite) est aussi dans Accueil.tsx
+   (MARGES_...) : le village se met au milieu de ce qui reste. Les changer ensemble.
+   ========================================================================= */
+
+.accueil {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #8fd36f;
+  color: var(--encre);
+}
+
+/* Le village, derrière tout. */
+.accueil-scene {
+  position: absolute;
+  inset: 0;
+}
+
+.scene-accueil {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* --- Le bandeau du haut ----------------------------------------------------------------- */
+
+.accueil-bandeau {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(1240px, calc(100% - 32px));
+  padding: 10px 14px;
+  translate: -50% 0;
+  border: 4px solid var(--encre);
+  border-radius: 22px;
+  background: var(--creme);
+  box-shadow: 0 6px 0 var(--encre);
+  animation: accueil-tombe 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+/* L'icône du jeu : une pioche dans un rond jaune. */
+.accueil-logo-icone {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  box-shadow: var(--ombre-petite);
+  font-size: 1.7rem;
+}
+
+.accueil-logo-texte {
+  flex: 1;
+  min-width: 0;
+}
+
+.accueil-logo {
+  font-family: var(--police-titre);
+  font-size: 2rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.accueil-accroche {
+  margin-top: 2px;
+  color: var(--encre-douce);
+  font-size: 0.92rem;
+}
+
+.accueil-bandeau-droite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.accueil-langues {
+  flex: none;
+}
+
+.accueil-langues .onglet {
+  flex: none;
+  font-size: 0.85rem;
+}
+
+.accueil-compte {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Les deux panneaux ------------------------------------------------------------------ */
+
+.accueil-contenu {
+  position: absolute;
+  top: 108px;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.accueil-panneau {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 100%;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 4px solid var(--encre);
+  border-radius: 24px;
+  background: var(--creme);
+  box-shadow: 0 6px 0 var(--encre);
+  pointer-events: auto;
+  animation: accueil-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+}
+
+.accueil-jouer {
+  width: 390px;
+}
+
+.accueil-classement {
+  width: 370px;
+  animation-delay: 0.08s;
+}
+
+@keyframes accueil-tombe {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes accueil-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+/* Le gros bouton Jouer : le nom du monde en petit dessous. */
+.accueil-gros-bouton {
+  flex-direction: column;
+  gap: 2px;
+  min-height: 72px;
+  font-size: 1.7rem;
+}
+
+.accueil-gros-bouton small {
+  font-family: var(--police);
+  font-size: 0.85rem;
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accueil-titre-mondes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.accueil-titre-mondes .etiquette {
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--encre);
+}
+
+/* --- Les mondes : une ligne blanche au contour, comme le classement ---------------------- */
+
+.accueil-mondes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accueil-monde {
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: var(--blanc);
+}
+
+/* Le dernier monde joué : surligné en jaune pâle (comme « toi » au classement). */
+.accueil-monde-dernier {
+  background: #fff4c7;
+}
+
+.accueil-monde-haut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.accueil-monde-pastille {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--couleur-monde);
+  font-size: 1.3rem;
+}
+
+.accueil-monde-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accueil-monde-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.02rem;
+}
+
+.accueil-monde-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  color: var(--encre-douce);
+  font-size: 0.8rem;
+}
+
+.accueil-monde-date {
+  font-weight: 700;
+}
+
+.accueil-monde .btn-rond {
+  width: 40px;
+  height: 40px;
+  font-size: 1.05rem;
+}
+
+.accueil-monde-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+
+.accueil-monde-renommer,
+.accueil-nouveau {
+  display: flex;
+  gap: 6px;
+}
+
+.accueil-monde-renommer .champ {
+  min-height: 40px;
+  padding: 0.2em 0.6em;
+}
+
+/* --- Le jeu en 4 étapes ------------------------------------------------------------------ */
+
+/* Pour un nouveau joueur, dans la carte Jouer : une étape par ligne. */
+.accueil-etapes-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accueil-etapes-liste li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: var(--blanc);
+}
+
+.accueil-etapes-liste li > span:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.accueil-etapes-liste .discret {
+  font-size: 0.85rem;
+}
+
+.accueil-etape-numero {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-family: var(--police-titre);
+}
+
+.accueil-etape-icone {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* Pour les autres, en bas au milieu : une seule pilule posée sur le village,
+   « ⛏️ Creuse › 👷 Embauche › 🛤️ Automatise › 💎 Descends ». */
+.accueil-etapes {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 14px;
+  translate: -50% 0;
+  border: var(--trait) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  box-shadow: var(--ombre-petite);
+  list-style: none;
+  white-space: nowrap;
+  animation: accueil-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) 0.15s backwards;
+}
+
+.accueil-etapes li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.88rem;
+}
+
+.accueil-etapes li + li::before {
+  content: '›';
+  margin: 0 4px;
+  color: var(--encre-douce);
+  font-family: var(--police-titre);
+  font-size: 1.3rem;
+}
+
+.accueil-etapes .accueil-etape-icone {
+  font-size: 1.15rem;
+}
+
+/* --- Le classement ------------------------------------------------------------------------ */
+
+.classement {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.classement-haut {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.classement-haut h2 {
+  flex: 1;
+  font-size: 1.45rem;
+}
+
+.classement-actualiser {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.classement-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classement-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 10px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 12px;
+  background: var(--blanc);
+  animation: accueil-arrive 0.3s ease-out backwards;
+}
+
+.classement-moi {
+  background: #fff4c7;
+}
+
+.classement-rang {
+  flex-shrink: 0;
+  width: 40px;
+  font-family: var(--police-titre);
+  font-size: 1.05rem;
+  color: var(--encre-douce);
+}
+
+.classement-podium .classement-rang {
+  font-size: 1.3rem;
+}
+
+.classement-pseudo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 900;
+}
+
+.classement-valeur {
+  color: var(--vert-texte);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.classement-message {
+  padding: 14px;
+  border: var(--trait-fin) dashed var(--encre-douce);
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Ta place, en bas : une ligne crème foncée. */
+.classement-toi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: var(--creme-fonce);
+}
+
+.classement-toi-rang {
+  flex-shrink: 0;
+  min-width: 48px;
+  padding: 2px 6px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 10px;
+  background: var(--nuit);
+  color: var(--jaune);
+  font-family: var(--police-titre);
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.classement-toi-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+/* --- Le compte (dans sa fenêtre) ---------------------------------------------------------- */
+
+.compte {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compte-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.compte-boutons .btn {
+  flex: 1;
+}
+
+.compte-connecte {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.compte-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--ciel);
+  font-size: 1.5rem;
+}
+
+.compte-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compte-texte strong {
+  font-size: 1.15rem;
+}
+
+.compte-note {
+  font-size: 0.8rem;
+}
+
+/* --- L'installation (PWA) ----------------------------------------------------------------- */
+
+.installation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.installation-icone {
+  flex-shrink: 0;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 12px;
+}
+
+.installation-texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.installation-texte .discret {
+  font-size: 0.8rem;
+}
+
+.installation-boutons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- La version, tout en bas à droite ----------------------------------------------------- */
+
+.accueil-version {
+  position: absolute;
+  right: 16px;
+  bottom: 2px;
+  z-index: 1;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgb(253 246 227 / 0.85);
+  color: var(--encre-douce);
+  font-size: 0.7rem;
+}
+
+/* Le navigateur refuse la sauvegarde : un avertissement rose, avant le numéro de version. */
+.accueil-sans-sauvegarde {
+  color: var(--rose-fonce);
+}
+
+/* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */
+
+@media (max-width: 1240px) {
+  .accueil-etapes {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .accueil-accroche {
+    display: none;
+  }
+
+  .accueil-jouer {
+    width: 360px;
+  }
+
+  .accueil-classement {
+    width: 330px;
+  }
+}
+
+/* --- Le téléphone : tout s'empile, on fait défiler ---------------------------------------- */
+
+@media (max-width: 760px) {
+  .accueil {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Le village en haut (il défile avec la page). */
+  .accueil-scene {
+    bottom: auto;
+    height: 430px;
+  }
+
+  .accueil-bandeau {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    margin: 10px 10px 0;
+    padding: 8px 10px;
+    translate: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-radius: 18px;
+  }
+
+  .accueil-logo-icone {
+    width: 42px;
+    height: 42px;
+    font-size: 1.35rem;
+  }
+
+  .accueil-logo {
+    font-size: 1.55rem;
+  }
+
+  .accueil-accroche {
+    display: block;
+    font-size: 0.78rem;
+  }
+
+  .accueil-bandeau-droite {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .accueil-compte {
+    max-width: 50%;
+  }
+
+  .accueil-contenu {
+    position: relative;
+    inset: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-top: 230px;
+    padding: 0 10px calc(36px + env(safe-area-inset-bottom));
+  }
+
+  .accueil-panneau,
+  .accueil-jouer,
+  .accueil-classement {
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .accueil-version {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    display: table;
+    margin: -24px auto 12px;
+  }
+}

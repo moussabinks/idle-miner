@@ -39,12 +39,13 @@ import {
   vitesseTrajet,
 } from './wagonnet'
 
-// Une partie avec le marché en (28, 40) et une ligne de 5 rails de la mine au marché.
+// Une partie avec le marché en (18, 30) et une ligne de 5 rails de la mine au marché.
+// (25/10 : la clairière fait 40 × 40 cases, la mine est en 15, 15)
 function partie(): EtatJeu {
   const etat = partieDeTest(aleatoireAvecGraine(1))
-  etat.village.batiments.push({ id: 'marche', x: 28, y: 40, miroir: false })
-  etat.inventaire = { fer: 15 }
-  for (let y = 35; y <= 39; y++) poserSol(etat, 'rail', 30, y)
+  etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false })
+  etat.coffre.contenu = { fer: 15 }
+  for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
   return etat
 }
 
@@ -84,7 +85,7 @@ describe('les trajets des wagonnets', () => {
   it('les trajets proposés au départ : seulement vers les bâtiments construits', () => {
     const etat = partie()
     expect(liaisonsDepuis(etat, 'puits')).toEqual(['mine-marche'])
-    etat.village.batiments.push({ id: 'foreuse', x: 40, y: 28, miroir: false })
+    etat.village.batiments.push({ id: 'foreuse', x: 30, y: 18, miroir: false })
     expect(liaisonsDepuis(etat, 'puits')).toEqual(['mine-marche', 'mine-foreuse'])
     expect(liaisonsDepuis(etat, 'foreuse')).toEqual(['foreuse-marche'])
   })
@@ -93,7 +94,7 @@ describe('les trajets des wagonnets', () => {
     const etat = partieAvecTrajet()
     etat.coffre.contenu = { fer: 10 }
     expect(peutPousser(etat, 'mine-marche')).toBe(true)
-    retirerSol(etat, 'rail', 30, 37)
+    retirerSol(etat, 'rail', 20, 27)
     expect(peutPousser(etat, 'mine-marche')).toBe(false)
   })
 
@@ -129,10 +130,10 @@ describe('les trajets des wagonnets', () => {
     expect(trajet.chargement).toEqual({})
   })
 
-  it('il laisse dans le coffre les objets gardés au marché', () => {
+  it('il laisse dans le coffre les objets « tout garder »', () => {
     const etat = partieAvecTrajet()
     etat.coffre.contenu = { fer: 10 }
-    etat.nonAVendre = ['fer']
+    reglerWagonnet(etat, 'fer', 'tout-garder')
     expect(peutPousser(etat, 'mine-marche')).toBe(false)
   })
 
@@ -158,19 +159,21 @@ describe('les trajets des wagonnets', () => {
     expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[0].places)
     expect(secondesArret(etat, 'mine-marche')).toBe(1)
     etat.argent = 100_000
-    etat.xp = 1_000_000
-    etat.inventaire = { fer: 10_000 }
+    etat.niveauMine = 2 // (25/10) le niveau 2 du pousseur attend le palier 2 de la mine
+    etat.coffre.contenu = { fer: 10_000 }
     const trajet = trajetDe(etat, 'mine-marche')!
     const vitesseAvant = vitesseTrajet(etat, trajet, etat.employes[0].nom)
     expect(ameliorerEmploye(etat, 0)[0]).toContain('costaud')
     expect(vitesseTrajet(etat, trajet, etat.employes[0].nom)).toBeCloseTo(vitesseAvant * NIVEAUX_POUSSEUR[1].vitesse)
     expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[0].places) // la vitesse ne change pas le chariot
-    // (23/10, bis) le prix du chariot monte avec le niveau du joueur
+    // (25/10) le prix du chariot ne dépend plus du niveau du joueur
     const cout = coutChariotPousseur(etat, etat.employes[0])!
-    expect(cout.materiaux.fer).toBeGreaterThan(NIVEAUX_CHARIOT_POUSSEUR[1].cout.materiaux.fer ?? 0)
+    expect(cout).toEqual(NIVEAUX_CHARIOT_POUSSEUR[1].cout)
     expect(agrandirChariot(etat, 0)[0]).toContain(String(NIVEAUX_CHARIOT_POUSSEUR[1].places))
     expect(capaciteTrajet(etat, 'mine-marche')).toBe(NIVEAUX_CHARIOT_POUSSEUR[1].places)
-    expect(etat.inventaire.fer ?? 0).toBe(10_000 - (cout.materiaux.fer ?? 0))
+    expect(etat.coffre.contenu.fer ?? 0).toBe(10_000 - (cout.materiaux.fer ?? 0))
+    // Le niveau 3 du chariot attend le palier 3.
+    expect(agrandirChariot(etat, 0)).toEqual([])
     expect(secondesArret(etat, 'mine-marche')).toBe(1)
   })
 
@@ -189,7 +192,7 @@ describe('les trajets des wagonnets', () => {
     const trajet = trajetDe(etat, 'mine-marche')!
     const aLaMain = secondesAllerRetour(etat, 'mine-marche', 3)
     etat.niveauMine = 2
-    etat.village.batiments.push({ id: 'generateur', x: 35, y: 37, miroir: false })
+    etat.village.batiments.push({ id: 'generateur', x: 25, y: 27, miroir: false })
     etat.generateur.carburant = 1000
     etat.coffre.contenu = { fer: 5 }
     expect(trajetElectrique(etat, 'mine-marche')).toBe(true)
@@ -209,10 +212,10 @@ describe('les trajets des wagonnets', () => {
     const etat = partieAvecTrajet()
     etat.coffre.contenu = { fer: 10 }
     pousserTrajet(etat, 'mine-marche')
-    retirerSol(etat, 'rail', 30, 37)
+    retirerSol(etat, 'rail', 20, 27)
     avancerWagonnets(etat, 1)
     expect(trajetDe(etat, 'mine-marche')?.etape).toBe('quai')
-    expect(etat.coffre.contenu).toEqual({ fer: 10 })
+    expect(etat.coffre.contenu).toEqual({ fer: 13 }) // (25/10) + les 3 fer du rail retiré, rendus dans le coffre
   })
 
   it('arrêter un trajet : le wagonnet disparaît, son chargement revient', () => {
@@ -228,9 +231,9 @@ describe('les trajets des wagonnets', () => {
     const etat = partie()
     etat.niveauMine = 2
     // La foreuse à droite de la mine, reliée par 3 rails.
-    etat.village.batiments.push({ id: 'foreuse', x: 38, y: 28, miroir: false })
-    etat.inventaire = { fer: 9 }
-    for (let x = 35; x <= 37; x++) poserSol(etat, 'rail', x, 30)
+    etat.village.batiments.push({ id: 'foreuse', x: 28, y: 18, miroir: false })
+    etat.coffre.contenu = { fer: 9 }
+    for (let x = 25; x <= 27; x++) poserSol(etat, 'rail', x, 20)
     expect(ligneDe(etat, 'mine-foreuse')).toHaveLength(3)
     creerTrajet(etat, 'mine-foreuse')
     creerTrajet(etat, 'mine-marche')
@@ -253,9 +256,9 @@ describe('les trajets des wagonnets', () => {
     const etat = partie()
     etat.niveauMine = 2
     // La foreuse collée au marché, avec un rail entre les deux.
-    etat.village.batiments.push({ id: 'foreuse', x: 34, y: 40, miroir: false })
-    etat.inventaire = { fer: 3 }
-    poserSol(etat, 'rail', 33, 42)
+    etat.village.batiments.push({ id: 'foreuse', x: 24, y: 30, miroir: false })
+    etat.coffre.contenu = { fer: 3 }
+    poserSol(etat, 'rail', 23, 32)
     creerTrajet(etat, 'foreuse-marche')
     etat.foreuse.chariot = { fer: 10 }
     pousserTrajet(etat, 'foreuse-marche')
@@ -267,13 +270,13 @@ describe('les trajets des wagonnets', () => {
   it('plusieurs wagonnets roulent en même temps sur les mêmes rails', () => {
     const etat = partie()
     etat.niveauMine = 2
-    etat.village.batiments.push({ id: 'generateur', x: 35, y: 37, miroir: false })
+    etat.village.batiments.push({ id: 'generateur', x: 25, y: 27, miroir: false })
     // Un rail de plus, collé au générateur, branché sur la ligne du marché.
-    etat.inventaire = { fer: 12 }
-    poserSol(etat, 'rail', 31, 38)
-    poserSol(etat, 'rail', 32, 38)
-    poserSol(etat, 'rail', 33, 38)
-    poserSol(etat, 'rail', 34, 38)
+    etat.coffre.contenu = { fer: 12 }
+    poserSol(etat, 'rail', 21, 28)
+    poserSol(etat, 'rail', 22, 28)
+    poserSol(etat, 'rail', 23, 28)
+    poserSol(etat, 'rail', 24, 28)
     expect(ligneDe(etat, 'mine-generateur')).not.toBeNull()
     creerTrajet(etat, 'mine-marche')
     creerTrajet(etat, 'mine-generateur')
@@ -290,9 +293,9 @@ describe('les trajets des wagonnets', () => {
   it('sans pousseur vers le générateur, la redstone part au marché (23/10)', () => {
     const etat = partie()
     etat.niveauMine = 2
-    etat.village.batiments.push({ id: 'generateur', x: 35, y: 37, miroir: false })
-    etat.inventaire = { fer: 12 }
-    for (let x = 31; x <= 34; x++) poserSol(etat, 'rail', x, 38)
+    etat.village.batiments.push({ id: 'generateur', x: 25, y: 27, miroir: false })
+    etat.coffre.contenu = { fer: 12 }
+    for (let x = 21; x <= 24; x++) poserSol(etat, 'rail', x, 28)
     creerTrajet(etat, 'mine-marche')
     creerTrajet(etat, 'mine-generateur') // le trajet existe, mais personne ne le pousse
     ajouterPousseur(etat, 'mine-marche')
@@ -306,7 +309,7 @@ describe('les trajets des wagonnets', () => {
 describe('pas de boucle dans les rails', () => {
   it('on ne peut pas fermer un carré de 2 × 2', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    etat.inventaire = { fer: 30 }
+    etat.coffre.contenu = { fer: 30 }
     poserSol(etat, 'rail', 5, 5)
     poserSol(etat, 'rail', 6, 5)
     poserSol(etat, 'rail', 6, 6)
@@ -318,7 +321,7 @@ describe('pas de boucle dans les rails', () => {
 
   it('ni une grande boucle, même en déplaçant un rail', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
-    etat.inventaire = { fer: 60 }
+    etat.coffre.contenu = { fer: 60 }
     // Un U : (5,5) → (8,5) → (8,7) → (5,7), il manque (5,6).
     for (const [x, y] of [[5, 5], [6, 5], [7, 5], [8, 5], [8, 6], [8, 7], [7, 7], [6, 7], [5, 7]]) poserSol(etat, 'rail', x, y)
     poserSol(etat, 'rail', 12, 12)
@@ -334,9 +337,9 @@ describe('la fenêtre des trajets (27/10)', () => {
   it('des rails qui relient deux bâtiments proposent un trajet, au milieu de la ligne', () => {
     const etat = partie()
     expect(trajetsAProposer(etat)).toEqual(['mine-marche'])
-    expect(milieuDeLigne(ligneDe(etat, 'mine-marche')!)).toEqual({ x: 30, y: 37 })
+    expect(milieuDeLigne(ligneDe(etat, 'mine-marche')!)).toEqual({ x: 20, y: 27 })
     // Toucher un rail de la ligne ouvre son trajet ; une case sans rail, rien.
-    expect(liaisonsSurLaCase(etat, 30, 36)).toEqual(['mine-marche'])
+    expect(liaisonsSurLaCase(etat, 20, 26)).toEqual(['mine-marche'])
     expect(liaisonsSurLaCase(etat, 10, 10)).toEqual([])
     reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
     expect(trajetsAProposer(etat)).toEqual([])
@@ -371,13 +374,13 @@ describe('les minerais du wagonnet, au panneau de la mine (27/10)', () => {
     expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ pierre: 2 })
   })
 
-  it('le renvoyer enlève aussi le « gardé » du marché', () => {
+  it('le recocher le renvoie au marché', () => {
     const etat = partieAvecTrajet()
-    etat.nonAVendre = ['fer']
-    expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(false)
+    envoyerObjet(etat, 'mine-marche', 'fer', false)
+    expect(exclusAffiches(etat, 'mine-marche')).toEqual(['fer'])
     envoyerObjet(etat, 'mine-marche', 'fer', true)
-    expect(etat.nonAVendre).toEqual([])
     expect(objetEnvoye(etat, 'mine-marche', 'fer')).toBe(true)
+    expect(exclusAffiches(etat, 'mine-marche')).toEqual([])
   })
 })
 
@@ -395,13 +398,14 @@ describe('l’aperçu d’un trajet, dans la fenêtre des rails (27/10)', () => 
     expect(sansPierre.objets).toEqual([['fer', 5], ['charbon', 10]])
   })
 
-  it('valider envoie aussi les objets « gardés » au marché', () => {
+  it('(25/10) avec le bonus « ventes × 2 », l’aperçu et la vente au marché valent le double', () => {
     const etat = partieAvecTrajet()
-    etat.nonAVendre = ['fer', 'or']
-    expect(exclusAffiches(etat, 'mine-marche')).toEqual(['fer'])
-    reglerTrajet(etat, 'mine-marche', { actif: true, exclus: [] })
-    // (l'or n'est pas un minerai du niveau 1 : il reste gardé)
-    expect(etat.nonAVendre).toEqual(['or'])
+    etat.coffre.contenu = { fer: 10 }
+    etat.boosts = { ventes: etat.stats.tempsDeJeu + 600 }
+    expect(apercuTrajet(etat, 'mine-marche', []).valeur).toBe(2 * 10 * 12)
+    pousserTrajet(etat, 'mine-marche')
+    allerRetour(etat, 'mine-marche')
+    expect(etat.stats.argentWagonnet).toBe(2 * 10 * 12)
   })
 })
 

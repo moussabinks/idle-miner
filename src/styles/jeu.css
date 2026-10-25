@@ -1,0 +1,591 @@
+/* =========================================================================
+   L'écran de jeu (25/10) : le village prend tout l'écran, et l'interface est posée dessus.
+     - en haut à gauche, le bandeau (Hud.tsx) ;
+     - en haut à droite, les boutons ronds (cadeau, stats, succès, réglages) et les tâches ;
+     - en bas, les gros boutons ronds (la mine, construire) ou la barre de construction.
+   ========================================================================= */
+
+.jeu {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  background: #8fd36f;
+  /* Les marges de l'interface : sous l'encoche et au-dessus de la barre de l'iPhone. */
+  --marge-haut: max(10px, env(safe-area-inset-top));
+  --marge-bas: max(12px, env(safe-area-inset-bottom));
+  --marge-gauche: max(10px, env(safe-area-inset-left));
+  --marge-droite: max(10px, env(safe-area-inset-right));
+}
+
+.jeu .scene {
+  position: absolute;
+  inset: 0;
+}
+
+.jeu .vue-village {
+  width: 100%;
+  height: 100%;
+}
+
+/* Le calque de l'interface laisse passer les clics vers la carte, sauf sur ses boutons. */
+.interface {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.interface button,
+.interface .taches,
+.interface .hud-case,
+.interface .barre-edition {
+  pointer-events: auto;
+}
+
+.interface-haut {
+  position: absolute;
+  top: var(--marge-haut);
+  left: var(--marge-gauche);
+  right: var(--marge-droite);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.interface-haut-droite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.boutons-haut {
+  display: flex;
+  gap: 8px;
+}
+
+.boutons-haut .btn-rond {
+  position: relative;
+}
+
+/* =========================================================================
+   Le bandeau (Hud.tsx) : des pastilles bleu nuit au gros contour crème
+   ========================================================================= */
+
+.hud {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hud-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.hud-case {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 4px 12px 4px 6px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 16px;
+  background: var(--nuit);
+  box-shadow: var(--ombre-petite);
+  color: var(--blanc);
+  font: inherit;
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+.hud-bouton {
+  cursor: pointer;
+}
+
+.hud-bouton:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--encre);
+}
+
+.hud-icone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--creme);
+  font-size: 1.15rem;
+}
+
+.hud-badge {
+  position: absolute;
+  right: -7px;
+  bottom: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--jaune);
+  color: var(--encre);
+  font-size: 0.7rem;
+  line-height: 14px;
+  text-align: center;
+}
+
+.hud-valeurs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-valeurs strong {
+  color: var(--jaune);
+  font-size: 1.05rem;
+}
+
+.hud-valeurs small {
+  font-size: 0.75rem;
+  color: #c9c2e4;
+}
+
+.hud-positif {
+  color: var(--vert) !important;
+}
+
+.hud-jauge {
+  width: 64px;
+  height: 10px;
+  border-color: var(--creme);
+  background: rgb(255 255 255 / 0.15);
+}
+
+/* Le niveau du joueur : une médaille violette et sa jauge d'XP. */
+.hud-niveau {
+  padding-right: 10px;
+}
+
+.hud-medaille {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--violet);
+  color: var(--encre);
+  font-family: var(--police-titre);
+  font-size: 1.1rem;
+}
+
+.hud-gemmes strong {
+  color: var(--violet);
+  font-size: 1.05rem;
+}
+
+.hud-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 2px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--vert);
+  color: var(--encre);
+  font-size: 0.95rem;
+}
+
+.hud-minuteur {
+  font-size: 0.8rem;
+  color: #c9c2e4;
+}
+
+/* Il faut agir (coffre plein, salaires) : la case rougit. */
+.hud-alerte {
+  background: var(--rose-fonce);
+  animation: hud-alerte 1.2s ease-in-out infinite;
+}
+
+.hud-alerte .hud-valeurs small,
+.hud-alerte .hud-minuteur {
+  color: var(--blanc);
+}
+
+@keyframes hud-alerte {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* L'argent saute à chaque vente. */
+.hud-saute {
+  display: inline-block;
+  animation: hud-saute 0.35s ease-out;
+}
+
+@keyframes hud-saute {
+  40% {
+    transform: scale(1.25);
+  }
+}
+
+.hud-boosts {
+  gap: 4px;
+}
+
+/* =========================================================================
+   Les tâches (Missions.tsx) : une carte crème, la première tâche en grand
+   ========================================================================= */
+
+.taches {
+  width: min(330px, 46vw);
+  border: var(--trait) solid var(--encre);
+  border-radius: 18px;
+  background: var(--creme);
+  box-shadow: var(--ombre);
+  overflow: hidden;
+}
+
+.taches-titre {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: none;
+  border-bottom: var(--trait-fin) solid var(--encre);
+  background: var(--jaune);
+  color: var(--encre);
+  font-family: var(--police-titre);
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.taches-repliees .taches-titre {
+  border-bottom: none;
+}
+
+.taches-repliees .tache {
+  display: none;
+}
+
+.tache {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: var(--trait-fin) dashed var(--creme-fonce);
+}
+
+.tache:last-child {
+  border-bottom: none;
+}
+
+.tache-icone {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.tache-corps {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tache-texte {
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.tache-suivante .tache-texte {
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+}
+
+.tache-elements {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tache-element {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tache-element .jauge {
+  flex: 1;
+  height: 10px;
+}
+
+.tache-element.fait .jauge > i {
+  background: var(--vert-fonce);
+}
+
+.tache-compte {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.tache-urgente {
+  background: #ffe1e5;
+}
+
+.tache-faite {
+  background: var(--vert);
+  animation: message-arrive 0.3s ease-out;
+}
+
+.tache-case {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--blanc);
+}
+
+/* =========================================================================
+   En bas : les gros boutons ronds (la mine, construire) ou la barre de construction
+   ========================================================================= */
+
+.interface-bas {
+  position: absolute;
+  left: var(--marge-gauche);
+  right: var(--marge-droite);
+  bottom: calc(var(--marge-bas) + 10px); /* (de la place pour l’étiquette des ronds) */
+}
+
+.barre-village {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.barre-village-droite {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.gros-rond {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 88px;
+  height: 88px;
+  border: 4px solid var(--encre);
+  border-radius: 50%;
+  background: var(--blanc);
+  box-shadow: 0 5px 0 var(--encre);
+  color: var(--encre);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.gros-rond:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--encre);
+}
+
+.gros-rond-icone {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+/* Le nom : une étiquette à cheval sur le bas du rond (25/10 : dans le rond, il débordait sur
+   téléphone et en anglais). */
+.gros-rond-texte {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  z-index: 2;
+  translate: -50% 0;
+  padding: 1px 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  font-family: var(--police-titre);
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* La mine : jaune, avec un anneau qui se remplit comme le coffre. */
+.gros-rond-mine {
+  background: conic-gradient(var(--orange) var(--remplissage, 0%), var(--jaune) 0);
+}
+
+.gros-rond-mine::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  z-index: 0;
+}
+
+.gros-rond-mine > .gros-rond-icone {
+  position: relative;
+  z-index: 1;
+}
+
+.gros-rond-construire {
+  background: var(--vert);
+}
+
+.gros-rond-petit {
+  width: 64px;
+  height: 64px;
+  border-width: var(--trait);
+}
+
+.gros-rond-petit .gros-rond-icone {
+  font-size: 1.5rem;
+}
+
+.gros-rond-petit .gros-rond-texte {
+  bottom: -10px;
+  font-size: 0.75rem;
+}
+
+.aide-clavier {
+  padding: 6px 12px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* Sans clavier (écran tactile), le rappel des flèches ne sert à rien. */
+@media (hover: none) {
+  .aide-clavier {
+    display: none;
+  }
+}
+
+/* Pendant une construction : une barre crème au milieu, en bas. */
+.barre-edition {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 18px;
+  background: var(--creme);
+  box-shadow: var(--ombre);
+}
+
+.consigne {
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+/* La description en haut de la fenêtre d'un bâtiment. */
+.description-batiment {
+  margin-top: -4px;
+}
+
+/* =========================================================================
+   Téléphone
+   ========================================================================= */
+
+@media (max-width: 640px) {
+  .interface-haut {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .interface-haut-droite {
+    position: absolute;
+    top: 0;
+    right: 0;
+    align-items: flex-end;
+  }
+
+  .boutons-haut {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .boutons-haut .btn-rond {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .hud {
+    padding-right: 48px;
+  }
+
+  .hud-case {
+    min-height: 40px;
+    padding: 3px 9px 3px 4px;
+    font-size: 0.85rem;
+  }
+
+  .hud-icone {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .hud-jauge {
+    width: 48px;
+  }
+
+  /* Les tâches passent sous le bandeau, en largeur, repliables. */
+  .taches {
+    position: fixed;
+    top: auto;
+    left: var(--marge-gauche);
+    right: var(--marge-droite);
+    bottom: calc(var(--marge-bas) + 96px);
+    width: auto;
+  }
+
+  .tache-suivante {
+    display: none;
+  }
+
+  .gros-rond {
+    width: 76px;
+    height: 76px;
+  }
+
+  .gros-rond-petit {
+    width: 56px;
+    height: 56px;
+  }
+}

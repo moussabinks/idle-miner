@@ -14,6 +14,7 @@ import { avancerTemps } from './jeu/temps'
 import { joueurPousse } from './jeu/wagonnet'
 import { evenementsEntre, type Evenement } from './evenements'
 import { sons } from './sons'
+import { stockage } from './stockage'
 
 export type Toast = { id: number; texte: string; succes: boolean }
 export type Gain = { id: number; montant: number; vente: boolean }
@@ -71,11 +72,11 @@ function jouerSons(evenements: Evenement[]): void {
 // rattrape le temps passé (la mine, les mineurs et le wagonnet ont continué) et on prépare un message.
 // (30/10) Le résumé s'affiche dans une grande fenêtre, avec un bouton « Tout récupérer ».
 function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: ResumeAbsence | null } {
-  marquerJoue(window.localStorage, idMonde)
-  const etat = charger(window.localStorage, idMonde)
+  marquerJoue(stockage, idMonde)
+  const etat = charger(stockage, idMonde)
   if (etat === null) return { etat: creerPartie(aleatoireNavigateur), resumeAbsence: null }
 
-  const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(window.localStorage, idMonde))
+  const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(stockage, idMonde))
   if (absence < 30) return { etat, resumeAbsence: null }
   const avant = photoPartie(etat)
   avancerTemps(etat, absence, aleatoireNavigateur)
@@ -149,7 +150,7 @@ export function usePartie(idMonde: string) {
 
       afficherToasts([
         // (23/10 : un niveau gagné a sa grande fenêtre, FeteNiveau : pas de message en plus)
-        ...messages.filter((texte) => !texte.startsWith('🎉 Niveau')).map((texte) => ({ id: prochainId++, texte, succes: false })),
+        ...messages.filter((texte) => !texte.startsWith('🎉')).map((texte) => ({ id: prochainId++, texte, succes: false })),
         ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
       ])
       const evenements = evenementsEntre(ancien, copie)
@@ -223,11 +224,11 @@ export function usePartie(idMonde: string) {
     const maintenant = Date.now()
     if (maintenant - derniereSauvegarde.current < 1000) return
     derniereSauvegarde.current = maintenant
-    sauvegarder(window.localStorage, idMonde, etat)
+    sauvegarder(stockage, idMonde, etat)
   }, [etat, idMonde])
   // Et en quittant la page.
   useEffect(() => {
-    const auRevoir = () => sauvegarder(window.localStorage, idMonde, etatRef.current)
+    const auRevoir = () => sauvegarder(stockage, idMonde, etatRef.current)
     window.addEventListener('pagehide', auRevoir)
     return () => {
       window.removeEventListener('pagehide', auRevoir)
