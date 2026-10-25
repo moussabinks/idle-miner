@@ -4,7 +4,7 @@
 // le sens de la marche : c'est ce qui donne l'impression d'un personnage en volume qui se retourne.
 // Le joueur a un casque jaune ; les mineurs employés, un casque de la couleur de leur rareté.
 
-import { RARETES, type IdRarete } from '../jeu/donnees'
+import type { IdRarete } from '../jeu/donnees'
 import { cheminPublic } from '../chemins'
 
 export type VueSprite = 'devant' | 'derriere' | 'gauche' | 'droite'
@@ -43,13 +43,5 @@ export function choisirVue(orientation: { sens: 1 | -1; vue: 'face' | 'dos' }, m
   if (!marche) return { vue: 'devant', miroir: false }
   if (orientation.vue === 'dos') return { vue: 'derriere', miroir: orientation.sens < 0 }
   return { vue: orientation.sens > 0 ? 'droite' : 'gauche', miroir: false }
-}
-
-// La rareté d'un mineur à partir de la couleur de son casque (la mine en coupe ne connaît que la
-// couleur). Une couleur inconnue : le joueur.
-export function quiSelonCasque(casque: string | null | undefined): QuiSprite {
-  if (!casque) return 'joueur'
-  const rarete = Object.values(RARETES).find((r) => r.couleur === casque)
-  return rarete ? rarete.id : 'joueur'
 }
 

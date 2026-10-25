@@ -1,12 +1,12 @@
 // Un dessin SVG qui ne change jamais (le sol du village, la plage), « figé » en image (26/10).
 //
-// Pourquoi : le sol est fait de milliers de formes et de flous. Tant qu'il reste du SVG, le
+// Pourquoi : le sol est fait de milliers de petites formes. Tant qu'il reste du SVG, le
 // navigateur le redessine en entier dès que quelque chose bouge par-dessus (un oiseau, un
 // wagonnet...) : le jeu tombait à 5 images par seconde. Une fois transformé en image, il est
 // dessiné une seule fois, puis simplement recopié : c'est beaucoup plus léger.
 //
 // Comment : on affiche d'abord le SVG normalement. Juste après, on le recopie en texte, on met
-// ses images (textures) directement dedans, et on en fait une <img> qui le remplace. Le
+// ses images éventuelles directement dedans, et on en fait une <img> qui le remplace. Le
 // résultat est gardé de côté : la prochaine fois (changement de monde...), l'image est prête.
 
 import { useEffect, useRef, useState, type ReactElement } from 'react'

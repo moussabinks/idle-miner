@@ -163,7 +163,7 @@ Ils lisent la partie avec **`useJeu()`** (`contexteJeu.ts`, 25/10) au lieu de la
 | `VueVillage.tsx`, `iso.ts`, `sprites.ts`, `DessinsVillage.tsx`, `ElementsVillage.tsx`, `ForetVillage.tsx`, `arbres.ts`, `PlageVillage.tsx`, `plage.ts`, `Rochers.tsx`, `Relief.tsx`, `couleurs.ts`, `ImageFigee.tsx`, `AmbianceVillage.tsx`, `fantome.ts` | Le village vu du ciel : la carte et la caméra, la projection isométrique, les personnages (taupes), les dessins, la forêt, la plage, le relief, ce qu'on pose (voir [village.md](village.md)) |
 | `WagonnetVillage.tsx`, `Wagonnet3D.tsx`, `minerais.ts` | Les wagonnets sur les rails, leur dessin, les minerais qu'ils portent |
 
-(Les détails de l'écran et du dessin sont dans [interface.md](interface.md) et [visuel-et-sons.md](visuel-et-sons.md), qui seront mises à jour après la refonte du 25/10.)
+(Les détails de l'écran et du dessin sont dans [interface.md](interface.md) et [visuel-et-sons.md](visuel-et-sons.md).)
 
 ### 3.6 `public/` : fichiers servis tels quels
 

@@ -1006,6 +1006,14 @@
   line-height: 1;
 }
 
+/* Le dessin des rails (public/images/batiments/rails.svg). */
+.construire-sol-image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
 /* Les bâtiments déjà construits : une petite liste d'étiquettes, tout en bas. */
 .construits {
   list-style: none;

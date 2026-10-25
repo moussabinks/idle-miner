@@ -414,15 +414,13 @@
   pointer-events: none;
 }
 
-/* --- Les bulles de notification au-dessus des bâtiments (refaites le 27/10) ---------------
-   Comme dans les jeux mobiles (30 % plus petite depuis le 28/10) : une médaille ronde et brillante (bord blanc épais, reflet,
-   l'icône cartoon en grand), un ruban de couleur à bouts fourchus en travers du bas avec deux
-   mots, et une pointe qui montre le bâtiment. « +2 » dans une pastille rouge s'il y a d'autres
-   choses à faire là-bas. La couleur dit l'urgence : rouge = alerte, rose = prêt, bleu = nouveau,
-   vert = achetable, jaune = trajet à créer.
-   Elle arrive en rebondissant, flotte doucement, et son icône se dandine de temps en temps pour
-   attirer l'œil. Les alertes tremblent et lancent une onde rouge ; les achats ont des étincelles
-   et une lueur verte. */
+/* --- Les bulles de notification au-dessus des bâtiments (27/10, style plat le 25/10) ---------
+   Comme dans les jeux mobiles : une médaille ronde de couleur au contour d'encre (l'icône
+   cartoon en grand), une étiquette de deux mots en dessous, et une pointe qui montre le
+   bâtiment. « +2 » dans une pastille rouge s'il y a d'autres choses à faire là-bas. La couleur
+   dit l'urgence : rouge = alerte, rose = prêt, bleu = nouveau, vert = achetable, jaune = trajet
+   à créer. Elle arrive en rebondissant, flotte doucement, et son icône se dandine de temps en
+   temps. Les alertes tremblent et lancent une onde rouge ; les achats ont des étincelles. */
 
 .bulle-notif {
   --couleur-bulle: #f9d65a;
@@ -845,9 +843,6 @@
   /* Un dégradé plutôt qu'un flou : le bord est doux, sans filtre à recalculer. */
   background: radial-gradient(closest-side, rgb(0 0 0 / 0.2), rgb(0 0 0 / 0));
 }
-
-/* Le générateur qui donne du courant : de petits éclairs bougent au-dessus de lui (plus de
-   lueur en filtre sur l'image depuis le 29/10 : elle la rendait floue). */
 
 @media (prefers-reduced-motion: reduce) {
   .ombre-nuage,

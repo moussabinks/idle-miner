@@ -15,8 +15,8 @@
 | [village.md](village.md) | Le village vu du ciel : la grille de 40 × 40, poser et payer les bâtiments, Modifier, rails (sans boucle) et trajets de wagonnets, chemins, personnages, bulles de notification. |
 | [mine-et-minage.md](mine-et-minage.md) | La mine à 5 niveaux : les blocs, le bloc à cliquer, le coffre et sa vente, les pioches, la mine toute seule, le temps qui passe (et hors ligne), événements, découvertes, succès, statistiques. |
 | [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, ascenseur, wagonnets, générateur, foreuse, mineurs, raretés, bâtiments, revenus, niveau du joueur, gemmes), le bot de simulation et les durées de jeu. |
-| [interface.md](interface.md) | L'écran : accueil, bandeau, tutoriel, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. (Refait le 25/10 : page à mettre à jour.) |
-| [visuel-et-sons.md](visuel-et-sons.md) | Le style graphique, les animations, les bruitages et la musique (Web Audio), l'application installable. (Refait le 25/10 : page à mettre à jour.) |
+| [interface.md](interface.md) | L'écran : accueil, bandeau, tutoriel, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. (Refait le 25/10 : style plat, taupes, dessins SVG.) |
+| [visuel-et-sons.md](visuel-et-sons.md) | Le style graphique, les animations, les bruitages et la musique (Web Audio), l'application installable. (Refait le 25/10 : style plat, taupes, dessins SVG.) |
 | [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md) | Les 5 mondes dans le stockage du navigateur, les conversions des vieilles parties, le hors-ligne, les comptes Supabase et le classement. |
 | [architecture.md](architecture.md) | L'organisation du code (`src/jeu/` pur, composants React, `src/styles/`), les deux langues, la version CrazyGames, les tests et le déploiement. |
 

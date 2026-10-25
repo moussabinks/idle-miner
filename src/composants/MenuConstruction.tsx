@@ -7,6 +7,7 @@
 // coffre de la mine.
 // Aucune règle du jeu ici : on lit l'état et on appelle les fonctions de src/jeu/batiments.ts.
 
+import type { ReactNode } from 'react'
 import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, LISTE_BATIMENTS, NIVEAU_JOUEUR_POUR, type Cout, type IdBatiment } from '../jeu/donnees'
 import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, type TypeSol } from '../jeu/batiments'
 import { nombre, t } from '../jeu/langue'
@@ -17,6 +18,7 @@ import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 import { IMAGES_BATIMENTS } from './iso'
 import { PrixCout } from './PrixCout'
+import { cheminPublic } from '../chemins'
 
 type Props = {
   etat: EtatJeu
@@ -67,7 +69,7 @@ function CarteBatiment({ id, nouveau, onPoser }: { id: IdBatiment; nouveau: bool
 }
 
 // Les rails ou les chemins : une ligne, un prix par case, un bouton « Poser ».
-function LigneSol({ icone, titre, effet, cout, verrou, onPoser }: { icone: string; titre: string; effet: string; cout: Cout; verrou: string | null; onPoser: () => void }) {
+function LigneSol({ icone, titre, effet, cout, verrou, onPoser }: { icone: ReactNode; titre: string; effet: string; cout: Cout; verrou: string | null; onPoser: () => void }) {
   const { etat } = useJeu()
   return (
     <div className="ligne-amelioration">
@@ -128,7 +130,7 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
 
       <h3 className="titre-section">{t('Rails et chemins')}</h3>
       <LigneSol
-        icone="🛤️"
+        icone={<img className="construire-sol-image" src={cheminPublic('/images/batiments/rails.svg')} alt="" width={56} height={56} draggable={false} />}
         titre={t('Rails')}
         effet={t('Relie deux bâtiments : un wagonnet roulera dessus. Prix par case.')}
         cout={COUT_RAIL}
