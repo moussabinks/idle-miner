@@ -21,10 +21,11 @@ describe('bot de simulation (équilibrage)', () => {
   })
 
   // (25/10 : les paliers ; le bot joue mieux qu'un joueur, qui mettra plutôt 5 à 8 h)
-  it('arrive au niveau 5 en 3 h à 6 h (médiane)', () => {
+  // (25/10, économie revue : les paliers 3 à 5 coûtent bien moins cher) Avant : 3 h à 6 h.
+  it('arrive au niveau 5 en 1 h à 3 h (médiane)', () => {
     const m = mediane(parties.map((p) => minutes(p.temps)))
-    expect(m).toBeGreaterThanOrEqual(3 * 60)
-    expect(m).toBeLessThanOrEqual(6 * 60)
+    expect(m).toBeGreaterThanOrEqual(60)
+    expect(m).toBeLessThanOrEqual(3 * 60)
   })
 
   it('monte de niveau petit à petit : niveau 5 après 8 minutes, niveau 10 après 1 heure (médiane)', () => {

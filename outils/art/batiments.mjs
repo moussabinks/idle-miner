@@ -852,11 +852,14 @@ export function generateur() {
 // ---------------------------------------------------------------------------
 
 export function iconeRails() {
-  const t = new Toile({ taille: 2, haut: 20, marge: 8, bas: 8 })
-  t.boite(0, 0, 2, 2, 0, 6, teintes('#d9b98a', '#b8956a', '#d9b98a'))
-  const z = 6
-  for (const y of [0.25, 0.75, 1.25, 1.75]) t.boite(0.3, y - 0.1, 1.7, y + 0.1, z, z + 5, teintes(C.bois, C.boisFonce))
-  for (const x of [0.6, 1.4]) t.boite(x - 0.06, 0.05, x + 0.06, 1.95, z + 5, z + 11, teintes(C.metal, fonce(C.metal, 0.25), clair(C.metal, 0.4)))
+  // (25/10) Plus clair : à 56 px dans le menu Bâtiments, les gros contours (6) et le bois foncé
+  // faisaient une icône presque noire, « à l'ombre ». Contours fins, sol d'herbe, bois et acier clairs.
+  const t = new Toile({ taille: 2, haut: 20, marge: 6, bas: 6 })
+  const fin = { trait: 3 }
+  t.boite(0, 0, 2, 2, 0, 5, teintes('#9fdc7c', '#7cc35f', '#9fdc7c'), fin)
+  const z = 5
+  for (const y of [0.3, 0.8, 1.3, 1.8]) t.boite(0.3, y - 0.12, 1.7, y + 0.12, z, z + 5, teintes(clair(C.bois, 0.25), C.bois), fin)
+  for (const x of [0.6, 1.4]) t.boite(x - 0.07, 0.05, x + 0.07, 1.95, z + 5, z + 11, teintes(clair(C.metal, 0.35), C.metal, clair(C.metal, 0.55)), fin)
   return t
 }
 

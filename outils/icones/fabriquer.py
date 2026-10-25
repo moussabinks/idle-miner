@@ -163,21 +163,22 @@ def fabriquer():
         )
     print(f'{len(couches)} icônes, {len(palette)} couleurs')
 
-    # (25/10) Les minerais aussi en images SVG (public/images/icones/u1F7E1.svg...) : les bulles
-    # « +1 » qui s'envolent de la mine les affichent en <img>. Dans ces bulles animées, Safari ne
+    # (25/10) Les icônes aussi en images SVG (public/images/icones/u1F7E1.svg...) : les bulles
+    # « +1 » qui s'envolent de la mine et les bulles des bâtiments les affichent en <img>. Dans ces bulles animées, Safari ne
     # prenait pas la police et montrait les emojis d'Apple (le fer redevenait un boulon 🔩).
     dossier_images = os.path.join(RACINE, 'public', 'images', 'icones')
     os.makedirs(dossier_images, exist_ok=True)
     for caractere in ICONES_EN_IMAGE:
-        nom = f'u{ord(caractere):04X}'
+        nom = f'u{ord(caractere[0]):04X}'
         with open(os.path.join(dossier_images, f'{nom}.svg'), 'w', encoding='utf-8') as f:
             # (le dessin va de x = 50 à 1 150, et de y = -900 à 200, contour et ombre compris)
             f.write(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -930 1200 1200">{svgs[nom]}</svg>\n')
     print(f'{len(ICONES_EN_IMAGE)} icônes en images')
 
 
-# Les icônes qui existent aussi en image (les minerais du coffre : BLOCS dans src/jeu/donnees.ts).
-ICONES_EN_IMAGE = ['🪨', '⚫', '🔩', '🔴', '🟡', '💚', '💎']
+# Les icônes qui existent aussi en image : toutes (25/10 : d'abord les minerais, puis les bulles
+# des bâtiments, qui bougent aussi et où Safari mettait son emoji 🔴 pour la redstone).
+ICONES_EN_IMAGE = list(ICONES)
 
 
 if __name__ == '__main__':

@@ -1403,3 +1403,10 @@ g.grille-construction {
   stroke-dasharray: 10 6;
   pointer-events: none;
 }
+
+/* (25/10) L'icône de la bulle en image (IconeImage.tsx : Safari ne prenait pas la police ici) */
+.bulle-icone .icone-image {
+  display: block;
+  width: 1.15em;
+  height: 1.15em;
+}

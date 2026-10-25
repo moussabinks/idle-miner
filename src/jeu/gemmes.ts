@@ -99,13 +99,15 @@ export function valeurEnDollars(cout: Cout): number {
 // (25/10, demandé par le propriétaire) Le prix en gemmes d'un achat : de 3 gemmes (une petite
 // amélioration) à 10 gemmes (la plus grosse), soit 3 à 10 publicités. Avant, il suivait la racine
 // carrée du prix et montait à plus de 100 gemmes en fin de partie.
-// Il compte les chiffres du prix en dollars : 2 gemmes de plus chaque fois que le prix est
-// multiplié par 10 (100 $ → 3, 1 000 $ → 5, 10 000 $ → 7, 100 000 $ → 9, 300 000 $ → 10).
+// Il compte les chiffres du prix en dollars : 2,4 gemmes de plus chaque fois que le prix est
+// multiplié par 10 (100 $ → 3, 1 000 $ → 5, 10 000 $ → 8, 85 000 $ et plus → 10).
+// (25/10, économie revue : les gros achats coûtent moins cher, la mine niveau 5 vaut ~86 000 $.)
 export const GEMMES_MIN = 3
 export const GEMMES_MAX = 10
+const GEMMES_PAR_ZERO = 2.4
 export function prixEnGemmes(cout: Cout): number {
   const valeur = Math.max(1, valeurEnDollars(cout))
-  const prix = Math.round(GEMMES_MIN + 2 * (Math.log10(valeur) - 2))
+  const prix = Math.round(GEMMES_MIN + GEMMES_PAR_ZERO * (Math.log10(valeur) - 2))
   return Math.min(GEMMES_MAX, Math.max(GEMMES_MIN, prix))
 }
 
