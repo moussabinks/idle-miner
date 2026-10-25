@@ -103,6 +103,16 @@ function dureeCourte(secondes: number): string {
   return `${Math.floor(s / 60)} min`
 }
 
+// (25/10) Une petite étiquette fixe au-dessus d'un bâtiment, sans jauge : « tout va bien, il
+// travaille » (la foreuse : sa jauge se remplissait à chaque bloc, chaque seconde, c'était trop).
+export function EtiquetteVillage({ x, y, texte }: { x: number; y: number; texte: string }) {
+  return (
+    <div className="mini-jauge mini-etiquette" style={{ left: x, top: y }} aria-hidden="true">
+      <span className="mini-jauge-texte">{texte}</span>
+    </div>
+  )
+}
+
 // Une mini-jauge au-dessus d'un objet du village (27/10) : ce qui se passe (« 📦 Chargement »),
 // le temps qu'il reste, et une petite barre qui se remplit. Pour le wagonnet qui charge ou vend,
 // l'ascenseur qui décharge...

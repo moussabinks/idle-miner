@@ -47,14 +47,14 @@ Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque n
 | Niveau | Rayon | Bonus de vitesse | Réserve | Pousseur électrique (débutant, commun) | Coût (25/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 12 cases | + 30 % | 5 min (10 redstones) | 3,25 cases/s | (le prix du bâtiment) | 2 |
-| 2 | 16 cases | + 40 % | 7 min | 3,5 cases/s | 5 000 $ + 80 fer + 40 redstone | 2 |
-| 3 | 20 cases | + 50 % | 10 min | 3,75 cases/s | 15 000 $ + 150 fer + 90 redstone | 3 |
-| 4 | 25 cases | + 60 % | 13 min | 4 cases/s | 40 000 $ + 250 fer + 180 redstone | 4 |
-| 5 | 30 cases | + 75 % | 16 min | 4,4 cases/s | 100 000 $ + 400 fer + 350 redstone | 5 |
+| 2 | 16 cases | + 40 % | 7 min | 3,5 cases/s | 4 000 $ + 80 fer + 40 redstone | 2 |
+| 3 | 20 cases | + 50 % | 10 min | 3,75 cases/s | 8 000 $ + 150 fer + 90 redstone | 3 |
+| 4 | 25 cases | + 60 % | 13 min | 4 cases/s | 15 000 $ + 250 fer + 180 redstone | 4 |
+| 5 | 30 cases | + 75 % | 16 min | 4,4 cases/s | 35 000 $ + 400 fer + 350 redstone | 5 |
 
 (Avant le 25/10 : rayon de 15 à 40 cases pour une clairière de 60 × 60, débloqué aux niveaux 6 à 15 du joueur. Avant le 23/10 : une « puissance » de × 1 à × 3, et le wagonnet électrique roulait tout seul.)
 
-Total des améliorations : 160 000 $ + 880 fer + 660 redstone. Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
+Total des améliorations : 62 000 $ + 880 fer + 660 redstone (25/10, économie revue : avant 160 000 $). Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
 
 ## Règles et comportement
 

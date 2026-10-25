@@ -63,20 +63,20 @@ export type NiveauMine = {
 export const NIVEAUX_MINE: NiveauMine[] = [
   { niveau: 1, nom: 'Galerie de surface', poids: { pierre: 70, charbon: 18, fer: 12 }, debit: 0.2, cout: { materiaux: {} } },
   { niveau: 2, nom: 'Veine de redstone', poids: { pierre: 60, charbon: 16, fer: 14, redstone: 10 }, debit: 0.3, cout: { argent: 800, materiaux: { fer: 40 } } },
-  { niveau: 3, nom: 'Filon d’or', poids: { pierre: 52, charbon: 14, fer: 14, redstone: 12, or: 8 }, debit: 0.4, cout: { argent: 12000, materiaux: { fer: 100, redstone: 40 } } },
+  { niveau: 3, nom: 'Filon d’or', poids: { pierre: 52, charbon: 14, fer: 14, redstone: 12, or: 8 }, debit: 0.4, cout: { argent: 6000, materiaux: { fer: 100, redstone: 40 } } },
   {
     niveau: 4,
     nom: 'Grotte aux émeraudes',
     poids: { pierre: 46, charbon: 12, fer: 13, redstone: 12, or: 11, emeraude: 6 },
     debit: 0.5,
-    cout: { argent: 70000, materiaux: { redstone: 100, or: 50 } },
+    cout: { argent: 22000, materiaux: { redstone: 100, or: 50 } },
   },
   {
     niveau: 5,
     nom: 'Cœur de diamant',
     poids: { pierre: 40, charbon: 11, fer: 12, redstone: 12, or: 12, emeraude: 8, diamant: 5 },
     debit: 0.6,
-    cout: { argent: 320000, materiaux: { or: 90, emeraude: 35 } },
+    cout: { argent: 80000, materiaux: { or: 90, emeraude: 35 } },
   },
 ]
 
@@ -90,9 +90,9 @@ export const NIVEAU_MINE_MAX = NIVEAUX_MINE.length
 export const NIVEAUX_COFFRE: { capacite: number; cout: Cout }[] = [
   { capacite: 100, cout: { materiaux: {} } },
   { capacite: 300, cout: { argent: 200, materiaux: { pierre: 40 } } },
-  { capacite: 800, cout: { argent: 3000, materiaux: { fer: 80 } } },
-  { capacite: 2000, cout: { argent: 12000, materiaux: { redstone: 60, or: 20 } } },
-  { capacite: 5000, cout: { argent: 45000, materiaux: { or: 60, emeraude: 20 } } },
+  { capacite: 800, cout: { argent: 2000, materiaux: { fer: 80 } } },
+  { capacite: 2000, cout: { argent: 6000, materiaux: { redstone: 60, or: 20 } } },
+  { capacite: 5000, cout: { argent: 18000, materiaux: { or: 60, emeraude: 20 } } },
 ]
 
 // ---------------------------------------------------------------------------
@@ -140,7 +140,7 @@ export const PIOCHES: Pioche[] = [
     emoji: '🟡',
     doublement: 0.3,
     durabilite: 500,
-    cout: { argent: 3500, materiaux: { or: 30 } },
+    cout: { argent: 2500, materiaux: { or: 30 } },
     reparation: { argent: 150, materiaux: { or: 5 } },
     couleur: '#f4c518',
   },
@@ -152,7 +152,7 @@ export const PIOCHES: Pioche[] = [
     emoji: '💚',
     doublement: 0.38,
     durabilite: 750,
-    cout: { argent: 9000, materiaux: { emeraude: 25 } },
+    cout: { argent: 6000, materiaux: { emeraude: 25 } },
     reparation: { argent: 300, materiaux: { emeraude: 4 } },
     couleur: '#2ee07a',
   },
@@ -162,7 +162,7 @@ export const PIOCHES: Pioche[] = [
     emoji: '💎',
     doublement: 0.45,
     durabilite: 1000,
-    cout: { argent: 25000, materiaux: { diamant: 15 } },
+    cout: { argent: 15000, materiaux: { diamant: 15 } },
     reparation: { argent: 600, materiaux: { diamant: 3 } },
     couleur: '#4ee8dc',
   },
@@ -220,9 +220,9 @@ export type NiveauAscenseur = {
 export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
   { niveau: 1, cout: { materiaux: {} }, secondesTrajet: 6, secondesChargement: 1, secondesVidage: 2, capacite: 15 }, // déjà dans la mine au départ
   { niveau: 2, cout: { argent: 700, materiaux: { fer: 30 } }, secondesTrajet: 4.5, secondesChargement: 0.9, secondesVidage: 1.8, capacite: 25 },
-  { niveau: 3, cout: { argent: 5000, materiaux: { fer: 90, redstone: 30 } }, secondesTrajet: 3.5, secondesChargement: 0.8, secondesVidage: 1.5, capacite: 40 },
-  { niveau: 4, cout: { argent: 18000, materiaux: { redstone: 100, or: 40 } }, secondesTrajet: 2.6, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 60 },
-  { niveau: 5, cout: { argent: 60000, materiaux: { or: 80, emeraude: 30 } }, secondesTrajet: 2, secondesChargement: 0.4, secondesVidage: 0.8, capacite: 90 },
+  { niveau: 3, cout: { argent: 3000, materiaux: { fer: 90, redstone: 30 } }, secondesTrajet: 3.5, secondesChargement: 0.8, secondesVidage: 1.5, capacite: 40 },
+  { niveau: 4, cout: { argent: 8000, materiaux: { redstone: 100, or: 40 } }, secondesTrajet: 2.6, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 60 },
+  { niveau: 5, cout: { argent: 22000, materiaux: { or: 80, emeraude: 30 } }, secondesTrajet: 2, secondesChargement: 0.4, secondesVidage: 0.8, capacite: 90 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -240,9 +240,9 @@ export const EMPLOYES_PAR_NIVEAU = 1
 // 2e à 2 000 $... et ce sont deux listes à part : mineurs, et pousseurs. 23/10 bis : avec 1 mineur
 // par niveau de la mine, chaque place vaut plus : 500, 3 500, 15 000, 45 000, 130 000 $.)
 // (25/10) Le premier mineur ne coûte presque rien : le jeu doit tourner tout seul en 2 minutes.
-export const PRIX_EMBAUCHE = [50, 1200, 7000, 25000, 80000, 200000, 500000, 1200000, 3000000, 6000000]
+export const PRIX_EMBAUCHE = [50, 800, 3000, 8000, 20000, 45000, 100000, 220000, 500000, 1000000]
 // Les pousseurs : au plus un par trajet (4).
-export const PRIX_EMBAUCHE_POUSSEUR = [300, 1500, 5000, 12000]
+export const PRIX_EMBAUCHE_POUSSEUR = [300, 1000, 2500, 5000]
 export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4
@@ -290,9 +290,9 @@ export const SALAIRES = [120, 300, 700, 1300, 2600]
 export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout: Cout }[] = [
   { nom: 'Bois', vitesse: 0.5, sac: 10, cout: { materiaux: {} } },
   { nom: 'Fer', vitesse: 0.75, sac: 18, cout: { argent: 400, materiaux: {} } },
-  { nom: 'Or', vitesse: 1, sac: 28, cout: { argent: 4000, materiaux: {} } },
-  { nom: 'Émeraude', vitesse: 1.3, sac: 40, cout: { argent: 15000, materiaux: {} } },
-  { nom: 'Diamant', vitesse: 1.7, sac: 55, cout: { argent: 50000, materiaux: {} } },
+  { nom: 'Or', vitesse: 1, sac: 28, cout: { argent: 2500, materiaux: {} } },
+  { nom: 'Émeraude', vitesse: 1.3, sac: 40, cout: { argent: 7000, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 1.7, sac: 55, cout: { argent: 18000, materiaux: {} } },
 ]
 
 // --- La rareté des mineurs (avec le recruteur, dès le niveau 4 de la mine) ---
@@ -321,14 +321,14 @@ export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendair
 // puis chaque palier suivant débloque leur niveau suivant (voir PALIER_CHEF).
 export const NIVEAU_MINE_RECRUTEUR = 4
 export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
-  { cout: { argent: 25000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
-  { cout: { argent: 70000, materiaux: {} }, chances: { commun: 57, rare: 23, epique: 12, legendaire: 6, mythique: 2 } },
-  { cout: { argent: 150000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8, mythique: 3 } },
+  { cout: { argent: 10000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
+  { cout: { argent: 25000, materiaux: {} }, chances: { commun: 57, rare: 23, epique: 12, legendaire: 6, mythique: 2 } },
+  { cout: { argent: 50000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8, mythique: 3 } },
 ]
 
 // --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec l'argent du joueur (23/10 : plus de trésorerie) ---
 export const NIVEAU_MINE_MANAGER = 3
-export const PRIX_MANAGER = 8000
+export const PRIX_MANAGER = 5000
 export const SALAIRE_MANAGER = 400 // toutes les 5 minutes
 export const SECONDES_AVANT_PAIE_MANAGER = 60
 // (23/10) La fatigue : le manager ne reste éveillé que « minutesEveil » (15 min au niveau 1),
@@ -338,8 +338,8 @@ export const SECONDES_AVANT_PAIE_MANAGER = 60
 // (25/10) 3 niveaux : 30 min, 1 h, puis 2 h éveillé.
 export const NIVEAUX_MANAGER: { minutesEveil: number; cout: Cout }[] = [
   { minutesEveil: 30, cout: { materiaux: {} } },
-  { minutesEveil: 60, cout: { argent: 30000, materiaux: {} } },
-  { minutesEveil: 120, cout: { argent: 90000, materiaux: {} } },
+  { minutesEveil: 60, cout: { argent: 12000, materiaux: {} } },
+  { minutesEveil: 120, cout: { argent: 30000, materiaux: {} } },
 ]
 
 // (25/10) Le palier de la mine qu'il faut pour chaque niveau d'un chef (case 0 : l'embauche).
@@ -369,10 +369,10 @@ export type NiveauPousseur = { nom: string; vitesse: number; cout: Cout }
 // achetait tout tout de suite et les chariots n'étaient jamais pleins.
 export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
   { nom: 'Débutant', vitesse: 1, cout: { materiaux: {} } },
-  { nom: 'Costaud', vitesse: 1.2, cout: { argent: 1000, materiaux: {} } },
-  { nom: 'Robuste', vitesse: 1.4, cout: { argent: 5000, materiaux: {} } },
-  { nom: 'Expert', vitesse: 1.65, cout: { argent: 15000, materiaux: {} } },
-  { nom: 'Champion', vitesse: 1.9, cout: { argent: 45000, materiaux: {} } },
+  { nom: 'Costaud', vitesse: 1.2, cout: { argent: 600, materiaux: {} } },
+  { nom: 'Robuste', vitesse: 1.4, cout: { argent: 2000, materiaux: {} } },
+  { nom: 'Expert', vitesse: 1.65, cout: { argent: 5000, materiaux: {} } },
+  { nom: 'Champion', vitesse: 1.9, cout: { argent: 12000, materiaux: {} } },
 ]
 // Les places du chariot d'un pousseur (à peu près ce que la mine et ses mineurs sortent pendant un
 // aller-retour d'environ 15 s : il suit tout juste, il faut l'agrandir quand on produit plus).
@@ -382,9 +382,9 @@ export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
 export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
   { places: 20, cout: { materiaux: {} } },
   { places: 40, cout: { argent: 800, materiaux: { fer: 40 } } },
-  { places: 70, cout: { argent: 4000, materiaux: { fer: 100 } } },
-  { places: 110, cout: { argent: 14000, materiaux: { fer: 200 } } },
-  { places: 170, cout: { argent: 45000, materiaux: { fer: 400 } } },
+  { places: 70, cout: { argent: 2500, materiaux: { fer: 100 } } },
+  { places: 110, cout: { argent: 6000, materiaux: { fer: 200 } } },
+  { places: 170, cout: { argent: 15000, materiaux: { fer: 400 } } },
 ]
 // (23/10) Le salaire d'un pousseur toutes les 5 minutes : une base, plus un peu pour chaque niveau
 // de vitesse et chaque niveau de chariot (× sa rareté) : 400 $ au départ, jusqu'à 2 600 $ au
@@ -434,10 +434,10 @@ export const SECONDES_PAR_REDSTONE = 30
 // (25/10) La clairière fait 40 × 40 cases : le rayon va de 12 à 30 cases.
 export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; reserveMinutes: number; cout: Cout }[] = [
   { rayon: 12, bonus: 0.3, reserveMinutes: 5, cout: { materiaux: {} } },
-  { rayon: 16, bonus: 0.4, reserveMinutes: 7, cout: { argent: 5000, materiaux: { fer: 80, redstone: 40 } } },
-  { rayon: 20, bonus: 0.5, reserveMinutes: 10, cout: { argent: 15000, materiaux: { fer: 150, redstone: 90 } } },
-  { rayon: 25, bonus: 0.6, reserveMinutes: 13, cout: { argent: 40000, materiaux: { fer: 250, redstone: 180 } } },
-  { rayon: 30, bonus: 0.75, reserveMinutes: 16, cout: { argent: 100000, materiaux: { fer: 400, redstone: 350 } } },
+  { rayon: 16, bonus: 0.4, reserveMinutes: 7, cout: { argent: 4000, materiaux: { fer: 80, redstone: 40 } } },
+  { rayon: 20, bonus: 0.5, reserveMinutes: 10, cout: { argent: 8000, materiaux: { fer: 150, redstone: 90 } } },
+  { rayon: 25, bonus: 0.6, reserveMinutes: 13, cout: { argent: 15000, materiaux: { fer: 250, redstone: 180 } } },
+  { rayon: 30, bonus: 0.75, reserveMinutes: 16, cout: { argent: 35000, materiaux: { fer: 400, redstone: 350 } } },
 ]
 // (23/10) Il ne se sert plus tout seul dans le coffre de la mine : sa redstone arrive par les
 // rails (un pousseur sur Mine → Générateur) ou à la main.
@@ -455,9 +455,9 @@ export const SECONDES_PAR_CHARBON = 20
 export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[] = [
   { vitesse: 0.5, reservoir: 15, cout: { materiaux: {} } },
   { vitesse: 1, reservoir: 22, cout: { argent: 3000, materiaux: { fer: 50, redstone: 20 } } },
-  { vitesse: 1.6, reservoir: 30, cout: { argent: 12000, materiaux: { fer: 100, redstone: 60 } } },
-  { vitesse: 2.4, reservoir: 40, cout: { argent: 35000, materiaux: { redstone: 150, or: 40 } } },
-  { vitesse: 3.4, reservoir: 50, cout: { argent: 90000, materiaux: { or: 80, emeraude: 20 } } },
+  { vitesse: 1.6, reservoir: 30, cout: { argent: 6000, materiaux: { fer: 100, redstone: 60 } } },
+  { vitesse: 2.4, reservoir: 40, cout: { argent: 14000, materiaux: { redstone: 150, or: 40 } } },
+  { vitesse: 3.4, reservoir: 50, cout: { argent: 30000, materiaux: { or: 80, emeraude: 20 } } },
 ]
 
 // (23/10, bis) Tout petit : environ 50 secondes de forage au même niveau de forage (sans
@@ -467,9 +467,9 @@ export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[
 export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 25, cout: { materiaux: {} } },
   { capacite: 50, cout: { argent: 4000, materiaux: { fer: 60 } } },
-  { capacite: 90, cout: { argent: 14000, materiaux: { fer: 120, redstone: 40 } } },
-  { capacite: 140, cout: { argent: 40000, materiaux: { redstone: 150, or: 50 } } },
-  { capacite: 200, cout: { argent: 100000, materiaux: { or: 100, emeraude: 25 } } },
+  { capacite: 90, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } } },
+  { capacite: 140, cout: { argent: 14000, materiaux: { redstone: 150, or: 50 } } },
+  { capacite: 200, cout: { argent: 30000, materiaux: { or: 100, emeraude: 25 } } },
 ]
 
 // ---------------------------------------------------------------------------

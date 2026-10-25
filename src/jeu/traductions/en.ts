@@ -893,4 +893,5 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Salaires payés': 'Wages paid',
   'Autres ventes (le manager vend du coffre pour payer les salaires)': 'Other sales (the manager sells from the chest to pay wages)',
   'Autres dépenses': 'Other expenses',
+  'Ça fore : {n} bloc(s)/s': 'Drilling: {n} block(s)/s',
 }

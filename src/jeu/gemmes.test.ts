@@ -36,7 +36,8 @@ describe('le prix en gemmes', () => {
     expect(prixEnGemmes({ materiaux: {} })).toBe(3)
     expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(3)
     expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(5)
-    expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(9)
+    expect(prixEnGemmes({ argent: 10_000, materiaux: {} })).toBe(8)
+    expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(10)
     expect(prixEnGemmes({ argent: 10_000_000, materiaux: {} })).toBe(10)
     // Les minerais comptent à leur prix au marché : 200 $ + 40 pierres = 240 $ → 4 gemmes.
     expect(prixEnGemmes({ argent: 200, materiaux: { pierre: 40 } })).toBe(4)

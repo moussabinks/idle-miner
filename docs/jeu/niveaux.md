@@ -24,7 +24,7 @@ Presque tout ce qu'on fait rapporte de l'XP (`XP_PAR`) :
 
 - **Rester AFK ne rapporte pas d'XP** : ni les voyages des wagonnets, ni l'argent gagné. Il faut acheter (ou cliquer) pour avancer.
 - **Un achat payé en gemmes** rapporte la même XP que payé en argent (c'est ce qu'on possède qui compte).
-- Mesuré avec le bot (qui clique 2 fois par seconde) : niveau 3 vers 30 s, niveau 5 vers 15 min, niveau 7 vers 42 min, niveau 9 vers 1 h 39, niveau 10 vers 1 h 47, niveau 12 vers 3 h 33 ; il finit au niveau 14 quand il descend la mine au niveau 5 (vers 4 h). Le niveau du joueur n'a **jamais bloqué** le bot : c'est l'argent qui décide du rythme.
+- Mesuré avec le bot (qui clique 2 fois par seconde) : niveau 3 vers 30 s, niveau 5 vers 15 min, niveau 7 vers 40 min, niveau 9 vers 1 h 09 ; il finit au niveau 10 quand il descend la mine au niveau 5 (vers 1 h 40). Avant l'économie revue (25/10), il finissait au niveau 14, vers 4 h. Le niveau du joueur n'a **jamais bloqué** le bot : c'est l'argent qui décide du rythme.
 
 ### Une chose ne rapporte qu'une fois
 

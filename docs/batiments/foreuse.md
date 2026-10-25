@@ -41,11 +41,11 @@ En haut du panneau, une carte d'état : sa vitesse (« 1 blocs/s »), **En march
 |---|---:|---:|---|---:|---|---:|---:|
 | 1 | 0,5 | 15 charbons (5 min) | (de base) | 25 | (de base) | 50 s | 2 |
 | 2 | 1 | 22 (7 min 20) | 3 000 $ + 50 fer + 20 redstone | 50 | 4 000 $ + 60 fer | 50 s | 2 |
-| 3 | 1,6 | 30 (10 min) | 12 000 $ + 100 fer + 60 redstone | 90 | 14 000 $ + 120 fer + 40 redstone | 56 s | 3 |
-| 4 | 2,4 | 40 (13 min 20) | 35 000 $ + 150 redstone + 40 or | 140 | 40 000 $ + 150 redstone + 50 or | 58 s | 4 |
-| 5 | 3,4 | 50 (16 min 40) | 90 000 $ + 80 or + 20 émeraude | 200 | 100 000 $ + 100 or + 25 émeraude | 59 s | 5 |
+| 3 | 1,6 | 30 (10 min) | 6 000 $ + 100 fer + 60 redstone | 90 | 7 000 $ + 120 fer + 40 redstone | 56 s | 3 |
+| 4 | 2,4 | 40 (13 min 20) | 14 000 $ + 150 redstone + 40 or | 140 | 14 000 $ + 150 redstone + 50 or | 58 s | 4 |
+| 5 | 3,4 | 50 (16 min 40) | 30 000 $ + 80 or + 20 émeraude | 200 | 30 000 $ + 100 or + 25 émeraude | 59 s | 5 |
 
-(« Plein en » : le chariot du même niveau que le forage, sans électricité, `secondesPourRemplir`.) Tout le forage : 140 000 $ + 150 fer + 230 redstone + 120 or + 20 émeraude. Tout le chariot : 158 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude. (Avant le 25/10 : 6 niveaux de chacun, débloqués par le niveau du joueur.)
+(« Plein en » : le chariot du même niveau que le forage, sans électricité, `secondesPourRemplir`.) Tout le forage : 53 000 $ + 150 fer + 230 redstone + 120 or + 20 émeraude. Tout le chariot : 55 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude. (Avant le 25/10 : 6 niveaux de chacun, débloqués par le niveau du joueur.)
 
 Le chariot est **petit exprès** : il est plein en moins d'une minute. Il faut donc le vider souvent (sur place, ou avec le wagonnet Foreuse → Marché) et l'agrandir quand on améliore le forage, sinon il bloque la foreuse. Chaque ligne a aussi son bouton violet **💎** pour payer en gemmes. Messages : « ⚙️ Foreuse plus rapide : *N* blocs par seconde, *R* charbons de réservoir. », « 🛒 Chariot de la foreuse plus grand : *N* places. »
 

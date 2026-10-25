@@ -28,7 +28,7 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
-import { nomEmploye, t } from '../jeu/langue'
+import { nombre, nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
   CaseChemin,
@@ -41,7 +41,7 @@ import {
 } from './DessinsVillage'
 import { AmbianceVillage } from './AmbianceVillage'
 import { WagonnetVillage } from './WagonnetVillage'
-import { ImageBatiment, MiniJauge, Perso } from './ElementsVillage'
+import { EtiquetteVillage, ImageBatiment, MiniJauge, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { BOITES_PLAGE } from './plage'
 import { ForetDerriere, ForetDevant, type VueForet } from './ForetVillage'
@@ -64,6 +64,7 @@ import {
   versGrille,
   type Point,
 } from './iso'
+import { IconeImage } from './IconeImage'
 
 type Props = {
   etat: EtatJeu
@@ -633,7 +634,9 @@ export function VueVillage({
       >
         {/* La plus urgente en grand (son icône et deux mots), et combien d'autres attendent. */}
         <span className="bulle-medaille">
-          <span className="bulle-icone">{liste[0].icone}</span>
+          <span className="bulle-icone">
+            <IconeImage emoji={liste[0].icone} />
+          </span>
         </span>
         <span className="bulle-court">{liste[0].court}</span>
         {liste.length > 1 && <span className="bulle-compte">+{liste.length - 1}</span>}
@@ -699,8 +702,8 @@ export function VueVillage({
   }
   const pForeuse = auDessus('foreuse')
   if (pForeuse && foreuseEnMarche(etat)) {
-    const vitesse = vitesseForage(etat)
-    bulles.push(<MiniJauge key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte={`⚙️ ${t('Forage')}`} part={etat.foreuse.progression} secondes={(1 - etat.foreuse.progression) / Math.max(0.01, vitesse)} />)
+    // (25/10) Plus de jauge (elle se remplissait à chaque bloc, chaque seconde) : juste « ça fore ».
+    bulles.push(<EtiquetteVillage key="jauge-foreuse" x={pForeuse.x} y={pForeuse.y} texte={`⚙️ ${t('Ça fore : {n} bloc(s)/s', { n: nombre(vitesseForage(etat), 1) })}`} />)
   }
   const pGenerateur = auDessus('generateur')
   if (pGenerateur && generateurEnMarche(etat)) {
