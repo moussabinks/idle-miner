@@ -15,6 +15,26 @@
 | ⭐ Gagner un **niveau du joueur** | **1 💎** par niveau (14 du niveau 2 au niveau 15 ; 3 avant le 25/10) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
 | 🎁 Le **cadeau du jour** | 2 à 12 💎 selon le jour de la série (35 par semaine), plus des bonus | `RECOMPENSES_QUOTIDIENNES` |
 | 🎉 Une **ancienne partie** convertie le 25/10 | 10 💎 offertes (une fois) | `GEMMES_CADEAU` dans `sauvegarde.ts` |
+| 💶 **Acheter un pack** avec de l'argent réel (25/10) | 10, 30, 60 ou 100 💎 | `PACKS_GEMMES`, `crediterPack` |
+
+### Les packs de gemmes (argent réel, 25/10)
+
+Dans la boutique, sous la publicité, la section **« Acheter des gemmes »** : quatre cartes (deux par ligne sur téléphone). Prix du propriétaire :
+
+| Pack | Prix | En plus, par rapport au petit pack (`bonusPack`) |
+|---|---:|---:|
+| 10 💎 | 1,99 € | — |
+| 30 💎 (« Populaire ») | 4,99 € | +20 % |
+| 60 💎 | 6,99 € | +71 % |
+| 100 💎 (« Meilleure offre ») | 8,99 € | +121 % |
+
+Les prix s'écrivent à la façon de la langue (`prixEuros` dans `langue.ts` : « 1,99 € », « €1.99 »). Toucher une carte ouvre la fenêtre de paiement (`Paiement.tsx`).
+
+⚠️ **Aucun vrai moyen de paiement n'est encore branché** (`PAIEMENT_SIMULE` dans `src/portail.ts`) :
+- pendant le développement (`npm run dev`), un **paiement simulé** (« aucun argent n'est pris ») donne les gemmes, pour tester la boutique ;
+- en ligne (Vercel, CrazyGames), la fenêtre dit « Le paiement arrive bientôt » et ne donne rien, sinon tout le monde aurait des gemmes gratuites.
+
+Pour le brancher, il faudra un fournisseur : par exemple **Stripe** pour la version Vercel (un paiement vérifié par le serveur, une fonction Supabase qui crédite les gemmes du compte, jamais le navigateur tout seul), et les **achats intégrés de CrazyGames** pour la version portail. Il faudra aussi les mentions légales (conditions de vente, droit de rétractation).
 
 Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché dans le bandeau du haut (case 💎) : la toucher ouvre la boutique. Le message d'un passage de niveau le dit : « 🎉 Niveau 4 ! +1 💎 ».
 
@@ -103,7 +123,8 @@ Quand on rouvre un monde, le jeu rattrape le temps passé (8 h au plus) et la fe
 | `src/jeu/mineur.ts` | Les champs `gemmes`, `boosts` et `quotidien` de `EtatJeu` ; `acheterAvecGemmes`, `peutPayerEnGemmes` ; les bonus dans le clic (`cliquerMine`), le débit de la mine (`debitMine`) et les ventes (`valeurDe`). |
 | `src/jeu/niveaux.ts` | La gemme de chaque niveau gagné (`mettreAJourXp`). |
 | `src/jeu/absence.ts` | `resume.gains` et `doublerAbsence`. |
-| `src/composants/Boutique.tsx` | La boutique (publicité, bonus). |
+| `src/composants/Boutique.tsx` | La boutique (publicité, packs de gemmes, bonus). |
+| `src/composants/Paiement.tsx` | La fenêtre de paiement d'un pack (simulée pendant le développement). |
 | `src/composants/RecompensesQuotidiennes.tsx` | Le calendrier du cadeau du jour. |
 | `src/composants/Publicite.tsx` | La fausse publicité de 30 s. |
 | `src/composants/Amelioration.tsx` | Le bouton violet 💎 de chaque amélioration. |

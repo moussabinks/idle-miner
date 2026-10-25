@@ -880,4 +880,13 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent. Pratique pour payer tes améliorations.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it. Handy to pay for your upgrades.',
   'Dans le coffre : {n}': 'In the chest: {n}',
   'Gardé :': 'Kept:',
+  // (25/10) Les packs de gemmes
+  'Acheter des gemmes': 'Buy gems',
+  '+{n} % offert': '+{n}% free',
+  'Populaire': 'Popular',
+  'Meilleure offre': 'Best value',
+  'Payer {prix}': 'Pay {prix}',
+  '💎 +{n} gemmes ! Merci pour ton achat !': '💎 +{n} gems! Thanks for your purchase!',
+  'Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.': 'Payment simulation: no money is taken. It is only here to test the shop.',
+  'Le paiement arrive bientôt ! En attendant, regarde une publicité pour gagner des gemmes.': 'Payments are coming soon! Meanwhile, watch an ad to earn gems.',
 }
