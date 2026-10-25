@@ -215,7 +215,8 @@ Une barre crème remplace les gros boutons, avec une consigne et des boutons :
 | Mode | Consigne | Boutons |
 |---|---|---|
 | **Placer un bâtiment** (ou déplacer un bâtiment, un rail, un chemin) | « 👆 Touche la carte pour placer, puis valide. Glisse pour déplacer la carte. » (jusqu'au premier toucher) | **✖ Annuler** (blanc), **↔ Retourner** (blanc, bâtiments seulement), **🗑️ Enlever** (rose, un rail ou chemin déjà posé), **✔ Construire ici** / **✔ Poser ici** (vert, grisé si la place est prise) |
-| **Poser des rails** | « Touche le sol là où commence ta voie… », puis « Le rail doré montre où il sera posé… », puis « Choisis où va le prochain rail avec les flèches, puis pose-le. » (3 🔩 fer le rail ; en rouge, pourquoi on ne peut pas) | **↰ Gauche**, **⬆ Tout droit**, **↱ Droite** (le sens choisi est jaune), **↩ Retirer le dernier** (rose), **✔ Poser ce rail** (vert), **Terminé** (jaune) |
+| **Poser des rails** (25/10 : la croix) | Une **croix comme une manette** : ⬆️ en haut (tout droit), ↰ à gauche, ↱ à droite, ↩ en bas (retirer le dernier rail), ✔️ **Poser** au milieu, et « Terminé » à côté. Sur la carte, une **grosse flèche jaune** part du dernier rail posé et montre où va la voie ; la caméra va chercher le rail proposé s'il est caché sous la barre. Avant : | « Touche le sol là où commence ta voie… », puis « Le rail doré montre où il sera posé… », puis « Choisis où va le prochain rail avec les flèches, puis pose-le. » (3 🔩 fer le rail ; en rouge, pourquoi on ne peut pas) | **↰ Gauche**, **⬆ Tout droit**, **↱ Droite** (le sens choisi est jaune), **↩ Retirer le dernier** (rose), **✔ Poser ce rail** (vert), **Terminé** (jaune) |
+
 | **Poser des chemins** | « 🪨 Touche le sol pour poser un chemin (… $ la case). » | **Terminé** (jaune) |
 | **Modifier** | « ✏️ Touche un bâtiment, un rail ou un chemin pour le déplacer. » | **Terminé** (jaune) |
 

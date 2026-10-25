@@ -84,7 +84,7 @@ type Props = {
   zonesRails?: boolean // on pose des rails : les bâtiments qu'on peut relier sont entourés de jaune
   onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
   // (23/10) Le rail proposé (doré) qu'on posera avec le bouton « Poser », et s'il peut l'être.
-  railPropose?: { c: Case; ok: boolean } | null
+  railPropose?: { c: Case; ok: boolean; depuis: Case | null; sens: { x: number; y: number } } | null
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -185,6 +185,21 @@ export function VueVillage({
   if (poussait !== pousse) {
     setPoussait(pousse)
     if (pousse && libre !== null) setLibre(null)
+  }
+  // (25/10) Pendant qu'on pose des rails, la caméra va chercher le rail proposé s'il est caché
+  // sous la barre du bas (ou hors de l'écran) : on voit toujours la flèche.
+  const cleRailPropose = railPropose ? `${railPropose.c.x},${railPropose.c.y}` : null
+  const [railSuivi, setRailSuivi] = useState<string | null>(null)
+  if (cleRailPropose !== railSuivi) {
+    setRailSuivi(cleRailPropose)
+    if (railPropose) {
+      const z = zoom ?? zoomConfort
+      const vue = libre ?? { cx: versEcran(joueur.x, joueur.y).x, cy: versEcran(joueur.x, joueur.y).y - 20 }
+      const p = versEcran(railPropose.c.x + 0.5, railPropose.c.y + 0.5)
+      const x = milieuX + (p.x - vue.cx) * z
+      const y = taille.h / 2 + (p.y - vue.cy) * z
+      if (x < taille.l * 0.12 || x > taille.l * 0.88 || y < taille.h * 0.15 || y > taille.h * 0.55) setLibre({ cx: p.x, cy: p.y + (taille.h * 0.12) / z })
+    }
   }
   const suivi = pousse && wagonnet ? wagonnet : joueur
   const ecranJoueur = versEcran(suivi.x, suivi.y)
@@ -779,6 +794,7 @@ export function VueVillage({
         <g className={`rail-propose ${railPropose.ok ? '' : 'rail-propose-bloque'}`}>
           <RailsDuVillage village={{ ...village, rails: [...village.rails, cleCase(railPropose.c.x, railPropose.c.y)] }} seulement={[cleCase(railPropose.c.x, railPropose.c.y)]} />
           <polygon className="losange-propose" points={losange(railPropose.c.x, railPropose.c.y, 1)} />
+          <FlecheRail depuis={railPropose.depuis} vers={railPropose.c} sens={railPropose.sens} />
         </g>
       )}
       {pinceau && caseApercu && typePinceau && !railPropose && (
@@ -939,4 +955,26 @@ function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; bati
     return `${p.x},${p.y}`
   }).join(' ')
   return <polygon className={`rayon-generateur ${enVue ? 'rayon-en-vue' : ''} ${allume ? 'rayon-allume' : ''}`} points={points} />
+}
+
+// (25/10) La flèche des rails : elle part du dernier rail posé et montre où va la voie (la case
+// du rail proposé). Sans rail posé, elle traverse la case proposée dans le sens de départ.
+function FlecheRail({ depuis, vers, sens }: { depuis: Case | null; vers: Case; sens: { x: number; y: number } }) {
+  const de = depuis ? { x: depuis.x + 0.5, y: depuis.y + 0.5 } : { x: vers.x + 0.5 - sens.x * 0.45, y: vers.y + 0.5 - sens.y * 0.45 }
+  const a = versEcran(de.x, de.y)
+  const b = versEcran(vers.x + 0.5 + sens.x * 0.6, vers.y + 0.5 + sens.y * 0.6)
+  // La pointe : un triangle au bout, tourné dans le sens de la flèche.
+  const longueur = Math.hypot(b.x - a.x, b.y - a.y) || 1
+  const ux = (b.x - a.x) / longueur
+  const uy = (b.y - a.y) / longueur
+  const base = { x: b.x - ux * 16, y: b.y - uy * 16 }
+  const pointe = `${b.x},${b.y} ${base.x - uy * 12},${base.y + ux * 12} ${base.x + uy * 12},${base.y - ux * 12}`
+  return (
+    <g className="fleche-rail" pointerEvents="none">
+      <line x1={a.x} y1={a.y} x2={base.x} y2={base.y} stroke="#2a2140" strokeWidth={13} strokeLinecap="round" />
+      <polygon points={pointe} fill="#2a2140" stroke="#2a2140" strokeWidth={6} strokeLinejoin="round" />
+      <line x1={a.x} y1={a.y} x2={base.x} y2={base.y} stroke="#f9d65a" strokeWidth={6} strokeLinecap="round" />
+      <polygon points={pointe} fill="#f9d65a" />
+    </g>
+  )
 }
