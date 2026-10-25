@@ -6,7 +6,9 @@
 
 ## 1. Le projet en bref
 
-- **Quoi** : un idle game de minage inspiré de Minecraft. Depuis le 22/10 : on clique sur le bloc de la mine, on vend ce qui sort du coffre, on embauche des mineurs, puis on automatise tout avec des rails et un générateur électrique, en descendant la mine sur 5 niveaux (jusqu'au diamant). Plus de prestige ni de vue en coupe (archivés dans `archives/`).
+- **Quoi** : un idle game de minage inspiré de Minecraft, qui doit **tourner tout seul dès les premières minutes**. La boucle : **Creuse, Embauche, Automatise, Descends**. On clique sur le bloc de la mine, tout va dans son coffre, qu'on **vend d'un clic depuis la mine** (25/10 : plus de sac à dos ni de bazar) ; des **taupes mineuses** creusent pour nous ; des **rails** jusqu'au marché, un wagonnet et son pousseur vendent tout seuls, même jeu fermé ; le **générateur** électrifie les rails et la foreuse. La mine a **5 niveaux** (jusqu'au diamant), qui sont aussi des **paliers** : à la mine niveau N, toutes les améliorations (5 niveaux chacune) peuvent monter jusqu'au niveau N. Le niveau du joueur (1 à 15) débloque les rails et les niveaux de la mine. Les **gemmes** (une publicité = 1 gemme, 3 par niveau, le cadeau du jour) paient n'importe quelle amélioration ou un bonus. Plus de prestige ni de vue en coupe (archivés dans `archives/` ; une « nouvelle mine » est prévue).
+- **Où on le joue** : sur Vercel (comptes Supabase et classement à l'argent gagné), et bientôt sur **CrazyGames** (une version « portail » sans comptes, avec leurs publicités ; la revue est dans `docs/revue-crazygames.md`). En français, et bientôt en anglais (tous les textes passent par `t()`).
+- **La doc du jeu** : `docs/jeu/vue-d-ensemble.md` (sommaire), les fiches `docs/batiments/`, et `CLAUDE.md` pour les règles de code et le style.
 - **D'où on part** : une v1 jouable en **Python** (notebook Jupyter + `ipywidgets`). Sa spec complète est dans `docs/idle_miner_v1.md`.
 - **Objectif** : un portage web avec un front plus soigné, jouable dans le navigateur et hébergé sur Vercel.
 - **Équipe** : 2 développeurs sur GitHub.
@@ -41,6 +43,8 @@
 - **Poste de dev (Mac)** : Homebrew, Node 26, npm 11, git, et gh connecté au compte `moussabinks`.
 
 ## 4. État actuel du code
+
+> ⚠️ **Cette section décrit le code d'avant le 25/10** (gardée pour l'histoire). L'état actuel, chiffres compris, est dans la doc : [docs/jeu/vue-d-ensemble.md](docs/jeu/vue-d-ensemble.md), [docs/jeu/equilibrage.md](docs/jeu/equilibrage.md), [docs/jeu/gemmes-et-recompenses.md](docs/jeu/gemmes-et-recompenses.md) et [docs/jeu/architecture.md](docs/jeu/architecture.md), et le résumé de la grande mise à jour est le dernier point du journal (section 7).
 
 **Refonte du 22/10 : la mine automatique** (`VERSION_ETAT = 21` : les parties d'avant repartent de zéro, l'accueil le dit). **24/10 : les trajets des wagonnets** (`VERSION_ETAT = 22` : une partie v21 est convertie). Tout se passe au village vu du ciel ; la mine ne se visite plus.
 
@@ -85,14 +89,20 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 
 ## 5. Feuille de route
 
-1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, succès. ✅ Mine automatique (22/10).
-1 bis. Prochaines idées (22/10) : améliorer les mineurs avec des « enchantements » (Fortune, Efficacité...) ; revoir toute l'économie après de vraies parties ; un but de fin de partie (le prestige est archivé) ; nettoyer le CSS de l'ancienne vue en coupe.
-2. **Brancher Vercel** (décision A/B ci-dessus).
-2 bis. ✅ **Leaderboard** (19/10) : prestige et argent gagné au total. Idées : classement par temps jusqu'à la bedrock, voir son rang même hors du top 20, retirer un tricheur à la main dans Supabase (Table Editor → classement).
-3. **Polish** : ✅ sons et animations (19/10), ✅ village vu du ciel avec les images fournies (20/10). Reste : meilleure ambiance par zone, des sons propres au village (marche, construction).
-4. Ajuster l'équilibrage après de vraies parties (le bot donne environ 19 min jusqu'à la bedrock).
-5. Village : quand il y aura trop de cabines d'ascenseur (un mineur = une cabine), construire une **2e mine** (prochaines mises à jour) ; (tenues du Bazar retirées le 27/10) ; ✅ personnages en images tirées des planches (21/10). Reste : **une planche du joueur** (hamster sans casque) à demander à l'équipe, pour que le joueur ait sa tête à lui.
-6. Idées en attente : améliorations des pioches au forgeron, couches dures, étais de mine, de vrais mineurs automatiques pour un jeu qui avance hors ligne (proposé le 18/10, pas encore décidé).
+**Fait**
+
+1. ✅ Données, mine, mineur, bot de simulation, UI, sauvegarde, succès. ✅ Mine automatique (22/10). ✅ Village vu du ciel (20/10). ✅ Leaderboard (19/10). ✅ Vercel : chaque push sur `main` déploie la prod, chaque PR a sa preview.
+2. ✅ **La grande mise à jour (25/10)**, d'après la revue `docs/revue-crazygames.md` : plus de sac ni de bazar (vente directe du coffre, punaise 📌), début rapide (mine qui tourne dès le niveau 1, 80 $, premier mineur à 50 $, tutoriel jusqu'au premier mineur), paliers (5 niveaux pour tout), niveau du joueur plafonné à 15, clairière de 40 × 40, gemmes (publicités, cadeau du jour, boutique, absence × 2), classement à l'argent gagné, nouveau style (taupes, contours épais, `Fenetre`, `src/styles/`), deux langues (`t()`), version CrazyGames, stockage sûr, chemins relatifs. Sauvegarde v29 (les vieilles parties sont converties).
+
+**À faire ensuite** (dans l'ordre)
+
+3. **La « nouvelle mine »** : une boucle longue pour la fin de partie, qui repart de zéro avec un **bonus permanent** (à partir du prestige rangé dans `archives/prestige/`).
+4. **Les défis du jour** : 3 défis tirés de la liste des tâches, pour revenir chaque jour (avec le cadeau du jour).
+5. **La collection de mineurs** : montrer tôt les mineurs rares découverts (« 3/24 mineurs découverts »).
+6. **CrazyGames** : tester le **vrai SDK** (publicités récompensées, `gameplayStart/Stop`, `happytime` : `src/portail.ts` n'a été écrit que d'après leur documentation), la sauvegarde par leur module Data, et faire la **vignette** et le **GIF** de la fiche.
+7. **Finitions** : remplir la traduction anglaise (`src/jeu/traductions/en.ts`, `npm run traductions`), remplacer le dernier `window.confirm` (`useCompte.ts`), finir le nettoyage du CSS, mettre à jour `docs/jeu/interface.md` et `docs/jeu/visuel-et-sons.md` (nouveau style), ajouter au bot les repères des 5 premières minutes.
+8. **Équilibrage** : l'ajuster après de vraies parties (le bot arrive au niveau 5 de la mine en ~4 h ; un vrai joueur plutôt 5 à 8 h).
+9. Idées en attente : améliorer les mineurs avec des « enchantements » (Fortune, Efficacité...) ; une **planche du joueur** (sa taupe à lui) ; des sons propres au village (marche, construction).
 
 ## 6. Décisions de design (héritées de la v1)
 
@@ -239,4 +249,4 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-24 (45)** : mine : plus de compteur « 💰 ce tour » sous le bloc (3 cases fixes, l'interface ne bouge plus) ; « Tout mettre dans le sac » laisse dans le coffre les « 📌 Garder N » du wagonnet ; boutons −100 / +100 pour ce nombre.
 - **2026-10-24 (46)** : le jeu ne se met plus en pause quand on change d'onglet ou de fenêtre : chaque tic de l'horloge compte tout le temps passé (avant : 1 s au plus, alors que le navigateur ralentit l'horloge d'un onglet caché).
 - **2026-10-23 (44)** : un employé au niveau max garde son échelle de carrés (toute remplie) avec « ✔ Niveau max » (pioche d'un mineur, vitesse et chariot d'un pousseur), au lieu de la faire disparaître.
-
+- **2026-10-25 : la grande mise à jour** (d'après la revue avant CrazyGames, `docs/revue-crazygames.md`). **Plus de sac à dos ni de bazar** : le coffre se vend d'un clic depuis la mine, au prix du marché (`vendreCoffre`), une **punaise 📌** y garde un minerai ; le marché ne sert plus qu'à recevoir les wagonnets ; le chariot de la foreuse se vend sur place (`vendreChariot`). **Début rapide** : la mine sort 0,2 bloc/s dès le niveau 1, 80 $ au départ, Personnel 40 $, premier mineur 50 $ ; tutoriel : bonjour, casser 10 blocs, vendre le coffre, Personnel, premier mineur, bravo. **Paliers** : toutes les améliorations ont 5 niveaux et le niveau N demande la mine au niveau N (les chefs : 3 niveaux, `PALIER_CHEF`) ; niveau du joueur plafonné à 15, il débloque les rails (2) et la mine (3, 5, 7, 9) et rapporte 3 gemmes par niveau ; tous les prix revus (`donnees.ts`). **Clairière de 40 × 40** (mine en 15, 15). **Gemmes** (`gemmes.ts`) : 1 par publicité (fausse pub de 30 s pour l'instant), prix en gemmes = arrondi(√valeur ÷ 5) ; boutique (Production × 2 15 min 8 💎, Ventes × 2 10 min 8 💎, Clics en or 5 min 4 💎, Trésor 10 💎) ; cadeau du jour (série de 7 jours, le 7e : 10 💎 + production × 2 30 min) ; absence doublée par une pub. **Classement** à l'argent gagné en tout. **Style** refait (taupes, contours bleu nuit épais, fenêtres crème, `Fenetre.tsx`, `src/styles/`, polices `@fontsource`), **deux langues** (`t()`, `src/jeu/traductions/en.ts` à remplir, `npm run traductions`), **version CrazyGames** (`VITE_PORTAIL=crazygames`, `src/portail.ts`), **stockage sûr** (`src/stockage.ts`), chemins relatifs (`base: './'`). Bot (médianes) : mine 2 en ~4 min, 3 en ~32 min, 4 en ~1 h 39, 5 en ~4 h, rails électriques en ~15 min ; repères : mine 2 en 2 à 10 min, rails < 10 min, électrique < 1 h 30, mine 5 en 3 à 6 h. **Sauvegarde v29** (`convertirVersion28`) : sac vendu, bazar retiré et 200 $ remboursés, village décalé de −10 cases (bâtiments reposés près de la mine si besoin, rails hors de la clairière retirés et leur fer rendu), niveaux ramenés à 5, 10 gemmes offertes, tutoriel passé. Doc mise à jour (nouvelle page `docs/jeu/gemmes-et-recompenses.md`, fiche du bazar supprimée).

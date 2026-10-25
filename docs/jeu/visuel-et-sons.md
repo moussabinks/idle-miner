@@ -1,5 +1,7 @@
 # Le visuel et les sons de Mega Digger
 
+> ⚠️ **(25/10) Le style et l'interface ont été refaits** : voir [CLAUDE.md](../../CLAUDE.md), section « Le style » ; cette page sera mise à jour.
+
 > Le style graphique, les animations, le décor, les bruitages, la musique et l'application installable (PWA).
 > Écrit d'après le code au 22/10, après la refonte de la **mine automatique** (plus de vue de la mine en coupe), mis à jour le 27/10 et le 30/10 (bonus de combo, jauge de la pioche, animation d'embauche, aperçu des rails, fenêtre du retour) : `src/index.css`, `src/blocs.css`, `src/effets.css`, `src/personnel.css`, `src/accueil.css`, `src/village.css`, `src/composants/*.tsx` (dont `iso.ts`, `DessinsVillage.tsx`, `VueVillage.tsx`, `PanneauMine.tsx`, `sprites.ts`, `SceneAccueil.tsx`), `src/sons.ts`, `src/ambiance.ts`, `src/installation.ts`, `public/` (dont `public/images/`). Les règles du village sont dans [village.md](village.md). Ce que fait chaque bouton est dans [interface.md](interface.md).
 

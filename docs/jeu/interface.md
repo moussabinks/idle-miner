@@ -1,5 +1,7 @@
 # L'interface de Mega Digger
 
+> ⚠️ **(25/10) Le style et l'interface ont été refaits** : voir [CLAUDE.md](../../CLAUDE.md), section « Le style » ; cette page sera mise à jour.
+
 > Ce que voit le joueur, écran par écran et composant par composant, et ce que fait chaque bouton.
 > Écrit d'après le code au 22/10 (trajets des wagonnets ajoutés le 24/10 ; menu Bâtiments seul, panneau de la mine refait, jauge du coffre et ventes au marché le 27/10 ; missions, bandeau à gauche, onglets et zoom le 27/10 ; niveau du joueur, tutoriel du forgeron, zoom plus doux et clic à côté des bâtiments le 29/10 ; onglet « Améliorer » de la mine, bonus de combo, fenêtres du rail et du retour, zoom fluide, panneaux plus larges le 30/10) (`src/App.tsx`, `src/composants/*.tsx`, `src/index.css`, `src/village.css`, `src/plein-ecran.css`…), après la refonte de la **mine automatique** : il n'y a plus qu'un seul mode, le village vu du ciel (plus de vue de la mine en coupe). Les règles et chiffres de chaque bâtiment sont dans les fiches [docs/batiments/](../batiments/README.md) ; les règles du village (grille, construction, rails, chemins) dans [village.md](village.md) ; le style visuel, les animations et les sons dans [visuel-et-sons.md](visuel-et-sons.md).
 

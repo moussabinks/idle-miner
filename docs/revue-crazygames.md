@@ -157,48 +157,51 @@ Le village est le point fort : il tient la comparaison avec les jeux mobiles du 
 
 Dans l'ordre : d'abord ce qui empêche de publier, puis ce qui retient le joueur, puis le polish. Chaque ligne tient dans une PR.
 
+> **Mis à jour le 25/10, après « la grande mise à jour »** : les cases cochées sont faites (le détail est dans [CONTEXTE.md](../CONTEXTE.md), journal du 25/10, et dans la doc [jeu/](jeu/vue-d-ensemble.md)).
+
 **Avant de publier (bloquant)**
 
-- [ ] Stockage sûr : un seul objet `stockage` avec try/catch et repli en mémoire
-- [ ] `base: './'` dans Vite et chemins relatifs pour images, polices, sons
-- [ ] Version « portail » : sans service worker, manifest, carte d'installation, comptes Supabase
-- [ ] SDK CrazyGames : sauvegarde Data, `gameplayStart/Stop`, `happytime`
-- [ ] Police Luckiest Guy servie depuis `public/fonts/`
-- [ ] Remplacer les `window.confirm` par `Confirmation`
-- [ ] Traduction anglaise (textes sortis dans un fichier par langue)
+- [x] Stockage sûr : un seul objet `stockage` avec try/catch et repli en mémoire (`src/stockage.ts`)
+- [x] `base: './'` dans Vite et chemins relatifs pour images, polices, sons (`import.meta.env.BASE_URL`)
+- [x] Version « portail » : sans service worker, manifest, carte d'installation, comptes Supabase (`VITE_PORTAIL=crazygames`, `src/portail.ts`)
+- [x] SDK CrazyGames : `gameplayStart/Stop`, `happytime` et publicités récompensées (l'adaptateur de `src/portail.ts`, **pas encore testé avec le vrai SDK** ; la sauvegarde par le module Data reste à faire)
+- [x] Police servie par le jeu (finalement Lilita One et Nunito, par `@fontsource` ; plus de Google Fonts)
+- [ ] Remplacer les `window.confirm` par `Confirmation` (presque : recommencer et supprimer un monde passent par la fenêtre du jeu ; **il reste celui des mondes à la connexion**, `useCompte.ts`)
+- [x] Traduction anglaise (textes sortis dans un fichier par langue) : `t()`, `src/jeu/traductions/en.ts`, `npm run traductions` (le mécanisme ; `en.ts` reste à remplir)
 
 **Première session (rétention J0)**
 
-- [ ] Premier revenu passif avant 2 minutes (mineur offert par le tutoriel)
-- [ ] Tutoriel jusqu'au premier mineur embauché
-- [ ] Bandeau qui se révèle petit à petit (argent + coffre au départ)
-- [ ] Une seule boucle en 4 mots, sur l'accueil et la bienvenue
+- [x] Premier revenu passif avant 2 minutes (finalement : la mine sort des blocs dès le niveau 1, et le premier mineur coûte 50 $)
+- [x] Tutoriel jusqu'au premier mineur embauché (bonjour, casser 10 blocs, vendre le coffre, Personnel, premier mineur, bravo)
+- [x] Bandeau qui se révèle petit à petit (argent + coffre au départ, `Hud.tsx`)
+- [x] Une seule boucle en 4 mots, sur l'accueil et la bienvenue (Creuse, Embauche, Automatise, Descends : `etapesDuJeu.ts`)
 - [ ] Repères du fil rouge des 5 minutes ajoutés au bot
 
 **Revenir (rétention J1 et J7)**
 
-- [ ] Boucle longue : « nouvelle mine » avec bonus permanent (à partir de `archives/`)
-- [ ] Niveaux 16 à 30 remplis, ou plafond à 15
-- [ ] Classement à l'argent gagné au total
-- [ ] Fenêtre de retour avec gros « +X $ » et « ×2 avec une pub »
-- [ ] Coffre quotidien et 3 défis du jour
+- [ ] Boucle longue : « nouvelle mine » avec bonus permanent (à partir de `archives/`) : prévue, prochaine étape
+- [x] Niveaux 16 à 30 remplis, ou plafond à 15 (plafond à 15, et chaque niveau rapporte 3 gemmes)
+- [x] Classement à l'argent gagné au total
+- [x] Fenêtre de retour avec gros « +X $ » et « ×2 avec une pub »
+- [x] Coffre quotidien (le cadeau du jour : série de 7 jours, gemmes, argent et bonus)
+- [ ] 3 défis du jour
 - [ ] Collection de mineurs visible tôt
 
 **Homogénéiser l'interface**
 
-- [ ] Composant `Fenetre` commun (✖, Échap, voile), toutes les fenêtres dessus
-- [ ] Composant `Bouton` à 5 rôles, couleurs revues
-- [ ] Une règle par sorte d'alerte ; la fête de niveau ne ferme plus le panneau
-- [ ] Vocabulaire unifié (tableau de la section 4)
+- [x] Composant `Fenetre` commun (✖, Échap, voile), toutes les fenêtres dessus
+- [x] Boutons à rôles, couleurs revues (`src/styles/theme.css` : vert acheter, jaune action principale et vendre, violet gemmes, bleu aller/voir, blanc neutre, rose détruire)
+- [x] Une règle par sorte d'alerte ; la fête de niveau ne ferme plus le panneau (elle attend qu'il soit fermé)
+- [x] Vocabulaire unifié (tableau de la section 4)
 - [ ] Textes à 12 px minimum, cibles à 44 px, plus d'info seulement au survol
-- [ ] Coffre de la mine simplifié, réglages fins à part
-- [ ] Menu Bâtiments : à construire d'abord
+- [x] Coffre de la mine simplifié, réglages fins à part (« Tout vendre », « Vendre » par minerai et une punaise 📌 ; plus de sac)
+- [x] Menu Bâtiments : à construire d'abord
 
 **Polish visuel**
 
-- [ ] Un seul habillage de fenêtre (bois + crème), titres en Luckiest Guy
-- [ ] Nouveau bloc à cliquer en 3/4, qui se fissure
+- [x] Un seul habillage de fenêtre (finalement : crème, contours bleu nuit épais, titres en Lilita One)
+- [x] Nouveau bloc à cliquer en 3/4, qui se fissure (`BlocDessin.tsx`)
 - [ ] Caméra plus proche au départ
 - [ ] Barre d'aide clavier qui disparaît
 - [ ] Vignette et GIF pour la fiche CrazyGames
-- [ ] Nettoyer le CSS mort (prestige, vue en coupe, enchanteur : environ 90 classes)
+- [ ] Nettoyer le CSS mort (prestige, vue en coupe, enchanteur : environ 90 classes) : en cours (les anciennes feuilles sont remplacées par `src/styles/`)
