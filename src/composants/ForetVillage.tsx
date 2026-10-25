@@ -6,7 +6,8 @@
 // Les arbres sont toujours plantés au même endroit (hasard à graine fixe) : la forêt ne change
 // pas d'une partie à l'autre.
 //
-// Il y a plus de mille arbres : en faire mille images de la page rendait la carte lente à faire
+// Il y a environ 450 arbres (25/10 : deux fois moins qu'avant, pour aérer la carte) : en faire
+// des centaines d'images de la page rendait la carte lente à faire
 // glisser. On les dessine donc dans des « toiles » (canvas), découpées en tuiles carrées, une
 // fois pour toutes. Après un zoom, les tuiles qu'on voit sont redessinées avec plus de pixels
 // (nettes de près) ; les autres restent légères.
@@ -38,9 +39,20 @@ const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.5, 0.25, 0]
 
 // La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
 // l'écart (en cases) entre deux arbres de ce rang. Les autres arbres restent derrière ce rang.
+// (25/10 : deux fois moins d'arbres qu'avant, pour aérer la carte : la lisière est un peu moins
+// serrée, et la forêt derrière a des bosquets et des petites clairières.)
 const DISTANCE_LISIERE = 1.3
-const ECART_LISIERE = 2.2
-const RECUL_DERRIERE = 1.5
+const ECART_LISIERE = 2.8
+const RECUL_DERRIERE = 1.6
+// L'écart moyen (en cases) entre deux arbres de la forêt, derrière la lisière.
+const PAS_FORET = 2.4
+
+// Des bosquets et des clairières : un nombre qui varie doucement d'un endroit à l'autre de la
+// forêt (entre -1 et 1 à peu près). Là où il est bas, on plante moins : de l'herbe entre des
+// groupes d'arbres, comme une vraie forêt, plutôt que des arbres tous au même écart.
+function touffu(x: number, y: number): number {
+  return 0.6 * Math.sin(x * 0.37 + 1.3) * Math.sin(y * 0.41 + 0.4) + 0.4 * Math.sin((x - y) * 0.23 + 2.1)
+}
 
 function planterForet(): Arbre[] {
   const hasard = aleatoireAvecGraine(2026)
@@ -55,7 +67,6 @@ function planterForet(): Arbre[] {
   }
   const arbres: Arbre[] = []
   const n = TAILLE_GRILLE
-  const pas = 1.55
   // Planter un arbre dont le tronc est sur le point (x, y) de la grille, large de « taille » cases.
   const planter = (x: number, y: number, taille: number, dehors: number) => {
     // Pas d'arbre sur la plage ni dans la mer (en bas à gauche, voir PlageVillage).
@@ -102,10 +113,11 @@ function planterForet(): Arbre[] {
   const maxX = Math.ceil(Math.max(...coins.map((c) => c.x)))
   const minY = Math.floor(Math.min(...coins.map((c) => c.y)))
   const maxY = Math.ceil(Math.max(...coins.map((c) => c.y)))
-  for (let gx = minX; gx < maxX; gx += pas) {
-    for (let gy = minY; gy < maxY; gy += pas) {
-      const x = gx + (hasard() - 0.5) * 1.1
-      const y = gy + (hasard() - 0.5) * 1.1
+  for (let gx = minX; gx < maxX; gx += PAS_FORET) {
+    for (let gy = minY; gy < maxY; gy += PAS_FORET) {
+      // Chaque arbre bouge un peu autour de son point : on ne devine pas de quadrillage.
+      const x = gx + (hasard() - 0.5) * 1.5
+      const y = gy + (hasard() - 0.5) * 1.5
       // De combien de cases on est sorti de la clairière.
       const dehors = Math.max(-x, -y, x - n, y - n)
       // Rien devant la lisière : les autres arbres restent derrière le premier rang.
@@ -113,12 +125,12 @@ function planterForet(): Arbre[] {
       // Juste derrière la lisière, un peu moins d'arbres, puis de plus en plus. Au fond de la
       // forêt, des arbres plus gros et moins nombreux (on n'en voit que le haut).
       const loin = dehors > 6
-      const chance = dehors < 3.5 ? 0.65 : loin ? 0.42 : 0.95
+      const chance = (dehors < 3.5 ? 0.6 : loin ? 0.5 : 0.85) + 0.3 * touffu(x, y)
       if (hasard() > chance) continue
       // Seulement là où la caméra peut voir (un arbre haut dépasse au-dessus de son pied).
       const p = versEcran(x, y)
       if (p.x < x0 - 80 || p.x > x1 + 80 || p.y < y0 - 20 || p.y > y1 + 160) continue
-      planter(x, y, loin ? 2.5 + hasard() * 0.8 : 1.7 + hasard() * 0.7, dehors)
+      planter(x, y, loin ? 2.2 + hasard() * 0.7 : 1.7 + hasard() * 0.6, dehors)
     }
   }
   // Du fond vers l'avant : un arbre plus bas sur l'écran est dessiné par-dessus.

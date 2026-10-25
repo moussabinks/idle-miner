@@ -6,7 +6,7 @@
 // dans src/jeu/donnees.ts : « gauche » = la façade en bas à gauche (y = 5), « droite » = celle en
 // bas à droite (x = 5).
 
-import { C, Toile, TRAIT, TRAIT_FIN, clair, fonce, r1, teintes } from './formes.mjs'
+import { C, DX, DY, Toile, TRAIT, TRAIT_FIN, clair, fonce, points, polygone, r1, rocher, teintes } from './formes.mjs'
 
 // L'épaisseur de la dalle de pavés, et la hauteur de son dessus.
 const DALLE = 8
@@ -380,76 +380,244 @@ export function employes() {
 }
 
 // ---------------------------------------------------------------------------
-// La foreuse : une machine orange, son moteur qui fume, et une grosse mèche en spirale
+// La foreuse (25/10, redessinée) : une grosse mèche en acier qui s'enfonce dans un trou plein de
+// terre, tenue par un portique jaune ; au-dessus, son moteur orange qui fume. Une trémie à charbon
+// devant à gauche, un tas de charbon devant à droite, un bidon au fond.
 // ---------------------------------------------------------------------------
 
+// L'acier de la mèche : le clair, le foncé (les rainures en spirale) et le reflet.
+const ACIER = '#b8c0cc'
+const ACIER_FONCE = '#7f889a'
+const ACIER_REFLET = '#eef1f6'
+// La terre retournée autour du trou.
+const TERRE = '#c9a274'
+
+// Des bandes de chantier (jaunes et noires, en biais) sur une façade, à dessiner avec surFace :
+// un rectangle de « longueur » sur « hauteur », posé sur le point d'origine de la façade.
+function bandesChantier(t, longueur, hauteur, jaune = C.jaune) {
+  const id = t.nouvelId('chantier')
+  t.defs.push(`<clipPath id="${id}"><rect x="0" y="${-hauteur}" width="${r1(longueur)}" height="${hauteur}"/></clipPath>`)
+  let raies = ''
+  for (let u = -hauteur; u < longueur; u += 22) {
+    raies += `<path d="M${r1(u)} 0 L${r1(u + hauteur)} ${-hauteur} L${r1(u + hauteur + 11)} ${-hauteur} L${r1(u + 11)} 0 Z" fill="${C.encre}"/>`
+  }
+  return (
+    `<rect x="0" y="${-hauteur}" width="${r1(longueur)}" height="${hauteur}" fill="${jaune}"/>` +
+    `<g clip-path="url(#${id})">${raies}</g>` +
+    `<rect x="0" y="${-hauteur}" width="${r1(longueur)}" height="${hauteur}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
+  )
+}
+
+// La grosse mèche en acier, vue de côté : un cylindre puis une pointe, entourés de larges rainures
+// en spirale. (mx, yHaut) : le milieu de son haut, en pixels du dessin ; rx : son rayon (en
+// pixels) ; longueurs du cylindre et de la pointe (en pixels). « coupe » : un clipPath qui cache
+// le bout de la pointe, enfoncé dans le trou.
+function meche(t, mx, yHaut, rx, cylindre, pointe, coupe) {
+  const ry = rx * 0.58 // un cercle couché, vu à l'angle du jeu
+  const yBas = yHaut + cylindre + pointe
+  // Le rayon de la mèche à la profondeur h (en pixels sous son haut).
+  const rayon = (h) => (h <= cylindre ? rx : Math.max(0, rx * (1 - (h - cylindre) / pointe)))
+  const corps =
+    `M${r1(mx - rx)} ${r1(yHaut)} L${r1(mx - rx)} ${r1(yHaut + cylindre)} L${r1(mx)} ${r1(yBas)} ` +
+    `L${r1(mx + rx)} ${r1(yHaut + cylindre)} L${r1(mx + rx)} ${r1(yHaut)} A${r1(rx)} ${r1(ry)} 0 0 0 ${r1(mx - rx)} ${r1(yHaut)} Z`
+  const idCorps = t.nouvelId('meche')
+  t.defs.push(`<clipPath id="${idCorps}"><path d="${corps}"/></clipPath>`)
+  // Le côté droit, à l'ombre : la même mèche, en plus sombre, au-delà de cette ligne.
+  const idOmbre = t.nouvelId('ombre')
+  t.defs.push(`<clipPath id="${idOmbre}"><rect x="${r1(mx + rx * 0.38)}" y="${r1(yHaut - ry - 10)}" width="${r1(rx)}" height="${r1(yBas - yHaut + ry + 20)}"/></clipPath>`)
+
+  // Une rainure en spirale (une hélice) : on suit le devant de la mèche, de la gauche (angle
+  // -90°) à la droite (+90°) ; elle descend d'un demi-pas pendant ce temps. h : où elle commence.
+  const pas = 124
+  const helice = (h) => {
+    const liste = []
+    for (let i = 0; i <= 16; i++) {
+      const a = -Math.PI / 2 + (i / 16) * Math.PI
+      const hh = h + (pas / 2) * (i / 16)
+      const r = rayon(Math.max(0, hh))
+      liste.push([mx + r * Math.sin(a), yHaut + hh + r * 0.4 * Math.cos(a)])
+    }
+    return liste
+  }
+  const largeurRainure = 42
+  const rainures = (clair, fonce_) => {
+    let svg = `<rect x="${r1(mx - rx - 4)}" y="${r1(yHaut - ry - 4)}" width="${r1(2 * rx + 8)}" height="${r1(yBas - yHaut + ry + 8)}" fill="${clair}"/>`
+    for (let h = -pas; h < cylindre + pointe; h += pas / 2) {
+      const haut = helice(h)
+      const bas = helice(h + largeurRainure)
+      svg += polygone([...haut, ...bas.reverse()], fonce_, 0)
+      // Les bords de la rainure, soulignés à l'encre.
+      for (const bord of [helice(h), helice(h + largeurRainure)]) {
+        svg += `<polyline points="${points(bord)}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
+      }
+    }
+    return svg
+  }
+  let svg = `<g clip-path="url(#${idCorps})">`
+  svg += rainures(ACIER, ACIER_FONCE)
+  // Le reflet : une facette claire, toute droite, sur la gauche de la mèche.
+  svg += `<path d="M${r1(mx - rx * 0.62)} ${r1(yHaut - ry)} L${r1(mx - rx * 0.4)} ${r1(yHaut - ry)} L${r1(mx - rx * 0.2)} ${r1(yBas)} L${r1(mx - rx * 0.32)} ${r1(yBas)} Z" fill="${ACIER_REFLET}" opacity="0.85"/>`
+  svg += `<g clip-path="url(#${idOmbre})">${rainures(fonce(ACIER, 0.18), fonce(ACIER_FONCE, 0.2))}</g>`
+  svg += `</g>`
+  svg += `<path d="${corps}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`
+  t.ajouter(coupe ? `<g clip-path="url(#${coupe})">${svg}</g>` : svg)
+}
+
 export function foreuse() {
-  const t = new Toile({ taille: 5, haut: 190 })
+  const t = new Toile({ taille: 5, haut: 250 })
   dalle(t, 5)
   const z = DALLE
-  const metal = teintes(C.metal, fonce(C.metal, 0.22))
+  const jaune = teintes(C.jaune, fonce(C.jaune, 0.2), clair(C.jaune, 0.35))
   const orange = teintes(C.orange, fonce(C.orange, 0.2))
-  // La plateforme en métal, avec des bandes jaunes et noires sur le devant.
+  const metalFonce = teintes('#6d7290', '#535774', '#8b90ab')
+
+  // La plateforme en acier, rayée de bandes de chantier sur ses deux façades de devant.
   const zp = z + 14
-  t.boite(0.5, 0.5, 4.5, 4.5, z, zp, metal)
-  t.surFace('gauche', 0.5, 4.5, z, Array.from({ length: 9 }, (_, i) => `<path d="M${10 + i * 16} -2 L${18 + i * 16} -12" stroke="${C.jaune}" stroke-width="6"/>`).join(''))
-  // Le pot d'échappement et sa fumée (derrière le moteur).
-  t.cylindre(1.05, 0.95, 0.17, 100, 150, teintes('#6d7290', '#535774', '#8b90ab'))
-  const [fx, fy] = t.pt(1.05, 0.95, 166)
-  ;[
-    [0, 0, 10],
-    [-10, -16, 13],
-  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
-  // Le moteur : une grosse boîte orange, sa vitre, sa grille et une roue dentée.
-  t.boite(0.75, 0.75, 3.1, 2.6, zp, 104, orange)
-  t.boite(0.7, 0.7, 3.15, 2.65, 104, 112, teintes(fonce(C.orange, 0.12), fonce(C.orange, 0.32)))
+  const [p0, p1] = [0.3, 4.7]
+  t.boite(p0, p0, p1, p1, z, zp, teintes(C.metal, fonce(C.metal, 0.22)))
+  t.surFace('gauche', p0, p1, z + 3, bandesChantier(t, (p1 - p0) * 38.15, 9))
+  t.surFace('droite', p1, p1, z + 3, bandesChantier(t, (p1 - p0) * 38.15, 9, fonce(C.jaune, 0.2)))
+
+  // L'axe de la mèche : au milieu de la dalle.
+  const A = 2.45
+  // Un bidon de carburant, au fond à droite.
+  t.cylindre(4.1, 0.75, 0.24, zp, zp + 32, teintes(C.redstone, fonce(C.redstone, 0.25)), { cerclages: [zp + 11, zp + 21] })
+
+  // La terre retournée autour du trou, puis le trou (sa paroi du fond, plus claire, et le noir).
+  t.ellipseSol(A, A, 1.95, zp, TERRE)
+  t.ellipseSol(A, A, 1.55, zp, fonce(TERRE, 0.55))
+  const [tx, ty] = t.pt(A, A, zp)
+  const rxTrou = 1.55 * DX * Math.SQRT2
+  const ryTrou = 1.55 * DY * Math.SQRT2
+  t.ajouter(`<ellipse cx="${r1(tx)}" cy="${r1(ty + 9)}" rx="${r1(rxTrou - 8)}" ry="${r1(ryTrou - 9)}" fill="${C.encre}"/>`)
+
+  // Le portique : deux pieds jaunes de part et d'autre du trou, des croisillons entre eux, et la
+  // grosse poutre du haut, sur la diagonale qui passe par l'axe (elle est en travers à l'écran).
+  const zPoutre = 160
+  const pieds = [
+    [1.0, 3.9],
+    [3.9, 1.0],
+  ]
+  const [g, d] = pieds
+  // Les croisillons (derrière la mèche).
+  t.poutre([g[0], g[1], zp + 16], [d[0], d[1], zPoutre - 6], C.jaune, 7)
+  t.poutre([d[0], d[1], zp + 16], [g[0], g[1], zPoutre - 6], C.jaune, 7)
+  for (const [x, y] of pieds) {
+    const e = 0.22
+    t.boite(x - e - 0.07, y - e - 0.07, x + e + 0.07, y + e + 0.07, zp, zp + 8, metalFonce) // le sabot
+    t.boite(x - e, y - e, x + e, y + e, zp + 8, zPoutre, jaune)
+    // Des bandes de chantier en bas du pied, et des rivets.
+    t.surFace('gauche', x - e, y + e, zp + 12, bandesChantier(t, 2 * e * 38.15, 26))
+    t.surFace('droite', x + e, y + e, zp + 12, bandesChantier(t, 2 * e * 38.15, 26, fonce(C.jaune, 0.2)))
+    for (const zr of [72, 102, 132]) {
+      const [rx_, ry_] = t.pt(x - e + 0.22, y + e, zr)
+      t.ajouter(`<circle cx="${r1(rx_)}" cy="${r1(ry_)}" r="3.2" fill="${fonce(C.jaune, 0.35)}"/>`)
+    }
+  }
+  // La poutre du haut, de pied en pied.
+  const k = 0.26
+  t.prisme(
+    [
+      [g[0] - 0.3 - k, g[1] + 0.3 - k],
+      [d[0] + 0.3 - k, d[1] - 0.3 - k],
+      [d[0] + 0.3 + k, d[1] - 0.3 + k],
+      [g[0] - 0.3 + k, g[1] + 0.3 + k],
+    ],
+    zPoutre,
+    zPoutre + 20,
+    jaune,
+  )
+
+  // Le moteur orange, posé sur la poutre : une grille et un voyant sur la façade de gauche, une
+  // roue dentée sur celle de droite.
+  const [m0, m1, zm0, zm1] = [A - 0.9, A + 0.9, zPoutre + 20, zPoutre + 66]
+  t.boite(m0, m0, m1, m1, zm0, zm1, orange)
+  t.boite(m0 - 0.07, m0 - 0.07, m1 + 0.07, m1 + 0.07, zm1, zm1 + 7, teintes(fonce(C.orange, 0.12), fonce(C.orange, 0.32)))
+  const faceMoteur = (m1 - m0) * 38.15
   t.surFace(
     'gauche',
-    0.75,
-    2.6,
-    zp,
-    `<rect x="10" y="-72" width="30" height="26" rx="5" fill="${C.bleu}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/><path d="M15 -66 L22 -59" stroke="${C.blanc}" stroke-width="4"/>` +
-      [24, 34].map((v) => `<path d="M58 ${-v} H82" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`).join(''),
+    m0,
+    m1,
+    zm0,
+    [12, 22, 32].map((v) => `<rect x="12" y="${-v - 8}" width="${r1(faceMoteur * 0.42)}" height="5" rx="2.5" fill="${fonce(C.orange, 0.35)}"/>`).join('') +
+      `<circle cx="${r1(faceMoteur * 0.76)}" cy="-26" r="9" fill="${C.redstone}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<circle cx="${r1(faceMoteur * 0.76 - 3)}" cy="-29" r="2.6" fill="${C.blanc}"/>`,
   )
   t.surFace(
     'droite',
-    3.1,
-    2.6,
-    zp,
-    `<circle cx="36" cy="-46" r="17" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" stroke-dasharray="7 4"/>` +
-      `<circle cx="36" cy="-46" r="11" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/><circle cx="36" cy="-46" r="4" fill="${C.encre}"/>`,
+    m1,
+    m1,
+    zm0,
+    `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="18" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" stroke-dasharray="7 4"/>` +
+      `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="11" fill="${fonce(C.jaune, 0.12)}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<circle cx="${r1(faceMoteur / 2)}" cy="-26" r="4.5" fill="${C.encre}"/>`,
   )
-  // Le bras qui avance au-dessus du trou, avec ses bandes de chantier.
-  const [bx0, bx1] = [1.45, 2.25]
-  t.boite(bx0, 1.6, bx1, 4.05, 112, 132, orange)
-  t.surFace('gauche', bx0, 4.05, 112, Array.from({ length: 3 }, (_, i) => `<path d="M${6 + i * 10} -3 L${12 + i * 10} -17" stroke="${C.encre}" stroke-width="5"/>`).join(''))
-  // Le trou, la mèche en spirale et son moteur, au bout du bras.
-  const [cx, cy] = [(bx0 + bx1) / 2, 3.6]
-  t.ellipseSol(cx, cy, 0.62, zp, C.encre)
-  const [mx, mHaut] = t.pt(cx, cy, 96)
-  const [, mBas] = t.pt(cx, cy, zp + 4)
-  const rx = 28
-  const meche = `M${r1(mx - rx)} ${r1(mHaut)} Q${r1(mx - rx * 0.6)} ${r1((mHaut + mBas) / 2)} ${r1(mx)} ${r1(mBas)} Q${r1(mx + rx * 0.6)} ${r1((mHaut + mBas) / 2)} ${r1(mx + rx)} ${r1(mHaut)} Z`
-  const id = t.nouvelId('meche')
-  t.defs.push(`<clipPath id="${id}"><path d="${meche}"/></clipPath>`)
-  t.ajouter(`<path d="${meche}" fill="#e3e8ef"/>`)
-  for (let k = -1; k < 6; k++) {
-    const y = mHaut + k * 15
-    t.ajouter(`<path d="M${r1(mx - rx)} ${r1(y)} L${r1(mx + rx)} ${r1(y + 14)}" stroke="${fonce(C.metal, 0.2)}" stroke-width="7" clip-path="url(#${id})"/>`)
-  }
-  t.ajouter(`<path d="${meche}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
-  t.cylindre(cx, cy, 0.45, 92, 114, teintes(C.jaune, fonce(C.jaune, 0.2)))
-  // Des cailloux qui volent autour de la mèche.
-  for (const [dx, dy, r] of [
-    [-36, -6, 5],
-    [38, -12, 4],
-    [-30, -24, 3.5],
+  // Le pot d'échappement (au fond à droite du moteur) et sa fumée.
+  const zToit = zm1 + 7
+  t.cylindre(A + 0.5, A - 0.5, 0.15, zToit, zToit + 34, metalFonce, { cerclages: [zToit + 22] })
+  const [fx, fy] = t.pt(A + 0.5, A - 0.5, zToit + 48)
+  ;[
+    [0, 0, 10],
+    [12, -16, 13],
+    [4, -37, 16],
+  ].forEach(([dx, dy, r]) => t.ajouter(`<circle cx="${r1(fx + dx)}" cy="${r1(fy + dy)}" r="${r}" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`))
+  // La trémie à charbon sur le moteur : un entonnoir en métal plein de charbon.
+  const [hx, hy] = [A - 0.2, A + 0.2]
+  t.volume(
+    [
+      [hx - 0.32, hy - 0.32, zToit],
+      [hx + 0.32, hy - 0.32, zToit],
+      [hx + 0.32, hy + 0.32, zToit],
+      [hx - 0.32, hy + 0.32, zToit],
+      [hx - 0.62, hy - 0.62, zToit + 26],
+      [hx + 0.62, hy - 0.62, zToit + 26],
+      [hx + 0.62, hy + 0.62, zToit + 26],
+      [hx - 0.62, hy + 0.62, zToit + 26],
+    ],
+    [
+      [4, 5, 6, 7],
+      [0, 1, 5, 4],
+      [1, 2, 6, 5],
+      [2, 3, 7, 6],
+      [3, 0, 4, 7],
+    ],
+    teintes(C.metal, fonce(C.metal, 0.25), fonce(C.charbon, 0.1)),
+  )
+  tasDeMinerais(t, hx, hy, zToit + 28, [C.charbon, fonce(C.charbon, 0.3)], 1.25)
+
+  // Le mandrin (ce qui tient la mèche, sous la poutre), puis la grosse mèche, dont le bout
+  // disparaît dans le trou : on la coupe sous le bord de devant du trou.
+  const zMeche = 98
+  t.cylindre(A, A, 0.36, zMeche, zPoutre, metalFonce, { cerclages: [zMeche + 44, zMeche + 54] })
+  const coupe = t.nouvelId('trou')
+  t.defs.push(
+    `<clipPath id="${coupe}"><path d="M${r1(tx - 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty)} L${r1(tx + rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 1 ${r1(tx - rxTrou)} ${r1(ty)} L${r1(tx - 300)} ${r1(ty)} Z"/></clipPath>`,
+  )
+  const [, yMeche] = t.pt(A, A, zMeche)
+  meche(t, tx, yMeche, 66, 26, 120, coupe)
+  // Le bord de devant du trou, et des mottes de terre et des cailloux autour.
+  t.ajouter(`<path d="M${r1(tx - rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 0 ${r1(tx + rxTrou)} ${r1(ty)}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
+  for (const [dx, dy, l, h, graine, couleur] of [
+    [-80, 18, 30, 20, 3, TERRE],
+    [-52, 40, 24, 16, 5, C.pierre],
+    [70, 26, 30, 20, 7, TERRE],
+    [26, 52, 22, 14, 9, TERRE],
+    [-18, 54, 18, 12, 11, C.pierre],
   ]) {
-    t.ajouter(`<circle cx="${r1(mx + dx)}" cy="${r1(mBas + dy)}" r="${r}" fill="${C.boisFonce}" stroke="${C.encre}" stroke-width="3"/>`)
+    t.ajouter(rocher(tx + dx, ty + dy, l, h, graine, couleur, TRAIT_FIN))
   }
-  // Un tas de charbon à droite (la foreuse en mange) et un bidon.
-  tasDeMinerais(t, 3.9, 3.4, zp, [C.charbon, fonce(C.charbon, 0.3)], 1.5)
-  t.cylindre(3.95, 1.2, 0.26, zp, zp + 30, teintes(C.redstone, fonce(C.redstone, 0.25)), { cerclages: [zp + 10, zp + 20] })
+  // Des cailloux qui volent autour de la mèche (elle creuse !).
+  for (const [dx, dy, r] of [
+    [-82, -26, 6],
+    [-68, -50, 4],
+    [84, -34, 5],
+    [74, -58, 3.5],
+  ]) {
+    t.ajouter(`<circle cx="${r1(tx + dx)}" cy="${r1(ty + dy)}" r="${r}" fill="${fonce(TERRE, 0.25)}" stroke="${C.encre}" stroke-width="3"/>`)
+  }
+  // Le tas de charbon, devant à droite (la foreuse en mange), et quelques morceaux à gauche.
+  tasDeMinerais(t, 4.2, 3.45, zp, [C.charbon, fonce(C.charbon, 0.3)], 1.4)
+  tasDeMinerais(t, 0.95, 4.35, zp, [C.charbon, fonce(C.charbon, 0.3)], 0.9)
   return t
 }
 
