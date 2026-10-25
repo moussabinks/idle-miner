@@ -492,7 +492,17 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
       >
         <p className="description-batiment discret">{t(info.description)}</p>
         {batimentActif === 'puits' && <PanneauMine eclats={eclats} trouvailles={trouvailles} onCliquer={cliquer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
-        {batimentActif === 'marche' && <PanneauMarche etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} />}
+        {batimentActif === 'marche' && (
+          <PanneauMarche
+            etat={etat}
+            jouer={jouer}
+            onReglerTrajet={setTrajetsOuverts}
+            onConstruireRails={() => {
+              setBatimentOuvert(null)
+              commencerPinceau('rail')
+            }}
+          />
+        )}
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}

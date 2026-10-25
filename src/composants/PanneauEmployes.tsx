@@ -312,6 +312,12 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
 // ---------------------------------------------------------------------------
 
 function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
+  // Le tutoriel montre le bouton vert « Embaucher » (data-tuto="embaucher") : la ligne d'achat
+  // (Achat) ne sait pas le marquer elle-même, alors on le marque une fois la ligne affichée.
+  const ligne = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    ligne.current?.querySelector('.btn-vert')?.setAttribute('data-tuto', 'embaucher')
+  })
   const prix = prixEmbauche(etat)
   const max = maxEmployes(etat)
   const avecRecruteur = etat.recruteur > 0
@@ -326,7 +332,7 @@ function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
     )
   }
   return (
-    <div data-tuto="embaucher">
+    <div ref={ligne}>
       <Achat
         icone="⛏️"
         titre={`${t('Mineur')} · ${nbDuRole(etat, 'mineur')} / ${max}`}

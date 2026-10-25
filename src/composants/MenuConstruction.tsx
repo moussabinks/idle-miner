@@ -44,7 +44,8 @@ function CarteBatiment({ id, nouveau, onPoser }: { id: IdBatiment; nouveau: bool
   const debloque = batimentDebloque(etat, id)
   const possible = peutConstruire(etat, id)
   return (
-    <article className={`carte construire-carte ${debloque ? '' : 'construire-bloque'} ${possible ? 'construire-possible' : ''}`}>
+    // (data-tuto : le tutoriel montre la carte du bâtiment, puis son bouton « Construire »)
+    <article data-tuto={`batiment-${id}`} className={`carte construire-carte ${debloque ? '' : 'construire-bloque'} ${possible ? 'construire-possible' : ''}`}>
       {nouveau && <span className="etiquette etiquette-rose construire-nouveau">{t('Nouveau !')}</span>}
       <img className="construire-image" src={IMAGES_BATIMENTS[id]} alt="" draggable={false} />
       <div className="construire-texte">

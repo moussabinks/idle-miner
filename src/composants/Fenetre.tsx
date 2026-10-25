@@ -5,7 +5,7 @@
 //   - « pied » : les boutons du bas (« Continuer », « Annuler »...).
 // Sur téléphone, elle monte du bas de l'écran (voir src/styles/theme.css).
 
-import { useEffect, useId, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { t } from '../jeu/langue'
 
 export type CouleurFenetre = 'vert' | 'jaune' | 'bleu' | 'rose' | 'violet' | 'orange' | 'creme'
@@ -26,12 +26,17 @@ type Props = {
 
 export function Fenetre({ titre, icone, couleur = 'vert', taille = 'moyenne', voile = 'sombre', devant = false, fermable = true, onFermer, pied, classe = '', children }: Props) {
   const idTitre = useId()
+  const voileRef = useRef<HTMLDivElement>(null)
 
-  // Échap ferme la fenêtre.
+  // Échap ferme la fenêtre... seulement celle du dessus (25/10 : avec une fenêtre ouverte sur une
+  // autre, Échap les fermait toutes les deux).
   useEffect(() => {
     if (!fermable) return
     function touche(evenement: KeyboardEvent) {
-      if (evenement.key === 'Escape') onFermer()
+      if (evenement.key !== 'Escape') return
+      const voiles = [...document.querySelectorAll('.voile')]
+      const dessus = voiles.reduce<Element | null>((haut, v) => (haut === null || Number(getComputedStyle(v).zIndex) >= Number(getComputedStyle(haut).zIndex) ? v : haut), null)
+      if (dessus === voileRef.current) onFermer()
     }
     window.addEventListener('keydown', touche)
     return () => window.removeEventListener('keydown', touche)
@@ -39,6 +44,7 @@ export function Fenetre({ titre, icone, couleur = 'vert', taille = 'moyenne', vo
 
   return (
     <div
+      ref={voileRef}
       className={`voile ${voile === 'clair' ? 'voile-clair' : ''} ${devant ? 'voile-devant' : ''}`}
       role="dialog"
       aria-modal="true"

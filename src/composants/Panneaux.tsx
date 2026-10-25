@@ -311,7 +311,6 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
             </button>
           )}
           <h3 className="titre-section">{t('Wagonnets')}</h3>
-          {ligneDe(etat, 'mine-foreuse') === null && <p className="discret">💡 {t('Relie-la à la mine par des rails : un wagonnet lui apportera le charbon.')}</p>}
           <PanneauTrajets depart="foreuse" arrivee="foreuse" onReglerTrajet={onReglerTrajet} />
         </>
       )}

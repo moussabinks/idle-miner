@@ -437,6 +437,11 @@ kbd {
   overscroll-behavior: contain;
 }
 
+/* Rien ne se fait écraser dans une fenêtre (une jauge seule devenait un trait) : elle défile. */
+.fenetre-corps > * {
+  flex-shrink: 0;
+}
+
 .fenetre-pied {
   display: flex;
   flex-wrap: wrap;
