@@ -4,6 +4,7 @@
 
 import { memo, type ReactNode } from 'react'
 import { BATIMENTS, type IdBatiment } from '../jeu/donnees'
+import { nombre } from '../jeu/langue'
 import { CALAGES, imageBatiment, profondeur, transformationSprite, versEcran } from './iso'
 import { ECHELLE_SPRITE, choisirVue, spritePerso, type QuiSprite, type VueSprite } from './sprites'
 
@@ -96,7 +97,7 @@ export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, cla
 // « 1,4 s », « 42 s », « 12 min ».
 function dureeCourte(secondes: number): string {
   const s = Math.max(0, secondes)
-  if (s < 10) return `${s.toLocaleString('fr-FR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} s`
+  if (s < 10) return `${nombre(s, 1)} s`
   if (s < 60) return `${Math.ceil(s)} s`
   return `${Math.floor(s / 60)} min`
 }

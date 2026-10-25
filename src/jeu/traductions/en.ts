@@ -856,4 +856,10 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '🛤️ Livré : {n} charbon.': '🛤️ Delivered: {n} coal.',
   '🛤️ Livré : {n} redstone.': '🛤️ Delivered: {n} redstone.',
   '🛤️ Tu pousses le wagonnet !': '🛤️ You push the minecart!',
+
+  // src/composants/VueVillage.tsx
+  'Automatiser le trajet {depart} → {arrivee}': 'Automate the route {depart} → {arrivee}',
+  'Coffre de la mine : {dans} / {capacite}': 'Mine chest: {dans} / {capacite}',
+  'Le village vu du ciel': 'The village from above',
+  'Pioche de {nom}': '{nom}’s pickaxe',
 }
