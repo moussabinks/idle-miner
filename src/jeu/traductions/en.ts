@@ -694,7 +694,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Clics en or': 'Golden clicks',
   '{emoji} {nom} pendant {minutes} min !': '{emoji} {nom} for {minutes} min!',
   '💰 Trésor : +{argent} $ !': '💰 Treasure: +{argent} $!',
-  '🎁 Jour {jour} : +{gemmes} 💎 et +{argent} $ !': '🎁 Day {jour}: +{gemmes} 💎 and +{argent} $!',
   '🎁 Jour {jour} : +{gemmes} 💎 !': '🎁 Day {jour}: +{gemmes} 💎!',
 
   // src/jeu/generateur.ts

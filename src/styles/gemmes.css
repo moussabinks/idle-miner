@@ -117,7 +117,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 4px;
+  padding: 6px 4px 8px;
   border: var(--trait) solid var(--encre);
   border-radius: 14px;
   background: var(--blanc);
@@ -144,19 +144,65 @@
   background: var(--violet);
 }
 
+/* En haut, petit : le paquet et « Jour 3 », sur la même ligne. */
 .quotidien-numero {
   font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-.quotidien-cadeau {
-  font-size: 1.8rem;
-  line-height: 1;
+/* En grand : les gemmes. */
+.quotidien-gemmes {
+  font-family: var(--police-titre);
+  font-size: 1.6rem;
+  line-height: 1.1;
 }
 
-.quotidien-contenu {
+.quotidien-bonus {
   display: flex;
   flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+/* Chaque bonus : une petite étiquette crème au contour d'encre (« ⚡ ×2 », puis « 15 min »). */
+.quotidien-bonus-un {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1px 4px 2px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 8px;
+  background: var(--creme);
+  line-height: 1.15;
+}
+
+.quotidien-bonus-un b {
+  font-family: var(--police-titre);
+  font-weight: 400;
+  font-size: 1.05rem;
+}
+
+.quotidien-bonus-un small {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* La légende des bonus, sous les cases. */
+.quotidien-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin: 0;
   font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.quotidien-jour.gros-lot .quotidien-bonus {
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .quotidien-revenir {

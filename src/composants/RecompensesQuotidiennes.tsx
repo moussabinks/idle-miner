@@ -6,9 +6,8 @@
 // saute dehors, une chose après l'autre, avec une fanfare.
 
 import { useState } from 'react'
-import { BOOSTS, RECOMPENSES_QUOTIDIENNES, argentRecompense, etatQuotidien, jourDe, recupererQuotidien, type Recompense } from '../jeu/gemmes'
+import { BOOSTS, LISTE_BOOSTS, RECOMPENSES_QUOTIDIENNES, etatQuotidien, jourDe, recupererQuotidien, type BonusCadeau, type Recompense } from '../jeu/gemmes'
 import { t } from '../jeu/langue'
-import { nombreAbrege } from '../nombres'
 import { sons } from '../sons'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
@@ -21,11 +20,11 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
   // Les jours de suite déjà pris (le cadeau du jour compte s'il est pris).
   const serie = disponible ? jour - 1 : jour
   // Le cadeau qu'on vient d'ouvrir (null : pas encore ouvert).
-  const [ouvert, setOuvert] = useState<{ jour: number; recompense: Recompense; argent: number } | null>(null)
+  const [ouvert, setOuvert] = useState<{ jour: number; recompense: Recompense } | null>(null)
 
   function ouvrir() {
     const recompense = RECOMPENSES_QUOTIDIENNES[jour - 1]
-    setOuvert({ jour, recompense, argent: argentRecompense(etat, recompense) })
+    setOuvert({ jour, recompense })
     // (pas de message en bas : la fenêtre montre déjà ce qu'on a gagné)
     jouer((e) => {
       recupererQuotidien(e, aujourdhui)
@@ -45,26 +44,36 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
           const numero = i + 1
           const pris = numero < jour || (numero === jour && !disponible)
           const actuel = numero === jour && disponible
-          const argent = argentRecompense(etat, r)
           return (
             <li key={numero} className={`quotidien-jour ${pris ? 'pris' : ''} ${actuel ? 'actuel' : ''} ${numero === 7 ? 'gros-lot' : ''}`}>
-              <span className="quotidien-numero">{t('Jour {n}', { n: numero })}</span>
-              <span className="quotidien-cadeau" aria-hidden="true">
-                {pris ? '✔' : numero === 7 ? '🏆' : '🎁'}
+              {/* En haut, petit : le jour et son paquet (✔ s'il est pris). */}
+              <span className="quotidien-numero">
+                <span aria-hidden="true">{pris ? '✔️' : numero === 7 ? '🏆' : '🎁'}</span> {t('Jour {n}', { n: numero })}
               </span>
-              <span className="quotidien-contenu">
-                <span>💎 {r.gemmes}</span>
-                {argent > 0 && <span>💵 {nombreAbrege(argent)}</span>}
-                {r.boost && (
-                  <span>
-                    {BOOSTS[r.boost.id].emoji} {r.boost.minutes} min
+              {/* En grand : ce qu'on gagne (c'est ça que le joueur regarde). */}
+              <span className="quotidien-gemmes">💎 {r.gemmes}</span>
+              <span className="quotidien-bonus">
+                {r.bonus.map((bonus) => (
+                  <span key={bonus.id} className="quotidien-bonus-un">
+                    <b>
+                      {BOOSTS[bonus.id].emoji} {BOOSTS[bonus.id].court}
+                    </b>
+                    <small>{bonus.minutes} min</small>
                   </span>
-                )}
+                ))}
               </span>
             </li>
           )
         })}
       </ol>
+      {/* Ce que veut dire chaque petit bonus des cases. */}
+      <p className="quotidien-legende">
+        {LISTE_BOOSTS.map((id) => (
+          <span key={id}>
+            {BOOSTS[id].emoji} {t(BOOSTS[id].nom)}
+          </span>
+        ))}
+      </p>
       <div className="rangee rangee-centre">
         {disponible ? (
           <button className="btn btn-jaune btn-grand btn-attention" onClick={ouvrir}>
@@ -78,11 +87,15 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
   )
 }
 
+// Un bonus du cadeau, en court : « ⚡ Production × 2 · 15 min ».
+function texteBonus(bonus: BonusCadeau): string {
+  const info = BOOSTS[bonus.id]
+  return `${info.emoji} ${t(info.nom)} · ${bonus.minutes} min`
+}
+
 // Le cadeau ouvert : des rayons qui tournent, le paquet qui saute, puis ce qu'il contenait.
-function CadeauOuvert({ jour, recompense, argent, onFermer }: { jour: number; recompense: Recompense; argent: number; onFermer: () => void }) {
-  const contenu = [`💎 +${recompense.gemmes}`]
-  if (argent > 0) contenu.push(`💵 +${nombreAbrege(argent)} $`)
-  if (recompense.boost) contenu.push(`${BOOSTS[recompense.boost.id].emoji} ${t(BOOSTS[recompense.boost.id].nom)} · ${recompense.boost.minutes} min`)
+function CadeauOuvert({ jour, recompense, onFermer }: { jour: number; recompense: Recompense; onFermer: () => void }) {
+  const contenu = [`💎 +${recompense.gemmes}`, ...recompense.bonus.map(texteBonus)]
   return (
     <Fenetre
       titre={t('Jour {n} : bravo !', { n: jour })}
