@@ -872,3 +872,10 @@
     font-size: 0.78rem;
   }
 }
+
+/* (25/10) L'icône du minerai dans la bulle « +1 » : une image (IconeImage.tsx), à la taille du texte. */
+.trouvaille .icone-image {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.25em;
+}

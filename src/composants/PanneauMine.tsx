@@ -53,6 +53,7 @@ import { OngletsPanneau } from './OngletsPanneau'
 import { PanneauTrajets } from './PanneauTrajets'
 import { StockMinerais } from './StockMinerais'
 import type { IdLiaison } from '../jeu/donnees'
+import { IconeImage } from './IconeImage'
 
 type Props = {
   eclats: Eclat[]
@@ -142,7 +143,7 @@ function BlocACliquer({ eclats, trouvailles, onCliquer, clicsParSeconde }: { ecl
         {trouvailles.map((tr) => (
           // (chacune un peu à gauche ou à droite, pour qu'elles ne s'empilent pas quand on clique vite)
           <span key={`trouvaille-${tr.id}`} className={`trouvaille ${tr.nombre > 1 ? 'trouvaille-double' : ''}`} style={{ translate: `${((tr.id * 37) % 5) * 22 - 44}px 0` }} aria-hidden="true">
-            +{tr.nombre} {BLOCS[tr.bloc].emoji}
+            +{tr.nombre} <IconeImage emoji={BLOCS[tr.bloc].emoji} />
           </span>
         ))}
         {combo >= 3 && (
