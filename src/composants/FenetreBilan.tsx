@@ -22,9 +22,9 @@ function dollars(n: number): string {
 
 // Le verdict, selon le solde : une mascotte et une phrase.
 function verdict(net: number, gains: number): { icone: string; titre: string; texte: string; sorte: string } {
-  if (gains <= 0 && net >= 0) return { icone: '😴', titre: t('Rien ne tourne'), texte: t('Embauche un mineur ou descends la mine : elle creusera pour toi.'), sorte: 'neutre' }
-  if (net < 0) return { icone: '😬', titre: t('Tu perds de l’argent'), texte: t('Tes salaires coûtent plus que ce que tu produis : améliore les pioches ou l’ascenseur, ou descends la mine.'), sorte: 'perte' }
-  if (net < gains * 0.25) return { icone: '🙂', titre: t('Tout juste rentable'), texte: t('Tu gagnes un peu : une meilleure pioche ferait la différence.'), sorte: 'juste' }
+  if (gains <= 0 && net >= 0) return { icone: '💤', titre: t('Rien ne tourne'), texte: t('Embauche un mineur ou descends la mine : elle creusera pour toi.'), sorte: 'neutre' }
+  if (net < 0) return { icone: '⚠️', titre: t('Tu perds de l’argent'), texte: t('Tes salaires coûtent plus que ce que tu produis : améliore les pioches ou l’ascenseur, ou descends la mine.'), sorte: 'perte' }
+  if (net < gains * 0.25) return { icone: '⭐', titre: t('Tout juste rentable'), texte: t('Tu gagnes un peu : une meilleure pioche ferait la différence.'), sorte: 'juste' }
   return { icone: '🤑', titre: t('Rentable !'), texte: t('Ta mine te rapporte plus qu’elle ne te coûte. Continue !'), sorte: 'rentable' }
 }
 

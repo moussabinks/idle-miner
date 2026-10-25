@@ -76,7 +76,7 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
   const estMoi = (ligne: LigneClassement) => joueur !== null && ligne.pseudo.toLowerCase() === joueur.pseudo.toLowerCase()
 
   let contenu
-  if (horsLigne && lignes === null) contenu = <p className="classement-message">📡 {t('Classement hors ligne')}</p>
+  if (horsLigne && lignes === null) contenu = <p className="classement-message">☁️ {t('Classement hors ligne')}</p>
   else if (lignes === null) contenu = <p className="classement-message discret">{t('Chargement du classement…')}</p>
   else if (lignes.length === 0) contenu = <p className="classement-message discret">{t('Personne n’est encore classé : à toi d’être le premier !')}</p>
   else

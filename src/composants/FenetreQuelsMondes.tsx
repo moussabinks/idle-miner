@@ -19,7 +19,7 @@ export function FenetreQuelsMondes({ question }: { question: QuestionMondes }) {
       pied={
         <>
           <button className="btn btn-blanc" onClick={() => question.repondre(false)}>
-            💻 {t('Garder ceux d’ici')}
+            📲 {t('Garder ceux d’ici')}
           </button>
           <button className="btn btn-jaune" onClick={() => question.repondre(true)} autoFocus>
             ☁️ {t('Prendre ceux du compte')}
