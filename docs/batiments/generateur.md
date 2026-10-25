@@ -9,7 +9,7 @@
 - **Déblocage** : au **niveau 2 de la mine** (« Veine de redstone »), là où la redstone commence à sortir de la mine. Depuis le 25/10, plus de niveau du joueur à part pour les bâtiments (avant : niveau 6). Avant, sa carte du menu 🏗️ Bâtiments a un cadenas « 🔒 Mine niveau 2 ».
 - **Prix pour le poser** : **3 500 $ + 80 fer + 30 redstone** (25/10 ; avant 4 000 $ + 100 fer + 40 redstone), une seule fois. Les minerais se prennent dans le coffre de la mine.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). On peut l'ouvrir de n'importe quel côté (à moins de 1 case).
-- **Le dessin au village** : une image en vue isométrique (`public/images/batiments/generateur.webp`) : une grosse bobine dorée et vitrée pleine d'éclairs jaunes, dans un bâti en bois et en métal, avec des tuyaux en cuivre, un cadran, deux petites bobines aux coins et des arcs électriques au-dessus, sur une dalle de 5 × 5 pavés.
+- **Le dessin au village** (25/10, SVG plat au contour d'encre, `public/images/batiments/generateur.svg`, dessiné par `generateur()` dans `outils/art/batiments.mjs`) : sur une dalle de 5 × 5 pavés, un socle en pierre et une grosse machine en métal à bande violette et couvercle sombre, une jauge sur la façade gauche, un panneau à l'éclair sur la façade droite (la porte), deux bobines de cuivre aux coins avec une boule rouge, et, au-dessus, un gros **cristal de redstone** pointu entouré d'étincelles. L'image ne bouge jamais (voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md#11-la-fluidité--les-règles-à-respecter)).
 - **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse. »
 - **Le rayon sur la carte** : un **cercle en pointillés jaunes** autour du générateur (une ellipse à l'écran, car la grille est en losange) :
   - bien visible (plus épais, et les pointillés tournent) quand on est devant le générateur, ou pendant qu'on le pose (on voit alors le rayon autour du fantôme, pratique pour bien le placer) ;
@@ -107,4 +107,4 @@ Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerate
 - `src/jeu/notifications.ts`, `src/jeu/objectifs.ts`, `src/jeu/succes.ts` : les bulles 🔴 et 🚧, les missions, le succès Électricien.
 - `src/composants/Panneaux.tsx` : `PanneauGenerateur`.
 - `src/composants/VueVillage.tsx` : le cercle du rayon (`RayonGenerateur`), les wagonnets électriques ; `src/village.css` : `.rayon-generateur`, `.wagonnet-electrique`.
-- `src/composants/iso.ts` : le calage de l'image ; `public/images/batiments/generateur.webp` : le dessin.
+- `src/composants/iso.ts` : le calage de l'image ; `public/images/batiments/generateur.svg` : le dessin, fabriqué par `node outils/art/fabriquer.mjs` (`outils/art/batiments.mjs`).

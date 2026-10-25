@@ -51,7 +51,8 @@ const PORTRAIT_PEPITE = cheminPublic('/images/personnages/mineur.svg')
 
 // Les cibles. (Un bâtiment sur la carte a l'attribut data-cible ; le reste, data-tuto.)
 const BOUTON_MINE = '[data-tuto="mine"]'
-const CHOIX_PERSONNEL = '[data-tuto="batiment-employes"], [data-tuto="poser-employes"]'
+// (25/10 : le bouton « Construire » lui-même, pas toute la carte : la flèche montre ce qu'il faut toucher)
+const CHOIX_PERSONNEL = '[data-tuto="poser-employes"]'
 const batiment = (id: IdBatiment) => `[data-cible="batiment:${id}"]`
 
 // Le texte et la cible de chaque étape, selon ce qui est ouvert.

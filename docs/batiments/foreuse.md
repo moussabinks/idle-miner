@@ -8,6 +8,7 @@
 - **Où** : là où tu la poses dans la clairière : un bâtiment de **5 × 5 cases**, acheté une fois dans le menu **🏗️ Bâtiments** pour **2 500 $ + 100 pierre + 50 fer** (25/10 ; avant 3 000 $ + 120 pierre + 60 fer ; les minerais se prennent dans le coffre de la mine). **✏️ Modifier** la déplace ou la retourne (miroir) gratuitement.
 - **Déblocage** : au **niveau 2 de la mine** (`BATIMENTS.foreuse.niveauMine = 2`). Depuis le 25/10, plus de niveau du joueur à part pour les bâtiments (avant : niveau 5). Avant, sa carte du menu Bâtiments a un cadenas « 🔒 Mine niveau 2 ». Ses améliorations suivent les **paliers** de la mine (« 🕳️ Mine *N* »).
 - **La porte** : sur la face avant **gauche** du dessin (à droite si elle est retournée).
+- **Le dessin au village** (25/10, SVG plat au contour d'encre, `public/images/batiments/foreuse.svg`, dessiné par `foreuse()` dans `outils/art/batiments.mjs`) : sur une dalle de 5 × 5 pavés, une plateforme en métal à bandes jaunes et noires, un gros moteur orange qui fume, un bras à bandes de chantier au-dessus d'un trou, une grosse mèche en spirale, des cailloux qui volent, un tas de charbon et un bidon.
 - **L'ouvrir** : toucher (ou cliquer) la foreuse : la taupe du joueur y marche, puis le panneau s'ouvre.
 - **Description** : « Elle creuse toute seule avec du charbon, et plus vite avec de l'électricité. »
 - **Bulles au-dessus** (`notifications.ts`), de la plus urgente à la moins urgente :

@@ -9,7 +9,7 @@
 - **Déblocage** : dès le début, jamais de cadenas. Depuis le 25/10, le tutoriel ne le fait plus construire (il va jusqu'au premier mineur) : la liste des tâches le propose ensuite (« Construis : Forgeron »). Les pioches suivantes, elles, demandent un **palier** de la mine (voir les chiffres).
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné).
 - **L'ouvrir** : toucher (ou cliquer) le forgeron : la taupe du joueur marche jusqu'à son côté le plus proche, puis le panneau s'ouvre. Aux flèches du clavier, il s'ouvre dès qu'on passe à moins de 1 case du bâtiment, de n'importe quel côté.
-- **Dessin au village** : une forge en pierre grise au toit d’ardoise, sa cheminée qui fume, son feu orange et son enclume, dans le style plat du 25/10 (voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md)).
+- **Le dessin au village** (25/10, SVG plat au contour d'encre, `public/images/batiments/forgeron.svg`, dessiné par `forgeron()` dans `outils/art/batiments.mjs`) : sur une dalle de 5 × 5 pavés, une maison en pierre grise au toit d'ardoise, sa cheminée qui fume, la forge en arche rouge de braises sur la façade droite (la porte), un seau d'eau et un tas de charbon, et l'enclume sur sa souche avec un marteau posé dessus (voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md)).
 - **Description** (en haut du panneau) : « Pioches et réparations. »
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔧 « Ta pioche est cassée : fais-la réparer ! »** (bulle rouge d'alerte) quand la pioche équipée est cassée ;
@@ -105,5 +105,5 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 - `src/composants/Hud.tsx` : la pioche équipée et sa durabilité dans le bandeau.
 - `src/composants/MenuConstruction.tsx` : la carte du forgeron dans le menu Bâtiments.
 - `src/composants/VueVillage.tsx`, `src/composants/ElementsVillage.tsx`, `src/composants/iso.ts` : l'image du bâtiment calée sur la grille, la bulle, les mineurs qui récupèrent leur pioche devant la forge.
-- `public/images/batiments/forgeron.webp` : le dessin de la forge.
+- `public/images/batiments/forgeron.svg` : le dessin de la forge, fabriqué par `node outils/art/fabriquer.mjs` (`outils/art/batiments.mjs`).
 - `src/evenements.ts`, `src/sons.ts` : les sons d'achat, d'amélioration et de pioche cassée.
