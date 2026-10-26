@@ -46,19 +46,19 @@ Une petite liste qui dit où on en est :
 
 Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque niveau agrandit le **rayon**, le **bonus de vitesse** (`NIVEAUX_GENERATEUR`, champ `bonus`) et la **réserve** de redstone (23/10, champ `reserveMinutes`) :
 
-| Niveau | Rayon | Bonus de vitesse | Réserve | Pousseur électrique (débutant, commun) | Coût (25/10) | Palier |
+| Niveau | Rayon | Bonus de vitesse | Réserve | Pousseur électrique (débutant, commun) | Coût (26/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 12 cases | + 30 % | 5 min (10 redstones) | 3,25 cases/s | (le prix du bâtiment) | 2 |
 | 2 | 15 cases | + 40 % | 7 min | 3,5 cases/s | 4 000 $ + 80 fer + 40 redstone | 2 |
 | 3 | 18 cases | + 50 % | 10 min | 3,75 cases/s | 8 000 $ + 150 fer + 90 redstone | 3 |
 | 4 | 21 cases | + 60 % | 13 min | 4 cases/s | 15 000 $ + 250 fer + 180 redstone | 4 |
-| 5 | 24 cases | + 75 % | 16 min | 4,4 cases/s | 35 000 $ + 400 fer + 350 redstone | 5 |
-| 6 | 26 cases | + 85 % | 19 min | 4,6 cases/s | 90 000 $ + 600 fer + 500 redstone | 6 |
-| 7 | 28 cases | + 100 % | 22 min | 5 cases/s | 220 000 $ + 800 redstone + 40 saphir | 7 |
+| 5 | 24 cases | + 75 % | 16 min | 4,4 cases/s | 70 000 $ + 800 fer + 700 redstone | 5 |
+| 6 | 26 cases | + 85 % | 19 min | 4,6 cases/s | 230 000 $ + 1 000 fer + 1 000 redstone | 6 |
+| 7 | 28 cases | + 100 % | 22 min | 5 cases/s | 660 000 $ + 1 000 redstone + 120 saphir | 7 |
 
 (Avant le 25/10 : rayon de 15 à 40 cases pour une clairière de 60 × 60, débloqué aux niveaux 6 à 15 du joueur. Avant le 23/10 : une « puissance » de × 1 à × 3, et le wagonnet électrique roulait tout seul.)
 
-Total des améliorations : 372 000 $ + 1 480 fer + 1 960 redstone + 40 saphir (26/10 ; jusqu'au niveau 5 : 62 000 $ + 880 fer + 660 redstone ; avant l'économie revue du 25/10 : 160 000 $). Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
+Total des améliorations : 987 000 $ + 2 280 fer + 3 010 redstone + 120 saphir (26/10, hausse de la fin de partie et plafond de 1 000 minerais compris ; jusqu'au niveau 5 : 97 000 $ + 1 280 fer + 1 010 redstone ; avant la hausse : 372 000 $ ; avant l'économie revue du 25/10 : 160 000 $). Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
 
 ## Règles et comportement
 

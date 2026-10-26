@@ -38,13 +38,14 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
     // (25/10) Plus aussi au-dessus de la mine : une seule alerte par chose (le Personnel).
   }
   // Un trajet dont les rails sont coupés (un rail enlevé, un bâtiment déplacé) : son wagonnet
-  // attend au quai. La bulle est sur ses deux bâtiments.
+  // attend au quai. (26/10) La bulle est seulement sur son bâtiment de départ (avant : sur les
+  // deux, trop de bulles), et pas du tout quand le village n'a plus aucun rail (après « Tout
+  // ranger » : les rails sont en stock, la liste des tâches propose de les reposer).
   for (const trajet of etat.trajets) {
-    if (ligneDe(etat, trajet.liaison)) continue
+    if (ligneDe(etat, trajet.liaison) || etat.village.rails.length === 0) continue
     const { depart, arrivee } = LIAISONS[trajet.liaison]
     const texte = t('Rails coupés entre {depart} et {arrivee} : le wagonnet attend. Repose les rails !', { depart: t(BATIMENTS[depart].nom).toLowerCase(), arrivee: t(BATIMENTS[arrivee].nom).toLowerCase() })
     ajouter(depart, { icone: '🚧', texte, court: t('Rails coupés'), sorte: 'alerte' })
-    ajouter(arrivee, { icone: '🚧', texte, court: t('Rails coupés'), sorte: 'alerte' })
   }
   // Un trajet sans pousseur (27/10) : son wagonnet ne part pas tout seul, même électrique.
   if (batimentPose(etat.village, 'employes')) {

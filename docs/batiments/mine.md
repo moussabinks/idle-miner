@@ -92,13 +92,13 @@ Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %
 | 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | — | — | 0,3 bloc/s (18 / min) | 800 $ + 40 fer | 3 |
 | 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | — | — | 0,4 bloc/s (24 / min) | 6 000 $ + 100 fer + 40 redstone | 5 |
 | 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | — | — | 0,5 bloc/s (30 / min) | 22 000 $ + 100 redstone + 50 or | 7 |
-| 5 | Caverne de saphir (26/10) | 40 | 11 | 12 | 12 | 12 | 8 | 5 | — | — | 0,6 bloc/s (36 / min) | 80 000 $ + 90 or + 35 émeraude | 9 |
-| 6 | Veine de rubis (26/10) | 36 | 10 | 12 | 11 | 12 | 9 | 7 | 5 | — | 0,7 bloc/s (42 / min) | 260 000 $ + 80 émeraude + 40 saphir | 11 |
-| 7 | Cœur de diamant (26/10) | 32 | 10 | 11 | 11 | 12 | 9 | 8 | 7 | 5 | 0,8 bloc/s (48 / min) | 800 000 $ + 80 saphir + 50 rubis | 13 |
+| 5 | Caverne de saphir (26/10) | 40 | 11 | 12 | 12 | 12 | 8 | 5 | — | — | 0,6 bloc/s (36 / min) | 160 000 $ + 180 or + 70 émeraude | 9 |
+| 6 | Veine de rubis (26/10) | 36 | 10 | 12 | 11 | 12 | 9 | 7 | 5 | — | 0,7 bloc/s (42 / min) | 650 000 $ + 200 émeraude + 100 saphir | 11 |
+| 7 | Cœur de diamant (26/10) | 32 | 10 | 11 | 11 | 12 | 9 | 8 | 7 | 5 | 0,8 bloc/s (48 / min) | 2 400 000 $ + 240 saphir + 150 rubis | 13 |
 
 (Avant le 26/10, il n'y avait que 5 niveaux, et le 5e était le « Cœur de diamant » : les mêmes chances qu'aujourd'hui au niveau 5, avec le diamant à la place du saphir. Une partie qui y était reste au niveau 5, devenu la Caverne de saphir : voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).)
 
-Total pour aller au niveau 7 : **1 168 800 $ + 140 fer + 140 redstone + 140 or + 115 émeraude + 120 saphir + 50 rubis** (26/10). Jusqu'au niveau 5 : 108 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude (25/10, économie revue : avant 402 800 $). Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
+(26/10) Les prix des paliers 5 à 7 (ici et dans les tableaux du coffre et de l'ascenseur) comprennent la **hausse de la fin de partie** (× 2, × 2,5, × 3 ; voir [../jeu/equilibrage.md](../jeu/equilibrage.md)). Total pour aller au niveau 7 : **3 238 800 $ + 140 fer + 140 redstone + 230 or + 270 émeraude + 340 saphir + 150 rubis** (26/10 ; avant la hausse : 1 168 800 $). Jusqu'au niveau 5 : 188 800 $ + 140 fer + 140 redstone + 230 or + 70 émeraude (avant la hausse : 108 800 $ ; 25/10, économie revue : avant 402 800 $). Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
 
 Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **20,79 $** au niveau 5, **31,62 $** au niveau 6, **46,37 $** au niveau 7 (avant le 26/10 : 19,79 $ au niveau 5).
 
@@ -122,33 +122,33 @@ Chaque niveau de la mine est un **palier** : à la mine niveau N, toutes les am�
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix (25/10) | Palier |
+| Niveau | Places | Prix (26/10) | Palier |
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
 | 2 | 300 | 200 $ + 40 pierre | 2 |
 | 3 | 800 | 2 000 $ + 80 fer | 3 |
 | 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
-| 5 | 5 000 | 18 000 $ + 60 or + 20 émeraude | 5 |
-| 6 | 10 000 | 50 000 $ + 40 émeraude + 30 saphir | 6 |
-| 7 | 20 000 | 150 000 $ + 50 saphir + 30 rubis | 7 |
+| 5 | 5 000 | 36 000 $ + 120 or + 40 émeraude | 5 |
+| 6 | 10 000 | 130 000 $ + 100 émeraude + 75 saphir | 6 |
+| 7 | 20 000 | 450 000 $ + 150 saphir + 90 rubis | 7 |
 
-Total : 226 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 60 émeraude + 80 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 26 200 $).
+Total : 624 200 $ + 40 pierre + 80 fer + 60 redstone + 140 or + 140 émeraude + 225 saphir + 90 rubis (26/10 ; jusqu'au niveau 5 : 44 200 $).
 
 ### L'ascenseur (`NIVEAUX_ASCENSEUR`)
 
 Il ne transporte que les blocs des **mineurs employés** (le joueur ne descend pas). La mine l'a au **niveau 1 dès le début**. Sa caisse fait des allers-retours sans cesse tant qu'un mineur travaille au fond : elle descend, se charge, remonte, se vide dans le coffre, et repart. **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + chargement + vidage). (25/10 : 5 niveaux au lieu de 10 ; 26/10 : 7.)
 
-| Niveau | Un trajet | Charge / vide | Caisse | Remonte au plus | Prix (25/10) | Palier |
+| Niveau | Un trajet | Charge / vide | Caisse | Remonte au plus | Prix (26/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 (au départ) | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | — | — |
 | 2 | 4,5 s | 0,9 s / 1,8 s | 25 | 2,1 bloc/s | 700 $ + 30 fer | 2 |
 | 3 | 3,5 s | 0,8 s / 1,5 s | 40 | 4,3 bloc/s | 3 000 $ + 90 fer + 30 redstone | 3 |
 | 4 | 2,6 s | 0,6 s / 1,2 s | 60 | 8,6 bloc/s | 8 000 $ + 100 redstone + 40 or | 4 |
-| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 22 000 $ + 80 or + 30 émeraude | 5 |
-| 6 | 1,6 s | 0,35 s / 0,7 s | 130 | 30,6 bloc/s | 60 000 $ + 120 or + 30 saphir | 6 |
-| 7 | 1,3 s | 0,3 s / 0,6 s | 180 | 51,4 bloc/s | 180 000 $ + 60 saphir + 30 rubis | 7 |
+| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 44 000 $ + 160 or + 60 émeraude | 5 |
+| 6 | 1,6 s | 0,35 s / 0,7 s | 130 | 30,6 bloc/s | 150 000 $ + 300 or + 75 saphir | 6 |
+| 7 | 1,3 s | 0,3 s / 0,6 s | 180 | 51,4 bloc/s | 540 000 $ + 180 saphir + 90 rubis | 7 |
 
-Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 33 700 $). Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
+Total : 745 700 $ + 120 fer + 130 redstone + 500 or + 60 émeraude + 255 saphir + 90 rubis (26/10 ; jusqu'au niveau 5 : 55 700 $). Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
 
 ## Règles et comportement
 

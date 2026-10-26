@@ -53,17 +53,17 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 Chaque pioche le fait creuser plus vite, avec un plus grand sac (le tas où il pose ses blocs au fond, en attendant la caisse). Payée **en argent seulement** (ou en gemmes) ; ces pioches ne s'usent pas. Chaque niveau demande la **mine au même niveau** (le palier).
 
-| Niveau | Pioche | Creuse | Sac | Prix (25/10) | Palier | Salaire / 5 min |
+| Niveau | Pioche | Creuse | Sac | Prix (26/10) | Palier | Salaire / 5 min |
 |---|---|---:|---:|---:|---:|---:|
 | 1 | Bois | 0,5 bloc/s | 10 | (de base) | — | 120 $ |
 | 2 | Fer | 0,75 bloc/s | 18 | 400 $ | 2 | 300 $ |
 | 3 | Or | 1 bloc/s | 28 | 2 500 $ | 3 | 700 $ |
 | 4 | Émeraude | 1,3 bloc/s | 40 | 7 000 $ | 4 | 1 300 $ |
-| 5 | Saphir (26/10) | 1,7 bloc/s | 55 | 18 000 $ | 5 | 2 600 $ |
-| 6 | Rubis (26/10) | 2,2 bloc/s | 75 | 45 000 $ | 6 | 4 500 $ |
-| 7 | Diamant | 2,8 bloc/s | 100 | 120 000 $ | 7 | 7 500 $ |
+| 5 | Saphir (26/10) | 1,7 bloc/s | 55 | 36 000 $ | 5 | 2 600 $ |
+| 6 | Rubis (26/10) | 2,2 bloc/s | 75 | 110 000 $ | 6 | 4 500 $ |
+| 7 | Diamant | 2,8 bloc/s | 100 | 360 000 $ | 7 | 7 500 $ |
 
-(25/10 : la pioche en pierre est retirée, il en reste 5 ; avant, 6 pioches de 500 $ à 60 000 $, et des salaires de 220 $ à 2 200 $. 26/10 : 7 pioches ; celle du niveau 5, qui était en diamant, est maintenant en **saphir**, avec les mêmes chiffres : un mineur qui avait la pioche en diamant a donc celle en saphir.) Le salaire fait environ 20 à 26 % de ce que le mineur fait sortir de la mine au palier de sa pioche : **une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire**. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-niveaux_ascenseur)). Toutes ses pioches : 192 900 $ (26/10 ; jusqu'au palier 5 : 27 900 $ ; avant l'économie revue : 69 400 $).
+(25/10 : la pioche en pierre est retirée, il en reste 5 ; avant, 6 pioches de 500 $ à 60 000 $, et des salaires de 220 $ à 2 200 $. 26/10 : 7 pioches ; celle du niveau 5, qui était en diamant, est maintenant en **saphir**, avec les mêmes chiffres : un mineur qui avait la pioche en diamant a donc celle en saphir.) Le salaire fait environ 20 à 26 % de ce que le mineur fait sortir de la mine au palier de sa pioche : **une meilleure pioche rapporte toujours plus qu'elle ne coûte en salaire**. Ce qu'il sort vraiment dépend aussi de l'ascenseur (voir [mine.md](mine.md#lascenseur-niveaux_ascenseur)). Toutes ses pioches : 515 900 $ (26/10, hausse de la fin de partie comprise : × 2, × 2,5, × 3 aux paliers 5 à 7 ; jusqu'au palier 5 : 45 900 $ ; avant la hausse : 192 900 $ ; avant l'économie revue : 69 400 $).
 
 - **Sa pioche lui descend par l'ascenseur** : si un forgeron est posé, il attend **3 secondes** au fond (`SECONDES_FORGE_EMPLOYE`) que le forgeron la fasse ; sinon, il l'a directement. Il ne remonte jamais pour ça.
 
@@ -89,11 +89,11 @@ Un pousseur est un **métier à part** : on l'embauche **pour un seul trajet** (
 | 2 | Costaud × 1,2 | 600 $ | 40 | 800 $ + 40 fer | 2 |
 | 3 | Robuste × 1,4 | 2 000 $ | 70 | 2 500 $ + 100 fer | 3 |
 | 4 | Expert × 1,65 | 5 000 $ | 110 | 6 000 $ + 200 fer | 4 |
-| 5 | Champion × 1,9 | 12 000 $ | 170 | 15 000 $ + 400 fer | 5 |
-| 6 | Maître × 2,2 | 30 000 $ | 260 | 40 000 $ + 700 fer | 6 |
-| 7 | Légende × 2,6 | 70 000 $ | 400 | 110 000 $ + 1 100 fer | 7 |
+| 5 | Champion × 1,9 | 24 000 $ | 170 | 30 000 $ + 800 fer | 5 |
+| 6 | Maître × 2,2 | 75 000 $ | 260 | 100 000 $ + 1 000 fer | 6 |
+| 7 | Légende × 2,6 | 210 000 $ | 400 | 330 000 $ + 1 000 fer | 7 |
 
-Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse lui-même a 20 places). (25/10 : plus de prix « × le niveau du joueur », et 5 niveaux au lieu de 5 et 7. 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer**, comme les autres ; un temps, en lingots de fer.) Si son chariot ne suit pas ce que sort le bâtiment de départ, une alerte le dit au panneau de la mine (ou de la foreuse, de la fonderie, de la joaillerie), avec un bouton vers le Personnel.
+Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse lui-même a 20 places). (25/10 : plus de prix « × le niveau du joueur », et 5 niveaux au lieu de 5 et 7. 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer**, comme les autres ; un temps, en lingots de fer. Les paliers 5 à 7 comprennent la hausse de la fin de partie, et jamais plus de 1 000 fer.) Pour un pousseur : 316 600 $ de vitesse, et 469 300 $ + 3 140 fer de chariot. Si son chariot ne suit pas ce que sort le bâtiment de départ, une alerte le dit au panneau de la mine (ou de la foreuse, de la fonderie, de la joaillerie), avec un bouton vers le Personnel.
 
 - **Son salaire** : **400 $** toutes les 5 minutes, **+ 250 $** par niveau de vitesse et **+ 200 $** par niveau de chariot (× sa rareté) : de 400 $ à 3 100 $ (26/10 ; 2 200 $ au plus avec 5 niveaux).
 - **Sa rareté** (avec le recruteur) : il pousse × 1 + (rendement − 1) ÷ 2 (`forcePousseur` : rare × 1,25, épique × 1,5, légendaire × 2, mythique × 3).
@@ -137,13 +137,13 @@ Pour les pousseurs : 120 $, 400 $, 1 000 $ et 2 000 $ pour les 4 premiers, puis 
 
 - On l'embauche, puis on l'améliore, **en argent** (`NIVEAUX_RECRUTEUR`, 3 niveaux depuis le 25/10 ; avant 4). Il donne une **rareté** à chaque nouvel employé (mineur, pousseur ou, 26/10, joaillier), tirée au hasard, du plus rare au plus commun (`tirerRarete`) :
 
-| Niveau | Prix (25/10) | Palier | Commun | Rare | Épique | Légendaire | Mythique |
+| Niveau | Prix (26/10) | Palier | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 1 (embauche) | 10 000 $ | 4 | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 40 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
-| 3 | 140 000 $ | 6 | 50 % | 25 % | 14 % | 8 % | 3 % |
+| 2 | 80 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
+| 3 | 350 000 $ | 6 | 50 % | 25 % | 14 % | 8 % | 3 % |
 
-Total : 190 000 $ (26/10 ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 5 et 5, total 85 000 $ ; avant l'économie revue : 245 000 $).
+Total : 440 000 $ (26/10, hausse de la fin de partie comprise ; avant la hausse : 190 000 $ ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 5 et 5, total 85 000 $ ; avant l'économie revue : 245 000 $).
 
 - **Les raretés** (`RARETES`) :
 
@@ -167,10 +167,10 @@ Total : 190 000 $ (26/10 ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 
 | Niveau | Reste éveillé | Prix | Palier |
 |---|---:|---:|---:|
 | 1 (embauche) | 30 min | 5 000 $ | 3 |
-| 2 | 1 h | 25 000 $ | 5 |
-| 3 | 2 h | 90 000 $ | 6 |
+| 2 | 1 h | 50 000 $ | 5 |
+| 3 | 2 h | 230 000 $ | 6 |
 
-(Avant le 25/10 : 5 niveaux, de 15 min à 1 h 30. Le 25/10 : 12 000 $ au palier 4 et 30 000 $ au palier 5, total 47 000 $.) Total : 120 000 $ (26/10 ; avant l'économie revue : 128 000 $).
+(Avant le 25/10 : 5 niveaux, de 15 min à 1 h 30. Le 25/10 : 12 000 $ au palier 4 et 30 000 $ au palier 5, total 47 000 $.) Total : 285 000 $ (26/10, hausse de la fin de partie comprise ; avant la hausse : 120 000 $ ; avant l'économie revue : 128 000 $).
 
 - **C'est une option** : un interrupteur l'arrête ou le remet au travail (`basculerManager`, `managerActif`). Arrêté, il ne paie personne et on ne lui doit rien : on paie ses employés soi-même.
 

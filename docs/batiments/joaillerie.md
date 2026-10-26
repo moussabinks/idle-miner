@@ -43,12 +43,12 @@ Une ligne d'amélioration (`Amelioration`) : « Établis *a* → *b* », « Outi
 | Niveau | Établis (joailliers au plus) | Outils | Un bijou, joaillier commun (sans électricité) | Entrée et réserve | Prix | Palier (`PALIER_JOAILLERIE`) |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 1 | × 1 | 10 s (6 par minute) | 30 places chacune | (le bâtiment) | 6 |
-| 2 | 2 | × 1,15 | 8,7 s (6,9 par minute) | 50 | 120 000 $ + 30 saphir | 6 |
-| 3 | 3 | × 1,3 | 7,7 s (7,8 par minute) | 80 | 220 000 $ + 25 rubis | 6 |
-| 4 | 4 | × 1,5 | 6,7 s (9 par minute) | 120 | 400 000 $ + 40 rubis + 10 diamant | 7 |
-| 5 | 5 | × 1,75 | 5,7 s (10,5 par minute) | 180 | 700 000 $ + 25 diamant | 7 |
+| 2 | 2 | × 1,15 | 8,7 s (6,9 par minute) | 50 | 300 000 $ + 75 saphir | 6 |
+| 3 | 3 | × 1,3 | 7,7 s (7,8 par minute) | 80 | 550 000 $ + 63 rubis | 6 |
+| 4 | 4 | × 1,5 | 6,7 s (9 par minute) | 120 | 1 200 000 $ + 120 rubis + 30 diamant | 7 |
+| 5 | 5 | × 1,75 | 5,7 s (10,5 par minute) | 180 | 2 100 000 $ + 75 diamant | 7 |
 
-Tous les niveaux : 1 440 000 $ + 30 saphir + 65 rubis + 35 diamant. Chaque niveau rapporte 30 XP (et 1 XP par 25 $ de son prix).
+Tous les niveaux : 4 150 000 $ + 75 saphir + 183 rubis + 105 diamant (26/10, hausse de la fin de partie comprise : × 2,5 au palier 6, × 3 au palier 7 ; le bâtiment n'est pas touché). Chaque niveau rapporte 30 XP (et 1 XP par 25 $ de son prix).
 
 ## Les joailliers
 

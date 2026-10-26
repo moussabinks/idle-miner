@@ -153,6 +153,9 @@ function automatisation(etat: EtatJeu): Mission | null {
   if (!batimentPose(etat.village, 'marche')) return mission('marche', '🏗️', t('Construis le marché (gratuit) : le wagonnet y vendra tout seul'), { construction: true, pret: true })
   if (!ligneDe(etat, 'mine-marche')) {
     const fer = COUT_RAIL.materiaux.fer ?? 3
+    // (26/10) Des rails en stock se reposent gratuitement.
+    const enStock = etat.stockSol?.rail ?? 0
+    if (enStock > 0) return mission('rails', '🛤️', t('Pose des rails de la mine au marché ({n} en stock, gratuits)', { n: enStock }), { construction: true, pret: true })
     return mission('rails', '🛤️', t('Pose des rails de la mine au marché ({fer} fer la case)', { fer }), { construction: true, pret: disponible(etat, 'fer') >= fer })
   }
   const trajet = trajetDe(etat, 'mine-marche')

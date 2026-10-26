@@ -886,6 +886,8 @@ function rencherir(cout: Cout, palier: number): void {
 for (const table of [NIVEAUX_MINE, NIVEAUX_COFFRE, PIOCHES, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT] as { cout: Cout }[][]) {
   table.forEach((niveau, i) => rencherir(niveau.cout, i + 1))
 }
+// (26/10) La réparation des pioches de la fin de partie suit la même hausse.
+PIOCHES.forEach((pioche, i) => rencherir(pioche.reparation, i + 1))
 // Les ateliers et les chefs ont leurs propres paliers.
 NIVEAUX_FONDERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_FONDERIE[i]))
 NIVEAUX_JOAILLERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_JOAILLERIE[i]))

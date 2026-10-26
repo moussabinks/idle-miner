@@ -1,5 +1,6 @@
 // Les succès du jeu. Ils sont vérifiés après chaque action et chaque moment qui passe.
 
+import { LISTE_BATIMENTS } from './donnees'
 import type { EtatJeu } from './mineur'
 import { railsAlimentes } from './wagonnet'
 import { t } from './langue'
@@ -43,7 +44,7 @@ export const SUCCES: Succes[] = [
   { id: 'riche', emoji: '💰', get titre() { return t('Riche') }, get description() { return t('Gagner 5 000 $') }, condition: (e) => e.stats.argentGagne >= 5000 },
   { id: 'millionnaire', emoji: '🤑', get titre() { return t('Magnat') }, get description() { return t('Gagner 100 000 $') }, condition: (e) => e.stats.argentGagne >= 100000 },
   { id: 'vrai_millionnaire', emoji: '👑', get titre() { return t('Millionnaire') }, get description() { return t('Gagner 1 000 000 $') }, condition: (e) => e.stats.argentGagne >= 1000000 },
-  { id: 'architecte', emoji: '🏗️', get titre() { return t('Architecte') }, get description() { return t('Poser 5 bâtiments au village') }, condition: (e) => e.village.batiments.length >= 6 },
+  { id: 'architecte', emoji: '🏗️', get titre() { return t('Architecte') }, get description() { return t('Construire tous les bâtiments du village') }, condition: (e) => LISTE_BATIMENTS.every((id) => e.village.batiments.some((b) => b.id === id)) },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

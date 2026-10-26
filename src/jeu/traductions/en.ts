@@ -824,7 +824,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Gagner 100 000 $': 'Earn 100,000 $',
   'Magnat': 'Tycoon',
   'Architecte': 'Architect',
-  'Poser 5 bâtiments au village': 'Place 5 buildings in the village',
 
   // src/jeu/wagonnet.ts
   '🛤️ Nouveau trajet : un wagonnet {description}.': '🛤️ New route: a minecart {description}.',
@@ -1054,4 +1053,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // (26/10) Plus de « Pousser » : seuls les pousseurs font rouler les wagonnets
   'Embauche un pousseur au Personnel : il fera rouler ce wagonnet.': 'Hire a pusher at the Staff building: they will run this cart.',
   'Pas de pousseur : embauche-en un au Personnel pour faire rouler ce wagonnet.': 'No pusher: hire one at the Staff building to run this cart.',
+  'Ateliers': 'Workshops',
+  'Construire tous les bâtiments du village': 'Build every building in the village',
+  'Pose des rails de la mine au marché ({n} en stock, gratuits)': 'Lay rails from the mine to the market ({n} in stock, free)',
 }

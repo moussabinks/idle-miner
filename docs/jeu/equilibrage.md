@@ -9,7 +9,7 @@
 Conventions : « bloc/s » = blocs par seconde ; les distances au village sont en **cases** de la grille. Les niveaux affichés commencent à 1 ; dans le code, la plupart sont des index qui commencent à 0 (coffre, générateur, forage, chariot, pioches). La colonne **« Palier »** donne le niveau de la mine qu'il faut (`palierRequis` : le niveau N demande la mine au niveau N). Tout achat peut aussi se payer en **gemmes** (voir [Les gemmes](#les-gemmes)).
 
 
-> **(26/10) La hausse de la fin de partie** (demandée par le propriétaire, `HAUSSE_PAR_PALIER` à la fin de `donnees.ts`) : tout ce qui demande le **palier 5, 6 ou 7** de la mine (descendre la mine, coffre, ascenseur, pioches, pioches des mineurs, pousseurs et leurs chariots, générateur, foreuse, fonderie, joaillerie, manager, recruteur) coûte **× 2 au palier 5, × 2,5 au palier 6, × 3 au palier 7**, en argent et en minerais (arrondi à 2 chiffres). À ce moment-là, le joueur a eu le temps de tenter sa chance au recruteur : ses mineurs rares le feraient finir trop vite. **Les prix des tableaux de cette page sont ceux d'avant la hausse** : multiplier ceux des paliers 5 à 7. Bot (qui ne tente pas sa chance au recruteur) : mine 5 en ~2 h 05, 6 en ~4 h 35, 7 en ~9 h 50 (avant : 1 h 40, 2 h 57, 5 h 08) ; repère du test : niveau 7 en 7 h à 12 h. (26/10) Et **jamais plus de 1 000 d'un même matériau** dans un prix (`MATERIAUX_MAX`), après la hausse : par exemple le générateur 6 demande 1 000 fer + 1 000 redstone, le 7e 1 000 redstone + 120 saphir.
+> **(26/10) La hausse de la fin de partie** (demandée par le propriétaire, `HAUSSE_PAR_PALIER` à la fin de `donnees.ts`) : tout ce qui demande le **palier 5, 6 ou 7** de la mine (descendre la mine, coffre, ascenseur, pioches, pioches des mineurs, pousseurs et leurs chariots, générateur, foreuse, fonderie, joaillerie, manager, recruteur) coûte **× 2 au palier 5, × 2,5 au palier 6, × 3 au palier 7**, en argent et en minerais (arrondi à 2 chiffres). À ce moment-là, le joueur a eu le temps de tenter sa chance au recruteur : ses mineurs rares le feraient finir trop vite. (26/10) Et **jamais plus de 1 000 d'un même matériau** dans un prix (`MATERIAUX_MAX`), après la hausse : par exemple le générateur 6 demande 1 000 fer + 1 000 redstone, le 7e 1 000 redstone + 120 saphir. **(26/10) Les tableaux de cette page donnent les vrais prix du jeu, hausse et plafond de 1 000 minerais compris** (sortis de `donnees.ts` ; les bâtiments à poser, les embauches et les salaires ne sont pas touchés). Bot (qui ne tente pas sa chance au recruteur, et qui améliore maintenant l'ascenseur quand il bloque ses mineurs) : mine 5 en ~1 h 50, 6 en ~3 h 25, 7 en ~5 h 55 (avant la hausse : 1 h 40, 2 h 57, 5 h 08) ; repère du test : niveau 7 en 4 h à 9 h.
 ## Sommaire
 
 1. [Constantes générales](#constantes-générales)
@@ -105,20 +105,20 @@ Les prix ne changent jamais (pas de prix variables). Une vente = la somme des pr
 - **Valeur moyenne** (`valeurMoyenneBloc(niveau, doublement = 0)`) = Σ chance × prix × (1 + doublement si c'est un minerai). Avec la pioche en diamant (60 %), un clic au niveau 7 vaut en moyenne 46,37 + 0,60 × (46,37 − 0,32) ≈ **74 $**.
 - **Débit** : la mine sort toute seule `debit` blocs par seconde dans le coffre, tant qu'il a de la place (`avancerMine`, `debitMine`), **dès le niveau 1** (25/10 ; avant, 0 au niveau 1 puis 0,25 à 0,4). Jamais doublés. × 2 pendant le bonus « Production × 2 ».
 
-| Pour aller au niveau | Prix (`cout`, 25/10) | Niveau du joueur | Ce qui se débloque |
+| Pour aller au niveau | Prix (`cout`, 26/10, hausse comprise) | Niveau du joueur | Ce qui se débloque |
 |---|---|---:|---|
 | 2 | 800 $ + 40 fer | 3 | Foreuse, Générateur ; palier 2 ; 2 mineurs |
 | 3 | 6 000 $ + 100 fer + 40 redstone | 5 | Manager ; palier 3 ; 3 mineurs |
 | 4 | 22 000 $ + 100 redstone + 50 or | 7 | Recruteur ; palier 4 ; 4 mineurs |
-| 5 | 80 000 $ + 90 or + 35 émeraude | 9 | le saphir ; **Fonderie** ; palier 5 ; 5 mineurs |
-| 6 | 260 000 $ + 80 émeraude + 40 saphir | 11 | le rubis ; **Joaillerie** (et les joailliers) ; palier 6 ; 6 mineurs |
-| 7 | 800 000 $ + 80 saphir + 50 rubis | 13 | (le dernier niveau : le diamant) ; palier 7 ; 7 mineurs |
+| 5 | 160 000 $ + 180 or + 70 émeraude | 9 | le saphir ; **Fonderie** ; palier 5 ; 5 mineurs |
+| 6 | 650 000 $ + 200 émeraude + 100 saphir | 11 | le rubis ; **Joaillerie** (et les joailliers) ; palier 6 ; 6 mineurs |
+| 7 | 2 400 000 $ + 240 saphir + 150 rubis | 13 | (le dernier niveau : le diamant) ; palier 7 ; 7 mineurs |
 
-Total pour aller au niveau 7 : **1 168 800 $ + 140 fer + 140 redstone + 140 or + 115 émeraude + 120 saphir + 50 rubis** (26/10). Jusqu'au niveau 5 : 108 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude, comme avant (25/10, économie revue : avant 402 800 $ ; avant le 25/10 : 122 900 $ + 165 fer + 180 redstone + 170 or + 40 émeraude, mais chaque amélioration avait ses propres niveaux du joueur). Chaque niveau donne aussi **1 mineur de plus** au maximum.
+Total pour aller au niveau 7 : **3 238 800 $ + 140 fer + 140 redstone + 230 or + 270 émeraude + 340 saphir + 150 rubis** (26/10, hausse comprise ; avant la hausse : 1 168 800 $). Jusqu'au niveau 5 : 188 800 $ + 140 fer + 140 redstone + 230 or + 70 émeraude (avant la hausse : 108 800 $ ; 25/10, économie revue : avant 402 800 $ ; avant le 25/10 : 122 900 $ + 165 fer + 180 redstone + 170 or + 40 émeraude, mais chaque amélioration avait ses propres niveaux du joueur). Chaque niveau donne aussi **1 mineur de plus** au maximum.
 
 ## Le coffre et la vente
 
-`NIVEAUX_COFFRE` (25/10) :
+`NIVEAUX_COFFRE` (25/10 ; prix du 26/10, hausse comprise) :
 
 | Niveau | Places | Prix | Palier |
 |---|---:|---|---:|
@@ -126,11 +126,11 @@ Total pour aller au niveau 7 : **1 168 800 $ + 140 fer + 140 redstone + 140 or +
 | 2 | 300 | 200 $ + 40 pierre | 2 |
 | 3 | 800 | 2 000 $ + 80 fer | 3 |
 | 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
-| 5 | 5 000 | 18 000 $ + 60 or + 20 émeraude | 5 |
-| 6 | 10 000 | 50 000 $ + 40 émeraude + 30 saphir | 6 |
-| 7 | 20 000 | 150 000 $ + 50 saphir + 30 rubis | 7 |
+| 5 | 5 000 | 36 000 $ + 120 or + 40 émeraude | 5 |
+| 6 | 10 000 | 130 000 $ + 100 émeraude + 75 saphir | 6 |
+| 7 | 20 000 | 450 000 $ + 150 saphir + 90 rubis | 7 |
 
-Total : 226 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 60 émeraude + 80 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 26 200 $).
+Total : 624 200 $ + 40 pierre + 80 fer + 60 redstone + 140 or + 140 émeraude + 225 saphir + 90 rubis (26/10 ; jusqu'au niveau 5 : 44 200 $).
 
 - **Plein** : plus de clic, plus de débit, et la caisse de l'ascenseur attend pour se vider.
 - **Payer** (`disponible`, `payerMateriaux`) : les minerais d'un prix se prennent **dans le coffre** (25/10 : il n'y a plus de sac). (26/10) Les lingots et les bijoux se prennent d'abord dans le coffre, puis dans la **réserve de leur atelier** (`reserveDAtelier`) : (26/10 : plus aucun prix en lingots, les chariots se paient en minerai de fer.)
@@ -141,17 +141,17 @@ Total : 226 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 60 émeraude + 80
 
 `PIOCHES`. Un clic casse **un bloc** (deux clics si la pioche est cassée) : pas de temps de casse, pas de vitesse.
 
-| Pioche | Doublement | Durabilité | Prix (débloquer / racheter, 25/10) | Palier | Réparation (pioche cassée) |
+| Pioche | Doublement | Durabilité | Prix (débloquer / racheter, 26/10) | Palier | Réparation (pioche cassée) |
 |---|---:|---:|---|---:|---|
 | Pierre | 10 % | 150 | 10 $ + 20 pierre (offerte, pas rachetable dans l'interface) | — | 5 $ + 10 pierre |
 | Fer | 20 % | 300 | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
 | Or | 30 % | 500 | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
 | Émeraude | 38 % | 750 | 6 000 $ + 25 émeraude | 4 | 300 $ + 4 émeraude |
-| Saphir (26/10) | 45 % | 1 000 | 15 000 $ + 15 saphir | 5 | 600 $ + 3 saphir |
-| Rubis (26/10) | 52 % | 1 300 | 45 000 $ + 15 rubis | 6 | 1 500 $ + 3 rubis |
-| Diamant | 60 % | 1 700 | 130 000 $ + 15 diamant | 7 | 4 000 $ + 3 diamant |
+| Saphir (26/10) | 45 % | 1 000 | 30 000 $ + 30 saphir | 5 | 1 200 $ + 6 saphir |
+| Rubis (26/10) | 52 % | 1 300 | 110 000 $ + 38 rubis | 6 | 3 800 $ + 8 rubis |
+| Diamant | 60 % | 1 700 | 390 000 $ + 45 diamant | 7 | 12 000 $ + 9 diamant |
 
-(26/10) La pioche d'index 4 (palier 5) est en saphir, avec les chiffres de l'ancienne pioche en diamant ; une partie qui avait celle en diamant a maintenant celle en saphir. Toutes les pioches (de fer à diamant) : 198 800 $ + 20 fer + 30 or + 25 émeraude + 15 saphir + 15 rubis + 15 diamant.
+(26/10) La pioche d'index 4 (palier 5) est en saphir, avec les chiffres de l'ancienne pioche en diamant (avant la hausse) ; une partie qui avait celle en diamant a maintenant celle en saphir. Les prix et les réparations des paliers 5 à 7 suivent la hausse de la fin de partie. Toutes les pioches (de fer à diamant) : 538 800 $ + 20 fer + 30 or + 25 émeraude + 30 saphir + 38 rubis + 45 diamant.
 
 - **Doublement** (`chanceDoublement`) : un minerai cassé en cliquant donne 2 au lieu d'1 si `aleatoire() < doublement`. 0 avec une pioche cassée. Seulement pour les clics. Un bonus de combo ajoute sa « fortune » (au plus 100 %), même avec une pioche cassée.
 - **Blocs par clic** : `(2 si doublé, sinon 1) × (blocs du bonus de combo) × (3 pendant le bonus « Fortune »)` (`cliquerMine`). L'usure, les statistiques et l'XP comptent toujours un seul bloc.
@@ -177,17 +177,17 @@ La fin du bonus se compte en temps de jeu (`stats.tempsDeJeu`), gardée dans `et
 
 `NIVEAUX_ASCENSEUR` (au panneau de la mine, onglet « Améliorer »). La caisse fait des allers-retours sans cesse tant que des mineurs travaillent au fond, et remonte au plus `capacite` blocs par voyage. **Débit** (`debitAscenseur`) = capacité ÷ (2 × trajet + chargement + vidage). La mine a son ascenseur de niveau 1 dès le début. (25/10 : 5 niveaux au lieu de 10, et des marches qui suivent ce que creusent les mineurs d'un palier à l'autre.)
 
-| Niveau | Trajet | Charge / vide | Caisse | Remonte au plus | Prix (25/10) | Palier |
+| Niveau | Trajet | Charge / vide | Caisse | Remonte au plus | Prix (26/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 6 s | 1 s / 2 s | 15 blocs | 1 bloc/s | (dès le début) | — |
 | 2 | 4,5 s | 0,9 s / 1,8 s | 25 | 2,1 bloc/s | 700 $ + 30 fer | 2 |
 | 3 | 3,5 s | 0,8 s / 1,5 s | 40 | 4,3 bloc/s | 3 000 $ + 90 fer + 30 redstone | 3 |
 | 4 | 2,6 s | 0,6 s / 1,2 s | 60 | 8,6 bloc/s | 8 000 $ + 100 redstone + 40 or | 4 |
-| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 22 000 $ + 80 or + 30 émeraude | 5 |
-| 6 | 1,6 s | 0,35 s / 0,7 s | 130 | 30,6 bloc/s | 60 000 $ + 120 or + 30 saphir | 6 |
-| 7 | 1,3 s | 0,3 s / 0,6 s | 180 | 51,4 bloc/s | 180 000 $ + 60 saphir + 30 rubis | 7 |
+| 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 44 000 $ + 160 or + 60 émeraude | 5 |
+| 6 | 1,6 s | 0,35 s / 0,7 s | 130 | 30,6 bloc/s | 150 000 $ + 300 or + 75 saphir | 6 |
+| 7 | 1,3 s | 0,3 s / 0,6 s | 180 | 51,4 bloc/s | 540 000 $ + 180 saphir + 90 rubis | 7 |
 
-Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 33 700 $). Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Ce que creusent les mineurs d'un palier (communs, pioche du palier, `maxEmployes` mineurs) : 0,5 ; 1,5 ; 3 ; 5,2 ; 8,5 ; 13,2 ; 19,6 bloc/s : l'ascenseur du même palier suit, avec de la marge pour les mineurs rares.
+Total : 745 700 $ + 120 fer + 130 redstone + 500 or + 60 émeraude + 255 saphir + 90 rubis (26/10 ; jusqu'au niveau 5 : 55 700 $). Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Ce que creusent les mineurs d'un palier (communs, pioche du palier, `maxEmployes` mineurs) : 0,5 ; 1,5 ; 3 ; 5,2 ; 8,5 ; 13,2 ; 19,6 bloc/s : l'ascenseur du même palier suit, avec de la marge pour les mineurs rares.
 
 ## Les rails et les wagonnets
 
@@ -207,11 +207,11 @@ Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir +
 | 2 | 40 | 800 $ + 40 fer | Costaud × 1,2 | 600 $ | 2 |
 | 3 | 70 | 2 500 $ + 100 fer | Robuste × 1,4 | 2 000 $ | 3 |
 | 4 | 110 | 6 000 $ + 200 fer | Expert × 1,65 | 5 000 $ | 4 |
-| 5 | 170 | 15 000 $ + 400 fer | Champion × 1,9 | 12 000 $ | 5 |
-| 6 | 260 | 40 000 $ + 700 fer | Maître × 2,2 | 30 000 $ | 6 |
-| 7 | 400 | 110 000 $ + 1 100 fer | Légende × 2,6 | 70 000 $ | 7 |
+| 5 | 170 | 30 000 $ + 800 fer | Champion × 1,9 | 24 000 $ | 5 |
+| 6 | 260 | 100 000 $ + 1 000 fer | Maître × 2,2 | 75 000 $ | 6 |
+| 7 | 400 | 330 000 $ + 1 000 fer | Légende × 2,6 | 210 000 $ | 7 |
 
-(25/10 : 5 niveaux, et plus de prix « × le niveau du joueur ». 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer** (un temps, en lingots de fer). Le joueur qui pousse lui-même a le premier chariot, 20 places.) Pour un pousseur : 119 600 $ de vitesse, et 174 300 $ + 740 fer + 170 lingots de fer de chariot.
+(25/10 : 5 niveaux, et plus de prix « × le niveau du joueur ». 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer** (un temps, en lingots de fer). Le joueur qui pousse lui-même a le premier chariot, 20 places.) Pour un pousseur : 316 600 $ de vitesse, et 469 300 $ + 3 140 fer de chariot (26/10, hausse et plafond de 1 000 fer compris).
 
 - **Trajets** (`LIAISONS`, 10 depuis le 26/10 ; 4 avant) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, et (26/10) Mine → Fonderie, Mine → Joaillerie, Foreuse → Fonderie, Foreuse → Joaillerie, Fonderie → Marché, Joaillerie → Marché. Un wagonnet chacun, créés gratuitement par le joueur. Il faut **un pousseur payé** pour qu'un trajet roule tout seul, même électrique.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue d'une case collée au bâtiment de départ à une case collée à celui d'arrivée, jamais en boucle (`feraitUneBoucle`). **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
@@ -238,11 +238,11 @@ Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir +
 | 2 | 15 | + 40 % | 7 min | 4 000 $ + 80 fer + 40 redstone | 2 |
 | 3 | 18 | + 50 % | 10 min | 8 000 $ + 150 fer + 90 redstone | 3 |
 | 4 | 21 | + 60 % | 13 min | 15 000 $ + 250 fer + 180 redstone | 4 |
-| 5 | 24 | + 75 % | 16 min | 35 000 $ + 400 fer + 350 redstone | 5 |
-| 6 | 26 | + 85 % | 19 min | 90 000 $ + 600 fer + 500 redstone | 6 |
-| 7 | 28 | + 100 % | 22 min | 220 000 $ + 800 redstone + 40 saphir | 7 |
+| 5 | 24 | + 75 % | 16 min | 70 000 $ + 800 fer + 700 redstone | 5 |
+| 6 | 26 | + 85 % | 19 min | 230 000 $ + 1 000 fer + 1 000 redstone | 6 |
+| 7 | 28 | + 100 % | 22 min | 660 000 $ + 1 000 redstone + 120 saphir | 7 |
 
-Améliorations (niveaux 2 à 7) : 372 000 $ + 1 480 fer + 1 960 redstone + 40 saphir (26/10 ; niveaux 2 à 5 : 62 000 $ + 880 fer + 660 redstone).
+Améliorations (niveaux 2 à 7) : 987 000 $ + 2 280 fer + 3 010 redstone + 120 saphir (26/10, hausse et plafond de 1 000 compris ; niveaux 2 à 5 : 97 000 $ + 1 280 fer + 1 010 redstone).
 
 - **Consommation** : 1 redstone = 30 s, soit 2 par minute, **120 par heure**, quel que soit le niveau.
 - **Rayon** : une case est dedans si `distance(centre de la case, centre du générateur) ≤ rayon`.
@@ -259,11 +259,11 @@ Améliorations (niveaux 2 à 7) : 372 000 $ + 1 480 fer + 1 960 redstone + 40 sa
 | 2 | 1 | 22 (7 min 20) | 3 000 $ + 50 fer + 20 redstone | 50 | 4 000 $ + 60 fer | 2 |
 | 3 | 1,6 | 30 (10 min) | 6 000 $ + 100 fer + 60 redstone | 90 | 7 000 $ + 120 fer + 40 redstone | 3 |
 | 4 | 2,4 | 40 (13 min 20) | 14 000 $ + 150 redstone + 40 or | 140 | 14 000 $ + 150 redstone + 50 or | 4 |
-| 5 | 3,4 | 50 (16 min 40) | 30 000 $ + 80 or + 20 émeraude | 200 | 30 000 $ + 100 or + 25 émeraude | 5 |
-| 6 | 4,6 | 60 (20 min) | 80 000 $ + 40 émeraude + 20 saphir | 280 | 70 000 $ + 300 fer + 20 saphir | 6 |
-| 7 | 6 | 70 (23 min 20) | 200 000 $ + 40 saphir + 20 rubis | 400 | 180 000 $ + 1700 fer + 25 rubis | 7 |
+| 5 | 3,4 | 50 (16 min 40) | 60 000 $ + 160 or + 40 émeraude | 200 | 60 000 $ + 200 or + 50 émeraude | 5 |
+| 6 | 4,6 | 60 (20 min) | 200 000 $ + 100 émeraude + 50 saphir | 280 | 180 000 $ + 750 fer + 50 saphir | 6 |
+| 7 | 6 | 70 (23 min 20) | 600 000 $ + 120 saphir + 60 rubis | 400 | 540 000 $ + 1 000 fer + 75 rubis | 7 |
 
-Total du forage : 333 000 $ + 150 fer + 230 redstone + 120 or + 60 émeraude + 60 saphir + 20 rubis. Total du chariot : 305 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude + 20 saphir + 25 rubis (26/10 : les deux derniers en minerai de fer, 300 puis 600 fer, plus en lingots) (26/10 ; jusqu'au niveau 5 : 53 000 $ et 55 000 $).
+Total du forage : 883 000 $ + 150 fer + 230 redstone + 200 or + 140 émeraude + 170 saphir + 60 rubis. Total du chariot : 805 000 $ + 1 930 fer + 190 redstone + 250 or + 50 émeraude + 50 saphir + 75 rubis (26/10 : les deux derniers en minerai de fer, 750 puis 1 000 fer avec la hausse et le plafond, plus en lingots) (26/10 ; jusqu'au niveau 5 : 83 000 $ et 85 000 $).
 
 - **Charbon** : 1 charbon = 20 s de forage, quelle que soit la vitesse (3 charbons par minute).
 - **Vitesse** = forage × bonus du générateur (dans le rayon) × 2 pendant le bonus « Production × 2 ».
@@ -282,12 +282,12 @@ Le bâtiment : 40 000 $ + 300 pierre + 200 fer + 150 charbon (mine niveau 5). El
 | Niveau | Lingots/s | Entrée et réserve | Four (charbons) | Prix | Palier |
 |---|---:|---:|---:|---|---:|
 | 1 | 0,5 | 40 | 15 (3 min) | (le bâtiment) | 5 |
-| 2 | 0,8 | 70 | 22 (4 min 24) | 60 000 $ + 300 fer + 100 charbon | 5 |
-| 3 | 1,2 | 110 | 30 (6 min) | 140 000 $ + 150 or + 20 saphir | 6 |
-| 4 | 1,7 | 160 | 40 (8 min) | 260 000 $ + 250 or + 20 rubis | 6 |
-| 5 | 2,4 | 240 | 50 (10 min) | 500 000 $ + 60 saphir + 40 rubis | 7 |
+| 2 | 0,8 | 70 | 22 (4 min 24) | 120 000 $ + 600 fer + 200 charbon | 5 |
+| 3 | 1,2 | 110 | 30 (6 min) | 350 000 $ + 380 or + 50 saphir | 6 |
+| 4 | 1,7 | 160 | 40 (8 min) | 650 000 $ + 630 or + 50 rubis | 6 |
+| 5 | 2,4 | 240 | 50 (10 min) | 1 500 000 $ + 180 saphir + 120 rubis | 7 |
 
-Améliorations : 960 000 $ + 300 fer + 100 charbon + 400 or + 80 saphir + 60 rubis.
+Améliorations : 2 620 000 $ + 600 fer + 200 charbon + 1 010 or + 230 saphir + 170 rubis (26/10, hausse comprise ; le bâtiment n'est pas touché).
 
 - **Vitesse** (`vitesseFonderie`) = lingots/s du niveau × bonus du générateur (si elle est dans son rayon) × 2 pendant « Production × 2 ». Un charbon fond 6 lingots au niveau 1, 28,8 au niveau 5 (sans électricité).
 - **Ce qu'elle ajoute** : 12 $ par lingot de fer (24 − 12), 35 $ par lingot d'or (70 − 35). Au niveau 1, à parts égales de fer et d'or : 0,5 × 23,5 ≈ 11,8 $/s.
@@ -299,12 +299,12 @@ Le bâtiment : 150 000 $ + 40 émeraude + 30 saphir (mine niveau 6). Ses **joail
 | Niveau | Établis (joailliers au plus) | Outils | Un bijou (joaillier commun) | Entrée et réserve | Prix | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 1 | × 1 | 10 s (6 par minute) | 30 | (le bâtiment) | 6 |
-| 2 | 2 | × 1,15 | 8,7 s | 50 | 120 000 $ + 30 saphir | 6 |
-| 3 | 3 | × 1,3 | 7,7 s | 80 | 220 000 $ + 25 rubis | 6 |
-| 4 | 4 | × 1,5 | 6,7 s | 120 | 400 000 $ + 40 rubis + 10 diamant | 7 |
-| 5 | 5 | × 1,75 | 5,7 s (10,5 par minute) | 180 | 700 000 $ + 25 diamant | 7 |
+| 2 | 2 | × 1,15 | 8,7 s | 50 | 300 000 $ + 75 saphir | 6 |
+| 3 | 3 | × 1,3 | 7,7 s | 80 | 550 000 $ + 63 rubis | 6 |
+| 4 | 4 | × 1,5 | 6,7 s | 120 | 1 200 000 $ + 120 rubis + 30 diamant | 7 |
+| 5 | 5 | × 1,75 | 5,7 s (10,5 par minute) | 180 | 2 100 000 $ + 75 diamant | 7 |
 
-Améliorations : 1 440 000 $ + 30 saphir + 65 rubis + 35 diamant.
+Améliorations : 4 150 000 $ + 75 saphir + 183 rubis + 105 diamant (26/10, hausse comprise ; le bâtiment n'est pas touché).
 
 - **Vitesse d'un joaillier** (`vitesseJoaillier`) = outils × rareté (× 1 à × 5) × bonus du générateur (dans le rayon) × 2 pendant « Employés × 2 » ÷ 10 s.
 - **Ce qu'il ajoute** : 120 $ par collier d'émeraude, 180 $ par pendentif de saphir, 255 $ par couronne de rubis, 360 $ par bague de diamant (bijou − gemme). Un joaillier commun au niveau 1 qui taille des saphirs : 0,1 × 180 = 18 $/s, pour 5 $/s de salaire.
@@ -326,17 +326,17 @@ Améliorations : 1 440 000 $ + 30 saphir + 65 rubis + 35 diamant.
 
 `NIVEAUX_EMPLOYE` (en argent, au Personnel) × la rareté (`RARETES`). Salaire : `SALAIRES`, toutes les 5 minutes.
 
-| Pioche | Creuse | Sac | Prix (25/10) | Palier | Salaire / 5 min |
+| Pioche | Creuse | Sac | Prix (26/10) | Palier | Salaire / 5 min |
 |---|---:|---:|---:|---:|---:|
 | Bois | 0,5 bloc/s | 10 | (de base) | — | 120 $ |
 | Fer | 0,75 | 18 | 400 $ | 2 | 300 $ |
 | Or | 1 | 28 | 2 500 $ | 3 | 700 $ |
 | Émeraude | 1,3 | 40 | 7 000 $ | 4 | 1 300 $ |
-| Saphir (26/10) | 1,7 | 55 | 18 000 $ | 5 | 2 600 $ |
-| Rubis (26/10) | 2,2 | 75 | 45 000 $ | 6 | 4 500 $ |
-| Diamant | 2,8 | 100 | 120 000 $ | 7 | 7 500 $ |
+| Saphir (26/10) | 1,7 | 55 | 36 000 $ | 5 | 2 600 $ |
+| Rubis (26/10) | 2,2 | 75 | 110 000 $ | 6 | 4 500 $ |
+| Diamant | 2,8 | 100 | 360 000 $ | 7 | 7 500 $ |
 
-(25/10 : 5 pioches au lieu de 6, la pierre est retirée. 26/10 : 7 pioches ; celle du palier 5, qui était en diamant, est maintenant en saphir, avec les mêmes chiffres.) Les pioches de tous les niveaux pour un mineur : 192 900 $ (jusqu'au palier 5 : 27 900 $).
+(25/10 : 5 pioches au lieu de 6, la pierre est retirée. 26/10 : 7 pioches ; celle du palier 5, qui était en diamant, est maintenant en saphir, avec les mêmes chiffres.) Les pioches de tous les niveaux pour un mineur : 515 900 $ (jusqu'au palier 5 : 45 900 $).
 
 - **Blocs par seconde d'un mineur** (`blocsParSecondeEmploye`) = ce qu'il creuse × `min(1, ce que remonte l'ascenseur ÷ ce que creusent tous les mineurs payés)` (`partRemontee`), × 2 pendant « Production × 2 ».
 - **Salaire** (`salaireEmploye`) = `arrondi(SALAIRES[pioche] × rareté.salaire)`. Sans manager, on paie au plus 5 minutes d'avance (au prorata du temps manquant).
@@ -365,17 +365,17 @@ Améliorations : 1 440 000 $ + 30 saphir + 65 rubis + 35 diamant.
 
 ### Recruteur (`NIVEAUX_RECRUTEUR`, 3 niveaux)
 
-| Niveau | Prix (25/10) | Palier (`PALIER_CHEF.recruteur`) | Commun | Rare | Épique | Légendaire | Mythique |
+| Niveau | Prix (26/10) | Palier (`PALIER_CHEF.recruteur`) | Commun | Rare | Épique | Légendaire | Mythique |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 1 (embauche) | 10 000 $ | 4 | 65 % | 20 % | 10 % | 4 % | 1 % |
-| 2 | 40 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
-| 3 | 140 000 $ | 6 | 50 % | 25 % | 14 % | 8 % | 3 % |
+| 2 | 80 000 $ | 5 | 57 % | 23 % | 12 % | 6 % | 2 % |
+| 3 | 350 000 $ | 6 | 50 % | 25 % | 14 % | 8 % | 3 % |
 
-Total : 190 000 $ (26/10 : niveaux 2 et 3 plus chers, le dernier au palier 6 ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 5, 5, total 85 000 $ ; avant l'économie revue : 245 000 $). Sans recruteur, 100 % de communs. Le recruteur tire aussi la rareté des **joailliers** (26/10). Le tirage part du plus rare (`tirerRarete`).
+Total : 440 000 $ (26/10 : niveaux 2 et 3 plus chers, le dernier au palier 6, hausse comprise ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 5, 5, total 85 000 $ ; avant l'économie revue : 245 000 $). Sans recruteur, 100 % de communs. Le recruteur tire aussi la rareté des **joailliers** (26/10). Le tirage part du plus rare (`tirerRarete`).
 
 ### Manager (`NIVEAUX_MANAGER`, 3 niveaux)
 
-`PRIX_MANAGER` = **5 000 $** (palier 3 ; 25/10, économie revue : avant 8 000 $), `SALAIRE_MANAGER` = 400 $ / 5 min. Il reste éveillé **30 min**, puis **1 h** (25 000 $, palier 5) et **2 h** (90 000 $, palier 6), jeu ouvert ou fermé, puis il s'endort jusqu'à ce qu'on le réveille. Total : 120 000 $ (26/10 ; le 25/10 : 12 000 $ au palier 4 et 30 000 $ au palier 5, total 47 000 $). Il paie 5 minutes de plus à chacun (lui d'abord, puis les employés du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), avec l'argent du joueur.
+`PRIX_MANAGER` = **5 000 $** (palier 3 ; 25/10, économie revue : avant 8 000 $), `SALAIRE_MANAGER` = 400 $ / 5 min. Il reste éveillé **30 min**, puis **1 h** (50 000 $, palier 5) et **2 h** (230 000 $, palier 6), jeu ouvert ou fermé, puis il s'endort jusqu'à ce qu'on le réveille. Total : 285 000 $ (26/10, hausse comprise ; le 25/10 : 12 000 $ au palier 4 et 30 000 $ au palier 5, total 47 000 $). Il paie 5 minutes de plus à chacun (lui d'abord, puis les employés du moins cher au plus cher) dès qu'il lui reste moins de 60 s payées (`SECONDES_AVANT_PAIE_MANAGER`), avec l'argent du joueur.
 
 ## Le village
 
@@ -420,7 +420,7 @@ Le joueur traverse la clairière (40 cases) en un peu plus de 5 s.
 Tout le détail est dans [gemmes-et-recompenses.md](gemmes-et-recompenses.md). En bref (`gemmes.ts`) :
 
 - **Gagner** : 1 par publicité (`GEMMES_PAR_PUB`), 3 par niveau du joueur (`GEMMES_PAR_NIVEAU`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES` : 1, 2, 1, 3, 2, 4 et 10 gemmes, 23 par semaine).
-- **Prix en gemmes** d'un achat (26/10) : de **2 à 10**, en proportion entre la moins chère (2) et la plus chère (10) des améliorations possibles du moment (`bornesGemmes`, `src/jeu/prixGemmes.ts`). Avant (25/10, gardé quand il n'y a pas de bornes, au moins 2) : `arrondi(3 + 2,4 × (log10(valeur en $) − 2))`, entre **3 et 10** (3 à 10 publicités), la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 100 $ → 3 💎, 1 000 $ → 5 💎, 10 000 $ → 8 💎, à partir d'environ 51 000 $ (comme la mine niveau 5, 85 950 $) → 10 💎.
+- **Prix en gemmes** d'un achat (26/10) : de **2 à 10**, en proportion entre la moins chère (2) et la plus chère (10) des améliorations possibles du moment (`bornesGemmes`, `src/jeu/prixGemmes.ts`). Avant (25/10, gardé quand il n'y a pas de bornes, au moins 2) : `arrondi(3 + 2,4 × (log10(valeur en $) − 2))`, entre **3 et 10** (3 à 10 publicités), la valeur comptant l'argent et les minerais à leur prix (`valeurEnDollars`) : 100 $ → 3 💎, 1 000 $ → 5 💎, 10 000 $ → 8 💎, à partir d'environ 51 000 $ (comme la mine niveau 5, 171 900 $) → 10 💎.
 - **Boutique** (`BOOSTS`, 25/10) : Production × 2, Ventes × 2 et Employés × 2 (15 min chacun) et Fortune (× 3 blocs par clic, 5 min), **3 💎** chacun ; plus de trésor.
 - **Cadeau du jour** (25/10) : plus d’argent ; chaque jour des gemmes (2 à 12, 35 par semaine) et un bonus de la boutique (Employés × 2, Ventes × 2, Production × 2, de 10 à 60 min) : voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md#4-le-cadeau-du-jour-recompensesquotidiennestsx).
 - **Absence × 2** (`doublerAbsence`) : une publicité redonne tout ce que l'absence a rapporté (l'argent gagné, plus la valeur de ce qui attend en plus dans le coffre et le chariot).
@@ -449,11 +449,11 @@ Ce qu'il faut pour descendre, et ce que coûte tout le palier (un niveau de chaq
 | 2 | 800 $ + 40 fer | 14 000 $ (20 000 $ avec la foreuse et le générateur à poser) + des minerais |
 | 3 | 6 000 $ + 100 fer + 40 redstone | 35 500 $ + des minerais |
 | 4 | 22 000 $ + 100 redstone + 50 or | 81 000 $ + des minerais |
-| 5 | 80 000 $ + 90 or + 35 émeraude | 195 000 $ + des minerais ; et la fonderie (40 000 $ + des minerais, puis 60 000 $ pour son niveau 2) |
-| 6 | 260 000 $ + 80 émeraude + 40 saphir | 510 000 $ + des minerais ; la fonderie niveaux 3 et 4 (400 000 $) ; la joaillerie (150 000 $, puis 340 000 $ pour ses niveaux 2 et 3) |
-| 7 | 800 000 $ + 80 saphir + 50 rubis | 1 360 000 $ + des minerais ; la fonderie niveau 5 (500 000 $) ; la joaillerie niveaux 4 et 5 (1 100 000 $) |
+| 5 | 160 000 $ + 180 or + 70 émeraude | 390 000 $ + des minerais ; et la fonderie (40 000 $ + des minerais, puis 120 000 $ pour son niveau 2) |
+| 6 | 650 000 $ + 200 émeraude + 100 saphir | 1 285 000 $ + des minerais ; la fonderie niveaux 3 et 4 (1 000 000 $) ; la joaillerie (150 000 $, puis 850 000 $ pour ses niveaux 2 et 3) |
+| 7 | 2 400 000 $ + 240 saphir + 150 rubis | 4 080 000 $ + des minerais ; la fonderie niveau 5 (1 500 000 $) ; la joaillerie niveaux 4 et 5 (3 300 000 $) |
 
-Tout au maximum (coffre, pioches, ascenseur, générateur, forage, chariot de la foreuse, recruteur, manager) : environ **2 millions $** (26/10 ; 390 000 $ avec 5 niveaux, et 1 million avant l'économie revue du 25/10), plus 192 900 $ par mineur (ses pioches), 293 900 $ par pousseur (vitesse et chariot) et les embauches ; et 2,4 millions $ pour les niveaux de la fonderie et de la joaillerie. Plus les niveaux de la mine (1 168 800 $).
+Tout au maximum (coffre, pioches, ascenseur, générateur, forage, chariot de la foreuse, recruteur, manager) : environ **5,3 millions $** (26/10, hausse comprise ; 2 millions avant la hausse, 390 000 $ avec 5 niveaux, et 1 million avant l'économie revue du 25/10), plus 515 900 $ par mineur (ses pioches), 785 900 $ par pousseur (vitesse et chariot) et les embauches ; et 6,8 millions $ pour les niveaux de la fonderie et de la joaillerie. Plus les niveaux de la mine (3 238 800 $).
 
 ## Le niveau du joueur
 
@@ -465,7 +465,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 
 ## Le bot de simulation
 
-`src/jeu/bot.ts` (`jouerPartie(aleatoire, maxSecondes = 12 h)`) joue une partie avec seulement des actions qu'un joueur peut faire, jusqu'au **niveau 7** de la mine (`NIVEAU_MINE_MAX` ; jusqu'au 25/10 : le niveau 5). Il gagne de l'XP comme un joueur et attend ses niveaux et ses paliers. `bot.test.ts` le fait jouer **10 parties** avec des graines fixes (1 à 10, générateur `mulberry32` : les résultats sont toujours les mêmes). Il ne se sert pas des gemmes.
+`src/jeu/bot.ts` (`jouerPartie(aleatoire, maxSecondes = 16 h)`) joue une partie avec seulement des actions qu'un joueur peut faire, jusqu'au **niveau 7** de la mine (`NIVEAU_MINE_MAX` ; jusqu'au 25/10 : le niveau 5). Il gagne de l'XP comme un joueur et attend ses niveaux et ses paliers. `bot.test.ts` le fait jouer **10 parties** avec des graines fixes (1 à 10, générateur `mulberry32` : les résultats sont toujours les mêmes). Il ne se sert pas des gemmes.
 
 ### Ce qu'il fait
 
@@ -473,7 +473,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 - **Le village** (`PLAN_DU_BOT`, autour de la mine posée en 15, 15) : le **Personnel** en (9, 21), le **marché** en (18, 28), juste sous la mine, le **forgeron** (26, 14), le **générateur** (25, 27), la **foreuse** (26, 21), et (26/10) la **fonderie** (9, 15) et la **joaillerie** (26, 8). Il pose **3 cases de rails** (20, 25 à 27) entre la mine et le marché dès qu'elles sont débloquées, puis y crée le trajet Mine → Marché et y embauche un pousseur.
 - **Vendre** (25/10 : depuis la mine, plus de marche) : tant que le wagonnet ne roule pas, il vend le coffre (et le chariot de la foreuse) quand le coffre est à moitié plein ; avec le wagonnet, au-delà de 85 %.
 - **Ce qu'il garde** (`reglerGarde`, dans `coffre.garder`) : les minerais du prochain coffre, du prochain niveau de mine, des rails, de la réparation, du prochain bâtiment, de 20 redstone pour le générateur et de la prochaine pioche, tant que ça tient dans 70 % du coffre.
-- **Les achats** : réparer, pioche suivante, niveau de mine dès qu'il peut, salaires dès que quelqu'un a moins d'une minute payée (et réveiller le manager à mi-fatigue), embaucher et améliorer les mineurs en gardant une paie d'avance, recruteur, manager à partir de 15 000 $, un pousseur pour Mine → Marché (et son chariot quand le coffre se remplit), générateur rempli de redstone et amélioré à 2 fois son prix, foreuse remplie de charbon et améliorée au-dessus de 3 000 $, ascenseur (à partir de 2 mineurs) et coffre ; (26/10) un **joaillier** dès qu'un établi est libre (en gardant une paie d'avance).
+- **Les achats** : réparer, pioche suivante, niveau de mine dès qu'il peut, salaires dès que quelqu'un a moins d'une minute payée (et réveiller le manager à mi-fatigue), embaucher et améliorer les mineurs en gardant une paie d'avance, recruteur, manager à partir de 15 000 $, un pousseur pour Mine → Marché (et son chariot quand le coffre se remplit), générateur rempli de redstone et amélioré à 2 fois son prix, foreuse remplie de charbon et améliorée au-dessus de 3 000 $, ascenseur (à partir de 2 mineurs, et (26/10) dès qu'il remonte moins que ce que creusent ses mineurs) et coffre ; (26/10) un **joaillier** dès qu'un établi est libre (en gardant une paie d'avance).
 - **Les ateliers** (26/10, `faireTournerLesAteliers`) : il y apporte à la main tout ce qu'ils acceptent (sauf ce qu'il garde), remplit le four de la fonderie quand il lui reste moins de 2 minutes, les améliore quand il a 1,5 fois le prix (sans toucher aux minerais du prochain niveau de la mine), et vend leur réserve (sauf les lingots qu'il garde pour ses achats). Il garde aussi les minerais du prochain niveau des ateliers. Il ne pose pas de rails vers eux.
 
 ### Ce que vérifie `bot.test.ts`
@@ -483,7 +483,7 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 | Fin | les 10 parties arrivent au **niveau 7** (26/10 ; avant, au niveau 5) |
 | Niveau 2 (médiane) | **2 à 10 minutes** (25/10 ; avant 15 à 40) |
 | Niveau 5 (médiane) | **1 h à 3 h** (25/10, économie revue ; avant 3 h à 6 h, et 6 h à 9 h avant le 25/10) |
-| Niveau 7 (médiane) | **3 h à 7 h** (26/10) |
+| Niveau 7 (médiane) | **4 h à 9 h** (26/10, avec la hausse de la fin de partie ; avant 3 h à 7 h) |
 | Ateliers | dans chaque partie, la fonderie a fondu plus de 100 lingots et la joaillerie taillé plus de 20 bijoux (26/10) |
 | Niveau du joueur (médianes) | le niveau 5 **après 8 minutes au moins**, le niveau 10 **après 1 heure au moins** |
 | Progression | chaque niveau prend plus de temps que le précédent (médiane, à 20 % près), du niveau 2 au niveau 7 |
@@ -493,6 +493,8 @@ Tout est expliqué dans [niveaux.md](niveaux.md). En bref :
 | Début | plus de 3 ventes à la main avant le wagonnet |
 
 ### Résultats mesurés (26/10, la grosse mise à jour des gemmes, 10 parties)
+
+> (26/10) **Après la hausse de la fin de partie**, le bot (qui améliore maintenant l'ascenseur quand il bloque ses mineurs) arrive, en médiane, au niveau 5 de la mine en **~1 h 50**, au niveau 6 en **~3 h 25** et au niveau 7 en **~5 h 55**. Le tableau ci-dessous est la mesure d'avant la hausse.
 
 | Mesure | Minimum | Médiane | Maximum |
 |---|---:|---:|---:|
@@ -522,9 +524,9 @@ Pour mémoire, avant l'économie revue (25/10) : niveau 3 en 32 min, niveau 4 en
 | Repère | Valeur | Source |
 |---|---|---|
 | Niveau 2 de la mine | **2 à 10 min** (médiane) ; mesuré : 3,9 min | `bot.test.ts` |
-| Niveau 5 de la mine | **1 h à 3 h** (médiane) ; mesuré : 1 h 40 ; un vrai joueur plutôt 2 h 30 à 4 h (25/10, économie revue ; avant 3 h à 6 h, mesuré 4 h) | `bot.test.ts` |
-| Niveau 6 de la mine | mesuré : 2 h 57 (26/10) | `bot.ts` |
-| Niveau 7 de la mine (le dernier) | **3 h à 7 h** (médiane) ; mesuré : 5 h 08 (26/10) | `bot.test.ts` |
+| Niveau 5 de la mine | **1 h à 3 h** (médiane) ; mesuré : ~1 h 50 (26/10, avec la hausse ; avant 1 h 40) ; un vrai joueur plutôt 2 h 30 à 4 h (25/10, économie revue ; avant 3 h à 6 h, mesuré 4 h) | `bot.test.ts` |
+| Niveau 6 de la mine | mesuré : ~3 h 25 (26/10, avec la hausse ; avant : 2 h 57) | `bot.ts` |
+| Niveau 7 de la mine (le dernier) | **4 h à 9 h** (médiane) ; mesuré : ~5 h 55 (26/10, avec la hausse ; avant : 5 h 08) | `bot.test.ts` |
 | Rails mine → marché | moins de 10 min | `bot.test.ts` |
 | Rails électriques | moins de 1 h 30 ; mesuré : 15 min | `bot.test.ts` |
 | Niveau 5 / niveau 10 du joueur | après 8 min / après 1 h (médianes) ; mesuré : 15 min / 1 h 40 | `bot.test.ts` |

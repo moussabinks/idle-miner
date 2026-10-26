@@ -42,12 +42,12 @@ Une ligne d'amélioration (`Amelioration`) : « *a* lingots/s → *b* », « *p*
 | Niveau | Lingots/s (sans électricité) | Entrée et réserve | Four | Prix | Palier (`PALIER_FONDERIE`) |
 |---|---:|---:|---:|---|---:|
 | 1 | 0,5 (30 / min) | 40 places chacune | 15 charbons (3 min) | (le bâtiment) | 5 |
-| 2 | 0,8 (48 / min) | 70 | 22 (4 min 24) | 60 000 $ + 300 fer + 100 charbon | 5 |
-| 3 | 1,2 (72 / min) | 110 | 30 (6 min) | 140 000 $ + 150 or + 20 saphir | 6 |
-| 4 | 1,7 (102 / min) | 160 | 40 (8 min) | 260 000 $ + 250 or + 20 rubis | 6 |
-| 5 | 2,4 (144 / min) | 240 | 50 (10 min) | 500 000 $ + 60 saphir + 40 rubis | 7 |
+| 2 | 0,8 (48 / min) | 70 | 22 (4 min 24) | 120 000 $ + 600 fer + 200 charbon | 5 |
+| 3 | 1,2 (72 / min) | 110 | 30 (6 min) | 350 000 $ + 380 or + 50 saphir | 6 |
+| 4 | 1,7 (102 / min) | 160 | 40 (8 min) | 650 000 $ + 630 or + 50 rubis | 6 |
+| 5 | 2,4 (144 / min) | 240 | 50 (10 min) | 1 500 000 $ + 180 saphir + 120 rubis | 7 |
 
-Tous les niveaux : 960 000 $ + 300 fer + 100 charbon + 400 or + 80 saphir + 60 rubis. Chaque niveau rapporte 30 XP (et 1 XP par 25 $ de son prix).
+Tous les niveaux : 2 620 000 $ + 600 fer + 200 charbon + 1 010 or + 230 saphir + 170 rubis (26/10, hausse de la fin de partie comprise : × 2, × 2,5, × 3 selon le palier ; le bâtiment n'est pas touché). Chaque niveau rapporte 30 XP (et 1 XP par 25 $ de son prix).
 
 ## Règles et comportement
 

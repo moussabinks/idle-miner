@@ -14,6 +14,7 @@ const SOURCES = [
   { id: 'joueur', nom: 'Tes ventes', emoji: '💰', couleur: 'var(--jaune)' },
   { id: 'wagonnet', nom: 'Wagonnet', emoji: '🛤️', couleur: 'var(--violet)' },
   { id: 'foreuse', nom: 'Foreuse', emoji: '⚙️', couleur: 'var(--ciel)' },
+  { id: 'ateliers', nom: 'Ateliers', emoji: '🏭', couleur: 'var(--orange)' },
 ] as const
 
 // Combien de sortes de blocs on montre (les plus cassées d'abord).
@@ -42,7 +43,7 @@ function Tuile({ emoji, titre, valeur }: { emoji: string; titre: string; valeur:
 // D'où vient l'argent : une barre partagée en trois, avec la légende et les montants.
 function ArgentParSource({ stats }: { stats: Stats }) {
   const sources = argentParSource(stats)
-  const total = sources.joueur + sources.wagonnet + sources.foreuse
+  const total = sources.joueur + sources.wagonnet + sources.foreuse + sources.ateliers
   return (
     <section className="carte stat-bloc">
       <h3 className="titre-section">{t('D’où vient ton argent')}</h3>

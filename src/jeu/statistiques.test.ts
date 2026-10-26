@@ -15,6 +15,8 @@ describe('statistiques', () => {
 
   it('sépare l’argent du marché, du wagonnet et de la foreuse', () => {
     const stats = { ...nouvellesStatistiques(), argentGagne: 1000, argentWagonnet: 600, argentForeuse: 100 }
-    expect(argentParSource(stats)).toEqual({ joueur: 300, wagonnet: 600, foreuse: 100 })
+    expect(argentParSource(stats)).toEqual({ joueur: 300, wagonnet: 600, foreuse: 100, ateliers: 0 })
+    // (26/10) les ateliers à part
+    expect(argentParSource({ ...stats, argentAteliers: 200 })).toEqual({ joueur: 100, wagonnet: 600, foreuse: 100, ateliers: 200 })
   })
 })
