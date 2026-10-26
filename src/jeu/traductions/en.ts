@@ -1040,4 +1040,5 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '🔄 {ancien} est parti(e) : {nom} prend son wagonnet, avec son chariot.': '🔄 {ancien} left: {nom} takes over their cart, with its wagon.',
   'Afficher le rayon sur la carte': 'Show the range on the map',
   '{objets} : la fonderie ou la joaillerie passe d’abord, ce qu’elle ne peut pas prendre part au marché.': '{objets}: the foundry or jewelry shop goes first, what it can’t take goes to the market.',
+  'Taille ×{n} plus vite': 'Cuts ×{n} faster',
 }
