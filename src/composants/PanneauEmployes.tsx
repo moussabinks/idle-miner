@@ -298,8 +298,8 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
         )}
         {/* Avec le recruteur : une nouvelle recrue prend sa place (même pioche), rareté au hasard. */}
         {!pousseur && etat.recruteur > 0 && (
-          // (25/10) Le bouton du hasard : aux couleurs de toutes les raretés, qui défilent, et un dé
-          // qui roule (on tire une rareté au hasard).
+          // (25/10) Le bouton du hasard : un dé qui roule (on tire une rareté au hasard). (26/10)
+          // Turquoise uni, plus d'arc-en-ciel qui défile.
           <button className="btn btn-petit btn-hasard" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>
             <span className="btn-hasard-de" aria-hidden="true">
               🎲
@@ -598,6 +598,8 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   const sansSalaire = nbSansSalaire(etat)
   const prix = prixEmbauche(etat)
   const managerEnPanne = managerEndormi(etat) || (managerActif(etat) && !managerAuTravail(etat))
+  // (26/10) Un chef qui vient de se débloquer et pas encore embauché (manager, recruteur) : « ! »
+  const chefADebloque = (managerDebloque(etat) && !etat.manager.embauche) || (recruteurDebloque(etat) && etat.recruteur === 0)
   const employe = aLicencier !== null ? etat.employes[aLicencier] : undefined
 
   return (
@@ -605,7 +607,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
       <OngletsPanneau
         onglets={[
           { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 ? '!' : prix !== null && etat.argent >= prix ? '+' : null },
-          { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne ? '!' : null },
+          { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne || chefADebloque ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
@@ -615,30 +617,28 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
         <p className="carte carte-creme vide-equipe">{t('Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !')}</p>
       )}
       {onglet === 'personnel' && etat.employes.length > 0 && !managerPaieLesSalaires(etat) && <Salaires etat={etat} jouer={jouer} />}
+      {/* (26/10) Deux sections : les mineurs (l'équipe, puis en recruter un), et les pousseurs
+          (l'équipe, puis en embaucher un). La recrue qu'on est en train de dévoiler n'apparaît
+          dans la liste qu'une fois sa carte montrée (sinon, on la voyait derrière avant). */}
       {onglet === 'personnel' &&
         (['mineur', 'pousseur'] as const).map((role) => {
-          const liste = etat.employes.map((e, index) => ({ e, index })).filter(({ e }) => e.role === role)
-          if (liste.length === 0) return null
+          const liste = etat.employes.map((e, index) => ({ e, index })).filter(({ e }) => e.role === role && e.nom !== recrue?.nom)
+          // (pas encore de trajet de wagonnet : pas de section pousseurs)
+          if (role === 'pousseur' && liste.length === 0 && etat.trajets.length === 0) return null
           return (
             <section key={role} className="section-employes">
               <h3 className="titre-section">{role === 'mineur' ? `⛏️ ${t('Mineurs')} ${liste.length} / ${maxEmployes(etat)}` : `🛤️ ${t('Pousseurs')} ${liste.length}`}</h3>
-              <div className="grille-employes">
-                {liste.map(({ e, index }) => (
-                  <CarteEmploye key={`${e.nom}-${index}`} etat={etat} jouer={jouer} employe={e} index={index} onLicencier={() => setALicencier(index)} onRemplacer={() => jouer((x) => remplacerMineur(x, index, aleatoireNavigateur))} />
-                ))}
-              </div>
+              {liste.length > 0 && (
+                <div className="grille-employes">
+                  {liste.map(({ e, index }) => (
+                    <CarteEmploye key={`${e.nom}-${index}`} etat={etat} jouer={jouer} employe={e} index={index} onLicencier={() => setALicencier(index)} onRemplacer={() => jouer((x) => remplacerMineur(x, index, aleatoireNavigateur))} />
+                  ))}
+                </div>
+              )}
+              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} />}
             </section>
           )
         })}
-
-      {/* Recruter, dans le même onglet, sous l'équipe. */}
-      {onglet === 'personnel' && (
-        <section className="section-employes">
-          <h3 className="titre-section">➕ {t('Recruter')}</h3>
-          <EmbaucheMineur etat={etat} />
-          <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} />
-        </section>
-      )}
 
       {onglet === 'chefs' && (
         <>

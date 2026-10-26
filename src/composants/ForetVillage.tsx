@@ -33,6 +33,7 @@ type Arbre = {
   x: number
   y: number
   devant: boolean // en bas de la carte : il passe devant les bâtiments et les personnages
+  paysage: boolean // une vignette du paysage (une colline, une montagne), pas un arbre de la lisière
   miroir: boolean
   // Où et à quelle taille on le dessine (en pixels du monde) : son coin haut-gauche et son échelle.
   gauche: number
@@ -45,10 +46,13 @@ type Arbre = {
 // jaune pour égayer, et pas de palmier (ils sont sur la plage).
 const POIDS_SORTES = [3, 3, 2.6, 1.6, 0.5, 0.25, 0]
 
-// La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang, et
-// l'écart (en cases) entre deux arbres de ce rang.
+// La lisière : à combien de cases du bord de la clairière poussent les troncs du premier rang,
+// l'écart (en cases) entre deux arbres de ce rang, et la largeur du pied de chaque arbre (en
+// cases). (26/10) Tous les arbres ont la même taille, ceux des collines et des montagnes aussi
+// (TAILLE_ARBRE dans outils/art/montagnes.mjs) : avant, elle changeait un peu d'un arbre à l'autre.
 const DISTANCE_LISIERE = 1.3
 const ECART_LISIERE = 3.1
+const TAILLE_ARBRE = 2
 
 function planterForet(): Arbre[] {
   const hasard = aleatoireAvecGraine(2026)
@@ -79,6 +83,7 @@ function planterForet(): Arbre[] {
       x,
       y,
       devant: x > n || y > n,
+      paysage: false,
       miroir,
       gauche: p.x - piedX * echelle,
       haut: p.y - image.pied.y * echelle,
@@ -87,18 +92,17 @@ function planterForet(): Arbre[] {
   }
   // Le premier rang, tout autour de la clairière : un carré de troncs à DISTANCE_LISIERE du bord,
   // un arbre tous les ECART_LISIERE (le côté est découpé en parts égales, pour que les coins
-  // tombent juste). Seule la taille et la sorte changent d'un arbre à l'autre.
+  // tombent juste). Seule la sorte change d'un arbre à l'autre.
   const debut = -DISTANCE_LISIERE
   const fin = n + DISTANCE_LISIERE
   const nbParCote = Math.round((fin - debut) / ECART_LISIERE)
   const ecart = (fin - debut) / nbParCote
   for (let i = 0; i < nbParCote; i++) {
     const t = debut + i * ecart
-    const taille = () => 1.85 + hasard() * 0.3
-    planter(t, debut, taille()) // le bord du haut à droite
-    planter(fin, t, taille()) // en bas à droite
-    planter(fin - (t - debut), fin, taille()) // en bas à gauche
-    planter(debut, fin - (t - debut), taille()) // en haut à gauche
+    planter(t, debut, TAILLE_ARBRE) // le bord du haut à droite
+    planter(fin, t, TAILLE_ARBRE) // en bas à droite
+    planter(fin - (t - debut), fin, TAILLE_ARBRE) // en bas à gauche
+    planter(debut, fin - (t - debut), TAILLE_ARBRE) // en haut à gauche
   }
   // Au-delà de la lisière : les collines et les montagnes.
   for (const p of planterPaysage()) {
@@ -109,14 +113,19 @@ function planterForet(): Arbre[] {
       x: p.x,
       y: p.y,
       devant: deDevant(p.x, p.y),
+      paysage: true,
       miroir: false, // (jamais en miroir : la lumière vient toujours de la gauche)
       gauche: e.x - image.pied.x * p.echelle,
       haut: e.y - image.pied.y * p.echelle,
       echelle: p.echelle,
     })
   }
-  // Du fond vers l'avant : un arbre plus bas sur l'écran est dessiné par-dessus.
-  return arbres.sort((a, b) => profondeur(a.x, a.y) - profondeur(b.x, b.y))
+  // Du fond vers l'avant : un arbre plus bas sur l'écran est dessiné par-dessus. Sauf derrière la
+  // clairière (26/10) : là, les collines et les montagnes passent toutes sous la lisière. Elles
+  // sont plus loin qu'elle, mais près des coins, une colline plantée sur le côté pouvait être plus
+  // bas sur l'écran qu'un arbre de la lisière, et le cacher : la rangée avait un trou en haut.
+  const rang = (a: Arbre) => (a.devant || a.paysage ? 0 : 1)
+  return arbres.sort((a, b) => rang(a) - rang(b) || profondeur(a.x, a.y) - profondeur(b.x, b.y))
 }
 
 const FORET = planterForet()

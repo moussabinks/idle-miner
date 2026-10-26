@@ -23,9 +23,10 @@
 Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 - **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, puis pousseurs). Pastille « ! » si quelqu'un n'est pas payé ;
-- **➕ Recruter** (en bas de l'onglet Personnel, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « + » quand on peut payer une embauche ;
-- **🎲 Remplacer** (avec le recruteur) : un bouton aux couleurs de toutes les raretés qui défilent, avec un dé qui roule (`btn-hasard`, 25/10) : une nouvelle recrue prend la place du mineur, rareté au hasard.
-- **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort.
+- (26/10) Deux sections : **⛏️ Mineurs** et **🛤️ Pousseurs**, chacune avec son équipe puis sa ligne pour recruter.
+- **Recruter** (en bas de chaque section, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « + » quand on peut payer une embauche ;
+- **🎲 Remplacer** (avec le recruteur) : un bouton turquoise uni avec un dé qui roule (`btn-hasard` ; 26/10 : avant, un arc-en-ciel qui défilait). La recrue n'apparaît dans la liste qu'une fois sa carte dévoilée : une nouvelle recrue prend la place du mineur, rareté au hasard.
+- **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort, et (26/10) dès qu'un chef est débloqué sans être embauché (le manager au niveau 3 de la mine, le recruteur au niveau 4) ; la tâche « 💼 Embauche le manager » passe alors devant.
 
 **Deux métiers** : les **mineurs** ne font que creuser (la caisse de l'ascenseur remonte ce qu'ils cassent). Les **pousseurs** ne creusent jamais : ils poussent le wagonnet d'un seul trajet.
 

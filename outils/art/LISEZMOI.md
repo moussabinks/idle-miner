@@ -96,11 +96,15 @@ l'échelle 0,5) ; son cadre est donné à `svg()`.
   largeur et sa hauteur), chaque pic coupé par une arête qui descend un peu vers la droite : à
   gauche la face éclairée (`ROCHE`), à droite celle à l'ombre (`ROCHE_OMBRE`). Un bonnet de neige
   qui coule en gouttes sous chaque sommet, de l'herbe en bas (en langues), puis les détails :
-  filons (une veine sombre d'où sortent deux ou trois **minerais à la forme des icônes**), grappes
-  de cristaux, fissures, sapins et rochers au pied. Le contour d'encre ne suit que la silhouette :
+  **gisements** (26/10 : `gisement()`, quelques pépites en losange au gros contour, comme sur le
+  bloc de la mine `BlocDessin.tsx`, à la place des filons aux grosses icônes), grappes de
+  cristaux, fissures, un arbre et des rochers au pied. Le contour d'encre ne suit que la silhouette :
   le pied n'en a pas, la montagne sort du sol.
 - **Une colline** (`colline()`) : une bosse verte, à l'ombre en bas à droite, la teinte éclairée
   décalée vers la lumière (comme le feuillage des arbres), un contour seulement sur le dessus.
+- **Les arbres** des vignettes passent par `v.arbre()` : ils ont tous la taille des arbres de la
+  lisière (`TAILLE_ARBRE` = 0,66, 26/10), et le cadre de la vignette s'agrandit tout seul pour les
+  contenir. Le jeu affiche toutes les vignettes à la même échelle (0,5) pour que ça reste vrai.
 - Les vignettes ne sont **jamais retournées** (la lumière vient toujours de la gauche) : pour varier,
   chaque montagne simple a deux versions (`-b`).
 - **La cascade** : la bande d'eau de `montagne-cascade` est aussi animée par le jeu (une petite

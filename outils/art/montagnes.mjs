@@ -1,8 +1,12 @@
 // Le paysage autour de la clairière (25/10) : au-delà de la rangée d'arbres qui entoure le terrain,
 // des collines vertes et des montagnes cartoon, avec de la neige au sommet. Dans les montagnes, des
-// filons de minerais (or, diamant, émeraude, redstone : les mêmes formes que les icônes du jeu),
-// des grappes de cristaux, une cascade qui tombe dans un petit bassin et l'entrée d'une galerie de
-// mine avec ses rails et son wagonnet.
+// pépites de minerais prises dans la roche (26/10 : dessinées comme sur le bloc de la mine,
+// BlocDessin.tsx ; avant, des filons avec de grosses icônes de minerais), des grappes de cristaux,
+// une cascade qui tombe dans un petit bassin et l'entrée d'une galerie de mine avec ses rails et
+// son wagonnet.
+//
+// (26/10) Tous les arbres des vignettes ont la taille des arbres de la lisière (TAILLE_ARBRE) :
+// avant, ceux des collines et du pied des montagnes étaient deux fois plus petits.
 //
 // Chaque dessin est une « vignette » (comme un arbre) : le jeu les plante tout autour de la
 // clairière et les dessine dans ses « toiles » (src/composants/ForetVillage.tsx et paysage.ts).
@@ -19,7 +23,6 @@ import { arbreRond, buisson, sapin } from './arbres.mjs'
 // Les couleurs du paysage.
 const ROCHE = '#b9b4d6' // la roche éclairée (un gris lilas, qui va bien avec l'herbe et l'encre)
 const ROCHE_OMBRE = '#918ab8' // la roche à l'ombre
-const ROCHE_FILON = '#6c6592' // le fond sombre d'un filon de minerais
 const NEIGE = '#ffffff'
 const NEIGE_OMBRE = '#d3def3'
 const HERBE = '#99d775' // l'herbe des collines et du bas des montagnes, éclairée
@@ -34,6 +37,23 @@ const liste = (pts) => pts.map(([x, y]) => `${r1(x)},${r1(y)}`).join(' ')
 const suiteRonde = (pts) => courbeRonde(pts).replace(/^M/, 'L')
 const entre = (a, b, t) => a + (b - a) * t
 
+// La taille des arbres dans les vignettes (26/10) : celle des arbres de la lisière. Là-bas, le pied
+// d'un arbre (200 pixels de large dans son dessin) fait 2 cases, soit 66 pixels du monde : le dessin
+// est réduit à 0,33. Les vignettes sont dessinées 2 fois plus grandes que le monde (le jeu les
+// affiche à 0,5) : ici, il faut 0,66.
+const TAILLE_ARBRE = 0.66
+
+// Les pépites de minerais, comme sur le bloc de la mine (src/composants/BlocDessin.tsx, PEPITES) :
+// la couleur de chaque minerai et son reflet plus clair.
+const PEPITES = {
+  charbon: { couleur: '#3d3a46', clair: '#6b6878' },
+  fer: { couleur: '#e7c9a6', clair: '#fbe8d3' },
+  redstone: { couleur: '#e2483d', clair: '#ff8a7a' },
+  or: { couleur: '#f9d65a', clair: '#fff1a8' },
+  emeraude: { couleur: '#3ccf7a', clair: '#a8f5c6' },
+  diamant: { couleur: '#5fe0e6', clair: '#c9fbfd' },
+}
+
 // Un dessin en cours : ses morceaux, ses définitions (clipPath) et un compteur pour leurs noms.
 class Vignette {
   constructor(nom) {
@@ -41,6 +61,9 @@ class Vignette {
     this.morceaux = []
     this.defs = []
     this.nbIds = 0
+    // Le rectangle occupé par les arbres (autour du pied) : le cadre de l'image s'agrandit pour
+    // les contenir, ils sont grands.
+    this.bornesArbres = null
   }
   ajouter(svg) {
     this.morceaux.push(svg)
@@ -55,9 +78,21 @@ class Vignette {
     this.defs.push(`<clipPath id="${id}">${chemins.map((d) => `<path d="${d}"/>`).join('')}</clipPath>`)
     return id
   }
+  // Un arbre de la forêt (arbres.mjs), son pied en (x, y), à la taille des arbres de la lisière.
+  arbre(dessin, x, y) {
+    const k = TAILLE_ARBRE
+    this.ajouter(`<g transform="translate(${r1(x)} ${r1(y)}) scale(${k})">${dessin}</g>`)
+    // (le dessin d'un arbre va de -160 à 160 en largeur, et de -410 à 40 en hauteur, autour de son pied)
+    const b = this.bornesArbres ?? { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
+    this.bornesArbres = { x0: Math.min(b.x0, x - 160 * k), y0: Math.min(b.y0, y - 410 * k), x1: Math.max(b.x1, x + 160 * k), y1: Math.max(b.y1, y + 40 * k) }
+  }
   // Le fichier SVG : le dessin est fait autour de son pied (0, 0) ; on le décale dans son cadre.
-  // cadre : { x0, y0, x1, y1 } autour du pied.
-  svg(cadre) {
+  // cadre : { x0, y0, x1, y1 } autour du pied (agrandi pour contenir les arbres).
+  svg(cadreVoulu) {
+    const b = this.bornesArbres
+    const cadre = b
+      ? { x0: Math.floor(Math.min(cadreVoulu.x0, b.x0)), y0: Math.floor(Math.min(cadreVoulu.y0, b.y0)), x1: Math.ceil(Math.max(cadreVoulu.x1, b.x1)), y1: Math.ceil(Math.max(cadreVoulu.y1, b.y1)) }
+      : cadreVoulu
     const largeur = Math.round(cadre.x1 - cadre.x0)
     const hauteur = Math.round(cadre.y1 - cadre.y0)
     const pied = { x: r1(-cadre.x0), y: r1(-cadre.y0) }
@@ -122,26 +157,33 @@ function etincelle(x, y, k = 1) {
   return `<path d="M${p(0, -11)} L${p(3, -3)} L${p(11, 0)} L${p(3, 3)} L${p(0, 11)} L${p(-3, 3)} L${p(-11, 0)} L${p(-3, -3)} Z" fill="#ffffff" stroke="${C.encre}" stroke-width="3"/>`
 }
 
-// Un filon : une veine de roche sombre qui traverse la paroi (un peu penchée), d'où sortent deux
-// ou trois minerais bien gros, pour qu'on les reconnaisse de loin.
-function filon(x, y, sortes, k = 1, graine = 1) {
+// Un gisement (26/10) : quelques pépites d'un minerai prises dans la roche, dessinées comme sur le
+// bloc de la mine (BlocDessin.tsx) : de petits losanges de couleur au gros contour, avec un reflet,
+// sur une tache de roche un peu plus sombre. dedans(x, y) : ce point est-il dans la roche ? (on ne
+// pose pas de pépite dans le vide, au bord de la montagne)
+function gisement(x, y, sorte, k = 1, graine = 1, dedans = () => true) {
   const hasard = hasardAvecGraine(graine)
-  const angle = -18 + hasard() * 22
-  const l = 62 * k
-  const veine = `M${-l} ${r1(8 * k)} Q${r1(-l * 0.3)} ${r1(-14 * k)} 0 0 T${l} ${r1(-6 * k)}`
-  let dessin =
-    `<path d="${veine}" stroke="${C.encre}" stroke-width="${r1(22 * k + 2 * TRAIT_FIN)}" fill="none"/>` +
-    `<path d="${veine}" stroke="${ROCHE_FILON}" stroke-width="${r1(22 * k)}" fill="none"/>`
+  const { couleur, clair: reflet } = PEPITES[sorte]
+  // la tache de roche, toute plate (comme les « taches de roche » du bloc)
+  const t = (dx, dy) => `${r1(x + dx * k)} ${r1(y + dy * k)}`
+  let dessin = `<path d="M${t(-46, -6)} L${t(-14, -26)} L${t(30, -20)} L${t(50, 4)} L${t(18, 24)} L${t(-30, 20)} Z" fill="${C.encre}" opacity="0.1"/>`
+  // les pépites : à peu près en triangle, un peu bousculées
   const places = [
-    [-34, 0, 38],
-    [8, -4, 42],
-    [44, -6, 34],
+    [-30, -4],
+    [4, -16],
+    [32, 2],
+    [-2, 14],
   ]
-  sortes.forEach((sorte, i) => {
-    const [dx, dy, taille] = places[i % places.length]
-    dessin += minerai(sorte, dx * k, dy * k, taille * k, (hasard() - 0.5) * 50, 4)
-  })
-  return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(angle)})">${dessin}</g>`
+  for (const [px, py] of places) {
+    const cx = x + (px + (hasard() - 0.5) * 10) * k
+    const cy = y + (py + (hasard() - 0.5) * 8) * k
+    if (!dedans(cx, cy)) continue
+    const r = (15 + hasard() * 4) * k
+    dessin +=
+      `<path d="M${r1(cx)} ${r1(cy - r)} L${r1(cx + r)} ${r1(cy)} L${r1(cx)} ${r1(cy + r)} L${r1(cx - r)} ${r1(cy)} Z" fill="${couleur}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<path d="M${r1(cx - r * 0.3)} ${r1(cy - r * 0.4)} L${r1(cx + r * 0.2)} ${r1(cy - r * 0.6)}" stroke="${reflet}" stroke-width="${r1(3.5 * k)}"/>`
+  }
+  return dessin
 }
 
 // Une petite fissure dans la roche (un « v » couché).
@@ -160,9 +202,6 @@ function fleur(x, y, couleur) {
   return `<circle cx="${r1(x)}" cy="${r1(y)}" r="5.5" fill="${couleur}" stroke="${C.encre}" stroke-width="2.5"/><circle cx="${r1(x)}" cy="${r1(y)}" r="2" fill="${C.orange}"/>`
 }
 
-// Un arbre de la forêt (arbres.mjs, dessiné dans un cadre de 360 × 460), en petit : son pied en (x, y).
-const petitArbre = (dessin, x, y, k) => `<g transform="translate(${r1(x)} ${r1(y)}) scale(${k})">${dessin}</g>`
-
 // ---------------------------------------------------------------------------
 // Une montagne
 // ---------------------------------------------------------------------------
@@ -170,7 +209,7 @@ const petitArbre = (dessin, x, y, k) => `<g transform="translate(${r1(x)} ${r1(y
 // Une montagne vue du ciel, en biais : une silhouette de pics (pics : [{ x en part de la largeur,
 // h en pixels }]), chaque pic coupé par une arête (à gauche la face éclairée, à droite celle à
 // l'ombre), de la neige en haut (neige : la part de la hauteur), de l'herbe en bas (herbe : en
-// pixels). Renvoie aussi des fonctions pour savoir où est la roche (pour y poser des filons).
+// pixels). Renvoie aussi des fonctions pour savoir où est la roche (pour y poser des pépites).
 function montagne(v, { largeur: W, pics, graine, neige = 0.34, herbe = 70 }) {
   const hasard = hasardAvecGraine(graine)
   const bruit = (a) => (hasard() - 0.5) * 2 * a
@@ -279,7 +318,7 @@ function montagne(v, { largeur: W, pics, graine, neige = 0.34, herbe = 70 }) {
     v.ajouter(`<path d="M${liste(arete.slice(0, 3)).replace(/ /g, ' L')}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}" fill="none" opacity="0.55"/>`)
   }
 
-  // Où peut-on poser un filon ? Dans la roche : sous la neige, au-dessus de l'herbe, dans la forme.
+  // Où peut-on poser une pépite ? Dans la forme de la montagne.
   const contour = [...silhouette, ...pied]
   const dedans = (x, y) => {
     let oui = false
@@ -300,13 +339,10 @@ function montagne(v, { largeur: W, pics, graine, neige = 0.34, herbe = 70 }) {
   }
 }
 
-// Les filons, les cristaux et les fissures d'une montagne. places : [x, y, sortes, k] (en pixels,
-// autour du pied), cristaux : [x, y, couleur, k].
-function decorerRoche(v, m, { filons = [], cristaux = [], fissures = [], graine = 3 }) {
-  filons.forEach(([x, y, sortes, k = 1], i) => {
-    v.ajouter(filon(x, y, sortes, k, graine + i))
-    if (i % 2 === 0) v.ajouter(etincelle(x + 26 * k, y - 22 * k, 0.8 * k))
-  })
+// Les pépites, les cristaux et les fissures d'une montagne. gisements : [x, y, minerai, taille]
+// (en pixels, autour du pied), cristaux : [x, y, couleur, taille].
+function decorerRoche(v, m, { gisements = [], cristaux = [], fissures = [], graine = 3 }) {
+  gisements.forEach(([x, y, sorte, k = 1], i) => v.ajouter(gisement(x, y, sorte, k, graine + i, m.dedans)))
   for (const [x, y, k = 1] of fissures) v.ajouter(fissure(x, y, k))
   for (const [x, y, couleur, k = 1] of cristaux) {
     v.ajouter(grappe(x, y, couleur, k))
@@ -314,11 +350,12 @@ function decorerRoche(v, m, { filons = [], cristaux = [], fissures = [], graine 
   }
 }
 
-// Quelques sapins et rochers au pied d'une montagne (sur l'herbe du bas).
+// Quelques arbres et rochers au pied d'une montagne (sur l'herbe du bas) : [sorte, x, y, taille]
+// (la taille ne compte que pour les rochers : les arbres ont tous la même).
 function piedDeMontagne(v, places) {
-  for (const [sorte, x, y, k] of places) {
-    if (sorte === 'sapin') v.ajouter(petitArbre(sapin(), x, y, k))
-    else if (sorte === 'rond') v.ajouter(petitArbre(arbreRond(), x, y, k))
+  for (const [sorte, x, y, k = 1] of places) {
+    if (sorte === 'sapin') v.arbre(sapin(), x, y)
+    else if (sorte === 'rond') v.arbre(arbreRond(), x, y)
     else if (sorte === 'rocher') v.ajouter(rocher(x, y, 46 * k, 34 * k, Math.round(x + y), ROCHE, TRAIT_FIN))
   }
 }
@@ -329,7 +366,7 @@ function piedDeMontagne(v, places) {
 
 // Les montagnes toutes simples (sans cascade ni galerie), chacune en deux versions (« -b ») pour
 // qu'on ne voie pas deux fois la même côte à côte. Pour chacune : sa largeur et ses pics, la
-// graine de son hasard, ses filons [x, y, minerais, taille], ses fissures [x, y, taille], ses
+// graine de son hasard, ses gisements [x, y, minerai, taille], ses fissures [x, y, taille], ses
 // cristaux [x, y, couleur, taille] et ce qui pousse à son pied [sorte, x, y, taille] (en pixels,
 // autour du milieu de son pied).
 const MONTAGNES_SIMPLES = [
@@ -341,9 +378,10 @@ const MONTAGNES_SIMPLES = [
       { x: -0.1, h: 600 },
       { x: 0.27, h: 430 },
     ],
-    filons: [
-      [-160, -200, ['or', 'diamant', 'or']],
-      [230, -160, ['redstone', 'redstone'], 0.9],
+    gisements: [
+      [-170, -200, 'or'],
+      [-80, -130, 'diamant', 0.9],
+      [190, -200, 'redstone', 0.9],
     ],
     fissures: [
       [-250, -120],
@@ -353,10 +391,9 @@ const MONTAGNES_SIMPLES = [
     ],
     cristaux: [[-10, -95, C.violet, 1]],
     pied: [
-      ['sapin', -300, 10, 0.32],
-      ['sapin', -250, 30, 0.38],
+      ['sapin', -290, 20],
       ['rocher', 150, 40, 1],
-      ['sapin', 320, 20, 0.3],
+      ['rocher', 300, 40, 0.8],
     ],
   },
   {
@@ -367,9 +404,10 @@ const MONTAGNES_SIMPLES = [
       { x: -0.24, h: 470 },
       { x: 0.12, h: 610 },
     ],
-    filons: [
-      [-230, -150, ['emeraude', 'emeraude', 'or']],
-      [60, -250, ['diamant', 'redstone', 'diamant'], 0.95],
+    gisements: [
+      [-190, -190, 'emeraude'],
+      [40, -250, 'diamant', 0.95],
+      [150, -160, 'or', 0.9],
     ],
     fissures: [
       [-120, -160],
@@ -378,9 +416,8 @@ const MONTAGNES_SIMPLES = [
     ],
     cristaux: [[250, -70, C.diamant, 0.9]],
     pied: [
-      ['sapin', -310, 16, 0.34],
-      ['rond', 40, 44, 0.26],
-      ['sapin', 300, 14, 0.3],
+      ['sapin', -300, 24],
+      ['rocher', 290, 40, 0.8],
     ],
   },
   {
@@ -388,16 +425,18 @@ const MONTAGNES_SIMPLES = [
     largeur: 640,
     graine: 23,
     pics: [{ x: 0.02, h: 520 }],
-    filons: [[-100, -180, ['diamant', 'or', 'diamant']]],
+    gisements: [
+      [-110, -180, 'diamant'],
+      [90, -140, 'or', 0.9],
+    ],
     fissures: [
       [-190, -90],
-      [70, -120],
+      [70, -220],
       [170, -90, 0.8],
     ],
     pied: [
-      ['sapin', -230, 18, 0.34],
+      ['sapin', -230, 24],
       ['rocher', 60, 40, 0.9],
-      ['sapin', 240, 16, 0.3],
     ],
   },
   {
@@ -405,16 +444,18 @@ const MONTAGNES_SIMPLES = [
     largeur: 620,
     graine: 29,
     pics: [{ x: -0.08, h: 500 }],
-    filons: [[90, -170, ['redstone', 'or', 'redstone'], 0.95]],
+    gisements: [
+      [90, -170, 'redstone', 0.95],
+      [-110, -200, 'or', 0.9],
+    ],
     fissures: [
-      [-150, -150],
+      [-150, -130],
       [-60, -280, 0.8],
       [200, -80],
     ],
     cristaux: [[-150, -60, C.emeraude, 0.85]],
     pied: [
-      ['sapin', 230, 20, 0.32],
-      ['sapin', -250, 24, 0.3],
+      ['sapin', 230, 24],
     ],
   },
   {
@@ -425,9 +466,10 @@ const MONTAGNES_SIMPLES = [
       { x: -0.22, h: 420 },
       { x: 0.18, h: 500 },
     ],
-    filons: [
-      [-190, -160, ['emeraude', 'or', 'emeraude']],
-      [170, -150, ['redstone', 'diamant'], 0.9],
+    gisements: [
+      [-190, -160, 'emeraude'],
+      [170, -150, 'redstone', 0.9],
+      [60, -260, 'diamant', 0.85],
     ],
     fissures: [
       [-110, -110],
@@ -436,9 +478,8 @@ const MONTAGNES_SIMPLES = [
     ],
     cristaux: [[260, -60, C.diamant, 0.9]],
     pied: [
-      ['sapin', -290, 20, 0.34],
-      ['rond', -60, 40, 0.28],
-      ['sapin', 300, 20, 0.3],
+      ['sapin', -290, 24],
+      ['rocher', 280, 40, 0.8],
     ],
   },
   {
@@ -449,15 +490,18 @@ const MONTAGNES_SIMPLES = [
       { x: -0.18, h: 490 },
       { x: 0.24, h: 380 },
     ],
-    filons: [[-120, -230, ['or', 'or', 'diamant'], 0.95]],
+    gisements: [
+      [-130, -230, 'or', 0.95],
+      [150, -150, 'diamant', 0.9],
+    ],
     fissures: [
       [60, -120],
       [230, -100, 0.8],
       [-250, -90],
     ],
-    cristaux: [[120, -70, C.violet, 0.85]],
+    cristaux: [[40, -70, C.violet, 0.85]],
     pied: [
-      ['sapin', -280, 18, 0.32],
+      ['rond', -280, 22],
       ['rocher', 250, 40, 0.9],
     ],
   },
@@ -467,14 +511,17 @@ const MONTAGNES_SIMPLES = [
     graine: 41,
     neige: 0.3,
     pics: [{ x: -0.05, h: 380 }],
-    filons: [[-80, -150, ['or', 'or', 'emeraude']]],
+    gisements: [
+      [-90, -150, 'or'],
+      [80, -120, 'emeraude', 0.85],
+    ],
     fissures: [
       [-160, -80],
       [40, -230, 0.8],
     ],
-    cristaux: [[30, -75, C.emeraude, 0.9]],
+    cristaux: [[0, -75, C.emeraude, 0.9]],
     pied: [
-      ['sapin', -190, 20, 0.32],
+      ['sapin', -190, 24],
       ['rocher', 180, 36, 0.8],
     ],
   },
@@ -484,15 +531,16 @@ const MONTAGNES_SIMPLES = [
     graine: 47,
     neige: 0.32,
     pics: [{ x: 0.08, h: 360 }],
-    filons: [[70, -140, ['diamant', 'emeraude'], 0.9]],
+    gisements: [
+      [70, -140, 'diamant', 0.9],
+      [-50, -180, 'redstone', 0.85],
+    ],
     fissures: [
-      [-120, -100],
+      [-120, -80],
       [160, -70, 0.8],
     ],
-    cristaux: [[-120, -60, C.redstone, 0.8]],
     pied: [
-      ['rond', -200, 26, 0.26],
-      ['sapin', 210, 20, 0.3],
+      ['sapin', 210, 24],
     ],
   },
   {
@@ -502,13 +550,10 @@ const MONTAGNES_SIMPLES = [
     neige: 0.3,
     herbe: 60,
     pics: [{ x: 0.04, h: 270 }],
-    filons: [[-50, -110, ['redstone', 'or'], 0.85]],
+    gisements: [[-50, -110, 'redstone', 0.85]],
     fissures: [[80, -90, 0.8]],
     cristaux: [[110, -70, C.diamant, 0.75]],
-    pied: [
-      ['sapin', -160, 18, 0.3],
-      ['rond', 150, 26, 0.24],
-    ],
+    pied: [['sapin', -160, 22]],
   },
   {
     nom: 'montagne-petite-b',
@@ -517,19 +562,19 @@ const MONTAGNES_SIMPLES = [
     neige: 0.34,
     herbe: 56,
     pics: [{ x: -0.06, h: 250 }],
-    filons: [[40, -100, ['emeraude', 'diamant'], 0.8]],
+    gisements: [[-30, -110, 'emeraude', 0.8]],
     fissures: [[-90, -80, 0.8]],
     pied: [
-      ['sapin', 150, 18, 0.3],
+      ['sapin', 150, 22],
       ['rocher', -140, 34, 0.8],
     ],
   },
 ]
 
-function montagneSimple({ nom, largeur, graine, pics, neige, herbe, filons = [], fissures = [], cristaux = [], pied = [] }) {
+function montagneSimple({ nom, largeur, graine, pics, neige, herbe, gisements = [], fissures = [], cristaux = [], pied = [] }) {
   const v = new Vignette(nom)
   const m = montagne(v, { largeur, graine, pics, neige, herbe })
-  decorerRoche(v, m, { filons, fissures, cristaux, graine })
+  decorerRoche(v, m, { gisements, fissures, cristaux, graine })
   m.finir()
   piedDeMontagne(v, pied)
   return v.svg({ x0: -largeur / 2 - 20, y0: -m.haut - 15, x1: largeur / 2 + 20, y1: 70 })
@@ -549,9 +594,10 @@ function montagneCascade() {
     ],
   })
   decorerRoche(v, m, {
-    filons: [
-      [-250, -150, ['or', 'diamant']],
-      [140, -190, ['emeraude', 'redstone', 'emeraude'], 0.9],
+    gisements: [
+      [-200, -200, 'or'],
+      [-20, -150, 'redstone', 0.9],
+      [140, -190, 'emeraude', 0.9],
     ],
     fissures: [
       [-280, -90],
@@ -609,15 +655,11 @@ function montagneCascade() {
   // un nénuphar
   v.ajouter(`<ellipse cx="${bx + 52}" cy="${by - 6}" rx="14" ry="7" fill="${C.feuillage}" stroke="${C.encre}" stroke-width="3"/><circle cx="${bx + 50}" cy="${by - 10}" r="5" fill="${C.rose}" stroke="${C.encre}" stroke-width="2.5"/>`)
   piedDeMontagne(v, [
-    ['sapin', -320, 14, 0.34],
-    ['sapin', -280, 34, 0.28],
-    ['sapin', 300, 20, 0.32],
-    ['rond', 200, 40, 0.26],
+    ['sapin', -310, 24],
   ])
-  const cadre = { x0: -390, y0: -595, x1: 390, y1: 125 }
-  const vignette = v.svg(cadre)
+  const vignette = v.svg({ x0: -390, y0: -595, x1: 390, y1: 125 })
   // Où est l'eau qui tombe, dans l'image (pour l'animation du jeu) : l'intérieur de la bande.
-  vignette.cascade = { x: r1(x0 + 3 - cadre.x0), y: r1(haut + 10 - cadre.y0), largeur: largeur - 6, hauteur: bas - haut - 30 }
+  vignette.cascade = { x: r1(x0 + 3 + vignette.pied.x), y: r1(haut + 10 + vignette.pied.y), largeur: largeur - 6, hauteur: bas - haut - 30 }
   return vignette
 }
 
@@ -627,8 +669,9 @@ function montagneGrotte() {
   const v = new Vignette('montagne-grotte')
   const m = montagne(v, { largeur: 600, graine: 79, pics: [{ x: 0.12, h: 400 }], neige: 0.32 })
   decorerRoche(v, m, {
-    filons: [
-      [110, -190, ['diamant', 'or', 'diamant'], 0.9],
+    gisements: [
+      [110, -190, 'diamant', 0.9],
+      [-180, -120, 'or', 0.85],
     ],
     fissures: [
       [-200, -90],
@@ -690,7 +733,7 @@ function montagneGrotte() {
   v.ajouter(`<path d="M${gx - 110} ${pied + 10} L${gx - 84} ${-50}" stroke="${C.encre}" stroke-width="12"/><path d="M${gx - 110} ${pied + 10} L${gx - 84} ${-50}" stroke="${C.bois}" stroke-width="6"/>`)
   v.ajouter(`<path d="M${gx - 112} ${-48} Q${gx - 84} ${-70} ${gx - 54} ${-44} Q${gx - 84} ${-58} ${gx - 112} ${-48} Z" fill="${C.metal}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
   piedDeMontagne(v, [
-    ['sapin', 230, 20, 0.32],
+    ['sapin', 230, 24],
     ['rocher', -230, 40, 0.9],
   ])
   return v.svg({ x0: -310, y0: -415, x1: 310, y1: 135 })
@@ -742,14 +785,14 @@ function garnirColline(v, c, places) {
     const y = c.surface(x) + dy
     if (sorte === 'touffe') v.ajouter(touffe(x, y))
     else if (sorte === 'fleur') v.ajouter(fleur(x, y, k))
-    else if (sorte === 'sapin') v.ajouter(petitArbre(sapin(), x, y, k))
-    else if (sorte === 'rond') v.ajouter(petitArbre(arbreRond(), x, y, k))
-    else if (sorte === 'buisson') v.ajouter(petitArbre(buisson(), x, y, k))
+    else if (sorte === 'sapin') v.arbre(sapin(), x, y)
+    else if (sorte === 'rond') v.arbre(arbreRond(), x, y)
+    else if (sorte === 'buisson') v.arbre(buisson(), x, y)
     else if (sorte === 'rocher') v.ajouter(rocher(x, y, 44 * k, 30 * k, Math.round(x * 7), ROCHE, TRAIT_FIN))
     else if (sorte === 'pepite') {
-      // un rocher d'où dépasse une pépite d'or (ou un autre minerai)
-      v.ajouter(rocher(x, y, 50, 36, 9, ROCHE, TRAIT_FIN))
-      v.ajouter(minerai(k, x + 8, y - 22, 24, 15, 3))
+      // un rocher avec des pépites d'or (ou d'un autre minerai), comme sur le bloc de la mine
+      v.ajouter(rocher(x, y, 64, 46, 9, ROCHE, TRAIT_FIN))
+      v.ajouter(gisement(x - 4, y - 22, k, 0.5, 9))
     }
   }
 }
@@ -760,8 +803,8 @@ function collineSapins() {
   garnirColline(v, c, [
     ['touffe', -110, 26],
     ['fleur', -60, 40, C.jaune],
-    ['sapin', 40, 22, 0.36],
-    ['sapin', 100, 30, 0.3],
+    ['sapin', -10, 30],
+    ['sapin', 110, 40],
     ['touffe', 140, 30],
   ])
   return v.svg({ x0: -200, y0: -275, x1: 200, y1: 60 })
@@ -771,7 +814,8 @@ function collineBuisson() {
   const v = new Vignette('colline-buisson')
   const c = colline(v, { largeur: 300, hauteur: 86, graine: 9, bosse: 10 })
   garnirColline(v, c, [
-    ['buisson', -40, 26, 0.26],
+    ['rocher', -50, 30, 1],
+    ['touffe', -10, 24],
     ['fleur', 40, 30, C.rose],
     ['fleur', 70, 38, '#ffffff'],
     ['fleur', -96, 36, C.violet],
@@ -784,9 +828,7 @@ function collineGrande() {
   const v = new Vignette('colline-grande')
   const c = colline(v, { largeur: 500, hauteur: 160, graine: 13 })
   garnirColline(v, c, [
-    ['sapin', -120, 40, 0.34],
-    ['sapin', -70, 22, 0.4],
-    ['rond', 30, 26, 0.3],
+    ['sapin', -60, 30],
     ['rocher', 120, 40, 1],
     ['touffe', 170, 40],
     ['fleur', 70, 70, C.jaune],
@@ -816,7 +858,7 @@ function collineFleurie() {
     ['fleur', 30, 20, C.violet],
     ['fleur', 80, 34, C.rose],
     ['touffe', 0, 50],
-    ['rond', 110, 40, 0.24],
+
     ['pepite', -40, 64, 'diamant'],
   ])
   return v.svg({ x0: -180, y0: -215, x1: 180, y1: 55 })
@@ -845,7 +887,7 @@ function collineLarge() {
     ['fleur', -170, 70, C.rose],
     ['touffe', -60, 34],
     ['fleur', 40, 60, C.jaune],
-    ['rond', 190, 40, 0.26],
+    ['touffe', 190, 40],
     ['touffe', 300, 50],
   ])
   return v.svg({ x0: -400, y0: -330, x1: 400, y1: 95 })
@@ -858,7 +900,7 @@ function collineLongue() {
     ['touffe', -320, 40],
     ['fleur', -230, 50, '#ffffff'],
     ['touffe', -120, 30],
-    ['buisson', 0, 30, 0.24],
+    ['touffe', 0, 30],
     ['fleur', 120, 46, C.violet],
     ['touffe', 250, 36],
     ['fleur', 330, 40, C.jaune],
@@ -869,15 +911,13 @@ function collineLongue() {
 // Un bosquet de sapins (au sol, pour les endroits sans colline).
 function bosquet() {
   const v = new Vignette('bosquet')
-  v.ajouter(`<ellipse cx="0" cy="6" rx="120" ry="30" fill="${HERBE_OMBRE}" opacity="0.6"/>`)
-  for (const [x, y, k] of [
-    [-50, -10, 0.36],
-    [40, -16, 0.42],
-    [-80, 16, 0.3],
-    [0, 14, 0.4],
-    [76, 20, 0.32],
+  v.ajouter(`<ellipse cx="0" cy="6" rx="130" ry="32" fill="${HERBE_OMBRE}" opacity="0.6"/>`)
+  for (const [x, y] of [
+    [-60, -8],
+    [64, -12],
+    [0, 18],
   ]) {
-    v.ajouter(petitArbre(sapin(), x, y, k))
+    v.arbre(sapin(), x, y)
   }
   return v.svg({ x0: -140, y0: -200, x1: 140, y1: 50 })
 }

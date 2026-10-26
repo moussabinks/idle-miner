@@ -127,3 +127,17 @@ describe('stands achetables', () => {
     expect(standsAchetables(etat)).toEqual(expect.arrayContaining(['forgeron', 'employes']))
   })
 })
+
+describe('(26/10) les tâches de production', () => {
+  it('le manager débloqué passe devant les améliorations, et une seule fois', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    poser(etat, ['marche', 'forgeron', 'employes'])
+    etat.stats.argentGagne = 100
+    etat.argent = 100
+    embaucher(etat, aleatoireAvecGraine(2))
+    etat.niveauMine = 3
+    const liste = missions(etat, ['ameliorer-Coffre de 300 places'])
+    expect(liste[0].id).toBe('goulot-manager')
+    expect(liste.filter((m) => m.texte.includes('manager')).length).toBe(1)
+  })
+})

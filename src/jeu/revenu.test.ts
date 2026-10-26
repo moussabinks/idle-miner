@@ -34,3 +34,12 @@ describe('revenu par seconde', () => {
     expect(revenuBrutEmploye(etat, etat.employes[0])).toBe(0)
   })
 })
+
+describe('(26/10) le « +X/s » et le wagonnet', () => {
+  it('sans wagonnet automatique, rien ne change : tout ce qui sort compte', () => {
+    const etat = creerPartie(aleatoireAvecGraine(1))
+    const r = revenuParSeconde(etat)
+    expect(r.limiteParWagonnet).toBe(false)
+    expect(r.total).toBeCloseTo(r.mine + r.mineurs + r.foreuse)
+  })
+})
