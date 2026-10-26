@@ -24,6 +24,7 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 - **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, puis pousseurs). Pastille « ! » si quelqu'un n'est pas payé ;
 - (26/10) Un pousseur dont le chariot ne suit pas la production : sa carte passe en rose, avec « ⚠️ Son chariot ne suit pas : il emporte *a* blocs/s, il en sort *b*. Agrandis-le ! » juste au-dessus de son chariot.
+- (26/10) Dans chaque section, les employés sont rangés **du plus rare au plus commun** (Mythique en haut), puis dans l'ordre d'embauche.
 - (26/10) Deux sections : **⛏️ Mineurs** et **🛤️ Pousseurs**, chacune avec son équipe puis sa ligne pour recruter.
 - **Recruter** (en bas de chaque section, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « ! » sur l'onglet Personnel dès qu'une place de mineur est libre (26/10 : chaque niveau de la mine en ouvre une ; avant, « + » seulement quand on pouvait la payer) ;
 - **🎲 Remplacer** (avec le recruteur) : un bouton turquoise uni avec un dé qui roule (`btn-hasard` ; 26/10 : avant, un arc-en-ciel qui défilait). La recrue n'apparaît dans la liste qu'une fois sa carte dévoilée : une nouvelle recrue prend la place du mineur, rareté au hasard.
