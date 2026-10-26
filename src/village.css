@@ -768,30 +768,31 @@
   }
 }
 
-/* Le rayon du générateur, sur le sol : pointillés jaunes, un peu plus visibles quand on le regarde. */
-.rayon-generateur {
-  fill: rgb(255 214 60 / 0.06);
-  stroke: rgb(255 214 60 / 0.55);
-  stroke-width: 2;
-  stroke-dasharray: 10 8;
+/* Le rayon du générateur, sur le sol : un trait d'encre, des pointillés jaunes par-dessus, et
+   l'intérieur teinté de jaune (26/10 : plus visible, avant on le voyait à peine sur l'herbe).
+   (23/10, fluidité) Immobile : un cercle aussi grand qui tourne faisait redessiner tout le sol. */
+.rayon-generateur-contour {
+  fill: rgb(255 214 60 / 0.3);
+  stroke: rgb(42 33 64 / 0.45);
+  stroke-width: 8;
+  stroke-linejoin: round;
 }
 
-.rayon-generateur.rayon-en-vue {
-  fill: rgb(255 214 60 / 0.16);
+.rayon-generateur-trait {
+  fill: none;
   stroke: #ffd63c;
-  stroke-width: 3;
-  /* (23/10, fluidité) Immobile : un cercle aussi grand qui tourne faisait redessiner tout le sol. */
+  stroke-width: 4;
+  stroke-dasharray: 14 10;
+  stroke-linejoin: round;
 }
 
-.rayon-generateur:not(.rayon-allume) {
-  stroke: rgb(220 220 220 / 0.7);
-  fill: rgb(220 220 220 / 0.08);
+/* Éteint ou sans redstone : le même cercle, en gris. */
+.rayon-generateur:not(.rayon-allume) .rayon-generateur-contour {
+  fill: rgb(220 220 220 / 0.18);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .rayon-generateur.rayon-en-vue {
-    animation: none;
-  }
+.rayon-generateur:not(.rayon-allume) .rayon-generateur-trait {
+  stroke: #e4e4ea;
 }
 
 .scene > .ventes {

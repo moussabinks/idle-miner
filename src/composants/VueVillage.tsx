@@ -988,7 +988,14 @@ function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; bati
     const p = versEcran(centre.x + r * Math.cos(angle), centre.y + r * Math.sin(angle))
     return `${p.x},${p.y}`
   }).join(' ')
-  return <polygon className={`rayon-generateur ${enVue ? 'rayon-en-vue' : ''} ${allume ? 'rayon-allume' : ''}`} points={points} />
+  // (26/10) Un trait d'encre sous les pointillés jaunes : le cercle se voit bien sur l'herbe (il
+  // est très grand aux derniers niveaux, on n'en voit souvent que le bord).
+  return (
+    <g className={`rayon-generateur ${enVue ? 'rayon-en-vue' : ''} ${allume ? 'rayon-allume' : ''}`}>
+      <polygon className="rayon-generateur-contour" points={points} />
+      <polygon className="rayon-generateur-trait" points={points} />
+    </g>
+  )
 }
 
 // (25/10) La flèche des rails : elle part du dernier rail posé et montre où va la voie (la case
