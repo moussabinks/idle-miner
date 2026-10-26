@@ -227,10 +227,10 @@ export function apporterAuAtelier(etat: EtatJeu, id: IdAtelier, bloc: IdBloc): s
   if (!atelierPose(etat, id) || !accepte(id, bloc)) return []
   const dispo = Math.max(0, disponible(etat, bloc) - garderDansLeCoffre(etat, bloc))
   const mis = Math.min(dispo, placeEntree(etat, id))
-  if (mis <= 0) return placeEntree(etat, id) === 0 ? [t('📥 L’entrée est pleine.')] : []
+  if (mis <= 0) return placeEntree(etat, id) === 0 ? [t('📦 L’entrée est pleine.')] : []
   payerMateriaux(etat, { [bloc]: mis })
   ajouterA(atelierDe(etat, id).entree, bloc, mis)
-  return [t('📥 +{n} {nom} apporté(s).', { n: mis, nom: t(BLOCS[bloc].nom).toLowerCase() })]
+  return [t('📦 +{n} {nom} apporté(s).', { n: mis, nom: t(BLOCS[bloc].nom).toLowerCase() })]
 }
 
 // Remplit le four de la fonderie avec le charbon du coffre de la mine.

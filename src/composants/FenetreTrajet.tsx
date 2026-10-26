@@ -195,7 +195,7 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
                 {refuses.map((bloc) => (
                   <span key={bloc} className="objet-tuile objet-refuse" aria-disabled="true">
                     <span className="objet-coche" aria-hidden="true">
-                      🚫
+                      ✖
                     </span>
                     <span className="objet-icone" aria-hidden="true">
                       {BLOCS[bloc].emoji}

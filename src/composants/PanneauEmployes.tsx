@@ -498,7 +498,7 @@ function EmbaucheJoaillier({ etat }: { etat: EtatJeu }) {
       titre={`${t('Joaillier')} · ${nbDuRole(etat, 'joaillier')} / ${max}`}
       effet={
         <>
-          {avecRecruteur ? t('Sa rareté est une surprise : un joaillier rare taille plus vite !') : t('Il taille les gemmes de la joaillerie en bijoux. Ses 10 premières minutes sont payées.')}
+          {avecRecruteur ? t('Sa rareté est une surprise : un joaillier rare taille plus vite !') : t('Il taille les gemmes de la joaillerie en bijoux. Ses 5 premières minutes sont payées.')}
           <span className="stats-recrue">
             <span className="etiquette">💍 {avecRecruteur ? t('{a} à {b} bijoux/min', { a: nombre(commun, 1), b: nombre(mythique, 1) }) : t('{n} bijoux/min', { n: nombre(commun, 1) })}</span>
             <span className="etiquette">💵 {t('{n} $ / 5 min', { n: nombre(apercuRecrue('joaillier').salaire) })}</span>

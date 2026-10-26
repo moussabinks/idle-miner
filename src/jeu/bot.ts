@@ -132,6 +132,11 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (estPose(etat, 'generateur')) couts.push({ materiaux: { redstone: 20 } })
     const pioche = PIOCHES[etat.meilleure + 1]
     if (pioche) couts.push(pioche.cout)
+    // (26/10) Le prochain niveau des ateliers (sinon la fonderie mange tout le fer de son amélioration).
+    for (const id of ['fonderie', 'joaillerie'] as IdAtelier[]) {
+      const prochain = prochainNiveauAtelier(etat, id)
+      if (prochain && atelierPose(etat, id) && debloque(etat, id, etat[id].niveau + 1)) couts.push(prochain.cout)
+    }
     return couts
   }
 

@@ -102,7 +102,7 @@ function CeQuIlAccepte({ id }: { id: IdAtelier }) {
               </span>
               {debloque ? (
                 <button className="btn btn-jaune btn-petit" disabled={n <= 0} onClick={() => jouer((e) => apporterAuAtelier(e, id, bloc))}>
-                  <span>📥 {t('Apporter')}</span>
+                  <span>📦 {t('Apporter')}</span>
                   {n > 0 && <span className="prix">{nombre(n)}</span>}
                 </button>
               ) : (
@@ -309,7 +309,7 @@ export function PanneauJoaillerie({ onReglerTrajet, onAllerAuPersonnel }: PropsP
     <div className="panneau-bat">
       <OngletsPanneau
         onglets={[
-          { id: 'travail', titre: `💍 ${t('Établis')}`, pastille: personne ? '!' : null },
+          { id: 'travail', titre: `🔨 ${t('Établis')}`, pastille: personne ? '!' : null },
           { id: 'reserve', titre: `💍 ${t('Bijoux')}`, pastille: plein ? '!' : null },
           { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerAtelier(etat, 'joaillerie') ? '+' : null },
         ]}
