@@ -30,9 +30,9 @@ Dans la boutique, sous la publicité, la section **« Acheter des gemmes »** : 
 
 Les prix s'écrivent à la façon de la langue (`prixEuros` dans `langue.ts` : « 1,99 € », « €1.99 »). Toucher une carte ouvre la fenêtre de paiement (`Paiement.tsx`).
 
-⚠️ **Pas de moyen de paiement à nous** (décision du propriétaire, 25/10) : le jeu est préparé pour **CrazyGames**, dont la boutique (Xsolla) gère tout le paiement. Elle est **sur invitation** (il faut la demander à CrazyGames) et réservée aux joueurs **connectés** à leur compte CrazyGames. En attendant (`PACKS_VISIBLES` dans `src/portail.ts`) :
-- pendant le développement (`npm run dev`), les packs se montrent, avec un **paiement simulé** (« aucun argent n'est pris ») qui donne les gemmes, pour tester la boutique ;
-- **en ligne (Vercel et CrazyGames), les packs sont cachés** : pas de bouton d'achat qui ne marche pas.
+⚠️ **Pas de moyen de paiement à nous** (décision du propriétaire, 25/10) : le jeu est préparé pour **CrazyGames**, dont la boutique (Xsolla) gère tout le paiement. Elle est **sur invitation** (il faut la demander à CrazyGames) et réservée aux joueurs **connectés** à leur compte CrazyGames. En attendant (`PAIEMENT_SIMULE` dans `src/portail.ts`) :
+- **les packs se montrent partout** (27/10, demandé par le propriétaire : la boutique doit avoir l'air prête). En ligne (Vercel et CrazyGames), la fenêtre de paiement s'ouvre, mais son bouton dit « 🔒 Bientôt disponible » et ne fait rien : aucun argent pris, aucune gemme donnée (« Les achats de gemmes arrivent très bientôt ! ») ;
+- pendant le développement (`npm run dev`), le **paiement est simulé** (« aucun argent n'est pris ») et donne les gemmes, pour tester la boutique.
 
 Le jour où CrazyGames ouvre sa boutique au jeu : déclarer les 4 packs chez eux, appeler leur boutique dans `Paiement.tsx` à la place du paiement simulé (puis `crediterPack`), et montrer les packs seulement aux joueurs connectés.
 

@@ -83,7 +83,9 @@ export function grandMoment(): void {
 
 // (25/10) Les packs de gemmes contre de l'argent réel. Pas de moyen de paiement à nous (décision
 // du propriétaire) : sur CrazyGames, les achats passent par leur boutique (Xsolla, sur
-// invitation, seulement pour les joueurs connectés). Tant qu'elle n'est pas ouverte au jeu, les
-// packs ne se montrent que pendant le développement (npm run dev), avec un paiement SIMULÉ
-// (aucun argent n'est pris), pour tester la boutique. En ligne, ils sont cachés.
-export const PACKS_VISIBLES = import.meta.env.DEV
+// invitation, seulement pour les joueurs connectés). Tant qu'elle n'est pas ouverte au jeu :
+//   - les packs se montrent partout (27/10, demandé par le propriétaire : la boutique doit avoir
+//     l'air prête), mais en ligne le bouton « Payer » dit « Bientôt disponible » et ne fait rien ;
+//   - pendant le développement (npm run dev), le paiement est SIMULÉ (aucun argent n'est pris) et
+//     donne les gemmes, pour tester la boutique.
+export const PAIEMENT_SIMULE = import.meta.env.DEV

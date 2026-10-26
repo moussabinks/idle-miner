@@ -10,7 +10,6 @@ import { minutesSecondes } from '../nombres'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 import { Paiement } from './Paiement'
-import { PACKS_VISIBLES } from '../portail'
 
 export function Boutique({ onFermer }: { onFermer: () => void }) {
   const { etat, jouer, regarderPub } = useJeu()
@@ -38,27 +37,24 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
         </button>
       </div>
 
-      {/* (25/10) Acheter des gemmes : seulement pendant le développement (voir PACKS_VISIBLES) */}
-      {PACKS_VISIBLES && (
-        <>
-          <h3 className="titre-section">{t('Acheter des gemmes')}</h3>
-          <div className="boutique-packs">
-            {PACKS_GEMMES.map((pack) => {
-              const bonus = bonusPack(pack)
-              return (
-                <button key={pack.id} className={`boutique-pack ${pack.etiquette ? 'boutique-pack-vedette' : ''}`} onClick={() => setEnPaiement(pack)}>
-                  {pack.etiquette && <span className="boutique-pack-etiquette">{pack.etiquette === 'populaire' ? t('Populaire') : t('Meilleure offre')}</span>}
-                  <span className="boutique-pack-gemmes">
-                    <span aria-hidden="true">💎</span> {nombre(pack.gemmes)}
-                  </span>
-                  <span className="boutique-pack-bonus">{bonus > 0 ? t('+{n} % offert', { n: bonus }) : '\u00a0'}</span>
-                  <span className="boutique-pack-prix">{prixEuros(pack.centimes)}</span>
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
+      {/* (25/10) Acheter des gemmes. (27/10) Montré partout, mais pas encore payable en ligne :
+          voir PAIEMENT_SIMULE dans src/portail.ts et Paiement.tsx. */}
+      <h3 className="titre-section">{t('Acheter des gemmes')}</h3>
+      <div className="boutique-packs">
+        {PACKS_GEMMES.map((pack) => {
+          const bonus = bonusPack(pack)
+          return (
+            <button key={pack.id} className={`boutique-pack ${pack.etiquette ? 'boutique-pack-vedette' : ''}`} onClick={() => setEnPaiement(pack)}>
+              {pack.etiquette && <span className="boutique-pack-etiquette">{pack.etiquette === 'populaire' ? t('Populaire') : t('Meilleure offre')}</span>}
+              <span className="boutique-pack-gemmes">
+                <span aria-hidden="true">💎</span> {nombre(pack.gemmes)}
+              </span>
+              <span className="boutique-pack-bonus">{bonus > 0 ? t('+{n} % offert', { n: bonus }) : '\u00a0'}</span>
+              <span className="boutique-pack-prix">{prixEuros(pack.centimes)}</span>
+            </button>
+          )
+        })}
+      </div>
 
       <h3 className="titre-section">{t('Bonus')}</h3>
       {LISTE_BOOSTS.map((id) => {
