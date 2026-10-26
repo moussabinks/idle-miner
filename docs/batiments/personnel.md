@@ -155,7 +155,7 @@ Total : 190 000 $ (26/10 ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 
 | Légendaire | × 3 | × 2,5 | orange `#f5a524` |
 | Mythique | × 5 | × 4 | rose `#ff4d8d` |
 
-- **🔄 Remplacer** un mineur, ou (26/10) un joaillier ou un pousseur (`remplacerMineur`, `prixRemplacement` ; un pousseur garde son trajet, sa vitesse et son chariot, et pas pendant qu'il pousse son wagonnet) : une nouvelle recrue (nom et rareté tirés au hasard) prend sa place, **avec sa pioche**, sans indemnités. Prix : le plus cher entre le quart de la dernière place possible (`PART_REMPLACEMENT`) et **200 $ × (niveau du joueur)²** (`PRIX_REMPLACEMENT_PAR_NIVEAU`).
+- **🔄 Remplacer** un mineur, ou (26/10) un joaillier ou un pousseur (`remplacerMineur`, `prixRemplacement` ; un pousseur garde son trajet, sa vitesse et son chariot ; depuis le 26/10, à tout moment, même en route : la recrue reprend le wagonnet là où il en était, il ne s'arrête pas) : une nouvelle recrue (nom et rareté tirés au hasard) prend sa place, **avec sa pioche**, sans indemnités. Prix : le plus cher entre le quart de la dernière place possible (`PART_REMPLACEMENT`) et **200 $ × (niveau du joueur)²** (`PRIX_REMPLACEMENT_PAR_NIVEAU`).
 
 ### 7. Le manager (palier 3 de la mine)
 

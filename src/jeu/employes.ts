@@ -706,8 +706,9 @@ export function prixRemplacement(etat: EtatJeu): number {
 
 export function peutRemplacer(etat: EtatJeu, index: number): boolean {
   const employe = etat.employes[index]
-  // (26/10) un joaillier et un pousseur aussi (le pousseur : pas pendant qu'il pousse son wagonnet)
-  return !!employe && employe.etape !== 'pousse' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
+  // (26/10) un joaillier et un pousseur aussi, à tout moment : même en route, la recrue prend sa
+  // place là où il en était (son wagonnet ne s'arrête pas, voir remplacerMineur).
+  return !!employe && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
 }
 
 export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoire): string[] {
