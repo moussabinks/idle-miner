@@ -32,7 +32,7 @@ ont changé, les recopier dans le jeu :
 |---|---|
 | `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers ; et les **minerais** (`minerai()`, 25/10) : les mêmes formes que les icônes du jeu (`outils/icones/dessins.py`) |
 | `batiments.mjs` | La dalle de pavés, le marché, le forgeron (25/10 : le four et son feu, la cheminée en briques, l'enclume vue de côté, `enclume()`), le Personnel, la foreuse (25/10 : la mèche en forme de carotte, `meche()`, son petit coffre à charbon, `coffreForeuse()`, et les bandes de chantier, `bandesChantier()`), le générateur, (26/10) la fonderie et la joaillerie, et l'icône des rails |
-| `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
+| `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 8 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
 | `montagnes.mjs` | Le paysage (25/10) : les montagnes enneigées (`montagne()`, la table `MONTAGNES_SIMPLES`, la montagne à la cascade et celle à la galerie de mine), leurs filons (`filon()`), cristaux et fissures, et les collines (`colline()`, `garnirColline()`), un bosquet de sapins et des rochers |
 | `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
@@ -56,7 +56,8 @@ ont changé, les recopier dans le jeu :
 
 Le jeu dessine par-dessus `mine.svg` (voir `DessinEvolutionMine` dans
 `src/composants/DessinsVillage.tsx`) : les deux câbles qui tombent du treuil, la caisse
-(`caisse-ascenseur-0.svg` vide, `1` à `4` de plus en plus riche) qui monte et descend dans le
+(`caisse-ascenseur-0.svg` vide, puis `1` à `7`, une par niveau de la mine : la caisse N a les
+minerais du niveau N, le dernier venu en haut du tas, `MINERAIS_CAISSE` dans `mine.mjs`) qui monte et descend dans le
 puits, coupée sous le bord de devant du puits, puis `mine-devant.svg` (les poutres de devant du
 puits, dans le même cadre que la mine) qui passe devant la caisse. Les caisses sont dessinées dans
 le cadre de la mine puis recadrées : leur position dans la mine est `POINTS_MINE.caisse`.
@@ -70,7 +71,9 @@ cheminée) sont plus hauts que les autres bâtiments : leur calage est différen
 
 Les minerais (dans la caisse, le wagonnet, les parois du puits, les filons, les caisses) sont
 dessinés par `minerai(sorte, x, y, taille, angle)` de `formes.mjs`, avec les formes des icônes du
-jeu : `pierre`, `charbon`, `fer`, `or`, `redstone`, `emeraude`, `diamant`. Jamais de petits cubes :
+jeu : `pierre`, `charbon`, `fer`, `or`, `redstone`, `emeraude`, `saphir`, `rubis`, `diamant`. (26/10) Le
+saphir (taillé en ovale) et le rubis (taillé en cœur) sont calculés par `gemmeTaillee()` : une
+table au milieu et une facette par côté, plus claire si elle regarde la lumière. Jamais de petits cubes :
 on doit reconnaître chaque minerai.
 
 ## Les arbres

@@ -408,6 +408,25 @@ describe('la pioche des mineurs suit la mine (23/10)', () => {
   })
 })
 
+describe('remplacer un pousseur avec le recruteur (26/10)', () => {
+  it('la recrue prend son wagonnet ; pas pendant qu’il pousse', () => {
+    const etat = partie()
+    etat.niveauMine = 4
+    etat.argent = 1_000_000
+    ameliorerRecruteur(etat)
+    etat.employes.push({ nom: 'Pousse', rarete: 'commun', niveau: 1, chariot: 2, role: 'pousseur', trajet: 'mine-marche', etape: 'quai', progression: 0, sac: {}, blocsCasses: 0, tempsPaye: 600, lieu: 'puits', depuis: 'puits', forgeEnAttente: false })
+    etat.trajets.push({ liaison: 'mine-marche', etape: 'quai', distance: 0, chargement: {}, pousseur: 'Pousse' })
+    expect(peutRemplacer(etat, 0)).toBe(true)
+    remplacerMineur(etat, 0, hasard())
+    const recrue = etat.employes[0]
+    expect(recrue.nom).not.toBe('Pousse')
+    expect(recrue).toMatchObject({ role: 'pousseur', trajet: 'mine-marche', niveau: 1, chariot: 2 })
+    expect(etat.trajets[0].pousseur).toBe(recrue.nom)
+    recrue.etape = 'pousse'
+    expect(peutRemplacer(etat, 0)).toBe(false)
+  })
+})
+
 describe('remplacer un mineur avec le recruteur (23/10)', () => {
   it('une nouvelle recrue prend sa place, avec sa pioche, selon le niveau du joueur', () => {
     const etat = partie()

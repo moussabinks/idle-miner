@@ -580,85 +580,62 @@ export const MINERAIS = {
     ],
     eclat: [76, 22],
   },
-  // (26/10) Le saphir (un losange bleu roi) et le rubis (un triangle cramoisi), comme leurs icônes
-  // 🔷 et 🔺 : la joaillerie en a sur son établi et dans son coffre.
-  saphir: {
-    contour: [
-      [50, 6],
-      [88, 50],
-      [50, 94],
-      [12, 50],
-    ],
-    couleur: '#2f5bd9',
-    facettes: [
-      [
-        '#8fb0ff',
-        [
-          [50, 6],
-          [50, 28],
-          [31, 50],
-          [12, 50],
-        ],
-      ],
-      [
-        '#1b3796',
-        [
-          [88, 50],
-          [50, 94],
-          [50, 72],
-          [69, 50],
-        ],
-      ],
-      [
-        '#4874ec',
-        [
-          [50, 28],
-          [69, 50],
-          [50, 72],
-          [31, 50],
-        ],
-      ],
-    ],
-    eclat: [76, 22],
-  },
-  rubis: {
-    contour: [
-      [50, 8],
-      [94, 84],
-      [6, 84],
-    ],
-    couleur: '#d81b4a',
-    facettes: [
-      [
-        '#ff7095',
-        [
-          [50, 8],
-          [50, 38],
-          [30, 72],
-          [6, 84],
-        ],
-      ],
-      [
-        '#9c0f33',
-        [
-          [50, 8],
-          [94, 84],
-          [70, 72],
-          [50, 38],
-        ],
-      ],
-      [
-        '#e8325f',
-        [
-          [50, 38],
-          [70, 72],
-          [30, 72],
-        ],
-      ],
-    ],
-    eclat: [78, 24],
-  },
+  // (26/10) Le saphir et le rubis : voir plus bas (gemmeTaillee), ils sont calculés.
 }
+
+// (26/10, redessinés) Le saphir (taillé en ovale, bleu roi) et le rubis (taillé en cœur, rouge
+// cramoisi), comme leurs icônes 🔷 et 🔺 (`outils/icones/dessins.py`) : la joaillerie en a sur son
+// établi et dans son coffre, et la caisse de l'ascenseur aux niveaux 5 à 7. Une gemme taillée, c'est
+// une table au milieu (le polygone du dedans, la même forme en plus petit) et une facette par côté
+// de la table, jusqu'au bord ; une facette est plus claire si elle regarde la lumière (en haut à
+// gauche), plus sombre sinon. « tons » : de la plus claire à la plus sombre.
+function gemmeTaillee(bord, table, parFacette, couleur, tons, couleurTable, reflet, eclat) {
+  const cx = table.reduce((s, [x]) => s + x, 0) / table.length
+  const cy = table.reduce((s, [, y]) => s + y, 0) / table.length
+  const n = table.length
+  const facettes = []
+  for (let i = 0; i < n; i++) {
+    const a = table[i]
+    const b = table[(i + 1) % n]
+    // les points du bord qui vont avec ce côté de la table (parFacette points par côté)
+    const dehors = []
+    for (let j = 0; j <= parFacette; j++) dehors.push(bord[(i * parFacette + j) % bord.length])
+    const angle = (Math.atan2((a[1] + b[1]) / 2 - cy, (a[0] + b[0]) / 2 - cx) * 180) / Math.PI
+    const ecart = Math.abs((((angle - 225 + 180) % 360) + 360) % 360 - 180) // 0 : face à la lumière
+    const ton = tons[Math.min(tons.length - 1, Math.floor((ecart / 180) * tons.length))]
+    facettes.push([ton, [a, ...dehors, b].map(([x, y]) => [r1(x), r1(y)])])
+  }
+  facettes.push([couleurTable, table.map(([x, y]) => [r1(x), r1(y)])])
+  facettes.push(['#ffffff', reflet])
+  return { contour: bord.map(([x, y]) => [r1(x), r1(y)]), couleur, facettes, eclat }
+}
+
+// Le saphir : un ovale plus large que haut (16 points), sa table en octogone.
+function saphirTaille() {
+  const [cx, cy, l, h] = [50, 54, 44, 37]
+  const ovale = (k, pas) => Array.from({ length: 360 / pas }, (_, i) => [cx + l * k * Math.cos((i * pas * Math.PI) / 180), cy + h * k * Math.sin((i * pas * Math.PI) / 180)])
+  return gemmeTaillee(ovale(1, 22.5), ovale(0.5, 45), 2, '#3a66e0', ['#a4c0ff', '#6f96f7', '#3a66e0', '#2647b4', '#1a3285'], '#4c78ec', [
+    [40, 37],
+    [46, 37],
+    [36, 57],
+    [30, 57],
+  ], [84, 22])
+}
+
+// Le rubis : un cœur à côtés droits (pas un cœur tout rond), sa table en petit cœur.
+function rubisTaille() {
+  const coeur = [[0, -22], [12, -38], [30, -40], [44, -26], [42, -6], [0, 42], [-42, -6], [-44, -26], [-30, -40], [-12, -38]]
+  const forme = (k) => coeur.map(([x, y]) => [50 + x * k, 54 + y * k])
+  return gemmeTaillee(forme(1), forme(0.5), 1, '#e8304f', ['#ff7d93', '#f04a68', '#dc2848', '#a8142f', '#7c0d24'], '#e8304f', [
+    [36, 38],
+    [41, 38],
+    [37, 55],
+    [32, 55],
+  ], [84, 16])
+}
+
+MINERAIS.saphir = saphirTaille()
+MINERAIS.rubis = rubisTaille()
 
 // Une petite étoile à quatre branches (l'éclat qui brille sur un minerai), dans le carré 100 × 100.
 function eclatMinerai(x, y, r) {

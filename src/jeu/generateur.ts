@@ -10,7 +10,7 @@
 // sa réserve (23/10 : 5 minutes au niveau 1, un peu plus à chaque niveau).
 
 import { BATIMENTS, NIVEAUX_GENERATEUR, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
-import { disponible, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
+import { disponible, garderDansLeCoffre, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
 import { batimentPose, type BatimentPose, type Case } from './village'
 import { debloque } from './niveaux'
 import { t } from './langue'
@@ -108,7 +108,8 @@ export function ascenseurAlimente(etat: EtatJeu): boolean {
 // Met de la redstone (du coffre de la mine) dans le générateur. nombre = Infinity : tout.
 export function remplirGenerateur(etat: EtatJeu, nombre: number): string[] {
   if (!generateurPose(etat)) return []
-  const mis = Math.min(nombre, disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
+  // (26/10) Ce que le joueur garde 📌 dans le coffre reste dans le coffre.
+  const mis = Math.min(nombre, Math.max(0, disponible(etat, 'redstone') - garderDansLeCoffre(etat, 'redstone')), placeRedstoneGenerateur(etat))
   if (mis <= 0) return placeRedstoneGenerateur(etat) === 0 && disponible(etat, 'redstone') > 0 ? [t('⚡ La réserve du générateur est pleine.')] : [t('🔴 Il te faut de la redstone (niveau 2 de la mine).')]
   payerMateriaux(etat, { redstone: mis })
   etat.generateur.carburant += mis * SECONDES_PAR_REDSTONE

@@ -1035,4 +1035,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'vend les lingots de la fonderie au marché': 'sells the foundry’s ingots at the market',
   'Vert : il l’apporte à la fonderie. Gris : il reste au départ. La fonderie ne fond que le fer et l’or.': 'Green: it brings it to the foundry. Grey: it stays behind. The foundry only smelts iron and gold.',
   'Vert : il l’apporte à la joaillerie. Gris : il reste au départ. La joaillerie ne taille que les gemmes.': 'Green: it brings it to the jewelry shop. Grey: it stays behind. The jewelry shop only cuts gems.',
+  // (26/10) Remplacer un pousseur
+  '🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son wagonnet, avec son chariot.': '🔄 {ancien} left: {nom} ({rarete}!) takes over their cart, with its wagon.',
+  '🔄 {ancien} est parti(e) : {nom} prend son wagonnet, avec son chariot.': '🔄 {ancien} left: {nom} takes over their cart, with its wagon.',
 }

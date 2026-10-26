@@ -49,7 +49,15 @@ Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché 
 
 Chaque ligne d'amélioration (`Amelioration.tsx`) a **deux boutons** : le vert, avec le prix en argent et en minerais, et le **violet 💎**, avec le prix en gemmes. Payer en gemmes ne prend **ni argent, ni minerais**. Les conditions restent les mêmes : il faut le **palier de la mine** (ou le niveau du joueur) qu'il faut pour cette amélioration.
 
-**Le prix en gemmes** (`prixEnGemmes`, revu le 25/10 à la demande du propriétaire) va de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
+**Le prix en gemmes, depuis le 26/10** (demandé par le propriétaire) va de **2 à 10 gemmes**, **par proportionnalité** : on prend toutes les améliorations que le joueur peut faire en ce moment (débloquées à son palier, pas encore au maximum : `achatsPossibles` sans les constructions ; `bornesGemmes` dans `src/jeu/prixGemmes.ts`). La **moins chère** (en dollars, `valeurEnDollars`) coûte **2 gemmes**, la **plus chère 10 gemmes**, et les autres entre les deux, en proportion de leur prix :
+
+```
+prix en gemmes = arrondi( 2 + 8 × (valeur − la moins chère) / (la plus chère − la moins chère) ), entre 2 et 10
+```
+
+Un achat hors de ces bornes (une réparation, un bâtiment) reste entre 2 et 10. Le prix affiché est calculé avant l'achat, et c'est celui qui est payé. Sans bornes (une seule amélioration possible), on garde la règle d'avant, ci-dessous (avec 2 gemmes au moins).
+
+**Avant le 26/10** : le prix en gemmes (`prixEnGemmes`, revu le 25/10) allait de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
 
 ```
 prix en gemmes = arrondi( 3 + 2,4 × (log10(valeur en $) − 2) ), entre 3 et 10

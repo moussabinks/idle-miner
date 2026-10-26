@@ -13,6 +13,7 @@
 
 import { useMemo, type ReactNode } from 'react'
 import type { Cout } from '../jeu/donnees'
+import { bornesGemmes } from '../jeu/prixGemmes'
 import { prixEnGemmes } from '../jeu/gemmes'
 import { niveauJoueur } from '../jeu/niveaux'
 import { t } from '../jeu/langue'
@@ -74,14 +75,16 @@ export function Niveaux({ niveau, max }: { niveau: number; max: number }) {
 // Le bouton vert (argent et minerais, avec le prix dessous) et le bouton violet (gemmes).
 export function BoutonsAchat({ etat, cout, possible, action, texte }: { etat: EtatJeu; cout: Cout; possible: boolean; action: Action; texte: string }) {
   const { jouer } = useJeu()
-  const gemmes = prixEnGemmes(cout)
+  // (26/10) De 2 à 10 gemmes, selon ce que coûtent les autres améliorations possibles.
+  const bornes = bornesGemmes(etat)
+  const gemmes = prixEnGemmes(cout, bornes)
   // (25/10, FPS) L'essai copie toute la partie : on ne le refait pas à chaque tour d'horloge
   // (20 fois par seconde), seulement quand change ce qui peut l'autoriser ou l'empêcher (les
   // gemmes, le palier de la mine, le niveau du joueur, l'équipe, les bâtiments, le prix). Sans assez de gemmes,
   // pas d'essai du tout.
   const assez = (etat.gemmes ?? 0) >= gemmes
-  const cle = assez ? [etat.gemmes, etat.niveauMine, niveauJoueur(etat), etat.employes.length, etat.village.batiments.length, JSON.stringify(cout)].join('|') : ''
-  const enGemmes = useMemo(() => assez && possibleEnGemmes(etat, action), [cle]) // eslint-disable-line react-hooks/exhaustive-deps
+  const cle = assez ? [etat.gemmes, gemmes, etat.niveauMine, niveauJoueur(etat), etat.employes.length, etat.village.batiments.length, JSON.stringify(cout)].join('|') : ''
+  const enGemmes = useMemo(() => assez && possibleEnGemmes(etat, action, bornes), [cle]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span className="ligne-amelioration-boutons">
       <button className="btn btn-vert btn-petit" disabled={!possible} onClick={() => jouer(action)}>
@@ -91,7 +94,7 @@ export function BoutonsAchat({ etat, cout, possible, action, texte }: { etat: Et
       <button
         className="btn btn-gemmes btn-petit"
         disabled={!enGemmes}
-        onClick={() => jouer((e) => acheterAvecGemmes(() => action(e)))}
+        onClick={() => jouer((e) => acheterAvecGemmes(() => action(e), bornesGemmes(e)))}
         title={t('Payer en gemmes, sans argent ni minerais')}
       >
         <span>💎 {gemmes}</span>
