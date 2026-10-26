@@ -99,6 +99,7 @@ import { OngletsPanneau } from './OngletsPanneau'
 import { nomTrajet } from './nomTrajet'
 import { RevelationRecrue } from './RevelationRecrue'
 import { cheminPublic } from '../chemins'
+import { analyseWagonnet, chariotTropPetit } from '../jeu/production'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
 type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void }
@@ -186,9 +187,12 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
   // Avec une nouvelle pioche, combien il creuserait.
   const avecPiocheSuivante = piocheSuivante ? vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) : 0
   const trajetsPossibles = LISTE_LIAISONS.filter((l) => l === employe.trajet || (ligneDe(etat, l) !== null && !trajetPris(etat, l)))
+  // (26/10) Son chariot ne suit pas la production : l'alerte, ici, sur sa carte (et son chariot en avant)
+  const analyse = pousseur && employe.trajet ? analyseWagonnet(etat, employe.trajet) : null
+  const chariotNeSuitPas = analyse !== null && analyse.pousseur?.nom === employe.nom && chariotTropPetit(analyse)
 
   return (
-    <article className={`carte carte-employe ${paye ? '' : 'carte-alerte'}`}>
+    <article className={`carte carte-employe ${paye && !chariotNeSuitPas ? '' : 'carte-alerte'}`}>
       <header className="carte-employe-entete">
         <span className="carte-employe-icone" aria-hidden="true">
           {iconeActiviteEmploye(employe)}
@@ -266,6 +270,11 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           possible={peutAmeliorerEmploye(etat, employe)}
           action={(e) => ameliorerEmploye(e, index)}
         />
+      )}
+      {chariotNeSuitPas && analyse && (
+        <p className="texte-alerte">
+          ⚠️ {t('Son chariot ne suit pas : il emporte {a} blocs/s, il en sort {b}. Agrandis-le !', { a: nombre(analyse.debitMax, 2), b: nombre(analyse.apport, 2) })}
+        </p>
       )}
       {pousseur && (
         <Amelioration
