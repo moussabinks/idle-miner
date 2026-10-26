@@ -54,10 +54,10 @@ Avec la fonderie et la joaillerie (et les niveaux Saphir, Rubis, Diamant de la m
 | 🟨 | lingot d'or | la pyramide de trois lingots dorés (avant, le dessin de 🟡) |
 | 🔷 | saphir | une gemme taillée en ovale, plus large que haute, bleu roi, avec sa table en octogone et huit facettes (le diamant 💎 est bleu ciel, à cinq côtés) |
 | 🔺 | rubis | une gemme taillée en cœur (des côtés droits), rouge cramoisi, avec sa table en petit cœur (la redstone 🔴 est rouge orangé, à six côtés) |
-| 📿 | collier d'émeraude | une chaîne de perles dorées et une émeraude en pendentif |
-| 🧿 | pendentif de saphir | un médaillon en or au cordon de cuir, un saphir ovale au milieu |
-| 🫅 | couronne de rubis | une couronne en or, des perles rouges et trois rubis en cœur (👑 reste la couronne du classement) |
-| 💍 | bague de diamant | un anneau en or et un diamant bleu ciel |
+| 📿 | collier d'émeraude | (26/10, redessiné) une chaîne de perles d'or en U (grosses et petites), deux petites émeraudes serties dans la chaîne, et en pendentif la grosse émeraude de 💚 dans un cadre d'or à huit côtés, avec quatre griffes, sa bélière et une goutte d'or |
+| 🧿 | pendentif de saphir | (26/10, redessiné) un médaillon d'or au bord festonné, le saphir ovale de 🔷 dans un cercle de perles d'or, quatre petits diamants ronds sur le bord, une bélière et une courte chaîne de maillons |
+| 🫅 | couronne de rubis | (26/10, redessiné) une couronne royale : le bonnet de velours rouge derrière, cinq pointes d'or (des perles blanches au bout des grandes), un bandeau gravé avec trois rubis en cœur de 🔺 dans leur chaton et des perles entre eux (👑 reste la couronne du classement) |
+| 💍 | bague de diamant | (26/10, redessiné) un solitaire : un anneau d'or vu de biais (plus épais devant), une corbeille à quatre griffes qui tient le diamant de 💎, et deux petits diamants ronds sur les épaules |
 | 🏭 | fonderie | un four en briques à la bouche qui rougeoie, sa cheminée qui fume, un lingot d'or |
 | 🏪 | joaillerie | une boutique à l'auvent violet, sa vitrine, une gemme en enseigne (💠 est déjà le diamant) |
 
@@ -66,3 +66,12 @@ ne les voyait plus à 16 px. Les facettes des gemmes taillées (saphir, rubis) s
 `_facettes()` : une facette par côté de la table, plus claire si elle regarde la lumière (en haut à
 gauche). Le saphir et le rubis ont aussi leur forme dans `outils/art/formes.mjs`
 (`minerai('saphir')`, `minerai('rubis')`).
+
+Les bijoux (26/10, redessinés : avant, on aurait dit des emojis d'Apple) sont de vrais bijoux de
+luxe. Leur or a quatre tons à plat (`_or()` : bord clair en haut à gauche, couleur, ombre en bas à
+droite, et un brun doré `OR_CREUX` pour les creux), avec des petits reflets presque blancs. Les
+briques : `_boule_or()` (une perle d'or), `_perle()` (une perle nacrée), `_brillant()` (un petit
+diamant rond serti, ses facettes faites par `_facettes()`), `_emeraude_petite()` et
+`_diamant_taille()` (💚 et 💎 en plus petit) ; le saphir et le rubis sont `_saphir()` et `_rubis()`.
+Chaque bijou garde une silhouette différente pour se lire à 16 px : un U et une gemme verte, un
+médaillon rond et bleu, une couronne, un anneau.
