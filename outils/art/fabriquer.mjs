@@ -41,6 +41,8 @@ for (const [id, fichier, dessiner] of [
   ecrire(BATIMENTS, fichier, toile.svg())
   calages[id] = toile.calage()
 }
+// (26/10) La foreuse en marche : le même dessin, mais la mèche tourne.
+ecrire(BATIMENTS, 'foreuse-active.svg', foreuse({ enMarche: true }).svg())
 ecrire(BATIMENTS, 'rails.svg', iconeRails().svg())
 
 // La mine, son calque de devant et les caisses de l'ascenseur.

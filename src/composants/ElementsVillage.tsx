@@ -5,7 +5,7 @@
 import { memo, type ReactNode } from 'react'
 import { BATIMENTS, type IdBatiment } from '../jeu/donnees'
 import { nombre } from '../jeu/langue'
-import { CALAGES, imageBatiment, profondeur, transformationSprite, versEcran } from './iso'
+import { CALAGES, IMAGE_FOREUSE_ACTIVE, imageBatiment, profondeur, transformationSprite, versEcran } from './iso'
 import { ECHELLE_SPRITE, choisirVue, spritePerso, type QuiSprite, type VueSprite } from './sprites'
 
 // Un personnage posé dans le monde (ses pieds sur le point de la grille). On le dessine avec
@@ -77,13 +77,14 @@ export function ImagePerso({ qui, vue, miroir = false, echelle = ECHELLE_SPRITE 
 }
 
 // Une image de bâtiment (« memo » : elle ne change que si on la déplace).
-export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, classe }: { id: IdBatiment; x: number; y: number; miroir: boolean; classe: string }) {
+// (26/10) « enMarche » : la foreuse qui fore montre son dessin où la mèche tourne.
+export const ImageBatiment = memo(function ImageBatiment({ id, x, y, miroir, classe, enMarche = false }: { id: IdBatiment; x: number; y: number; miroir: boolean; classe: string; enMarche?: boolean }) {
   const calage = CALAGES[id]
   const taille = BATIMENTS[id].taille
   return (
     <img
       className={`sprite-batiment ${classe}`}
-      src={imageBatiment(id)}
+      src={id === 'foreuse' && enMarche ? IMAGE_FOREUSE_ACTIVE : imageBatiment(id)}
       alt={BATIMENTS[id].nom}
       width={calage.largeur}
       height={calage.hauteur}

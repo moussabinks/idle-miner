@@ -529,7 +529,13 @@ function bandesChantier(t, longueur, hauteur, jaune = C.jaune) {
 // pointe, entourée de rainures en spirale. (mx, yHaut) : le milieu de son haut, en pixels du
 // dessin ; rx : son rayon en haut (en pixels) ; longueur : de son haut à sa pointe (en pixels).
 // « coupe » : un clipPath qui cache ce qui est enfoncé dans le trou.
-function meche(t, mx, yHaut, rx, longueur, coupe) {
+// (26/10) « images » : 1 pour une mèche immobile ; plus, pour une mèche qui TOURNE (la version
+// « en marche » de la foreuse) : les rainures en spirale sont dessinées autant de fois, chaque fois
+// un peu plus bas, et le SVG les montre l'une après l'autre en boucle (une animation SMIL, dans
+// l'image elle-même : aucune animation CSS sur l'image, qui la rendait floue).
+const IMAGES_MECHE = 6
+const DUREE_TOUR_MECHE = 0.42 // secondes pour un demi-pas de spirale (le motif se répète)
+function meche(t, mx, yHaut, rx, longueur, coupe, images = 1) {
   const ry = rx * 0.58 // un cercle couché, vu à l'angle du jeu
   // Le rayon de la mèche à la profondeur h (en pixels sous son haut) : comme une carotte, il
   // diminue doucement puis plus vite vers la pointe.
@@ -560,9 +566,10 @@ function meche(t, mx, yHaut, rx, longueur, coupe) {
     return liste
   }
   const largeurRainure = 20
-  const rainures = (clair, fonce_) => {
+  // « decalage » : de 0 à 1, de combien la spirale est descendue (une image de l'animation).
+  const rainures = (clair, fonce_, decalage = 0) => {
     let svg = `<rect x="${r1(mx - rx - 4)}" y="${r1(yHaut - ry - 4)}" width="${r1(2 * rx + 8)}" height="${r1(longueur + ry + 8)}" fill="${clair}"/>`
-    for (let h = -pas; h < longueur; h += pas / 2) {
+    for (let h = -pas + (decalage * pas) / 2; h < longueur; h += pas / 2) {
       const haut = helice(h)
       const bas = helice(h + largeurRainure)
       svg += polygone([...haut, ...bas.reverse()], fonce_, 0)
@@ -573,14 +580,23 @@ function meche(t, mx, yHaut, rx, longueur, coupe) {
     }
     return svg
   }
+  // Une image de la mèche : ses rainures (au soleil, et à l'ombre à droite).
+  const uneImage = (decalage) => rainures(ACIER, ACIER_FONCE, decalage) + `<g clip-path="url(#${idOmbre})">${rainures(fonce(ACIER, 0.18), fonce(ACIER_FONCE, 0.2), decalage)}</g>`
   let svg = `<g clip-path="url(#${idCorps})">`
-  svg += rainures(ACIER, ACIER_FONCE)
+  if (images <= 1) svg += uneImage(0)
+  else {
+    // Chaque image n'est visible que pendant sa part du tour (calcMode discrete : pas de fondu).
+    const cles = Array.from({ length: images }, (_, i) => r1((i / images) * 1000) / 1000).join(';')
+    for (let i = 0; i < images; i++) {
+      const valeurs = Array.from({ length: images }, (_, j) => (j === i ? 'visible' : 'hidden')).join(';')
+      svg += `<g visibility="${i === 0 ? 'visible' : 'hidden'}"><animate attributeName="visibility" values="${valeurs}" keyTimes="${cles}" calcMode="discrete" dur="${DUREE_TOUR_MECHE}s" repeatCount="indefinite"/>${uneImage(i / images)}</g>`
+    }
+  }
   // Le reflet : une bande claire qui suit le côté gauche de la mèche.
   const reflet = []
   for (let i = 0; i <= 10; i++) reflet.push([mx - rayon((i / 10) * longueur) * 0.55, yHaut - ry * 0.6 + (i / 10) * longueur * 0.9])
   for (let i = 10; i >= 0; i--) reflet.push([mx - rayon((i / 10) * longueur) * 0.3, yHaut - ry * 0.6 + (i / 10) * longueur * 0.9])
   svg += polygone(reflet, ACIER_REFLET, 0).replace('/>', ' opacity="0.85"/>')
-  svg += `<g clip-path="url(#${idOmbre})">${rainures(fonce(ACIER, 0.18), fonce(ACIER_FONCE, 0.2))}</g>`
   svg += `</g>`
   svg += `<path d="${corps}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`
   t.ajouter(coupe ? `<g clip-path="url(#${coupe})">${svg}</g>` : svg)
@@ -637,7 +653,8 @@ function coffreForeuse(t, x0, y0, lx, ly, z) {
   tasDeCharbon(t, (x0 + x1) / 2, (y0 + y1) / 2, z1 + 2, 0.9)
 }
 
-export function foreuse() {
+// (26/10) « enMarche » : la mèche tourne (le dessin foreuse-active.svg, montré quand elle fore).
+export function foreuse({ enMarche = false } = {}) {
   const t = new Toile({ taille: 5, haut: 214 })
   dalle(t, 5)
   const z = DALLE
@@ -753,7 +770,7 @@ export function foreuse() {
     `<clipPath id="${coupe}"><path d="M${r1(tx - 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty - 600)} L${r1(tx + 300)} ${r1(ty)} L${r1(tx + rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 1 ${r1(tx - rxTrou)} ${r1(ty)} L${r1(tx - 300)} ${r1(ty)} Z"/></clipPath>`,
   )
   const [, yMeche] = t.pt(A, A, zMeche)
-  meche(t, tx, yMeche, 30, zMeche - zp + 14, coupe)
+  meche(t, tx, yMeche, 30, zMeche - zp + 14, coupe, enMarche ? IMAGES_MECHE : 1)
   // Le bord de devant du trou, et des mottes de terre et des cailloux autour.
   t.ajouter(`<path d="M${r1(tx - rxTrou)} ${r1(ty)} A${r1(rxTrou)} ${r1(ryTrou)} 0 0 0 ${r1(tx + rxTrou)} ${r1(ty)}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
   for (const [dx, dy, l, h, graine, couleur] of [

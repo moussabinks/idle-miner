@@ -486,7 +486,7 @@ export function VueVillage({
       )
       continue
     }
-    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" />)
+    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" enMarche={b.id === 'foreuse' && foreuseEnMarche(etat)} />)
   }
 
   // Le fantôme de ce qu'on place.

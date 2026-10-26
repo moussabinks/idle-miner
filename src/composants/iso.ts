@@ -166,6 +166,9 @@ export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   generateur: cheminPublic('/images/batiments/generateur.svg'),
 }
 
+// (26/10) La foreuse en marche : le même dessin, avec la mèche qui tourne (une animation dans le SVG).
+export const IMAGE_FOREUSE_ACTIVE = cheminPublic('/images/batiments/foreuse-active.svg')
+
 // L'image à afficher pour un bâtiment. (25/10 : les dessins n'ont plus d'écritures, un bâtiment
 // retourné (miroir) utilise donc la même image, simplement retournée.)
 export function imageBatiment(id: IdBatiment): string {
