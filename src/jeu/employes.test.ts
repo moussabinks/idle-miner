@@ -409,7 +409,7 @@ describe('la pioche des mineurs suit la mine (23/10)', () => {
 })
 
 describe('remplacer un pousseur avec le recruteur (26/10)', () => {
-  it('la recrue prend son wagonnet ; pas pendant qu’il pousse', () => {
+  it('la recrue prend son wagonnet, même en route, là où il en était', () => {
     const etat = partie()
     etat.niveauMine = 4
     etat.argent = 1_000_000
@@ -422,8 +422,18 @@ describe('remplacer un pousseur avec le recruteur (26/10)', () => {
     expect(recrue.nom).not.toBe('Pousse')
     expect(recrue).toMatchObject({ role: 'pousseur', trajet: 'mine-marche', niveau: 1, chariot: 2 })
     expect(etat.trajets[0].pousseur).toBe(recrue.nom)
+    // (26/10) En route aussi : la nouvelle recrue reprend le wagonnet là où il était.
     recrue.etape = 'pousse'
-    expect(peutRemplacer(etat, 0)).toBe(false)
+    recrue.progression = 0.4
+    etat.trajets[0].etape = 'aller'
+    etat.trajets[0].distance = 3
+    etat.trajets[0].pousseur = recrue.nom
+    expect(peutRemplacer(etat, 0)).toBe(true)
+    remplacerMineur(etat, 0, aleatoireAvecGraine(9))
+    const suivante = etat.employes[0]
+    expect(suivante.nom).not.toBe(recrue.nom)
+    expect(suivante).toMatchObject({ etape: 'pousse', progression: 0.4 })
+    expect(etat.trajets[0]).toMatchObject({ etape: 'aller', distance: 3, pousseur: suivante.nom })
   })
 })
 
