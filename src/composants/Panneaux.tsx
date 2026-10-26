@@ -47,7 +47,9 @@ import { SUCCES } from '../jeu/succes'
 import { batimentPose } from '../jeu/village'
 import { ligneDe, trajetElectrique } from '../jeu/wagonnet'
 import type { Action } from '../usePartie'
+import { montrerRayon, rayonToujoursVisible } from '../rayonGenerateur'
 import { AlerteChariot } from './AlerteChariot'
+import { Interrupteur } from './Interrupteur'
 import { Amelioration, BoutonsAchat } from './Amelioration'
 import { Barre } from './Barre'
 import { useJeu } from './contexteJeu'
@@ -454,6 +456,7 @@ export function PanneauGenerateur(_props: PropsPanneau) {
   const verrouGenerateur = verrou(etat, 'generateur', g.niveau + 1)
   const aMettre = Math.min(disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
   const [onglet, setOnglet] = useState<'courant' | 'ameliorer'>('courant')
+  const [rayonVisible, setRayonVisible] = useState(rayonToujoursVisible)
   return (
     <div className="panneau-bat">
       <OngletsPanneau
@@ -470,6 +473,15 @@ export function PanneauGenerateur(_props: PropsPanneau) {
           <CarteEtat icone="⚡" titre={t('{bonus} de vitesse', { bonus: boostGenerateur(etat) })} etiquette={enMarche ? t('Allumé') : !g.allume ? t('Éteint') : t('Plus de redstone')} ok={enMarche}>
             <span className="discret">{t('Rayon : {n} cases (le cercle jaune sur la carte)', { n: rayonGenerateur(etat) })}</span>
           </CarteEtat>
+          {/* (26/10) Garder le cercle du rayon sur la carte, même le panneau fermé. */}
+          <Interrupteur
+            allume={rayonVisible}
+            texte={t('Afficher le rayon sur la carte')}
+            onBasculer={() => {
+              montrerRayon(!rayonVisible)
+              setRayonVisible(!rayonVisible)
+            }}
+          />
           <Barre valeur={g.carburant} max={Math.max(g.carburant, reserveMaxGenerateur(etat))} texte={`${BLOCS.redstone.emoji} ${minutes(g.carburant)} / ${minutes(reserveMaxGenerateur(etat))}`} couleur="rouge" />
           <div className="rangee">
             <button className={`btn btn-jaune rangee-grand ${g.allume && !enMarche && aMettre > 0 ? 'btn-attention' : ''}`} disabled={aMettre <= 0} onClick={() => jouer((e) => remplirGenerateur(e, Infinity))}>

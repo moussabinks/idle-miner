@@ -10,6 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenerateur } from '../jeu/generateur'
 import { fonderieEnMarche } from '../jeu/ateliers'
+import { rayonToujoursVisible } from '../rayonGenerateur'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
@@ -966,7 +967,8 @@ function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; bati
   const taille = BATIMENTS.generateur.taille
   const centre = place ? { x: fantome.x + taille / 2, y: fantome.y + taille / 2 } : centreGenerateur(etat)
   if (!centre) return null
-  const enVue = place || batimentActif === 'generateur'
+  // (26/10) ou toujours, si « Afficher le rayon » est coché dans le panneau du générateur
+  const enVue = place || batimentActif === 'generateur' || rayonToujoursVisible()
   const allume = generateurEnMarche(etat)
   // (23/10) Plus de cercle en permanence quand il donne du courant : seulement en le regardant.
   if (!enVue) return null
