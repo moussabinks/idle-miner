@@ -661,7 +661,13 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
           dans la liste qu'une fois sa carte montrée (sinon, on la voyait derrière avant). */}
       {onglet === 'personnel' &&
         (['mineur', 'pousseur'] as const).map((role) => {
-          const liste = etat.employes.map((e, index) => ({ e, index })).filter(({ e }) => e.role === role && e.nom !== recrue?.nom)
+          // (26/10) Les plus rares en haut (Mythique d'abord) ; à rareté égale, l'ordre d'embauche.
+          // (« index » reste sa place dans l'équipe : les actions s'en servent.)
+          const rang = (e: Employe) => LISTE_RARETES.indexOf(rareteDe(e).id)
+          const liste = etat.employes
+            .map((e, index) => ({ e, index }))
+            .filter(({ e }) => e.role === role && e.nom !== recrue?.nom)
+            .sort((a, b) => rang(b.e) - rang(a.e) || a.index - b.index)
           // (pas encore de trajet de wagonnet : pas de section pousseurs)
           if (role === 'pousseur' && liste.length === 0 && etat.trajets.length === 0) return null
           return (
