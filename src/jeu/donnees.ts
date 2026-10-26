@@ -891,3 +891,33 @@ NIVEAUX_FONDERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_FONDERIE[i
 NIVEAUX_JOAILLERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_JOAILLERIE[i]))
 NIVEAUX_RECRUTEUR.forEach((niveau, i) => rencherir(niveau.cout, PALIER_CHEF.recruteur[i]))
 NIVEAUX_MANAGER.forEach((niveau, i) => rencherir(niveau.cout, PALIER_CHEF.manager[i]))
+
+// (26/10, demandé par le propriétaire) Jamais plus de 1 000 d'un même matériau dans un prix (après
+// la hausse de la fin de partie) : au-delà, il fallait attendre trop longtemps devant le coffre
+// (le dernier générateur demandait 2 400 redstone).
+export const MATERIAUX_MAX = 1000
+
+function plafonner(cout: Cout): void {
+  for (const [bloc, n] of Object.entries(cout.materiaux)) cout.materiaux[bloc as IdBloc] = Math.min(MATERIAUX_MAX, n ?? 0)
+}
+
+for (const table of [
+  NIVEAUX_MINE,
+  NIVEAUX_COFFRE,
+  PIOCHES,
+  NIVEAUX_ASCENSEUR,
+  NIVEAUX_EMPLOYE,
+  NIVEAUX_POUSSEUR,
+  NIVEAUX_CHARIOT_POUSSEUR,
+  NIVEAUX_GENERATEUR,
+  NIVEAUX_FORAGE,
+  NIVEAUX_CHARIOT,
+  NIVEAUX_FONDERIE,
+  NIVEAUX_JOAILLERIE,
+  NIVEAUX_RECRUTEUR,
+  NIVEAUX_MANAGER,
+] as { cout: Cout }[][]) {
+  for (const niveau of table) plafonner(niveau.cout)
+}
+for (const pioche of PIOCHES) plafonner(pioche.reparation)
+for (const id of LISTE_BATIMENTS) plafonner(BATIMENTS[id].cout)
