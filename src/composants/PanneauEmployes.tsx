@@ -686,6 +686,10 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   // (26/10) Un chef qui vient de se débloquer et pas encore embauché (manager, recruteur) : « ! »
   const chefADebloque = (managerDebloque(etat) && !etat.manager.embauche) || (recruteurDebloque(etat) && etat.recruteur === 0)
   const employe = aLicencier !== null ? etat.employes[aLicencier] : undefined
+  // (26/10) « ! » dès qu'une amélioration est payable : la pioche ou la vitesse d'un employé, le
+  // chariot d'un pousseur ; et, aux Chefs, le manager ou le recruteur.
+  const employeAmeliorable = etat.employes.some((e) => peutAmeliorerEmploye(etat, e) || peutAgrandirChariot(etat, e))
+  const chefAmeliorable = peutAmeliorerManager(etat) || peutAmeliorerRecruteur(etat)
 
   return (
     <div className="panneau-bat panneau-personnel">
@@ -693,8 +697,8 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
         onglets={[
           // (26/10) « ! » aussi dès qu'une place de mineur est libre (la mine vient de descendre d'un
           // niveau : un mineur de plus), même sans encore l'argent pour l'embaucher
-          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 || prix !== null || prixEmbauche(etat, 'joaillier') !== null ? '!' : null },
-          { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne || chefADebloque ? '!' : null },
+          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 || prix !== null || prixEmbauche(etat, 'joaillier') !== null || employeAmeliorable ? '!' : null },
+          { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne || chefADebloque || chefAmeliorable ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
