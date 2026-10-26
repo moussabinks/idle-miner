@@ -706,8 +706,8 @@ export function prixRemplacement(etat: EtatJeu): number {
 
 export function peutRemplacer(etat: EtatJeu, index: number): boolean {
   const employe = etat.employes[index]
-  // (26/10) un joaillier aussi (un pousseur, non)
-  return !!employe && employe.role !== 'pousseur' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
+  // (26/10) un joaillier et un pousseur aussi (le pousseur : pas pendant qu'il pousse son wagonnet)
+  return !!employe && employe.etape !== 'pousse' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
 }
 
 export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoire): string[] {
@@ -718,6 +718,12 @@ export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoi
   const rarete = tirerRarete(etat, aleatoire)
   // (sa gemme en cours repart à l'entrée de la joaillerie : voir avancerJoaillerie)
   etat.employes[index] = { ...ancien, nom, rarete, blocsCasses: 0 }
+  // (26/10) Un pousseur : son wagonnet le connaît par son nom.
+  for (const trajet of etat.trajets) if (trajet.pousseur === ancien.nom) trajet.pousseur = nom
+  if (ancien.role === 'pousseur') {
+    if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend son wagonnet, avec son chariot.', { ancien: ancien.nom, nom })]
+    return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son wagonnet, avec son chariot.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
+  }
   if (ancien.role === 'joaillier') {
     if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend son établi.', { ancien: ancien.nom, nom })]
     return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son établi.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]

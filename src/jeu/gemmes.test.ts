@@ -23,6 +23,7 @@ import {
   secondesBoost,
   veille,
 } from './gemmes'
+import { bornesGemmes, prixEnGemmesPour } from './prixGemmes'
 import { acheterAvecGemmes, agrandirCoffre, avancerMine, capaciteCoffre, creerPartie, debitMine, peutPayer, peutPayerEnGemmes, vendreCoffre, type EtatJeu } from './mineur'
 import { mettreAJourXp, xpTotalePourNiveau } from './niveaux'
 import { partieDeTest } from './partieDeTest'
@@ -32,9 +33,31 @@ function partie(): EtatJeu {
 }
 
 describe('le prix en gemmes', () => {
-  it('(25/10) de 3 gemmes pour une petite amélioration à 10 pour la plus grosse', () => {
-    expect(prixEnGemmes({ materiaux: {} })).toBe(3)
-    expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(3)
+  // (26/10) Par proportionnalité : la moins chère des améliorations possibles 2 gemmes, la plus
+  // chère 10, les autres entre les deux.
+  it('(26/10) de 2 gemmes (la moins chère) à 10 (la plus chère), en proportion', () => {
+    const bornes = { min: 1000, max: 9000 }
+    expect(prixEnGemmes({ argent: 1000, materiaux: {} }, bornes)).toBe(2)
+    expect(prixEnGemmes({ argent: 9000, materiaux: {} }, bornes)).toBe(10)
+    expect(prixEnGemmes({ argent: 5000, materiaux: {} }, bornes)).toBe(6)
+    expect(prixEnGemmes({ argent: 2000, materiaux: {} }, bornes)).toBe(3)
+    // Hors des bornes (une réparation, un bâtiment...), on reste entre 2 et 10.
+    expect(prixEnGemmes({ argent: 50, materiaux: {} }, bornes)).toBe(2)
+    expect(prixEnGemmes({ argent: 90_000, materiaux: {} }, bornes)).toBe(10)
+  })
+
+  it('les bornes : la moins chère et la plus chère des améliorations possibles', () => {
+    const etat = partie()
+    etat.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
+    const bornes = bornesGemmes(etat)!
+    expect(bornes.min).toBeGreaterThan(0)
+    expect(bornes.max).toBeGreaterThanOrEqual(bornes.min)
+    expect(prixEnGemmesPour(etat, { argent: bornes.min, materiaux: {} })).toBe(2)
+  })
+
+  it('(25/10) sans bornes : de 2 gemmes pour une petite amélioration à 10 pour la plus grosse', () => {
+    expect(prixEnGemmes({ materiaux: {} })).toBe(2)
+    expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(2)
     expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(5)
     expect(prixEnGemmes({ argent: 10_000, materiaux: {} })).toBe(8)
     expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(10)

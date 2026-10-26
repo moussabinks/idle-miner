@@ -52,15 +52,17 @@ Avec la fonderie et la joaillerie (et les niveaux Saphir, Rubis, Diamant de la m
 | 🟡 | or (brut) | le même caillou, avec des pépites dorées qui brillent |
 | ⬜ | lingot de fer | les deux lingots gris (avant, le dessin de 🔩) |
 | 🟨 | lingot d'or | la pyramide de trois lingots dorés (avant, le dessin de 🟡) |
-| 🔷 | saphir | une gemme en losange, bleu roi (le diamant 💎 est bleu ciel, à cinq côtés) |
-| 🔺 | rubis | une gemme taillée en triangle, rouge cramoisi (la redstone 🔴 est rouge orangé, à six côtés) |
+| 🔷 | saphir | une gemme taillée en ovale, plus large que haute, bleu roi, avec sa table en octogone et huit facettes (le diamant 💎 est bleu ciel, à cinq côtés) |
+| 🔺 | rubis | une gemme taillée en cœur (des côtés droits), rouge cramoisi, avec sa table en petit cœur (la redstone 🔴 est rouge orangé, à six côtés) |
 | 📿 | collier d'émeraude | une chaîne de perles dorées et une émeraude en pendentif |
-| 🧿 | pendentif de saphir | un médaillon en or au cordon de cuir, un saphir au milieu |
-| 🫅 | couronne de rubis | une couronne en or, des perles rouges et trois rubis (👑 reste la couronne du classement) |
+| 🧿 | pendentif de saphir | un médaillon en or au cordon de cuir, un saphir ovale au milieu |
+| 🫅 | couronne de rubis | une couronne en or, des perles rouges et trois rubis en cœur (👑 reste la couronne du classement) |
 | 💍 | bague de diamant | un anneau en or et un diamant bleu ciel |
 | 🏭 | fonderie | un four en briques à la bouche qui rougeoie, sa cheminée qui fume, un lingot d'or |
 | 🏪 | joaillerie | une boutique à l'auvent violet, sa vitrine, une gemme en enseigne (💠 est déjà le diamant) |
 
 Les pépites (`_pepite()`, `_minerai_brut()`) sont entourées d'un petit creux sombre : sans lui, on
-ne les voyait plus à 16 px. Le saphir et le rubis ont aussi leur forme dans `outils/art/formes.mjs`
+ne les voyait plus à 16 px. Les facettes des gemmes taillées (saphir, rubis) sont coloriées par
+`_facettes()` : une facette par côté de la table, plus claire si elle regarde la lumière (en haut à
+gauche). Le saphir et le rubis ont aussi leur forme dans `outils/art/formes.mjs`
 (`minerai('saphir')`, `minerai('rubis')`).

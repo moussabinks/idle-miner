@@ -347,7 +347,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           </button>
         )}
         {/* Avec le recruteur : une nouvelle recrue prend sa place (même pioche), rareté au hasard. */}
-        {!pousseur && etat.recruteur > 0 && (
+        {etat.recruteur > 0 && (
           // (25/10) Le bouton du hasard : un dé qui roule (on tire une rareté au hasard). (26/10)
           // Turquoise uni, plus d'arc-en-ciel qui défile.
           <button className="btn btn-petit btn-hasard" disabled={!peutRemplacer(etat, index)} onClick={onRemplacer}>

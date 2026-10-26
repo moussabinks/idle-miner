@@ -28,7 +28,7 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 - (26/10) Dans chaque section, les employés sont rangés **du plus rare au plus commun** (Mythique en haut), puis dans l'ordre d'embauche.
 - (26/10) Deux sections : **⛏️ Mineurs** et **🛤️ Pousseurs**, chacune avec son équipe puis sa ligne pour recruter ; et (26/10, la grosse mise à jour des gemmes) une troisième, **💍 Joailliers *n* / *max***, dès que la joaillerie est posée.
 - **Recruter** (en bas de chaque section, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, un **pousseur** pour un trajet de wagonnet, ou (26/10) un **joaillier**. Pastille « ! » sur l'onglet Personnel dès qu'une place de mineur (ou, 26/10, un établi de joaillier) est libre (26/10 : chaque niveau de la mine en ouvre une ; avant, « + » seulement quand on pouvait la payer) ;
-- **🎲 Remplacer** (avec le recruteur) : un bouton turquoise uni avec un dé qui roule (`btn-hasard` ; 26/10 : avant, un arc-en-ciel qui défilait). La recrue n'apparaît dans la liste qu'une fois sa carte dévoilée : une nouvelle recrue prend la place du mineur (ou, 26/10, du joaillier : « prend son établi »), rareté au hasard.
+- **🎲 Remplacer** (avec le recruteur) : un bouton turquoise uni avec un dé qui roule (`btn-hasard` ; 26/10 : avant, un arc-en-ciel qui défilait). La recrue n'apparaît dans la liste qu'une fois sa carte dévoilée : une nouvelle recrue prend la place du mineur (ou, 26/10, du joaillier : « prend son établi » ; ou du pousseur : « prend son wagonnet », avec son chariot), rareté au hasard.
 - (26/10) Dans la carte du recruteur, un **tableau des raretés**, de Commun à Mythique : la chance d'en tomber sur une, ce que creuse une recrue de cette rareté (blocs/s, avec la pioche de départ, et ×1 à ×5) et son salaire toutes les 5 minutes.
 - **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort, et (26/10) dès qu'un chef est débloqué sans être embauché (le manager au niveau 3 de la mine, le recruteur au niveau 4) ; la tâche « 💼 Embauche le manager » passe alors devant.
 
@@ -155,7 +155,7 @@ Total : 190 000 $ (26/10 ; le 25/10 : 10 000, 25 000 et 50 000 $ aux paliers 4, 
 | Légendaire | × 3 | × 2,5 | orange `#f5a524` |
 | Mythique | × 5 | × 4 | rose `#ff4d8d` |
 
-- **🔄 Remplacer** un mineur ou (26/10) un joaillier (`remplacerMineur`, `prixRemplacement` ; pas un pousseur) : une nouvelle recrue (nom et rareté tirés au hasard) prend sa place, **avec sa pioche**, sans indemnités. Prix : le plus cher entre le quart de la dernière place possible (`PART_REMPLACEMENT`) et **200 $ × (niveau du joueur)²** (`PRIX_REMPLACEMENT_PAR_NIVEAU`).
+- **🔄 Remplacer** un mineur, ou (26/10) un joaillier ou un pousseur (`remplacerMineur`, `prixRemplacement` ; un pousseur garde son trajet, sa vitesse et son chariot, et pas pendant qu'il pousse son wagonnet) : une nouvelle recrue (nom et rareté tirés au hasard) prend sa place, **avec sa pioche**, sans indemnités. Prix : le plus cher entre le quart de la dernière place possible (`PART_REMPLACEMENT`) et **200 $ × (niveau du joueur)²** (`PRIX_REMPLACEMENT_PAR_NIVEAU`).
 
 ### 7. Le manager (palier 3 de la mine)
 

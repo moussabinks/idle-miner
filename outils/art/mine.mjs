@@ -600,17 +600,23 @@ function devant() {
   return t
 }
 
-// Les minerais de chaque niveau de la caisse : 1 pierre, charbon, fer ; 2 + redstone ;
-// 3 + or et émeraude ; 4 + diamant. (Le dernier de la liste est posé tout en haut du tas.)
+// Les minerais de chaque niveau de la caisse, un par niveau de la mine (26/10 : 7 niveaux) :
+// 1 pierre, charbon, fer ; 2 + redstone ; 3 + or ; 4 + émeraude ; 5 + saphir ; 6 + rubis ;
+// 7 + diamant. Chaque caisse garde les minerais les plus beaux du niveau d'avant, et le nouveau
+// minerai est le dernier de la liste : il est posé tout en haut du tas (et parfois dedans).
 const MINERAIS_CAISSE = [
   [],
   ['pierre', 'charbon', 'pierre', 'fer', 'charbon'],
   ['pierre', 'charbon', 'fer', 'redstone', 'redstone'],
-  ['charbon', 'fer', 'redstone', 'or', 'emeraude', 'or'],
-  ['fer', 'redstone', 'or', 'emeraude', 'diamant', 'diamant'],
+  ['charbon', 'fer', 'redstone', 'or', 'or'],
+  ['charbon', 'fer', 'redstone', 'or', 'emeraude', 'emeraude'],
+  ['fer', 'redstone', 'or', 'emeraude', 'saphir', 'saphir'],
+  ['redstone', 'or', 'emeraude', 'saphir', 'rubis', 'rubis'],
+  ['or', 'emeraude', 'saphir', 'rubis', 'diamant', 'diamant'],
 ]
 
-// La caisse de l'ascenseur, vide (0) ou pleine (1 à 4), dans le cadre de la mine.
+// La caisse de l'ascenseur, vide (0) ou pleine (1 à 7 : les minerais du niveau de la mine), dans
+// le cadre de la mine.
 function caisse(niveau) {
   const t = toileMine()
   const z0 = SOL
@@ -670,7 +676,7 @@ function svgRecadre(t, cadre) {
 
 export function mine() {
   const leFond = fond()
-  const caisses = [0, 1, 2, 3, 4].map(caisse)
+  const caisses = MINERAIS_CAISSE.map((_, niveau) => caisse(niveau))
   const cadre = caisses[0].cadre
   const t = leFond
   const p = (x, y, z) => t.pt(x, y, z).map(r1)

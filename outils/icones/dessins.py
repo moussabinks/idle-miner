@@ -282,63 +282,82 @@ def or_():
     return _minerai_brut(OR, brille=True)
 
 
-def _losange(cx, cy, l, h):
-    """Les sommets d'un losange (haut, droite, bas, gauche) de demi-largeur l et demi-hauteur h."""
-    return (cx, cy - h), (cx + l, cy), (cx, cy + h), (cx - l, cy)
+def _facettes(table, bord, couleurs, lumiere=225):
+    """Les facettes d'une gemme taillée, entre sa table (le polygone du milieu) et son bord : une
+    facette par côté de la table, coloriée selon qu'elle regarde la lumière (en haut à gauche,
+    « lumiere » en degrés, y vers le bas) ou pas. « couleurs » : de la plus claire à la plus sombre."""
+    cx = sum(x for x, _ in table) / len(table)
+    cy = sum(y for _, y in table) / len(table)
+    couches = []
+    n = len(table)
+    for i in range(n):
+        a, b = table[i], table[(i + 1) % n]
+        # On prolonge les deux arêtes loin vers l'extérieur, puis on coupe au bord de la gemme.
+        loin_a = (cx + (a[0] - cx) * 3, cy + (a[1] - cy) * 3)
+        loin_b = (cx + (b[0] - cx) * 3, cy + (b[1] - cy) * 3)
+        facette = inter(bord, poly(a, b, loin_b, loin_a))
+        # De quel côté regarde la facette (son milieu, vu du centre) ?
+        angle = math.degrees(math.atan2((a[1] + b[1]) / 2 - cy, (a[0] + b[0]) / 2 - cx))
+        ecart = abs((angle - lumiere + 180) % 360 - 180)  # 0 : face à la lumière, 180 : à l'ombre
+        couleur = couleurs[min(len(couleurs) - 1, int(ecart / 180 * len(couleurs)))]
+        couches.append((couleur, facette))
+    return couches
 
 
-def _saphir(cx=50, cy=50, l=37, h=44, eclat_=True):
-    # Le saphir : une gemme en losange (comme 🔷), d'un bleu roi profond. Un losange plus petit au
-    # milieu (la table), et quatre facettes autour : la plus claire en haut à gauche (la lumière),
-    # la plus sombre en bas à droite.
-    H, D, B, G = _losange(cx, cy, l, h)
-    h_, d_, b_, g_ = _losange(cx, cy + h * 0.05, l * 0.48, h * 0.5)
-    couches = [
-        ('#2f5bd9', poly(H, D, B, G)),
-        ('#8fb0ff', poly(H, h_, g_, G)),
-        ('#5a86f2', poly(H, D, d_, h_)),
-        ('#1b3796', poly(D, B, b_, d_)),
-        ('#2f5bd9', poly(G, g_, b_, B)),
-        ('#4874ec', poly(h_, d_, b_, g_)),
-        ('#ffffffb0', poly((cx - l * 0.1, cy - h * 0.3), (cx + l * 0.06, cy - h * 0.22), (cx - l * 0.3, cy + h * 0.02), (cx - l * 0.36, cy - h * 0.06))),
+def _saphir(cx=50, cy=52, l=42, h=36, eclat_=True):
+    # (26/10, redessiné) Le saphir : une gemme taillée en ovale (taille « coussin »), plus large que
+    # haute, d'un bleu roi profond. Au milieu, la table (un octogone) ; autour, huit facettes, les
+    # plus claires en haut à gauche (la lumière), les plus sombres en bas à droite. Le diamant 💎
+    # est bleu ciel et pointu en bas, l'émeraude 💚 un octogone vert plus haut que large.
+    bord = ellipse(cx, cy, l, h)
+    table = [(cx + l * 0.5 * math.cos(math.radians(a)), cy + h * 0.5 * math.sin(math.radians(a))) for a in range(0, 360, 45)]
+    couches = [('#3a66e0', bord)]
+    couches += _facettes(table, bord, ('#a4c0ff', '#6f96f7', '#3a66e0', '#2647b4', '#1a3285'))
+    couches += [
+        ('#4c78ec', poly(*table)),
+        # le reflet de la table (une bande blanche en biais), et un petit reflet sur le bord
+        ('#ffffffb0', inter(poly(*table), poly((cx - l * 0.3, cy - h * 0.6), (cx - l * 0.08, cy - h * 0.6), (cx - l * 0.36, cy + h * 0.3), (cx - l * 0.58, cy + h * 0.3)))),
+        ('#ffffffc0', ellipse(cx - l * 0.62, cy - h * 0.52, l * 0.16, h * 0.08, -32)),
     ]
     if eclat_:
-        couches.append(('#ffffffd0', eclat(cx + l * 0.7, cy - h * 0.7, l * 0.22)))
+        couches.append(('#ffffffe0', eclat(cx + l * 0.68, cy - h * 0.78, max(3, l * 0.2))))
     return couches
 
 
 @icone('🔷')
 def saphir():
     # (26/10) Le saphir, la gemme du niveau 5 de la mine.
-    return _saphir(50, 50, 38, 44)
+    return _saphir(50, 54, 43, 36)
 
 
-def _rubis(cx=50, cy=54, k=1.0, eclat_=True):
-    # Le rubis : une gemme taillée en triangle (comme 🔺), rouge cramoisi, tirant sur le rose
-    # (la redstone 🔴, elle, est un cristal rouge orangé à six côtés). Un triangle au milieu (la
-    # table), et trois facettes autour : claire à gauche, moyenne en bas, sombre à droite.
-    def pt(x, y):
-        return (cx + x * k, cy + y * k)
+def _rubis(cx=50, cy=52, k=1.0, eclat_=True):
+    # (26/10, redessiné) Le rubis : une gemme taillée en cœur, rouge cramoisi (la redstone 🔴 est
+    # un cristal rouge orangé à six côtés). Un cœur à facettes (des côtés droits, pas un cœur tout
+    # rond) : au milieu, la table (un petit cœur), et autour une facette par côté, claires en haut
+    # à gauche, sombres en bas à droite.
+    def pt(x, y, f=1.0):
+        return (cx + x * k * f, cy + (y + 4) * k * f - 4 * k)
 
-    A, B, C_ = pt(0, -46), pt(44, 32), pt(-44, 32)
-    a, b, c = pt(0, -16), pt(20, 18), pt(-20, 18)
-    couches = [
-        ('#d81b4a', poly(A, B, C_)),
-        ('#ff7095', poly(A, a, c, C_)),
-        ('#9c0f33', poly(A, B, b, a)),
-        ('#b8143e', poly(C_, c, b, B)),
-        ('#e8325f', poly(a, b, c)),
-        ('#ffffffb0', poly(pt(-4, -34), pt(2, -30), pt(-22, 8), pt(-28, 8))),
+    # le cœur, autour de (0, 0) : les deux bosses en haut, la pointe en bas
+    coeur = [(0, -22), (12, -38), (30, -40), (44, -26), (42, -6), (0, 42), (-42, -6), (-44, -26), (-30, -40), (-12, -38)]
+    bord = poly(*[pt(x, y) for x, y in coeur], arrondi=2 * k)
+    table = [pt(x, y, 0.5) for x, y in coeur]
+    couches = [('#e8304f', bord)]
+    couches += _facettes(table, bord, ('#ff7d93', '#f04a68', '#dc2848', '#a8142f', '#7c0d24'))
+    couches += [
+        ('#e8304f', poly(*table)),
+        ('#ffffffb0', inter(poly(*table), poly(pt(-22, -30), pt(-12, -30), pt(-20, 4), pt(-30, 4)))),
+        ('#ffffffc0', ellipse(*pt(-30, -30), 7 * k, 3.5 * k, -40)),
     ]
     if eclat_:
-        couches.append(('#ffffffd0', eclat(cx + 30 * k, cy - 34 * k, 8 * k)))
+        couches.append(('#ffffffe0', eclat(*pt(36, -40), 8 * k)))
     return couches
 
 
 @icone('🔺')
 def rubis():
     # (26/10) Le rubis, la gemme du niveau 6 de la mine.
-    return _rubis(50, 56, 1.0)
+    return _rubis(50, 52, 1.0)
 
 
 # ---------------------------------------------------------------------------
@@ -381,7 +400,7 @@ def bijou_emeraude():
 
 @icone('🧿')
 def bijou_saphir():
-    # L'amulette de saphir : un gros médaillon en or au cordon de cuir, un saphir en losange au
+    # L'amulette de saphir : un gros médaillon en or au cordon de cuir, un saphir ovale au
     # milieu, entouré d'un cercle de petites perles dorées.
     cordon = union(courbe('M 12 6 Q 26 22 42 24', 5), courbe('M 88 6 Q 74 22 58 24', 5))
     anneau = contour(cercle(50, 24, 7), 5)
@@ -389,7 +408,7 @@ def bijou_saphir():
     couches = [('#8a5a2c', cordon)] + r(anneau, OR, d=2, brillance=False) + r(medaillon, OR, brillance=False)
     couches.append((OR[2], contour(cercle(50, 62, 25), 2.5)))
     couches += [(OR[1], cercle(50 + 25 * math.cos(a), 62 + 25 * math.sin(a), 2.6)) for a in [i * math.pi / 6 for i in range(12)]]
-    couches += _saphir(50, 62, 15, 19, eclat_=False)
+    couches += _saphir(50, 62, 18, 15, eclat_=False)
     couches.append(('#ffffffd0', eclat(78, 36, 8)))
     return couches
 
@@ -397,7 +416,7 @@ def bijou_saphir():
 @icone('🫅')
 def bijou_rubis():
     # La couronne de rubis : une petite couronne en or, une perle rouge au bout de chaque pointe
-    # et trois rubis taillés en triangle sur son bandeau. (👑 reste la couronne du classement.)
+    # et trois rubis taillés en cœur sur son bandeau. (👑 reste la couronne du classement.)
     forme = poly((10, 84), (12, 32), (31, 54), (50, 22), (69, 54), (88, 32), (90, 84), arrondi=3)
     bandeau = rect(10, 64, 80, 20, 3)
     couches = r(forme, OR, brillance=True, bx=30, by=46) + r(bandeau, (OR[2], OR[1], '#a86c0c'), d=3, brillance=False)

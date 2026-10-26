@@ -39,7 +39,7 @@ import { infoNiveauMine, tirerBloc } from './mine'
 import { debloque, recordsDeDepart } from './niveaux'
 import { ascenseurAlimente, multiplicateurGenerateur } from './generateur'
 import { nombre, t } from './langue'
-import { boostActif, multiplicateurVentes, prixEnGemmes, type Boosts, type Quotidien } from './gemmes'
+import { boostActif, multiplicateurVentes, prixEnGemmes, type BornesGemmes, type Boosts, type Quotidien } from './gemmes'
 import { nouveauVillage, type Village } from './village'
 
 export type Inventaire = Partial<Record<IdBloc, number>>
@@ -382,9 +382,11 @@ export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
 // lieu de l'argent et des minerais. Toutes les actions d'achat (améliorer le coffre, une pioche,
 // un mineur...) marchent ainsi aussi en gemmes, sans rien changer dans chacune.
 let paiementEnGemmes = false
+// (26/10) Les bornes du prix en gemmes pendant cet achat (voir prixEnGemmes).
+let bornesEnCours: BornesGemmes | null = null
 
 export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
-  if (paiementEnGemmes) return (etat.gemmes ?? 0) >= prixEnGemmes(cout)
+  if (paiementEnGemmes) return (etat.gemmes ?? 0) >= prixEnGemmes(cout, bornesEnCours)
   return etat.argent >= (cout.argent ?? 0) && possede(etat, cout.materiaux)
 }
 
@@ -401,7 +403,7 @@ export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
 
 export function payer(etat: EtatJeu, cout: Cout): void {
   if (paiementEnGemmes) {
-    etat.gemmes = (etat.gemmes ?? 0) - prixEnGemmes(cout)
+    etat.gemmes = (etat.gemmes ?? 0) - prixEnGemmes(cout, bornesEnCours)
     return
   }
   etat.argent -= cout.argent ?? 0
@@ -410,25 +412,29 @@ export function payer(etat: EtatJeu, cout: Cout): void {
 
 // Fait un achat en payant avec des gemmes (l'action est celle d'un achat normal : améliorer le
 // coffre, embaucher...). Les conditions (palier de la mine, niveau du joueur) restent les mêmes.
-export function acheterAvecGemmes(action: () => string[]): string[] {
+// « bornes » : les prix de la moins chère et de la plus chère amélioration possibles AVANT
+// l'achat (bornesGemmes, dans prixGemmes.ts), pour que le prix payé soit celui affiché.
+export function acheterAvecGemmes(action: () => string[], bornes: BornesGemmes | null = null): string[] {
   paiementEnGemmes = true
+  bornesEnCours = bornes
   try {
     return action()
   } finally {
     paiementEnGemmes = false
+    bornesEnCours = null
   }
 }
 
 // L'action réussirait-elle en payant en gemmes ? On l'essaie sur une copie de la partie.
-export function possibleEnGemmes(etat: EtatJeu, action: (e: EtatJeu) => string[]): boolean {
+export function possibleEnGemmes(etat: EtatJeu, action: (e: EtatJeu) => string[], bornes: BornesGemmes | null = null): boolean {
   const copie = structuredClone(etat)
-  acheterAvecGemmes(() => action(copie))
+  acheterAvecGemmes(() => action(copie), bornes)
   return copie.gemmes < etat.gemmes
 }
 
 // Pourrait-on faire cet achat en gemmes ?
-export function peutPayerEnGemmes(etat: EtatJeu, cout: Cout): boolean {
-  return (etat.gemmes ?? 0) >= prixEnGemmes(cout)
+export function peutPayerEnGemmes(etat: EtatJeu, cout: Cout, bornes: BornesGemmes | null = null): boolean {
+  return (etat.gemmes ?? 0) >= prixEnGemmes(cout, bornes)
 }
 
 // ---------------------------------------------------------------------------

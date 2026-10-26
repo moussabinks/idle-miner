@@ -442,12 +442,13 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
         .filter(([, nombre]) => nombre > 0)
     case 'mine-foreuse': {
       // Dès que le réservoir n'est plus plein, il emporte tout le charbon du coffre : le surplus
-      // ira dans le chariot de la foreuse (28/10).
-      const nombre = besoinCharbon(etat) > 0 ? (etat.coffre.contenu.charbon ?? 0) : 0
+      // ira dans le chariot de la foreuse (28/10). (26/10) Sauf ce que le joueur garde 📌 : avant,
+      // le charbon gardé pour une amélioration partait quand même à la foreuse.
+      const nombre = besoinCharbon(etat) > 0 ? Math.max(0, (etat.coffre.contenu.charbon ?? 0) - (etat.coffre.garder?.charbon ?? 0)) : 0
       return nombre > 0 ? [['charbon', nombre]] : []
     }
     case 'mine-generateur': {
-      const nombre = Math.min(etat.coffre.contenu.redstone ?? 0, besoinRedstone(etat))
+      const nombre = Math.min(Math.max(0, (etat.coffre.contenu.redstone ?? 0) - (etat.coffre.garder?.redstone ?? 0)), besoinRedstone(etat))
       return nombre > 0 ? [['redstone', nombre]] : []
     }
     case 'foreuse-marche': {

@@ -12,7 +12,7 @@ import {
 } from './donnees'
 import { foreuseAlimentee, multiplicateurGenerateur } from './generateur'
 import { tirerBloc } from './mine'
-import { disponible, encaisser, payer, payerMateriaux, peutPayer, valeurDe, type EtatJeu, type Inventaire } from './mineur'
+import { disponible, encaisser, garderDansLeCoffre, payer, payerMateriaux, peutPayer, valeurDe, type EtatJeu, type Inventaire } from './mineur'
 import { multiplicateurProduction } from './gemmes'
 import { nombre, t } from './langue'
 import { batimentPose } from './village'
@@ -88,7 +88,8 @@ export function foreuseEnMarche(etat: EtatJeu): boolean {
 // sans dépasser son réservoir.
 export function remplirForeuse(etat: EtatJeu, nombre: number): string[] {
   if (!foreusePosee(etat)) return []
-  const mis = Math.min(nombre, disponible(etat, 'charbon'), placeCharbonForeuse(etat))
+  // (26/10) Ce que le joueur garde 📌 dans le coffre reste dans le coffre.
+  const mis = Math.min(nombre, Math.max(0, disponible(etat, 'charbon') - garderDansLeCoffre(etat, 'charbon')), placeCharbonForeuse(etat))
   if (mis <= 0) return placeCharbonForeuse(etat) === 0 && disponible(etat, 'charbon') > 0 ? [t('🔥 Le réservoir de la foreuse est plein.')] : []
   payerMateriaux(etat, { charbon: mis })
   etat.foreuse.carburant += mis * SECONDES_PAR_CHARBON

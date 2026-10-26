@@ -252,6 +252,23 @@ describe('les trajets des wagonnets', () => {
     expect(trajetDe(etat, 'mine-marche')?.chargement).toEqual({ charbon: 15 })
   })
 
+  // (26/10, bug du propriétaire) Le charbon gardé 📌 (pour une amélioration de la fonderie) ne part
+  // plus à la foreuse : avant, ce wagonnet emportait tout le charbon du coffre.
+  it('Mine → Foreuse : il laisse dans le coffre le charbon gardé', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    etat.village.batiments.push({ id: 'foreuse', x: 28, y: 18, miroir: false })
+    etat.coffre.contenu = { fer: 9 }
+    for (let x = 25; x <= 27; x++) poserSol(etat, 'rail', x, 20)
+    creerTrajet(etat, 'mine-foreuse')
+    etat.foreuse.carburant = 0
+    etat.coffre.contenu = { charbon: 30 }
+    etat.coffre.garder = { charbon: 25 }
+    expect(aCharger(etat, 'mine-foreuse')).toBe(5)
+    etat.coffre.garder = { charbon: 100 }
+    expect(aCharger(etat, 'mine-foreuse')).toBe(0)
+  })
+
   it('Foreuse → Marché : il vend le chariot de la foreuse', () => {
     const etat = partie()
     etat.niveauMine = 2

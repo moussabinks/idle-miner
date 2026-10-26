@@ -96,18 +96,28 @@ export function valeurEnDollars(cout: Cout): number {
   return (cout.argent ?? 0) + Object.entries(cout.materiaux).reduce((total, [bloc, n]) => total + (n ?? 0) * BLOCS[bloc as IdBloc].prix, 0)
 }
 
-// (25/10, demandé par le propriétaire) Le prix en gemmes d'un achat : de 3 gemmes (une petite
-// amélioration) à 10 gemmes (la plus grosse), soit 3 à 10 publicités. Avant, il suivait la racine
-// carrée du prix et montait à plus de 100 gemmes en fin de partie.
-// Il compte les chiffres du prix en dollars : 2,4 gemmes de plus chaque fois que le prix est
-// multiplié par 10 (100 $ → 3, 1 000 $ → 5, 10 000 $ → 8, à partir d'environ 51 000 $ → 10).
-// (25/10, économie revue : les gros achats coûtent moins cher, la mine niveau 5 vaut ~86 000 $.)
-export const GEMMES_MIN = 3
+// (26/10, demandé par le propriétaire) Le prix en gemmes d'un achat : de 2 gemmes à 10 gemmes
+// (2 à 10 publicités), **par proportionnalité** avec les améliorations que le joueur peut faire en
+// ce moment : la moins chère (en dollars) coûte 2 gemmes, la plus chère 10 gemmes, et les autres
+// entre les deux, selon leur prix (« bornes » : le prix de la moins chère et de la plus chère,
+// calculées par bornesGemmes dans prixGemmes.ts).
+// Sans bornes (ou une seule amélioration possible), on garde l'ancienne règle : 2,4 gemmes de plus
+// chaque fois que le prix est multiplié par 10, entre 2 et 10.
+export const GEMMES_MIN = 2
 export const GEMMES_MAX = 10
 const GEMMES_PAR_ZERO = 2.4
-export function prixEnGemmes(cout: Cout): number {
+
+export type BornesGemmes = { min: number; max: number } // en dollars
+
+export function prixEnGemmes(cout: Cout, bornes: BornesGemmes | null = null): number {
   const valeur = Math.max(1, valeurEnDollars(cout))
-  const prix = Math.round(GEMMES_MIN + GEMMES_PAR_ZERO * (Math.log10(valeur) - 2))
+  let prix: number
+  if (bornes && bornes.max > bornes.min) {
+    const part = (valeur - bornes.min) / (bornes.max - bornes.min) // 0 : la moins chère, 1 : la plus chère
+    prix = Math.round(GEMMES_MIN + part * (GEMMES_MAX - GEMMES_MIN))
+  } else {
+    prix = Math.round(3 + GEMMES_PAR_ZERO * (Math.log10(valeur) - 2))
+  }
   return Math.min(GEMMES_MAX, Math.max(GEMMES_MIN, prix))
 }
 

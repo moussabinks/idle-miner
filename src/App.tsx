@@ -7,7 +7,7 @@
 // Clavier : les flèches pour marcher (on peut les combiner), Espace pour sauter, Échap pour
 // fermer une fenêtre ou annuler ce qu'on est en train de poser.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { couperPourPub, sons } from './sons'
 import { Accueil } from './composants/Accueil'
 import { Aide } from './composants/Aide'
@@ -240,10 +240,28 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     setFantome(null)
   }
 
+  // (26/10, demandé par le propriétaire) Après avoir retiré un rail (ou un pavé), le suivant de la
+  // ligne est choisi tout seul : on retire toute une ligne d'affilée, sans la retoucher à chaque
+  // fois. On continue dans le même sens si on peut.
+  const sensRetrait = useRef<{ dx: number; dy: number } | null>(null)
   function retirerFantome() {
     const f = fantome
     if (!f) return
-    if (f.type === 'sol' && f.de) jouer((e) => retirerSol(e, f.sol, (f.de as Case).x, (f.de as Case).y))
+    if (f.type === 'sol' && f.de) {
+      const { x, y } = f.de
+      const apres = jouer((e) => retirerSol(e, f.sol, x, y))
+      const cases = new Set(f.sol === 'rail' ? apres.village.rails : apres.village.chemins)
+      const sens = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }]
+      const avant = sensRetrait.current
+      if (avant) sens.sort((a, b) => Number(b.dx === avant.dx && b.dy === avant.dy) - Number(a.dx === avant.dx && a.dy === avant.dy))
+      const suivant = sens.find((d) => cases.has(cleCase(x + d.dx, y + d.dy)))
+      if (suivant) {
+        sensRetrait.current = suivant
+        setFantome({ type: 'sol', sol: f.sol, x: x + suivant.dx, y: y + suivant.dy, de: { x: x + suivant.dx, y: y + suivant.dy } })
+        return
+      }
+    }
+    sensRetrait.current = null
     setFantome(null)
   }
 
@@ -381,6 +399,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         const b = batimentPose(etat.village, cible.id)
         if (b) setFantome({ type: 'batiment', id: b.id, x: b.x, y: b.y, miroir: b.miroir })
       } else if (cible?.type === 'rail' || cible?.type === 'chemin') {
+        sensRetrait.current = null
         setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
       }
       return
