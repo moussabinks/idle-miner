@@ -124,7 +124,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Fonderie** | (26/10) Atelier du niveau 5 : elle fond le fer et l'or en lingots, en brûlant du charbon. 5 niveaux. Voir [../batiments/fonderie.md](../batiments/fonderie.md). |
 | **Foreuse** | Machine du niveau 2 : au charbon, elle fore seule dans son chariot, plus vite dans le rayon du générateur. Une seule foreuse, 7 niveaux de forage et de chariot. |
 | **Gemme** 💎 | (25/10) La monnaie bonus (à ne pas confondre avec les gemmes de la mine, émeraude, saphir, rubis et diamant, que taille la joaillerie) : 1 par publicité, 3 par niveau du joueur, et le cadeau du jour. Elle paie n'importe quelle amélioration (sans argent ni minerais) ou un bonus. Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md). |
-| **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et accélère ce qui est dans un cercle autour de lui (12 à 36 cases). 7 niveaux. |
+| **Générateur** | Bâtiment du niveau 2 : il brûle de la redstone et accélère ce qui est dans un cercle autour de lui (12 à 28 cases). 7 niveaux. |
 | **Hors ligne** | Quand on rouvre un monde, le temps écoulé (8 h au plus) est rattrapé : mine, générateur, foreuse, mineurs, manager, fonderie et joailliers, wagonnets. Les clics non. La fenêtre « Bon retour, mineur ! » le résume, et une publicité peut le doubler. |
 | **Indemnités** | Ce que coûte un licenciement : 40 % du prix de la dernière place de son métier. |
 | **Joaillerie** | (26/10) Atelier du niveau 6 : ses joailliers (embauchés au Personnel) taillent les gemmes en bijoux. 5 niveaux (1 à 5 établis). Voir [../batiments/joaillerie.md](../batiments/joaillerie.md). |

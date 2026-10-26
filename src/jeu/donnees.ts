@@ -557,15 +557,17 @@ export const SECONDES_PAR_REDSTONE = 30
 // (23/10) « reserveMinutes » : la redstone qu'il peut garder au plus, en minutes de marche (5 min
 // au niveau 1, puis un peu plus à chaque niveau). Sans pousseur sur Mine → Générateur, il faut
 // donc revenir le remplir souvent.
-// (25/10) La clairière fait 40 × 40 cases : le rayon va de 12 à 30 cases.
+// (25/10) La clairière fait 40 × 40 cases. (26/10, demandé par le propriétaire) Le rayon va de 12
+// à 28 cases : au niveau max, posé près du milieu, il couvre toute la clairière (du milieu à un
+// coin : 20 × √2 ≈ 28 cases), sans la dépasser de beaucoup (avant : jusqu'à 36, bien plus grand).
 export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; reserveMinutes: number; cout: Cout }[] = [
   { rayon: 12, bonus: 0.3, reserveMinutes: 5, cout: { materiaux: {} } },
-  { rayon: 16, bonus: 0.4, reserveMinutes: 7, cout: { argent: 4000, materiaux: { fer: 80, redstone: 40 } } },
-  { rayon: 20, bonus: 0.5, reserveMinutes: 10, cout: { argent: 8000, materiaux: { fer: 150, redstone: 90 } } },
-  { rayon: 25, bonus: 0.6, reserveMinutes: 13, cout: { argent: 15000, materiaux: { fer: 250, redstone: 180 } } },
-  { rayon: 30, bonus: 0.75, reserveMinutes: 16, cout: { argent: 35000, materiaux: { fer: 400, redstone: 350 } } },
-  { rayon: 33, bonus: 0.85, reserveMinutes: 19, cout: { argent: 90000, materiaux: { fer: 600, redstone: 500 } } },
-  { rayon: 36, bonus: 1, reserveMinutes: 22, cout: { argent: 220000, materiaux: { redstone: 800, saphir: 40 } } },
+  { rayon: 15, bonus: 0.4, reserveMinutes: 7, cout: { argent: 4000, materiaux: { fer: 80, redstone: 40 } } },
+  { rayon: 18, bonus: 0.5, reserveMinutes: 10, cout: { argent: 8000, materiaux: { fer: 150, redstone: 90 } } },
+  { rayon: 21, bonus: 0.6, reserveMinutes: 13, cout: { argent: 15000, materiaux: { fer: 250, redstone: 180 } } },
+  { rayon: 24, bonus: 0.75, reserveMinutes: 16, cout: { argent: 35000, materiaux: { fer: 400, redstone: 350 } } },
+  { rayon: 26, bonus: 0.85, reserveMinutes: 19, cout: { argent: 90000, materiaux: { fer: 600, redstone: 500 } } },
+  { rayon: 28, bonus: 1, reserveMinutes: 22, cout: { argent: 220000, materiaux: { redstone: 800, saphir: 40 } } },
 ]
 // (23/10) Il ne se sert plus tout seul dans le coffre de la mine : sa redstone arrive par les
 // rails (un pousseur sur Mine → Générateur) ou à la main.
