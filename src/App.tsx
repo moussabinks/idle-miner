@@ -784,7 +784,21 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           />
         )}
         {trajetsOuverts && trajetsOuverts.length > 0 && (
-          <FenetreTrajet etat={etat} liaisons={trajetsOuverts} onValider={validerTrajets} onFermer={fermerTrajets} actionsRail={railTouche ? { onDeplacer: deplacerRailTouche, onRetirer: retirerRailTouche } : null} />
+          <FenetreTrajet
+            etat={etat}
+            liaisons={trajetsOuverts}
+            onValider={validerTrajets}
+            onFermer={fermerTrajets}
+            actionsRail={railTouche ? { onDeplacer: deplacerRailTouche, onRetirer: retirerRailTouche } : null}
+            onAllerAuPersonnel={
+              batimentPose(etat.village, 'employes')
+                ? () => {
+                    fermerTrajets()
+                    ouvrirBatiment('employes')
+                  }
+                : undefined
+            }
+          />
         )}
         {trajetsOuverts && trajetsOuverts.length === 0 && railTouche && <FenetreRail onDeplacer={deplacerRailTouche} onRetirer={retirerRailTouche} onFermer={fermerTrajets} />}
         {resumeAbsence && <FenetreAbsence resume={resumeAbsence} onFermer={recupererAbsence} />}

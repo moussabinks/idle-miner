@@ -23,6 +23,8 @@ import { BoutonsRail } from './FenetreRail'
 import { Interrupteur } from './Interrupteur'
 import { IMAGES_BATIMENTS } from './iso'
 import { OngletsPanneau } from './OngletsPanneau'
+import { AlerteChariot } from './AlerteChariot'
+import { analyseWagonnet } from '../jeu/production'
 
 type Props = {
   etat: EtatJeu
@@ -31,6 +33,8 @@ type Props = {
   onFermer: () => void
   // (30/10) On a touché un rail : de quoi le déplacer ou le retirer, en bas de la fenêtre.
   actionsRail?: { onDeplacer: () => void; onRetirer: () => void } | null
+  // (26/10) Ouvrir le Personnel (pour agrandir le chariot d'un pousseur qui ne suit pas)
+  onAllerAuPersonnel?: () => void
 }
 
 // Ce qu'il y a au départ du trajet (le coffre de la mine, ou le chariot de la foreuse).
@@ -79,7 +83,7 @@ function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
   )
 }
 
-export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail = null }: Props) {
+export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail = null, onAllerAuPersonnel }: Props) {
   // Les réglages en cours (pas encore validés), un par trajet. Un trajet pas encore créé est
   // proposé activé : c'est pour ça qu'on a posé les rails.
   const [reglages, setReglages] = useState<Partial<Record<IdLiaison, ReglageTrajet>>>(() =>
@@ -137,6 +141,8 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
 
       <DessinTrajet liaison={liaison} actif={reglage.actif} />
       <p className="trajet-description">{t('Un wagonnet {action}.', { action: t(info.description) })}</p>
+      {/* (26/10) Son chariot ne suit pas la production : l'alerte en haut, et un bouton vers le Personnel */}
+      <AlerteChariot analyse={analyseWagonnet(etat, liaison)} batiment={info.depart === 'foreuse' ? t('la foreuse') : t('la mine')} onAllerAuPersonnel={onAllerAuPersonnel} />
 
       <Interrupteur allume={reglage.actif} texte={reglage.actif ? t('Automatisation activée') : t('Automatisation arrêtée')} onBasculer={() => changer(liaison, { actif: !reglage.actif })} />
 
