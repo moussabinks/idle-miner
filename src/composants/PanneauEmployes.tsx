@@ -205,6 +205,13 @@ function Salaires({ etat, jouer }: Props) {
   )
 }
 
+// Le chariot de ce pousseur ne suit pas la production de son trajet (26/10).
+function pousseurNeSuitPas(etat: EtatJeu, employe: Employe): boolean {
+  if (employe.role !== 'pousseur' || !employe.trajet) return false
+  const analyse = analyseWagonnet(etat, employe.trajet)
+  return analyse !== null && analyse.pousseur?.nom === employe.nom && chariotTropPetit(analyse)
+}
+
 // La carte d'un employé : qui il est, ses chiffres, ses améliorations, et ses boutons.
 function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }: Props & { employe: Employe; index: number; onLicencier: () => void; onRemplacer: () => void }) {
   const pousseur = employe.role === 'pousseur'
@@ -225,7 +232,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
   const trajetsPossibles = LISTE_LIAISONS.filter((l) => l === employe.trajet || (ligneDe(etat, l) !== null && !trajetPris(etat, l)))
   // (26/10) Son chariot ne suit pas la production : l'alerte, ici, sur sa carte (et son chariot en avant)
   const analyse = pousseur && employe.trajet ? analyseWagonnet(etat, employe.trajet) : null
-  const chariotNeSuitPas = analyse !== null && analyse.pousseur?.nom === employe.nom && chariotTropPetit(analyse)
+  const chariotNeSuitPas = pousseurNeSuitPas(etat, employe)
 
   return (
     <article className={`carte carte-employe ${paye && !chariotNeSuitPas ? '' : 'carte-alerte'}`}>
@@ -686,9 +693,12 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   // (26/10) Un chef qui vient de se débloquer et pas encore embauché (manager, recruteur) : « ! »
   const chefADebloque = (managerDebloque(etat) && !etat.manager.embauche) || (recruteurDebloque(etat) && etat.recruteur === 0)
   const employe = aLicencier !== null ? etat.employes[aLicencier] : undefined
-  // (26/10) « ! » dès qu'une amélioration est payable : la pioche ou la vitesse d'un employé, le
-  // chariot d'un pousseur ; et, aux Chefs, le manager ou le recruteur.
-  const employeAmeliorable = etat.employes.some((e) => peutAmeliorerEmploye(etat, e) || peutAgrandirChariot(etat, e))
+  // (26/10) « ! » dès qu'une amélioration est payable : la pioche d'un mineur ; et, aux Chefs, le
+  // manager ou le recruteur. (27/10, demandé par le propriétaire) Un pousseur, seulement s'il en a
+  // besoin : son chariot ne suit pas la production (sinon, pas de « ! » pour rien).
+  const employeAmeliorable = etat.employes.some((e) =>
+    e.role === 'pousseur' ? pousseurNeSuitPas(etat, e) && (peutAmeliorerEmploye(etat, e) || peutAgrandirChariot(etat, e)) : peutAmeliorerEmploye(etat, e),
+  )
   const chefAmeliorable = peutAmeliorerManager(etat) || peutAmeliorerRecruteur(etat)
 
   return (
