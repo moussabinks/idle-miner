@@ -19,7 +19,18 @@ export type TraceRail = {
 
 // Le sens de départ : on s'éloigne du bâtiment le plus proche (on part de la mine vers le marché,
 // par exemple).
+// (26/10, demandé par le propriétaire) Juste à côté d'un rail déjà posé, on continue sa ligne : la
+// flèche part dans le sens du rail voisin vers cette case (le bout d'une ligne d'abord).
 export function sensDeDepart(village: Village, c: Case): Sens {
+  const rails = new Set(village.rails)
+  const directions: Sens[] = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]
+  const voisins = directions.filter((d) => rails.has(`${c.x - d.x},${c.y - d.y}`))
+  if (voisins.length > 0) {
+    // Un rail qui n'a qu'un voisin est un bout de ligne : c'est lui qu'on prolonge.
+    const nbVoisins = (x: number, y: number) => directions.filter((d) => rails.has(`${x + d.x},${y + d.y}`)).length
+    const bout = voisins.find((d) => nbVoisins(c.x - d.x, c.y - d.y) <= 1) ?? voisins[0]
+    return bout
+  }
   let meilleur: { dx: number; dy: number; d: number } | null = null
   for (const b of village.batiments) {
     const t = BATIMENTS[b.id].taille

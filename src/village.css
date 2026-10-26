@@ -73,8 +73,18 @@
   pointer-events: none;
 }
 
-.foret-devant {
+.foret-devant,
+.foret-lisiere {
   z-index: 90000;
+}
+
+/* (26/10) En édition, la lisière de devant devient translucide : on voit les rails derrière. */
+.foret-lisiere {
+  transition: opacity 0.25s;
+}
+
+.foret-lisiere.lisiere-translucide {
+  opacity: 0.3;
 }
 
 .tuile-foret {
