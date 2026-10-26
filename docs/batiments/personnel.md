@@ -27,6 +27,7 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 - (26/10) Deux sections : **⛏️ Mineurs** et **🛤️ Pousseurs**, chacune avec son équipe puis sa ligne pour recruter.
 - **Recruter** (en bas de chaque section, avec les chiffres de la recrue : blocs/s ou cases/s, places du chariot, salaire) : un **mineur**, ou un **pousseur** pour un trajet de wagonnet. Pastille « ! » sur l'onglet Personnel dès qu'une place de mineur est libre (26/10 : chaque niveau de la mine en ouvre une ; avant, « + » seulement quand on pouvait la payer) ;
 - **🎲 Remplacer** (avec le recruteur) : un bouton turquoise uni avec un dé qui roule (`btn-hasard` ; 26/10 : avant, un arc-en-ciel qui défilait). La recrue n'apparaît dans la liste qu'une fois sa carte dévoilée : une nouvelle recrue prend la place du mineur, rareté au hasard.
+- (26/10) Dans la carte du recruteur, un **tableau des raretés**, de Commun à Mythique : la chance d'en tomber sur une, ce que creuse une recrue de cette rareté (blocs/s, avec la pioche de départ, et ×1 à ×5) et son salaire toutes les 5 minutes.
 - **💼 Chefs** : le **manager** et le **recruteur**. Pastille « ! » si le manager n'a plus assez d'argent ou s'il dort, et (26/10) dès qu'un chef est débloqué sans être embauché (le manager au niveau 3 de la mine, le recruteur au niveau 4) ; la tâche « 💼 Embauche le manager » passe alors devant.
 
 **Deux métiers** : les **mineurs** ne font que creuser (la caisse de l'ascenseur remonte ce qu'ils cassent). Les **pousseurs** ne creusent jamais : ils poussent le wagonnet d'un seul trajet.

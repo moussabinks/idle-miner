@@ -899,4 +899,10 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Le wagonnet ne suit pas : agrandis le chariot de {nom}': 'The cart can’t keep up: upgrade {nom}’s cart',
   'Le wagonnet ne suit pas : agrandis le chariot de son pousseur': 'The cart can’t keep up: upgrade its pusher’s cart',
   'Son chariot ne suit pas : il emporte {a} blocs/s, il en sort {b}. Agrandis-le !': 'Their cart can’t keep up: it carries {a} blocks/s, {b} come out. Upgrade it!',
+  // (26/10) Le tableau des raretés du recruteur
+  'Chance': 'Chance',
+  'Les raretés': 'Rarities',
+  'Minage': 'Mining',
+  'Rareté': 'Rarity',
+  '/ 5 min': '/ 5 min',
 }

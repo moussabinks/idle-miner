@@ -132,13 +132,41 @@ function EtiquetteRarete({ employe }: { employe: Employe }) {
 function Chances({ etat, apercu }: { etat: EtatJeu; apercu: boolean }) {
   // Sans recruteur, on montre ce qu'il donnera dès son embauche.
   const chances = apercu ? NIVEAUX_RECRUTEUR[0].chances : chancesRecrutement(etat)
+  // (26/10) Un tableau bien rangé, de la plus commune à la plus rare : la chance de tomber dessus,
+  // ce que creuse une recrue de cette rareté (avec la pioche de départ), et son salaire.
   return (
-    <div className="rangee chances-rarete">
-      {LISTE_RARETES.map((id) => (
-        <span key={id} className="etiquette" style={{ background: RARETES[id].couleur }}>
-          {t(RARETES[id].nom)} {nombre(chances[id], 2)} %
+    <div className="tableau-raretes" role="table" aria-label={t('Les raretés')}>
+      <div className="tableau-raretes-ligne tableau-raretes-entete" role="row">
+        <span role="columnheader">{t('Rareté')}</span>
+        <span role="columnheader">
+          <span className="tableau-raretes-icone">🎲 </span>
+          {t('Chance')}
         </span>
-      ))}
+        <span role="columnheader">
+          <span className="tableau-raretes-icone">⛏️ </span>
+          {t('Minage')}
+        </span>
+        <span role="columnheader">💵 {t('/ 5 min')}</span>
+      </div>
+      {LISTE_RARETES.map((id) => {
+        const recrue = apercuRecrue('mineur', id)
+        return (
+          <div key={id} className="tableau-raretes-ligne" role="row">
+            <span role="cell">
+              <span className="etiquette" style={{ background: RARETES[id].couleur }}>
+                {t(RARETES[id].nom)}
+              </span>
+            </span>
+            <span role="cell">
+              <strong>{nombre(chances[id], 2)} %</strong>
+            </span>
+            <span role="cell">
+              {t('{n} blocs/s', { n: parSeconde(recrue.vitesse) })} <small className="discret tableau-raretes-fois">×{nombre(RARETES[id].rendement, 1)}</small>
+            </span>
+            <span role="cell">{nombre(recrue.salaire)} $</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
