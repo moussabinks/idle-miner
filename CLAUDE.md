@@ -28,7 +28,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - `src/composants/` : composants React. Ils lisent l'état du jeu et appellent ses actions, et ne contiennent pas de règles du jeu. `useJeu()` (`contexteJeu.ts`) donne la partie, `jouer`, et `regarderPub`.
 - `src/styles/` : le style (voir « Le style » plus bas). `src/village.css` : le dessin du village.
 - L'aléatoire passe par une fonction injectable, pour qu'on puisse avoir des tests déterministes.
-- Garder un **bot de simulation** dans les tests (`src/jeu/bot.ts`) : il joue une partie complète et vérifie l'équilibrage. Repères (25/10, début rapide et paliers) : niveau 2 de la mine en 2 à 10 minutes, rails posés en moins de 10 minutes et électrifiés en moins de 1 h 30, niveau 5 en 1 h à 3 h, niveau 7 en 3 h à 7 h (26/10 ; médianes : le bot y arrive en ~5 h ; un vrai joueur met plutôt 2 h 30 à 4 h pour le niveau 5 ; 25/10, économie revue : avant 3 h à 6 h).
+- Garder un **bot de simulation** dans les tests (`src/jeu/bot.ts`) : il joue une partie complète et vérifie l'équilibrage. Repères (25/10, début rapide et paliers) : niveau 2 de la mine en 2 à 10 minutes, rails posés en moins de 10 minutes et électrifiés en moins de 1 h 30, niveau 5 en 1 h à 3 h, niveau 7 en 7 h à 12 h (26/10, hausse × 2 à × 3 aux paliers 5 à 7 : `HAUSSE_PAR_PALIER` ; médianes : le bot, qui ne tente pas sa chance au recruteur, y arrive en ~9 h 50 ; un vrai joueur met plutôt 2 h 30 à 4 h pour le niveau 5 ; 25/10, économie revue : avant 3 h à 6 h).
 
 ## Conventions
 

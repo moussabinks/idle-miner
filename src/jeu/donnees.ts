@@ -854,3 +854,38 @@ export const NIVEAU_JOUEUR_POUR = {
   rails: 2, // poser des rails (et donc créer des trajets de wagonnets)
   mine: [1, 3, 5, 7, 9, 11, 13], // NIVEAUX_MINE : les 7 paliers (26/10)
 }
+
+// ---------------------------------------------------------------------------
+// (26/10, demandé par le propriétaire) La hausse de la fin de partie
+// ---------------------------------------------------------------------------
+// À partir du palier 5 de la mine, le joueur a eu le temps de « tenter sa chance » au recruteur :
+// ses mineurs sont rares, il gagne bien plus. Sans hausse, il finissait le jeu trop vite. Tout ce
+// qui demande le palier 5, 6 ou 7 (descendre la mine, améliorer le coffre, l'ascenseur, les
+// pioches, les employés, les chariots, le générateur, la foreuse, la fonderie, la joaillerie, les
+// chefs) coûte donc plus cher : × 2 au palier 5, × 2,5 au palier 6, × 3 au palier 7, argent et
+// minerais. Les prix écrits dans les tables plus haut sont ceux d'AVANT cette hausse.
+export const HAUSSE_PAR_PALIER: Record<number, number> = { 5: 2, 6: 2.5, 7: 3 }
+
+// Un joli nombre rond : 2 chiffres qui comptent (37 500 → 38 000 ; 175 → 180).
+function arrondiJoli(n: number): number {
+  if (n < 100) return Math.round(n)
+  const puissance = Math.pow(10, Math.floor(Math.log10(n)) - 1)
+  return Math.round(n / puissance) * puissance
+}
+
+function rencherir(cout: Cout, palier: number): void {
+  const facteur = HAUSSE_PAR_PALIER[palier] ?? 1
+  if (facteur === 1) return
+  if (cout.argent) cout.argent = arrondiJoli(cout.argent * facteur)
+  for (const [bloc, n] of Object.entries(cout.materiaux)) cout.materiaux[bloc as IdBloc] = arrondiJoli((n ?? 0) * facteur)
+}
+
+// Les tables où la case « i » demande le palier i + 1 de la mine.
+for (const table of [NIVEAUX_MINE, NIVEAUX_COFFRE, PIOCHES, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT] as { cout: Cout }[][]) {
+  table.forEach((niveau, i) => rencherir(niveau.cout, i + 1))
+}
+// Les ateliers et les chefs ont leurs propres paliers.
+NIVEAUX_FONDERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_FONDERIE[i]))
+NIVEAUX_JOAILLERIE.forEach((niveau, i) => rencherir(niveau.cout, PALIER_JOAILLERIE[i]))
+NIVEAUX_RECRUTEUR.forEach((niveau, i) => rencherir(niveau.cout, PALIER_CHEF.recruteur[i]))
+NIVEAUX_MANAGER.forEach((niveau, i) => rencherir(niveau.cout, PALIER_CHEF.manager[i]))

@@ -30,10 +30,12 @@ describe('bot de simulation (équilibrage)', () => {
 
   // (26/10 : la grosse mise à jour, saphir au niveau 5, rubis au 6, diamant au 7) La fin de partie
   // prend quelques heures de plus.
-  it(`arrive au niveau ${NIVEAU_MINE_MAX} en 3 h à 7 h (médiane)`, () => {
+  // (26/10, la hausse de la fin de partie : × 2 à × 3 aux paliers 5 à 7) Le bot ne tente pas sa
+  // chance au recruteur : un joueur avec des mineurs rares ira plus vite. Avant : 3 h à 7 h.
+  it(`arrive au niveau ${NIVEAU_MINE_MAX} en 7 h à 12 h (médiane)`, () => {
     const m = mediane(parties.map((p) => minutes(p.temps)))
-    expect(m).toBeGreaterThanOrEqual(3 * 60)
-    expect(m).toBeLessThanOrEqual(7 * 60)
+    expect(m).toBeGreaterThanOrEqual(7 * 60)
+    expect(m).toBeLessThanOrEqual(12 * 60)
   })
 
   it('fait tourner la fonderie et la joaillerie', () => {
