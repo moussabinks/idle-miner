@@ -4,14 +4,14 @@
 // automatiser (rails, wagonnet, pousseur, mineurs, générateur) ; enfin les améliorations les
 // plus proches. Les urgences passent devant (salaires, coffre plein).
 
-import { BATIMENTS, BLOCS, COUT_RAIL, LISTE_BATIMENTS, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { BATIMENTS, BLOCS, COUT_RAIL, LISTE_BATIMENTS, PRIX_MANAGER, type Cout, type IdBatiment, type IdBloc } from './donnees'
 import { batimentDebloque } from './batiments'
-import { nbSansSalaire } from './employes'
+import { coutChariotPousseur, managerDebloque, nbSansSalaire } from './employes'
 import { generateurPose } from './generateur'
-import { disponible, nbDansCoffre, peutPayer, type EtatJeu } from './mineur'
+import { disponible, nbDansCoffre, peutPayer, prochainNiveauAscenseur, type EtatJeu } from './mineur'
 import { achatsPossibles, type AchatPossible } from './objectifs'
-import { analyseWagonnet, chariotTropPetit } from './production'
-import { railsDebloques } from './niveaux'
+import { analyseAscenseur, analyseWagonnet, chariotTropPetit } from './production'
+import { debloque, railsDebloques } from './niveaux'
 import { batimentPose } from './village'
 import { ligneDe, railsAlimentes, trajetDe } from './wagonnet'
 import { t } from './langue'
@@ -91,6 +91,37 @@ function urgences(etat: EtatJeu): Mission[] {
   return liste
 }
 
+// (26/10) Ce qui freine la production, du plus grave au moins grave : ces tâches passent juste
+// après les urgences (le joueur sait quoi faire pour gagner plus).
+//   1. l'ascenseur trop petit : les mineurs creusent plus que la caisse ne remonte ;
+//   2. le chariot d'un pousseur trop petit : le wagonnet vend moins que ce qui sort ;
+//   3. le manager débloqué mais pas embauché : sans lui, les mineurs s'arrêtent dès que leur
+//      salaire est fini.
+function goulots(etat: EtatJeu, dejaProposes: Set<string>): Mission[] {
+  const liste: Mission[] = []
+  const ascenseur = prochainNiveauAscenseur(etat)
+  const mineurs = etat.employes.some((e) => e.role === 'mineur')
+  if (mineurs && ascenseur && analyseAscenseur(etat).tropLent && debloque(etat, 'ascenseur', etat.ascenseur.niveau)) {
+    dejaProposes.add(cleAchat('puits', ascenseur.cout))
+    liste.push(missionAchat(etat, 'goulot-ascenseur', '🛗', t('Ascenseur trop petit : améliore-le'), ascenseur.cout, { stand: 'puits' }))
+  }
+  for (const liaison of ['mine-marche', 'foreuse-marche'] as const) {
+    const analyse = analyseWagonnet(etat, liaison)
+    if (!analyse?.pousseur || !chariotTropPetit(analyse)) continue
+    const cout = coutChariotPousseur(etat, analyse.pousseur)
+    if (cout && debloque(etat, 'chariotPousseur', (analyse.pousseur.chariot ?? 0) + 1)) {
+      dejaProposes.add(cleAchat('employes', cout))
+      liste.push(missionAchat(etat, `goulot-chariot-${liaison}`, '🚃', t('Le wagonnet ne suit pas : agrandis le chariot de {nom}', { nom: analyse.pousseur.nom }), cout, { stand: 'employes' }))
+    }
+  }
+  if (managerDebloque(etat) && !etat.manager.embauche && batimentPose(etat.village, 'employes')) {
+    const prix: Cout = { argent: PRIX_MANAGER, materiaux: {} }
+    dejaProposes.add(cleAchat('employes', prix))
+    liste.push(missionAchat(etat, 'goulot-manager', '💼', t('Embauche le manager : il paiera les salaires'), prix, { stand: 'employes' }))
+  }
+  return liste
+}
+
 // Les premiers pas (25/10) : casser des blocs, les vendre depuis la mine, embaucher un mineur.
 function premiersPas(etat: EtatJeu): Mission | null {
   if (etat.stats.argentGagne === 0) {
@@ -145,27 +176,24 @@ function automatisation(etat: EtatJeu): Mission | null {
   return null
 }
 
-// Le chariot de ce pousseur est trop petit : son wagonnet ne suit pas, la production s'entasse.
-function chariotBloque(etat: EtatJeu, nom: string): boolean {
-  const pousseur = etat.employes.find((e) => e.nom === nom && e.role === 'pousseur')
-  if (!pousseur?.trajet) return false
-  const analyse = analyseWagonnet(etat, pousseur.trajet)
-  return analyse?.pousseur?.nom === nom && chariotTropPetit(analyse)
+// Un achat reconnu par son bâtiment et son prix.
+function cleAchat(stand: IdBatiment | null, cout: Cout): string {
+  return `${stand}|${JSON.stringify(cout)}`
 }
 
 // Les améliorations les plus proches (celles dont on a déjà la plus grande part de l'argent).
 // (25/10, demandé par le propriétaire) D'abord les grosses : la mine, le coffre, l'ascenseur, la
 // foreuse, le générateur, les pioches, embaucher... Les améliorations d'UN employé (« Chariot de
 // Noah », « Vitesse de Noah ») seulement quand il n'y a plus rien d'autre, sauf le chariot d'un
-// pousseur qui bloque la production : celui-là passe devant.
-function ameliorations(etat: EtatJeu): Mission[] {
+// pousseur qui bloque la production : celui-là est dans goulots().
+// « dejaProposes » : les prix des tâches de goulots() (« stand|prix »), pour ne pas les proposer deux fois.
+function ameliorations(etat: EtatJeu, dejaProposes: Set<string>): Mission[] {
   const part = (cout: Cout) => (cout.argent ? Math.min(1, etat.argent / cout.argent) : 1)
   const parProximite = (a: AchatPossible, b: AchatPossible) => Number(peutPayer(etat, b.cout)) - Number(peutPayer(etat, a.cout)) || part(b.cout) - part(a.cout)
-  const achats = achatsPossibles(etat).filter((a) => !a.construction)
-  const urgents = achats.filter((a) => a.chariotPousseur && a.employe && chariotBloque(etat, a.employe))
+  const achats = achatsPossibles(etat).filter((a) => !a.construction && !dejaProposes.has(cleAchat(a.stand, a.cout)))
   const grosses = achats.filter((a) => !a.employe).sort(parProximite)
-  const petites = grosses.length > 0 ? [] : achats.filter((a) => a.employe && !urgents.includes(a)).sort(parProximite)
-  return [...urgents, ...grosses, ...petites].map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
+  const petites = grosses.length > 0 ? [] : achats.filter((a) => a.employe).sort(parProximite)
+  return [...grosses, ...petites].map((a) => missionAchat(etat, `ameliorer-${a.nom}`, '⬆️', a.nom, a.cout, { stand: a.stand }))
 }
 
 // (25/10) Plus de tâche « Niveau X : ce qu'il débloque » : la liste ne montre que des choses
@@ -175,13 +203,16 @@ function ameliorations(etat: EtatJeu): Mission[] {
 // (« économise pour le sac » qui devenait « récupère 40 fer »). Les nouvelles ne prennent que les
 // places libres. Seules les urgences passent toujours devant.
 export function missions(etat: EtatJeu, avant: string[] = []): Mission[] {
-  const toutes = [...urgences(etat), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat)].filter((m): m is Mission => m !== null)
+  const dejaProposes = new Set<string>()
+  const toutes = [...urgences(etat), ...goulots(etat, dejaProposes), premiersPas(etat), prochainBatiment(etat), automatisation(etat), ...ameliorations(etat, dejaProposes)].filter((m): m is Mission => m !== null)
   // Pas deux fois la même.
   const vues = new Set<string>()
   const candidates = toutes.filter((m) => !vues.has(m.id) && vues.add(m.id))
-  const urgentes = candidates.filter((m) => ID_URGENCES.includes(m.id))
-  const gardees = avant.map((id) => candidates.find((m) => m.id === id && !ID_URGENCES.includes(m.id))).filter((m): m is Mission => m !== undefined)
-  const nouvelles = candidates.filter((m) => !ID_URGENCES.includes(m.id) && !avant.includes(m.id))
+  // (26/10) Les urgences, puis ce qui freine la production (goulots), passent toujours devant.
+  const devant = (m: Mission) => ID_URGENCES.includes(m.id) || m.id.startsWith('goulot-')
+  const urgentes = candidates.filter(devant)
+  const gardees = avant.map((id) => candidates.find((m) => m.id === id && !devant(m))).filter((m): m is Mission => m !== undefined)
+  const nouvelles = candidates.filter((m) => !devant(m) && !avant.includes(m.id))
   return [...urgentes, ...gardees, ...nouvelles].slice(0, NOMBRE_MAX)
 }
 

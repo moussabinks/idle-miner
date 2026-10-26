@@ -14,12 +14,16 @@ import { blocsParSecondeEmploye, managerAuTravail, managerPaieLesSalaires, salai
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitMine, type EtatJeu, type Employe } from './mineur'
+import { analyseWagonnet, chariotTropPetit } from './production'
 
 export type Revenu = {
   mine: number
   mineurs: number
   foreuse: number
   total: number
+  // (26/10) Le wagonnet du coffre ne suit pas : il vend moins que ce qui sort de la mine. Le
+  // « total » compte alors ce qu'il vend vraiment (le reste s'entasse dans le coffre).
+  limiteParWagonnet: boolean
 }
 
 // Ce que rapporte un mineur par seconde, avant son salaire.
@@ -39,13 +43,31 @@ function revenuMineurs(etat: EtatJeu): number {
   return total
 }
 
+// Les salaires payés en ce moment, par seconde (employés au travail et manager).
+function salairesParSeconde(etat: EtatJeu): number {
+  let total = 0
+  for (const employe of etat.employes) if (employe.tempsPaye > 0) total += salaireEmploye(employe) / SECONDES_PAR_PAIE
+  if (managerAuTravail(etat)) total += salaireManager() / SECONDES_PAR_PAIE
+  return total
+}
+
 export function revenuParSeconde(etat: EtatJeu): Revenu {
   // Coffre plein : la mine et les mineurs s'arrêtent.
   const plein = coffrePlein(etat)
   const mine = plein ? 0 : debitMine(etat) * valeurMoyenneBloc(etat.niveauMine)
   const mineurs = plein ? Math.min(0, revenuMineurs(etat)) : revenuMineurs(etat)
   const foreuse = foreuseEnMarche(etat) ? vitesseForage(etat) * valeurMoyenneBloc(etat.niveauMine) : 0
-  return { mine, mineurs, foreuse, total: mine + mineurs + foreuse }
+  // (26/10) Avant, le « +X/s » comptait tout ce qui sort de la mine, même quand le wagonnet ne
+  // suivait pas : le joueur se croyait riche, mais l'argent restait dans le coffre (et au retour
+  // d'une absence, il ne pouvait pas payer les salaires). Avec un wagonnet automatique, on ne
+  // compte que ce qu'il vend vraiment.
+  const wagonnet = analyseWagonnet(etat, 'mine-marche')
+  const salaires = salairesParSeconde(etat)
+  const brutMineurs = plein ? 0 : etat.employes.filter((e) => e.tempsPaye > 0).reduce((total, e) => total + revenuBrutEmploye(etat, e), 0)
+  const sortDeLaMine = mine + brutMineurs
+  const limiteParWagonnet = chariotTropPetit(wagonnet)
+  const vendu = limiteParWagonnet && wagonnet ? Math.min(sortDeLaMine, wagonnet.debitMax * valeurMoyenneBloc(etat.niveauMine)) : sortDeLaMine
+  return { mine, mineurs, foreuse, total: vendu - salaires + foreuse, limiteParWagonnet }
 }
 
 // ---------------------------------------------------------------------------

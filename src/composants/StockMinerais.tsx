@@ -4,7 +4,7 @@
 //   - le gros bouton « Tout vendre » avec ce que ça rapporte ;
 //   - une ligne par minerai : combien il y en a, ce que ça vaut, et « Vendre » pour lui seul ;
 //   - pour le coffre, une punaise 📌 par minerai : elle ouvre le réglage « garder » (−100, −10,
-//     +10, +100, ou tout) ; ce qu'on garde n'est plus vendu, ni par « Tout vendre », ni par le
+//     0, +10, +100) ; ce qu'on garde n'est plus vendu, ni par « Tout vendre », ni par le
 //     wagonnet, pour payer ses améliorations.
 // Aucune règle du jeu ici : le panneau reçoit les actions (vendre, garder).
 
@@ -82,7 +82,7 @@ type PropsLigne = {
 }
 
 // Les pas du réglage « garder ».
-const PAS_GARDER = [-100, -10, 10, 100]
+const PAS_GARDER = [-100, -10, 0, 10, 100]
 
 function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre, onChanger, onTout }: PropsLigne) {
   const info = BLOCS[bloc]
@@ -133,19 +133,24 @@ function LigneStock({ etat, bloc, nombreDe, aVendre, garde, toutGarde, onVendre,
             </button>
           }
         >
-          <p className="stock-reglage-aide">{t('Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent. Pratique pour payer tes améliorations.')}</p>
+          {/* (26/10) Une phrase simple, et le nombre gardé en grand */}
+          <p className="stock-reglage-aide">{t('Le minerai gardé reste dans le coffre : il n’est pas vendu au marché.')}</p>
           <p className="stock-reglage-titre">
-            <span aria-hidden="true">{info.emoji}</span> {t('Dans le coffre : {n}', { n: nombre(nombreDe) })} · 📌 {t('Gardé :')} <b>{toutGarde ? t('tout') : nombre(garde)}</b>
+            <span aria-hidden="true">{info.emoji}</span> 📌 {t('Gardé :')} <b>{toutGarde ? t('tout') : nombre(garde)}</b>
           </p>
+          {/* (26/10) −100 −10 [0] +10 +100 : les gros pas en plus grand, le 0 au milieu */}
           <div className="stock-reglage-boutons">
-            {PAS_GARDER.map((pas) => (
-              <button key={pas} className={`btn btn-petit ${pas < 0 ? 'btn-blanc' : 'btn-bleu'}`} disabled={pas < 0 && !garde_} onClick={() => onChanger(pas)}>
-                {pas > 0 ? `+${pas}` : `−${-pas}`}
-              </button>
-            ))}
-            <button className={`btn btn-petit ${toutGarde ? 'btn-bleu' : 'btn-blanc'}`} aria-pressed={toutGarde} onClick={onTout}>
-              {t('Tout')}
-            </button>
+            {PAS_GARDER.map((pas) =>
+              pas === 0 ? (
+                <button key="zero" className="btn btn-blanc stock-pas-zero" disabled={!garde_} onClick={() => (toutGarde ? onTout() : onChanger(-garde))}>
+                  0
+                </button>
+              ) : (
+                <button key={pas} className={`btn ${pas < 0 ? 'btn-blanc' : 'btn-bleu'} ${Math.abs(pas) >= 100 ? 'stock-pas-gros' : 'stock-pas-petit'}`} disabled={pas < 0 && !garde_} onClick={() => onChanger(pas)}>
+                  {pas > 0 ? `+${pas}` : `−${-pas}`}
+                </button>
+              ),
+            )}
           </div>
         </Fenetre>,
           document.body,

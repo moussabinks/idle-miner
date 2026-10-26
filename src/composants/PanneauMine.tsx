@@ -318,7 +318,8 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
       <OngletsPanneau
         onglets={[
           { id: 'creuser', titre: `⛏️ ${t('Creuser')}`, pastille: coffrePlein(etat) ? '!' : null },
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutDescendre ? '!' : null },
+          // (26/10) « ! » aussi quand l'ascenseur est trop petit pour la production
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutDescendre || ascenseurTropPetit ? '!' : null },
           { id: 'wagonnets', titre: `🚃 ${t('Wagonnets')}` },
           // (25/10) plus de « ! » ici : il restait allumé sans rien de particulier à faire
           { id: 'production', titre: `📊 ${t('Production')}` },
@@ -357,6 +358,15 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
 
       {onglet === 'ameliorer' && (
         <div className="liste-ameliorations">
+          {/* (26/10) L'ascenseur trop petit : en premier, bien en vue (il freine la production) */}
+          {ascenseurTropPetit && (
+            <div className="carte carte-goulot">
+              <p className="texte-alerte">
+                ⚠️ {t('Ascenseur trop petit : tes mineurs creusent {a} blocs/s, la caisse en remonte {b}.', { a: parSeconde(puits.creuse), b: parSeconde(puits.debit) })}
+              </p>
+              <AmeliorationAscenseur etat={etat} />
+            </div>
+          )}
           <div className={`carte carte-creme carte-palier ${peutDescendre ? 'carte-palier-prete' : ''}`}>
             {prochain ? (
               <>
@@ -400,12 +410,7 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
             possible={coffre !== null && verrou(etat, 'coffre', etat.coffre.niveau + 1) === null && peutPayer(etat, coffre.cout)}
             action={agrandirCoffre}
           />
-          <AmeliorationAscenseur etat={etat} />
-          {ascenseurTropPetit && (
-            <p className="texte-alerte">
-              ⚠️ {t('Ascenseur trop petit : tes mineurs creusent {a} blocs/s, la caisse en remonte {b}.', { a: parSeconde(puits.creuse), b: parSeconde(puits.debit) })}
-            </p>
-          )}
+          {!ascenseurTropPetit && <AmeliorationAscenseur etat={etat} />}
           <p className="discret">{t('Coffre : {n} / {max}', { n: nombre(nbDansCoffre(etat)), max: nombre(capaciteCoffre(etat)) })}</p>
         </div>
       )}

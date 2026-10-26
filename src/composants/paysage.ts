@@ -37,24 +37,24 @@ export const VIGNETTES = {
   'montagne-geante': vignette('montagne-geante', 820, 685, 410, 615),
   'montagne-geante-b': vignette('montagne-geante-b', 820, 695, 410, 625),
   'montagne-grande': vignette('montagne-grande', 680, 605, 340, 535),
-  'montagne-grande-b': vignette('montagne-grande-b', 660, 585, 330, 515),
-  'montagne-double': vignette('montagne-double', 760, 585, 380, 515),
-  'montagne-double-b': vignette('montagne-double-b', 740, 575, 370, 505),
-  'montagne-moyenne': vignette('montagne-moyenne', 560, 465, 280, 395),
-  'montagne-moyenne-b': vignette('montagne-moyenne-b', 580, 445, 290, 375),
-  'montagne-petite': vignette('montagne-petite', 480, 355, 240, 285),
-  'montagne-petite-b': vignette('montagne-petite-b', 460, 335, 230, 265),
-  'montagne-cascade': vignette('montagne-cascade', 780, 720, 390, 595),
-  'montagne-grotte': vignette('montagne-grotte', 620, 550, 310, 415),
-  'colline-sapins': vignette('colline-sapins', 400, 335, 200, 275),
+  'montagne-grande-b': vignette('montagne-grande-b', 666, 585, 330, 515),
+  'montagne-double': vignette('montagne-double', 776, 585, 396, 515),
+  'montagne-double-b': vignette('montagne-double-b', 756, 575, 386, 505),
+  'montagne-moyenne': vignette('montagne-moyenne', 576, 465, 296, 395),
+  'montagne-moyenne-b': vignette('montagne-moyenne-b', 606, 445, 290, 375),
+  'montagne-petite': vignette('montagne-petite', 506, 355, 266, 285),
+  'montagne-petite-b': vignette('montagne-petite-b', 486, 335, 230, 265),
+  'montagne-cascade': vignette('montagne-cascade', 806, 720, 416, 595),
+  'montagne-grotte': vignette('montagne-grotte', 646, 550, 310, 415),
+  'colline-sapins': vignette('colline-sapins', 416, 416, 200, 356),
   'colline-buisson': vignette('colline-buisson', 320, 220, 160, 170),
-  'colline-grande': vignette('colline-grande', 520, 400, 260, 330),
+  'colline-grande': vignette('colline-grande', 520, 464, 260, 394),
   'colline-petite': vignette('colline-petite', 260, 155, 130, 110),
   'colline-fleurie': vignette('colline-fleurie', 360, 270, 180, 215),
   'colline-douce': vignette('colline-douce', 460, 215, 230, 150),
   'colline-large': vignette('colline-large', 800, 425, 400, 330),
   'colline-longue': vignette('colline-longue', 920, 290, 460, 200),
-  bosquet: vignette('bosquet', 280, 250, 140, 200),
+  bosquet: vignette('bosquet', 336, 333, 166, 283),
   rochers: vignette('rochers', 220, 160, 110, 110),
 } satisfies Record<string, Vignette>
 
@@ -62,10 +62,11 @@ export type SorteVignette = keyof typeof VIGNETTES
 
 // L'eau qui tombe de la cascade, dans l'image de « montagne-cascade » (en pixels de l'image) :
 // le jeu la fait couler par-dessus (voir Cascade dans ForetVillage.tsx).
-export const EAU_CASCADE = { x: 270, y: 350, largeur: 40, hauteur: 243 }
+export const EAU_CASCADE = { x: 296, y: 350, largeur: 40, hauteur: 243 }
 
 // Les vignettes sont dessinées deux fois plus grandes que le monde : à l'échelle 0,5, elles ont
-// la taille prévue. On les grossit ou les rapetisse un tout petit peu, pour varier.
+// la taille prévue. (26/10) Toutes à la même échelle : leurs arbres ont ainsi exactement la taille
+// des arbres de la lisière (avant, on les grossissait ou rapetissait un peu, pour varier).
 const ECHELLE = 0.5
 
 // Une vignette plantée : sa sorte, son pied (en cases, à virgule), son échelle.
@@ -106,7 +107,7 @@ const COLLINES_FOND: Tirage = [
   { sorte: 'colline-buisson', poids: 2 },
   { sorte: 'colline-fleurie', poids: 2 },
   { sorte: 'colline-large', poids: 1.6 },
-  { sorte: 'colline-sapins', poids: 1.2 },
+  { sorte: 'colline-sapins', poids: 0.7 },
   { sorte: 'colline-grande', poids: 1 },
   { sorte: 'colline-longue', poids: 1 },
   { sorte: 'colline-petite', poids: 0.8 },
@@ -157,7 +158,7 @@ function zonesAGarder(): { zone: Rectangle; profondeur: number }[] {
     const rectangle = { x0: e.x + (x0 - image.pied.x) * k, y0: e.y + (y0 - image.pied.y) * k, x1: e.x + (x1 - image.pied.x) * k, y1: e.y + (y1 - image.pied.y) * k }
     return { zone: rectangle, profondeur: profondeur(p.x, p.y) }
   }
-  return [zone(CASCADE, 230, 300, 560, 700), zone(GROTTE, 140, 270, 470, 540)]
+  return [zone(CASCADE, 256, 300, 586, 700), zone(GROTTE, 140, 270, 470, 540)]
 }
 
 // Le bas de l'écran le plus haut où peut monter une vignette de devant, au point x du monde : la
@@ -218,12 +219,14 @@ export function planterPaysage(): Plante[] {
 
   // 1. Les montagnes, au fond (à partir de 6 cases de la clairière). Les plus proches gardent
   // leur sommet enneigé à l'écran : on prend la plus grande qui tient sous le haut de la caméra.
-  grille(5.6, 2.4, (x, y) => {
+  // (26/10) Deux fois moins de montagnes qu'avant (une tous les 8 cases au lieu de 5,6) : entre
+  // elles, des collines (étape 2).
+  grille(8, 3, (x, y) => {
     const d = dehors(x, y)
     if (d < 6.2 || deDevant(x, y)) return
-    if (pres(x, y, CASCADE, 8) || pres(x, y, GROTTE, 7)) return
+    if (pres(x, y, CASCADE, 9) || pres(x, y, GROTTE, 8)) return
     const e = versEcran(x, y)
-    const echelle = ECHELLE * (0.92 + hasard() * 0.16)
+    const echelle = ECHELLE
     const place = e.y - (y0 + 14) // la hauteur qu'on a au-dessus du pied, jusqu'au haut de la caméra
     const loin = d > 13
     const choix = MONTAGNES.filter((sorte) => loin || VIGNETTES[sorte].pied.y * echelle < place)
@@ -261,12 +264,12 @@ export function planterPaysage(): Plante[] {
   grille(3.5, 1.8, (x, y) => {
     const d = dehors(x, y)
     if (d < 3 || d > 9.5 || deDevant(x, y) || hasard() < 0.2) return
-    planterColline(x, y, COLLINES_FOND, ECHELLE * (0.9 + hasard() * 0.2))
+    planterColline(x, y, COLLINES_FOND, ECHELLE)
   })
   grille(5, 2.2, (x, y) => {
     const d = dehors(x, y)
     if (d < 3 || !deDevant(x, y) || hasard() < 0.12) return
-    planterColline(x, y, d < 7 ? COLLINES_DEVANT_PRES : COLLINES_DEVANT_LOIN, ECHELLE * (0.9 + hasard() * 0.2))
+    planterColline(x, y, d < 7 ? COLLINES_DEVANT_PRES : COLLINES_DEVANT_LOIN, ECHELLE)
   })
 
   // 3. Loin devant, tout à droite (après le coin de droite de la clairière), quelques petites
@@ -276,7 +279,7 @@ export function planterPaysage(): Plante[] {
     if (montagnesDevant >= 3 || !deDevant(x, y) || y > N || dehors(x, y) < 14 || versEcran(x, y).x < versEcran(N, 0).x + 60) return
     const b = hasard() < 0.5 ? '-b' : ''
     for (const sorte of [`montagne-moyenne${b}`, `montagne-petite${b}`] as SorteVignette[]) {
-      const p = { sorte, x, y, echelle: ECHELLE * (0.95 + hasard() * 0.1) }
+      const p = { sorte, x, y, echelle: ECHELLE }
       if (possible(p)) {
         plantes.push(p)
         montagnesDevant += 1

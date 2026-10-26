@@ -2,6 +2,7 @@
 // qu'il y a quelque chose à faire là-bas (coffre de la mine plein, chariot de la foreuse plein,
 // plus de redstone, salaires à payer, rails coupés, amélioration achetable...).
 
+import { analyseWagonnet, chariotTropPetit } from './production'
 import { BATIMENTS, LIAISONS, type IdBatiment } from './donnees'
 import { DECOUVERTES, decouvertesAMontrer } from './decouvertes'
 import { alerteSalaires } from './employes'
@@ -56,6 +57,13 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
         sorte: 'alerte',
       })
     }
+  }
+  // (26/10) Un wagonnet qui vend moins que ce qui sort (son chariot est trop petit) : l'argent
+  // s'entasse dans le coffre au lieu d'arriver dans la poche. On agrandit le chariot au Personnel.
+  for (const liaison of ['mine-marche', 'foreuse-marche'] as const) {
+    if (!chariotTropPetit(analyseWagonnet(etat, liaison))) continue
+    ajouter('employes', { icone: '🚃', texte: t('Le wagonnet ne suit pas : agrandis le chariot de son pousseur'), court: t('Chariot !'), sorte: 'alerte' })
+    break
   }
   // Des pousseurs dont le trajet a été arrêté : ils attendent au quai, pour rien.
   const sansTrajet = etat.employes.filter((e) => e.role === 'pousseur' && (e.trajet === null || !trajetDe(etat, e.trajet))).length

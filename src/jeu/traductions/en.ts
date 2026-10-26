@@ -873,11 +873,8 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Demi-tour': 'Turn back',
   '{a} à {b} blocs/s': '{a} to {b} blocks/s',
   '{n} cases/s': '{n} tiles/s',
-  'Recruter': 'Recruit',
   '{prix} $': '{prix} $',
   'Prix du marché': 'Market prices',
-  'Ce que tu gardes reste dans le coffre : ni « Tout vendre », ni le wagonnet ne le vendent. Pratique pour payer tes améliorations.': 'What you keep stays in the chest: neither “Sell all” nor the minecart sells it. Handy to pay for your upgrades.',
-  'Dans le coffre : {n}': 'In the chest: {n}',
   'Gardé :': 'Kept:',
   // (25/10) Les packs de gemmes
   'Acheter des gemmes': 'Buy gems',
@@ -894,4 +891,11 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Autres ventes (le manager vend du coffre pour payer les salaires)': 'Other sales (the manager sells from the chest to pay wages)',
   'Autres dépenses': 'Other expenses',
   'Ça fore : {n} bloc(s)/s': 'Drilling: {n} block(s)/s',
+  // (26/10) Les tâches de production, le wagonnet, garder
+  'Ascenseur trop petit : améliore-le': 'Elevator too small: upgrade it',
+  'Chariot !': 'Cart!',
+  'Embauche le manager : il paiera les salaires': 'Hire the manager: he will pay the wages',
+  'Le minerai gardé reste dans le coffre : il n’est pas vendu au marché.': 'Kept ore stays in the chest: it is not sold at the market.',
+  'Le wagonnet ne suit pas : agrandis le chariot de {nom}': 'The cart can’t keep up: upgrade {nom}’s cart',
+  'Le wagonnet ne suit pas : agrandis le chariot de son pousseur': 'The cart can’t keep up: upgrade its pusher’s cart',
 }

@@ -807,9 +807,29 @@
 
 .stock-reglage-boutons {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 6px;
+}
+
+/* (26/10) Les pas du réglage : ±100 plus grands que ±10, le 0 au milieu */
+.stock-reglage-boutons .stock-pas-gros {
+  min-width: 58px;
+  min-height: 48px;
+  font-size: 1.05rem;
+}
+
+.stock-reglage-boutons .stock-pas-petit {
+  min-width: 46px;
+  min-height: 40px;
+  font-size: 0.85rem;
+}
+
+.stock-reglage-boutons .stock-pas-zero {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  font-size: 1rem;
 }
 
 @media (max-width: 640px) {
@@ -878,4 +898,16 @@
   width: 1.2em;
   height: 1.2em;
   vertical-align: -0.25em;
+}
+
+/* (26/10) L'ascenseur trop petit, en premier dans « Améliorer » : un cadre rose bien visible */
+.carte-goulot {
+  display: grid;
+  gap: 6px;
+  background: #ffe1e5;
+  border-color: #d6455d;
+}
+
+.carte-goulot .texte-alerte {
+  margin: 0;
 }

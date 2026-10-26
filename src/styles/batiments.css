@@ -1067,18 +1067,20 @@
 /* (25/10) Le bouton du hasard (remplacer un mineur, avec le recruteur) : des bandes aux couleurs
    des raretés qui défilent, un dé qui roule, et le texte sur une étiquette crème. */
 .btn-hasard {
+  /* (26/10) Une seule couleur, turquoise vif (avant : un arc-en-ciel qui défilait) */
   gap: 6px;
-  background: repeating-linear-gradient(115deg, #b9b4ab 0 14px, #4f9df0 14px 28px, #b06cf0 28px 42px, #f5a524 42px 56px, #ff4d8d 56px 70px);
-  background-size: 163px 100%;
-  animation: hasard-defile 2.4s linear infinite;
+  background: #46d6c6;
+}
+
+.btn-hasard:hover:not(:disabled) {
+  background: #5fe3d4;
 }
 
 .btn-hasard:disabled {
-  /* (trop cher : il garde ses couleurs, juste pâli, pour donner envie) */
-  background: repeating-linear-gradient(115deg, #b9b4ab 0 14px, #4f9df0 14px 28px, #b06cf0 28px 42px, #f5a524 42px 56px, #ff4d8d 56px 70px);
+  /* (trop cher : il garde sa couleur, juste pâli, pour donner envie) */
+  background: #46d6c6;
   border-color: var(--encre);
   opacity: 0.6;
-  animation: none;
 }
 
 .btn-hasard-de {
@@ -1088,16 +1090,7 @@
 }
 
 .btn-hasard-texte {
-  padding: 0 8px;
-  border: var(--trait-fin) solid var(--encre);
-  border-radius: 999px;
-  background: var(--creme);
-}
-
-@keyframes hasard-defile {
-  to {
-    background-position: 163px 0;
-  }
+  font-weight: 800;
 }
 
 @keyframes hasard-de {
@@ -1115,7 +1108,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-hasard,
   .btn-hasard-de {
     animation: none;
   }
