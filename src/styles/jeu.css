@@ -677,3 +677,70 @@
   color: var(--vert-fonce);
   font-weight: 800;
 }
+
+/* (26/10) La réorganisation du village, façon Clash of Clans : la barre des objets rangés. */
+.barre-reorganisation {
+  max-width: 900px;
+}
+
+.reorganisation-objets {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scroll-snap-type: x proximity;
+}
+
+.reorganisation-objet {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 92px;
+  min-height: 96px;
+  padding: 6px 4px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 14px;
+  background: var(--blanc);
+  box-shadow: var(--ombre-petite);
+  font: inherit;
+  font-weight: 900;
+  color: var(--encre);
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.reorganisation-objet:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.reorganisation-objet img {
+  width: 76px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.reorganisation-icone {
+  font-size: 2.6rem;
+  line-height: 64px;
+}
+
+.reorganisation-nom {
+  font-size: 0.78rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.reorganisation-sol {
+  background: var(--creme-fonce);
+}
+
+.reorganisation-objet .pastille {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+}

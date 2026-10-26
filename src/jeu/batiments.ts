@@ -10,9 +10,8 @@ import {
   LISTE_BATIMENTS,
   type Cout,
   type IdBatiment,
-  type IdBloc,
 } from './donnees'
-import { ajouterA, payer, peutPayer, type EtatJeu } from './mineur'
+import { payer, peutPayer, type EtatJeu } from './mineur'
 import { niveauAtteint, niveauPourBatiment, railsDebloques } from './niveaux'
 import { t } from './langue'
 import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
@@ -118,8 +117,23 @@ export function placePourUnRail(village: Village, x: number, y: number, de: { x:
   return 'ok'
 }
 
+// (26/10) Les rails et les pavés en stock (retirés, ou rangés en réorganisant le village).
+export function stockSol(etat: EtatJeu, type: TypeSol): number {
+  return etat.stockSol?.[type] ?? 0
+}
+
+function ajouterAuStock(etat: EtatJeu, type: TypeSol, nombre: number): void {
+  const stock = (etat.stockSol ??= { rail: 0, chemin: 0 })
+  stock[type] = Math.max(0, (stock[type] ?? 0) + nombre)
+}
+
+// Poser une case : on prend d'abord dans le stock (gratuit), sinon on paie.
+function peutPayerSol(etat: EtatJeu, type: TypeSol): boolean {
+  return stockSol(etat, type) > 0 || peutPayer(etat, coutSol(type))
+}
+
 export function peutPoserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): boolean {
-  if (!peutPayer(etat, coutSol(type))) return false
+  if (!peutPayerSol(etat, type)) return false
   if (type === 'rail' && !railsDebloques(etat)) return false
   if (type === 'rail') return placePourUnRail(etat.village, x, y) === 'ok'
   return empriseLibre(etat.village, { x, y, taille: 1 })
@@ -132,7 +146,8 @@ export function poserSol(etat: EtatJeu, type: TypeSol, x: number, y: number): st
     if (place === 'bords') return [messageBords()]
   }
   if (!peutPoserSol(etat, type, x, y)) return []
-  payer(etat, coutSol(type))
+  if (stockSol(etat, type) > 0) ajouterAuStock(etat, type, -1)
+  else payer(etat, coutSol(type))
   listeSol(etat, type).push(cleCase(x, y))
   return []
 }
@@ -155,24 +170,24 @@ export function deplacerSol(etat: EtatJeu, type: TypeSol, de: { x: number; y: nu
   return []
 }
 
-// Enlever une case : elle est remboursée (30/10). Le fer d'un rail revient dans le coffre de la
-// mine ; un chemin rend son argent.
+// Enlever une case : (26/10, demandé par le propriétaire) elle va dans le stock, et se repose
+// gratuitement (menu Bâtiments). Avant (30/10), elle était remboursée en fer ou en argent.
 export function retirerSol(etat: EtatJeu, type: TypeSol, x: number, y: number): string[] {
   const liste = listeSol(etat, type)
   const index = liste.indexOf(cleCase(x, y))
   if (index === -1) return []
   liste.splice(index, 1)
-  const cout = coutSol(type)
-  etat.argent += cout.argent ?? 0
-  for (const [id, nombre] of Object.entries(cout.materiaux)) ajouterA(etat.coffre.contenu, id as IdBloc, nombre ?? 0)
-  return [type === 'rail' ? t('🛤️ Rail retiré : +{fer} 🔩 fer rendus.', { fer: COUT_RAIL.materiaux.fer ?? 0 }) : t('🪨 Chemin retiré : +{argent} $ rendus.', { argent: COUT_CHEMIN.argent ?? 0 })]
+  ajouterAuStock(etat, type, 1)
+  // (pendant une réorganisation, pas de message à chaque case)
+  if (etat.reorganisation) return []
+  return [type === 'rail' ? t('🛤️ Rail rangé : {n} en stock.', { n: stockSol(etat, type) }) : t('🪨 Pavé rangé : {n} en stock.', { n: stockSol(etat, type) })]
 }
 
 // Pourquoi on ne peut pas poser un rail ou un chemin ici (null : on peut). Pour le dire au
 // joueur (30/10 : avant, rien ne se passait quand il n'avait plus de fer).
 export function raisonSolImpossible(etat: EtatJeu, type: TypeSol, x: number, y: number): string | null {
   if (type === 'rail' && !railsDebloques(etat)) return null
-  if (!peutPayer(etat, coutSol(type))) {
+  if (!peutPayerSol(etat, type)) {
     return type === 'rail'
       ? t('🔩 Plus de fer : un rail coûte {fer} fer (dans le coffre de la mine). Va creuser !', { fer: COUT_RAIL.materiaux.fer ?? 0 })
       : t("💵 Pas assez d'argent : un chemin coûte {argent} $.", { argent: COUT_CHEMIN.argent ?? 0 })

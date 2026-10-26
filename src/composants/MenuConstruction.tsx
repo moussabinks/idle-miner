@@ -9,7 +9,7 @@
 
 import type { ReactNode } from 'react'
 import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, LISTE_BATIMENTS, NIVEAU_JOUEUR_POUR, type Cout, type IdBatiment } from '../jeu/donnees'
-import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, type TypeSol } from '../jeu/batiments'
+import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, stockSol, type TypeSol } from '../jeu/batiments'
 import { nombre, t } from '../jeu/langue'
 import { disponible, peutPayer, type EtatJeu } from '../jeu/mineur'
 import { niveauPourBatiment, railsDebloques, verrouNiveau } from '../jeu/niveaux'
@@ -69,7 +69,9 @@ function CarteBatiment({ id, nouveau, onPoser }: { id: IdBatiment; nouveau: bool
 }
 
 // Les rails ou les chemins : une ligne, un prix par case, un bouton « Poser ».
-function LigneSol({ icone, titre, effet, cout, verrou, onPoser }: { icone: ReactNode; titre: string; effet: string; cout: Cout; verrou: string | null; onPoser: () => void }) {
+// (26/10) « stock » : les cases rangées (retirées, ou restées après une réorganisation du village),
+// qu'on repose gratuitement avant de payer les suivantes.
+function LigneSol({ icone, titre, effet, cout, verrou, onPoser, stock = 0 }: { icone: ReactNode; titre: string; effet: string; cout: Cout; verrou: string | null; onPoser: () => void; stock?: number }) {
   const { etat } = useJeu()
   return (
     <div className="ligne-amelioration">
@@ -77,16 +79,18 @@ function LigneSol({ icone, titre, effet, cout, verrou, onPoser }: { icone: React
         {icone}
       </span>
       <span className="ligne-amelioration-texte">
-        <span className="ligne-amelioration-nom">{titre}</span>
+        <span className="ligne-amelioration-nom">
+          {titre} {stock > 0 && <span className="etiquette etiquette-vert">{t('{n} en stock', { n: nombre(stock) })}</span>}
+        </span>
         <span className="ligne-amelioration-effet">{effet}</span>
       </span>
       {verrou ? (
         <span className="verrou">🔒 {verrou}</span>
       ) : (
         <span className="ligne-amelioration-boutons">
-          <button className="btn btn-vert btn-petit" disabled={!peutPayer(etat, cout)} onClick={onPoser}>
+          <button className="btn btn-vert btn-petit" disabled={stock <= 0 && !peutPayer(etat, cout)} onClick={onPoser}>
             <span>{t('Poser')}</span>
-            <Prix etat={etat} cout={cout} />
+            {stock > 0 ? <span className="prix">{t('Gratuit')}</span> : <Prix etat={etat} cout={cout} />}
           </button>
         </span>
       )}
@@ -136,8 +140,9 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
         cout={COUT_RAIL}
         verrou={railsDebloques(etat) ? null : `⭐ ${NIVEAU_JOUEUR_POUR.rails}`}
         onPoser={() => onPinceau('rail')}
+        stock={stockSol(etat, 'rail')}
       />
-      <LigneSol icone="🪨" titre={t('Chemin de pavés')} effet={t('Juste pour faire joli ! Prix par case.')} cout={COUT_CHEMIN} verrou={null} onPoser={() => onPinceau('chemin')} />
+      <LigneSol icone="🪨" titre={t('Chemin de pavés')} effet={t('Juste pour faire joli ! Prix par case.')} cout={COUT_CHEMIN} verrou={null} onPoser={() => onPinceau('chemin')} stock={stockSol(etat, 'chemin')} />
 
       {construits.length > 0 && (
         <>

@@ -234,6 +234,20 @@ export type EtatJeu = {
   // Le bonus de combo en cours (30/10) : son palier, et l'heure de jeu (stats.tempsDeJeu) où il
   // s'arrête. Absent : pas de bonus.
   bonus?: { palier: number; fin: number } | null
+  // (26/10) Les rails et les pavés rangés en stock (retirés, ou restés dans la barre en
+  // réorganisant le village) : on les repose gratuitement. Absent : rien en stock.
+  stockSol?: { rail: number; chemin: number }
+  // (26/10) Le village en cours de réorganisation (façon Clash of Clans, voir reorganiser.ts) :
+  // le jeu est en pause tant qu'il n'est pas fini. Absent ou null : pas de réorganisation.
+  reorganisation?: Reorganisation | null
+}
+
+// (26/10) Une réorganisation du village : le village d'avant (pour « Annuler ») et les bâtiments
+// encore rangés dans la barre, à reposer (avec leur sens).
+export type Reorganisation = {
+  avant: Village
+  stockAvant: { rail: number; chemin: number }
+  ranges: { id: IdBatiment; miroir: boolean }[]
 }
 
 // Version 21 (22/10) : la mine automatique. Les parties d'avant repartent de zéro.

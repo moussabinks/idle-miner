@@ -1323,13 +1323,104 @@ def medaille_bronze():
     return _medaille(('#d08a4a', '#f2b98a', '#985a26'), VERT)
 
 
+# (26/10, redessinée) La poubelle 🗑️ (les boutons roses « Enlever », « Retirer ») : une vraie
+# poubelle de métal gris bleuté vue de trois quarts. Un seau en tronc de cône, rayé de cannelures
+# verticales (plus serrées sur les côtés, car le seau est rond), avec un rebord en haut et un
+# cerclage en bas. Le couvercle bombé, avec sa poignée, est entrouvert (soulevé à gauche) : une
+# boule de papier froissé dépasse. Le métal a cinq tons à plat, du plus clair à gauche (la
+# lumière) au plus sombre à droite, comme un cylindre ; un trait d'encre sépare le couvercle.
+
+POUBELLE_TONS = ('#f4f8fc', '#d3dfeb', '#a9bccf', '#7f95ad', '#5a6f88')
+POUBELLE_CREUX = '#2f3b52'
+
+
+def _seau_point(theta, t):
+    """Un point de la surface du seau : « theta » fait le tour (0 : le bord gauche, pi : le bord
+    droit, en passant par devant), « t » descend du haut (0) au bas (1)."""
+    cx = 50
+    rx = 32 + (25 - 32) * t  # le seau se rétrécit vers le bas
+    cy = 48 + (90 - 48) * t
+    ry = 7 + (6 - 7) * t
+    return (cx - rx * math.cos(theta), cy + ry * math.sin(theta))
+
+
+def _seau_morceau(theta0, theta1, t0, t1, pas=10):
+    """Le morceau de la surface du seau entre deux « theta » et deux hauteurs « t »."""
+    angles = [theta0 + (theta1 - theta0) * i / pas for i in range(pas + 1)]
+    haut = [_seau_point(a, t0) for a in angles]
+    bas = [_seau_point(a, t1) for a in reversed(angles)]
+    return poly(*(haut + bas))
+
+
 @icone('🗑')
 def poubelle():
-    seau = poly((20, 30), (80, 30), (72, 92), (28, 92), arrondi=4)
-    couvercle = rect(12, 18, 76, 12, 5)
-    anse = rect(40, 8, 20, 12, 4)
-    lignes = union(rect(36, 42, 5, 40, 2.5), rect(48, 42, 5, 40, 2.5), rect(60, 42, 5, 40, 2.5))
-    return r(anse, METAL, d=2, brillance=False) + r(seau, METAL, brillance=False) + [('#66717d', lignes)] + r(couvercle, METAL, d=3, brillance=False)
+    pi = math.pi
+    T = POUBELLE_TONS
+    seau = union(_seau_morceau(0, pi, 0, 1, 24), ellipse(50, 48, 32, 7))
+    couches = [(T[2], seau)]
+    # les tons du cylindre : clair à gauche, sombre à droite
+    couches += [
+        (T[1], inter(seau, _seau_morceau(0.08 * pi, 0.34 * pi, 0, 1))),
+        (T[3], inter(seau, _seau_morceau(0.66 * pi, 0.86 * pi, 0, 1))),
+        (T[4], inter(seau, _seau_morceau(0.86 * pi, pi, 0, 1))),
+    ]
+    # les cannelures : un creux sombre, et à sa gauche un fil de lumière
+    for k in range(1, 7):
+        a = pi * k / 7
+        creux = trait([_seau_point(a, 0.2), _seau_point(a, 0.82)], 2.6)
+        fil = trait([_seau_point(a - 0.07, 0.2), _seau_point(a - 0.07, 0.82)], 1.4)
+        couches += [(T[0] if a < 0.6 * pi else T[2], fil), (POUBELLE_CREUX + 'b0', creux)]
+    # le cerclage du bas et le rebord du haut (des bandes en relief)
+    couches += [
+        (T[3], _seau_morceau(0, pi, 0.88, 1, 24)),
+        (T[2], _seau_morceau(0.1 * pi, 0.6 * pi, 0.89, 0.95, 16)),
+        (T[3], _seau_morceau(0, pi, 0.06, 0.15, 24)),
+        (T[1], _seau_morceau(0.08 * pi, 0.62 * pi, 0.065, 0.11, 16)),
+        # le grand reflet du seau, en long à gauche
+        (T[0] + 'd0', _seau_morceau(0.2 * pi, 0.26 * pi, 0.2, 0.8, 4)),
+    ]
+    # l'ouverture : le rebord rond et le noir du dedans
+    couches += [
+        (T[1], ellipse(50, 48, 32, 7)),
+        (POUBELLE_CREUX, ellipse(50, 48.6, 28, 5.2)),
+    ]
+    # la boule de papier froissé qui dépasse, à gauche : une boule cabossée à facettes (comme les
+    # gemmes, par `_facettes()`), blanc crème, avec des plis
+    papier = poly(*_blob(30, 42, 14, 10.5, (1.0, 0.86, 1.05, 0.9, 1.06, 0.88, 1.02, 0.84, 1.04, 0.92), -10), arrondi=1.5)
+    milieu = _blob(28, 41, 6.5, 4.8, (1.0, 0.8, 1.1, 0.85, 1.0), 20)
+    couches += [(FONCE, grossir(papier, 2.2)), ('#efe9dc', papier)]
+    couches += _facettes(milieu, papier, ('#ffffff', '#f7f2e8', '#e6dece', '#cfc4b0', '#b3a68f'))
+    couches += [
+        ('#fbf8f1', poly(*milieu)),
+        ('#b3a68f', trait([milieu[1], (33, 50)], 1.3)),
+        ('#b3a68f', trait([milieu[3], (17, 41)], 1.3)),
+        ('#b3a68f', trait([(24, 39), (27, 42), (31, 39)], 1.2)),
+    ]
+    # le couvercle bombé, soulevé à gauche (il tourne autour de son bord droit)
+    bord = union(ellipse(50, 41, 35, 8), rect(15, 36, 70, 5), ellipse(50, 36, 35, 8))
+    dome = moins(ellipse(50, 36, 28, 16), rect(0, 36, 100, 50))
+    poignee = courbe('M 41 22 Q 40 11 50 11 Q 60 11 59 22', 6)
+    couvercle = union(bord, dome)
+
+    def penche(forme):
+        return deplace(tourne(forme, 18, 86, 42), 0, 2.5)
+
+    couches += [
+        (FONCE, penche(grossir(couvercle, 2.2))),
+        (T[2], penche(couvercle)),
+        (T[3], penche(moins(bord, ellipse(50, 36, 35, 8)))),
+        (T[4], penche(inter(moins(bord, ellipse(50, 36, 35, 8)), rect(64, 0, 40, 100)))),
+        (T[1], penche(ellipse(50, 36, 35, 8))),
+        (T[2], penche(dome)),
+        (T[1], penche(inter(dome, ellipse(40, 36, 17, 15)))),
+        (T[3], penche(inter(dome, moins(ellipse(50, 36, 28, 16), ellipse(45, 37, 28, 16))))),
+        (T[0], penche(ellipse(37, 27, 7, 3.2, -25))),
+        (FONCE, penche(grossir(poignee, 2.0))),
+        (T[2], penche(poignee)),
+        (T[0], penche(courbe('M 42.8 19 Q 42.8 13.5 49 13.3', 2))),
+    ]
+    couches.append(('#ffffffe0', eclat(31, 70, 4.5)))
+    return couches
 
 
 @icone('📄')
