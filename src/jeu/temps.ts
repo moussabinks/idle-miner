@@ -4,7 +4,8 @@
 // L'interface appelle avancerTemps plusieurs fois par seconde.
 
 import type { Aleatoire } from './aleatoire'
-import { avancerEmployes } from './employes'
+import { avancerFonderie, avancerJoaillerie } from './ateliers'
+import { avancerEmployes, rareteDe } from './employes'
 import { avancerForeuse } from './foreuse'
 import { avancerGenerateur } from './generateur'
 import { avancerMine, type EtatJeu } from './mineur'
@@ -27,6 +28,9 @@ export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoi
       ...avancerGenerateur(etat, pas),
       ...avancerForeuse(etat, pas, aleatoire),
       ...avancerEmployes(etat, pas, aleatoire),
+      // (26/10) la fonderie fond, les joailliers taillent
+      ...avancerFonderie(etat, pas),
+      ...avancerJoaillerie(etat, pas, (e) => rareteDe(e).rendement),
       ...avancerWagonnets(etat, pas),
     )
     reste -= pas

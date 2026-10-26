@@ -5,6 +5,8 @@
 #
 # Les couleurs reviennent souvent : on les nomme ici (base, clair, foncé).
 
+import math
+
 from formes import (
     cercle,
     contour,
@@ -13,6 +15,7 @@ from formes import (
     eclat,
     ellipse,
     etoile,
+    grossir,
     inter,
     miroir,
     moins,
@@ -154,9 +157,10 @@ def charbon():
     ]
 
 
-@icone('🔩')
-def fer():
-    # Un lingot de fer vu de trois quarts, et un deuxième derrière.
+@icone('⬜')
+def lingot_fer():
+    # (26/10) Le lingot de fer (la fonderie le fabrique avec le fer brut) : un lingot de fer vu de
+    # trois quarts, et un deuxième derrière. (Avant, c'était le dessin du fer 🔩.)
     def lingot(dx, dy):
         dessus = poly((20 + dx, 30 + dy), (80 + dx, 30 + dy), (94 + dx, 54 + dy), (6 + dx, 54 + dy))
         face = poly((6 + dx, 54 + dy), (94 + dx, 54 + dy), (86 + dx, 80 + dy), (14 + dx, 80 + dy))
@@ -168,6 +172,42 @@ def fer():
         ]
 
     return lingot(0, -14) + lingot(0, 14)
+
+
+# (26/10) Le minerai brut : un caillou gris (comme la pierre 🪨) avec des pépites dedans, comme le
+# minerai de Minecraft. Le fer brut a des pépites beige rosé, l'or brut des pépites dorées qui
+# brillent. Chaque pépite est entourée d'un petit creux plus sombre, pour qu'on la voie bien même
+# en tout petit.
+PIERRE_MINERAI = ('#9b9a96', '#cfcdc6', '#6a6966')
+
+
+def _pepite(cx, cy, taille, angle=0):
+    """Une pépite cabossée (un petit polygone aux coins adoucis), au milieu en (cx, cy)."""
+    forme = [(-1, -0.75), (0.25, -1), (1, -0.35), (0.85, 0.65), (-0.1, 1), (-0.95, 0.45)]
+    p = poly(*[(cx + x * taille, cy + y * taille) for x, y in forme], arrondi=1.5)
+    return tourne(p, angle, cx, cy) if angle else p
+
+
+def _minerai_brut(couleurs, brille=False):
+    roche = poly((12, 68), (18, 38), (40, 18), (68, 16), (88, 38), (92, 68), (72, 88), (28, 88), arrondi=6)
+    couches = r(roche, PIERRE_MINERAI, brillance=False) + [
+        ('#b9b7b0', inter(roche, poly((40, 18), (68, 16), (62, 30), (38, 32)))),
+    ]
+    for cx, cy, taille, angle in ((34, 42, 13, -10), (66, 36, 11, 25), (60, 66, 14, 5), (28, 70, 9, 40)):
+        pepite = _pepite(cx, cy, taille, angle)
+        couches.append(('#57554f', moins(grossir(pepite, 2.5), pepite)))
+        couches += r(pepite, couleurs, d=3, brillance=False)
+        couches.append(('#ffffffc0', ellipse(cx - taille * 0.35, cy - taille * 0.4, taille * 0.32, taille * 0.2, -25)))
+    if brille:
+        couches.append(('#ffffffe0', eclat(80, 18, 9)))
+        couches.append(('#ffffffd0', eclat(20, 30, 6)))
+    return couches
+
+
+@icone('🔩')
+def fer():
+    # (26/10) Le fer brut (le minerai), à fondre en lingots ⬜ à la fonderie.
+    return _minerai_brut(('#e6b48f', '#ffd9bd', '#b77d58'))
 
 
 def _gemme(couleurs, forme='hexa'):
@@ -218,10 +258,11 @@ def redstone():
     ]
 
 
-@icone('🟡')
-def or_():
-    # (25/10) L'or : une pyramide de trois lingots dorés qui brillent (avant, une pépite, pas assez
-    # reconnaissable). Le fer, lui, est une pile de deux lingots gris.
+@icone('🟨')
+def lingot_or():
+    # (26/10) Le lingot d'or (la fonderie le fabrique avec l'or brut 🟡) : une pyramide de trois
+    # lingots dorés qui brillent (25/10 : c'était le dessin de l'or 🟡). Le lingot de fer ⬜, lui,
+    # est une pile de deux lingots gris.
     def lingot(dx, dy):
         dessus = poly((14 + dx, 0 + dy), (40 + dx, 0 + dy), (48 + dx, 12 + dy), (6 + dx, 12 + dy))
         face = poly((6 + dx, 12 + dy), (48 + dx, 12 + dy), (44 + dx, 26 + dy), (10 + dx, 26 + dy))
@@ -233,6 +274,164 @@ def or_():
         ]
 
     return lingot(2, 60) + lingot(50, 60) + lingot(26, 34) + [('#ffffffe0', eclat(80, 26, 9))]
+
+
+@icone('🟡')
+def or_():
+    # (26/10) L'or brut (le minerai) : des pépites dorées qui brillent, à fondre en lingots 🟨.
+    return _minerai_brut(OR, brille=True)
+
+
+def _losange(cx, cy, l, h):
+    """Les sommets d'un losange (haut, droite, bas, gauche) de demi-largeur l et demi-hauteur h."""
+    return (cx, cy - h), (cx + l, cy), (cx, cy + h), (cx - l, cy)
+
+
+def _saphir(cx=50, cy=50, l=37, h=44, eclat_=True):
+    # Le saphir : une gemme en losange (comme 🔷), d'un bleu roi profond. Un losange plus petit au
+    # milieu (la table), et quatre facettes autour : la plus claire en haut à gauche (la lumière),
+    # la plus sombre en bas à droite.
+    H, D, B, G = _losange(cx, cy, l, h)
+    h_, d_, b_, g_ = _losange(cx, cy + h * 0.05, l * 0.48, h * 0.5)
+    couches = [
+        ('#2f5bd9', poly(H, D, B, G)),
+        ('#8fb0ff', poly(H, h_, g_, G)),
+        ('#5a86f2', poly(H, D, d_, h_)),
+        ('#1b3796', poly(D, B, b_, d_)),
+        ('#2f5bd9', poly(G, g_, b_, B)),
+        ('#4874ec', poly(h_, d_, b_, g_)),
+        ('#ffffffb0', poly((cx - l * 0.1, cy - h * 0.3), (cx + l * 0.06, cy - h * 0.22), (cx - l * 0.3, cy + h * 0.02), (cx - l * 0.36, cy - h * 0.06))),
+    ]
+    if eclat_:
+        couches.append(('#ffffffd0', eclat(cx + l * 0.7, cy - h * 0.7, l * 0.22)))
+    return couches
+
+
+@icone('🔷')
+def saphir():
+    # (26/10) Le saphir, la gemme du niveau 5 de la mine.
+    return _saphir(50, 50, 38, 44)
+
+
+def _rubis(cx=50, cy=54, k=1.0, eclat_=True):
+    # Le rubis : une gemme taillée en triangle (comme 🔺), rouge cramoisi, tirant sur le rose
+    # (la redstone 🔴, elle, est un cristal rouge orangé à six côtés). Un triangle au milieu (la
+    # table), et trois facettes autour : claire à gauche, moyenne en bas, sombre à droite.
+    def pt(x, y):
+        return (cx + x * k, cy + y * k)
+
+    A, B, C_ = pt(0, -46), pt(44, 32), pt(-44, 32)
+    a, b, c = pt(0, -16), pt(20, 18), pt(-20, 18)
+    couches = [
+        ('#d81b4a', poly(A, B, C_)),
+        ('#ff7095', poly(A, a, c, C_)),
+        ('#9c0f33', poly(A, B, b, a)),
+        ('#b8143e', poly(C_, c, b, B)),
+        ('#e8325f', poly(a, b, c)),
+        ('#ffffffb0', poly(pt(-4, -34), pt(2, -30), pt(-22, 8), pt(-28, 8))),
+    ]
+    if eclat_:
+        couches.append(('#ffffffd0', eclat(cx + 30 * k, cy - 34 * k, 8 * k)))
+    return couches
+
+
+@icone('🔺')
+def rubis():
+    # (26/10) Le rubis, la gemme du niveau 6 de la mine.
+    return _rubis(50, 56, 1.0)
+
+
+# ---------------------------------------------------------------------------
+# (26/10) Les bijoux (la joaillerie taille les gemmes en bijoux) : de l'or et une gemme
+# ---------------------------------------------------------------------------
+
+
+def _emeraude_petite(cx, cy, k):
+    """Une petite émeraude (le dessin de 💚, en plus petit), au milieu en (cx, cy)."""
+    def pt(x, y):
+        return (cx + (x - 50) * k, cy + (y - 50) * k)
+
+    g = poly(pt(34, 10), pt(66, 10), pt(84, 30), pt(84, 70), pt(66, 90), pt(34, 90), pt(16, 70), pt(16, 30))
+    return g, [
+        ('#2fb35a', g),
+        ('#7cf0a0', inter(g, poly(pt(34, 10), pt(66, 10), pt(68, 28), pt(32, 28)))),
+        ('#1c7c3c', inter(g, poly(pt(68, 28), pt(84, 30), pt(84, 70), pt(68, 72)))),
+        ('#45cf72', rect(cx - 18 * k, cy - 22 * k, 36 * k, 44 * k, 3 * k)),
+        ('#ffffffb0', rect(cx - 12 * k, cy - 18 * k, 7 * k, 22 * k, 3 * k)),
+    ]
+
+
+@icone('📿')
+def bijou_emeraude():
+    # Le collier d'émeraude : une chaîne en or (des perles dorées) et une grosse émeraude en
+    # pendentif, sertie dans l'or.
+    chaine = courbe('M 14 8 Q 12 54 50 56 Q 88 54 86 8', 6)
+    perles = union(*[cercle(x, y, 5) for x, y in ((14, 14), (16, 30), (24, 44), (36, 52), (64, 52), (76, 44), (84, 30), (86, 14))])
+    gemme, couches_gemme = _emeraude_petite(50, 72, 0.48)
+    serti = grossir(gemme, 4.5)
+    return (
+        r(chaine, OR, d=2, brillance=False)
+        + r(perles, OR, d=2, brillance=False)
+        + r(cercle(50, 54, 6), OR, d=2, brillance=False)
+        + r(serti, OR, d=3, brillance=False)
+        + couches_gemme
+        + [('#ffffffd0', eclat(78, 72, 7))]
+    )
+
+
+@icone('🧿')
+def bijou_saphir():
+    # L'amulette de saphir : un gros médaillon en or au cordon de cuir, un saphir en losange au
+    # milieu, entouré d'un cercle de petites perles dorées.
+    cordon = union(courbe('M 12 6 Q 26 22 42 24', 5), courbe('M 88 6 Q 74 22 58 24', 5))
+    anneau = contour(cercle(50, 24, 7), 5)
+    medaillon = cercle(50, 62, 32)
+    couches = [('#8a5a2c', cordon)] + r(anneau, OR, d=2, brillance=False) + r(medaillon, OR, brillance=False)
+    couches.append((OR[2], contour(cercle(50, 62, 25), 2.5)))
+    couches += [(OR[1], cercle(50 + 25 * math.cos(a), 62 + 25 * math.sin(a), 2.6)) for a in [i * math.pi / 6 for i in range(12)]]
+    couches += _saphir(50, 62, 15, 19, eclat_=False)
+    couches.append(('#ffffffd0', eclat(78, 36, 8)))
+    return couches
+
+
+@icone('🫅')
+def bijou_rubis():
+    # La couronne de rubis : une petite couronne en or, une perle rouge au bout de chaque pointe
+    # et trois rubis taillés en triangle sur son bandeau. (👑 reste la couronne du classement.)
+    forme = poly((10, 84), (12, 32), (31, 54), (50, 22), (69, 54), (88, 32), (90, 84), arrondi=3)
+    bandeau = rect(10, 64, 80, 20, 3)
+    couches = r(forme, OR, brillance=True, bx=30, by=46) + r(bandeau, (OR[2], OR[1], '#a86c0c'), d=3, brillance=False)
+    for x, y in ((12, 26), (50, 16), (88, 26)):
+        couches += r(cercle(x, y, 6.5), ROUGE, d=2, brillance=False)
+        couches.append(('#ffffffc0', cercle(x - 2, y - 2, 2)))
+    for x in (28, 50, 72):
+        couches += _rubis(x, 76, 0.2, eclat_=False)
+    return couches
+
+
+@icone('💍')
+def bijou_diamant():
+    # La bague de diamant : un anneau en or, et un diamant bleu ciel serti sur le dessus.
+    anneau = moins(ellipse(50, 66, 32, 26), ellipse(50, 66, 21, 16))
+    serti = poly((36, 38), (64, 38), (58, 50), (42, 50), arrondi=1)
+    k = 0.52
+
+    def pt(x, y):
+        return (50 + (x - 50) * k, 26 + (y - 50) * k)
+
+    g = poly(pt(30, 14), pt(70, 14), pt(90, 46), pt(50, 90), pt(10, 46))
+    return (
+        r(anneau, OR, by=50, bx=30, brx=8, bry=4)
+        + r(serti, OR, d=2, brillance=False)
+        + [
+            ('#4fd3f0', g),
+            ('#b8f3ff', poly(pt(30, 14), pt(70, 14), pt(62, 32), pt(38, 32))),
+            ('#1f9ec4', poly(pt(90, 46), pt(62, 32), pt(50, 90))),
+            ('#ffffffc0', poly(pt(36, 18), pt(50, 18), pt(44, 28), pt(32, 28))),
+            ('#ffffffe0', eclat(80, 14, 8)),
+            ('#ffffffd0', eclat(20, 22, 5)),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +589,66 @@ def carte():
     chemin = courbe('M 22 72 Q 30 50 46 56 Q 60 62 66 42', 3.5)
     croix = union(trait([(66, 28), (78, 40)], 5), trait([(78, 28), (66, 40)], 5))
     return [('#f0d9a4', papier), ('#d9bd80', plis), ('#a8743a', chemin), (ROUGE[0], croix)]
+
+
+BRIQUE = ('#d65a36', '#f59a74', '#9e3a20')
+
+
+@icone('🏭')
+def fonderie():
+    # (26/10) La fonderie : un four en briques à la bouche orange qui rougeoie, sa cheminée qui
+    # fume, et un lingot d'or tout juste sorti du moule.
+    four = svg('M 10 92 L 10 52 Q 10 32 32 32 L 62 32 Q 84 32 84 52 L 84 92 Z')
+    cheminee = rect(58, 10, 18, 30, 3)
+    bouche = svg('M 26 92 L 26 68 Q 26 52 46 52 Q 66 52 66 68 L 66 92 Z')
+    joints = union(*[rect(x, y, 14, 4, 2) for x, y in ((16, 42), (40, 40), (70, 46), (14, 60), (72, 64), (14, 78), (72, 80))])
+    flamme = svg('M 32 92 Q 30 76 40 68 Q 40 78 46 78 Q 44 64 52 58 Q 54 72 60 74 Q 62 84 60 92 Z')
+    coeur = svg('M 38 92 Q 38 82 46 78 Q 48 84 52 84 Q 56 86 54 92 Z')
+    fumee = union(cercle(70, 8, 6), cercle(82, 6, 8), cercle(92, 14, 5))
+    lingot = poly((60, 84), (84, 84), (90, 94), (54, 94))
+    return (
+        r(fumee, BLANC, d=2, brillance=False)
+        + r(cheminee, NOIR, d=3, brillance=False)
+        + [('#ffffff40', rect(61, 13, 4, 22, 2))]
+        + r(four, BRIQUE, brillance=False)
+        + [(BRIQUE[2], joints), (FONCE, bouche), ('#ff8a1f40', grossir(bouche, 3)), (ORANGE[0], flamme), (OR[1], coeur)]
+        + r(lingot, OR, d=2, brillance=False)
+        + [(OR[1], poly((62, 85), (82, 85), (84, 88), (60, 88)))]
+    )
+
+
+@icone('🏪')
+def joaillerie():
+    # (26/10) La joaillerie : une petite boutique crème à l'auvent violet festonné, une vitrine où
+    # brillent des bijoux, et une grosse gemme en enseigne sur le toit.
+    murs = rect(16, 46, 68, 46, 4)
+    auvent = union(rect(10, 40, 80, 12, 4), *[cercle(x, 52, 6.8) for x in (17, 30.5, 44, 57.5, 71, 84)])
+    rayures = inter(auvent, union(*[rect(x, 30, 13.5, 40) for x in (23.75, 50.75, 77.75)]))
+    vitrine = rect(24, 62, 32, 22, 3)
+    porte = rect(62, 62, 14, 30, 3)
+    k = 0.42
+
+    def pt(x, y):
+        return (50 + (x - 50) * k, 22 + (y - 50) * k)
+
+    gemme = poly(pt(30, 14), pt(70, 14), pt(90, 46), pt(50, 90), pt(10, 46))
+    return (
+        r(murs, BLANC, brillance=False)
+        + [(FONCE, rect(46, 34, 8, 8))]
+        + [
+            ('#4fd3f0', gemme),
+            ('#b8f3ff', poly(pt(30, 14), pt(70, 14), pt(62, 32), pt(38, 32))),
+            ('#1f9ec4', poly(pt(90, 46), pt(62, 32), pt(50, 90))),
+            ('#ffffffd0', eclat(78, 14, 7)),
+            ('#ffffffd0', eclat(22, 20, 5)),
+        ]
+        + r(auvent, VIOLET, d=3, brillance=False)
+        + [(VIOLET[1], rayures)]
+        + [('#8cc8f5', vitrine), ('#ffffff90', poly((28, 64), (34, 64), (28, 74)))]
+        + [(OR[0], contour(ellipse(34, 78, 5, 4), 2.5)), ('#4fd3f0', cercle(34, 73, 2.6)), ('#e8325f', cercle(46, 76, 3.4)), ('#2fb35a', cercle(52, 70, 2.6))]
+        + r(porte, VIOLET, d=2, brillance=False)
+        + [(OR[0], cercle(72, 78, 2))]
+    )
 
 
 # ---------------------------------------------------------------------------

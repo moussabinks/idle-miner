@@ -7,7 +7,11 @@
 //   - Mine → Marché : il emporte le coffre de la mine et le vend ;
 //   - Mine → Foreuse : il apporte le charbon du coffre à la foreuse ;
 //   - Mine → Générateur : il apporte la redstone du coffre au générateur ;
-//   - Foreuse → Marché : il vend le chariot de la foreuse.
+//   - Foreuse → Marché : il vend le chariot de la foreuse ;
+//   - (26/10) Mine → Fonderie et Foreuse → Fonderie : il apporte le fer et l'or (et le charbon du
+//     four) ; Mine → Joaillerie et Foreuse → Joaillerie : les gemmes ; Fonderie → Marché et
+//     Joaillerie → Marché : il vend les lingots et les bijoux. Le joueur choisit quels minerais
+//     partent sur chaque trajet ; un atelier n'accepte que ce qu'il sait transformer.
 // Les rails ne font jamais de boucle (voir batiments.ts) : entre deux bâtiments, il n'y a donc
 // qu'une seule route. Plusieurs wagonnets peuvent rouler sur les mêmes rails : ils se croisent
 // sans se gêner.
@@ -35,7 +39,8 @@ import {
   type IdRarete,
   type NiveauPousseur,
 } from './donnees'
-import { livrerCharbon, placeCharbonForeuse, retirerDuChariot } from './foreuse'
+import { placeCharbonForeuse, livrerCharbon } from './foreuse'
+import { accepte, livrerAtelier, objetsAcceptes, placeCharbonFonderie, placeEntree, produitDe, type IdAtelier } from './ateliers'
 import { blocsDuNiveau } from './mine'
 import { casesDansLeRayon, generateurEnMarche, livrerRedstone, multiplicateurGenerateur, placeRedstoneGenerateur } from './generateur'
 import { ajouterA, encaisser, nouveauTrajet, parPrix, retirerDe, totalObjets, valeurDe, type EtatJeu, type Employe, type Inventaire, type Trajet } from './mineur'
@@ -87,18 +92,61 @@ export function creerTrajet(etat: EtatJeu, liaison: IdLiaison): string[] {
 // touche (ou on touche les rails) pour régler le trajet : l'activer ou non, et choisir les objets
 // que le wagonnet emporte.
 
-// Les objets qu'on peut choisir d'envoyer sur ce trajet. Vers le marché : tout ce que sort la
-// mine à son niveau actuel. Vers la foreuse et le générateur, il n'y a pas le choix (le charbon,
-// la redstone) : la liste est vide.
-export function objetsAuChoix(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
-  if (LIAISONS[liaison].arrivee !== 'marche') return []
-  return blocsDuNiveau(etat.niveauMine)
+// (26/10) L'atelier où arrive ce trajet (la fonderie, la joaillerie), ou null.
+export function atelierDArrivee(liaison: IdLiaison): IdAtelier | null {
+  const arrivee = LIAISONS[liaison].arrivee
+  return arrivee === 'fonderie' || arrivee === 'joaillerie' ? arrivee : null
 }
 
-// Ce que le wagonnet de ce trajet emporte toujours (sans choix).
+// Le stock d'où part le wagonnet de ce trajet : le coffre de la mine, le chariot de la foreuse, ou
+// la réserve d'un atelier (ses lingots, ses bijoux).
+export function stockDuDepart(etat: EtatJeu, liaison: IdLiaison): Inventaire {
+  switch (LIAISONS[liaison].depart) {
+    case 'foreuse':
+      return etat.foreuse.chariot
+    case 'fonderie':
+      return etat.fonderie.sortie
+    case 'joaillerie':
+      return etat.joaillerie.sortie
+    default:
+      return etat.coffre.contenu
+  }
+}
+
+// Les objets qu'on peut choisir d'envoyer sur ce trajet. Vers le marché : tout ce que sort la
+// mine à son niveau actuel (ou les lingots, les bijoux d'un atelier). Vers la foreuse et le
+// générateur, il n'y a pas le choix (le charbon, la redstone) : la liste est vide. (26/10) Vers un
+// atelier : ce qu'il accepte, parmi ce que sort la mine.
+export function objetsAuChoix(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
+  const { depart, arrivee } = LIAISONS[liaison]
+  const duNiveau = blocsDuNiveau(etat.niveauMine)
+  const atelier = atelierDArrivee(liaison)
+  if (atelier) return objetsAcceptes(atelier).filter((bloc) => duNiveau.includes(bloc))
+  if (arrivee !== 'marche') return []
+  if (depart === 'fonderie' || depart === 'joaillerie') {
+    return objetsAcceptes(depart)
+      .filter((bloc) => duNiveau.includes(bloc))
+      .map((bloc) => produitDe(depart, bloc))
+      .filter((produit): produit is IdBloc => produit !== null)
+  }
+  return duNiveau
+}
+
+// (26/10) Ce qu'un atelier refuse, parmi ce que sort la mine (pour le montrer, grisé, dans la
+// fenêtre du trajet) : vide pour les autres trajets.
+export function objetsRefuses(etat: EtatJeu, liaison: IdLiaison): IdBloc[] {
+  const atelier = atelierDArrivee(liaison)
+  if (!atelier) return []
+  const fixe = objetFixe(liaison)
+  return blocsDuNiveau(etat.niveauMine).filter((bloc) => !accepte(atelier, bloc) && bloc !== fixe)
+}
+
+// Ce que le wagonnet de ce trajet emporte toujours (sans choix). (26/10) Vers la fonderie, en
+// plus du minerai choisi : le charbon de son four, tant qu'il n'est pas plein.
 export function objetFixe(liaison: IdLiaison): IdBloc | null {
   if (liaison === 'mine-foreuse') return 'charbon'
   if (liaison === 'mine-generateur') return 'redstone'
+  if (liaison === 'mine-fonderie' || liaison === 'foreuse-fonderie') return 'charbon'
   return null
 }
 
@@ -341,9 +389,48 @@ function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): numb
   // dans le coffre au lieu d'être vendus.
   // (23/10) « Garder 40 » : ce nombre-là reste toujours dans le coffre, le wagonnet prend le reste.
   const fixe = etat.coffre.garder?.[bloc] ?? 0
-  if (bloc === 'charbon' && trajetAutomatique(etat, 'mine-foreuse')) return Math.max(fixe, besoinCharbon(etat))
-  if (bloc === 'redstone' && trajetAutomatique(etat, 'mine-generateur')) return Math.max(fixe, besoinRedstone(etat))
-  return fixe
+  let pourLesAutres = reservePourLesAteliers(etat, 'puits', bloc)
+  if (bloc === 'charbon' && trajetAutomatique(etat, 'mine-foreuse')) pourLesAutres += besoinCharbon(etat)
+  if (bloc === 'redstone' && trajetAutomatique(etat, 'mine-generateur')) pourLesAutres += besoinRedstone(etat)
+  return Math.max(fixe, pourLesAutres)
+}
+
+// (26/10) Ce qu'un wagonnet vers le marché laisse au départ (la mine, ou la foreuse) pour les
+// ateliers : le minerai choisi pour un trajet automatique vers la fonderie ou la joaillerie, tant
+// qu'il y a de la place à leur entrée (et le charbon du four de la fonderie). S'ils sont pleins,
+// le reste part au marché : rien ne reste bloqué.
+function reservePourLesAteliers(etat: EtatJeu, depart: IdBatiment, bloc: IdBloc): number {
+  let reserve = 0
+  for (const liaison of LISTE_LIAISONS) {
+    const atelier = atelierDArrivee(liaison)
+    if (!atelier || LIAISONS[liaison].depart !== depart || !trajetAutomatique(etat, liaison)) continue
+    if (accepte(atelier, bloc) && objetEnvoye(etat, liaison, bloc)) reserve += placeEntree(etat, atelier)
+    if (atelier === 'fonderie' && bloc === 'charbon') reserve += placeCharbonFonderie(etat)
+  }
+  return reserve
+}
+
+// (26/10) Ce que le wagonnet d'un trajet vers un atelier emporte : le minerai choisi qu'il
+// accepte, sans dépasser la place de son entrée (les plus chers d'abord), et, pour la fonderie, le
+// charbon qui manque à son four. Au départ de la mine, ce que le joueur garde (📌) reste.
+function aEmporterVersAtelier(etat: EtatJeu, liaison: IdLiaison, atelier: IdAtelier, exclus: IdBloc[]): [IdBloc, number][] {
+  const stock = stockDuDepart(etat, liaison)
+  const depuisLaMine = LIAISONS[liaison].depart === 'puits'
+  const liste: [IdBloc, number][] = []
+  let place = placeEntree(etat, atelier)
+  for (const [bloc, nombre] of parPrix(stock)) {
+    if (!accepte(atelier, bloc) || exclus.includes(bloc) || place <= 0) continue
+    const libre = Math.max(0, nombre - (depuisLaMine ? (etat.coffre.garder?.[bloc] ?? 0) : 0))
+    const pris = Math.min(libre, place)
+    if (pris > 0) liste.push([bloc, pris])
+    place -= pris
+  }
+  if (atelier === 'fonderie') {
+    const libre = Math.max(0, (stock.charbon ?? 0) - (depuisLaMine ? (etat.coffre.garder?.charbon ?? 0) : 0))
+    const charbon = Math.min(libre, placeCharbonFonderie(etat))
+    if (charbon > 0) liste.push(['charbon', charbon])
+  }
+  return liste
 }
 
 // Ce qu'il y a à emporter au départ de ce trajet, objet par objet (les plus chers d'abord).
@@ -364,8 +451,23 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
       return nombre > 0 ? [['redstone', nombre]] : []
     }
     case 'foreuse-marche': {
+      // (26/10) Il laisse au chariot ce qui part vers un atelier (trajet automatique).
       const exclus = exclusAutres ?? exclusDe(etat, liaison)
-      return parPrix(etat.foreuse.chariot).filter(([bloc]) => !exclus.includes(bloc))
+      return parPrix(etat.foreuse.chariot)
+        .filter(([bloc]) => !exclus.includes(bloc))
+        .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - reservePourLesAteliers(etat, 'foreuse', bloc))])
+        .filter(([, nombre]) => nombre > 0)
+    }
+    case 'mine-fonderie':
+    case 'foreuse-fonderie':
+      return aEmporterVersAtelier(etat, liaison, 'fonderie', exclusAutres ?? exclusDe(etat, liaison))
+    case 'mine-joaillerie':
+    case 'foreuse-joaillerie':
+      return aEmporterVersAtelier(etat, liaison, 'joaillerie', exclusAutres ?? exclusDe(etat, liaison))
+    case 'fonderie-marche':
+    case 'joaillerie-marche': {
+      const exclus = exclusAutres ?? exclusDe(etat, liaison)
+      return parPrix(stockDuDepart(etat, liaison)).filter(([bloc]) => !exclus.includes(bloc))
     }
   }
 }
@@ -391,13 +493,14 @@ export function repartir(liste: [IdBloc, number][], places: number): [IdBloc, nu
   return parts.filter(([, nombre]) => nombre > 0)
 }
 
-// Remplit le wagonnet au départ (dans le coffre de la mine, ou le chariot de la foreuse).
+// Remplit le wagonnet au départ (dans le coffre de la mine, le chariot de la foreuse, ou la
+// réserve d'un atelier).
 function charger(etat: EtatJeu, trajet: Trajet): void {
   const place = capaciteTrajet(etat, trajet.liaison) - totalObjets(trajet.chargement)
+  const stock = stockDuDepart(etat, trajet.liaison)
   for (const [bloc, pris] of repartir(aEmporter(etat, trajet.liaison), place)) {
     ajouterA(trajet.chargement, bloc, pris)
-    if (trajet.liaison === 'foreuse-marche') retirerDuChariot(etat, bloc, pris)
-    else retirerDe(etat.coffre.contenu, bloc, pris)
+    retirerDe(stock, bloc, pris)
   }
 }
 
@@ -422,14 +525,18 @@ function livrer(etat: EtatJeu, trajet: Trajet): string[] {
     const reste = livrerRedstone(etat, chargement.redstone ?? 0)
     if (reste > 0) trajet.chargement = { redstone: reste }
   }
+  // (26/10) Un atelier prend ce qu'il accepte (tant qu'il a de la place) ; le reste repart.
+  const atelier = atelierDArrivee(trajet.liaison)
+  if (atelier) trajet.chargement = livrerAtelier(etat, atelier, chargement)
   if (trajet.pousseur !== 'joueur') return []
-  const livres = totalObjets(chargement)
+  const livres = totalObjets(chargement) - totalObjets(trajet.chargement)
+  if (atelier) return [t('🛤️ Livré à l’atelier : {n} objet(s).', { n: livres })]
   return [trajet.liaison === 'mine-foreuse' ? t('🛤️ Livré : {n} charbon.', { n: livres }) : t('🛤️ Livré : {n} redstone.', { n: livres })]
 }
 
 // Le chargement retourne d'où il vient (trajet arrêté, ou rails coupés en route).
 function rendreChargement(etat: EtatJeu, trajet: Trajet): void {
-  const retour: Inventaire = trajet.liaison === 'foreuse-marche' ? etat.foreuse.chariot : etat.coffre.contenu
+  const retour: Inventaire = stockDuDepart(etat, trajet.liaison)
   for (const [bloc, nombre] of parPrix(trajet.chargement)) ajouterA(retour, bloc, nombre)
   trajet.chargement = {}
 }

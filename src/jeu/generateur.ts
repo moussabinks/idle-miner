@@ -4,7 +4,8 @@
 //   - l'ascenseur de la mine, si la mine est dans le rayon (voir secondesTrajetMineur) ;
 //   - les rails : si toutes les cases d'un trajet sont dans le rayon, son pousseur pousse le
 //     wagonnet plus vite (voir wagonnet.ts) ;
-//   - la foreuse : elle fore plus vite.
+//   - la foreuse : elle fore plus vite ;
+//   - (26/10) la fonderie et la joaillerie : elles fondent et taillent plus vite.
 // On le remplit de redstone (de son sac ou du coffre de la mine), à la main ou par les rails, jusqu'à
 // sa réserve (23/10 : 5 minutes au niveau 1, un peu plus à chaque niveau).
 
@@ -88,6 +89,11 @@ export function casesDansLeRayon(etat: EtatJeu, cases: Case[]): boolean {
 
 export function foreuseAlimentee(etat: EtatJeu): boolean {
   return generateurEnMarche(etat) && batimentDansLeRayon(etat, 'foreuse')
+}
+
+// (26/10) La fonderie ou la joaillerie, dans le rayon du générateur allumé : elle va plus vite.
+export function atelierAlimente(etat: EtatJeu, id: 'fonderie' | 'joaillerie'): boolean {
+  return generateurEnMarche(etat) && batimentDansLeRayon(etat, id)
 }
 
 // L'ascenseur de la mine est accéléré : la mine est dans le rayon du générateur allumé.

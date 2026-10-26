@@ -9,6 +9,7 @@ import { coutAmeliorationEmploye, coutChariotPousseur, verrouMinePioche, manager
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
 // (26/10) La tâche du générateur montre la vitesse qu'il donne (avant : son rayon)
 import { generateurPose, prochainNiveauGenerateur, texteBonusGenerateur } from './generateur'
+import { prochainNiveauAtelier } from './ateliers'
 import {
   coutPioche,
   peutPayer,
@@ -62,6 +63,18 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
   if (generateurPose(etat)) {
     const prochain = prochainNiveauGenerateur(etat)
     if (prochain && debloque(etat, 'generateur', etat.generateur.niveau + 1)) achats.push({ stand: 'generateur', nom: t('Générateur : vitesse {bonus}', { bonus: texteBonusGenerateur(prochain.bonus) }), cout: prochain.cout })
+  }
+
+  // (26/10) La fonderie et la joaillerie : leur niveau suivant, et les joailliers à embaucher.
+  if (pose('fonderie')) {
+    const prochain = prochainNiveauAtelier(etat, 'fonderie')
+    if (prochain && debloque(etat, 'fonderie', etat.fonderie.niveau + 1)) achats.push({ stand: 'fonderie', nom: t('Fonderie niveau {n}', { n: etat.fonderie.niveau + 2 }), cout: prochain.cout })
+  }
+  if (pose('joaillerie')) {
+    const prochain = prochainNiveauAtelier(etat, 'joaillerie')
+    if (prochain && debloque(etat, 'joaillerie', etat.joaillerie.niveau + 1)) achats.push({ stand: 'joaillerie', nom: t('Joaillerie niveau {n}', { n: etat.joaillerie.niveau + 2 }), cout: prochain.cout })
+    const prix = prixEmbauche(etat, 'joaillier')
+    if (prix !== null && pose('employes')) achats.push({ stand: 'employes', nom: t('Embaucher un joaillier'), cout: { argent: prix, materiaux: {} } })
   }
 
   if (pose('employes')) {

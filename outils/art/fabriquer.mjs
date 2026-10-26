@@ -13,7 +13,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { employes, forgeron, foreuse, generateur, iconeRails, marche } from './batiments.mjs'
+import { employes, fonderie, forgeron, foreuse, generateur, iconeRails, joaillerie, marche } from './batiments.mjs'
 import { mine } from './mine.mjs'
 import { arbres } from './arbres.mjs'
 import { montagnes } from './montagnes.mjs'
@@ -36,6 +36,8 @@ for (const [id, fichier, dessiner] of [
   ['employes', 'employes.svg', employes],
   ['foreuse', 'foreuse.svg', foreuse],
   ['generateur', 'generateur.svg', generateur],
+  ['fonderie', 'fonderie.svg', fonderie], // (26/10)
+  ['joaillerie', 'joaillerie.svg', joaillerie], // (26/10)
 ]) {
   const toile = dessiner()
   ecrire(BATIMENTS, fichier, toile.svg())
@@ -43,6 +45,8 @@ for (const [id, fichier, dessiner] of [
 }
 // (26/10) La foreuse en marche : le même dessin, mais la mèche tourne.
 ecrire(BATIMENTS, 'foreuse-active.svg', foreuse({ enMarche: true }).svg())
+// (26/10) La fonderie en marche : le feu danse, le creuset verse le métal fondu, la fumée monte.
+ecrire(BATIMENTS, 'fonderie-active.svg', fonderie({ enMarche: true }).svg())
 ecrire(BATIMENTS, 'rails.svg', iconeRails().svg())
 
 // La mine, son calque de devant et les caisses de l'ascenseur.

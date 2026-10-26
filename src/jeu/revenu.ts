@@ -91,6 +91,7 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
   const valeur = valeurMoyenneBloc(etat.niveauMine)
   const mineurs = etat.employes.filter((e) => e.role === 'mineur')
   const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
+  const joaillierS = etat.employes.filter((e) => e.role === 'joaillier')
   const auTravail = mineurs.filter((m) => m.tempsPaye > 0)
   const brutMineurs = plein ? 0 : auTravail.reduce((total, m) => total + revenuBrutEmploye(etat, m), 0)
   const mine = plein ? 0 : debitMine(etat) * valeur
@@ -105,6 +106,10 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
     { id: 'salaires-mineurs', icone: '⛏️', nom: t('Salaires des mineurs'), detail: mineurs.length > 1 ? t('{n} mineurs', { n: mineurs.length }) : t('{n} mineur', { n: mineurs.length }), parMinute: paie(mineurs) },
     { id: 'salaires-pousseurs', icone: '🛤️', nom: t('Salaires des pousseurs'), detail: pousseurs.length > 1 ? t('{n} pousseurs', { n: pousseurs.length }) : t('{n} pousseur', { n: pousseurs.length }), parMinute: paie(pousseurs) },
   ]
+  // (26/10) les joailliers
+  if (joaillierS.length > 0) {
+    depenses.push({ id: 'salaires-joailliers', icone: '💍', nom: t('Salaires des joailliers'), detail: joaillierS.length > 1 ? t('{n} joailliers', { n: joaillierS.length }) : t('{n} joaillier', { n: joaillierS.length }), parMinute: paie(joaillierS) })
+  }
   if (managerPaieLesSalaires(etat)) depenses.push({ id: 'manager', icone: '💼', nom: t('Salaire du manager'), detail: t('il paie tout le monde'), parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
   const totalGains = gains.reduce((total, l) => total + l.parMinute, 0)
   const totalDepenses = depenses.reduce((total, l) => total + l.parMinute, 0)

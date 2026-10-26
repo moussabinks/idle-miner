@@ -1,5 +1,6 @@
 // Les bâtiments du village (5 × 5 cases), chacun posé sur sa dalle de pavés : le marché, le
-// forgeron, le Personnel, la foreuse et le générateur. La mine (10 × 10) est dans mine.mjs.
+// forgeron, le Personnel, la foreuse, le générateur, (26/10) la fonderie et la joaillerie. La
+// mine (10 × 10) est dans mine.mjs.
 //
 // Chaque dessin est fait en « cases » (x et y de 0 à 5, z en pixels vers le haut), du fond vers
 // l'avant : ce qui est dessiné après passe devant. La porte de chaque bâtiment est du côté donné
@@ -525,6 +526,22 @@ function bandesChantier(t, longueur, hauteur, jaune = C.jaune) {
   )
 }
 
+// (26/10) Une petite animation dans l'image elle-même (SMIL, sans CSS) : les « images » (des bouts
+// de SVG) sont montrées l'une après l'autre, en boucle, chacune pendant sa part de « duree »
+// secondes (calcMode discrete : on passe d'une image à l'autre d'un coup, sans fondu). Avec une
+// seule image, rien ne bouge. La mèche de la foreuse et la fonderie s'en servent.
+function enBoucle(images, duree) {
+  const n = images.length
+  if (n <= 1) return images[0] ?? ''
+  const cles = Array.from({ length: n }, (_, i) => r1((i / n) * 1000) / 1000).join(';')
+  let svg = ''
+  for (let i = 0; i < n; i++) {
+    const valeurs = Array.from({ length: n }, (_, j) => (j === i ? 'visible' : 'hidden')).join(';')
+    svg += `<g visibility="${i === 0 ? 'visible' : 'hidden'}"><animate attributeName="visibility" values="${valeurs}" keyTimes="${cles}" calcMode="discrete" dur="${duree}s" repeatCount="indefinite"/>${images[i]}</g>`
+  }
+  return svg
+}
+
 // La mèche en forme de carotte, vue de côté : large en haut, de plus en plus fine jusqu'à sa
 // pointe, entourée de rainures en spirale. (mx, yHaut) : le milieu de son haut, en pixels du
 // dessin ; rx : son rayon en haut (en pixels) ; longueur : de son haut à sa pointe (en pixels).
@@ -583,15 +600,10 @@ function meche(t, mx, yHaut, rx, longueur, coupe, images = 1) {
   // Une image de la mèche : ses rainures (au soleil, et à l'ombre à droite).
   const uneImage = (decalage) => rainures(ACIER, ACIER_FONCE, decalage) + `<g clip-path="url(#${idOmbre})">${rainures(fonce(ACIER, 0.18), fonce(ACIER_FONCE, 0.2), decalage)}</g>`
   let svg = `<g clip-path="url(#${idCorps})">`
-  if (images <= 1) svg += uneImage(0)
-  else {
-    // Chaque image n'est visible que pendant sa part du tour (calcMode discrete : pas de fondu).
-    const cles = Array.from({ length: images }, (_, i) => r1((i / images) * 1000) / 1000).join(';')
-    for (let i = 0; i < images; i++) {
-      const valeurs = Array.from({ length: images }, (_, j) => (j === i ? 'visible' : 'hidden')).join(';')
-      svg += `<g visibility="${i === 0 ? 'visible' : 'hidden'}"><animate attributeName="visibility" values="${valeurs}" keyTimes="${cles}" calcMode="discrete" dur="${DUREE_TOUR_MECHE}s" repeatCount="indefinite"/>${uneImage(i / images)}</g>`
-    }
-  }
+  svg += enBoucle(
+    Array.from({ length: Math.max(1, images) }, (_, i) => uneImage(i / Math.max(1, images))),
+    DUREE_TOUR_MECHE,
+  )
   // Le reflet : une bande claire qui suit le côté gauche de la mèche.
   const reflet = []
   for (let i = 0; i <= 10; i++) reflet.push([mx - rayon((i / 10) * longueur) * 0.55, yHaut - ry * 0.6 + (i / 10) * longueur * 0.9])
@@ -861,6 +873,499 @@ export function generateur() {
   etincelle(1.5, 3.1, 200, 1.2)
   etincelle(3.3, 1.8, 226, 1)
   etincelle(1.2, 2.2, 150, 0.8)
+  return t
+}
+
+// ---------------------------------------------------------------------------
+// (26/10) Les outils de la fonderie et de la joaillerie
+// ---------------------------------------------------------------------------
+
+// Un tronc de pyramide : un polygone en bas (à la hauteur zBas) et un plus petit en haut (zHaut),
+// avec le même nombre de coins. Pour le haut du four de la fonderie, le toit de la joaillerie, la
+// couronne de la gemme...
+function tronc(t, bas, zBas, haut, zHaut, teinte, options) {
+  const n = bas.length
+  const sommets = [...bas.map(([x, y]) => [x, y, zBas]), ...haut.map(([x, y]) => [x, y, zHaut])]
+  const faces = [haut.map((_, i) => n + i)]
+  for (let i = 0; i < n; i++) faces.push([i, (i + 1) % n, n + ((i + 1) % n), n + i])
+  t.volume(sommets, faces, teinte, options)
+}
+
+// Un rectangle (de x0, y0 à x1, y1), comme liste de coins, pour tronc().
+const coins = (x0, y0, x1, y1) => [
+  [x0, y0],
+  [x1, y0],
+  [x1, y1],
+  [x0, y1],
+]
+
+// Un polygone régulier (n coins) de rayon r en cases, autour de (cx, cy).
+const polygoneRegulier = (cx, cy, r, n, depart = 0) => Array.from({ length: n }, (_, i) => [cx + r * Math.cos(depart + (i / n) * 2 * Math.PI), cy + r * Math.sin(depart + (i / n) * 2 * Math.PI)])
+
+// Un lingot couché (un peu plus étroit en haut qu'en bas), de lx cases sur ly, haut de h pixels.
+function lingot3d(t, x, y, lx, ly, z, h, teinte) {
+  const e = 0.05
+  tronc(t, coins(x, y, x + lx, y + ly), z, coins(x + e, y + e, x + lx - e, y + ly - e), z + h, teinte, { trait: TRAIT_FIN })
+}
+
+// Une étincelle qui brille (une étoile à quatre branches, blanche ou dorée), en points du dessin.
+function brillant(x, y, r, couleur = C.blanc) {
+  const k = 0.28
+  return `<path d="M${r1(x)} ${r1(y - r)} L${r1(x + r * k)} ${r1(y - r * k)} L${r1(x + r)} ${r1(y)} L${r1(x + r * k)} ${r1(y + r * k)} L${r1(x)} ${r1(y + r)} L${r1(x - r * k)} ${r1(y + r * k)} L${r1(x - r)} ${r1(y)} L${r1(x - r * k)} ${r1(y - r * k)} Z" fill="${couleur}" stroke="${C.encre}" stroke-width="2.5"/>`
+}
+
+// ---------------------------------------------------------------------------
+// (26/10) La fonderie : elle fond le fer et l'or bruts en lingots. Un gros haut-fourneau en briques
+// rouges (bien plus grand et plus chaud que le four du forgeron, qui est en pierre grise) : sa
+// bouche crache un feu orange, son haut se resserre en une grosse cheminée qui fume. Devant, un
+// creuset sur son support verse le métal fondu dans un moule à lingots (une plaque de fonte à trois
+// creux). À droite, contre le four, une pile de lingots de fer (gris) et d'or ; au fond, le tas
+// de charbon ; devant à droite, une caisse de minerai brut.
+// « enMarche » : le dessin fonderie-active.svg (le feu danse, le creuset verse, la fumée monte).
+// ---------------------------------------------------------------------------
+
+const BRIQUE_FONDERIE = '#d0603f'
+const FONTE = '#4a4658' // la fonte (le fer noir des moules, du creuset, des cerclages)
+const FONDU = '#ff8a1f' // le métal fondu
+const FONDU_CLAIR = '#ffd84a'
+
+// Quelques briques dessinées sur une façade (pas toutes : le style reste simple). « liste » :
+// [u, v, largeur] en pixels de la façade (v vers le haut).
+function briquesSurFace(t, cote, x, y, z, liste, couleur) {
+  t.surFace(cote, x, y, z, liste.map(([u, v, l]) => `<rect x="${u}" y="${-v}" width="${l}" height="10" rx="3" fill="none" stroke="${couleur}" stroke-width="3"/>`).join(''))
+}
+
+// Les flammes dans la bouche du four (sur la façade), au milieu en m : une image de l'animation.
+function flammesFonderie(m, i) {
+  const h = [
+    [-44, -58, -40],
+    [-50, -46, -52],
+    [-38, -62, -46],
+  ][i % 3]
+  return (
+    `<path d="M${r1(m - 24)} -6 Q${r1(m - 28)} -24 ${r1(m - 14)} ${h[0]} Q${r1(m - 12)} -28 ${r1(m - 4)} -32 Q${r1(m - 2)} ${h[1] + 8} ${r1(m + 4)} ${h[1]} Q${r1(m + 10)} -36 ${r1(m + 14)} ${h[2]} Q${r1(m + 28)} -24 ${r1(m + 24)} -6 Z" fill="${FEU}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+    `<path d="M${r1(m - 14)} -6 Q${r1(m - 16)} -20 ${r1(m - 6)} ${r1(h[0] * 0.6)} Q${r1(m)} -18 ${r1(m + 4)} ${r1(h[1] * 0.68)} Q${r1(m + 16)} -20 ${r1(m + 14)} -6 Z" fill="${FEU_CLAIR}"/>`
+  )
+}
+
+// La fumée qui sort de la cheminée, autour de (fx, fy) : une image de l'animation (« decalage »,
+// de 0 à 1 : de combien les bouffées sont montées).
+function fumeeFonderie(fx, fy, decalage) {
+  let svg = ''
+  for (let i = 2; i >= 0; i--) {
+    const s = (i + decalage) / 3 // 0 : au ras de la cheminée, 1 : tout en haut
+    const x = fx - 14 * Math.sin(s * Math.PI) + 4 * s
+    const y = fy - 54 * s
+    svg += `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(10 + 8 * s)}" fill="#e6e1d8" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`
+  }
+  return svg
+}
+
+export function fonderie({ enMarche = false } = {}) {
+  const t = new Toile({ taille: 5, haut: 240 })
+  dalle(t, 5)
+  const z = DALLE
+  const briques = teintes(BRIQUE_FONDERIE, fonce(BRIQUE_FONDERIE, 0.25), clair(BRIQUE_FONDERIE, 0.25))
+  const joint = fonce(BRIQUE_FONDERIE, 0.3)
+  const fonte = teintes(FONTE, '#2f2c3a', '#8a869c')
+  const pierre = teintes(C.pierre, C.pierreFoncee, clair(C.pierre, 0.3))
+  const bois = teintes(C.bois, C.boisFonce)
+
+  // Au fond à droite, le tas de charbon (le four en brûle beaucoup).
+  tasDeCharbon(t, 4.05, 0.95, z, 1.15)
+
+  // La lueur du feu, à plat sur les pavés devant la bouche du four.
+  const [lx, ly] = t.pt(1.75, 3.25, z)
+  t.ajouter(`<ellipse cx="${r1(lx)}" cy="${r1(ly)}" rx="80" ry="36" fill="${FEU}" opacity="0.32"/>`)
+
+  // Le haut-fourneau : un socle de pierre, le corps en briques, un cerclage de fonte.
+  const [x0, y0, x1, y1] = [0.5, 0.4, 2.9, 2.6]
+  const zSocle = z + 12
+  const zCorps = 92
+  t.boite(x0 - 0.08, y0 - 0.08, x1 + 0.08, y1 + 0.08, z, zSocle, pierre)
+  t.boite(x0, y0, x1, y1, zSocle, zCorps, briques)
+  const faceGauche = (x1 - x0) * 38.15
+  const faceDroite = (y1 - y0) * 38.15
+  briquesSurFace(t, 'gauche', x0, y1, zSocle, [[6, 22, 16], [4, 50, 18], [10, 66, 14], [72, 64, 16], [70, 34, 16]], joint)
+  briquesSurFace(t, 'droite', x1, y1, zSocle, [[8, 18, 16], [6, 60, 18], [62, 66, 14], [64, 14, 16]], fonce(BRIQUE_FONDERIE, 0.45))
+
+  // La bouche du four, sur la façade de gauche : une arche de pierres claires, le noir du four, le
+  // métal fondu qui rougeoie au fond, les flammes (elles dansent quand la fonderie marche).
+  const m = faceGauche / 2
+  const flammes = Array.from({ length: enMarche ? 3 : 1 }, (_, i) => flammesFonderie(m, i))
+  t.surFace(
+    'gauche',
+    x0,
+    y1,
+    zSocle,
+    `<path d="M${r1(m - 34)} 0 V-30 A34 34 0 0 1 ${r1(m + 34)} -30 V0 Z" fill="${clair(C.pierre, 0.2)}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<path d="M${r1(m - 34)} -30 A34 34 0 0 1 ${r1(m + 34)} -30" fill="none" stroke="${C.encre}" stroke-width="3" stroke-dasharray="3 13"/>` +
+      `<path d="M${r1(m - 25)} 0 V-30 A25 25 0 0 1 ${r1(m + 25)} -30 V0 Z" fill="${C.encre}"/>` +
+      enBoucle(flammes, 0.36) +
+      `<rect x="${r1(m - 25)}" y="-7" width="50" height="7" fill="${FONDU}"/>` +
+      `<rect x="${r1(m - 38)}" y="-5" width="76" height="8" rx="3" fill="${clair(C.pierre, 0.1)}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`,
+  )
+  // Sur la façade de droite : une petite trappe ronde en fonte, avec son judas qui rougeoie.
+  const judas = (couleur) => `<circle cx="${r1(faceDroite / 2)}" cy="-42" r="6" fill="${couleur}" stroke="${C.encre}" stroke-width="3"/>`
+  t.surFace(
+    'droite',
+    x1,
+    y1,
+    zSocle,
+    `<circle cx="${r1(faceDroite / 2)}" cy="-42" r="16" fill="${FONTE}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      [0, 1, 2, 3].map((i) => `<circle cx="${r1(faceDroite / 2 + 11 * Math.cos(i * 1.571 + 0.785))}" cy="${r1(-42 + 11 * Math.sin(i * 1.571 + 0.785))}" r="2.2" fill="#8a869c"/>`).join('') +
+      enBoucle(enMarche ? [judas(FEU_CLAIR), judas(FEU)] : [judas(FEU)], 0.5),
+  )
+  // Le cerclage de fonte, puis le haut du four qui se resserre, un autre cerclage, et la cheminée.
+  t.boite(x0 - 0.05, y0 - 0.05, x1 + 0.05, y1 + 0.05, zCorps, zCorps + 10, fonte)
+  const zHaut = 136
+  tronc(t, coins(x0, y0, x1, y1), zCorps + 10, coins(x0 + 0.45, y0 + 0.45, x1 - 0.45, y1 - 0.45), zHaut, briques)
+  t.boite(x0 + 0.4, y0 + 0.4, x1 - 0.4, y1 - 0.4, zHaut, zHaut + 8, fonte)
+  const [c0, c1, d0, d1] = [1.32, 2.08, 1.12, 1.88]
+  const zCheminee = 200
+  t.boite(c0, d0, c1, d1, zHaut + 8, zCheminee, briques)
+  for (let zz = zHaut + 22; zz < zCheminee - 6; zz += 16) {
+    t.ligne([c0 + 0.08, d1, zz], [c1 - 0.08, d1, zz], joint, 3)
+    t.ligne([c1, d1 - 0.08, zz], [c1, d0 + 0.08, zz], fonce(BRIQUE_FONDERIE, 0.45), 3)
+  }
+  t.boite(c0 - 0.08, d0 - 0.08, c1 + 0.08, d1 + 0.08, zCheminee, zCheminee + 10, fonte)
+  const [fx, fy] = t.pt((c0 + c1) / 2, (d0 + d1) / 2, zCheminee + 26)
+  t.ajouter(enBoucle(enMarche ? [0, 0.25, 0.5, 0.75].map((d) => fumeeFonderie(fx, fy, d)) : [fumeeFonderie(fx, fy, 0.35)], 1.2))
+
+  // La pile de lingots, à droite contre le four : quatre lingots de fer en bas, puis l'or (trois,
+  // deux, un).
+  const fer = teintes('#c3ccd6', '#8e9aa6', '#e9eef3')
+  const or = teintes(C.or, fonce(C.or, 0.22), '#ffe68a')
+  const [px, lxL, lyL, hL] = [3.2, 0.62, 0.26, 9]
+  const rangees = [
+    [fer, [1.62, 1.92, 2.22, 2.52]],
+    [or, [1.77, 2.07, 2.37]],
+    [or, [1.92, 2.22]],
+    [or, [2.07]],
+  ]
+  rangees.forEach(([teinte, ys], n) => ys.forEach((y) => lingot3d(t, px + n * 0.02, y, lxL - n * 0.04, lyL, z + n * hL, hL, teinte)))
+  const [bx, by] = t.pt(px + 0.3, 2.2, z + 4 * hL + 12)
+  t.ajouter(brillant(bx + 6, by - 4, 9) + brillant(bx - 22, by + 16, 6))
+
+  // Le moule à lingots, devant à gauche : une plaque de fonte à trois creux. Dans les deux premiers,
+  // un lingot de fer et un lingot d'or déjà durcis ; le troisième reçoit le métal fondu du creuset.
+  const [m0, m1, n0, n1, zm] = [0.55, 2.5, 3.6, 4.3, z + 14]
+  t.boite(m0, n0, m1, n1, z, zm, fonte)
+  const creux = [
+    [0.7, 1.25],
+    [1.35, 1.9],
+    [2.0, 2.4],
+  ]
+  creux.forEach(([a, b], i) => {
+    const creu = [
+      [a, n0 + 0.14, zm],
+      [b, n0 + 0.14, zm],
+      [b, n1 - 0.14, zm],
+      [a, n1 - 0.14, zm],
+    ]
+    t.poly(creu, '#2f2c3a', { trait: 3 })
+    const dedans = creu.map(([x, y]) => [x + (x === a ? 0.05 : -0.05), y + (y < (n0 + n1) / 2 ? 0.05 : -0.05), zm])
+    if (i === 0) t.poly(dedans, '#d6dee6', { trait: 0 })
+    if (i === 1) t.poly(dedans, '#ffe68a', { trait: 0 })
+    if (i === 2 && enMarche) {
+      // Le métal fondu qui remplit le creux, et ses reflets qui bougent.
+      t.poly(dedans, FONDU, { trait: 0 })
+      const [cx, cy] = t.pt((a + b) / 2, (n0 + n1) / 2, zm)
+      t.ajouter(
+        enBoucle(
+          [
+            `<ellipse cx="${r1(cx - 4)}" cy="${r1(cy - 2)}" rx="7" ry="3" fill="${FONDU_CLAIR}"/>`,
+            `<ellipse cx="${r1(cx + 4)}" cy="${r1(cy + 1)}" rx="8" ry="3.5" fill="${FONDU_CLAIR}"/>`,
+            `<ellipse cx="${r1(cx)}" cy="${r1(cy - 1)}" rx="6" ry="2.5" fill="${FONDU_CLAIR}"/>`,
+          ],
+          0.3,
+        ),
+      )
+    }
+  })
+
+  // Le creuset, sur son support de fonte (deux poteaux et un axe) : penché pour verser quand la
+  // fonderie marche, presque droit sinon.
+  const [kx, ky0, ky1, zk] = [3.5, 3.55, 4.25, z + 74]
+  t.boite(kx - 0.07, ky0 - 0.07, kx + 0.07, ky0 + 0.07, z, zk, fonte, { trait: TRAIT_FIN })
+  t.poutre([kx, ky0, zk], [kx, ky1, zk], '#6d7290', 4)
+  const [cx, cy] = t.pt(kx, (ky0 + ky1) / 2, zk)
+  const angle = enMarche ? -58 : -12
+  const a = (angle * Math.PI) / 180
+  const tourne = ([u, v]) => [cx + 1.25 * (u * Math.cos(a) - v * Math.sin(a)), cy + 1.25 * (u * Math.sin(a) + v * Math.cos(a))]
+  if (enMarche) {
+    // Le filet de métal fondu, du bec du creuset au troisième creux du moule.
+    const [bxx, byy] = tourne([-24, -17])
+    const [ex, ey] = t.pt(2.2, (n0 + n1) / 2, zm)
+    const filet = `M${r1(bxx)} ${r1(byy)} Q${r1(ex + 2)} ${r1(byy - 8)} ${r1(ex + 2)} ${r1(ey - 2)}`
+    t.ajouter(`<path d="${filet}" stroke="${C.encre}" stroke-width="18" fill="none"/><path d="${filet}" stroke="${FONDU}" stroke-width="10" fill="none"/>`)
+    t.ajouter(enBoucle([0, 6, 12].map((d) => `<path d="${filet}" stroke="${FONDU_CLAIR}" stroke-width="3.5" fill="none" stroke-dasharray="6 12" stroke-dashoffset="${-d}"/>`), 0.24))
+    t.ajouter(`<ellipse cx="${r1(ex + 2)}" cy="${r1(ey)}" rx="12" ry="5" fill="${FONDU_CLAIR}" stroke="${C.encre}" stroke-width="3"/>`)
+  }
+  t.ajouter(
+    `<g transform="translate(${r1(cx)} ${r1(cy)}) rotate(${angle}) scale(1.25)">` +
+      `<path d="M-18 -15 L-26 -19 L-17 -10 Z" fill="${FONTE}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<path d="M-18 -15 L18 -15 L14 12 Q0 19 -14 12 Z" fill="${FONTE}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<path d="M6 -12 L4 10" stroke="#2f2c3a" stroke-width="6"/>` +
+      `<ellipse cx="0" cy="-15" rx="18" ry="5.5" fill="#2f2c3a" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<ellipse cx="0" cy="-15" rx="13" ry="3.5" fill="${FONDU}"/><ellipse cx="-4" cy="-16" rx="5" ry="1.6" fill="${FONDU_CLAIR}"/>` +
+      `<circle cx="0" cy="-2" r="5" fill="#6d7290" stroke="${C.encre}" stroke-width="3"/>` +
+      `</g>`,
+  )
+  t.boite(kx - 0.07, ky1 - 0.07, kx + 0.07, ky1 + 0.07, z, zk, fonte, { trait: TRAIT_FIN })
+
+  // Devant à droite, une caisse de minerai brut (du fer et de l'or) à fondre.
+  caisse(t, 4.2, 3.95, 0.6, z, 22, [C.fer, C.or, fonce(C.fer, 0.12)])
+  return t
+}
+
+// ---------------------------------------------------------------------------
+// (26/10) La joaillerie : elle taille les gemmes en bijoux. Une jolie boutique aux murs de pierre
+// claire, au toit violet (un toit « à la Mansart », bordé d'or) ; sur le toit, une grosse gemme
+// taillée sert d'enseigne. Sur la façade de gauche, la vitrine où brillent les bijoux, sous un auvent
+// violet et lilas ; sur celle de droite, la porte (côté « droite » dans donnees.ts) et deux petits
+// buis en pot. Devant, l'établi du joaillier avec sa loupe, et un petit coffre ouvert plein de gemmes.
+// ---------------------------------------------------------------------------
+
+const VIOLET_JOAILLERIE = '#9a6ae0'
+const LILAS = '#d9c6fb'
+
+// La grosse gemme de l'enseigne, posée sur sa pointe : le dessous (la culasse, une pyramide à
+// l'envers), puis le dessus (la couronne, un tronc de pyramide). Au milieu en (cx, cy).
+function grosseGemme(t, cx, cy, zPointe, r, couleur) {
+  const teinte = teintes(couleur, fonce(couleur, 0.3), clair(couleur, 0.45))
+  const zFiletage = zPointe + r * 44
+  const octogone = (rr) => polygoneRegulier(cx, cy, rr, 8, Math.PI / 8)
+  t.pyramide(octogone(r), zFiletage, [cx, cy, zPointe], teinte)
+  tronc(t, octogone(r), zFiletage, octogone(r * 0.58), zFiletage + r * 22, teinte)
+  return zFiletage + r * 22
+}
+
+// Le coffre ouvert plein de gemmes (comme celui de la foreuse, mais cerclé d'or).
+function coffreGemmes(t, x0, y0, lx, ly, z) {
+  const [x1, y1, z1] = [x0 + lx, y0 + ly, z + 24]
+  t.poly(
+    [
+      [x0, y0, z1],
+      [x1, y0, z1],
+      [x1, y0 - 0.28, z1 + 26],
+      [x0, y0 - 0.28, z1 + 26],
+    ],
+    fonce(VIOLET_JOAILLERIE, 0.35),
+  )
+  t.boite(x0, y0, x1, y1, z, z1, teintes(C.bois, C.boisFonce))
+  t.poly(
+    [
+      [x0 + 0.07, y0 + 0.07, z1],
+      [x1 - 0.07, y0 + 0.07, z1],
+      [x1 - 0.07, y1 - 0.07, z1],
+      [x0 + 0.07, y1 - 0.07, z1],
+    ],
+    fonce(VIOLET_JOAILLERIE, 0.45),
+    { trait: TRAIT_FIN },
+  )
+  for (const x of [x0 + 0.12, x1 - 0.12]) t.ligne([x, y1, z + 3], [x, y1, z1 - 2], fonce(C.or, 0.15), 4)
+  for (const y of [y0 + 0.1, y1 - 0.1]) t.ligne([x1, y, z + 3], [x1, y, z1 - 2], fonce(C.or, 0.3), 4)
+  const [sx, sy] = t.pt((x0 + x1) / 2, y1, z1 - 8)
+  t.ajouter(`<rect x="${r1(sx - 5)}" y="${r1(sy - 4)}" width="10" height="12" rx="2" fill="${C.or}" stroke="${C.encre}" stroke-width="3"/>`)
+  const [gx, gy] = t.pt((x0 + x1) / 2, (y0 + y1) / 2, z1 + 2)
+  for (const [sorte, dx, dy, taille, angle] of [
+    ['emeraude', -13, -4, 17, -12],
+    ['rubis', 11, -6, 17, 10],
+    ['saphir', -1, -12, 18, 0],
+    ['diamant', 1, 2, 18, -8],
+  ]) {
+    t.ajouter(minerai(sorte, gx + dx, gy + dy, taille, angle))
+  }
+  t.ajouter(brillant(gx + 18, gy - 22, 6))
+}
+
+export function joaillerie() {
+  const t = new Toile({ taille: 5, haut: 206 })
+  dalle(t, 5)
+  const z = DALLE
+  const murs = teintes('#f1e7d8', '#dccbb2', '#f1e7d8')
+  const blanc = teintes('#fffaf0', '#e8dcc4', '#ffffff')
+  const violet = teintes(VIOLET_JOAILLERIE, fonce(VIOLET_JOAILLERIE, 0.25), clair(VIOLET_JOAILLERIE, 0.25))
+  const or = teintes(C.or, fonce(C.or, 0.22), '#ffe68a')
+  const bois = teintes(C.bois, C.boisFonce)
+
+  // La boutique : un socle de pierre, les murs, des pilastres blancs aux coins, une corniche.
+  const [x0, y0, x1, y1, zMur] = [0.6, 0.7, 3.9, 3.7, 104]
+  const zSocle = z + 12
+  t.boite(x0 - 0.06, y0 - 0.06, x1 + 0.06, y1 + 0.06, z, zSocle, teintes(C.pierre, C.pierreFoncee, clair(C.pierre, 0.3)))
+  t.boite(x0, y0, x1, y1, zSocle, zMur, murs)
+  t.boite(x0 - 0.04, y1 - 0.2, x0 + 0.16, y1 + 0.04, zSocle, zMur, blanc)
+  t.boite(x1 - 0.2, y1 - 0.2, x1 + 0.04, y1 + 0.04, zSocle, zMur, blanc)
+  t.boite(x1 - 0.2, y0 - 0.04, x1 + 0.04, y0 + 0.16, zSocle, zMur, blanc)
+  t.boite(x0 - 0.1, y0 - 0.1, x1 + 0.1, y1 + 0.1, zMur, zMur + 8, blanc)
+  t.ligne([x0 - 0.1, y1 + 0.1, zMur + 3], [x1 + 0.1, y1 + 0.1, zMur + 3], C.or, 3)
+  t.ligne([x1 + 0.1, y1 + 0.1, zMur + 3], [x1 + 0.1, y0 - 0.1, zMur + 3], fonce(C.or, 0.2), 3)
+
+  // Le toit violet, bordé d'or, et ses rangées d'ardoises.
+  const zToit = zMur + 8
+  const zHautToit = zToit + 30
+  const retrait = 0.55
+  tronc(t, coins(x0 - 0.12, y0 - 0.12, x1 + 0.12, y1 + 0.12), zToit, coins(x0 + retrait, y0 + retrait, x1 - retrait, y1 - retrait), zHautToit, violet)
+  for (const k of [0.33, 0.66]) {
+    const zz = zToit + (zHautToit - zToit) * k
+    const e = -0.12 + (retrait + 0.12) * k
+    t.ligne([x0 + e + 0.04, y1 - e, zz], [x1 - e, y1 - e, zz], fonce(VIOLET_JOAILLERIE, 0.12), 3)
+    t.ligne([x1 - e, y1 - e, zz], [x1 - e, y0 + e + 0.04, zz], fonce(VIOLET_JOAILLERIE, 0.38), 3)
+  }
+  t.poly(
+    [
+      [x0 + retrait, y0 + retrait, zHautToit],
+      [x1 - retrait, y0 + retrait, zHautToit],
+      [x1 - retrait, y1 - retrait, zHautToit],
+      [x0 + retrait, y1 - retrait, zHautToit],
+    ],
+    'none',
+    { trait: TRAIT_FIN, contour: C.or },
+  )
+
+  // L'enseigne : une grosse gemme bleu ciel sur un socle doré, qui brille.
+  const [gx, gy] = [(x0 + x1) / 2, (y0 + y1) / 2]
+  t.cylindre(gx, gy, 0.3, zHautToit, zHautToit + 8, or)
+  t.cylindre(gx, gy, 0.1, zHautToit + 8, zHautToit + 20, or, { trait: TRAIT_FIN })
+  const zHautGemme = grosseGemme(t, gx, gy, zHautToit + 16, 0.95, C.diamant)
+  const [rx, ry] = t.pt(gx - 0.35, gy + 0.35, zHautGemme - 6)
+  t.ajouter(`<path d="M${r1(rx)} ${r1(ry)} L${r1(rx + 14)} ${r1(ry - 6)}" stroke="${C.blanc}" stroke-width="5"/>`)
+  const [ex, ey] = t.pt(gx, gy, zHautGemme)
+  t.ajouter(brillant(ex - 44, ey - 2, 10) + brillant(ex + 40, ey - 16, 8) + brillant(ex + 30, ey + 40, 6))
+
+  // La vitrine, sur la façade de gauche : un cadre doré, la vitre bleu pâle, et derrière, sur des
+  // coussins violets, une bague, un collier et une couronne qui brillent.
+  const faceGauche = (x1 - x0) * 38.15
+  const [vu0, vu1] = [16, faceGauche - 16]
+  const coussin = (u) => `<ellipse cx="${u}" cy="-16" rx="13" ry="5" fill="${VIOLET_JOAILLERIE}" stroke="${C.encre}" stroke-width="3"/>`
+  const bijoux =
+    // la bague : un anneau d'or et un diamant
+    `<ellipse cx="34" cy="-25" rx="7" ry="6" fill="none" stroke="${C.encre}" stroke-width="7"/><ellipse cx="34" cy="-25" rx="7" ry="6" fill="none" stroke="${C.or}" stroke-width="3"/>` +
+    `<path d="M29 -34 L39 -34 L34 -27 Z" fill="${C.diamant}" stroke="${C.encre}" stroke-width="2.5"/>` +
+    // le collier : une chaîne d'or et une émeraude
+    `<path d="M${r1(faceGauche / 2 - 11)} -44 Q${r1(faceGauche / 2)} -22 ${r1(faceGauche / 2 + 11)} -44" fill="none" stroke="${C.encre}" stroke-width="6"/><path d="M${r1(faceGauche / 2 - 11)} -44 Q${r1(faceGauche / 2)} -22 ${r1(faceGauche / 2 + 11)} -44" fill="none" stroke="${C.or}" stroke-width="2.5"/>` +
+    `<rect x="${r1(faceGauche / 2 - 4)}" y="-31" width="8" height="10" rx="2" fill="${C.emeraude}" stroke="${C.encre}" stroke-width="2.5"/>` +
+    // la couronne : de l'or et des rubis
+    `<path d="M${r1(faceGauche - 44)} -20 L${r1(faceGauche - 45)} -34 L${r1(faceGauche - 39)} -28 L${r1(faceGauche - 34)} -37 L${r1(faceGauche - 29)} -28 L${r1(faceGauche - 23)} -34 L${r1(faceGauche - 24)} -20 Z" fill="${C.or}" stroke="${C.encre}" stroke-width="2.5"/>` +
+    `<circle cx="${r1(faceGauche - 34)}" cy="-24" r="2.6" fill="${C.rubis}"/>`
+  t.surFace(
+    'gauche',
+    x0,
+    y1,
+    zSocle,
+    `<rect x="${vu0}" y="-54" width="${r1(vu1 - vu0)}" height="46" rx="4" fill="#d6eefc" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<rect x="${vu0 + 4}" y="-14" width="${r1(vu1 - vu0 - 8)}" height="5" fill="${LILAS}"/>` +
+      coussin(34) +
+      coussin(r1(faceGauche / 2)) +
+      coussin(r1(faceGauche - 34)) +
+      bijoux +
+      `<path d="M${vu0 + 6} -36 L${vu0 + 18} -50 M${vu0 + 12} -30 L${vu0 + 28} -50" stroke="${C.blanc}" stroke-width="4"/>` +
+      `<rect x="${vu0}" y="-54" width="${r1(vu1 - vu0)}" height="46" rx="4" fill="none" stroke="${C.or}" stroke-width="3"/>` +
+      `<rect x="${vu0 - 6}" y="-9" width="${r1(vu1 - vu0 + 12)}" height="8" rx="3" fill="${blanc.haut}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      brillant(46, -40, 6) +
+      brillant(faceGauche - 50, -44, 5),
+  )
+
+  // L'auvent violet et lilas, au-dessus de la vitrine, avec sa frange festonnée.
+  const [ax0, ax1, ay0, ay1, zFond, zAvant] = [x0 + 0.25, x1 - 0.3, y1, y1 + 0.36, zMur - 4, zMur - 14]
+  const bandes = 6
+  for (let i = 0; i < bandes; i++) {
+    const xa = ax0 + ((ax1 - ax0) * i) / bandes
+    const xb = ax0 + ((ax1 - ax0) * (i + 1)) / bandes
+    t.poly(
+      [
+        [xa, ay0, zFond],
+        [xb, ay0, zFond],
+        [xb, ay1, zAvant],
+        [xa, ay1, zAvant],
+      ],
+      i % 2 ? LILAS : VIOLET_JOAILLERIE,
+      { trait: 0 },
+    )
+  }
+  t.poly(
+    [
+      [ax0, ay0, zFond],
+      [ax1, ay0, zFond],
+      [ax1, ay1, zAvant],
+      [ax0, ay1, zAvant],
+    ],
+    'none',
+  )
+  for (let i = 0; i < bandes; i++) {
+    const xa = ax0 + ((ax1 - ax0) * i) / bandes
+    const xb = ax0 + ((ax1 - ax0) * (i + 1)) / bandes
+    const [a, b, c, d] = [
+      [xa, ay1, zAvant],
+      [xb, ay1, zAvant],
+      [xb, ay1, zAvant - 10],
+      [xa, ay1, zAvant - 10],
+    ].map(([x, y, zz]) => t.pt(x, y, zz))
+    const creux = [(c[0] + d[0]) / 2, (c[1] + d[1]) / 2 + 9]
+    t.ajouter(`<path d="M${r1(a[0])} ${r1(a[1])} L${r1(b[0])} ${r1(b[1])} L${r1(c[0])} ${r1(c[1])} Q${r1(creux[0])} ${r1(creux[1])} ${r1(d[0])} ${r1(d[1])} Z" fill="${i % 2 ? LILAS : VIOLET_JOAILLERIE}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  }
+  // Les côtés de l'auvent (des triangles, à l'ombre).
+  for (const x of [ax1]) {
+    t.poly(
+      [
+        [x, ay0, zFond],
+        [x, ay1, zAvant],
+        [x, ay1, zAvant - 10],
+        [x, ay0, zFond - 4],
+      ],
+      fonce(VIOLET_JOAILLERIE, 0.3),
+      { trait: TRAIT_FIN },
+    )
+  }
+
+  // La porte, au milieu de la façade de droite : violette, en arc, avec sa petite vitre ronde et
+  // sa poignée dorée ; au-dessus, une petite enseigne ronde à la bague.
+  const faceDroite = (y1 - y0) * 38.15
+  const mp = faceDroite / 2
+  t.surFace(
+    'droite',
+    x1,
+    y1,
+    zSocle,
+    `<path d="M${r1(mp - 17)} 0 V-40 A17 17 0 0 1 ${r1(mp + 17)} -40 V0 Z" fill="${VIOLET_JOAILLERIE}" stroke="${C.encre}" stroke-width="${TRAIT}"/>` +
+      `<path d="M${r1(mp - 17)} -40 A17 17 0 0 1 ${r1(mp + 17)} -40" fill="none" stroke="${C.or}" stroke-width="3"/>` +
+      `<circle cx="${r1(mp)}" cy="-40" r="7" fill="#d6eefc" stroke="${C.encre}" stroke-width="3"/>` +
+      `<circle cx="${r1(mp + 9)}" cy="-20" r="3" fill="${C.or}" stroke="${C.encre}" stroke-width="2"/>` +
+      `<circle cx="${r1(mp)}" cy="-68" r="11" fill="${C.creme}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<circle cx="${r1(mp)}" cy="-65" r="5" fill="none" stroke="${C.encre}" stroke-width="5"/><circle cx="${r1(mp)}" cy="-65" r="5" fill="none" stroke="${C.or}" stroke-width="2"/>` +
+      `<path d="M${r1(mp - 4)} -74 L${r1(mp + 4)} -74 L${r1(mp)} -69 Z" fill="${C.diamant}" stroke="${C.encre}" stroke-width="2"/>`,
+  )
+  // La marche devant la porte, et un buis taillé en boule dans un pot de chaque côté.
+  const [ym0, ym1] = [y1 - (mp + 22) / 38.15, y1 - (mp - 22) / 38.15]
+  t.boite(x1, ym0, x1 + 0.3, ym1, z, z + 5, teintes(C.pierre, C.pierreFoncee))
+  for (const y of [ym0 - 0.35, ym1 + 0.35]) {
+    t.cylindre(x1 + 0.32, y, 0.17, z, z + 14, teintes(VIOLET_JOAILLERIE, fonce(VIOLET_JOAILLERIE, 0.25), clair(VIOLET_JOAILLERIE, 0.3)), { trait: TRAIT_FIN })
+    const [bx, by] = t.pt(x1 + 0.32, y, z + 26)
+    t.ajouter(`<circle cx="${r1(bx)}" cy="${r1(by)}" r="13" fill="${C.feuillage}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/><circle cx="${r1(bx - 4)}" cy="${r1(by - 4)}" r="6" fill="${clair(C.feuillage, 0.3)}"/>`)
+  }
+
+  // L'établi du joaillier, devant à gauche : un meuble en bois à tiroir, des gemmes à tailler, et la loupe
+  // sur son bras doré.
+  const [tx0, tx1, ty0, ty1, zt] = [0.35, 1.55, 4.15, 4.65, z + 28]
+  t.boite(tx0 + 0.06, ty0 + 0.06, tx1 - 0.06, ty1 - 0.06, z, zt, bois)
+  t.surFace('gauche', tx0 + 0.06, ty1 - 0.06, z, `<rect x="10" y="-22" width="${r1((tx1 - tx0 - 0.12) * 38.15 - 20)}" height="12" rx="3" fill="${clair(C.bois, 0.15)}" stroke="${C.encre}" stroke-width="3"/><circle cx="${r1(((tx1 - tx0 - 0.12) * 38.15) / 2)}" cy="-16" r="2.5" fill="${C.or}" stroke="${C.encre}" stroke-width="2"/>`)
+  t.boite(tx0, ty0, tx1, ty1, zt, zt + 6, teintes(clair(C.bois, 0.1), C.boisFonce), { trait: TRAIT_FIN })
+  const [ox, oy] = t.pt(0.75, 4.4, zt + 6)
+  t.ajouter(minerai('saphir', ox, oy - 6, 16, -10) + minerai('rubis', ox + 20, oy + 4, 15, 8))
+  // La loupe : un pied, un bras coudé, et le verre rond qui brille.
+  const [lpx, lpy] = t.pt(1.3, 4.35, zt + 6)
+  const bras = `M${r1(lpx)} ${r1(lpy)} L${r1(lpx)} ${r1(lpy - 30)} L${r1(lpx - 18)} ${r1(lpy - 40)}`
+  t.ajouter(`<ellipse cx="${r1(lpx)}" cy="${r1(lpy)}" rx="9" ry="4" fill="${C.or}" stroke="${C.encre}" stroke-width="3"/>`)
+  t.ajouter(`<path d="${bras}" stroke="${C.encre}" stroke-width="10" fill="none"/><path d="${bras}" stroke="${C.or}" stroke-width="4" fill="none"/>`)
+  t.ajouter(
+    `<circle cx="${r1(lpx - 26)}" cy="${r1(lpy - 44)}" r="13" fill="#d6eefc" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<circle cx="${r1(lpx - 26)}" cy="${r1(lpy - 44)}" r="10" fill="none" stroke="${C.or}" stroke-width="3"/>` +
+      `<path d="M${r1(lpx - 32)} ${r1(lpy - 46)} Q${r1(lpx - 30)} ${r1(lpy - 52)} ${r1(lpx - 24)} ${r1(lpy - 52)}" stroke="${C.blanc}" stroke-width="3" fill="none"/>`,
+  )
+
+  // Devant à droite, le petit coffre ouvert plein de gemmes.
+  coffreGemmes(t, 3.75, 4.05, 0.75, 0.5, z)
   return t
 }
 

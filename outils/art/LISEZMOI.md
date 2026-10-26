@@ -31,7 +31,7 @@ ont changé, les recopier dans le jeu :
 | Fichier | Ce qu'il dessine |
 |---|---|
 | `formes.mjs` | La palette, les teintes, et la « toile » isométrique : boîtes, prismes, toits, pyramides, cylindres, dessins à plat sur une façade (`surFace`), rochers ; et les **minerais** (`minerai()`, 25/10) : les mêmes formes que les icônes du jeu (`outils/icones/dessins.py`) |
-| `batiments.mjs` | La dalle de pavés, le marché, le forgeron (25/10 : le four et son feu, la cheminée en briques, l'enclume vue de côté, `enclume()`), le Personnel, la foreuse (25/10 : la mèche en forme de carotte, `meche()`, son petit coffre à charbon, `coffreForeuse()`, et les bandes de chantier, `bandesChantier()`), le générateur et l'icône des rails |
+| `batiments.mjs` | La dalle de pavés, le marché, le forgeron (25/10 : le four et son feu, la cheminée en briques, l'enclume vue de côté, `enclume()`), le Personnel, la foreuse (25/10 : la mèche en forme de carotte, `meche()`, son petit coffre à charbon, `coffreForeuse()`, et les bandes de chantier, `bandesChantier()`), le générateur, (26/10) la fonderie et la joaillerie, et l'icône des rails |
 | `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 5 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
 | `montagnes.mjs` | Le paysage (25/10) : les montagnes enneigées (`montagne()`, la table `MONTAGNES_SIMPLES`, la montagne à la cascade et celle à la galerie de mine), leurs filons (`filon()`), cristaux et fissures, et les collines (`colline()`, `garnirColline()`), un bosquet de sapins et des rochers |
@@ -111,3 +111,24 @@ l'échelle 0,5) ; son cadre est donné à `svg()`.
   boîte posée dessus, où des traits blancs descendent) ; si on la déplace, recopier `EAU_CASCADE`
   (affichée par `fabriquer.mjs`) dans `paysage.ts`.
 
+
+## La fonderie et la joaillerie (26/10)
+
+- **La fonderie** (`fonderie()`, porte à gauche) : un haut-fourneau en briques rouges (le forgeron,
+  lui, a un four en pierre grise et une enclume), sa bouche qui crache le feu, son haut qui se
+  resserre en une grosse cheminée qui fume ; devant, le moule à lingots (une plaque de fonte à trois
+  creux) et le creuset sur son support ; contre le four, une pile de lingots de fer et d'or ; au
+  fond, le charbon ; devant à droite, une caisse de minerai brut.
+- **`fonderie-active.svg`** (`fonderie({ enMarche: true })`) : la fonderie qui travaille. Le feu
+  danse, le creuset penché verse un filet de métal fondu dans le moule, le judas clignote et la
+  fumée monte. Comme la mèche de la foreuse, c'est une animation **dans le SVG** (SMIL : des images
+  montrées l'une après l'autre avec `<animate attributeName="visibility" calcMode="discrete">`),
+  jamais une animation CSS. Le petit outil `enBoucle(images, duree)` de `batiments.mjs` la fabrique
+  (la mèche s'en sert aussi).
+- **La joaillerie** (`joaillerie()`, porte à droite) : une boutique en pierre claire au toit violet
+  bordé d'or, une grosse gemme bleu ciel en enseigne sur le toit, la vitrine aux bijoux sous un auvent
+  violet et lilas, la porte violette et deux buis en pot ; devant, l'établi et sa loupe, et un petit
+  coffre ouvert plein de gemmes (`coffreGemmes()`).
+- Outils ajoutés : `tronc()` (un tronc de pyramide), `polygoneRegulier()`, `lingot3d()`,
+  `brillant()` (une étincelle), et dans `formes.mjs` les minerais `saphir` et `rubis`.
+- La fumée de la fonderie monte haut : son dessin est plus haut que les autres (son calage aussi).

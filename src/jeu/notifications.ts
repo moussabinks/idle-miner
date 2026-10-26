@@ -3,6 +3,7 @@
 // plus de redstone, salaires à payer, rails coupés, amélioration achetable...).
 
 import { analyseWagonnet, chariotTropPetit } from './production'
+import { atelierPose, besoinCharbonFonderie, joailliers, sortiePleine } from './ateliers'
 import { BATIMENTS, LIAISONS, type IdBatiment } from './donnees'
 import { DECOUVERTES, decouvertesAMontrer } from './decouvertes'
 import { alerteSalaires } from './employes'
@@ -60,7 +61,7 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   }
   // (26/10) Un wagonnet qui vend moins que ce qui sort (son chariot est trop petit) : l'argent
   // s'entasse dans le coffre au lieu d'arriver dans la poche. On agrandit le chariot au Personnel.
-  for (const liaison of ['mine-marche', 'foreuse-marche'] as const) {
+  for (const liaison of ['mine-marche', 'foreuse-marche', 'fonderie-marche', 'joaillerie-marche'] as const) {
     if (!chariotTropPetit(analyseWagonnet(etat, liaison))) continue
     ajouter('employes', { icone: '🚃', texte: t('Le wagonnet ne suit pas : agrandis le chariot de son pousseur'), court: t('Chariot !'), sorte: 'alerte' })
     break
@@ -73,6 +74,14 @@ export function notificationsBatiments(etat: EtatJeu): Partial<Record<IdBatiment
   if (batimentPose(etat.village, 'foreuse')) {
     if (chariotPlein(etat)) ajouter('foreuse', { icone: '🛒', texte: t('Le chariot est plein : viens le vider !'), court: t('Plein !'), sorte: 'alerte' })
     else if (etat.foreuse.carburant <= 0) ajouter('foreuse', { icone: '🔥', texte: t('Plus de charbon !'), court: t('Charbon ?'), sorte: 'alerte' })
+  }
+  // (26/10) La fonderie : plus de charbon (alors qu'elle a du minerai), ou sa réserve est pleine.
+  // La joaillerie : sa réserve est pleine, ou personne n'y travaille.
+  if (besoinCharbonFonderie(etat)) ajouter('fonderie', { icone: '⚫', texte: t('Plus de charbon dans le four de la fonderie !'), court: t('Charbon ?'), sorte: 'alerte' })
+  else if (atelierPose(etat, 'fonderie') && sortiePleine(etat, 'fonderie')) ajouter('fonderie', { icone: '🟨', texte: t('La réserve de lingots est pleine : vends-la !'), court: t('Plein !'), sorte: 'alerte' })
+  if (atelierPose(etat, 'joaillerie') && sortiePleine(etat, 'joaillerie')) ajouter('joaillerie', { icone: '💍', texte: t('La réserve de bijoux est pleine : vends-la !'), court: t('Plein !'), sorte: 'alerte' })
+  else if (atelierPose(etat, 'joaillerie') && !joailliers(etat).some((e) => e.tempsPaye > 0)) {
+    ajouter('joaillerie', { icone: '💍', texte: t('Personne ne taille les gemmes : embauche un joaillier au Personnel'), court: t('Joaillier ?'), sorte: 'alerte' })
   }
   if (generateurPose(etat) && etat.generateur.allume && etat.generateur.carburant <= 0) {
     ajouter('generateur', { icone: '🔴', texte: t('Plus de redstone !'), court: t('Redstone ?'), sorte: 'alerte' })
