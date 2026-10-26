@@ -21,7 +21,7 @@ import { embaucherJoaillier, peutEmbaucherJoaillier, prixEmbauche } from './empl
 import { disponible, payerMateriaux, type EtatJeu } from './mineur'
 import { partieDeTest } from './partieDeTest'
 import { avancerTemps } from './temps'
-import { creerTrajet, objetFixe, objetsAuChoix, objetsRefuses, trajetDe, avancerWagonnets } from './wagonnet'
+import { aCharger, atelierPrioritaire, creerTrajet, envoyerObjet, objetFixe, objetsAuChoix, objetsRefuses, trajetDe, avancerWagonnets } from './wagonnet'
 
 const hasard = () => aleatoireAvecGraine(1)
 
@@ -172,5 +172,31 @@ describe('les wagonnets vers les ateliers (26/10)', () => {
     expect(etat.fonderie.carburant).toBe(4 * SECONDES_PAR_CHARBON_FONDERIE)
     expect(etat.coffre.contenu).toEqual({ pierre: 10 }) // la pierre est refusée : elle reste
     expect(trajetDe(etat, 'mine-fonderie')).not.toBeNull()
+  })
+
+  // (26/10, demandé par le propriétaire) L'atelier passe d'abord ; ce qu'il ne peut pas prendre part
+  // au marché, même si le fer est décoché pour le marché : rien ne s'entasse au départ.
+  it('le fer va d’abord à la fonderie, le reste part au marché', () => {
+    const etat = partieAvecRails()
+    etat.village.batiments.push({ id: 'marche', x: 26, y: 16, miroir: false })
+    poserSol(etat, 'rail', 25, 17)
+    creerTrajet(etat, 'mine-fonderie')
+    creerTrajet(etat, 'mine-marche')
+    for (const l of ['mine-fonderie', 'mine-marche'] as const) {
+      etat.employes.push({ nom: l, rarete: 'commun', niveau: 0, role: 'pousseur', trajet: l, etape: 'quai', progression: 0, sac: {}, blocsCasses: 0, tempsPaye: 9999, lieu: 'puits', depuis: 'puits', forgeEnAttente: false })
+    }
+    envoyerObjet(etat, 'mine-marche', 'fer', false) // décoché pour le marché
+    expect(atelierPrioritaire(etat, 'puits', 'fer')).toBe('fonderie')
+    etat.fonderie.entree = { fer: 30 } // 10 places libres
+    etat.coffre.contenu = { fer: 100 }
+    expect(aCharger(etat, 'mine-marche')).toBe(90)
+    etat.fonderie.entree = { fer: 40 } // pleine : tout part au marché
+    expect(aCharger(etat, 'mine-marche')).toBe(100)
+  })
+
+  it('pareil depuis la foreuse : le chariot ne se remplit pas', () => {
+    const etat = partie()
+    etat.foreuse.chariot = { fer: 50, or: 10 }
+    expect(atelierPrioritaire(etat, 'foreuse', 'fer')).toBeNull()
   })
 })

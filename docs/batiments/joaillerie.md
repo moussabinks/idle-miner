@@ -117,3 +117,7 @@ Trois trajets touchent la joaillerie (voir [mine.md](mine.md#les-wagonnets) et [
 - `src/jeu/ateliers.test.ts` : les tests.
 - `src/composants/PanneauxAteliers.tsx` (`PanneauJoaillerie`, `Etablis`, `CeQuIlAccepte`, `Reserve`) : le panneau ; `src/composants/PanneauEmployes.tsx` (`EmbaucheJoaillier`) : la section des joailliers au Personnel ; `src/composants/VueVillage.tsx` : les joailliers devant la boutique ; `src/styles/batiments.css` : `.appel-joaillier`, les lignes « ce qu'ils taillent » et les tuiles refusées.
 - `public/images/batiments/joaillerie.svg` : le dessin, fabriqué par `node outils/art/fabriquer.mjs` (`joaillerie()` dans `outils/art/batiments.mjs`, voir son LISEZMOI) ; les icônes 🏪, 📿, 🧿, 🫅 et 💍 dans `outils/icones/dessins.py`.
+
+## Priorité à l'atelier (26/10)
+
+Quand un trajet automatique (avec son pousseur) emmène un minerai de la mine ou de la foreuse vers cet atelier, **l'atelier passe d'abord** : le wagonnet du marché (Mine → Marché, Foreuse → Marché) laisse au départ juste ce qui tient encore à l'entrée de l'atelier (moins ce que son wagonnet y apporte déjà), et **emporte le reste au marché**, même si ce minerai est décoché pour le marché. Rien ne s'entasse plus dans le coffre ou le chariot de la foreuse quand l'atelier ne suit pas (`atelierPrioritaire`, `reservePourLesAteliers` dans `src/jeu/wagonnet.ts`). La fenêtre du trajet du marché le dit sous les tuiles.

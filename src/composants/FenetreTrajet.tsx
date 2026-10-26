@@ -17,7 +17,7 @@ import { charbonMaxForeuse } from '../jeu/foreuse'
 import { reserveMaxGenerateur } from '../jeu/generateur'
 import { nombre, t } from '../jeu/langue'
 import type { EtatJeu } from '../jeu/mineur'
-import { apercuTrajet, atelierDArrivee, exclusAffiches, objetFixe, objetsAuChoix, objetsRefuses, stockDuDepart, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
+import { apercuTrajet, atelierDArrivee, atelierPrioritaire, exclusAffiches, objetFixe, objetsAuChoix, objetsRefuses, stockDuDepart, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
 import { nombreAbrege } from '../nombres'
 import { Barre } from './Barre'
 import { Fenetre } from './Fenetre'
@@ -115,6 +115,8 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
   const versLeMarche = info.arrivee === 'marche'
   const atelier = atelierDArrivee(liaison)
   const refuses = objetsRefuses(etat, liaison)
+  // (26/10) Vers le marché : les minerais qu'un atelier prend d'abord (le marché a le reste).
+  const prioritaires = versLeMarche ? choix.filter((bloc) => atelierPrioritaire(etat, info.depart, bloc) !== null) : []
   const nouveau = liaisons.some((l) => trajetDe(etat, l) === null)
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
 
@@ -187,7 +189,10 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
                         {BLOCS[bloc].emoji}
                       </span>
                       <span className="objet-nom">{t(BLOCS[bloc].nom)}</span>
-                      <span className="objet-infos">×{nombreAbrege(stock[bloc] ?? 0)}</span>
+                      <span className="objet-infos">
+                        ×{nombreAbrege(stock[bloc] ?? 0)}
+                        {prioritaires.includes(bloc) && ` · ${BATIMENTS[atelierPrioritaire(etat, info.depart, bloc) ?? 'fonderie'].emoji}`}
+                      </span>
                     </button>
                   )
                 })}
@@ -212,6 +217,11 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
                     ? t('Vert : il l’apporte à la joaillerie. Gris : il reste au départ. La joaillerie ne taille que les gemmes.')
                     : t('Vert : il l’emporte et le vend. Gris : il reste dans le coffre.')}
               </p>
+              {prioritaires.length > 0 && (
+                <p className="discret">
+                  {t('{objets} : la fonderie ou la joaillerie passe d’abord, ce qu’elle ne peut pas prendre part au marché.', { objets: prioritaires.map((bloc) => BLOCS[bloc].emoji).join(' ') })}
+                </p>
+              )}
             </section>
           )}
           {fixe && <Reserve etat={etat} liaison={liaison} />}
