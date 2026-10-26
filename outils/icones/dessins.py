@@ -284,6 +284,185 @@ def rubis():
 
 
 # ---------------------------------------------------------------------------
+# (26/10, redessinés) Les minerais bruts (fer 🔩, or 🟡) et les lingots (⬜, 🟨)
+# ---------------------------------------------------------------------------
+#
+# Le minerai brut : un gros caillou taillé à facettes (la face du dessus claire, les faces à
+# l'ombre en bas à droite), avec de grosses pépites de métal qui en sortent. Le métal doit couvrir
+# presque la moitié du caillou : à 16 px, on voit d'abord sa couleur (rose-beige pour le fer, jaune
+# d'or pour l'or), pas la pierre grise 🪨. Chaque pépite est elle aussi taillée à facettes (par
+# `_facettes()`, comme les gemmes), entourée d'un creux sombre dans la roche, avec un reflet blanc.
+# Le fer a des pépites anguleuses, allongées en filon ; l'or des pépites rondes et dodues qui
+# scintillent (des étincelles autour).
+
+ROCHE_MINERAI = ('#d8d6cf', '#bdbbb4', '#a2a09a', '#86847f', '#6b6a66')
+ROCHE_CREUX = '#4a4743'
+
+# fer : du plus clair au plus sombre (beige rosé, comme le minerai de fer de Minecraft, et rouille)
+FER_TONS = ('#fff4ec', '#fbd5c0', '#e5ad94', '#bf7f68', '#8e5446')
+FER_CREUX = '#55332e'
+# or : du plus clair au plus sombre
+OR_TONS = ('#fffbe3', '#ffe98f', '#f9c63a', '#e09a16', '#b06d0c')
+
+
+def _roche_taillee(contour_roche, dessus):
+    """Un caillou taillé : la forme entière, et sa face du dessus (« dessus ») ; les autres faces
+    vont de la plus claire (en haut à gauche) à la plus sombre (en bas à droite)."""
+    roche = poly(*contour_roche, arrondi=5)
+    couches = [(ROCHE_MINERAI[2], roche)]
+    couches += _facettes(dessus, roche, ROCHE_MINERAI[1:])
+    couches.append((ROCHE_MINERAI[0], poly(*dessus)))
+    return roche, couches
+
+
+def _pepite_taillee(points, tons, creux, reflet=True):
+    """Une pépite de métal taillée à facettes, prise dans la roche. « points » : son contour ; sa
+    table (le dessus plat qui brille) est le même contour en plus petit, poussé vers la lumière."""
+    pepite = poly(*points, arrondi=1.2)
+    cx = sum(x for x, _ in points) / len(points)
+    cy = sum(y for _, y in points) / len(points)
+    l = max(x for x, _ in points) - min(x for x, _ in points)
+    table = [(cx - l * 0.07 + (x - cx) * 0.5, cy - l * 0.07 + (y - cy) * 0.5) for x, y in points]
+    couches = [(creux, grossir(pepite, 2.6)), (tons[2], pepite)]
+    couches += _facettes(table, pepite, tons[1:])
+    couches.append((tons[1], poly(*table)))
+    if reflet:
+        # un éclat de lumière sur le dessus, presque blanc
+        couches.append((tons[0], ellipse(cx - l * 0.14, cy - l * 0.12, l * 0.13, l * 0.07, -35)))
+    return pepite, couches
+
+
+def _blob(cx, cy, rx, ry, bosses, angle=0):
+    """Le contour d'une pépite cabossée : un ovale dont les points rentrent ou sortent un peu
+    (« bosses » : un facteur par point, autour du centre)."""
+    n = len(bosses)
+    a0 = math.radians(angle)
+    pts = []
+    for i, k in enumerate(bosses):
+        a = 2 * math.pi * i / n
+        x, y = rx * k * math.cos(a), ry * k * math.sin(a)
+        pts.append((cx + x * math.cos(a0) - y * math.sin(a0), cy + x * math.sin(a0) + y * math.cos(a0)))
+    return pts
+
+
+ROCHE_FER = [(8, 62), (14, 34), (34, 15), (62, 11), (86, 26), (94, 56), (82, 84), (52, 93), (20, 86)]
+DESSUS_FER = [(30, 30), (56, 22), (72, 36), (60, 52), (34, 52), (24, 42)]
+
+
+@icone('🔩')
+def fer():
+    # (26/10, redessiné) Le fer brut (le minerai), à fondre en lingots ⬜ à la fonderie : un caillou
+    # taillé, traversé en biais par un gros filon de pépites rose-beige anguleuses (et deux petites).
+    _, couches = _roche_taillee(ROCHE_FER, DESSUS_FER)
+    for pts in (
+        # le filon : trois grosses pépites anguleuses, en biais du haut à gauche vers le bas à droite
+        [(14, 40), (26, 26), (42, 28), (46, 42), (34, 54), (18, 54)],
+        [(42, 52), (54, 38), (70, 40), (76, 56), (64, 68), (46, 66)],
+        [(60, 74), (72, 66), (88, 70), (86, 84), (72, 90), (60, 86)],
+        # deux petites pépites
+        [(66, 18), (76, 16), (82, 26), (74, 32), (64, 28)],
+        [(22, 66), (32, 62), (38, 72), (30, 80), (20, 76)],
+    ):
+        couches += _pepite_taillee(pts, FER_TONS, FER_CREUX)[1]
+    couches.append(('#ffffffe0', eclat(84, 40, 6.5)))
+    return couches
+
+
+ROCHE_OR = [(8, 64), (12, 36), (32, 18), (60, 14), (84, 26), (94, 54), (84, 82), (54, 93), (22, 88)]
+DESSUS_OR = [(30, 32), (56, 24), (72, 38), (60, 54), (34, 54), (24, 44)]
+
+
+@icone('🟡')
+def or_():
+    # (26/10, redessiné) L'or brut (le minerai), à fondre en lingots 🟨 : un caillou taillé plein de
+    # grosses pépites d'or rondes et dodues (l'une dépasse en haut), qui scintillent.
+    _, couches = _roche_taillee(ROCHE_OR, DESSUS_OR)
+    for cx, cy, rx, ry, bosses, angle in (
+        (36, 44, 19, 16, (1, 0.9, 1.05, 0.95, 1, 0.92, 1.04, 0.9), -12),
+        (68, 60, 18, 16, (0.95, 1.05, 0.9, 1, 1.04, 0.9, 1, 0.96), 14),
+        (66, 22, 13, 11, (1, 0.92, 1.05, 0.9, 1, 0.95, 1.05), 0),
+        (30, 76, 11, 9, (1, 0.9, 1.05, 0.95, 1, 0.92), 20),
+        (82, 40, 7, 6, (1, 0.9, 1.05, 0.95, 1), 0),
+    ):
+        couches += _pepite_taillee(_blob(cx, cy, rx, ry, bosses, angle), OR_TONS, OR_CREUX)[1]
+    couches += [('#ffffffe8', eclat(86, 14, 9)), ('#ffffffd8', eclat(14, 26, 6)), ('#ffffffe0', eclat(52, 84, 5))]
+    return couches
+
+
+# Le lingot : vu de trois quarts, un tronc de pyramide couché (le dessus plus petit que le
+# dessous). On le place en trois dimensions (u : la longueur, v : la profondeur, z : la hauteur),
+# puis on le projette : ce qui est plus loin est un peu plus haut et plus à droite. On voit le
+# dessus (le plus clair), le bout de gauche (éclairé), la face de devant et le bout de droite (le
+# plus sombre). Sur le dessus, un creux (le poinçon), et une bande de lumière blanche en biais.
+
+
+def _lingot(ox, oy, tons, creux, u0=0, v0=0, z0=0, L=46, D=22, H=16, su=8, sv=4):
+    """Un lingot posé en (u0, v0, z0) ; le point (0, 0, 0) du monde est en (ox, oy) sur le dessin.
+    « su » : de combien les bouts penchent, « sv » : les côtés. « tons » : du plus clair au plus
+    sombre (reflet, dessus, bout de gauche, devant, bout de droite)."""
+
+    def p(u, v, z):
+        u, v, z = u + u0, v + v0, z + z0
+        return (ox + u + v * 0.42, oy - z - v * 0.58)
+
+    dessus = poly(p(su, sv, H), p(L - su, sv, H), p(L - su, D - sv, H), p(su, D - sv, H))
+    devant = poly(p(0, 0, 0), p(L, 0, 0), p(L - su, sv, H), p(su, sv, H))
+    droite = poly(p(L, 0, 0), p(L, D, 0), p(L - su, D - sv, H), p(L - su, sv, H))
+    gauche = poly(p(0, 0, 0), p(su, sv, H), p(su, D - sv, H), p(0, D, 0))
+    tout = union(dessus, devant, droite, gauche)
+    m = (L - 2 * su) * 0.18
+    poincon = poly(p(su + m, sv + 3, H), p(L - su - m, sv + 3, H), p(L - su - m, D - sv - 3, H), p(su + m, D - sv - 3, H))
+
+    def bande(u, largeur):
+        """Une bande de lumière en biais, sur le dessus et le devant."""
+        return inter(union(dessus, devant), poly(p(u, 0, -2), p(u + largeur, 0, -2), p(u + largeur + 10, D, H + 2), p(u + 10, D, H + 2)))
+
+    couches = [
+        # (un trait d'encre autour : il sépare le lingot de ceux qu'il cache)
+        (FONCE, grossir(tout, 2.4)),
+        (tons[2], gauche),
+        (tons[4], droite),
+        (tons[3], devant),
+        (tons[1], dessus),
+        (creux, poincon),
+        (tons[1], moins(poincon, deplace(poincon, -1.4, 1.4))),
+        (tons[0] + 'c8', bande(L * 0.2, L * 0.14)),
+        (tons[0] + '90', bande(L * 0.2 + L * 0.2, L * 0.05)),
+        # le fil de lumière sur l'arête de devant du dessus
+        (tons[0], trait([p(su + 1, sv, H), p(L - su - 1, sv, H)], 1.6)),
+    ]
+    return tout, couches
+
+
+ACIER_TONS = ('#ffffff', '#e8eef5', '#c6d0db', '#a2afbd', '#6d7a8b')
+ACIER_CREUX = '#8794a4'
+LINGOT_OR_TONS = ('#fffbe3', '#ffe98f', '#ffd24d', '#f5b82e', '#c98512')
+
+
+@icone('⬜')
+def lingot_fer():
+    # (26/10, redessiné) Le lingot de fer (la fonderie le fabrique avec le fer brut 🔩) : deux
+    # lingots d'acier poli gris bleuté, l'un sur l'autre, avec leur poinçon et une bande de
+    # lumière. (Le lingot d'or 🟨 est une pyramide de trois lingots.)
+    couches = _lingot(8, 90, ACIER_TONS, ACIER_CREUX, L=62, D=30, H=20, su=9, sv=5)[1]
+    couches += _lingot(8, 90, ACIER_TONS, ACIER_CREUX, u0=10, v0=6, z0=20, L=56, D=26, H=19, su=9, sv=5)[1]
+    couches += [('#ffffffe8', eclat(80, 30, 8)), ('#ffffffd0', eclat(22, 82, 4.5))]
+    return couches
+
+
+@icone('🟨')
+def lingot_or():
+    # (26/10, redessiné) Le lingot d'or (la fonderie le fabrique avec l'or brut 🟡) : une pyramide
+    # de trois lingots d'or qui brillent, avec leur poinçon, une bande de lumière et des étincelles.
+    t = dict(L=40, D=22, H=17, su=7, sv=4)
+    couches = _lingot(6, 92, LINGOT_OR_TONS, OR_CREUX, **t)[1]
+    couches += _lingot(6, 92, LINGOT_OR_TONS, OR_CREUX, u0=44, **t)[1]
+    couches += _lingot(6, 92, LINGOT_OR_TONS, OR_CREUX, u0=20, v0=5, z0=17, **t)[1]
+    couches += [('#ffffffe8', eclat(78, 40, 9)), ('#ffffffd8', eclat(20, 58, 5.5)), ('#ffffffe0', eclat(54, 82, 4))]
+    return couches
+
+
+# ---------------------------------------------------------------------------
 # (26/10) Les bijoux (la joaillerie taille les gemmes en bijoux) : de l'or et une gemme
 # ---------------------------------------------------------------------------
 #
