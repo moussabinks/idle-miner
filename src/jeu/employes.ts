@@ -731,6 +731,9 @@ export function licencier(etat: EtatJeu, index: number): string[] {
   const prix = employe ? indemnites(etat, employe.role) : 0
   if (!employe || etat.argent < prix || employe.etape === 'pousse') return []
   etat.argent -= prix
+  // (26/10) Un joaillier laisse la gemme qu'il taillait à l'entrée de la joaillerie.
+  const gemme = employe.role === 'joaillier' ? gemmeEnCours(employe) : null
+  if (gemme) ajouterA(etat.joaillerie.entree, gemme, 1)
   etat.employes.splice(index, 1)
   return [t('👋 {nom} est parti(e). Indemnités : {prix} $.', { nom: employe.nom, prix: nombre(prix) })]
 }
