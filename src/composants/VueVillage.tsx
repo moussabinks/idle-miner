@@ -147,7 +147,8 @@ export function VueVillage({
   const zoomMin = Math.max(taille.l / (LIMITES_CAMERA.x1 - LIMITES_CAMERA.x0), taille.h / (LIMITES_CAMERA.y1 - LIMITES_CAMERA.y0))
   const zoomConfort = Math.min(ZOOM_MAX, Math.max(zoomMin, taille.l / 760))
   const [zoom, setZoom] = useState<number | null>(null)
-  const [libre, setLibre] = useState<{ cx: number; cy: number } | null>(null)
+  // (« douce » : la caméra y glisse en douceur, comme quand elle suit le joueur ; sinon elle y saute)
+  const [libre, setLibre] = useState<{ cx: number; cy: number; douce?: boolean } | null>(null)
 
   // Le joueur se remet à marcher : la caméra le suit de nouveau.
   const [marchait, setMarchait] = useState(joueur.marche)
@@ -195,11 +196,20 @@ export function VueVillage({
   // (seulement quand un bouton l'a déplacé : « suivi » change ; un toucher sur la carte, non)
   const cleRailPropose = railPropose ? railPropose.suivi : null
   const [railSuivi, setRailSuivi] = useState<number | null>(null)
+  const [railCentre, setRailCentre] = useState<string | null>(null)
   if (cleRailPropose !== null && cleRailPropose !== railSuivi) {
     const avant = railSuivi
     setRailSuivi(cleRailPropose)
+    setRailCentre(railPropose?.depuis ? cleCase(railPropose.depuis.x, railPropose.depuis.y) : null)
     // (la première fois, on note seulement le compteur : c'était un toucher sur la carte)
-    if (avant !== null && railPropose) {
+    // (26/10, demandé par le propriétaire) Un rail vient d'être posé : la caméra glisse en douceur
+    // pour centrer le nouveau rail, à chaque rail.
+    const clePose = railPropose?.depuis ? cleCase(railPropose.depuis.x, railPropose.depuis.y) : null
+    if (avant !== null && railPropose?.depuis && clePose !== railCentre) {
+      const z = zoom ?? zoomConfort
+      const p = versEcran(railPropose.depuis.x + 0.5, railPropose.depuis.y + 0.5)
+      setLibre({ cx: p.x, cy: p.y + (taille.h * 0.12) / z, douce: true })
+    } else if (avant !== null && railPropose) {
       const z = zoom ?? zoomConfort
       const vue = libre ?? { cx: versEcran(joueur.x, joueur.y).x, cy: versEcran(joueur.x, joueur.y).y - 20 }
       const p = versEcran(railPropose.c.x + 0.5, railPropose.c.y + 0.5)
@@ -211,7 +221,7 @@ export function VueVillage({
   const suivi = pousse && wagonnet ? wagonnet : joueur
   const ecranJoueur = versEcran(suivi.x, suivi.y)
   const normale = borner({ z: zoom ?? zoomConfort, ...(libre ?? { cx: ecranJoueur.x, cy: ecranJoueur.y - 20 }) })
-  const camera: Camera = { ...normale, douce: libre === null }
+  const camera: Camera = { ...normale, douce: libre === null || libre.douce === true }
   const cameraRef = useRef(camera)
   useLayoutEffect(() => {
     cameraRef.current = camera

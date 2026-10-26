@@ -363,6 +363,61 @@ def rubis():
 # ---------------------------------------------------------------------------
 # (26/10) Les bijoux (la joaillerie taille les gemmes en bijoux) : de l'or et une gemme
 # ---------------------------------------------------------------------------
+#
+# (26/10, redessinés en vrais bijoux de luxe) L'or des bijoux a quatre tons à plat : un bord
+# clair en haut à gauche (la lumière), la couleur, une ombre en bas à droite, et un brun doré
+# pour les creux ; plus de petits reflets presque blancs. Les gemmes serties sont les mêmes
+# dessins que les gemmes brutes (💚 💎 🔷 🔺), en plus petit, pour qu'on les reconnaisse.
+
+OR_CLAIR = '#ffe98f'
+OR_BASE = '#f5b82e'
+OR_OMBRE = '#d08a12'
+OR_CREUX = '#94590a'
+OR_REFLET = '#fffbe3'
+PERLE = ('#f6f0e4', '#ffffff', '#c8bba6')
+
+
+def _or(forme, d=3.0, clair=True):
+    """Une pièce d'or à plat : sa couleur, un bord clair en haut à gauche et une ombre en bas à
+    droite (épais de « d »)."""
+    couches = [(OR_BASE, forme)]
+    if clair:
+        couches.append((OR_CLAIR, moins(forme, deplace(forme, d * 0.55, d * 0.75))))
+    couches.append((OR_OMBRE, moins(forme, deplace(forme, -d * 0.55, -d * 0.75))))
+    return couches
+
+
+def _boule_or(cx, cy, rayon):
+    """Une perle d'or (une boule) : ombre en bas à droite et un point de lumière."""
+    boule = cercle(cx, cy, rayon)
+    return _or(boule, d=max(1.2, rayon * 0.45), clair=False) + [(OR_REFLET, cercle(cx - rayon * 0.35, cy - rayon * 0.35, rayon * 0.32))]
+
+
+def _perle(cx, cy, rayon):
+    """Une perle blanche nacrée."""
+    boule = cercle(cx, cy, rayon)
+    return [
+        (PERLE[0], boule),
+        (PERLE[2], moins(boule, deplace(boule, -rayon * 0.3, -rayon * 0.4))),
+        (PERLE[1], cercle(cx - rayon * 0.35, cy - rayon * 0.35, rayon * 0.35)),
+    ]
+
+
+def _sur_courbe(p0, p1, p2, t):
+    """Le point de la courbe (de Bézier, du second degré) p0 → p2, tirée vers p1, à « t » (0 à 1)."""
+    u = 1 - t
+    return (u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0], u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1])
+
+
+def _brillant(cx, cy, rayon):
+    """Un petit diamant rond (vu de dessus), serti dans un anneau d'or : sa table en octogone et
+    huit facettes (le même bleu ciel que le diamant 💎)."""
+    pierre = cercle(cx, cy, rayon)
+    table = [(cx + rayon * 0.5 * math.cos(math.radians(a + 22.5)), cy + rayon * 0.5 * math.sin(math.radians(a + 22.5))) for a in range(0, 360, 45)]
+    couches = _or(grossir(pierre, 1.6), d=1.4, clair=False) + [('#4fd3f0', pierre)]
+    couches += _facettes(table, pierre, ('#e6fbff', '#b8f3ff', '#4fd3f0', '#1f9ec4'))
+    couches += [('#8fe6f8', poly(*table)), ('#ffffffd0', cercle(cx - rayon * 0.3, cy - rayon * 0.3, rayon * 0.28))]
+    return couches
 
 
 def _emeraude_petite(cx, cy, k):
@@ -375,6 +430,9 @@ def _emeraude_petite(cx, cy, k):
         ('#2fb35a', g),
         ('#7cf0a0', inter(g, poly(pt(34, 10), pt(66, 10), pt(68, 28), pt(32, 28)))),
         ('#1c7c3c', inter(g, poly(pt(68, 28), pt(84, 30), pt(84, 70), pt(68, 72)))),
+        # (les marches de la taille « émeraude » : un deuxième rang, à gauche et en bas)
+        ('#38c066', inter(g, poly(pt(16, 30), pt(32, 28), pt(32, 72), pt(16, 70)))),
+        ('#22914a', inter(g, poly(pt(32, 72), pt(68, 72), pt(66, 90), pt(34, 90)))),
         ('#45cf72', rect(cx - 18 * k, cy - 22 * k, 36 * k, 44 * k, 3 * k)),
         ('#ffffffb0', rect(cx - 12 * k, cy - 18 * k, 7 * k, 22 * k, 3 * k)),
     ]
@@ -382,75 +440,181 @@ def _emeraude_petite(cx, cy, k):
 
 @icone('📿')
 def bijou_emeraude():
-    # Le collier d'émeraude : une chaîne en or (des perles dorées) et une grosse émeraude en
-    # pendentif, sertie dans l'or.
-    chaine = courbe('M 14 8 Q 12 54 50 56 Q 88 54 86 8', 6)
-    perles = union(*[cercle(x, y, 5) for x, y in ((14, 14), (16, 30), (24, 44), (36, 52), (64, 52), (76, 44), (84, 30), (86, 14))])
-    gemme, couches_gemme = _emeraude_petite(50, 72, 0.48)
-    serti = grossir(gemme, 4.5)
-    return (
-        r(chaine, OR, d=2, brillance=False)
-        + r(perles, OR, d=2, brillance=False)
-        + r(cercle(50, 54, 6), OR, d=2, brillance=False)
-        + r(serti, OR, d=3, brillance=False)
-        + couches_gemme
-        + [('#ffffffd0', eclat(78, 72, 7))]
-    )
+    # Le collier d'émeraude : une chaîne de perles d'or qui descend en U, deux petites émeraudes
+    # serties dans la chaîne, et en pendentif une grosse émeraude taillée, dans un cadre d'or à
+    # griffes, avec sa bélière (l'anneau qui la tient) et une goutte d'or en dessous.
+    couches = []
+    gauche = ((12, 6), (12, 44), (46, 44))
+    droite = ((88, 6), (88, 44), (54, 44))
+    # le fil de la chaîne, sous les perles
+    fil = union(courbe('M 12 6 Q 12 44 46 44', 3), courbe('M 88 6 Q 88 44 54 44', 3))
+    couches.append((OR_OMBRE, fil))
+    accents = []
+    for p0, p1, p2 in (gauche, droite):
+        for i in range(9):
+            t = i / 8.6
+            x, y = _sur_courbe(p0, p1, p2, t)
+            if i == 6:
+                accents.append((x, y))
+            elif i % 2 == 0:
+                couches += _boule_or(x, y, 4.4)
+            else:
+                couches += _boule_or(x, y, 2.8)
+    # les deux petites émeraudes de la chaîne, dans leur chaton d'or
+    for x, y in accents:
+        petite, couches_petite = _emeraude_petite(x, y, 0.15)
+        couches += _or(grossir(petite, 1.8), d=1.4, clair=False) + couches_petite
+    # la bélière
+    couches += _or(contour(ellipse(50, 45, 4.5, 5), 3.2), d=1.4)
+    # le pendentif : le cadre d'or (à huit côtés, comme la gemme), puis l'émeraude
+    gemme, couches_gemme = _emeraude_petite(50, 69, 0.42)
+    cadre = grossir(gemme, 4.2)
+    couches += _boule_or(50, 91, 3.6)
+    couches += _or(cadre, d=3)
+    couches.append((OR_CREUX, moins(grossir(gemme, 1.2), gemme)))
+    couches += couches_gemme
+    # les griffes, aux quatre coins de l'émeraude, et une perle d'or en haut du cadre
+    for x, y in ((50 - 13, 69 - 15), (50 + 13, 69 - 15), (50 - 13, 69 + 15), (50 + 13, 69 + 15)):
+        couches += _boule_or(x, y, 2.6)
+    couches += _boule_or(50, 50.5, 3)
+    couches += [('#ffffffe0', eclat(80, 76, 7)), ('#ffffffd0', eclat(24, 70, 4.5))]
+    return couches
 
 
 @icone('🧿')
 def bijou_saphir():
-    # L'amulette de saphir : un gros médaillon en or au cordon de cuir, un saphir ovale au
-    # milieu, entouré d'un cercle de petites perles dorées.
-    cordon = union(courbe('M 12 6 Q 26 22 42 24', 5), courbe('M 88 6 Q 74 22 58 24', 5))
-    anneau = contour(cercle(50, 24, 7), 5)
-    medaillon = cercle(50, 62, 32)
-    couches = [('#8a5a2c', cordon)] + r(anneau, OR, d=2, brillance=False) + r(medaillon, OR, brillance=False)
-    couches.append((OR[2], contour(cercle(50, 62, 25), 2.5)))
-    couches += [(OR[1], cercle(50 + 25 * math.cos(a), 62 + 25 * math.sin(a), 2.6)) for a in [i * math.pi / 6 for i in range(12)]]
-    couches += _saphir(50, 62, 18, 15, eclat_=False)
-    couches.append(('#ffffffd0', eclat(78, 36, 8)))
+    # Le pendentif de saphir : un médaillon en or au bord festonné (une couronne de petites
+    # boules), un saphir ovale (le dessin de 🔷) dans un cercle de perles d'or, quatre petits
+    # diamants autour, et en haut une bélière et une courte chaîne.
+    couches = []
+    # la chaîne, en V, de maillons ovales
+    for x0, y0, x1, y1 in ((16, 6, 44, 26), (84, 6, 56, 26)):
+        angle = math.degrees(math.atan2(y1 - y0, x1 - x0))
+        for i in range(5):
+            t = i / 4
+            x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+            # (un gros maillon ouvert, puis un petit maillon plein)
+            maillon = contour(ellipse(x, y, 4.2, 2.6, angle), 2.2) if i % 2 == 0 else ellipse(x, y, 2.6, 1.6, angle)
+            couches += _or(maillon, d=1.2, clair=False)
+    # la bélière (un anneau, puis un petit tube d'or)
+    couches += _or(contour(cercle(50, 26, 4.6), 3), d=1.4)
+    couches += _or(rect(45, 29, 10, 8, 3), d=1.6)
+    # le médaillon festonné : un ovale et des petites bosses tout autour
+    cx, cy, l, h = 50, 64, 28, 25
+    bosses = [cercle(cx + l * math.cos(a), cy + h * math.sin(a), 5.2) for a in [i * math.pi / 8 for i in range(16)]]
+    medaillon = union(ellipse(cx, cy, l, h), *bosses)
+    couches += _or(medaillon, d=3.4)
+    # le creux, puis le cercle de perles d'or autour du saphir
+    couches.append((OR_CREUX, ellipse(cx, cy, l - 6, h - 6)))
+    couches.append((OR_OMBRE, ellipse(cx, cy, l - 7.5, h - 7.5)))
+    couches += [(OR_CLAIR, cercle(cx + (l - 6) * math.cos(a), cy + (h - 6) * math.sin(a), 1.7)) for a in [i * math.pi / 9 for i in range(18)]]
+    couches += _saphir(cx, cy + 0.5, 17, 14, eclat_=False)
+    # les quatre petits diamants, sur le bord
+    for x, y in ((cx - l - 1, cy), (cx + l + 1, cy), (cx, cy + h + 1), (cx, cy - h - 1)):
+        couches += _brillant(x, y, 3.6)
+    couches += [('#ffffffe0', eclat(80, 34, 7)), ('#ffffffd0', eclat(20, 38, 4.5))]
     return couches
 
 
 @icone('🫅')
 def bijou_rubis():
-    # La couronne de rubis : une petite couronne en or, une perle rouge au bout de chaque pointe
-    # et trois rubis taillés en cœur sur son bandeau. (👑 reste la couronne du classement.)
-    forme = poly((10, 84), (12, 32), (31, 54), (50, 22), (69, 54), (88, 32), (90, 84), arrondi=3)
-    bandeau = rect(10, 64, 80, 20, 3)
-    couches = r(forme, OR, brillance=True, bx=30, by=46) + r(bandeau, (OR[2], OR[1], '#a86c0c'), d=3, brillance=False)
-    for x, y in ((12, 26), (50, 16), (88, 26)):
-        couches += r(cercle(x, y, 6.5), ROUGE, d=2, brillance=False)
-        couches.append(('#ffffffc0', cercle(x - 2, y - 2, 2)))
-    for x in (28, 50, 72):
-        couches += _rubis(x, 76, 0.2, eclat_=False)
+    # La couronne de rubis : une couronne royale. Derrière, le bonnet de velours rouge ; devant,
+    # cinq pointes d'or (les grandes ont une perle au bout), un bandeau gravé avec trois rubis
+    # taillés en cœur (le dessin de 🔺) et des perles entre eux. (👑 reste la couronne du
+    # classement, plus simple.)
+    couches = []
+    # le velours, qu'on voit entre les pointes
+    velours = svg('M 16 66 Q 14 26 50 22 Q 86 26 84 66 Z')
+    couches += [
+        ('#b8173a', velours),
+        ('#7e0c27', moins(velours, deplace(velours, -4, -3))),
+        ('#e04a68', inter(velours, ellipse(36, 31, 7, 3.2, -25))),
+    ]
+    # les pointes : de grandes pointes au milieu et aux bords, de petites entre elles
+    pointes = poly(
+        (10, 68), (12, 30), (24, 52), (31, 40), (38, 52), (50, 20),
+        (62, 52), (69, 40), (76, 52), (88, 30), (90, 68),
+        arrondi=2,
+    )
+    couches += _or(pointes, d=3.5)
+    # une arête claire au milieu de chaque grande pointe (l'or est bombé)
+    for x0, y0, x1 in ((12, 34, 16), (50, 26, 50), (88, 34, 84)):
+        couches.append((OR_REFLET, trait([(x0, y0 + 4), (x1, y0 + 20)], 2.2)))
+    # le bandeau, gravé : un liseré clair en haut, un liseré sombre en bas
+    bandeau = rect(9, 62, 82, 24, 4)
+    couches += _or(bandeau, d=3)
+    couches += [
+        (OR_CLAIR, rect(12, 64, 76, 3, 1.5)),
+        (OR_CREUX, rect(12, 80.5, 76, 2, 1)),
+    ]
+    # les perles au bout des pointes
+    for x, y, rayon in ((12, 27, 5.4), (50, 16, 6), (88, 27, 5.4)):
+        couches += _perle(x, y, rayon)
+    for x, y in ((31, 37), (69, 37)):
+        couches += _boule_or(x, y, 3.4)
+    # les rubis du bandeau, chacun dans son chaton d'or, et les perles entre eux
+    for x, k in ((50, 0.23), (27, 0.18), (73, 0.18)):
+        couches += _or(grossir(poly(*[(x + px * k, 73 + py * k) for px, py in ((0, -22), (12, -38), (30, -40), (44, -26), (42, -6), (0, 42), (-42, -6), (-44, -26), (-30, -40), (-12, -38))]), 1.8), d=1.2, clair=False)
+        couches += _rubis(x, 73, k, eclat_=False)
+    for x in (16, 38, 62, 84):
+        couches += _perle(x, 73, 2.6)
+    # un petit rubis rond au pied de la grande pointe du milieu
+    couches += _or(cercle(50, 48, 4.6), d=1.4, clair=False) + [('#e8304f', cercle(50, 48, 3.2)), ('#ff9fb0', cercle(49, 47, 1.2))]
+    couches += [('#ffffffe0', eclat(74, 16, 6))]
     return couches
+
+
+def _diamant_taille(cx, cy, k):
+    """Le diamant 💎 (la même taille et les mêmes couleurs), en plus petit, au milieu en (cx, cy) :
+    sa couronne (la table et ses côtés) et sa culasse (la pointe), avec deux facettes de plus en
+    bas pour qu'il scintille."""
+    def pt(x, y):
+        return (cx + (x - 50) * k, cy + (y - 52) * k)
+
+    g = poly(pt(30, 14), pt(70, 14), pt(90, 46), pt(50, 90), pt(10, 46))
+    haut = poly(pt(30, 14), pt(70, 14), pt(62, 32), pt(38, 32))
+    gauche = poly(pt(10, 46), pt(38, 32), pt(50, 90))
+    droite = poly(pt(90, 46), pt(62, 32), pt(50, 90))
+    return g, [
+        ('#4fd3f0', g),
+        ('#b8f3ff', haut),
+        ('#1f9ec4', droite),
+        ('#4fd3f0', moins(gauche, droite)),
+        ('#8fe6f8', poly(pt(38, 32), pt(50, 90), pt(26, 42))),
+        ('#178ab0', poly(pt(62, 32), pt(74, 42), pt(50, 90))),
+        ('#ffffffc0', poly(pt(36, 18), pt(50, 18), pt(44, 28), pt(32, 28))),
+    ]
 
 
 @icone('💍')
 def bijou_diamant():
-    # La bague de diamant : un anneau en or, et un diamant bleu ciel serti sur le dessus.
-    anneau = moins(ellipse(50, 66, 32, 26), ellipse(50, 66, 21, 16))
-    serti = poly((36, 38), (64, 38), (58, 50), (42, 50), arrondi=1)
-    k = 0.52
-
-    def pt(x, y):
-        return (50 + (x - 50) * k, 26 + (y - 50) * k)
-
-    g = poly(pt(30, 14), pt(70, 14), pt(90, 46), pt(50, 90), pt(10, 46))
-    return (
-        r(anneau, OR, by=50, bx=30, brx=8, bry=4)
-        + r(serti, OR, d=2, brillance=False)
-        + [
-            ('#4fd3f0', g),
-            ('#b8f3ff', poly(pt(30, 14), pt(70, 14), pt(62, 32), pt(38, 32))),
-            ('#1f9ec4', poly(pt(90, 46), pt(62, 32), pt(50, 90))),
-            ('#ffffffc0', poly(pt(36, 18), pt(50, 18), pt(44, 28), pt(32, 28))),
-            ('#ffffffe0', eclat(80, 14, 8)),
-            ('#ffffffd0', eclat(20, 22, 5)),
-        ]
-    )
+    # La bague de diamant (un solitaire) : un anneau d'or vu un peu de biais (plus épais devant),
+    # une monture en corbeille à quatre griffes qui tient un gros diamant (le dessin de 💎), et
+    # deux petits diamants ronds sur les épaules de l'anneau.
+    couches = []
+    exterieur = ellipse(50, 67, 33, 25)
+    trou = ellipse(50, 64, 22, 15)
+    anneau = moins(exterieur, trou)
+    couches += _or(anneau, d=4)
+    # l'intérieur de l'anneau, qu'on voit au fond (en haut du trou)
+    couches.append((OR_CREUX, moins(trou, deplace(trou, 0, 5))))
+    # un reflet net sur le devant de l'anneau
+    couches.append((OR_REFLET, courbe('M 26 78 Q 34 88 48 89', 2.4)))
+    # les épaules : deux petits diamants
+    couches += _brillant(24, 52, 4.4)
+    couches += _brillant(76, 52, 4.4)
+    # la monture (la corbeille sous le diamant)
+    corbeille = poly((32, 36), (68, 36), (59, 54), (41, 54), arrondi=1.5)
+    couches += _or(corbeille, d=2.5)
+    couches.append((OR_CREUX, poly((42, 42), (58, 42), (55, 48), (45, 48))))
+    # le diamant, puis les griffes par-dessus son bord
+    gemme, couches_gemme = _diamant_taille(50, 28, 0.6)
+    couches += couches_gemme
+    for (x0, y0), (x1, y1) in (((35, 39), (28, 23)), ((65, 39), (72, 23)), ((44, 42), (41, 29)), ((56, 42), (59, 29))):
+        couches += _or(trait([(x0, y0), (x1, y1)], 3.4), d=1.2, clair=False)
+        couches += _boule_or(x1, y1, 2.3)
+    couches += [('#ffffffe0', eclat(84, 14, 7)), ('#ffffffd0', eclat(16, 26, 4.5)), ('#ffffffe0', eclat(44, 14, 3.2))]
+    return couches
 
 
 # ---------------------------------------------------------------------------

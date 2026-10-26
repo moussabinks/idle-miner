@@ -89,6 +89,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 
 **Les rails**
 
+- (26/10, demandé par le propriétaire) **À chaque rail posé, la caméra glisse en douceur** pour centrer le nouveau rail (`VueVillage.tsx`, `libre.douce`).
 - Les rails sont dans le menu Bâtiments, **à partir du niveau 2 du joueur** (25/10 ; avant, le niveau 3 : `NIVEAU_JOUEUR_POUR.rails`, `railsDebloques`), **3 fer la case** (`COUT_RAIL`). Avant, leur carte a un cadenas « 🔒 ⭐ 2 ». Chaque case posée rapporte 3 XP et chaque trajet créé 30 XP, une seule fois : retirer un rail puis le reposer ne redonne rien.
 - Un rail **occupe une seule case**, mais sa voie est **dessinée sur deux cases de large** (une demi-case de plus à gauche et à droite, talus compris) : voir « Les rails » dans [visuel-et-sons.md](visuel-et-sons.md).
 - **Les bords de la voie** (25/10) : les cases où déborde la demi-voie (les deux côtés d'une ligne droite, l'extérieur d'un virage, le dos d'un T : `bordsDeVoie` dans `village.ts`) sont **interdites aux bâtiments et aux chemins**. Pendant qu'on pose l'un d'eux, ces cases sont montrées en rouge. Devant et derrière une ligne (dans son sens), c'est libre : un bâtiment peut s'y raccorder. À l'inverse, on ne peut pas poser (ni déplacer) un rail si sa voie, ou celle de ses voisins qui change de forme, passerait sur un bâtiment ou un chemin (`placePourUnRail` dans `batiments.ts`, message « 🚧 Pas la place »). Les parties d'avant ne sont pas touchées : ce qui y était déjà posé reste là.
