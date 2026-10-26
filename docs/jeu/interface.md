@@ -271,7 +271,7 @@ Les onglets portent une **pastille « ! »** quand il y a quelque chose à faire
 | `PrixCout.tsx` | dans les boutons | « 1 500 $ · 3/10 🔩 » ; ce qui manque est en rouge (les minerais viennent du coffre de la mine) |
 | `Barre.tsx` | coffre, durabilité, charbon, fatigue… | une jauge avec son texte par-dessus (« 120 / 300 », « Plein ! ») ; vert, rose, jaune, violet ou bleu |
 | `StockMinerais.tsx` | coffre de la mine, chariot de la foreuse | le titre et sa jauge, le gros **💰 Tout vendre** (jaune, avec « +… $ »), puis une ligne par minerai : nombre, **📌 Garder** (coffre seulement, bleu quand il est gardé : ouvre une petite fenêtre « Le minerai gardé reste dans le coffre : il n'est pas vendu au marché. », « 📌 Gardé : N », et **−100 −10 0 +10 +100**, les gros pas en plus grand ; 26/10) et **+… $** (jaune, vendre ce minerai) |
-| `PanneauTrajets.tsx` | mine, marché, foreuse | une ligne par trajet : « Pas de rails », « Rails posés », « En route » (avec une jauge), « Pas de pousseur », « Au quai » ; boutons **🛒 Pousser** (jaune, si personne ne le pousse) et **🛤️ Automatiser** (vert) ou **⚙️ Régler** (bleu) |
+| `PanneauTrajets.tsx` | mine, marché, foreuse | une ligne par trajet : « Pas de rails », « Rails posés », « En route » (avec une jauge), « Pas de pousseur », « Au quai » ; bouton **🛤️ Automatiser** (vert) ou **⚙️ Régler** (bleu) ; (26/10) plus de bouton **🛒 Pousser** : seuls les pousseurs font rouler les wagonnets |
 | `Interrupteur.tsx` | trajets, manager | un interrupteur gris / vert avec son texte |
 | `AlerteChariot.tsx` | mine, foreuse | le chariot du pousseur est trop petit, avec **👷 Agrandir** |
 

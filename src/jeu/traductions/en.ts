@@ -218,7 +218,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   '{duree} l’aller-retour': '{duree} round trip',
   '{n} $/min': '{n} $/min',
   '{nom} le pousse.': '{nom} pushes it.',
-  'Pas de pousseur : embauche-en un au Personnel (sinon, pousse-le toi-même).': 'No pusher: hire one at the Staff (or push it yourself).',
   'Ce rail :': 'This rail:',
 
   // src/composants/FeteNiveau.tsx
@@ -362,11 +361,9 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Rails posés': 'Rails laid',
   'En route': 'On the way',
   'Pas de pousseur': 'No pusher',
-  'Embauche un pousseur au Personnel, ou pousse-le toi-même.': 'Hire a pusher at the Staff, or push it yourself.',
   'Au quai': 'At the dock',
   'Rien à emporter pour l’instant.': 'Nothing to carry for now.',
   'Son pousseur va repartir.': 'Its pusher will head out again.',
-  'Pousser': 'Push',
   'Régler': 'Set up',
   'Aucun trajet possible pour l’instant : construis le bâtiment d’arrivée.': 'No route possible yet: build the destination building.',
 
@@ -1054,4 +1051,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Touche un bâtiment de la barre, puis place-le. Encore 1 bâtiment à poser.': 'Tap a building in the bar, then place it. 1 building left to place.',
   'Tous les bâtiments sont posés ! Les rails et les pavés qui restent iront dans le stock.': 'All buildings are placed! Leftover rails and paving go to your stock.',
   'Tout ranger': 'Store all',
+  // (26/10) Plus de « Pousser » : seuls les pousseurs font rouler les wagonnets
+  'Embauche un pousseur au Personnel : il fera rouler ce wagonnet.': 'Hire a pusher at the Staff building: they will run this cart.',
+  'Pas de pousseur : embauche-en un au Personnel pour faire rouler ce wagonnet.': 'No pusher: hire one at the Staff building to run this cart.',
 }
