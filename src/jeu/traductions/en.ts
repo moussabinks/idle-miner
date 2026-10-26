@@ -1038,4 +1038,5 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // (26/10) Remplacer un pousseur
   '🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son wagonnet, avec son chariot.': '🔄 {ancien} left: {nom} ({rarete}!) takes over their cart, with its wagon.',
   '🔄 {ancien} est parti(e) : {nom} prend son wagonnet, avec son chariot.': '🔄 {ancien} left: {nom} takes over their cart, with its wagon.',
+  'Afficher le rayon sur la carte': 'Show the range on the map',
 }
