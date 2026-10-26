@@ -874,6 +874,8 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Populaire': 'Popular',
   'Meilleure offre': 'Best value',
   'Payer {prix}': 'Pay {prix}',
+  'Bientôt disponible': 'Coming soon',
+  'Les achats de gemmes arrivent très bientôt ! En attendant, regarde une publicité pour gagner des gemmes.': 'Gem purchases are coming very soon! Meanwhile, watch an ad to earn gems.',
   '💎 +{n} gemmes ! Merci pour ton achat !': '💎 +{n} gems! Thanks for your purchase!',
   'Simulation de paiement : aucun argent n’est pris. Elle sert à tester la boutique.': 'Payment simulation: no money is taken. It is only here to test the shop.',
   // (25/10) Le retour d'absence : le bénéfice net
