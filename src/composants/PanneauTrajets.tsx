@@ -3,13 +3,14 @@
 // Une ligne par trajet, avec une seule chose à faire :
 //   - pas encore de rails : « Pas de rails » (on les pose avec 🏗️ Construire) ;
 //   - des rails, mais pas de trajet : « Automatiser » (ouvre la fenêtre du trajet) ;
-//   - un trajet : où en est son wagonnet, « Pousser » si personne ne le pousse, et « Régler ».
+//   - un trajet : où en est son wagonnet, et « Régler » (26/10 : plus de « Pousser » : seuls les
+//     pousseurs embauchés font rouler les wagonnets).
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu.
 
 import { BATIMENTS, LIAISONS, LISTE_LIAISONS, type IdBatiment, type IdLiaison } from '../jeu/donnees'
-import { nombre, t } from '../jeu/langue'
+import { t } from '../jeu/langue'
 import { batimentPose } from '../jeu/village'
-import { aCharger, aUnPousseur, capaciteTrajet, distanceDepuisLeDepart, enRoute, ligneDe, longueurTrajet, peutPousser, pousserTrajet, trajetDe, trajetElectrique } from '../jeu/wagonnet'
+import { aCharger, aUnPousseur, distanceDepuisLeDepart, enRoute, ligneDe, longueurTrajet, trajetDe, trajetElectrique } from '../jeu/wagonnet'
 import { Barre } from './Barre'
 import { useJeu } from './contexteJeu'
 import { nomTrajet } from './nomTrajet'
@@ -17,7 +18,7 @@ import type { PropsPanneau } from './Panneaux'
 
 // Une ligne : le nom du trajet, son état, et le bouton.
 export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; onReglerTrajet?: (liaisons: IdLiaison[]) => void }) {
-  const { etat, jouer } = useJeu()
+  const { etat } = useJeu()
   const info = LIAISONS[liaison]
   const ligne = ligneDe(etat, liaison)
   const trajet = trajetDe(etat, liaison)
@@ -35,13 +36,12 @@ export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; o
     detail = trajet.etape === 'aller' ? `→ ${t(BATIMENTS[info.arrivee].nom)}` : `← ${t(BATIMENTS[info.depart].nom)}`
   } else if (!aUnPousseur(etat, liaison)) {
     etiquette = { texte: t('Pas de pousseur'), classe: 'etiquette-rose' }
-    detail = t('Embauche un pousseur au Personnel, ou pousse-le toi-même.')
+    detail = t('Embauche un pousseur au Personnel : il fera rouler ce wagonnet.')
   } else {
     etiquette = { texte: t('Au quai'), classe: 'etiquette-bleu' }
     detail = aCharger(etat, liaison) === 0 ? t('Rien à emporter pour l’instant.') : t('Son pousseur va repartir.')
   }
 
-  const aPorter = Math.min(capaciteTrajet(etat, liaison), aCharger(etat, liaison))
   return (
     <div className="ligne-amelioration ligne-wagonnet">
       <span className="ligne-wagonnet-icone" aria-hidden="true">
@@ -59,13 +59,8 @@ export function LigneTrajet({ liaison, onReglerTrajet }: { liaison: IdLiaison; o
       </div>
       {ligne && (
         <span className="ligne-amelioration-boutons">
-          {/* Personne ne le pousse : le joueur peut le pousser lui-même. */}
-          {trajet && !aUnPousseur(etat, liaison) && (
-            <button className="btn btn-jaune btn-petit" disabled={!peutPousser(etat, liaison)} onClick={() => jouer((e) => pousserTrajet(e, liaison))}>
-              <span>🛒 {t('Pousser')}</span>
-              {aPorter > 0 && <span className="prix">{t('{n} blocs', { n: nombre(aPorter) })}</span>}
-            </button>
-          )}
+          {/* (26/10, demandé par le propriétaire) Plus de bouton « Pousser » : le joueur ne pousse
+              plus les wagonnets lui-même, c'est le travail des pousseurs (plus simple à comprendre). */}
           {onReglerTrajet && (
             <button className={`btn btn-petit ${trajet ? 'btn-bleu' : 'btn-vert'}`} onClick={() => onReglerTrajet([liaison])}>
               {trajet ? `⚙️ ${t('Régler')}` : `🛤️ ${t('Automatiser')}`}

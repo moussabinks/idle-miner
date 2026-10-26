@@ -77,7 +77,7 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 
 - **Sans rails** : ce qu'il faut relier (menu Bâtiments, 3 🔩 fer la case, à partir du niveau 2 du joueur).
 - **Rails posés, pas de trajet** : « Touche la bulle 🛤️ Automatiser sur les rails » (la fenêtre du trajet s'ouvre aussi toute seule dès que les rails relient les deux bâtiments).
-- **Trajet créé** : où en est son wagonnet et qui le pousse, **🛒 Pousser** (toi, un wagonnet à la fois, si personne ne le pousse) et **⚙️ Régler** (la fenêtre du trajet : l'activer ou l'arrêter, choisir les objets).
+- **Trajet créé** : où en est son wagonnet et qui le pousse, et **⚙️ Régler** (26/10 : plus de « 🛒 Pousser ») (la fenêtre du trajet : l'activer ou l'arrêter, choisir les objets).
 - Si le **chariot du pousseur** du marché ne suit pas ce que sort la mine : « 🛒 Le chariot de *Nom* est trop petit… », avec un bouton vers le Personnel (`AlerteChariot.tsx`).
 
 ## Les chiffres
@@ -174,7 +174,7 @@ Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir +
   - **vers le générateur** : la redstone qui manque à sa réserve ;
   - (26/10) **vers la fonderie** : le fer et l'or choisis (les autres objets sont « Refusé ici »), sans dépasser la place de son entrée, et le charbon qui manque à son four ;
   - (26/10) **vers la joaillerie** : les gemmes choisies (émeraude, saphir, rubis, diamant), sans dépasser la place de son entrée.
-- **Qui le fait avancer** : **toi** (« Pousser », un wagonnet à la fois), ou **son pousseur**, embauché au Personnel pour ce trajet. Il faut un pousseur payé pour qu'un trajet roule tout seul, **même électrique** ; sur un trajet électrique (toutes ses cases dans le rayon du générateur allumé), il va + 30 % à + 100 % plus vite. Voir [personnel.md](personnel.md#3-les-pousseurs) et [generateur.md](generateur.md).
+- **Qui le fait avancer** : **son pousseur** (26/10 : le joueur ne le pousse plus lui-même), embauché au Personnel pour ce trajet. Il faut un pousseur payé pour qu'un trajet roule tout seul, **même électrique** ; sur un trajet électrique (toutes ses cases dans le rayon du générateur allumé), il va + 30 % à + 100 % plus vite. Voir [personnel.md](personnel.md#3-les-pousseurs) et [generateur.md](generateur.md).
 - **Ligne coupée** (un rail enlevé, un bâtiment déplacé) : le wagonnet revient au quai, son chargement retourne d'où il vient, et une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
 - Les wagonnets roulent aussi jeu fermé (avec leur pousseur payé). Ce qu'ils vendent est en grand dans la fenêtre du retour.
 

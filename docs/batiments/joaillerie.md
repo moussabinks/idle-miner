@@ -29,7 +29,7 @@ Le panneau (`PanneauJoaillerie` dans `PanneauxAteliers.tsx`) a **trois onglets**
 - **Établis *n* / *max*** : une ligne par joaillier, avec la gemme qu'il taille, son prénom, une étiquette de la couleur de sa rareté (« *N* bijoux/min »), et une jauge « Taille : saphir » ; ou « 😠 Pas payé » (ligne rouge), « Il arrive à son établi. », « Il attend une gemme. ».
 - **Les établis libres** : une carte « 💍 *N* établis libres » : « Embauche un joaillier au Personnel : un joaillier rare taille plus vite. », avec le bouton bleu **👷 Aller au Personnel** et le prix de la prochaine embauche (le bouton attire l'œil tant qu'il n'y a aucun joaillier).
 - **Ce qu'ils taillent** : la jauge de l'**entrée** (« Entrée : *n* / *places* »), puis une ligne par gemme : « 💚 → 📿 Émeraude → Collier d'émeraude · 80 $ → 200 $ · *n* à l'entrée », de même pour le saphir (🔷 → 🧿), le rubis (🔺 → 🫅) et le diamant (💎 → 💍), avec **📦 Apporter *N*** (`apporterAuAtelier`) ; une gemme que la mine ne sort pas encore a le cadenas « 🔒 🕳️ Mine 7 » (le diamant, au niveau 6). Dessous, en gris, **✖ Refusé ici** et les icônes de ce que sort la mine et qu'elle ne prend pas (pierre, charbon, fer, redstone, or). « « Apporter » prend dans le coffre de la mine (sauf ce que tu gardes 📌). Avec des rails, un wagonnet l'apporte tout seul. »
-- **Wagonnets** : les trajets qui partent d'ici ou y arrivent (`PanneauTrajets`), avec **Pousser** et **⚙️ Régler**.
+- **Wagonnets** : les trajets qui partent d'ici ou y arrivent (`PanneauTrajets`), avec **⚙️ Régler**.
 
 ### 2. 💍 Bijoux : la réserve
 

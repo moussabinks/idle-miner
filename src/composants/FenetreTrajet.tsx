@@ -251,7 +251,7 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
           {apercu.moteur !== 'toi' ? (
             <p className="texte-ok">👷 {t('{nom} le pousse.', { nom: pousseur?.nom ?? '' })}</p>
           ) : (
-            <p className="texte-alerte">👷 {t('Pas de pousseur : embauche-en un au Personnel (sinon, pousse-le toi-même).')}</p>
+            <p className="texte-alerte">👷 {t('Pas de pousseur : embauche-en un au Personnel pour faire rouler ce wagonnet.')}</p>
           )}
         </>
       )}

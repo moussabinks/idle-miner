@@ -28,7 +28,7 @@ Le panneau (`PanneauFonderie` dans `PanneauxAteliers.tsx`) a **trois onglets**. 
 - **🔥 Remplir le four · *N* ⚫** : met du charbon **du coffre de la mine** jusqu'à remplir le four (`remplirFonderie`). Le bouton attire l'œil (`btn-attention`) quand le four est vide et qu'il y a du charbon à mettre. Messages : « 🔥 +*N* charbon dans le four. », « 🔥 Le four de la fonderie est plein. », « ⚫ Il te faut du charbon dans le coffre de la mine. » Sous le bouton : « 1 charbon = 12 secondes de four. Le four ne brûle que quand il fond. »
 - Réserve pleine : un bouton **🟨 Réserve pleine : vendre les lingots** mène à l'onglet Lingots.
 - **Ce qu'elle fond** : la jauge de l'**entrée** (« Entrée : *n* / *places* »), puis une ligne par minerai accepté : « 🔩 → ⬜ Fer → Lingot de fer · 12 $ → 24 $ · *n* à l'entrée » et « 🟡 → 🟨 Or → Lingot d'or · 35 $ → 70 $ », avec **📦 Apporter *N*** (`apporterAuAtelier`). Dessous, en gris, **✖ Refusé ici** et les icônes de ce que sort la mine et qu'elle ne prend pas (pierre, redstone, gemmes… ; le charbon n'y est pas, il va dans le four). « « Apporter » prend dans le coffre de la mine (sauf ce que tu gardes 📌). Avec des rails, un wagonnet l'apporte tout seul. » Messages : « 📦 +*N* fer apporté(s). », « 📦 L'entrée est pleine. »
-- **Wagonnets** : les trajets qui partent d'ici ou y arrivent (`PanneauTrajets`), avec **Pousser** et **⚙️ Régler**.
+- **Wagonnets** : les trajets qui partent d'ici ou y arrivent (`PanneauTrajets`), avec **⚙️ Régler**.
 
 ### 2. 🟨 Lingots : la réserve
 

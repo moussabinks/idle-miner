@@ -18,7 +18,7 @@ Le panneau (`PanneauMarche` dans `Panneaux.tsx`, refait le 25/10) :
 
 - **💰 Vendu par les wagonnets** : tout l'argent que les wagonnets ont vendu ici (`stats.argentWagonnet`).
 - **Sans rails** vers le marché : une carte **« 🛤️ Relie la mine au marché avec des rails »** (« Un wagonnet y vendra le coffre de la mine tout seul, même quand tu ne joues pas. »), avec le bouton **🛤️ Poser des rails** (ou le cadenas « 🔒 ⭐ 2 » avant le niveau 2 du joueur).
-- **Wagonnets vers le marché** : les trajets qui arrivent ici (Mine → Marché, Foreuse → Marché, et depuis le 26/10 Fonderie → Marché et Joaillerie → Marché), avec où en est chaque wagonnet, **Pousser** et **⚙️ Régler** (`PanneauTrajets`, `arrivee="marche"`).
+- **Wagonnets vers le marché** : les trajets qui arrivent ici (Mine → Marché, Foreuse → Marché, et depuis le 26/10 Fonderie → Marché et Joaillerie → Marché), avec où en est chaque wagonnet et **⚙️ Régler** (`PanneauTrajets`, `arrivee="marche"`).
 
 Il n'y a plus de vente à la main ici : pour vendre soi-même, c'est **💰 Tout vendre** au panneau de la mine (voir [mine.md](mine.md#-le-coffre--vendre-dun-clic-2510)), ou au panneau de la foreuse pour son chariot, et (26/10) au panneau de la fonderie ou de la joaillerie pour leur réserve.
 
@@ -54,7 +54,7 @@ Et les produits des ateliers (26/10), jamais doublés :
 - **Le wagonnet Mine → Marché** emporte le coffre (jusqu'aux places du chariot de son pousseur), **sauf les minerais épinglés 📌** au panneau de la mine, les objets décochés dans la fenêtre du trajet, et le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets ont un pousseur), et (26/10) le minerai qu'un trajet automatique doit apporter à la fonderie ou à la joaillerie, tant qu'elles ont de la place. Au marché, il vend tout son chargement (`valeurDe`), puis repart vers la mine.
 - **Le wagonnet Foreuse → Marché** emporte le chariot de la foreuse et le vend.
 - (26/10) **Les wagonnets Fonderie → Marché et Joaillerie → Marché** emportent la réserve de l'atelier (ses lingots, ses bijoux) et la vendent. Dans la fenêtre du trajet, on choisit quels lingots ou quels bijoux partent.
-- **Il faut un pousseur** embauché au Personnel pour chaque trajet qui roule tout seul (même électrique). Sinon, le joueur peut le pousser lui-même (« Pousser »).
+- **Il faut un pousseur** embauché au Personnel pour chaque trajet qui roule tout seul (même électrique). Sans pousseur, le wagonnet reste au quai (26/10 : le joueur ne le pousse plus lui-même).
 - **Toutes les ventes utilisent le même calcul** (`valeurDe` : la somme des prix, arrondie, × 2 pendant le bonus « 💰 Ventes × 2 » de la boutique des gemmes).
 - **Statistiques** : l'argent des wagonnets va dans `argentWagonnet` (la part « 🛤️ Wagonnet » de l'écran 📊) et dans l'argent gagné (`argentGagne`, qui compte pour les succès et le **classement**). La fenêtre du retour dit en grand ce que les wagonnets ont vendu pendant l'absence.
 - **Pas de marché, pas de trajet vers le marché** : tant qu'il n'est pas posé, aucun wagonnet ne peut y aller.
