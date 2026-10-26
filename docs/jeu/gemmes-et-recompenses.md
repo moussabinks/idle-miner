@@ -74,11 +74,11 @@ Autrement dit : 2,4 gemmes de plus chaque fois que le prix est multiplié par 10
 | Mine niveau 2 (800 $ + 40 fer) | 1 280 $ | 6 💎 |
 | Mine niveau 3 (6 000 $ + 100 fer + 40 redstone) | 7 800 $ | 8 💎 |
 | Une amélioration à 20 000 $ | 20 000 $ | 9 💎 |
-| Générateur niveau 5 (35 000 $ + 400 fer + 350 redstone) | 45 050 $ | 9 💎 |
-| Mine niveau 5 (80 000 $ + 90 or + 35 émeraudes) | 85 950 $ | 10 💎 |
-| Mine niveau 7 (800 000 $ + 80 saphirs + 50 rubis, 26/10) | 818 100 $ | 10 💎 |
+| Générateur niveau 5 (70 000 $ + 800 fer + 700 redstone, 26/10) | 90 100 $ | 10 💎 |
+| Mine niveau 5 (160 000 $ + 180 or + 70 émeraudes, 26/10) | 171 900 $ | 10 💎 |
+| Mine niveau 7 (2 400 000 $ + 240 saphirs + 150 rubis, 26/10) | 2 454 300 $ | 10 💎 |
 
-(26/10) Avec les niveaux 6 et 7, beaucoup d'achats de fin de partie dépassent largement 51 000 $ (la joaillerie niveau 5 : 700 000 $ + 25 diamants) : ils coûtent tous **10 💎**, le plafond. Les lingots et les bijoux d'un prix comptent à leur prix de vente (`valeurEnDollars`).
+(26/10) Avec les niveaux 6 et 7, beaucoup d'achats de fin de partie dépassent largement 51 000 $ (la joaillerie niveau 5 : 2 100 000 $ + 75 diamants, hausse de la fin de partie comprise) : ils coûtent tous **10 💎**, le plafond. Les lingots et les bijoux d'un prix comptent à leur prix de vente (`valeurEnDollars`).
 
 Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) est lancée dans `acheterAvecGemmes(() => action)` (`mineur.ts`) : pendant ce temps, `payer` retire des gemmes au lieu de l'argent et des minerais. `peutPayerEnGemmes` dit si on en a assez.
 

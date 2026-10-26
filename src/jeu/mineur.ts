@@ -50,6 +50,7 @@ export type Statistiques = {
   argentGagne: number // tout l'argent gagné (ventes au marché, wagonnet, chariot de la foreuse)
   argentForeuse: number // l'argent des chariots de la foreuse
   argentWagonnet: number // l'argent des voyages du wagonnet
+  argentAteliers?: number // (26/10) l'argent des réserves de la fonderie et de la joaillerie vendues d'un clic
   blocsParType: Inventaire // ce que tu as cassé en cliquant, par sorte
   blocsForeuse: number
   blocsMineurs: number

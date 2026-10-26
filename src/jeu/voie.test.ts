@@ -81,7 +81,7 @@ describe('les virages doux', () => {
 })
 
 describe('les bulles des rails', () => {
-  it('rails coupés : une bulle sur les deux bâtiments du trajet', () => {
+  it('rails coupés : une bulle sur le bâtiment de départ du trajet (26/10 : plus sur les deux)', () => {
     const etat = partie()
     etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false })
     for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
@@ -89,6 +89,9 @@ describe('les bulles des rails', () => {
     expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBeFalsy()
     retirerSol(etat, 'rail', 20, 27)
     expect(notificationsBatiments(etat).puits?.some((n) => n.court === 'Rails coupés')).toBe(true)
-    expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBe(true)
+    expect(notificationsBatiments(etat).marche?.some((n) => n.court === 'Rails coupés')).toBeFalsy()
+    // Plus aucun rail (après « Tout ranger ») : pas de bulle, la liste des tâches s'en charge.
+    for (const y of [25, 26, 28, 29]) retirerSol(etat, 'rail', 20, y)
+    expect(notificationsBatiments(etat).puits?.some((n) => n.court === 'Rails coupés')).toBeFalsy()
   })
 })

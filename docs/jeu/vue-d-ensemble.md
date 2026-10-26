@@ -86,11 +86,11 @@ Pendant ce temps, la **mine toute seule**, les **mineurs** (tant qu'on paie leur
 | **2** | Veine de redstone | redstone | 800 $ + 40 fer | 3 | 0,3 bloc/s (18 / min) | 2 | **Foreuse**, **Générateur** ; palier 2 | ~4 min |
 | **3** | Filon d'or | or | 6 000 $ + 100 fer + 40 redstone | 5 | 0,4 bloc/s (24 / min) | 3 | **Manager** (paie les salaires) ; palier 3 | ~24 min |
 | **4** | Grotte aux émeraudes | émeraude | 22 000 $ + 100 redstone + 50 or | 7 | 0,5 bloc/s (30 / min) | 4 | **Recruteur** (rareté des mineurs) ; palier 4 | ~54 min |
-| **5** | Caverne de saphir (26/10) | saphir | 80 000 $ + 90 or + 35 émeraudes | 9 | 0,6 bloc/s (36 / min) | 5 | **Fonderie** ; recruteur et manager niveau 2 ; palier 5 | ~1 h 40 |
-| **6** | Veine de rubis (26/10) | rubis | 260 000 $ + 80 émeraudes + 40 saphirs | 11 | 0,7 bloc/s (42 / min) | 6 | **Joaillerie** et joailliers ; recruteur et manager niveau 3 ; palier 6 | ~2 h 57 |
-| **7** | Cœur de diamant (26/10) | diamant | 800 000 $ + 80 saphirs + 50 rubis | 13 | 0,8 bloc/s (48 / min) | 7 | palier 7 (le dernier) | ~5 h 08 |
+| **5** | Caverne de saphir (26/10) | saphir | 160 000 $ + 180 or + 70 émeraudes | 9 | 0,6 bloc/s (36 / min) | 5 | **Fonderie** ; recruteur et manager niveau 2 ; palier 5 | ~1 h 50 |
+| **6** | Veine de rubis (26/10) | rubis | 650 000 $ + 200 émeraudes + 100 saphirs | 11 | 0,7 bloc/s (42 / min) | 6 | **Joaillerie** et joailliers ; recruteur et manager niveau 3 ; palier 6 | ~3 h 25 |
+| **7** | Cœur de diamant (26/10) | diamant | 2 400 000 $ + 240 saphirs + 150 rubis | 13 | 0,8 bloc/s (48 / min) | 7 | palier 7 (le dernier) | ~5 h 55 |
 
-Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 2 à 10 minutes, niveau 5 en 1 h à 3 h (un vrai joueur met plutôt 2 h 30 à 4 h), et (26/10) niveau 7 en 3 h à 7 h. Avant le 26/10, la mine s'arrêtait au niveau 5 (le diamant), et le manager niveau 2 arrivait au niveau 4. Le 25/10, l'économie a été revue (paliers 3 à 5 et embauches moins chers) : avant, il fallait 3 h à 6 h pour le niveau 5. Avant le 25/10, il fallait 15 à 40 minutes pour le niveau 2 et 6 à 9 h pour le niveau 5. Le détail des niveaux du joueur est dans [niveaux.md](niveaux.md).
+Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 2 à 10 minutes, niveau 5 en 1 h à 3 h (un vrai joueur met plutôt 2 h 30 à 4 h), et (26/10) niveau 7 en 4 h à 9 h. (26/10) Les prix des niveaux 5 à 7 comprennent la **hausse de la fin de partie** (× 2, × 2,5, × 3, voir [equilibrage.md](equilibrage.md)) : avant, le bot y arrivait vers 1 h 40, 2 h 57 et 5 h 08. Avant le 26/10, la mine s'arrêtait au niveau 5 (le diamant), et le manager niveau 2 arrivait au niveau 4. Le 25/10, l'économie a été revue (paliers 3 à 5 et embauches moins chers) : avant, il fallait 3 h à 6 h pour le niveau 5. Avant le 25/10, il fallait 15 à 40 minutes pour le niveau 2 et 6 à 9 h pour le niveau 5. Le détail des niveaux du joueur est dans [niveaux.md](niveaux.md).
 
 ## Glossaire
 
@@ -148,7 +148,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Rails** | 3 fer la case, à partir du niveau 2 du joueur : une ligne entre deux bâtiments permet d'y créer un trajet de wagonnet. Remboursés quand on les retire. |
 | **Rareté** | Commun, rare, épique, légendaire, mythique : tirée à l'embauche quand on a le recruteur. Multiplie la vitesse et le sac du mineur, ou la vitesse du joaillier (× 1 à × 5), et son salaire (× 1 à × 4). |
 | **Rayon** | Le cercle (en cases) autour du générateur où tout est électrique. |
-| **Recruteur** | Débloqué au niveau 4 de la mine (3 niveaux : 10 000, 40 000 et 140 000 $, 26/10) : donne une rareté aux employés embauchés, et permet de **remplacer** un mineur ou un joaillier. |
+| **Recruteur** | Débloqué au niveau 4 de la mine (3 niveaux : 10 000, 80 000 et 350 000 $, 26/10, hausse de la fin de partie comprise) : donne une rareté aux employés embauchés, et permet de **remplacer** un mineur ou un joaillier. |
 | **Réserve (d'un atelier)** | (26/10) Ce que la fonderie ou la joaillerie a fabriqué (ses lingots, ses bijoux) : on la vend d'un clic, ou un wagonnet l'emporte au marché. Pleine, l'atelier s'arrête. |
 | **Revenu ($/s)** | L'estimation de ce que la mine produit par seconde (mine toute seule, mineurs moins salaires, foreuse, et ce qu'ajoutent les ateliers), dans le bandeau. Les clics ne comptent pas. |
 | **Succès** | 28 accomplissements (`succes.ts` ; 21 avant le 26/10). |

@@ -123,17 +123,17 @@ Depuis le 25/10, le bonus **« 👆 Clics en or »** de la boutique des gemmes (
 
 ### Les pioches (`PIOCHES`)
 
-| Pioche | Chance de doubler un minerai | Durabilité | Prix (25/10) | Palier (niveau de la mine) | Réparation (cassée) |
+| Pioche | Chance de doubler un minerai | Durabilité | Prix (26/10) | Palier (niveau de la mine) | Réparation (cassée) |
 |---|---:|---:|---|---:|---|
 | 🪨 Pierre | 10 % | 150 clics | offerte au départ | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
 | 💚 Émeraude | 38 % | 750 | 6 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
-| 🔷 Saphir (26/10) | 45 % | 1 000 | 15 000 $ + 15 saphirs | 5 | 600 $ + 3 saphirs |
-| 🔺 Rubis (26/10) | 52 % | 1 300 | 45 000 $ + 15 rubis | 6 | 1 500 $ + 3 rubis |
-| 💎 Diamant | 60 % | 1 700 | 130 000 $ + 15 diamants | 7 | 4 000 $ + 3 diamants |
+| 🔷 Saphir (26/10) | 45 % | 1 000 | 30 000 $ + 30 saphirs | 5 | 1 200 $ + 6 saphirs |
+| 🔺 Rubis (26/10) | 52 % | 1 300 | 110 000 $ + 38 rubis | 6 | 3 800 $ + 8 rubis |
+| 💎 Diamant | 60 % | 1 700 | 390 000 $ + 45 diamants | 7 | 12 000 $ + 9 diamants |
 
-(26/10) La pioche du niveau 5 de la mine est en **saphir** : elle a les chiffres de l'ancienne pioche en diamant (qui était au palier 5). Une partie qui avait la pioche en diamant a maintenant celle en saphir (c'est le même index, 4). La vraie pioche en diamant arrive avec le diamant, au palier 7.
+(26/10) La pioche du niveau 5 de la mine est en **saphir** : elle a les chiffres de l'ancienne pioche en diamant (qui était au palier 5). Une partie qui avait la pioche en diamant a maintenant celle en saphir (c'est le même index, 4). La vraie pioche en diamant arrive avec le diamant, au palier 7. (26/10) Les prix et les réparations des paliers 5 à 7 comprennent la **hausse de la fin de partie** (× 2, × 2,5, × 3 : voir [equilibrage.md](equilibrage.md)).
 
 - La réparation coûte une part de ce prix, **selon l'usure** (au moins 1 $ et 1 minerai) : voir [forgeron.md](../batiments/forgeron.md).
 - **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics ; la pioche en pierre se répare pour presque rien ; toutes les autres pioches débloquées se rachètent neuves.
@@ -144,15 +144,15 @@ Depuis le 25/10, le bonus **« 👆 Clics en or »** de la boutique des gemmes (
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
-| Niveau | Places | Prix (25/10) | Palier |
+| Niveau | Places | Prix (26/10) | Palier |
 |---|---:|---|---:|
 | 1 | 100 | (départ) | — |
 | 2 | 300 | 200 $ + 40 pierre | 2 |
 | 3 | 800 | 2 000 $ + 80 fer | 3 |
 | 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
-| 5 | 5 000 | 18 000 $ + 60 or + 20 émeraudes | 5 |
-| 6 | 10 000 | 50 000 $ + 40 émeraudes + 30 saphirs | 6 |
-| 7 | 20 000 | 150 000 $ + 50 saphirs + 30 rubis | 7 |
+| 5 | 5 000 | 36 000 $ + 120 or + 40 émeraudes | 5 |
+| 6 | 10 000 | 130 000 $ + 100 émeraudes + 75 saphirs | 6 |
+| 7 | 20 000 | 450 000 $ + 150 saphirs + 90 rubis | 7 |
 
 `rangerDansCoffre` ne range que ce qui tient : le clic est refusé avant (coffre plein), et un mineur garde ses blocs dans son sac au fond de la mine en attendant la place.
 
@@ -178,16 +178,16 @@ Partout dans le jeu (bâtiments, rails, pioches, réparations, niveaux de mine, 
 
 ### Descendre d'un niveau (`descendreNiveauMine`)
 
-| Pour aller au niveau | Prix (25/10) | Niveau du joueur |
+| Pour aller au niveau | Prix (26/10) | Niveau du joueur |
 |---|---|---:|
 | 2 · Veine de redstone | 800 $ + 40 fer | 3 |
 | 3 · Filon d'or | 6 000 $ + 100 fer + 40 redstone | 5 |
 | 4 · Grotte aux émeraudes | 22 000 $ + 100 redstone + 50 or | 7 |
-| 5 · Caverne de saphir | 80 000 $ + 90 or + 35 émeraudes | 9 |
-| 6 · Veine de rubis (26/10) | 260 000 $ + 80 émeraudes + 40 saphirs | 11 |
-| 7 · Cœur de diamant (26/10) | 800 000 $ + 80 saphirs + 50 rubis | 13 |
+| 5 · Caverne de saphir | 160 000 $ + 180 or + 70 émeraudes | 9 |
+| 6 · Veine de rubis (26/10) | 650 000 $ + 200 émeraudes + 100 saphirs | 11 |
+| 7 · Cœur de diamant (26/10) | 2 400 000 $ + 240 saphirs + 150 rubis | 13 |
 
-Le niveau 2 est bien moins cher qu'avant (900 $ + 45 fer). Les suivants coûtent un peu moins qu'avant le 25/10 (7 000 $, 25 000 $ et 90 000 $), alors que chaque niveau ouvre maintenant **tout un palier**. (25/10, économie revue : ils coûtaient d'abord 12 000 $, 70 000 $ et 320 000 $.) Descendre d'un niveau rapporte **150 XP** (et l'XP de son prix).
+Le niveau 2 est bien moins cher qu'avant (900 $ + 45 fer). Les suivants coûtent un peu moins qu'avant le 25/10 (7 000 $, 25 000 $ et 90 000 $), alors que chaque niveau ouvre maintenant **tout un palier**. (25/10, économie revue : ils coûtaient d'abord 12 000 $, 70 000 $ et 320 000 $.) (26/10) Les niveaux 5 à 7 comprennent la hausse de la fin de partie (avant : 80 000 $, 260 000 $ et 800 000 $). Descendre d'un niveau rapporte **150 XP** (et l'XP de son prix).
 
 Le niveau change tout de suite (le bloc à cliquer est tiré au nouveau niveau). Il débloque aussi : foreuse et générateur (niveau 2), manager (3), recruteur (4), fonderie (5), joaillerie (6), **1 mineur de plus** à chaque niveau, et le palier suivant de toutes les améliorations. Depuis le 26/10, le niveau **7** (Cœur de diamant) est le dernier (avant : le niveau 5) : il n'y a pas encore de fin de partie (une « nouvelle mine » est prévue).
 

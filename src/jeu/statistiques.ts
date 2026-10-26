@@ -4,11 +4,13 @@
 import type { IdBloc } from './donnees'
 import type { Statistiques } from './mineur'
 
-// D'où vient l'argent : toi (ventes au marché), le wagonnet, la foreuse.
-export function argentParSource(stats: Statistiques): { joueur: number; wagonnet: number; foreuse: number } {
+// D'où vient l'argent : toi (ventes au marché), le wagonnet, la foreuse, et (26/10) les ateliers
+// (les lingots et les bijoux vendus d'un clic).
+export function argentParSource(stats: Statistiques): { joueur: number; wagonnet: number; foreuse: number; ateliers: number } {
   const foreuse = stats.argentForeuse
   const wagonnet = stats.argentWagonnet
-  return { joueur: Math.max(0, stats.argentGagne - foreuse - wagonnet), wagonnet, foreuse }
+  const ateliers = stats.argentAteliers ?? 0
+  return { joueur: Math.max(0, stats.argentGagne - foreuse - wagonnet - ateliers), wagonnet, foreuse, ateliers }
 }
 
 // Les blocs que tu as cassés en cliquant, du plus fréquent au plus rare.

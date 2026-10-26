@@ -32,10 +32,11 @@ describe('bot de simulation (équilibrage)', () => {
   // prend quelques heures de plus.
   // (26/10, la hausse de la fin de partie : × 2 à × 3 aux paliers 5 à 7) Le bot ne tente pas sa
   // chance au recruteur : un joueur avec des mineurs rares ira plus vite. Avant : 3 h à 7 h.
-  it(`arrive au niveau ${NIVEAU_MINE_MAX} en 7 h à 12 h (médiane)`, () => {
+  // (26/10, bis) Le bot améliore aussi l'ascenseur quand il bloque (comme la tâche le propose) : ~6 h.
+  it(`arrive au niveau ${NIVEAU_MINE_MAX} en 4 h à 9 h (médiane)`, () => {
     const m = mediane(parties.map((p) => minutes(p.temps)))
-    expect(m).toBeGreaterThanOrEqual(7 * 60)
-    expect(m).toBeLessThanOrEqual(12 * 60)
+    expect(m).toBeGreaterThanOrEqual(4 * 60)
+    expect(m).toBeLessThanOrEqual(9 * 60)
   })
 
   it('fait tourner la fonderie et la joaillerie', () => {

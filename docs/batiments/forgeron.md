@@ -33,22 +33,22 @@ Chaque achat affiche son prix à gauche du bouton (en vert ce qu'on a, en rouge 
 
 Valeurs de `PIOCHES` (`src/jeu/donnees.ts`). La pioche en **pierre** est offerte au début de la partie (il n'y a plus de pioche en bois ni en netherite).
 
-| Pioche | Chance de doubler un minerai | Durabilité | Prix pour la débloquer (25/10) | Palier (niveau de la mine) | Réparation (pioche cassée) |
+| Pioche | Chance de doubler un minerai | Durabilité | Prix pour la débloquer (26/10) | Palier (niveau de la mine) | Réparation (pioche cassée) |
 |---|---:|---:|---|---:|---|
 | 🪨 Pierre | 10 % | 150 clics | (offerte) | — | 5 $ + 10 pierre |
 | ⚙️ Fer | 20 % | 300 clics | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 clics | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
 | 💚 Émeraude | 38 % | 750 clics | 6 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
-| 🔷 Saphir (26/10) | 45 % | 1 000 clics | 15 000 $ + 15 saphirs | 5 | 600 $ + 3 saphirs |
-| 🔺 Rubis (26/10) | 52 % | 1 300 clics | 45 000 $ + 15 rubis | 6 | 1 500 $ + 3 rubis |
-| 💎 Diamant | 60 % | 1 700 clics | 130 000 $ + 15 diamants | 7 | 4 000 $ + 3 diamants |
+| 🔷 Saphir (26/10) | 45 % | 1 000 clics | 30 000 $ + 30 saphirs | 5 | 1 200 $ + 6 saphirs |
+| 🔺 Rubis (26/10) | 52 % | 1 300 clics | 110 000 $ + 38 rubis | 6 | 3 800 $ + 8 rubis |
+| 💎 Diamant | 60 % | 1 700 clics | 390 000 $ + 45 diamants | 7 | 12 000 $ + 9 diamants |
 | 💥 Cassée | 0 % | — | — | — | — |
 
-Avant le 25/10 : 400 $ + 20 fer, 4 000 $ + 40 or, 9 000 $ + 25 émeraudes et 20 000 $ + 20 diamants, débloquées aux niveaux 4, 7, 10 et 12 du joueur. (25/10, économie revue : l'or, l'émeraude et le diamant coûtaient d'abord 3 500 $, 9 000 $ et 25 000 $.) Les réparations n'ont pas changé. Débloquer une pioche rapporte **30 XP** (plus 1 XP par 25 $ de son prix ; une seule fois : racheter une pioche neuve ne redonne rien). Chaque pioche peut aussi se payer en gemmes (bouton violet 💎).
+Avant le 25/10 : 400 $ + 20 fer, 4 000 $ + 40 or, 9 000 $ + 25 émeraudes et 20 000 $ + 20 diamants, débloquées aux niveaux 4, 7, 10 et 12 du joueur. (25/10, économie revue : l'or, l'émeraude et le diamant coûtaient d'abord 3 500 $, 9 000 $ et 25 000 $.) Les réparations n'ont pas changé. (26/10) Les pioches des paliers 5 à 7 et leurs réparations comprennent la **hausse de la fin de partie** (× 2, × 2,5, × 3 ; avant : 15 000 $ + 15 saphirs, 45 000 $ + 15 rubis, 130 000 $ + 15 diamants). Débloquer une pioche rapporte **30 XP** (plus 1 XP par 25 $ de son prix ; une seule fois : racheter une pioche neuve ne redonne rien). Chaque pioche peut aussi se payer en gemmes (bouton violet 💎).
 
 Chaque pioche arrive avec le niveau de la mine où sort son minerai : l'or au niveau 3, l'émeraude au 4, le saphir au 5, le rubis au 6, le diamant au 7 (26/10).
 
-(26/10) Avant, la 5e pioche (palier 5) était en **diamant**. Elle est devenue la pioche en **saphir**, avec les mêmes chiffres (45 %, 1 000 clics, 15 000 $). Une partie qui avait la pioche en diamant a donc maintenant celle en saphir (c'est le même index dans `PIOCHES`, 4 : rien à convertir), et la vraie pioche en diamant l'attend au palier 7.
+(26/10) Avant, la 5e pioche (palier 5) était en **diamant**. Elle est devenue la pioche en **saphir**, avec les mêmes chiffres (45 %, 1 000 clics, 15 000 $ avant la hausse de la fin de partie, 30 000 $ + 30 saphirs depuis). Une partie qui avait la pioche en diamant a donc maintenant celle en saphir (c'est le même index dans `PIOCHES`, 4 : rien à convertir), et la vraie pioche en diamant l'attend au palier 7.
 
 ### Le prix d'une réparation
 
@@ -60,9 +60,9 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 | Fer | 30 $ + 5 fer | 15 $ + 3 fer |
 | Or | 150 $ + 5 or | 75 $ + 3 or |
 | Émeraude | 300 $ + 4 émeraudes | 150 $ + 2 émeraudes |
-| Saphir (26/10) | 600 $ + 3 saphirs | 300 $ + 2 saphirs |
-| Rubis (26/10) | 1 500 $ + 3 rubis | 750 $ + 2 rubis |
-| Diamant | 4 000 $ + 3 diamants (26/10 ; avant, 600 $ + 3 diamants) | 2 000 $ + 2 diamants |
+| Saphir (26/10) | 1 200 $ + 6 saphirs | 600 $ + 3 saphirs |
+| Rubis (26/10) | 3 800 $ + 8 rubis | 1 900 $ + 4 rubis |
+| Diamant | 12 000 $ + 9 diamants (26/10, hausse comprise ; avant, 4 000 $ + 3 diamants, et encore avant 600 $ + 3 diamants) | 6 000 $ + 5 diamants |
 
 ## Règles et comportement
 

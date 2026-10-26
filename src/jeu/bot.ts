@@ -66,6 +66,7 @@ import {
 import { debloque, niveauJoueur } from './niveaux'
 import { verifierSucces } from './succes'
 import { avancerTemps } from './temps'
+import { analyseAscenseur } from './production'
 import { railsMineMarche } from './village'
 import { creerTrajet, peutCreerTrajet, railsAlimentes, trajetDe } from './wagonnet'
 
@@ -120,6 +121,10 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 16 * 3600): Resu
   // bot les garde dans le coffre (il ne les vend pas, le wagonnet ne les emporte pas).
   function prochainsCouts(): Cout[] {
     const couts: Cout[] = []
+    // (26/10) L'ascenseur d'abord quand il bloque les mineurs (la tâche « Ascenseur trop petit ») :
+    // le joueur garde 📌 ses minerais pour lui.
+    const ascenseurSuivant = prochainNiveauAscenseur(etat)
+    if (ascenseurSuivant && analyseAscenseur(etat).tropLent && debloque(etat, 'ascenseur', etat.ascenseur.niveau)) couts.push(ascenseurSuivant.cout)
     // (le coffre d'abord : le prochain niveau de la mine ne tient pas toujours dans le coffre actuel)
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && debloque(etat, 'coffre', etat.coffre.niveau + 1)) couts.push(coffre.cout)
@@ -251,7 +256,7 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 16 * 3600): Resu
     if (estPose(etat, 'generateur')) {
       if (etat.generateur.carburant < 120) remplirGenerateur(etat, 10)
       const prochain = prochainNiveauGenerateur(etat)
-      if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 2 && peutPayer(etat, prochain.cout) && gardeLaMine(prochain.cout)) ameliorerGenerateur(etat)
+      if (prochain && etat.argent >= (prochain.cout.argent ?? 0) * 1.2 && peutPayer(etat, prochain.cout) && gardeLaMine(prochain.cout)) ameliorerGenerateur(etat)
     }
 
     // La foreuse : du charbon (son chariot part au marché avec le coffre, voir allerVendre).
@@ -263,7 +268,10 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 16 * 3600): Resu
 
     // Les améliorations de la mine, avec une marge (l'argent sert d'abord aux niveaux).
     const ascenseur = prochainNiveauAscenseur(etat)
-    if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout) && gardeLaMine(ascenseur.cout)) ameliorerAscenseur(etat)
+    // (26/10) Comme un joueur qui suit la tâche « Ascenseur trop petit » : quand l'ascenseur bloque
+    // les mineurs, il passe avant les minerais gardés pour la mine.
+    const ascenseurBloque = analyseAscenseur(etat).tropLent
+    if (ascenseur && etat.employes.length >= 2 && etat.argent >= (ascenseur.cout.argent ?? 0) + marge() && peutPayer(etat, ascenseur.cout) && (ascenseurBloque || gardeLaMine(ascenseur.cout))) ameliorerAscenseur(etat)
     const coffre = prochainNiveauCoffre(etat)
     if (coffre && etat.argent >= (coffre.cout.argent ?? 0) + marge() && peutPayer(etat, coffre.cout)) agrandirCoffre(etat)
     // (23/10) Le chariot du pousseur du marché est petit : quand le coffre se remplit, il l'agrandit

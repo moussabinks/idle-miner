@@ -264,6 +264,7 @@ export function vendreSortie(etat: EtatJeu, id: IdAtelier, lot?: Inventaire): st
   if (gain <= 0) return []
   for (const [bloc, n] of Object.entries(vendus)) retirerDe(atelier.sortie, bloc as IdBloc, n ?? 0)
   encaisser(etat, gain)
+  etat.stats.argentAteliers = (etat.stats.argentAteliers ?? 0) + gain
   return [id === 'fonderie' ? t('💰 Lingots vendus : +{gain} $', { gain: nombre(gain) }) : t('💰 Bijoux vendus : +{gain} $', { gain: nombre(gain) })]
 }
 
