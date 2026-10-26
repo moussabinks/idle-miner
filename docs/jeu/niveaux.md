@@ -78,12 +78,12 @@ Une fois débloqué, il faut quand même **payer** (en argent et minerais, ou en
 | Palier (mine) | Ce qui peut monter au même niveau |
 |---:|---|
 | 1 | le départ : coffre de 100, pioche en pierre, ascenseur 1, mineurs en pioche de bois, pousseurs débutants avec un chariot de 20 places |
-| 2 | 📦 coffre de 300 · ⛏️ pioche en fer · 🛗 ascenseur 2 · 👷 pioche en fer des mineurs · 🛤️ pousseur « Costaud » et chariot de 40 · ⚙️ foreuse (forage 1 bloc/s, chariot de 50) · ⚡ générateur rayon 16 |
-| 3 | 📦 coffre de 800 · pioche en or · ascenseur 3 · mineurs en or · pousseur « Robuste », chariot de 70 · forage 1,6, chariot de 90 · générateur rayon 20 · 💼 **embauche du manager** |
-| 4 | 📦 coffre de 2 000 · pioche en émeraude · ascenseur 4 · mineurs en émeraude · pousseur « Expert », chariot de 110 · forage 2,4, chariot de 140 · générateur rayon 25 · 🎩 **embauche du recruteur** |
-| 5 | 📦 coffre de 5 000 · pioche en **saphir** · ascenseur 5 · mineurs en saphir · pousseur « Champion », chariot de 170 · forage 3,4, chariot de 200 · générateur rayon 30 · 🎩 recruteur niveau 2 · 💼 manager niveau 2 · 🏭 **la fonderie** (et son niveau 2) |
-| 6 | 📦 coffre de 10 000 · pioche en **rubis** · ascenseur 6 · mineurs en rubis · pousseur « Maître », chariot de 260 · forage 4,6, chariot de 280 · générateur rayon 33 · 🎩 recruteur niveau 3 · 💼 manager niveau 3 · 🏭 fonderie niveaux 3 et 4 · 🏪 **la joaillerie** (et ses niveaux 2 et 3) |
-| 7 | 📦 coffre de 20 000 · pioche en **diamant** · ascenseur 7 · mineurs en diamant · pousseur « Légende », chariot de 400 · forage 6, chariot de 400 · générateur rayon 36 · 🏭 fonderie niveau 5 · 🏪 joaillerie niveaux 4 et 5 |
+| 2 | 📦 coffre de 300 · ⛏️ pioche en fer · 🛗 ascenseur 2 · 👷 pioche en fer des mineurs · 🛤️ pousseur « Costaud » et chariot de 40 · ⚙️ foreuse (forage 1 bloc/s, chariot de 50) · ⚡ générateur rayon 15 |
+| 3 | 📦 coffre de 800 · pioche en or · ascenseur 3 · mineurs en or · pousseur « Robuste », chariot de 70 · forage 1,6, chariot de 90 · générateur rayon 18 · 💼 **embauche du manager** |
+| 4 | 📦 coffre de 2 000 · pioche en émeraude · ascenseur 4 · mineurs en émeraude · pousseur « Expert », chariot de 110 · forage 2,4, chariot de 140 · générateur rayon 21 · 🎩 **embauche du recruteur** |
+| 5 | 📦 coffre de 5 000 · pioche en **saphir** · ascenseur 5 · mineurs en saphir · pousseur « Champion », chariot de 170 · forage 3,4, chariot de 200 · générateur rayon 24 · 🎩 recruteur niveau 2 · 💼 manager niveau 2 · 🏭 **la fonderie** (et son niveau 2) |
+| 6 | 📦 coffre de 10 000 · pioche en **rubis** · ascenseur 6 · mineurs en rubis · pousseur « Maître », chariot de 260 · forage 4,6, chariot de 280 · générateur rayon 26 · 🎩 recruteur niveau 3 · 💼 manager niveau 3 · 🏭 fonderie niveaux 3 et 4 · 🏪 **la joaillerie** (et ses niveaux 2 et 3) |
+| 7 | 📦 coffre de 20 000 · pioche en **diamant** · ascenseur 7 · mineurs en diamant · pousseur « Légende », chariot de 400 · forage 6, chariot de 400 · générateur rayon 28 · 🏭 fonderie niveau 5 · 🏪 joaillerie niveaux 4 et 5 |
 
 (Avant le 26/10, il n'y avait que les paliers 1 à 5, et le palier 5 donnait la pioche en diamant.)
 

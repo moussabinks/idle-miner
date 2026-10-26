@@ -230,17 +230,17 @@ Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir +
 
 ## Le générateur
 
-`NIVEAUX_GENERATEUR` (25/10 : rayon de 12 à 30 cases, pour la clairière de 40 × 40) :
+`NIVEAUX_GENERATEUR` (25/10 : rayon pour la clairière de 40 × 40 ; 26/10 : de 12 à 28 cases, 12, 15, 18, 21, 24, 26, 28 : au niveau max, du milieu de la clairière à un coin, avant jusqu'à 36) :
 
 | Niveau | Rayon (cases) | Bonus | Réserve | Prix | Palier |
 |---|---:|---:|---:|---|---:|
 | 1 | 12 | + 30 % | 5 min | le bâtiment : 3 500 $ + 80 fer + 30 redstone | 2 |
-| 2 | 16 | + 40 % | 7 min | 4 000 $ + 80 fer + 40 redstone | 2 |
-| 3 | 20 | + 50 % | 10 min | 8 000 $ + 150 fer + 90 redstone | 3 |
-| 4 | 25 | + 60 % | 13 min | 15 000 $ + 250 fer + 180 redstone | 4 |
-| 5 | 30 | + 75 % | 16 min | 35 000 $ + 400 fer + 350 redstone | 5 |
-| 6 | 33 | + 85 % | 19 min | 90 000 $ + 600 fer + 500 redstone | 6 |
-| 7 | 36 | + 100 % | 22 min | 220 000 $ + 800 redstone + 40 saphir | 7 |
+| 2 | 15 | + 40 % | 7 min | 4 000 $ + 80 fer + 40 redstone | 2 |
+| 3 | 18 | + 50 % | 10 min | 8 000 $ + 150 fer + 90 redstone | 3 |
+| 4 | 21 | + 60 % | 13 min | 15 000 $ + 250 fer + 180 redstone | 4 |
+| 5 | 24 | + 75 % | 16 min | 35 000 $ + 400 fer + 350 redstone | 5 |
+| 6 | 26 | + 85 % | 19 min | 90 000 $ + 600 fer + 500 redstone | 6 |
+| 7 | 28 | + 100 % | 22 min | 220 000 $ + 800 redstone + 40 saphir | 7 |
 
 Améliorations (niveaux 2 à 7) : 372 000 $ + 1 480 fer + 1 960 redstone + 40 saphir (26/10 ; niveaux 2 à 5 : 62 000 $ + 880 fer + 660 redstone).
 

@@ -1,7 +1,7 @@
 # ⚡ Générateur
 
 > La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **accélère** tout ce qui est dans son **rayon** (23/10, de + 30 % à + 75 % selon son niveau ; 26/10 : jusqu'à + 100 % avec 7 niveaux) : **l'ascenseur de la mine** (si la mine est dans le rayon), **les wagonnets** (si tous les rails d'un trajet sont dans le rayon, son pousseur le pousse plus vite), **la foreuse**, et depuis le 26/10 **la fonderie** et **la joaillerie**. Un bon plus, pas un turbo.
-> Mis à jour pour la grande mise à jour du 25/10 : rayon de 12 à 30 cases (la clairière fait 40 × 40), nouveaux prix, ses niveaux suivent les **paliers** de la mine, plus de niveau du joueur pour le poser. Le panneau a été refait dans le nouveau style. Mis à jour le 26/10 (la grosse mise à jour des gemmes) : 7 niveaux (rayon jusqu'à 36 cases, + 100 %), et il accélère aussi la fonderie et la joaillerie.
+> Mis à jour pour la grande mise à jour du 25/10 : rayon de 12 à 30 cases (la clairière fait 40 × 40 ; 26/10 : de 12 à 28, au niveau max il couvre toute la clairière depuis son milieu, sans la dépasser), nouveaux prix, ses niveaux suivent les **paliers** de la mine, plus de niveau du joueur pour le poser. Le panneau a été refait dans le nouveau style. Mis à jour le 26/10 (la grosse mise à jour des gemmes) : 7 niveaux (rayon jusqu'à 36 cases, + 100 %), et il accélère aussi la fonderie et la joaillerie.
 
 ## Où et quand
 
@@ -49,12 +49,12 @@ Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque n
 | Niveau | Rayon | Bonus de vitesse | Réserve | Pousseur électrique (débutant, commun) | Coût (25/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
 | 1 | 12 cases | + 30 % | 5 min (10 redstones) | 3,25 cases/s | (le prix du bâtiment) | 2 |
-| 2 | 16 cases | + 40 % | 7 min | 3,5 cases/s | 4 000 $ + 80 fer + 40 redstone | 2 |
-| 3 | 20 cases | + 50 % | 10 min | 3,75 cases/s | 8 000 $ + 150 fer + 90 redstone | 3 |
-| 4 | 25 cases | + 60 % | 13 min | 4 cases/s | 15 000 $ + 250 fer + 180 redstone | 4 |
-| 5 | 30 cases | + 75 % | 16 min | 4,4 cases/s | 35 000 $ + 400 fer + 350 redstone | 5 |
-| 6 | 33 cases | + 85 % | 19 min | 4,6 cases/s | 90 000 $ + 600 fer + 500 redstone | 6 |
-| 7 | 36 cases | + 100 % | 22 min | 5 cases/s | 220 000 $ + 800 redstone + 40 saphir | 7 |
+| 2 | 15 cases | + 40 % | 7 min | 3,5 cases/s | 4 000 $ + 80 fer + 40 redstone | 2 |
+| 3 | 18 cases | + 50 % | 10 min | 3,75 cases/s | 8 000 $ + 150 fer + 90 redstone | 3 |
+| 4 | 21 cases | + 60 % | 13 min | 4 cases/s | 15 000 $ + 250 fer + 180 redstone | 4 |
+| 5 | 24 cases | + 75 % | 16 min | 4,4 cases/s | 35 000 $ + 400 fer + 350 redstone | 5 |
+| 6 | 26 cases | + 85 % | 19 min | 4,6 cases/s | 90 000 $ + 600 fer + 500 redstone | 6 |
+| 7 | 28 cases | + 100 % | 22 min | 5 cases/s | 220 000 $ + 800 redstone + 40 saphir | 7 |
 
 (Avant le 25/10 : rayon de 15 à 40 cases pour une clairière de 60 × 60, débloqué aux niveaux 6 à 15 du joueur. Avant le 23/10 : une « puissance » de × 1 à × 3, et le wagonnet électrique roulait tout seul.)
 

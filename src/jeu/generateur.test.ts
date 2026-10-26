@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { poserSol } from './batiments'
-import { SECONDES_PAR_REDSTONE } from './donnees'
+import { NIVEAUX_GENERATEUR, SECONDES_PAR_REDSTONE } from './donnees'
 import {
   ameliorerGenerateur,
   avancerGenerateur,
@@ -91,7 +91,7 @@ describe('le générateur', () => {
     etat.argent = 5000
     etat.coffre.contenu = { fer: 80, redstone: 40 }
     ameliorerGenerateur(etat)
-    expect(rayonGenerateur(etat)).toBe(16)
+    expect(rayonGenerateur(etat)).toBe(NIVEAUX_GENERATEUR[1].rayon)
     expect(reserveMaxGenerateur(etat)).toBe(7 * 60)
   })
 })

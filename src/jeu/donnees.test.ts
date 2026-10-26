@@ -52,7 +52,10 @@ describe('les données du jeu', () => {
     NIVEAUX_GENERATEUR.forEach((n, i) => {
       if (i > 0) expect(n.rayon).toBeGreaterThan(NIVEAUX_GENERATEUR[i - 1].rayon)
     })
-    expect(NIVEAUX_GENERATEUR[NIVEAUX_GENERATEUR.length - 1].rayon).toBeLessThanOrEqual(TAILLE_GRILLE)
+    // (26/10) Au niveau max, du milieu de la clairière à un coin, sans la dépasser de beaucoup.
+    const milieuAuCoin = (TAILLE_GRILLE / 2) * Math.SQRT2
+    expect(NIVEAUX_GENERATEUR[NIVEAUX_GENERATEUR.length - 1].rayon).toBeGreaterThanOrEqual(milieuAuCoin - 1)
+    expect(NIVEAUX_GENERATEUR[NIVEAUX_GENERATEUR.length - 1].rayon).toBeLessThanOrEqual(milieuAuCoin + 1)
   })
 
   it('(25/10) toutes les améliorations ont autant de niveaux que la mine (7 depuis le 26/10) ; les chefs en ont 3', () => {
