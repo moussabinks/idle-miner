@@ -101,7 +101,7 @@ export type ResultatBot = {
   allersRetours: number // les ventes faites à la main, depuis la mine (25/10 : plus de marche)
 }
 
-export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): ResultatBot {
+export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 16 * 3600): ResultatBot {
   const etat = creerPartie(aleatoire)
   const aleatoireTemps = aleatoireAvecGraine(0)
   const tempsNiveaux: Record<number, number> = { 1: 0 }
