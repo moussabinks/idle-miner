@@ -173,7 +173,7 @@ export function PanneauFonderie({ onReglerTrajet, onAllerAuPersonnel }: PropsPan
         onglets={[
           { id: 'travail', titre: `🔥 ${t('Four')}`, pastille: sansCharbon ? '!' : null },
           { id: 'reserve', titre: `🟨 ${t('Lingots')}`, pastille: plein ? '!' : null },
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerAtelier(etat, 'fonderie') ? '+' : null },
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerAtelier(etat, 'fonderie') ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
@@ -310,7 +310,7 @@ export function PanneauJoaillerie({ onReglerTrajet, onAllerAuPersonnel }: PropsP
         onglets={[
           { id: 'travail', titre: `🔨 ${t('Établis')}`, pastille: personne ? '!' : null },
           { id: 'reserve', titre: `💍 ${t('Bijoux')}`, pastille: plein ? '!' : null },
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerAtelier(etat, 'joaillerie') ? '+' : null },
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerAtelier(etat, 'joaillerie') ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}

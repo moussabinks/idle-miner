@@ -293,7 +293,7 @@ export function PanneauForeuse({ onReglerTrajet, onAllerAuPersonnel }: PropsPann
         onglets={[
           { id: 'forage', titre: `🔥 ${t('Charbon')}`, pastille: !enMarche && !plein ? '!' : null },
           { id: 'chariot', titre: `🛒 ${t('Chariot')}`, pastille: plein ? '!' : null },
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerForage(etat) || peutAmeliorerChariot(etat) ? '+' : null },
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutAmeliorerForage(etat) || peutAmeliorerChariot(etat) ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}
@@ -462,7 +462,7 @@ export function PanneauGenerateur(_props: PropsPanneau) {
       <OngletsPanneau
         onglets={[
           { id: 'courant', titre: `⚡ ${t('Courant')}`, pastille: g.allume && !enMarche ? '!' : null },
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: prochain !== null && verrouGenerateur === null && peutPayer(etat, prochain.cout) ? '+' : null },
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: prochain !== null && verrouGenerateur === null && peutPayer(etat, prochain.cout) ? '!' : null },
         ]}
         actif={onglet}
         onChoisir={setOnglet}

@@ -29,6 +29,7 @@ import {
   noterCombo,
   peutPayer,
   piocheEnMain,
+  prochainNiveauAscenseur,
   prochainNiveauCoffre,
   prochainNiveauMine,
   secondesBonus,
@@ -39,7 +40,7 @@ import {
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { iconeActiviteEmploye, nbSansSalaire, rareteDe } from '../jeu/employes'
 import { nombre, nomEmploye, t } from '../jeu/langue'
-import { verrou } from '../jeu/niveaux'
+import { debloque, verrou } from '../jeu/niveaux'
 import { analyseAscenseur, analyseWagonnet, production } from '../jeu/production'
 import type { Eclat, Trouvaille } from '../usePartie'
 import { sons } from '../sons'
@@ -312,6 +313,11 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
   const verrouMine = verrou(etat, 'mine', etat.niveauMine)
   const peutDescendre = prochain !== null && verrouMine === null && peutPayer(etat, prochain.cout)
   const ascenseurTropPetit = etat.employes.some((e) => e.role === 'mineur') && puits.tropLent
+  // (26/10) « ! » sur l'onglet Améliorer dès qu'une amélioration est payable (coffre, ascenseur).
+  const ascenseurSuivant = prochainNiveauAscenseur(etat)
+  const peutAmeliorerQuelqueChose =
+    (coffre !== null && debloque(etat, 'coffre', etat.coffre.niveau + 1) && peutPayer(etat, coffre.cout)) ||
+    (ascenseurSuivant !== null && debloque(etat, 'ascenseur', etat.ascenseur.niveau) && peutPayer(etat, ascenseurSuivant.cout))
 
   return (
     <div className="panneau-mine">
@@ -319,7 +325,7 @@ export function PanneauMine({ eclats, trouvailles, onCliquer, onReglerTrajet, on
         onglets={[
           { id: 'creuser', titre: `⛏️ ${t('Creuser')}`, pastille: coffrePlein(etat) ? '!' : null },
           // (26/10) « ! » aussi quand l'ascenseur est trop petit pour la production
-          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutDescendre || ascenseurTropPetit ? '!' : null },
+          { id: 'ameliorer', titre: `⬆️ ${t('Améliorer')}`, pastille: peutDescendre || ascenseurTropPetit || peutAmeliorerQuelqueChose ? '!' : null },
           { id: 'wagonnets', titre: `🚃 ${t('Wagonnets')}` },
           // (25/10) plus de « ! » ici : il restait allumé sans rien de particulier à faire
           { id: 'production', titre: `📊 ${t('Production')}` },
