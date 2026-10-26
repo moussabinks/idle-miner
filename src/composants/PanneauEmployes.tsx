@@ -398,7 +398,7 @@ function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
         titre={`${t('Mineur')} · ${nbDuRole(etat, 'mineur')} / ${max}`}
         effet={
           <>
-            {avecRecruteur ? t('Sa rareté est une surprise ! Ses 10 premières minutes sont payées.') : t('Il creuse tout seul au fond de la mine. Ses 10 premières minutes sont payées.')}
+            {avecRecruteur ? t('Sa rareté est une surprise ! Ses 5 premières minutes sont payées.') : t('Il creuse tout seul au fond de la mine. Ses 5 premières minutes sont payées.')}
             {/* (25/10) Ce qu'il fera, avant de l'embaucher */}
             <span className="stats-recrue">
               <span className="etiquette">

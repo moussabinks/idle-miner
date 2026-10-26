@@ -560,7 +560,7 @@ export function maisonDe(etat: EtatJeu, employe: Employe): IdBatiment {
   return batimentPose(etat.village, depart) ? depart : 'puits'
 }
 
-// Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
+// Embauche un mineur : ses 5 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
   // (25/10) payer() : en argent, ou en gemmes (acheterAvecGemmes)

@@ -728,7 +728,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     id: 'generateur',
     nom: 'Générateur',
     emoji: '⚡',
-    description: 'Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse.',
+    description: 'Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails, foreuse, fonderie et joaillerie.',
     taille: 5,
     porte: 'droite',
     niveauMine: 2,

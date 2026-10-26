@@ -1,7 +1,7 @@
 # ⚒️ Forgeron
 
 > Le bâtiment où l'on débloque, rachète, répare et change de pioche. La pioche ne décide pas de la vitesse : chaque clic casse un bloc, et une meilleure pioche donne plus de chances de **doubler les minerais**.
-> Mis à jour pour la grande mise à jour du 25/10 : nouveaux prix, chaque pioche suit le **palier** de la mine (fer au niveau 2 de la mine, or au 3, émeraude au 4, diamant au 5), plus de sac. Le panneau a été refait dans le nouveau style.
+> Mis à jour pour la grande mise à jour du 25/10 : nouveaux prix, chaque pioche suit le **palier** de la mine (fer au niveau 2 de la mine, or au 3, émeraude au 4, diamant au 5), plus de sac. Le panneau a été refait dans le nouveau style. Mis à jour le 26/10 (la grosse mise à jour des gemmes) : 7 pioches, saphir au niveau 5 de la mine, rubis au 6, diamant au 7.
 
 ## Où et quand
 
@@ -39,12 +39,16 @@ Valeurs de `PIOCHES` (`src/jeu/donnees.ts`). La pioche en **pierre** est offerte
 | ⚙️ Fer | 20 % | 300 clics | 300 $ + 20 fer | 2 | 30 $ + 5 fer |
 | 🟡 Or | 30 % | 500 clics | 2 500 $ + 30 or | 3 | 150 $ + 5 or |
 | 💚 Émeraude | 38 % | 750 clics | 6 000 $ + 25 émeraudes | 4 | 300 $ + 4 émeraudes |
-| 💎 Diamant | 45 % | 1 000 clics | 15 000 $ + 15 diamants | 5 | 600 $ + 3 diamants |
+| 🔷 Saphir (26/10) | 45 % | 1 000 clics | 15 000 $ + 15 saphirs | 5 | 600 $ + 3 saphirs |
+| 🔺 Rubis (26/10) | 52 % | 1 300 clics | 45 000 $ + 15 rubis | 6 | 1 500 $ + 3 rubis |
+| 💎 Diamant | 60 % | 1 700 clics | 130 000 $ + 15 diamants | 7 | 4 000 $ + 3 diamants |
 | 💥 Cassée | 0 % | — | — | — | — |
 
 Avant le 25/10 : 400 $ + 20 fer, 4 000 $ + 40 or, 9 000 $ + 25 émeraudes et 20 000 $ + 20 diamants, débloquées aux niveaux 4, 7, 10 et 12 du joueur. (25/10, économie revue : l'or, l'émeraude et le diamant coûtaient d'abord 3 500 $, 9 000 $ et 25 000 $.) Les réparations n'ont pas changé. Débloquer une pioche rapporte **30 XP** (plus 1 XP par 25 $ de son prix ; une seule fois : racheter une pioche neuve ne redonne rien). Chaque pioche peut aussi se payer en gemmes (bouton violet 💎).
 
-Chaque pioche arrive avec le niveau de la mine où sort son minerai : l'or au niveau 3, l'émeraude au 4, le diamant au 5.
+Chaque pioche arrive avec le niveau de la mine où sort son minerai : l'or au niveau 3, l'émeraude au 4, le saphir au 5, le rubis au 6, le diamant au 7 (26/10).
+
+(26/10) Avant, la 5e pioche (palier 5) était en **diamant**. Elle est devenue la pioche en **saphir**, avec les mêmes chiffres (45 %, 1 000 clics, 15 000 $). Une partie qui avait la pioche en diamant a donc maintenant celle en saphir (c'est le même index dans `PIOCHES`, 4 : rien à convertir), et la vraie pioche en diamant l'attend au palier 7.
 
 ### Le prix d'une réparation
 
@@ -55,19 +59,22 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 | Pierre | 5 $ + 10 pierre | 3 $ + 5 pierre |
 | Fer | 30 $ + 5 fer | 15 $ + 3 fer |
 | Or | 150 $ + 5 or | 75 $ + 3 or |
-| Diamant | 600 $ + 3 diamants | 300 $ + 2 diamants |
+| Émeraude | 300 $ + 4 émeraudes | 150 $ + 2 émeraudes |
+| Saphir (26/10) | 600 $ + 3 saphirs | 300 $ + 2 saphirs |
+| Rubis (26/10) | 1 500 $ + 3 rubis | 750 $ + 2 rubis |
+| Diamant | 4 000 $ + 3 diamants (26/10 ; avant, 600 $ + 3 diamants) | 2 000 $ + 2 diamants |
 
 ## Règles et comportement
 
 ### Le doublement
 
-- Chaque clic sur le bloc de la mine casse **un bloc** (la pioche ne change pas la vitesse). Si ce bloc est un **minerai** (tout sauf la pierre), il y a la chance de la pioche (10 à 45 %) d'en avoir **2** au lieu d'1 (`chanceDoublement`). Jamais plus de 2 (sauf avec un bonus de combo, voir plus bas).
+- Chaque clic sur le bloc de la mine casse **un bloc** (la pioche ne change pas la vitesse). Si ce bloc est un **minerai** (tout sauf la pierre), il y a la chance de la pioche (10 à 60 %) d'en avoir **2** au lieu d'1 (`chanceDoublement`). Jamais plus de 2 (sauf avec un bonus de combo, voir plus bas).
 - Le doublement ne vaut **que pour les clics du joueur** : la mine toute seule, les mineurs employés et la foreuse ne doublent jamais.
 - Depuis le 30/10, un **bonus de combo** (en cliquant vite : 10, 25, 50… clics d'affilée) ajoute pendant quelques secondes sa « fortune » à cette chance (+25 % à +100 %, au plus 100 % en tout, même avec une pioche cassée), et les plus gros font tomber 2, 3 ou 5 blocs par clic. Voir [mine.md](mine.md) et [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md).
 
 ### L'usure
 
-- Chaque clic qui casse un bloc avec une pioche qui n'est pas cassée lui retire **1 point** de durabilité (toujours, plus de hasard). La pioche en pierre tient donc 150 clics, celle en diamant 1 000.
+- Chaque clic qui casse un bloc avec une pioche qui n'est pas cassée lui retire **1 point** de durabilité (toujours, plus de hasard). La pioche en pierre tient donc 150 clics, celle en diamant 1 700 (26/10).
 - Quand la durabilité tombe à 0 : « 💥 Ta pioche en X est cassée ! Il faut 2 clics par bloc : fais-la réparer au forgeron. », avec un son de casse. Le bandeau affiche « 💥 Pioche cassée (2 clics par bloc) » et une barre rouge « Cassée ! ».
 - **Pioche cassée** : il faut **2 clics par bloc** (`CLICS_MAINS_NUES`), sans doublement, et elle ne s'use plus.
 - Chaque pioche garde sa propre usure : changer de pioche ne répare rien.
@@ -77,17 +84,17 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 - **On n'est jamais bloqué** : une pioche cassée casse encore un bloc tous les 2 clics. Même sans argent, on peut donc toujours remplir le coffre et aller vendre.
 - **La pioche en pierre ne se rachète pas** (pas de bouton) : elle se répare seulement, pour pas cher (5 $ + 10 pierre au plus).
 - **Un seul déblocage à la fois** : on ne peut débloquer que la pioche juste après la meilleure (`niveau ≤ meilleure + 1`), et seulement avec le palier qu'elle demande (`debloque(etat, 'pioches', niveau)` dans `peutAcheterPioche`). Une pioche déjà débloquée se rachète toujours.
-- **Racheter neuve demande aussi les minerais** de la pioche (20 fer, 30 or, 25 émeraudes ou 15 diamants), comme pour la débloquer.
+- **Racheter neuve demande aussi les minerais** de la pioche (20 fer, 30 or, 25 émeraudes, 15 saphirs, 15 rubis ou 15 diamants), comme pour la débloquer.
 - **Réparer n'équipe pas** la pioche (racheter et débloquer, si).
 - Les minerais se paient avec le **coffre de la mine** : pas besoin de les porter jusqu'à la forge. Une punaise 📌 sur le fer (ou l'or…) au panneau de la mine évite de le vendre par erreur.
 
 ## Lien avec le reste du jeu
 
 - **Missions** (`src/jeu/missions.ts`, `src/jeu/objectifs.ts`) : tant que le forgeron n'est pas posé, une mission dit « Construis : Forgeron » (avec ce qu'il manque : « Gagne *X* $ » ou « Récupère *N* pierre »). Une fois posé, la pioche suivante est le **premier** achat d'amélioration de `achatsPossibles` (juste après les bâtiments à construire). Si on peut la payer, la bulle 💰 apparaît ; sinon, une mission d'amélioration peut la proposer (« 🪨 12/25 » ou « 💵 180/200 »).
-- **Personnel** : les pioches des mineurs employés (`NIVEAUX_EMPLOYE` : bois, fer, or, émeraude, diamant) s'achètent là-bas, en argent seulement, avec le même palier. Elles ne s'usent pas. **Si un forgeron est posé**, le mineur attend **3 secondes** au fond de la mine (`SECONDES_FORGE_EMPLOYE`) que le forgeron fasse sa pioche, qui lui descend par l'ascenseur ; sans forgeron, il l'a directement.
+- **Personnel** : les pioches des mineurs employés (`NIVEAUX_EMPLOYE` : bois, fer, or, émeraude, saphir, rubis, diamant ; 26/10) s'achètent là-bas, en argent seulement, avec le même palier. Elles ne s'usent pas. **Si un forgeron est posé**, le mineur attend **3 secondes** au fond de la mine (`SECONDES_FORGE_EMPLOYE`) que le forgeron fasse sa pioche, qui lui descend par l'ascenseur ; sans forgeron, il l'a directement.
 - **Bandeau** (`src/composants/Hud.tsx`) : la pioche équipée et sa barre de durabilité.
 - **Panneau de la mine** : le rappel « ⛏️ *N* % de chance de doubler un minerai » à côté du bloc.
-- **Succès** : « ⚙️ Âge du fer », « 🥇 Pioche dorée » et « 💎 Diamants ! » se débloquent avec les pioches en fer, or et diamant.
+- **Succès** : « ⚙️ Âge du fer », « 🥇 Pioche dorée », « 💚 Vert brillant », (26/10) « 🔷 Bleu profond », « 🔺 Rouge passion » et « 💎 Diamants ! » se débloquent avec les pioches en fer, or, émeraude, saphir, rubis et diamant.
 - **Sons** : débloquer une pioche joue la petite fanfare d'amélioration ; un rachat ou une réparation joue le son d'achat ; une pioche qui casse a son propre son (« clang » triste).
 - **Bot de simulation** (`src/jeu/bot.ts`) : il pose le forgeron en (26, 14), répare dès que sa pioche casse, débloque la suivante dès qu'il peut, et garde dans le coffre (sans les vendre) les minerais de la prochaine pioche et de la réparation.
 
@@ -99,7 +106,7 @@ La réparation coûte **une part du prix de réparation, selon l'usure** (`coutR
 - `src/jeu/employes.ts` : le passage des mineurs à la forge (`ameliorerEmploye`, `forgeEnAttente`, étape `forge`).
 - `src/jeu/notifications.ts` : les bulles 🔧 « pioche cassée » et 💰 « achetable ».
 - `src/jeu/missions.ts`, `src/jeu/objectifs.ts` : « Construis : Forgeron », puis la pioche suivante.
-- `src/jeu/succes.ts` : les trois succès des pioches.
+- `src/jeu/succes.ts` : les six succès des pioches (26/10).
 - `src/composants/Panneaux.tsx` : le panneau du forgeron (`PanneauPioches`).
 - `src/composants/Amelioration.tsx` : le composant `Achat` (prix à gauche, bouton à droite).
 - `src/composants/Hud.tsx` : la pioche équipée et sa durabilité dans le bandeau.

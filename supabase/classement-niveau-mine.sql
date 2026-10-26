@@ -25,5 +25,6 @@ $$;
 -- (sans le déclencheur : la date de ces lignes ne bouge pas, les joueurs qui n'ont pas rejoué
 -- depuis le 22/10 restent hors du classement)
 alter table public.classement disable trigger garder_meilleur_score;
-update public.classement set prestige = 0 where prestige > 5;
+-- (26/10 : la mine a 7 niveaux ; avant, « > 5 »)
+update public.classement set prestige = 0 where prestige > 7;
 alter table public.classement enable trigger garder_meilleur_score;

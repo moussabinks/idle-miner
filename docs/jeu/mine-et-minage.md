@@ -208,7 +208,7 @@ Le niveau change tout de suite (le bloc à cliquer est tiré au nouveau niveau).
 
 1. Le temps écoulé depuis la dernière sauvegarde est mesuré, plafonné à **8 heures** (`ABSENCE_MAX`). Moins de 30 s : rien à rattraper.
 2. `avancerTemps` est appelé avec toute la durée : la mine, le générateur, la foreuse, les mineurs (et le manager), la fonderie et les joailliers (26/10), et les wagonnets (s'ils ont un pousseur ou l'électricité) tournent comme si le jeu était ouvert. **Les clics, eux, ne tournent pas.**
-3. Une **grande fenêtre** résume l'absence (`src/jeu/absence.ts` : `photoPartie` avant, `resumerAbsence` après ; `FenetreAbsence.tsx`) : **« Bon retour, mineur ! »**, la durée (« 2 h 13 »), ce que **les mineurs ont creusé**, ce que **la mine a sorti toute seule**, ce que **la foreuse a foré**, les **voyages** des wagonnets, les blocs **en plus dans le coffre**, ce que **les wagonnets ont vendu**, et en grand le **bénéfice net** (25/10, demandé par le propriétaire : l'argent en plus dans la poche, salaires déduits ; avant, c'était le chiffre d'affaires). Au retour, le **coffre de la mine est vendu tout seul** (`vendreCoffreAuRetour`, sauf ce qu'on garde 📌), et depuis le 26/10 la **réserve de la fonderie et de la joaillerie** aussi (ses lingots et ses bijoux). Les lignes de l'argent tombent juste : 🚃 ventes des wagonnets + 📦 coffre vendu au retour + 💰 autres ventes (surtout le manager qui vend du coffre pour payer les salaires) − 💵 salaires payés = bénéfice net. S'il le faut : « 😠 Un employé attend son salaire : paie-le au Personnel ! », et combien de temps le manager paie avant de s'endormir. Deux boutons : **📺 Doubler · +X $** (une publicité, puis `doublerAbsence` redonne une fois ces gains, voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md)) et **Continuer**. S'il ne s'est rien passé, pas de fenêtre.
+3. Une **grande fenêtre** résume l'absence (`src/jeu/absence.ts` : `photoPartie` avant, `resumerAbsence` après ; `FenetreAbsence.tsx`) : **« Bon retour, mineur ! »**, la durée (« 2 h 13 »), ce que **les mineurs ont creusé**, ce que **la mine a sorti toute seule**, ce que **la foreuse a foré**, les **voyages** des wagonnets, les blocs **en plus dans le coffre**, ce que **les wagonnets ont vendu**, et en grand le **bénéfice net** (25/10, demandé par le propriétaire : l'argent en plus dans la poche, salaires déduits ; avant, c'était le chiffre d'affaires). Au retour, le **coffre de la mine est vendu tout seul** (`vendreCoffreAuRetour`, sauf ce qu'on garde 📌), et depuis le 26/10 les **bijoux de la joaillerie** aussi (les **lingots** de la fonderie restent dans sa réserve : ils paient certaines améliorations, les chariots). Les lignes de l'argent tombent juste : 🚃 ventes des wagonnets + 📦 coffre vendu au retour + 💰 autres ventes (surtout le manager qui vend du coffre pour payer les salaires) − 💵 salaires payés = bénéfice net. S'il le faut : « 😠 Un employé attend son salaire : paie-le au Personnel ! », et combien de temps le manager paie avant de s'endormir. Deux boutons : **📺 Doubler · +X $** (une publicité, puis `doublerAbsence` redonne une fois ces gains, voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md)) et **Continuer**. S'il ne s'est rien passé, pas de fenêtre.
 
 ---
 
@@ -221,7 +221,7 @@ L'interface compare l'état **avant** et **après** chaque action (`evenementsEn
 | `casse` | un clic a cassé le bloc (`blocsCasses` a augmenté) ; avec le nombre tombé (1 ou 2) et s'il est rare | le « crac » (plus lourd pour un bloc dur), « plink » pour un minerai ou pluie d'étincelles pour un rare, 2 pièces si doublé ; les éclats et le minerai qui s'envole |
 | `vente` | l'argent a monté sans compter les wagonnets (coffre, chariot de la foreuse ou, 26/10, réserve d'un atelier vendu par le joueur) | le « ka-ching ! » (plus de pièces pour une grosse vente), la grosse animation « +X $ », le compteur qui saute |
 | `achat` | l'argent a baissé | « pop » et 2 pièces (sauf si c'est une amélioration) |
-| `amelioration` | un niveau de plus quelque part : mine, coffre, ascenseur, forage, chariot, générateur, meilleure pioche, recruteur, pioche d'un mineur, vitesse ou chariot d'un pousseur (`totalNiveaux` ; les niveaux de la fonderie et de la joaillerie, et ceux du manager, n'y sont pas : leur achat fait le son d'un achat normal) | la petite fanfare (à la place du son d'achat) |
+| `amelioration` | un niveau de plus quelque part : mine, coffre, ascenseur, forage, chariot, générateur, meilleure pioche, recruteur, pioche d'un mineur, vitesse ou chariot d'un pousseur (`totalNiveaux`, avec depuis le 26/10 les niveaux du manager, de la fonderie et de la joaillerie) | la petite fanfare (à la place du son d'achat) |
 | `piocheCassee` | la pioche en main vient de casser | « clang » triste |
 | `wagonnet` | un wagonnet a vendu au marché (`argentWagonnet` a monté) | 3 pièces discrètes, et un petit « +X $ » en haut de l'écran |
 
@@ -260,10 +260,10 @@ Les bâtiments tout juste débloqués (foreuse, générateur au niveau 2 ; fonde
 | 💍 Joaillier | tailler ton premier bijou à la joaillerie (26/10) |
 | 💠 Ça brille ! | trouver un diamant (en cliquant) |
 | 👷 Patron | embaucher ton premier mineur |
-| 👥 Chef d'équipe | avoir 6 employés (mineurs, pousseurs et joailliers ; le texte du jeu dit « 6 mineurs ») |
+| 👥 Chef d'équipe | avoir 6 mineurs (26/10 : les pousseurs et les joailliers ne comptent plus) |
 | 🛤️ Cheminot | créer un trajet de wagonnet |
 | ⚡ Électricien | électrifier les rails avec le générateur (au moins un trajet électrique) |
-| 🗺️ Réseau complet | avoir 4 trajets de wagonnet (le texte dit « les 4 trajets » : il y en a 10 possibles depuis le 26/10) |
+| 🗺️ Réseau complet | avoir 4 trajets de wagonnet (sur les 10 possibles depuis le 26/10) |
 | 🚃 Ligne régulière | faire 100 voyages de wagonnet |
 | 💰 Riche | gagner 5 000 $ |
 | 🤑 Magnat | gagner 100 000 $ |

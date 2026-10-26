@@ -1,6 +1,6 @@
 # 💰 Marché
 
-> Depuis la grande mise à jour du 25/10, le marché sert **seulement à l'automatisation** : c'est l'arrivée des wagonnets **Mine → Marché** (le coffre de la mine) et **Foreuse → Marché** (le chariot de la foreuse), qui y **vendent tout seuls**, même jeu fermé. On ne vient plus y vendre à la main : le coffre se vend directement depuis la mine (et le chariot de la foreuse sur place).
+> Depuis la grande mise à jour du 25/10, le marché sert **seulement à l'automatisation** : c'est l'arrivée des wagonnets **Mine → Marché** (le coffre de la mine) et **Foreuse → Marché** (le chariot de la foreuse), et depuis le 26/10 **Fonderie → Marché** (les lingots) et **Joaillerie → Marché** (les bijoux), qui y **vendent tout seuls**, même jeu fermé. On ne vient plus y vendre à la main : le coffre se vend directement depuis la mine (et le chariot de la foreuse sur place).
 
 ## Où et quand
 
@@ -18,13 +18,13 @@ Le panneau (`PanneauMarche` dans `Panneaux.tsx`, refait le 25/10) :
 
 - **💰 Vendu par les wagonnets** : tout l'argent que les wagonnets ont vendu ici (`stats.argentWagonnet`).
 - **Sans rails** vers le marché : une carte **« 🛤️ Relie la mine au marché avec des rails »** (« Un wagonnet y vendra le coffre de la mine tout seul, même quand tu ne joues pas. »), avec le bouton **🛤️ Poser des rails** (ou le cadenas « 🔒 ⭐ 2 » avant le niveau 2 du joueur).
-- **Wagonnets vers le marché** : les trajets qui arrivent ici (Mine → Marché, Foreuse → Marché), avec où en est chaque wagonnet, **Pousser** et **⚙️ Régler** (`PanneauTrajets`, `arrivee="marche"`).
+- **Wagonnets vers le marché** : les trajets qui arrivent ici (Mine → Marché, Foreuse → Marché, et depuis le 26/10 Fonderie → Marché et Joaillerie → Marché), avec où en est chaque wagonnet, **Pousser** et **⚙️ Régler** (`PanneauTrajets`, `arrivee="marche"`).
 
-Il n'y a plus de vente à la main ici : pour vendre soi-même, c'est **💰 Tout vendre** au panneau de la mine (voir [mine.md](mine.md#-le-coffre--vendre-dun-clic-2510)), ou au panneau de la foreuse pour son chariot.
+Il n'y a plus de vente à la main ici : pour vendre soi-même, c'est **💰 Tout vendre** au panneau de la mine (voir [mine.md](mine.md#-le-coffre--vendre-dun-clic-2510)), ou au panneau de la foreuse pour son chariot, et (26/10) au panneau de la fonderie ou de la joaillerie pour leur réserve.
 
 ### Les prix de vente
 
-Prix tirés de `BLOCS` (`src/jeu/donnees.ts`). Ils ne changent jamais (pas de prix variables). Ce sont les mêmes partout : au marché, au coffre de la mine et au chariot de la foreuse.
+Prix tirés de `BLOCS` (`src/jeu/donnees.ts`). Ils ne changent jamais (pas de prix variables). Ce sont les mêmes partout : au marché, au coffre de la mine, au chariot de la foreuse et à la réserve des ateliers. Le panneau du marché (« Prix du marché ») montre les objets que sort la mine à son niveau, et (26/10) les lingots et les bijoux dès que la fonderie ou la joaillerie est construite.
 
 | Objet | Prix | Doublé par la pioche ? | Sort de la mine à partir du |
 |---|---:|:---:|---|
@@ -34,12 +34,26 @@ Prix tirés de `BLOCS` (`src/jeu/donnees.ts`). Ils ne changent jamais (pas de pr
 | 🔴 Redstone | 15 $ | oui | niveau 2 |
 | 🟡 Or | 35 $ | oui | niveau 3 |
 | 💚 Émeraude | 80 $ | oui | niveau 4 |
-| 💎 Diamant | 100 $ | oui | niveau 5 |
+| 🔷 Saphir (26/10) | 120 $ | oui | niveau 5 |
+| 🔺 Rubis (26/10) | 170 $ | oui | niveau 6 |
+| 💎 Diamant | 240 $ (26/10 ; avant 100 $) | oui | niveau 7 (26/10 ; avant, niveau 5) |
+
+Et les produits des ateliers (26/10), jamais doublés :
+
+| Objet | Prix | Fait à partir de |
+|---|---:|---|
+| ⬜ Lingot de fer | 24 $ | 🔩 fer, à la [fonderie](fonderie.md) (mine niveau 5) |
+| 🟨 Lingot d'or | 70 $ | 🟡 or, à la fonderie |
+| 📿 Collier d'émeraude | 200 $ | 💚 émeraude, à la [joaillerie](joaillerie.md) (mine niveau 6) |
+| 🧿 Pendentif de saphir | 300 $ | 🔷 saphir, à la joaillerie |
+| 🫅 Couronne de rubis | 425 $ | 🔺 rubis, à la joaillerie |
+| 💍 Bague de diamant | 600 $ | 💎 diamant, à la joaillerie |
 
 ## Règles et comportement
 
-- **Le wagonnet Mine → Marché** emporte le coffre (jusqu'aux places du chariot de son pousseur), **sauf les minerais épinglés 📌** au panneau de la mine, les objets décochés dans la fenêtre du trajet, et le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets ont un pousseur). Au marché, il vend tout son chargement (`valeurDe`), puis repart vers la mine.
+- **Le wagonnet Mine → Marché** emporte le coffre (jusqu'aux places du chariot de son pousseur), **sauf les minerais épinglés 📌** au panneau de la mine, les objets décochés dans la fenêtre du trajet, et le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets ont un pousseur), et (26/10) le minerai qu'un trajet automatique doit apporter à la fonderie ou à la joaillerie, tant qu'elles ont de la place. Au marché, il vend tout son chargement (`valeurDe`), puis repart vers la mine.
 - **Le wagonnet Foreuse → Marché** emporte le chariot de la foreuse et le vend.
+- (26/10) **Les wagonnets Fonderie → Marché et Joaillerie → Marché** emportent la réserve de l'atelier (ses lingots, ses bijoux) et la vendent. Dans la fenêtre du trajet, on choisit quels lingots ou quels bijoux partent.
 - **Il faut un pousseur** embauché au Personnel pour chaque trajet qui roule tout seul (même électrique). Sinon, le joueur peut le pousser lui-même (« Pousser »).
 - **Toutes les ventes utilisent le même calcul** (`valeurDe` : la somme des prix, arrondie, × 2 pendant le bonus « 💰 Ventes × 2 » de la boutique des gemmes).
 - **Statistiques** : l'argent des wagonnets va dans `argentWagonnet` (la part « 🛤️ Wagonnet » de l'écran 📊) et dans l'argent gagné (`argentGagne`, qui compte pour les succès et le **classement**). La fenêtre du retour dit en grand ce que les wagonnets ont vendu pendant l'absence.
@@ -48,16 +62,16 @@ Prix tirés de `BLOCS` (`src/jeu/donnees.ts`). Ils ne changent jamais (pas de pr
 
 ## Lien avec le reste du jeu
 
-- **Mine** : on y vend le coffre à la main au début ; le wagonnet Mine → Marché prend le relais. **Foreuse** : son chariot se vend sur place, ou part au marché en wagonnet. **Personnel** : les pousseurs. **Générateur** : avec tous les rails d'un trajet dans son rayon, le pousseur va plus vite.
-- **Missions** : « Construis le marché (gratuit) : le wagonnet y vendra tout seul », puis « Pose des rails de la mine au marché (3 fer la case) », « Touche la bulle 🛤️ sur les rails : automatise le trajet », « Embauche un pousseur pour le wagonnet », et plus tard « Relie la foreuse au marché (rails) : elle vendra toute seule ».
-- **Succès** : « 🛤️ Cheminot » (un trajet), « 🚃 Ligne régulière » (100 voyages), « 💰 Riche » (5 000 $ gagnés), « 🤑 Magnat » (100 000 $).
+- **Mine** : on y vend le coffre à la main au début ; le wagonnet Mine → Marché prend le relais. **Foreuse** : son chariot se vend sur place, ou part au marché en wagonnet. **Fonderie** et **Joaillerie** (26/10) : leurs lingots et leurs bijoux se vendent sur place d'un clic, ou partent au marché en wagonnet. **Personnel** : les pousseurs. **Générateur** : avec tous les rails d'un trajet dans son rayon, le pousseur va plus vite.
+- **Missions** : « Construis le marché (gratuit) : le wagonnet y vendra tout seul », puis « Pose des rails de la mine au marché (3 fer la case) », « Touche la bulle 🛤️ sur les rails : automatise le trajet », « Embauche un pousseur pour le wagonnet », et plus tard « Relie la foreuse au marché (rails) : elle vendra toute seule », puis (26/10) « Relie la fonderie au marché (rails) : ses lingots s'y vendront tout seuls » et « Relie la joaillerie au marché (rails) : ses bijoux s'y vendront tout seuls ».
+- **Succès** : « 🛤️ Cheminot » (un trajet), « 🚃 Ligne régulière » (100 voyages), « 💰 Riche » (5 000 $ gagnés), « 🤑 Magnat » (100 000 $), « 👑 Millionnaire » (1 000 000 $, 26/10).
 - **Bot de simulation** : il pose le marché en (18, 28), juste sous la mine, avec 3 cases de rails.
 
 ## Fichiers du code
 
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.marche` : gratuit, 5 × 5, porte à gauche) et les prix de vente (`BLOCS`).
 - `src/jeu/batiments.ts` : poser, déplacer et retourner le bâtiment.
-- `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche` et `foreuse-marche`, `avancerWagonnets`).
+- `src/jeu/wagonnet.ts` : les wagonnets qui vendent au marché (trajets `mine-marche`, `foreuse-marche`, et depuis le 26/10 `fonderie-marche` et `joaillerie-marche`, `avancerWagonnets`).
 - `src/jeu/mineur.ts` : le calcul d'une vente (`valeurDe`, `encaisser`).
 - `src/jeu/notifications.ts` : la bulle 🚧 « rails coupés ».
 - `src/jeu/missions.ts` : la mission « Construis le marché (gratuit) » et les étapes de l'automatisation.

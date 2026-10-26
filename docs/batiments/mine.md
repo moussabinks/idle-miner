@@ -1,12 +1,12 @@
 # ⛏️ Mine
 
-> Le cœur du jeu, au milieu de la clairière. On ne descend pas dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**, qu'on **vend d'un clic, ici même** (25/10 : plus de sac à dos ni de marche jusqu'au marché). La mine sort aussi des blocs toute seule, **dès le niveau 1**. C'est ici qu'on **descend d'un niveau** (5 niveaux : chacun est un **palier** qui débloque le niveau suivant de toutes les améliorations), qu'on agrandit le coffre, qu'on améliore l'ascenseur des mineurs et qu'on règle les **wagonnets** vers le marché, la foreuse et le générateur.
-> Écrit d'après le code au 25/10 (la grande mise à jour). Les règles détaillées du minage (le bloc, les pioches, les niveaux) sont aussi dans [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md). Le panneau a été refait le 25/10 dans le nouveau style : son apparence sera détaillée dans [../jeu/interface.md](../jeu/interface.md).
+> Le cœur du jeu, au milieu de la clairière. On ne descend pas dedans : devant la mine, on **clique sur un gros bloc** pour creuser, et tout ce qui sort va dans le **coffre de la mine**, qu'on **vend d'un clic, ici même** (25/10 : plus de sac à dos ni de marche jusqu'au marché). La mine sort aussi des blocs toute seule, **dès le niveau 1**. C'est ici qu'on **descend d'un niveau** (7 niveaux depuis le 26/10, 5 avant : chacun est un **palier** qui débloque le niveau suivant de toutes les améliorations), qu'on agrandit le coffre, qu'on améliore l'ascenseur des mineurs et qu'on règle les **wagonnets** vers le marché, la foreuse, le générateur, et depuis le 26/10 la fonderie et la joaillerie.
+> Écrit d'après le code au 25/10 (la grande mise à jour), mis à jour le 26/10 (la grosse mise à jour des gemmes : saphir au niveau 5, rubis au 6, diamant au 7). Les règles détaillées du minage (le bloc, les pioches, les niveaux) sont aussi dans [../jeu/mine-et-minage.md](../jeu/mine-et-minage.md). Le panneau a été refait le 25/10 dans le nouveau style : son apparence sera détaillée dans [../jeu/interface.md](../jeu/interface.md).
 
 ## Où et quand
 
 - **Où** : la mine est **déjà posée** au début de la partie, **au milieu de la clairière** (cases 15 à 24 de la grille de 40 × 40, `POSITION_MINE`). C'est le seul bâtiment de **10 × 10 cases** (identifiant `'puits'`, nom affiché « Mine »). Elle n'est pas dans le menu Bâtiments (rien à payer), mais **✏️ Modifier** permet de la déplacer ou de la retourner gratuitement.
-- **Déblocage** : dès le début, jamais de cadenas. Ses niveaux demandent un **niveau du joueur** (3, 5, 7, 9) ; ses autres améliorations (coffre, ascenseur) suivent les **paliers** (« 🕳️ Mine *N* »).
+- **Déblocage** : dès le début, jamais de cadenas. Ses niveaux demandent un **niveau du joueur** (3, 5, 7, 9, 11, 13) ; ses autres améliorations (coffre, ascenseur) suivent les **paliers** (« 🕳️ Mine *N* »).
 - **La porte** : au milieu de sa face avant **gauche** (à droite si elle est retournée). Le joueur apparaît devant elle au chargement de la partie.
 - **L'ouvrir** : toucher (ou cliquer) la mine, ou le gros bouton rond **⛏️ Mine** en bas de l'écran : la taupe du joueur y marche et le panneau s'ouvre.
 - **Description** : « Clique sur le bloc pour creuser. Tout ce qui sort de la mine va dans son coffre, que tu vends d'un clic. »
@@ -59,8 +59,8 @@ Les minerais des prix (bâtiments, améliorations, rails…) se prennent **dans 
   - ✨ le nouveau minerai et son prix ;
   - ⚙️ les blocs par minute que la mine sort toute seule (avant → après) ;
   - 👷 +1 mineur à embaucher au Personnel ;
-  - 🏗️ les bâtiments débloqués (foreuse et générateur au niveau 2), 💼 le manager (niveau 3), 🎲 le recruteur (niveau 4).
-- Dessous, la ligne d'amélioration de la mine (`Amelioration`) : le bouton vert **Descendre** avec le prix, et le bouton violet **💎** pour payer en gemmes. Sans le niveau du joueur : « 🔒 ⭐ *N* ». Au niveau 5 : « 🏆 Ta mine est au plus profond : le cœur de diamant ! ».
+  - 🏗️ les bâtiments débloqués (foreuse et générateur au niveau 2, fonderie au niveau 5, joaillerie au niveau 6), 💼 le manager (niveau 3), 🎲 le recruteur (niveau 4).
+- Dessous, la ligne d'amélioration de la mine (`Amelioration`) : le bouton vert **Descendre** avec le prix, et le bouton violet **💎** pour payer en gemmes. Sans le niveau du joueur : « 🔒 ⭐ *N* ». Au niveau 7 (26/10 ; avant, au niveau 5) : « 🏆 Ta mine est au plus profond : le cœur de diamant ! ».
 
 ### 📦 Taille du coffre et 🛗 Ascenseur (onglet Améliorer)
 
@@ -73,7 +73,7 @@ Onglet **📊 Production** (`TableauProduction`) : en gros, le **total en blocs 
 
 ### Les trajets de wagonnets (onglet Wagonnets)
 
-Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent de la mine, vers le **marché** (💰, il vend le coffre), la **foreuse** (🔥, il lui apporte le charbon) et le **générateur** (🔴, il lui apporte la redstone) :
+Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent de la mine, vers le **marché** (💰, il vend le coffre), la **foreuse** (🔥, il lui apporte le charbon), le **générateur** (🔴, il lui apporte la redstone), et depuis le 26/10 la **fonderie** (🏭, le fer, l'or et le charbon du four) et la **joaillerie** (🏪, les gemmes) :
 
 - **Sans rails** : ce qu'il faut relier (menu Bâtiments, 3 🔩 fer la case, à partir du niveau 2 du joueur).
 - **Rails posés, pas de trajet** : « Touche la bulle 🛤️ Automatiser sur les rails » (la fenêtre du trajet s'ouvre aussi toute seule dès que les rails relient les deux bâtiments).
@@ -82,21 +82,25 @@ Un bloc **🛤️ Wagonnets** (`PanneauTrajets`) montre les trajets qui partent 
 
 ## Les chiffres
 
-### Les 5 niveaux de la mine (`NIVEAUX_MINE`)
+### Les 7 niveaux de la mine (`NIVEAUX_MINE`)
 
 Les poids de chaque niveau font 100 : ce sont donc directement les chances, en %.
 
-| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Diamant | La mine sort seule | Prix pour y descendre (25/10) | Niveau du joueur |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|
-| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | 0,2 bloc/s (12 / min) | (départ) | — |
-| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | 0,3 bloc/s (18 / min) | 800 $ + 40 fer | 3 |
-| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | 0,4 bloc/s (24 / min) | 6 000 $ + 100 fer + 40 redstone | 5 |
-| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | 0,5 bloc/s (30 / min) | 22 000 $ + 100 redstone + 50 or | 7 |
-| 5 | Cœur de diamant | 40 | 11 | 12 | 12 | 12 | 8 | 5 | 0,6 bloc/s (36 / min) | 80 000 $ + 90 or + 35 émeraude | 9 |
+| Niveau | Nom | Pierre | Charbon | Fer | Redstone | Or | Émeraude | Saphir | Rubis | Diamant | La mine sort seule | Prix pour y descendre | Niveau du joueur |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---:|
+| 1 | Galerie de surface | 70 | 18 | 12 | — | — | — | — | — | — | 0,2 bloc/s (12 / min) | (départ) | — |
+| 2 | Veine de redstone | 60 | 16 | 14 | 10 | — | — | — | — | — | 0,3 bloc/s (18 / min) | 800 $ + 40 fer | 3 |
+| 3 | Filon d'or | 52 | 14 | 14 | 12 | 8 | — | — | — | — | 0,4 bloc/s (24 / min) | 6 000 $ + 100 fer + 40 redstone | 5 |
+| 4 | Grotte aux émeraudes | 46 | 12 | 13 | 12 | 11 | 6 | — | — | — | 0,5 bloc/s (30 / min) | 22 000 $ + 100 redstone + 50 or | 7 |
+| 5 | Caverne de saphir (26/10) | 40 | 11 | 12 | 12 | 12 | 8 | 5 | — | — | 0,6 bloc/s (36 / min) | 80 000 $ + 90 or + 35 émeraude | 9 |
+| 6 | Veine de rubis (26/10) | 36 | 10 | 12 | 11 | 12 | 9 | 7 | 5 | — | 0,7 bloc/s (42 / min) | 260 000 $ + 80 émeraude + 40 saphir | 11 |
+| 7 | Cœur de diamant (26/10) | 32 | 10 | 11 | 11 | 12 | 9 | 8 | 7 | 5 | 0,8 bloc/s (48 / min) | 800 000 $ + 80 saphir + 50 rubis | 13 |
 
-Total pour aller au niveau 5 : **108 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude** (25/10, économie revue : avant 402 800 $). Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
+(Avant le 26/10, il n'y avait que 5 niveaux, et le 5e était le « Cœur de diamant » : les mêmes chances qu'aujourd'hui au niveau 5, avec le diamant à la place du saphir. Une partie qui y était reste au niveau 5, devenu la Caverne de saphir : voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).)
 
-Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **19,79 $** au niveau 5.
+Total pour aller au niveau 7 : **1 168 800 $ + 140 fer + 140 redstone + 140 or + 115 émeraude + 120 saphir + 50 rubis** (26/10). Jusqu'au niveau 5 : 108 800 $ + 140 fer + 140 redstone + 140 or + 35 émeraude (25/10, économie revue : avant 402 800 $). Descendre d'un niveau rapporte **150 XP** (plus 1 XP par 25 $ de son prix).
+
+Ce que vaut **en moyenne un bloc** au marché (sans doublement, `valeurMoyenneBloc`) : **3,04 $** au niveau 1, **4,58 $** au niveau 2, **7,50 $** au niveau 3, **13,07 $** au niveau 4, **20,79 $** au niveau 5, **31,62 $** au niveau 6, **46,37 $** au niveau 7 (avant le 26/10 : 19,79 $ au niveau 5).
 
 Ce que **débloque** chaque niveau (en plus du palier) :
 
@@ -106,11 +110,15 @@ Ce que **débloque** chaque niveau (en plus du palier) :
 | 2 | **Foreuse** et **Générateur** (menu Bâtiments) ; la redstone ; 2 mineurs |
 | 3 | **Manager** (au Personnel) ; l'or ; 3 mineurs |
 | 4 | **Recruteur** (au Personnel) ; manager niveau 2 ; les émeraudes ; 4 mineurs |
-| 5 | Les diamants ; recruteur niveaux 2 et 3, manager niveau 3 ; 5 mineurs |
+| 5 | Les saphirs ; la **Fonderie** (menu Bâtiments) ; recruteur niveau 2, manager niveau 2 ; 5 mineurs |
+| 6 | Les rubis ; la **Joaillerie** (menu Bâtiments) et ses joailliers ; recruteur niveau 3, manager niveau 3 ; 6 mineurs |
+| 7 | Les diamants (le plus rare, tout au fond) ; 7 mineurs |
+
+(Avant le 26/10 : le niveau 5 donnait les diamants, le recruteur niveaux 2 et 3 et le manager niveau 3 ; le manager niveau 2 arrivait au niveau 4.)
 
 ### Les paliers (25/10)
 
-Chaque niveau de la mine est un **palier** : à la mine niveau N, toutes les améliorations du jeu peuvent monter **jusqu'à leur niveau N** (elles ont toutes 5 niveaux, `NIVEAUX_PAR_AMELIORATION`). La règle : **on améliore un niveau de chaque chose, puis on descend la mine.** Le tableau complet est dans [../jeu/niveaux.md](../jeu/niveaux.md#3-les-paliers-de-la-mine).
+Chaque niveau de la mine est un **palier** : à la mine niveau N, toutes les améliorations du jeu peuvent monter **jusqu'à leur niveau N** (elles ont toutes 7 niveaux depuis le 26/10, `NIVEAUX_PAR_AMELIORATION` ; la fonderie et la joaillerie ont leurs propres paliers). La règle : **on améliore un niveau de chaque chose, puis on descend la mine.** Le tableau complet est dans [../jeu/niveaux.md](../jeu/niveaux.md#3-les-paliers-de-la-mine).
 
 ### Le coffre (`NIVEAUX_COFFRE`)
 
@@ -121,12 +129,14 @@ Chaque niveau de la mine est un **palier** : à la mine niveau N, toutes les am�
 | 3 | 800 | 2 000 $ + 80 fer | 3 |
 | 4 | 2 000 | 6 000 $ + 60 redstone + 20 or | 4 |
 | 5 | 5 000 | 18 000 $ + 60 or + 20 émeraude | 5 |
+| 6 | 10 000 | 50 000 $ + 40 émeraude + 30 saphir | 6 |
+| 7 | 20 000 | 150 000 $ + 50 saphir + 30 rubis | 7 |
 
-Total : 26 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 20 émeraude.
+Total : 226 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 60 émeraude + 80 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 26 200 $).
 
 ### L'ascenseur (`NIVEAUX_ASCENSEUR`)
 
-Il ne transporte que les blocs des **mineurs employés** (le joueur ne descend pas). La mine l'a au **niveau 1 dès le début**. Sa caisse fait des allers-retours sans cesse tant qu'un mineur travaille au fond : elle descend, se charge, remonte, se vide dans le coffre, et repart. **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + chargement + vidage). (25/10 : 5 niveaux au lieu de 10.)
+Il ne transporte que les blocs des **mineurs employés** (le joueur ne descend pas). La mine l'a au **niveau 1 dès le début**. Sa caisse fait des allers-retours sans cesse tant qu'un mineur travaille au fond : elle descend, se charge, remonte, se vide dans le coffre, et repart. **Ce qu'il remonte au plus** (`debitAscenseur`) = capacité de la caisse ÷ (2 × trajet + chargement + vidage). (25/10 : 5 niveaux au lieu de 10 ; 26/10 : 7.)
 
 | Niveau | Un trajet | Charge / vide | Caisse | Remonte au plus | Prix (25/10) | Palier |
 |---|---:|---:|---:|---:|---|---:|
@@ -135,8 +145,10 @@ Il ne transporte que les blocs des **mineurs employés** (le joueur ne descend p
 | 3 | 3,5 s | 0,8 s / 1,5 s | 40 | 4,3 bloc/s | 3 000 $ + 90 fer + 30 redstone | 3 |
 | 4 | 2,6 s | 0,6 s / 1,2 s | 60 | 8,6 bloc/s | 8 000 $ + 100 redstone + 40 or | 4 |
 | 5 | 2 s | 0,4 s / 0,8 s | 90 | 17,3 bloc/s | 22 000 $ + 80 or + 30 émeraude | 5 |
+| 6 | 1,6 s | 0,35 s / 0,7 s | 130 | 30,6 bloc/s | 60 000 $ + 120 or + 30 saphir | 6 |
+| 7 | 1,3 s | 0,3 s / 0,6 s | 180 | 51,4 bloc/s | 180 000 $ + 60 saphir + 30 rubis | 7 |
 
-Total : 33 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
+Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 33 700 $). Sous l'électricité du générateur (mine dans le rayon), les trajets sont plus courts. Si les mineurs creusent plus que ça, leurs sacs se remplissent au fond et ils attendent la caisse.
 
 ## Règles et comportement
 
@@ -144,37 +156,39 @@ Total : 33 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'élect
 
 - **Tout ce qui sort de la mine y va** : tes clics, les blocs que la mine sort toute seule, et les blocs des mineurs (remontés par la caisse). La foreuse a son propre chariot.
 - **Coffre plein = tout s'arrête** : le bloc ne se clique plus, la mine ne sort plus rien, et la caisse de l'ascenseur attend pleine en haut (les mineurs gardent leurs blocs dans leur sac, sans user leur salaire). Le « $/s » du bandeau tombe à 0 (ou en dessous, à cause des salaires).
-- **On paie avec le coffre** : partout dans le jeu, les minerais d'un achat se prennent dans le coffre (`disponible`, `payer`) ; ou on paie en gemmes.
-- Il se vide de deux façons : **la vente** (Tout vendre, ou un minerai) et **les wagonnets** (vers le marché, la foreuse, le générateur).
+- **On paie avec le coffre** : partout dans le jeu, les minerais d'un achat se prennent dans le coffre (`disponible`, `payer`) ; les lingots et les bijoux (26/10) aussi dans la réserve de leur atelier ; ou on paie en gemmes.
+- Il se vide de trois façons : **la vente** (Tout vendre, ou un minerai), **les wagonnets** (vers le marché, la foreuse, le générateur, la fonderie, la joaillerie) et, depuis le 26/10, **« 📦 Apporter »** au panneau de la fonderie ou de la joaillerie (le minerai qu'elles acceptent, sauf ce qu'on garde 📌).
 
 ### La mine toute seule
 
-- Elle sort **0,2 à 0,6 bloc par seconde** selon le niveau (`debit`), tant que le coffre a de la place, même jeu fermé (8 h au plus). Ces blocs ne sont **jamais doublés** et n'usent pas la pioche. Le bonus « ⚡ Production × 2 » double ce débit.
+- Elle sort **0,2 à 0,8 bloc par seconde** selon le niveau (`debit`), tant que le coffre a de la place, même jeu fermé (8 h au plus). Ces blocs ne sont **jamais doublés** et n'usent pas la pioche. Le bonus « ⚡ Production × 2 » double ce débit.
 - Le bloc à cliquer, lui, n'est pas cassé par la mine : il attend ton clic.
 
 ### Les wagonnets
 
 - Au début, **il n'y a aucun trajet**. Il faut une **ligne de rails continue** entre une case collée au bâtiment de départ et une case collée à celui d'arrivée (`ligneDe`, `railsEntre`), puis créer le trajet (la fenêtre du trajet s'ouvre toute seule quand les rails relient les deux bâtiments ; sinon, la bulle « 🛤️ Automatiser »). Les rails : **3 fer la case**, à partir du **niveau 2 du joueur**, jamais en boucle. Voir [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets).
-- **4 trajets**, un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur (ils partent d'ici), et Foreuse → Marché (voir [foreuse.md](foreuse.md)).
+- **10 trajets** depuis le 26/10 (4 avant), un wagonnet chacun (`LIAISONS`) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Mine → Fonderie, Mine → Joaillerie (ils partent d'ici) ; Foreuse → Marché, Foreuse → Fonderie, Foreuse → Joaillerie (voir [foreuse.md](foreuse.md)) ; Fonderie → Marché et Joaillerie → Marché (voir [fonderie.md](fonderie.md) et [joaillerie.md](joaillerie.md)).
 - **Ce qu'il emporte au départ**, jusqu'aux places du chariot de son pousseur (un peu de chaque objet s'il n'a pas la place pour tout, `repartir`) :
-  - **vers le marché** : le coffre, **sauf les minerais épinglés 📌** et les objets décochés dans la fenêtre du trajet, et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets ont un pousseur). Au marché, il vend tout ;
+  - **vers le marché** : le coffre, **sauf les minerais épinglés 📌** et les objets décochés dans la fenêtre du trajet, et sauf le charbon et la redstone qui manquent à la foreuse et au générateur (si leurs trajets ont un pousseur), et (26/10) sauf le minerai qu'un trajet automatique doit apporter à la fonderie ou à la joaillerie, tant qu'elles ont de la place (`reservePourLesAteliers`). Au marché, il vend tout ;
   - **vers la foreuse** : dès que son réservoir n'est plus plein, tout le charbon du coffre ; le surplus va dans son chariot ;
-  - **vers le générateur** : la redstone qui manque à sa réserve.
-- **Qui le fait avancer** : **toi** (« Pousser », un wagonnet à la fois), ou **son pousseur**, embauché au Personnel pour ce trajet. Il faut un pousseur payé pour qu'un trajet roule tout seul, **même électrique** ; sur un trajet électrique (toutes ses cases dans le rayon du générateur allumé), il va + 30 % à + 75 % plus vite. Voir [personnel.md](personnel.md#3-les-pousseurs) et [generateur.md](generateur.md).
+  - **vers le générateur** : la redstone qui manque à sa réserve ;
+  - (26/10) **vers la fonderie** : le fer et l'or choisis (les autres objets sont « Refusé ici »), sans dépasser la place de son entrée, et le charbon qui manque à son four ;
+  - (26/10) **vers la joaillerie** : les gemmes choisies (émeraude, saphir, rubis, diamant), sans dépasser la place de son entrée.
+- **Qui le fait avancer** : **toi** (« Pousser », un wagonnet à la fois), ou **son pousseur**, embauché au Personnel pour ce trajet. Il faut un pousseur payé pour qu'un trajet roule tout seul, **même électrique** ; sur un trajet électrique (toutes ses cases dans le rayon du générateur allumé), il va + 30 % à + 100 % plus vite. Voir [personnel.md](personnel.md#3-les-pousseurs) et [generateur.md](generateur.md).
 - **Ligne coupée** (un rail enlevé, un bâtiment déplacé) : le wagonnet revient au quai, son chargement retourne d'où il vient, et une bulle **🚧 Rails coupés** est sur ses deux bâtiments.
 - Les wagonnets roulent aussi jeu fermé (avec leur pousseur payé). Ce qu'ils vendent est en grand dans la fenêtre du retour.
 
 ### Descendre d'un niveau
 
 - On paie le prix (argent + minerais du coffre, ou gemmes) et la mine passe au niveau suivant tout de suite : le bloc à cliquer est tiré au nouveau niveau, et les mineurs, la mine et la foreuse sortent les nouveaux minerais. Le coffre garde ce qu'il contenait. Le palier suivant est ouvert.
-- Il n'y a **pas encore de fin** après le niveau 5 (une « nouvelle mine » avec un bonus permanent est prévue).
+- Il n'y a **pas encore de fin** après le niveau 7 (26/10 ; avant, le niveau 5) : une « nouvelle mine » avec un bonus permanent est prévue.
 
 ## Lien avec le reste du jeu
 
-- **Marché** : le wagonnet Mine → Marché y vend le coffre tout seul. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Personnel** : les mineurs remplissent le coffre, et les pousseurs (un par trajet) poussent les wagonnets. **Foreuse** et **Générateur** : débloqués au niveau 2 ; la mine peut leur envoyer leur charbon et leur redstone par wagonnet.
+- **Marché** : le wagonnet Mine → Marché y vend le coffre tout seul. **Forgeron** : la pioche décide de la chance de doubler en cliquant. **Personnel** : les mineurs remplissent le coffre, et les pousseurs (un par trajet) poussent les wagonnets. **Foreuse** et **Générateur** : débloqués au niveau 2 ; la mine peut leur envoyer leur charbon et leur redstone par wagonnet. **Fonderie** (niveau 5) et **Joaillerie** (niveau 6) : la mine leur envoie son fer, son or, son charbon et ses gemmes par wagonnet, ou à la main (« 📦 Apporter », dans leur panneau).
 - **Tutoriel** (`tutoriel.ts`) : « casse 10 blocs à la mine », puis « vends le coffre » (la flèche montre « Tout vendre »).
 - **Missions** (`missions.ts`, `objectifs.ts`) : « Casse 10 blocs à la mine », « Vends le coffre de la mine », l'urgence « Le coffre est plein : vends-le ! », les achats du stand `puits` (« Mine niveau *N* : *nom* », « Coffre de *N* places », « Ascenseur niveau *N* ») et les étapes de l'automatisation (« Construis le marché (gratuit) : le wagonnet y vendra tout seul », « Pose des rails de la mine au marché (3 fer la case) », « Touche la bulle 🛤️ sur les rails », « Embauche un pousseur pour le wagonnet »). Quand il manque de l'argent ou des minerais pour un achat, la mission envoie à la mine (on y vend, on y creuse).
-- **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Cœur de diamant (niveaux 2 à 5), Ça brille ! (un diamant), Cheminot (un trajet), Réseau complet (les 4 trajets), Ligne régulière (100 voyages).
+- **Succès** : Premier coup de pioche, Terrassier (100 blocs), Tunnelier (1 000 blocs), Veine de redstone, Chercheur d'or, Grotte aux émeraudes, Caverne de saphir, Veine de rubis, Cœur de diamant (niveaux 2 à 7, 26/10), Ça brille ! (un diamant), Cheminot (un trajet), Réseau complet (4 trajets), Ligne régulière (100 voyages).
 - **Classement** : l'argent gagné en tout (ventes du coffre comprises) ; le niveau de la mine (le meilleur de tes mondes) est seulement affiché. Voir [../jeu/sauvegarde-et-en-ligne.md](../jeu/sauvegarde-et-en-ligne.md).
 - **Statistiques** : blocs cassés en cliquant (par sorte), blocs sortis tout seuls de la mine, voyages et argent des wagonnets, argent gagné « par toi » (le coffre vendu à la main).
 
@@ -191,5 +205,5 @@ Total : 33 700 $ + 120 fer + 130 redstone + 120 or + 30 émeraude. Sous l'élect
 - `src/composants/PanneauMine.tsx` : le panneau (bloc à cliquer, coffre, onglet Améliorer, wagonnets, production) ; `src/composants/StockMinerais.tsx` : le coffre à vendre (Tout vendre, Vendre, punaise 📌) ; `src/composants/PanneauTrajets.tsx` : le bloc des trajets ; `src/composants/Ascenseur.tsx` : la ligne de l'ascenseur ; `src/composants/Amelioration.tsx` : les lignes d'amélioration (argent ou 💎) ; `src/composants/AlerteChariot.tsx` : le chariot trop petit.
 - `src/usePartie.ts` : le clic (`cliquer` : le son du coup, puis `cliquerMine`), les éclats et les minerais qui s'envolent.
 - `src/composants/DessinsVillage.tsx`, `src/composants/VueVillage.tsx` : la caisse de l'ascenseur, le panneau du niveau.
-- `public/images/batiments/mine.svg`, `mine-devant.svg`, `caisse-ascenseur-0.svg` à `-4.svg` : les dessins, fabriqués par `node outils/art/fabriquer.mjs` (`outils/art/mine.mjs`) ; leurs points utiles (`POINTS_MINE`) sont dans `src/composants/iso.ts`.
+- `public/images/batiments/mine.svg`, `mine-devant.svg`, `caisse-ascenseur-0.svg` à `-4.svg` (26/10 : la caisse « à l'émeraude » sert aux niveaux 4 à 6, celle au diamant au niveau 7) : les dessins, fabriqués par `node outils/art/fabriquer.mjs` (`outils/art/mine.mjs`) ; leurs points utiles (`POINTS_MINE`) sont dans `src/composants/iso.ts`.
 - `src/styles/mine.css` : le style du panneau de la mine (25/10).
