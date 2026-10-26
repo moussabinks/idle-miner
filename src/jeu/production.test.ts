@@ -5,6 +5,7 @@ import { poserSol } from './batiments'
 import { NIVEAUX_ASCENSEUR } from './donnees'
 import { embaucher, embaucherPousseur } from './employes'
 import { capaciteCoffre, debitMine } from './mineur'
+import { chancesDesBlocs } from './mine'
 import { analyseAscenseur, analyseWagonnet, production } from './production'
 import { creerTrajet } from './wagonnet'
 
@@ -77,5 +78,22 @@ describe('les goulots : ascenseur et wagonnet', () => {
     // (23/10) un chariot plus grand pour son pousseur
     etat.employes[0].chariot = 1
     expect(analyseWagonnet(etat)?.debitMax).toBeGreaterThan(pousse?.debitMax ?? Infinity)
+  })
+
+  // (26/10, bug signalé par le propriétaire) Vers la foreuse, seul le charbon compte.
+  it('le wagonnet de la foreuse : seulement le charbon que sort la mine', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    etat.niveauMine = 2
+    etat.village.batiments.push({ id: 'marche', x: 18, y: 30, miroir: false })
+    etat.village.batiments.push({ id: 'foreuse', x: 28, y: 18, miroir: false })
+    etat.coffre.contenu = { fer: 30 }
+    for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
+    for (let x = 25; x <= 27; x++) poserSol(etat, 'rail', x, 20)
+    creerTrajet(etat, 'mine-marche')
+    creerTrajet(etat, 'mine-foreuse')
+    const tout = analyseWagonnet(etat, 'mine-marche')?.apport ?? 0
+    const charbon = analyseWagonnet(etat, 'mine-foreuse')?.apport ?? 0
+    expect(charbon).toBeGreaterThan(0)
+    expect(charbon).toBeCloseTo(tout * (chancesDesBlocs(2).charbon ?? 0))
   })
 })

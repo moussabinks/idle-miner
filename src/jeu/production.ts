@@ -5,9 +5,9 @@
 
 import { atelierPose, joailliers, joaillierAuTravail, nbEntree, vitesseFonderie } from './ateliers'
 import { bijouxParMinute, blocsParSecondeEmploye, vitesseMineurs } from './employes'
-import { valeurMoyenneBloc } from './mine'
+import { chancesDesBlocs, valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitAscenseur, debitMine, prochainNiveauAscenseur, type EtatJeu, type Employe } from './mineur'
-import { SECONDES_PAR_CHARBON_FONDERIE, type IdLiaison } from './donnees'
+import { SECONDES_PAR_CHARBON_FONDERIE, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from './donnees'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { capaciteTrajet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
 
@@ -118,7 +118,15 @@ function apportAuDepart(etat: EtatJeu, liaison: IdLiaison): number {
   if (liaison === 'mine-joaillerie' || liaison === 'foreuse-joaillerie') return bijouxParSeconde(etat)
   // (le coffre plein arrête la production : on compte ce que la mine sortirait sans s'arrêter)
   const mineurs = etat.employes.filter((e) => e.role === 'mineur' && e.etape !== 'attend').reduce((t, m) => t + blocsParSecondeEmploye(etat, m), 0)
-  return debitMine(etat) + Math.min(mineurs, debitAscenseur(etat))
+  const sortDeLaMine = debitMine(etat) + Math.min(mineurs, debitAscenseur(etat))
+  // (26/10, bug signalé par le propriétaire) Vers la foreuse, le wagonnet n'emporte que le
+  // charbon : on compte seulement le charbon que sort la mine (avant : toute sa production, et
+  // l'alerte « le chariot ne suit pas » s'allumait pour rien). Vers le générateur, seulement la
+  // redstone qu'il brûle (le wagonnet ne prend que ce qui manque à sa réserve).
+  const part = (bloc: IdBloc) => chancesDesBlocs(etat.niveauMine)[bloc] ?? 0
+  if (liaison === 'mine-foreuse') return sortDeLaMine * part('charbon')
+  if (liaison === 'mine-generateur') return Math.min(sortDeLaMine * part('redstone'), etat.generateur.allume ? 1 / SECONDES_PAR_REDSTONE : 0)
+  return sortDeLaMine
 }
 
 export function analyseWagonnet(etat: EtatJeu, liaison: IdLiaison = 'mine-marche'): AnalyseWagonnet | null {
