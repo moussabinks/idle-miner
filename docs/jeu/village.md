@@ -163,7 +163,7 @@ Depuis le 25/10, tous les personnages sont des **taupes**, dessinées dans le no
   2. ils **récupèrent leur pioche** devant la forge (3 s, `forge`) ;
   3. ils **attendent leur wagonnet au quai** (les pousseurs : au bord de la voie, à côté du début des rails de leur trajet, devant le bâtiment de départ) ;
   4. ils **poussent un wagonnet** (juste derrière lui) ; pendant le chargement au départ et le déchargement à l'arrivée, ils **attendent à l'arrêt** sans marcher (28/10 ; le joueur aussi quand c'est lui qui pousse) ;
-  5. (26/10) les **joailliers** travaillent **devant la joaillerie**, l'un à côté de l'autre (`taille`) : ils y vont à pied depuis le Personnel après leur embauche ;
+  5. (26/10) les **joailliers** ne se voient pas sur la carte : ils travaillent dans la joaillerie (on en voit un seulement s'il attend son salaire devant le Personnel) ;
   6. ils **attendent leur salaire** devant le Personnel, mécontents (😠 au-dessus de la tête, ils tapent du pied). Une fois payés ensemble, ils **repartent l'un après l'autre**, à 0,7 s d'écart (`ECART_DEPART`) : ceux qui attendent leur tour restent à leur place devant le Personnel.
 - **Une embauche se voit** (30/10) : une **gerbe d'étincelles** jaillit du Personnel avec « 👷 *Nom* arrive ! », puis le nouveau mineur part vers la mine entouré d'un **halo doré**, avec des étincelles et une bulle « ✨ Nouveau ! » au-dessus de la tête (pendant 6 s).
 - **Le recruteur** et **le manager** restent **devant le bâtiment Personnel**, avec leur étiquette (ils ne bougent pas : on n'utilise que leur image de face).

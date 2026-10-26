@@ -16,7 +16,7 @@
   - sinon **💍 « Joaillier ? »** (alerte rouge) : « Personne ne taille les gemmes : embauche un joaillier au Personnel », quand aucun joaillier n'est payé ;
   - **🚧 « Rails coupés »** (alerte rouge) quand un trajet qui part d'ici ou y arrive n'a plus de rails complets ;
   - et au Personnel, **🚃 « Chariot ! »** quand le wagonnet Joaillerie → Marché ne suit pas ce qu'elle fabrique.
-- **Les joailliers au village** : ils travaillent **devant la joaillerie**, l'un à côté de l'autre (étape `taille`), avec leur casque de la couleur de leur rareté et leur prénom au-dessus de la tête.
+- **Les joailliers au village** : on ne les voit pas (26/10, demandé par le propriétaire) : ils travaillent dans la joaillerie. Seul un joaillier qui attend son salaire se montre, fâché, devant le Personnel.
 
 ## Ce qu'on peut y faire
 
