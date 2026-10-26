@@ -48,10 +48,10 @@ Avec la fonderie et la joaillerie (et les niveaux Saphir, Rubis, Diamant de la m
 
 | Emoji | Ce que c'est | Le dessin |
 |---|---|---|
-| 🔩 | fer (brut) | un caillou gris avec des pépites beige rosé (le minerai de fer de Minecraft) |
-| 🟡 | or (brut) | le même caillou, avec des pépites dorées qui brillent |
-| ⬜ | lingot de fer | les deux lingots gris (avant, le dessin de 🔩) |
-| 🟨 | lingot d'or | la pyramide de trois lingots dorés (avant, le dessin de 🟡) |
+| 🔩 | fer (brut) | (26/10, redessiné) un caillou taillé à facettes (gris, cinq tons) où sortent de grosses pépites anguleuses rose-beige en filon, avec reflet et étincelle |
+| 🟡 | or (brut) | (26/10, redessiné) le même caillou taillé, plein de grosses pépites d'or rondes et cabossées (une dépasse presque en haut), des paillettes et trois étincelles |
+| ⬜ | lingot de fer | (26/10, redessiné) deux lingots d'acier poli gris bleuté, l'un sur l'autre, vus de trois quarts |
+| 🟨 | lingot d'or | (26/10, redessiné) une pyramide de trois lingots d'or vus de trois quarts, avec des étincelles |
 | 🔷 | saphir | une gemme taillée en ovale, plus large que haute, bleu roi, avec sa table en octogone et huit facettes (le diamant 💎 est bleu ciel, à cinq côtés) |
 | 🔺 | rubis | une gemme taillée en cœur (des côtés droits), rouge cramoisi, avec sa table en petit cœur (la redstone 🔴 est rouge orangé, à six côtés) |
 | 📿 | collier d'émeraude | (26/10, redessiné) une chaîne de perles d'or en U (grosses et petites), deux petites émeraudes serties dans la chaîne, et en pendentif la grosse émeraude de 💚 dans un cadre d'or à huit côtés, avec quatre griffes, sa bélière et une goutte d'or |
@@ -61,8 +61,16 @@ Avec la fonderie et la joaillerie (et les niveaux Saphir, Rubis, Diamant de la m
 | 🏭 | fonderie | un four en briques à la bouche qui rougeoie, sa cheminée qui fume, un lingot d'or |
 | 🏪 | joaillerie | une boutique à l'auvent violet, sa vitrine, une gemme en enseigne (💠 est déjà le diamant) |
 
-Les pépites (`_pepite()`, `_minerai_brut()`) sont entourées d'un petit creux sombre : sans lui, on
-ne les voyait plus à 16 px. Les facettes des gemmes taillées (saphir, rubis) sont coloriées par
+Le minerai brut (26/10, redessiné) : `_roche_taillee()` fait le caillou (sa face du dessus claire,
+les autres faces coloriées par `_facettes()`, de la plus claire en haut à gauche à la plus sombre),
+`_pepite_taillee()` une pépite de métal comme une bille à plat (un creux sombre autour, sans lui on
+ne la voit plus à 16 px ; un bord clair en haut à gauche, l'ombre en bas à droite, un gros reflet
+presque blanc) et `_blob()` le contour cabossé des pépites d'or. Le métal couvre presque la moitié
+du caillou : à 16 px on voit d'abord sa couleur (rose-beige `FER_TONS`, jaune `OR_TONS`), pas la
+pierre grise 🪨. Les lingots : `_lingot()`, un tronc de pyramide placé en 3D (longueur u,
+profondeur v, hauteur z) puis projeté ; on voit le dessus (avec son poinçon et une bande de lumière
+en biais), le bout de gauche, le devant et le bout de droite, du plus clair au plus sombre
+(`ACIER_TONS`, `LINGOT_OR_TONS`) ; un trait d'encre autour sépare les lingots empilés. Les facettes des gemmes taillées (saphir, rubis) sont coloriées par
 `_facettes()` : une facette par côté de la table, plus claire si elle regarde la lumière (en haut à
 gauche). Le saphir et le rubis ont aussi leur forme dans `outils/art/formes.mjs`
 (`minerai('saphir')`, `minerai('rubis')`).

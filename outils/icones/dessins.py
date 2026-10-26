@@ -315,20 +315,25 @@ def _roche_taillee(contour_roche, dessus):
     return roche, couches
 
 
-def _pepite_taillee(points, tons, creux, reflet=True):
-    """Une pépite de métal taillée à facettes, prise dans la roche. « points » : son contour ; sa
-    table (le dessus plat qui brille) est le même contour en plus petit, poussé vers la lumière."""
-    pepite = poly(*points, arrondi=1.2)
-    cx = sum(x for x, _ in points) / len(points)
-    cy = sum(y for _, y in points) / len(points)
-    l = max(x for x, _ in points) - min(x for x, _ in points)
-    table = [(cx - l * 0.07 + (x - cx) * 0.5, cy - l * 0.07 + (y - cy) * 0.5) for x, y in points]
-    couches = [(creux, grossir(pepite, 2.6)), (tons[2], pepite)]
-    couches += _facettes(table, pepite, tons[1:])
-    couches.append((tons[1], poly(*table)))
-    if reflet:
-        # un éclat de lumière sur le dessus, presque blanc
-        couches.append((tons[0], ellipse(cx - l * 0.14, cy - l * 0.12, l * 0.13, l * 0.07, -35)))
+def _pepite_taillee(points, tons, creux, arrondi=1.2):
+    """Une pépite de métal prise dans la roche. « points » : son contour. Comme une bille de
+    métal à plat : un bord clair en haut à gauche, une ombre en bas à droite (et un fil plus sombre
+    tout au bord), et un gros reflet presque blanc, avec un petit point de lumière."""
+    pepite = poly(*points, arrondi=arrondi)
+    x0, y0, x1, y1 = pepite.bounds
+    l, h = x1 - x0, y1 - y0
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    d = max(1.6, l * 0.16)
+    couches = [
+        (creux, grossir(pepite, 2.6)),
+        (tons[2], pepite),
+        (tons[1], moins(pepite, deplace(pepite, d * 0.55, d * 0.7))),
+        (tons[3], moins(pepite, deplace(pepite, -d * 0.7, -d * 0.85))),
+        (tons[4], moins(pepite, deplace(pepite, -d * 0.25, -d * 0.32))),
+        # le reflet : une tache claire penchée, et un point de lumière à côté
+        (tons[0], inter(pepite, ellipse(cx - l * 0.12, cy - h * 0.14, l * 0.2, h * 0.1, -35))),
+        (tons[0], cercle(cx + l * 0.12, cy - h * 0.28, max(0.9, l * 0.05))),
+    ]
     return pepite, couches
 
 
@@ -363,7 +368,11 @@ def fer():
         [(66, 18), (76, 16), (82, 26), (74, 32), (64, 28)],
         [(22, 66), (32, 62), (38, 72), (30, 80), (20, 76)],
     ):
-        couches += _pepite_taillee(pts, FER_TONS, FER_CREUX)[1]
+        # (un peu plus grosses que dessinées : le métal doit dominer à 16 px)
+        mx = sum(x for x, _ in pts) / len(pts)
+        my = sum(y for _, y in pts) / len(pts)
+        pts = [(mx + (x - mx) * 1.12, my + (y - my) * 1.12) for x, y in pts]
+        couches += _pepite_taillee(pts, FER_TONS, FER_CREUX, arrondi=2)[1]
     couches.append(('#ffffffe0', eclat(84, 40, 6.5)))
     return couches
 
@@ -377,14 +386,17 @@ def or_():
     # (26/10, redessiné) L'or brut (le minerai), à fondre en lingots 🟨 : un caillou taillé plein de
     # grosses pépites d'or rondes et dodues (l'une dépasse en haut), qui scintillent.
     _, couches = _roche_taillee(ROCHE_OR, DESSUS_OR)
+    # des paillettes d'or dans la roche
+    for x, y, rayon in ((50, 30, 1.8), (16, 56, 1.6), (50, 76, 1.8), (80, 76, 1.5)):
+        couches += [(OR_CREUX, cercle(x, y, rayon + 1.2)), (OR_TONS[1], cercle(x, y, rayon))]
     for cx, cy, rx, ry, bosses, angle in (
-        (36, 44, 19, 16, (1, 0.9, 1.05, 0.95, 1, 0.92, 1.04, 0.9), -12),
-        (68, 60, 18, 16, (0.95, 1.05, 0.9, 1, 1.04, 0.9, 1, 0.96), 14),
-        (66, 22, 13, 11, (1, 0.92, 1.05, 0.9, 1, 0.95, 1.05), 0),
-        (30, 76, 11, 9, (1, 0.9, 1.05, 0.95, 1, 0.92), 20),
-        (82, 40, 7, 6, (1, 0.9, 1.05, 0.95, 1), 0),
+        (36, 44, 19, 16, (1, 0.86, 1.06, 0.92, 1.08, 0.88, 1, 0.84, 1.05, 0.93), -12),
+        (68, 61, 18, 16, (0.95, 1.08, 0.86, 1.02, 1.06, 0.88, 1.04, 0.9, 1.0, 0.94), 14),
+        (66, 22, 13, 11, (1, 0.86, 1.07, 0.9, 1.04, 0.88, 1.05, 0.95), 0),
+        (30, 76, 11, 9, (1, 0.86, 1.06, 0.92, 1.04, 0.88, 1.02), 20),
+        (83, 40, 7, 6, (1, 0.88, 1.06, 0.92, 1.02, 0.9), 0),
     ):
-        couches += _pepite_taillee(_blob(cx, cy, rx, ry, bosses, angle), OR_TONS, OR_CREUX)[1]
+        couches += _pepite_taillee(_blob(cx, cy, rx, ry, bosses, angle), OR_TONS, OR_CREUX, arrondi=2.2)[1]
     couches += [('#ffffffe8', eclat(86, 14, 9)), ('#ffffffd8', eclat(14, 26, 6)), ('#ffffffe0', eclat(52, 84, 5))]
     return couches
 
@@ -434,7 +446,7 @@ def _lingot(ox, oy, tons, creux, u0=0, v0=0, z0=0, L=46, D=22, H=16, su=8, sv=4)
     return tout, couches
 
 
-ACIER_TONS = ('#ffffff', '#e8eef5', '#c6d0db', '#a2afbd', '#6d7a8b')
+ACIER_TONS = ('#ffffff', '#eaf1f9', '#c4d0de', '#a3b2c4', '#6a7b90')
 ACIER_CREUX = '#8794a4'
 LINGOT_OR_TONS = ('#fffbe3', '#ffe98f', '#ffd24d', '#f5b82e', '#c98512')
 

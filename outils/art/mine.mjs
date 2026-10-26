@@ -7,8 +7,9 @@
 // un rocher à cristaux, des tonneaux et des caisses.
 //
 // Les minerais ont la forme des icônes du jeu (minerai() dans formes.mjs) : un caillou, un
-// morceau de charbon, des lingots de fer et d'or, des cristaux de redstone, des émeraudes et des
-// diamants (plus des petits cubes).
+// morceau de charbon, (26/10) du fer et de l'or bruts (un caillou à grosses pépites), des cristaux
+// de redstone, des émeraudes, des saphirs, des rubis et des diamants (plus des petits cubes) ; un
+// lingot d'or dans le coffre au trésor.
 //
 // Le jeu dessine par-dessus (src/composants/DessinsVillage.tsx, DessinEvolutionMine) : les câbles
 // qui tombent du treuil, la caisse de l'ascenseur qui monte et descend dans le puits, puis le
@@ -236,6 +237,7 @@ function coffreTresor(t, x0, y0) {
   ]) {
     t.ajouter(`<ellipse cx="${r1(cx + dx)}" cy="${r1(cy + dy)}" rx="9" ry="6.5" fill="${C.or}" stroke="${C.encre}" stroke-width="3"/>`)
   }
+  t.ajouter(minerai('lingotOr', cx - 24, cy - 10, 24, -12)) // (26/10)
   t.ajouter(minerai('redstone', cx - 16, cy - 20, 20, -14))
   t.ajouter(minerai('diamant', cx + 10, cy - 26, 28, 8))
   t.ajouter(minerai('emeraude', cx + 28, cy - 12, 19, 18))
