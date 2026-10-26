@@ -193,6 +193,10 @@ export function planterPaysage(): Plante[] {
     ]) {
       const g = versGrille(px, py)
       if (surLaPlage(g.x, g.y + 0.4)) return false
+      // (26/10) Au fond, les deux bouts du pied restent derrière la lisière : près des coins, une
+      // grande colline plantée sur un côté débordait dans la clairière, son contour passait entre
+      // les arbres.
+      if (!deDevant(p.x, p.y) && py === e.y && dehors(g.x, g.y) < 1.3) return false
     }
     // Rien devant la cascade ni devant la galerie.
     if (garder.some((g) => profondeur(p.x, p.y) > g.profondeur - 300 && seCroisent(g.zone, cadre))) return false
