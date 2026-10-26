@@ -83,7 +83,8 @@ function VenteWagonnet({ vente }: { vente: Vente }) {
   )
 }
 
-export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Trajet }) {
+// « sansVente » (26/10) : pendant la visite d'un autre village, pas de « +X $ » qui jaillit.
+export function WagonnetVillage({ etat, trajet: w, sansVente = false }: { etat: EtatJeu; trajet: Trajet; sansVente?: boolean }) {
   const info = LIAISONS[w.liaison]
   const ligne = ligneDe(etat, w.liaison)
   // La trace de la voie (quelques dizaines de points : vite calculée, même à chaque image).
@@ -156,7 +157,7 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
     setVentes((liste) => [...liste.slice(-1), vente])
     window.setTimeout(() => setVentes((liste) => liste.filter((v) => v.id !== vente.id)), DUREE_VENTE)
   }, [w.chargement, w.etape, versLeMarche, trace])
-  const ventesVisibles = ventes.map((v) => <VenteWagonnet key={`vente${v.id}`} vente={v} />)
+  const ventesVisibles = sansVente ? null : ventes.map((v) => <VenteWagonnet key={`vente${v.id}`} vente={v} />)
 
   if (!ligne || !trace) return <>{ventesVisibles}</>
   // Où on en est sur la trace (du départ à l'arrivée), et dans quel sens on roule.

@@ -1052,4 +1052,11 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Ateliers': 'Workshops',
   'Construire tous les bâtiments du village': 'Build every building in the village',
   'Pose des rails de la mine au marché ({n} en stock, gratuits)': 'Lay rails from the mine to the market ({n} in stock, free)',
+  // (26/10) La visite des villages du classement
+  '{pseudo} n’a pas encore ouvert son village aux visites.': '{pseudo} hasn’t opened their village to visitors yet.',
+  'Impossible de joindre le serveur. Vérifie ta connexion.': 'Can’t reach the server. Check your connection.',
+  'Le village de {pseudo}': '{pseudo}’s village',
+  'Rentrer': 'Go home',
+  'Visiter': 'Visit',
+  'Visiter le village de {pseudo}': 'Visit {pseudo}’s village',
 }

@@ -28,6 +28,7 @@ import { RecompensesQuotidiennes } from './composants/RecompensesQuotidiennes'
 import { Reglages } from './composants/Reglages'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
+import { Visite } from './composants/Visite'
 import { FenetreAbsence } from './composants/FenetreAbsence'
 import { FenetreQuelsMondes } from './composants/FenetreQuelsMondes'
 import { FeteNiveau } from './composants/FeteNiveau'
@@ -65,7 +66,7 @@ import { notificationsBatiments } from './jeu/notifications'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { MARGE_CLIC_BATIMENT, batimentProcheDe, batimentPose, caseAccesProche, cleCase, empriseBatiment, empriseLibre, type Case, type Occupant } from './jeu/village'
-import { capaciteCoffre, coffrePlein, nbDansCoffre } from './jeu/mineur'
+import { capaciteCoffre, coffrePlein, nbDansCoffre, type EtatJeu } from './jeu/mineur'
 import { joueurPousse, liaisonsSurLaCase, reglerTrajet, trajetsAProposer, type ReglageTrajet } from './jeu/wagonnet'
 import { grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
 import { useCompte } from './useCompte'
@@ -905,16 +906,19 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
 // L'application : l'écran d'accueil (choix du monde et compte), puis le jeu.
 function App() {
   const [monde, setMonde] = useState<InfoMonde | null>(null)
+  // (26/10) Le village d'un joueur du classement qu'on visite (depuis l'accueil).
+  const [visite, setVisite] = useState<{ pseudo: string; partie: EtatJeu } | null>(null)
   // (25/10) Changer de langue redessine tout le jeu.
   const [, setLangue] = useState<Langue | null>(null)
   // Le compte reste ouvert pendant la partie : il recopie les mondes en ligne régulièrement.
   const compte = useCompte()
   // (la question « quels mondes garder ? » peut venir sur l'accueil ou pendant la partie)
   const question = compte.question && <FenetreQuelsMondes question={compte.question} />
+  if (monde === null && visite !== null) return <Visite pseudo={visite.pseudo} partie={visite.partie} onRentrer={() => setVisite(null)} />
   if (monde === null)
     return (
       <>
-        <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} />
+        <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} onVisiter={(pseudo, partie) => setVisite({ pseudo, partie })} />
         {question}
       </>
     )

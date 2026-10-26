@@ -71,6 +71,8 @@ describe('(25/10) les prénoms des employés en anglais', () => {
     expect(nomEmploye('Noah 22')).toBe('Emma 22')
     expect(nomEmploye('la mine')).toBe('la mine')
     expect(t('Licencier {nom} ?', { nom: 'Moussa' })).toContain('Olivia')
+    // (26/10) Le pseudo d'un joueur ne change jamais.
+    expect(t('Le village de {pseudo}', { pseudo: 'Noah' })).toBe('Noah’s village')
   })
 
   it('en français, il ne change pas', () => {

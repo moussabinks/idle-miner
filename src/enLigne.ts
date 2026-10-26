@@ -2,12 +2,14 @@
 // Supabase est un service hébergé qui nous donne une base de données et des comptes
 // (avec les mots de passe bien protégés), sans qu'on ait à écrire de serveur.
 //
-// Les tables et leurs règles de sécurité sont dans `supabase/schema.sql` et `supabase/classement.sql`.
+// Les tables et leurs règles de sécurité sont dans `supabase/schema.sql`, `supabase/classement.sql`
+// et `supabase/villages.sql`.
 // Si Supabase ne répond pas, le jeu marche quand même : tout reste dans le navigateur.
 
 import { createClient } from '@supabase/supabase-js'
 import type { LigneClassement, Score } from './jeu/classement'
 import { emailDuPseudo, type SauvegardeEnLigne } from './jeu/compte'
+import type { EtatJeu } from './jeu/mineur'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
 
 // L'adresse du projet et sa clé « publishable ». Cette clé est faite pour être publique
@@ -126,4 +128,21 @@ export async function placeDuScore(argent: number, pseudo: string | null): Promi
     devant: nombre.count ?? 0,
     suivant: ligne ? { pseudo: String(ligne.pseudo), prestige: Number(ligne.prestige), argent: Number(ligne.argent) } : null,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Les villages à visiter (26/10, table « villages » : supabase/villages.sql)
+// ---------------------------------------------------------------------------
+
+// Range en ligne la partie du meilleur monde du joueur (son village, que les autres peuvent visiter).
+export async function envoyerVillage(joueur: Joueur, partie: EtatJeu): Promise<void> {
+  const { error } = await supabase.from('villages').upsert({ joueur: joueur.id, pseudo: joueur.pseudo, partie })
+  if (error) throw new Error(error.message)
+}
+
+// La partie d'un joueur du classement (null s'il n'a pas encore envoyé son village).
+export async function lireVillage(pseudo: string): Promise<unknown> {
+  const { data, error } = await supabase.from('villages').select('partie').eq('pseudo', pseudo).maybeSingle()
+  if (error) throw new Error(error.message)
+  return data?.partie ?? null
 }

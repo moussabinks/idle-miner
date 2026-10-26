@@ -331,6 +331,13 @@ Avant le 22/10, la colonne `prestige` contenait le prestige (jusqu'à 500). Depu
 1. **Dans le jeu** (`lireClassement`, `src/enLigne.ts`) : le classement ne montre que les lignes mises à jour depuis le 22/10 (`modifie_le` ≥ 2026-10-22). (Le filtre `prestige` ≤ 5 a été retiré le 23/10, voir 3.3 : seul l'affichage du niveau ignore un ancien prestige.) Les anciens scores disparaissent tout de suite de l'affichage.
 2. **Sur le serveur, une fois** : `supabase/classement-remise-a-zero.sql` (`delete from public.classement;`) efface toutes les lignes pour de bon. À coller dans Supabase : **SQL Editor > New query > Run**. Chaque joueur retrouve sa ligne, avec ses vrais scores, à sa **prochaine sauvegarde en ligne** (le jeu l'envoie tout seul). Aucune table n'est créée ni modifiée : les règles RLS de `classement.sql` restent les mêmes (le SQL Editor a le droit de supprimer ; un joueur, lui, ne peut jamais le faire). **À lancer à la main** : ce n'est pas fait automatiquement.
 
+### 3.5 Visiter le village d'un joueur (26/10)
+
+- Chaque ligne du classement (sauf la sienne) a un bouton bleu **« 🏡 Visiter »** (l'icône seule sur un petit écran). Il charge le village du joueur (`lireVillage(pseudo)`, `src/enLigne.ts`) et l'ouvre en plein écran (`src/composants/Visite.tsx`, rendu par `App.tsx` à la place de l'accueil). « 🚶 Rentrer » (ou Échap) ramène à l'accueil.
+- Le village envoyé est la partie du **meilleur monde** du joueur (le plus d'argent gagné : `villageAPartager`, `src/jeu/visite.ts`). Il part avec le score (`envoyerLeScore`, `useCompte.ts`), donc toutes les 5 minutes au plus ; un refus (table pas encore créée) est ignoré. Un joueur qui n'a rien envoyé : « X n'a pas encore ouvert son village aux visites. »
+- Pendant la visite : on se promène (toucher le sol, flèches, Espace), mais **rien ne s'ouvre**, et on ne voit **ni bulle, ni jauge, ni message, ni « +X $ »** (prop `visite` de `VueVillage`, `sansVente` de `WagonnetVillage`). Le temps passe sur une copie (`avancerVisite`) : ses employés **travaillent toujours**, même si son manager dort ou si leur salaire n'est plus payé (c'est seulement pour l'animation) ; le coffre et le chariot de la foreuse se vident quand ils sont pleins, les réserves de charbon et de redstone ne s'épuisent pas. Rien n'est sauvegardé : la vraie partie du joueur ne bouge pas.
+- Table **`public.villages`** (`supabase/villages.sql`, à coller une fois dans le SQL Editor) : `joueur`, `pseudo`, `partie` (jsonb, moins de 500 Ko), `modifie_le`. Lisible par tout le monde (même sans compte), chacun n'écrit que sa ligne avec son pseudo (les mêmes règles que `classement`). Les sauvegardes complètes (`sauvegardes`) restent privées.
+
 ---
 
 ## 4. Les tables Supabase et leurs règles (RLS)
