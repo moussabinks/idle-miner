@@ -843,15 +843,9 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // src/composants/RecompensesQuotidiennes.tsx (ouverture du cadeau)
   'Jour {n} : bravo !': 'Day {n}: well done!',
   'Série : {n} jours de suite !': 'Streak: {n} days in a row!',
-  // src/composants/WagonnetVillage.tsx et VueVillage.tsx (mini-jauges)
-  'Chargement': 'Loading',
-  'Chargement du chariot': 'Loading the cart',
+  // src/composants/VueVillage.tsx (mini-jauges)
   'Coffre plein !': 'Chest full!',
-  'Déchargement': 'Unloading',
   'Déchargement · {n}': 'Unloading · {n}',
-  'Livraison de la redstone': 'Redstone delivery',
-  'Livraison du charbon': 'Coal delivery',
-  'Vente': 'Sale',
   // src/composants/Publicite.tsx
   'Simulation de pub': 'Ad simulation',
   // src/composants/StockMinerais.tsx (réglage « garder »)

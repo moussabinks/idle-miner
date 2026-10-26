@@ -8,14 +8,14 @@
 // dans le sens de la voie, d'un essieu à l'autre. On le dessine en 3D (Wagonnet3D.tsx).
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { BLOCS, LIAISONS, RARETES, type IdBatiment } from '../jeu/donnees'
+import { BLOCS, LIAISONS, RARETES } from '../jeu/donnees'
 import { totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } from '../jeu/mineur'
-import { capaciteTrajet, ligneDe, longueurTrajet, secondesArret, vitesseTrajet } from '../jeu/wagonnet'
+import { capaciteTrajet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
-import { MiniJauge, Perso } from './ElementsVillage'
+import { Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
-import { nomEmploye, t } from '../jeu/langue'
+import { nomEmploye } from '../jeu/langue'
 
 // Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
 // wagonnet se place entre eux et regarde de l'un vers l'autre. Dans un virage, il tourne donc
@@ -23,14 +23,6 @@ import { nomEmploye, t } from '../jeu/langue'
 const ESSIEUX = 0.6
 // Le pousseur marche à cette distance derrière le wagonnet (en cases, le long de la voie).
 const RECUL_POUSSEUR = 1.15
-
-// Ce que fait le wagonnet à son arrivée, selon le bâtiment.
-// (une fonction : le texte est traduit au moment de l'afficher, dans la langue choisie)
-const TEXTES_LIVRAISON: Partial<Record<IdBatiment, () => string>> = {
-  marche: () => `💰 ${t('Vente')}`,
-  foreuse: () => `⚫ ${t('Livraison du charbon')}`,
-  generateur: () => `🔴 ${t('Livraison de la redstone')}`,
-}
 
 // La vente d'un wagonnet au marché (27/10) : quand il a fini de décharger, un « +X $ » doré
 // jaillit juste au-dessus de lui (par-dessus le marché), compte de 0 jusqu'au montant, avec une
@@ -190,16 +182,12 @@ export function WagonnetVillage({ etat, trajet: w }: { etat: EtatJeu; trajet: Tr
   const mineur = roule && !joueurPousse ? etat.employes.find((m) => m.nom === w.pousseur && m.etape === 'pousse') : undefined
   const e = versEcran(ici.x, ici.y)
   // À l'arrêt pour charger (au départ) ou pour livrer (à l'arrivée) : la distance est négative
-  // pendant ce temps-là (voir wagonnet.ts). Une mini-jauge montre ce qui se passe.
+  // pendant ce temps-là (voir wagonnet.ts). Le pousseur attend à l'arrêt, sans marcher (28/10).
+  // (27/10, demandé par le propriétaire : plus de jauge « Vente » au marché, le « +X $ » suffit)
   const enPause = roule && distance < 0 && vitesse > 0
-  const restePause = enPause ? -distance / vitesse : 0
-  // (pendant ce temps, le pousseur attend à l'arrêt, sans marcher : 28/10)
-  const textePause = w.etape === 'aller' ? (info.depart === 'foreuse' ? `⚙️ ${t('Chargement du chariot')}` : `📦 ${t('Chargement')}`) : (TEXTES_LIVRAISON[info.arrivee]?.() ?? `📦 ${t('Déchargement')}`)
   return (
     <>
       {ventesVisibles}
-      {/* (23/10) La jauge seulement quand il vend au marché (plus pour charger ou décharger). */}
-      {enPause && w.etape !== 'aller' && info.arrivee === 'marche' && <MiniJauge x={e.x} y={e.y - 40} texte={textePause} part={1 - restePause / secondesArret(etat, w.liaison)} secondes={restePause} />}
       <svg
         className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
         style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}

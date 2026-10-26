@@ -23,7 +23,7 @@
 
 Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
-- **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, pousseurs, puis joailliers). Pastille « ! » si quelqu'un n'est pas payé ;
+- **👷 Personnel** (25/10 : l'équipe et les embauches dans le même onglet) : les salaires, puis **une carte par employé** (ses chiffres, ses améliorations, « Payer » et « Licencier »), rangées par métier (mineurs, pousseurs, puis joailliers). Pastille « ! » si quelqu'un n'est pas payé, si la pioche d'un mineur peut s'améliorer, ou si un pousseur dont le chariot ne suit pas peut s'améliorer (27/10 : pas de « ! » pour un pousseur qui n'en a pas besoin) ;
 - (26/10) Un pousseur dont le chariot ne suit pas la production : sa carte passe en rose, avec « ⚠️ Son chariot ne suit pas : il emporte *a* blocs/s, il en sort *b*. Agrandis-le ! » juste au-dessus de son chariot. « Il en sort » compte seulement ce que son wagonnet emporte (26/10) : le charbon vers la foreuse, la redstone que brûle le générateur, ce que fabrique ou consomme un atelier ; toute la production de la mine seulement vers le marché.
 - (26/10) Dans chaque section, les employés sont rangés **du plus rare au plus commun** (Mythique en haut), puis dans l'ordre d'embauche.
 - (26/10) Deux sections : **⛏️ Mineurs** et **🛤️ Pousseurs**, chacune avec son équipe puis sa ligne pour recruter ; et (26/10, la grosse mise à jour des gemmes) une troisième, **💍 Joailliers *n* / *max***, dès que la joaillerie est posée.
