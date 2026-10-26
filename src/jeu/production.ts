@@ -3,10 +3,11 @@
 // ça rapporte à peu près ; et les goulots (l'ascenseur, le wagonnet du marché suivent-ils ?).
 // Ce sont des moyennes : les vrais blocs sont tirés au hasard.
 
-import { blocsParSecondeEmploye, vitesseMineurs } from './employes'
+import { atelierPose, joailliers, joaillierAuTravail, nbEntree, vitesseFonderie } from './ateliers'
+import { bijouxParMinute, blocsParSecondeEmploye, vitesseMineurs } from './employes'
 import { valeurMoyenneBloc } from './mine'
 import { coffrePlein, debitAscenseur, debitMine, prochainNiveauAscenseur, type EtatJeu, type Employe } from './mineur'
-import type { IdLiaison } from './donnees'
+import { SECONDES_PAR_CHARBON_FONDERIE, type IdLiaison } from './donnees'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
 import { capaciteTrajet, ligneDe, secondesAllerRetour, trajetDe, trajetElectrique, vitesseTrajet } from './wagonnet'
 
@@ -92,8 +93,29 @@ export type AnalyseWagonnet = {
 }
 
 // Ce que le bâtiment de départ sort tout seul, par seconde.
+// (26/10) Ce que fabriquent les ateliers par seconde : les lingots de la fonderie (quand elle a de
+// quoi fondre), les bijoux des joailliers payés.
+function lingotsParSeconde(etat: EtatJeu): number {
+  return atelierPose(etat, 'fonderie') && (etat.fonderie.carburant > 0 || nbEntree(etat, 'fonderie') > 0) ? vitesseFonderie(etat) : 0
+}
+
+function bijouxParSeconde(etat: EtatJeu): number {
+  return joailliers(etat)
+    .filter(joaillierAuTravail)
+    .reduce((total, e) => total + bijouxParMinute(etat, e) / 60, 0)
+}
+
 function apportAuDepart(etat: EtatJeu, liaison: IdLiaison): number {
   if (liaison === 'foreuse-marche') return foreuseEnMarche(etat) || etat.foreuse.carburant > 0 ? vitesseForage(etat) : 0
+  // (26/10) Les ateliers : ce qu'ils fabriquent part au marché ; ce qu'ils consomment arrive par
+  // les rails (le minerai, et le charbon du four de la fonderie).
+  if (liaison === 'fonderie-marche') return lingotsParSeconde(etat)
+  if (liaison === 'joaillerie-marche') return bijouxParSeconde(etat)
+  if (liaison === 'mine-fonderie' || liaison === 'foreuse-fonderie') {
+    const lingots = lingotsParSeconde(etat)
+    return lingots > 0 ? lingots + 1 / SECONDES_PAR_CHARBON_FONDERIE : 0
+  }
+  if (liaison === 'mine-joaillerie' || liaison === 'foreuse-joaillerie') return bijouxParSeconde(etat)
   // (le coffre plein arrête la production : on compte ce que la mine sortirait sans s'arrêter)
   const mineurs = etat.employes.filter((e) => e.role === 'mineur' && e.etape !== 'attend').reduce((t, m) => t + blocsParSecondeEmploye(etat, m), 0)
   return debitMine(etat) + Math.min(mineurs, debitAscenseur(etat))

@@ -12,6 +12,7 @@ import {
   charger,
   cleMonde,
   convertirVersion28,
+  convertirVersion29,
   creerMonde,
   dupliquerMonde,
   exporterTout,
@@ -382,5 +383,62 @@ describe('copie de tous les mondes (sauvegarde en ligne)', () => {
   it('renvoie une copie vide sans aucun monde', () => {
     expect(exporterTout(fauxStockage())).toEqual({})
     expect(mondesDeLaCopie({})).toEqual([])
+  })
+})
+
+// (26/10) La grosse mise à jour des gemmes : la mine a 7 niveaux, le saphir au 5, le rubis au 6
+// et le diamant au 7. Un joueur qui était au niveau 5 (le diamant) garde son niveau 5, qui est
+// maintenant le saphir : ses diamants deviennent des saphirs, et ses pioches en diamant aussi
+// (le même niveau de pioche, qui s'appelle maintenant « Saphir »).
+describe('une partie de la version 29 (avant le saphir et le rubis)', () => {
+  function partie29(): EtatJeu {
+    const etat = partieDeTest(aleatoireAvecGraine(1)) as Omit<EtatJeu, 'fonderie' | 'joaillerie'> & Partial<EtatJeu>
+    etat.version = 29
+    etat.niveauMine = 5
+    etat.meilleure = 4
+    etat.coffre.contenu = { pierre: 10, diamant: 7 }
+    etat.coffre.garder = { diamant: 3 }
+    etat.foreuse.chariot = { diamant: 2 }
+    delete etat.fonderie
+    delete etat.joaillerie
+    return etat as EtatJeu
+  }
+
+  function charger29(etat: EtatJeu): EtatJeu {
+    const stockage = fauxStockage()
+    stockage.setItem(cleMonde('1'), JSON.stringify(etat))
+    const chargee = charger(stockage, '1')
+    if (!chargee) throw new Error('la partie de la version 29 ne se charge pas')
+    return chargee
+  }
+
+  it('se charge à la version actuelle, avec une fonderie et une joaillerie vides', () => {
+    const etat = charger29(partie29())
+    expect(etat.version).toBe(VERSION_ETAT)
+    expect(etat.niveauMine).toBe(5)
+    expect(etat.fonderie).toMatchObject({ niveau: 0, entree: {}, sortie: {} })
+    expect(etat.joaillerie).toMatchObject({ niveau: 0, entree: {}, sortie: {} })
+  })
+
+  it('les diamants deviennent des saphirs, partout', () => {
+    const avant = partie29()
+    avant.village.batiments.push({ id: 'employes', x: 9, y: 21, miroir: false })
+    avant.argent = 1000
+    embaucher(avant, aleatoireAvecGraine(2))
+    avant.employes[0].sac = { diamant: 4 }
+    avant.employes[0].niveau = 4
+    const etat = charger29(avant)
+    expect(etat.coffre.contenu).toEqual({ pierre: 10, saphir: 7 })
+    expect(etat.coffre.garder).toEqual({ saphir: 3 })
+    expect(etat.foreuse.chariot).toEqual({ saphir: 2 })
+    expect(etat.employes[0].sac).toEqual({ saphir: 4 })
+    expect(etat.employes[0].niveau).toBe(4) // sa pioche est maintenant en saphir
+    expect(etat.meilleure).toBe(4)
+  })
+
+  it('ne touche pas aux autres versions', () => {
+    const actuelle = creerPartie(aleatoireAvecGraine(1))
+    expect(convertirVersion29(actuelle)).toBe(actuelle)
+    expect(convertirVersion29(null)).toBeNull()
   })
 })

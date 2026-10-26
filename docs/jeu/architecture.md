@@ -1,7 +1,7 @@
 # Architecture du code
 
 > Comment le projet Mega Digger (ex-Idle Miner) est organisé : stack, fichiers, flux des données, langues, version CrazyGames, tests et façon de travailler.
-> Mis à jour pour la **grande mise à jour du 25/10** : nouvelles règles (`gemmes.ts`, plus de sac ni de bazar), deux langues (`langue.ts`, `traductions/`), stockage sûr (`stockage.ts`), version CrazyGames (`portail.ts`), contexte React (`contexteJeu.ts`), fenêtre commune (`Fenetre.tsx`) et nouveau style (`src/styles/`). Les règles du jeu sont dans [vue-d-ensemble.md](vue-d-ensemble.md) et [equilibrage.md](equilibrage.md), le village dans [village.md](village.md), les fiches des bâtiments dans [../batiments/](../batiments/README.md), la sauvegarde et la partie en ligne dans [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md).
+> Mis à jour pour la **grande mise à jour du 25/10** : nouvelles règles (`gemmes.ts`, plus de sac ni de bazar), deux langues (`langue.ts`, `traductions/`), stockage sûr (`stockage.ts`), version CrazyGames (`portail.ts`), contexte React (`contexteJeu.ts`), fenêtre commune (`Fenetre.tsx`) et nouveau style (`src/styles/`). Complété le 26/10 (la grosse mise à jour des gemmes : `ateliers.ts`, `PanneauxAteliers.tsx`, version de sauvegarde 30). Les règles du jeu sont dans [vue-d-ensemble.md](vue-d-ensemble.md) et [equilibrage.md](equilibrage.md), le village dans [village.md](village.md), les fiches des bâtiments dans [../batiments/](../batiments/README.md), la sauvegarde et la partie en ligne dans [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md).
 
 ## 1. Stack
 
@@ -55,36 +55,37 @@ Dépendances de production : `react`, `react-dom`, `@supabase/supabase-js`, `@fo
 
 | Fichier | Rôle |
 |---|---|
-| `donnees.ts` | Toutes les données et constantes : blocs, niveaux de la mine (`NIVEAUX_MINE` : ce sont aussi les paliers), `NIVEAUX_PAR_AMELIORATION` (5), coffre, pioches, bonus de combo, ascenseur, mineurs (pioches, salaires, raretés, recruteur, manager, `PALIER_CHEF`), pousseurs (vitesse, chariot), rails et trajets (`LIAISONS`), générateur, foreuse, bâtiments (`LISTE_BATIMENTS`), grille de 40 × 40 (`TAILLE_GRILLE`), niveau du joueur (`XP_PAR`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX` = 15, `NIVEAU_JOUEUR_POUR`) |
-| `mine.ts` | Les 5 niveaux de la mine : tirer un bloc (`tirerBloc`), les chances, la valeur moyenne d'un bloc, ce que rapporte le niveau suivant (`gainsNiveauSuivant`) |
-| `mineur.ts` | Le type `EtatJeu` (et `Coffre`, `Foreuse`, `Generateur`, `Trajet`, `Employe`, `Navette`, `Manager`, `Statistiques`...), `VERSION_ETAT` (29), `creerPartie` (80 $ au départ), et les actions du joueur : le coffre, payer (`disponible`, `payer`, `acheterAvecGemmes`, `peutPayerEnGemmes`), le clic (`cliquerMine`), les bonus de combo, la mine toute seule (`avancerMine`, `debitMine`), les niveaux, l'ascenseur, **la vente directe** (`vendreCoffre`, `vendreMinerai`, la punaise `basculerGarderTout`, 25/10), les pioches et leur réparation |
+| `donnees.ts` | Toutes les données et constantes : blocs, niveaux de la mine (`NIVEAUX_MINE` : ce sont aussi les paliers), `NIVEAUX_PAR_AMELIORATION` (7 depuis le 26/10), coffre, pioches, bonus de combo, ascenseur, mineurs (pioches, salaires, raretés, recruteur, manager, `PALIER_CHEF`), pousseurs (vitesse, chariot), rails et trajets (`LIAISONS`), générateur, foreuse, (26/10) fonderie et joaillerie (`NIVEAUX_FONDERIE`, `NIVEAUX_JOAILLERIE`, `PALIER_FONDERIE`, `PALIER_JOAILLERIE`, `LINGOT_DE`, `BIJOU_DE`, `PRIX_EMBAUCHE_JOAILLIER`), bâtiments (`LISTE_BATIMENTS`), grille de 40 × 40 (`TAILLE_GRILLE`), niveau du joueur (`XP_PAR`, `xpPourPasser`, `NIVEAU_JOUEUR_MAX` = 15, `NIVEAU_JOUEUR_POUR`) |
+| `mine.ts` | Les 7 niveaux de la mine (26/10) : tirer un bloc (`tirerBloc`), les chances, la valeur moyenne d'un bloc, ce que rapporte le niveau suivant (`gainsNiveauSuivant`) |
+| `mineur.ts` | Le type `EtatJeu` (et `Coffre`, `Foreuse`, `Generateur`, `Atelier` (26/10), `Trajet`, `Employe`, `Navette`, `Manager`, `Statistiques`...), `VERSION_ETAT` (30), `creerPartie` (80 $ au départ), et les actions du joueur : le coffre, payer (`disponible`, `payer`, `acheterAvecGemmes`, `peutPayerEnGemmes` ; 26/10 : les lingots et les bijoux aussi depuis la réserve de leur atelier), le clic (`cliquerMine`), les bonus de combo, la mine toute seule (`avancerMine`, `debitMine`), les niveaux, l'ascenseur, **la vente directe** (`vendreCoffre`, `vendreMinerai`, la punaise `basculerGarderTout`, 25/10), les pioches et leur réparation |
 | `gemmes.ts` | **Nouveau (25/10)** : les gemmes : en gagner (`recompenserPub`, `GEMMES_PAR_NIVEAU`), le prix en gemmes (`prixEnGemmes`), la boutique (`BOOSTS`, `acheterBoost`, `TRESOR`), les multiplicateurs des bonus (`multiplicateurProduction`, `multiplicateurVentes`, `boostActif`), le cadeau du jour (`RECOMPENSES_QUOTIDIENNES`, `etatQuotidien`, `recupererQuotidien`). Voir [gemmes-et-recompenses.md](gemmes-et-recompenses.md) |
 | `langue.ts` | **Nouveau (25/10)** : les deux langues. `t('Texte en français', { trou: valeur })` rend le texte dans la langue du joueur (la phrase française sert de clé dans `traductions/en.ts` ; sans traduction, le texte reste en français), `nombre(n)` écrit un nombre à la façon de la langue, `pluriel`, `changerLangue`. Ni React ni navigateur : la logique s'en sert pour ses messages |
 | `traductions/en.ts` | **Nouveau (25/10)** : la traduction anglaise (`TRADUCTIONS_EN` : texte français → texte anglais, avec les mêmes `{trous}`). Encore à remplir : `npm run traductions` liste ce qui manque |
-| `employes.ts` | Les employés : embauche des mineurs et des pousseurs (`prixEmbauche`, `embaucher`, `embaucherPousseur`), pioches des mineurs, vitesse et chariot des pousseurs, travail (creuser, la caisse de l'ascenseur `avancerNavette`, marcher au village), salaires, licenciement, manager (palier 3, sa fatigue) et recruteur (palier 4, `remplacerMineur`) |
-| `wagonnet.ts` | Les trajets des wagonnets (Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché), un wagonnet par trajet : créer, régler (`reglerTrajet`) et arrêter un trajet, ce qu'il emporte (sans les minerais épinglés), qui le pousse, électricité (`trajetElectrique`, `railsAlimentes`), vitesse, livraison, retour, ligne coupée |
-| `generateur.ts` | Le générateur : rayon (`casesDansLeRayon`), foreuse alimentée, redstone et sa réserve, améliorations |
+| `employes.ts` | Les employés : embauche des mineurs, des pousseurs et (26/10) des joailliers (`prixEmbauche`, `embaucher`, `embaucherPousseur`, `embaucherJoaillier`), pioches des mineurs, vitesse et chariot des pousseurs, travail (creuser, la caisse de l'ascenseur `avancerNavette`, marcher au village), salaires, licenciement, manager (palier 3, sa fatigue) et recruteur (palier 4, `remplacerMineur`) |
+| `wagonnet.ts` | Les trajets des wagonnets (Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, et depuis le 26/10 les six trajets des ateliers), un wagonnet par trajet : créer, régler (`reglerTrajet`) et arrêter un trajet, ce qu'il emporte (sans les minerais épinglés), qui le pousse, électricité (`trajetElectrique`, `railsAlimentes`), vitesse, livraison, retour, ligne coupée |
+| `generateur.ts` | Le générateur : rayon (`casesDansLeRayon`), foreuse et ateliers alimentés (`atelierAlimente`, 26/10), redstone et sa réserve, améliorations |
 | `foreuse.ts` | La foreuse (niveau 2) : charbon, forage, chariot, **vente sur place** (`vendreChariot`, 25/10), améliorations, bonus électrique |
+| `ateliers.ts` | **Nouveau (26/10)** : la **fonderie** (niveau 5 de la mine : le fer et l'or en lingots, au charbon) et la **joaillerie** (niveau 6 : les joailliers taillent les gemmes en bijoux) : ce qu'ils acceptent, l'entrée et la réserve, « Apporter », le four, la vente de la réserve, le travail seconde après seconde (`avancerFonderie`, `avancerJoaillerie`), leurs niveaux et leur plus-value. Voir [../batiments/fonderie.md](../batiments/fonderie.md) et [../batiments/joaillerie.md](../batiments/joaillerie.md) |
 | `village.ts` | La géométrie du village : types `Village`, `BatimentPose` ; grille de 40 × 40, mine posée d'office en 15, 15 (`POSITION_MINE`), emprises, portes, chemin à pied (A étoile), rails entre deux bâtiments, raccords, pas de boucle, bords de la voie, virages doux |
 | `batiments.ts` | Les actions du village : construire (`batimentDebloque`, `construireBatiment`), déplacer, retourner, poser / déplacer / enlever des rails (remboursés) et des chemins, `raisonSolImpossible` |
 | `niveaux.ts` | Le niveau du joueur (XP sur les « records » des compteurs, `mettreAJourXp`, 1 gemme par niveau gagné) et **les paliers** (25/10 : `palierRequis`, `debloque`, `verrou` « 🕳️ Mine N », `verrouNiveau` « ⭐ N »), ce qu'apporte un niveau (`deblocagesDuNiveau`, `prochainDeblocage`). Voir [niveaux.md](niveaux.md) |
 | `tutoriel.ts` | Les étapes du tutoriel (25/10 : bonjour, casser 10 blocs, vendre le coffre, construire le Personnel, embaucher le premier mineur, bravo) : `etapeTutoriel`, `etapeFaite`, `avancerTutoriel` |
 | `missions.ts` | `missions(etat, avant)` : une à trois missions (urgences, premiers pas, prochain bâtiment, automatisation, améliorations les plus proches ; 25/10 : plus de « Niveau X ») ; une mission affichée garde sa place |
 | `objectifs.ts` | Les achats possibles (`achatsPossibles`) et les bâtiments où une amélioration est achetable |
-| `notifications.ts` | Les bulles au-dessus des bâtiments (salaires, rails coupés, pousseurs sans trajet, chariot plein, plus de charbon, plus de redstone, pioche cassée, coffre plein, nouveauté, achetable pendant le tutoriel) |
+| `notifications.ts` | Les bulles au-dessus des bâtiments (salaires, rails coupés, pousseurs sans trajet, chariot d'un wagonnet trop petit, chariot plein, plus de charbon, plus de redstone, pioche cassée, coffre plein, réserve d'un atelier pleine, pas de joaillier, nouveauté, achetable pendant le tutoriel) |
 | `decouvertes.ts` | Le manager et le recruteur tout juste débloqués (bulle ✨ au-dessus du Personnel) |
-| `succes.ts` | Les 21 succès (titres traduits avec `t()`) et `verifierSucces` |
-| `revenu.ts` | Estimation de ce que la mine produit par seconde (« $/s ») |
+| `succes.ts` | Les 28 succès (26/10 ; 21 avant) (titres traduits avec `t()`) et `verifierSucces` |
+| `revenu.ts` | Estimation de ce que la mine produit par seconde (« $/s »), et le bilan par minute ; depuis le 26/10, avec la plus-value des ateliers et le salaire des joailliers |
 | `production.ts` | Le tableau de production et les goulots (`production`, `analyseAscenseur`, `analyseWagonnet`, `chariotTropPetit`) |
-| `absence.ts` | Le résumé de l'absence (`photoPartie`, `resumerAbsence`, `ResumeAbsence.gains`) et l'absence doublée (`doublerAbsence`, 25/10) |
+| `absence.ts` | Le résumé de l'absence (`photoPartie`, `resumerAbsence`, `ResumeAbsence.gains`), la vente au retour (`vendreCoffreAuRetour` : le coffre, et depuis le 26/10 la réserve des ateliers) et l'absence doublée (`doublerAbsence`, 25/10) |
 | `statistiques.ts` | Calculs pour l'écran 📊 (argent par source, blocs les plus cassés) |
-| `temps.ts` | `avancerTemps` : la mine, le générateur, la foreuse, les mineurs et les wagonnets, par morceaux d'une minute au plus ; puis l'XP du joueur |
+| `temps.ts` | `avancerTemps` : la mine, le générateur, la foreuse, les employés, la fonderie et la joaillerie (26/10) et les wagonnets, par morceaux d'une minute au plus ; puis l'XP du joueur |
 | `aleatoire.ts` | Le type `Aleatoire`, `aleatoireNavigateur` (Math.random), `aleatoireAvecGraine` (mulberry32), `entierEntre`, `choisir`, `choisirPondere` |
-| `sauvegarde.ts` | Les 5 mondes, la vérification de version et les **conversions** des vieilles parties (`convertirVersion21` … `convertirVersion28`, 25/10 : sac vendu, bazar remboursé, village recalé sur 40 × 40, 5 niveaux pour tout, 10 gemmes), export/import de tous les mondes |
+| `sauvegarde.ts` | Les 5 mondes, la vérification de version et les **conversions** des vieilles parties (`convertirVersion21` … `convertirVersion29` ; 25/10 : sac vendu, bazar remboursé, village recalé sur 40 × 40, 5 niveaux pour tout, 10 gemmes ; 26/10 : les diamants deviennent des saphirs, la fonderie et la joaillerie arrivent vides), export/import de tous les mondes |
 | `compte.ts` | Règles du pseudo et du mot de passe, email fabriqué, choix de synchronisation à la connexion |
 | `classement.ts` | Le meilleur score parmi les mondes : **l'argent gagné en tout** (25/10) et le niveau de la mine (rangé dans `prestige`) |
 | `partieDeTest.ts` | Pour les tests : une partie déjà au niveau maximum du joueur |
-| `bot.ts` | Bot de simulation qui joue une partie jusqu'au niveau 5 de la mine (`jouerPartie`), utilisé par les tests d'équilibrage |
+| `bot.ts` | Bot de simulation qui joue une partie jusqu'au niveau 7 de la mine (`jouerPartie` ; 26/10 : il fait aussi tourner la fonderie et la joaillerie), utilisé par les tests d'équilibrage |
 | `*.test.ts` | Les tests (section 7) |
 
 Retirés : le 25/10, tout ce qui touchait au **sac** (`SACS`, `prendreDuCoffre`, `vendreLot`, `nonAVendre`…) et au **bazar** ; le 27/10, `tenues.ts` ; le 22/10, `talents.ts`, `conditionsPrestige.ts`, `enchantements.ts` (vers `archives/`) et `convois.ts`.
@@ -154,9 +155,10 @@ Ils lisent la partie avec **`useJeu()`** (`contexteJeu.ts`, 25/10) au lieu de la
 | `Toasts.tsx`, `Gains.tsx` | Les messages (au plus 3 à la fois) et les « +X $ » qui s'envolent |
 | `Confirmation.tsx` | Une confirmation dans le style du jeu (licencier, supprimer un monde…) |
 | `PanneauMine.tsx` | La mine : bloc à cliquer, coffre à vendre, palier suivant, coffre, ascenseur, wagonnets, production |
-| `StockMinerais.tsx` | Un stock à vendre (le coffre de la mine ou le chariot de la foreuse) : « Tout vendre », une ligne par minerai avec « Vendre », et la punaise 📌 pour le coffre |
-| `PanneauEmployes.tsx` | Le Personnel : Équipe, Embaucher (mineur ou pousseur), Chefs |
+| `StockMinerais.tsx` | Un stock à vendre (le coffre de la mine, le chariot de la foreuse, ou la réserve d'un atelier, 26/10) : « Tout vendre », une ligne par minerai avec « Vendre », et la punaise 📌 pour le coffre |
+| `PanneauEmployes.tsx` | Le Personnel : Équipe, Embaucher (mineur, pousseur ou, 26/10, joaillier), Chefs |
 | `Panneaux.tsx` | Les panneaux du Marché, du Forgeron, de la Foreuse et du Générateur, et celui des succès |
+| `PanneauxAteliers.tsx` | **Nouveau (26/10)** : les panneaux de la Fonderie (🔥 Four · 🟨 Lingots · ⬆️ Améliorer) et de la Joaillerie (🔨 Établis · 💍 Bijoux · ⬆️ Améliorer) |
 | `PanneauTrajets.tsx`, `FenetreTrajet.tsx`, `FenetreRail.tsx`, `nomTrajet.ts`, `traceRail.ts` | Les trajets d'un bâtiment, la fenêtre d'un trajet (l'activer, ses objets), un rail touché, le nom d'un trajet traduit, la pose des rails pas à pas |
 | `AlerteChariot.tsx`, `Ascenseur.tsx`, `Barre.tsx`, `PrixCout.tsx`, `OngletsPanneau.tsx`, `RevelationRecrue.tsx`, `confettis.ts` | Petits morceaux d'interface : chariot trop petit, ligne de l'ascenseur, jauge, prix, onglets, révélation d'une recrue, confettis |
 | `MenuConstruction.tsx` | Le menu « Construire » : en grand les bâtiments à construire, puis les rails, le chemin, et en petit ce qui est déjà construit |
@@ -202,7 +204,7 @@ Ces scripts se collent à la main dans le SQL Editor de Supabase. Toute nouvelle
 | `idle_miner_v1.md` | Spec de la v1 (notebook Python) : une source d'idées historique |
 | `revue-crazygames.md` | La revue avant CrazyGames (24/10) et son plan d'action |
 | `batiments/README.md` | Index des fiches des bâtiments |
-| `batiments/mine.md`, `personnel.md`, `marche.md`, `forgeron.md`, `foreuse.md`, `generateur.md` | Une fiche par bâtiment (à mettre à jour quand on le modifie ; le bazar est retiré le 25/10) |
+| `batiments/mine.md`, `personnel.md`, `marche.md`, `forgeron.md`, `foreuse.md`, `generateur.md`, `fonderie.md`, `joaillerie.md` (26/10) | Une fiche par bâtiment (à mettre à jour quand on le modifie ; le bazar est retiré le 25/10) |
 | `jeu/vue-d-ensemble.md` | Le point d'entrée de la doc : concept, boucle, progression, glossaire, sommaire |
 | `jeu/niveaux.md` | Le niveau du joueur et les paliers |
 | `jeu/gemmes-et-recompenses.md` | Les gemmes, la boutique, le cadeau du jour, l'absence doublée (25/10) |
@@ -282,20 +284,21 @@ Lancés par `npm test` (Vitest), sans navigateur. Au 25/10 : **26 fichiers, 238 
 
 | Fichier | Ce qu'il vérifie |
 |---|---|
-| `src/jeu/bot.test.ts` | **Bot d'équilibrage** : 10 parties à graines fixes. Toujours le niveau 5 ; niveau 2 en **2 à 10 min** et niveau 5 en **1 h à 3 h** (médianes, 25/10, économie revue ; avant 3 h à 6 h) ; niveau 5 du joueur après 8 min au moins et niveau 10 après 1 h au moins ; chaque niveau plus long que le précédent ; rails en moins de 10 min et électriques en moins de 1 h 30 ; au moins 4 employés, plus de 100 voyages de wagonnet, plus de blocs des mineurs que des clics ; plus de 3 ventes à la main au début |
+| `src/jeu/bot.test.ts` | **Bot d'équilibrage** : 10 parties à graines fixes. Toujours le niveau 7 (26/10 ; avant, le 5) ; niveau 2 en **2 à 10 min**, niveau 5 en **1 h à 3 h** (médianes, 25/10, économie revue ; avant 3 h à 6 h) et niveau 7 en **3 h à 7 h** (26/10) ; la fonderie fond plus de 100 lingots et la joaillerie taille plus de 20 bijoux dans chaque partie ; niveau 5 du joueur après 8 min au moins et niveau 10 après 1 h au moins ; chaque niveau plus long que le précédent ; rails en moins de 10 min et électriques en moins de 1 h 30 ; au moins 4 employés, plus de 100 voyages de wagonnet, plus de blocs des mineurs que des clics ; plus de 3 ventes à la main au début |
 | `src/jeu/gemmes.test.ts` | **Nouveau (25/10)** : le prix en gemmes, payer une amélioration en gemmes (mêmes conditions), gagner des gemmes (publicité, niveau), les bonus et le trésor, le cadeau du jour et sa série |
 | `src/jeu/langue.test.ts` | **Nouveau (25/10)** : `t()` en français et en anglais, les `{trous}`, un texte sans traduction, `nombre`, `pluriel` |
 | `src/jeu/tutoriel.test.ts` | Les étapes du tutoriel (jusqu'au premier mineur) |
 | `src/jeu/mineur.test.ts` | Début de partie ; clic (coffre, usure, doublement, pioche cassée, coffre plein) ; la mine toute seule ; la vente du coffre et la punaise ; payer ; niveaux ; coffre ; ascenseur ; pioches |
 | `src/jeu/niveaux.test.ts` | L'XP, les niveaux (au plus 15), les gemmes de chaque niveau, les cadenas du niveau du joueur et des paliers |
-| `src/jeu/mine.test.ts`, `src/jeu/donnees.test.ts` | Les blocs, les chances, la valeur moyenne, le débit ; les tables (5 niveaux pour tout, prix qui montent) |
+| `src/jeu/mine.test.ts`, `src/jeu/donnees.test.ts` | Les blocs, les chances, la valeur moyenne, le débit ; les tables (7 niveaux pour tout depuis le 26/10, prix qui montent) |
 | `src/jeu/employes.test.ts` | Embauche, prix, travail, ascenseur, pousseurs, licenciement, salaires, recruteur, manager |
 | `src/jeu/wagonnet.test.ts`, `src/jeu/voie.test.ts`, `src/composants/traceRail.test.ts` | Les trajets des wagonnets, la voie (bords, virages, bulles), la pose des rails pas à pas |
 | `src/jeu/generateur.test.ts`, `src/jeu/foreuse.test.ts` | Le générateur ; la foreuse (charbon, chariot, vente sur place, électricité, améliorations) |
+| `src/jeu/ateliers.test.ts` | **Nouveau (26/10)** : ce que les ateliers acceptent, les prix des lingots et des bijoux, leurs paliers ; la fonderie (fondre au charbon, payer avec sa réserve, s'améliorer) ; les joailliers (autant que d'établis, la gemme la plus chère d'abord, sans salaire la gemme retourne à l'entrée) ; les wagonnets vers les ateliers (minerais choisis, refusés, charbon du four) |
 | `src/jeu/village.test.ts` | La mine au milieu, les bâtiments, déplacer, chemins à pied, rails, mineurs au village, bulles |
 | `src/jeu/objectifs.test.ts`, `src/jeu/nouveautes30.test.ts` | Les missions et les achats ; bonus de combo, rails remboursés, missions qui gardent leur place, résumé de l'absence |
 | `src/jeu/production.test.ts`, `src/jeu/revenu.test.ts`, `src/jeu/bilan.test.ts`, `src/jeu/statistiques.test.ts` | La production, le revenu, le bilan, les statistiques |
-| `src/jeu/sauvegarde.test.ts` | Relecture, mondes, export/import, et **chaque conversion** (dont la 28 → 29 : sac vendu, bazar remboursé, village recalé, rails hors de la clairière remboursés, 5 niveaux, 10 gemmes, tutoriel passé) |
+| `src/jeu/sauvegarde.test.ts` | Relecture, mondes, export/import, et **chaque conversion** (dont la 28 → 29 : sac vendu, bazar remboursé, village recalé, rails hors de la clairière remboursés, 5 niveaux, 10 gemmes, tutoriel passé ; et la 29 → 30 : diamants changés en saphirs, ateliers vides) |
 | `src/jeu/compte.test.ts`, `src/jeu/classement.test.ts`, `src/jeu/decouvertes.test.ts` | Compte, classement (argent gagné), découvertes |
 | `src/evenements.test.ts` | Bloc cassé, diamant doublé, vente, pioche qui casse |
 

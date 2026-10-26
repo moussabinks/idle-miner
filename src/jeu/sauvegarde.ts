@@ -6,7 +6,7 @@
 // dans les tests c'est un faux stockage en mémoire.
 
 import { BLOCS, LIAISONS, TAILLE_GRILLE, type IdBatiment, type IdBloc, type IdLiaison } from './donnees'
-import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, ajouterA, nouveauTrajet, type EtatJeu } from './mineur'
+import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, ajouterA, nouvelAtelier, nouveauTrajet, type EtatJeu, type Inventaire } from './mineur'
 import { donnerXpAVieillePartie, recordsDeDepart } from './niveaux'
 import { t } from './langue'
 import { empriseBatiment, empriseLibre, lireCle, railsMineMarche, POSITION_MINE, type BatimentPose, type Village } from './village'
@@ -210,7 +210,7 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const donnees: unknown = JSON.parse(texte)
-    const convertie = convertirVersion28(convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees))))))))
+    const convertie = convertirVersion29(convertirVersion28(convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
     // celles des anciennes parties (et le succès « Paysagiste »).
@@ -298,6 +298,8 @@ function estUnEtatValide(donnees: unknown): donnees is EtatJeu {
     typeof etat.ascenseur === 'object' &&
     typeof etat.foreuse === 'object' &&
     typeof etat.generateur === 'object' &&
+    typeof etat.fonderie === 'object' &&
+    typeof etat.joaillerie === 'object' &&
     typeof etat.niveauWagonnets === 'number' &&
     Array.isArray(etat.trajets) &&
     Array.isArray(etat.employes) &&
@@ -401,7 +403,7 @@ export function convertirVersion28(donnees: unknown): unknown {
   if (ancienne.version !== 28 || typeof ancienne.village !== 'object' || ancienne.village === null) return donnees
   const { inventaire, nonAVendre: _nonAVendre, niveauSac: _niveauSac, ...reste } = ancienne
   const etat = JSON.parse(JSON.stringify(reste)) as EtatJeu
-  etat.version = VERSION_ETAT
+  etat.version = 29
 
   // Le sac est vendu.
   let vente = 0
@@ -457,6 +459,45 @@ export function convertirVersion28(donnees: unknown): unknown {
   if (etat.tutoriel !== undefined) etat.tutoriel = 99
   // L'XP ne compte que ce qui sera fait à partir de maintenant (les prix ont changé).
   etat.recordsXp = recordsDeDepart(etat)
+  return etat
+}
+
+// Version 29 → 30 (26/10, la grande mise à jour des gemmes) : la mine a 7 niveaux. Le saphir
+// arrive au niveau 5, le rubis au 6, et le diamant descend tout au fond, au niveau 7. Une partie
+// au niveau 5 (avant « Cœur de diamant ») y reste : c'est maintenant la Caverne de saphir.
+//   - ses diamants deviennent des saphirs, partout (coffre, chariot de la foreuse, wagonnets,
+//     sacs des mineurs, caisse de l'ascenseur), et ce qu'elle gardait ou excluait aussi ;
+//   - la pioche en diamant (la sienne et celles des mineurs) devient celle en saphir : c'est le
+//     même niveau (4), il n'y a rien à changer ;
+//   - la fonderie et la joaillerie arrivent, vides.
+export function convertirVersion29(donnees: unknown): unknown {
+  if (typeof donnees !== 'object' || donnees === null) return donnees
+  const ancienne = donnees as EtatJeu
+  if (ancienne.version !== 29 || typeof ancienne.coffre !== 'object' || ancienne.coffre === null) return donnees
+  const etat = JSON.parse(JSON.stringify(ancienne)) as EtatJeu
+  etat.version = 30
+  // Les diamants d'un inventaire deviennent des saphirs.
+  const enSaphirs = (inventaire: Inventaire | undefined) => {
+    const n = inventaire?.diamant ?? 0
+    if (!inventaire || n <= 0) return
+    delete inventaire.diamant
+    ajouterA(inventaire, 'saphir', n)
+  }
+  enSaphirs(etat.coffre.contenu)
+  if (etat.coffre.garder?.diamant) {
+    etat.coffre.garder.saphir = Math.max(etat.coffre.garder.saphir ?? 0, etat.coffre.garder.diamant)
+    delete etat.coffre.garder.diamant
+  }
+  enSaphirs(etat.foreuse?.chariot)
+  for (const trajet of etat.trajets ?? []) {
+    enSaphirs(trajet.chargement)
+    if (trajet.exclus) trajet.exclus = [...new Set(trajet.exclus.map((bloc) => ((bloc as string) === 'diamant' ? 'saphir' : bloc)))]
+  }
+  for (const employe of etat.employes ?? []) enSaphirs(employe.sac)
+  enSaphirs(etat.ascenseur?.navette?.chargement)
+  if (etat.prochainBloc === 'diamant') etat.prochainBloc = 'saphir'
+  etat.fonderie = nouvelAtelier()
+  etat.joaillerie = nouvelAtelier()
   return etat
 }
 

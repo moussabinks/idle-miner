@@ -34,9 +34,11 @@ import {
   PART_REMPLACEMENT,
   PRIX_REMPLACEMENT_PAR_NIVEAU,
   PRIX_EMBAUCHE,
+  PRIX_EMBAUCHE_JOAILLIER,
   PRIX_EMBAUCHE_POUSSEUR,
   PRIX_MANAGER,
   RARETES,
+  SALAIRE_JOAILLIER,
   SALAIRE_MANAGER,
   SALAIRES,
   SALAIRE_POUSSEUR_BASE,
@@ -78,6 +80,7 @@ import {
 } from './mineur'
 import { batimentPose, caseAcces, caseBloquee, cheminEntre, longueurChemin, trouverChemin, type Case } from './village'
 import { creerTrajet, ligneDe, trajetDe } from './wagonnet'
+import { gemmeEnCours, maxJoailliers, vitesseJoaillier } from './ateliers'
 
 // Le travail avance par morceaux de 30 secondes au plus : après une longue absence, le manager
 // a ainsi le temps de payer les salaires entre deux morceaux.
@@ -109,7 +112,7 @@ export function nbDuRole(etat: EtatJeu, role: RoleEmploye): number {
 // (23/10) Chaque métier a sa liste : les mineurs (1 de plus par niveau de mine, donc plus chers),
 // et les pousseurs (au plus un par trajet).
 function prixDeBase(n: number, role: RoleEmploye = 'mineur'): number {
-  const liste = role === 'pousseur' ? PRIX_EMBAUCHE_POUSSEUR : PRIX_EMBAUCHE
+  const liste = role === 'pousseur' ? PRIX_EMBAUCHE_POUSSEUR : role === 'joaillier' ? PRIX_EMBAUCHE_JOAILLIER : PRIX_EMBAUCHE
   const dernier = liste.length - 1
   if (n <= dernier) return liste[n]
   return liste[dernier] * HAUSSE_APRES_LISTE ** (n - dernier)
@@ -126,7 +129,8 @@ function arrondiPrix(prix: number): number {
 // 1er pousseur aussi, même si on a déjà des mineurs.
 export function prixEmbauche(etat: EtatJeu, role: RoleEmploye = 'mineur'): number | null {
   const nombre = nbDuRole(etat, role)
-  if (nombre >= (role === 'mineur' ? maxEmployes(etat) : maxPousseurs())) return null
+  const max = role === 'mineur' ? maxEmployes(etat) : role === 'joaillier' ? maxJoailliers(etat) : maxPousseurs()
+  if (nombre >= max) return null
   return arrondiPrix(prixDeBase(nombre, role))
 }
 
@@ -158,6 +162,11 @@ export function vitesseEmploye(employe: Employe): number {
 export function apercuRecrue(role: RoleEmploye, rarete: IdRarete = 'commun'): { vitesse: number; salaire: number } {
   const recrue = { role, niveau: 0, rarete, chariot: 0 } as Employe
   return { vitesse: role === 'mineur' ? vitesseEmploye(recrue) : 0, salaire: salaireEmploye(recrue) }
+}
+
+// (26/10) Combien de bijoux par minute taille ce joaillier (à la joaillerie, en ce moment).
+export function bijouxParMinute(etat: EtatJeu, employe: Pick<Employe, 'rarete'>): number {
+  return vitesseJoaillier(etat, (RARETES[employe.rarete] ?? RARETES.commun).rendement) * 60
 }
 
 // Ce que creusent par seconde tous les mineurs payés.
@@ -240,6 +249,7 @@ export function secondesRestantesEmploye(etat: EtatJeu, employe: Employe): numbe
 // Le prix de son prochain niveau : une pioche pour un mineur, un niveau de vitesse (23/10) pour
 // un pousseur (il pousse son wagonnet plus vite ; son chariot, c'est coutChariotPousseur).
 export function coutAmeliorationEmploye(_etat: EtatJeu, employe: Employe): Cout | null {
+  if (employe.role === 'joaillier') return null // (26/10) un joaillier n'a pas d'amélioration : c'est la joaillerie qu'on améliore
   if (employe.role === 'pousseur') return NIVEAUX_POUSSEUR[employe.niveau + 1]?.cout ?? null
   return NIVEAUX_EMPLOYE[employe.niveau + 1]?.cout ?? null
 }
@@ -283,10 +293,13 @@ export function agrandirChariot(etat: EtatJeu, index: number): string[] {
 // Le salaire de 5 minutes d'un mineur, selon sa pioche et sa rareté.
 export function salaireEmploye(employe: Employe): number {
   // (23/10) Un pousseur : selon sa vitesse ET la taille de son chariot.
+  // (26/10) Un joaillier : un salaire fixe (× sa rareté).
   const base =
     employe.role === 'pousseur'
       ? SALAIRE_POUSSEUR_BASE + SALAIRE_POUSSEUR_PAR_VITESSE * employe.niveau + SALAIRE_POUSSEUR_PAR_CHARIOT * (employe.chariot ?? 0)
-      : SALAIRES[Math.min(employe.niveau, SALAIRES.length - 1)]
+      : employe.role === 'joaillier'
+        ? SALAIRE_JOAILLIER
+        : SALAIRES[Math.min(employe.niveau, SALAIRES.length - 1)]
   return Math.round(base * rareteDe(employe).salaire)
 }
 
@@ -538,14 +551,16 @@ function prenomAuHasard(etat: EtatJeu, aleatoire: Aleatoire): string {
 // Actions (au Personnel)
 // ---------------------------------------------------------------------------
 
-// Où travaille un employé : la mine pour un mineur, le départ de son trajet pour un pousseur.
+// Où travaille un employé : la mine pour un mineur, le départ de son trajet pour un pousseur, la
+// joaillerie pour un joaillier (26/10).
 export function maisonDe(etat: EtatJeu, employe: Employe): IdBatiment {
+  if (employe.role === 'joaillier') return batimentPose(etat.village, 'joaillerie') ? 'joaillerie' : 'employes'
   if (employe.role !== 'pousseur' || employe.trajet === null) return 'puits'
   const depart = LIAISONS[employe.trajet].depart
   return batimentPose(etat.village, depart) ? depart : 'puits'
 }
 
-// Embauche un mineur : ses 10 premières minutes sont payées, puis il descend creuser.
+// Embauche un mineur : ses 5 premières minutes sont payées, puis il descend creuser.
 export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   const prix = prixEmbauche(etat)
   // (25/10) payer() : en argent, ou en gemmes (acheterAvecGemmes)
@@ -575,6 +590,39 @@ export function embaucher(etat: EtatJeu, aleatoire: Aleatoire): string[] {
   })
   if (rarete === 'commun') return [t('👷 {nom} est embauché(e) ! Il part à la mine.', { nom })]
   return [t('👷 {nom} ({rarete} !) est embauché(e) ! Il part à la mine.', { nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
+}
+
+// (26/10) Embauche un joaillier : il part du Personnel à la joaillerie, et y taille les gemmes.
+// Avec le recruteur, sa rareté est tirée au hasard (un joaillier mythique taille 5 fois plus vite).
+export function peutEmbaucherJoaillier(etat: EtatJeu): boolean {
+  const prix = prixEmbauche(etat, 'joaillier')
+  return prix !== null && peutPayer(etat, { argent: prix, materiaux: {} })
+}
+
+export function embaucherJoaillier(etat: EtatJeu, aleatoire: Aleatoire): string[] {
+  const prix = prixEmbauche(etat, 'joaillier')
+  if (prix === null || !peutEmbaucherJoaillier(etat)) return []
+  payer(etat, { argent: prix, materiaux: {} })
+  const nom = prenomAuHasard(etat, aleatoire)
+  const rarete = tirerRarete(etat, aleatoire)
+  const personnel = batimentPose(etat.village, 'employes') !== null
+  etat.employes.push({
+    nom,
+    rarete,
+    niveau: 0,
+    role: 'joaillier',
+    trajet: null,
+    etape: personnel ? 'marche' : 'taille',
+    progression: 0,
+    sac: {},
+    blocsCasses: 0,
+    tempsPaye: SECONDES_PAR_PAIE,
+    lieu: 'joaillerie',
+    depuis: personnel ? 'employes' : 'joaillerie',
+    forgeEnAttente: false,
+  })
+  if (rarete === 'commun') return [t('💍 {nom} est embauché(e) : il part tailler les gemmes à la joaillerie.', { nom })]
+  return [t('💍 {nom} ({rarete} !) est embauché(e) : il part tailler les gemmes à la joaillerie.', { nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
 }
 
 // Peut-on embaucher un pousseur pour ce trajet ? Il faut des rails entre ses deux bâtiments.
@@ -629,6 +677,18 @@ function nomTrajet(liaison: IdLiaison): string {
       return t('de la mine au générateur')
     case 'foreuse-marche':
       return t('de la foreuse au marché')
+    case 'mine-fonderie':
+      return t('de la mine à la fonderie')
+    case 'mine-joaillerie':
+      return t('de la mine à la joaillerie')
+    case 'foreuse-fonderie':
+      return t('de la foreuse à la fonderie')
+    case 'foreuse-joaillerie':
+      return t('de la foreuse à la joaillerie')
+    case 'fonderie-marche':
+      return t('de la fonderie au marché')
+    case 'joaillerie-marche':
+      return t('de la joaillerie au marché')
   }
 }
 
@@ -646,7 +706,8 @@ export function prixRemplacement(etat: EtatJeu): number {
 
 export function peutRemplacer(etat: EtatJeu, index: number): boolean {
   const employe = etat.employes[index]
-  return !!employe && employe.role === 'mineur' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
+  // (26/10) un joaillier aussi (un pousseur, non)
+  return !!employe && employe.role !== 'pousseur' && etat.recruteur > 0 && etat.argent >= prixRemplacement(etat)
 }
 
 export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoire): string[] {
@@ -655,7 +716,12 @@ export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoi
   etat.argent -= prixRemplacement(etat)
   const nom = prenomAuHasard(etat, aleatoire)
   const rarete = tirerRarete(etat, aleatoire)
+  // (sa gemme en cours repart à l'entrée de la joaillerie : voir avancerJoaillerie)
   etat.employes[index] = { ...ancien, nom, rarete, blocsCasses: 0 }
+  if (ancien.role === 'joaillier') {
+    if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend son établi.', { ancien: ancien.nom, nom })]
+    return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son établi.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
+  }
   if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend sa place, avec sa pioche.', { ancien: ancien.nom, nom })]
   return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend sa place, avec sa pioche.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
 }
@@ -665,6 +731,9 @@ export function licencier(etat: EtatJeu, index: number): string[] {
   const prix = employe ? indemnites(etat, employe.role) : 0
   if (!employe || etat.argent < prix || employe.etape === 'pousse') return []
   etat.argent -= prix
+  // (26/10) Un joaillier laisse la gemme qu'il taillait à l'entrée de la joaillerie.
+  const gemme = employe.role === 'joaillier' ? gemmeEnCours(employe) : null
+  if (gemme) ajouterA(etat.joaillerie.entree, gemme, 1)
   etat.employes.splice(index, 1)
   return [t('👋 {nom} est parti(e). Indemnités : {prix} $.', { nom: employe.nom, prix: nombre(prix) })]
 }
@@ -737,7 +806,7 @@ function suite(etat: EtatJeu, employe: Employe, ici: IdBatiment): string[] {
     partir(employe, ici, maison)
     return []
   }
-  employe.etape = employe.role === 'pousseur' ? 'quai' : 'descend'
+  employe.etape = employe.role === 'pousseur' ? 'quai' : employe.role === 'joaillier' ? 'taille' : 'descend'
   // (il arrive à pied : il attend la caisse en haut, puis descend dedans)
   if (employe.etape === 'descend') employe.enCabine = false
   return []
@@ -805,6 +874,17 @@ function travailler(etat: EtatJeu, employe: Employe, secondes: number, aleatoire
       // (« as string » : TypeScript croit encore qu'il attend, mais suite() vient de le changer)
       if ((employe.etape as string) === 'marche') employe.progression = -ECART_DEPART * devant
       continue
+    }
+    // (26/10) Un joaillier à son établi : plus payé (ou plus de joaillerie), il s'en va ; sinon, il
+    // taille (le travail lui-même est dans ateliers.ts : avancerJoaillerie).
+    if (employe.etape === 'taille') {
+      if (employe.tempsPaye <= 0 || employe.lieu !== maisonDe(etat, employe)) {
+        messages.push(...suite(etat, employe, employe.lieu))
+        if (employe.etape === 'taille') break
+        continue
+      }
+      employe.tempsPaye = Math.max(0, employe.tempsPaye - reste)
+      break
     }
     // Au quai ou en train de pousser : c'est le wagonnet qui décide (voir wagonnet.ts).
     if (employe.etape === 'quai' || employe.etape === 'pousse') {
@@ -1081,6 +1161,8 @@ function destination(lieu: IdBatiment): string {
       return t('va au quai de la foreuse')
     case 'forgeron':
       return t('va chercher sa pioche à la forge')
+    case 'joaillerie':
+      return t('va à son établi de la joaillerie')
     case 'employes':
       return t('va attendre son salaire au Personnel')
     default:
@@ -1110,6 +1192,8 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
       return t('🛤️ pousse le wagonnet')
     case 'forge':
       return t('🔨 attend sa nouvelle pioche du forgeron ({secondes} s)', { secondes })
+    case 'taille':
+      return gemmeEnCours(employe) ? t('💍 taille une gemme à la joaillerie') : t('💤 attend des gemmes à la joaillerie')
     default:
       return t('🚶 {destination} ({secondes} s)', { destination: destination(employe.lieu), secondes })
   }
@@ -1117,6 +1201,6 @@ export function activiteEmploye(etat: EtatJeu, employe: Employe): string {
 
 export function iconeActiviteEmploye(employe: Employe): string {
   if (employe.etape === 'attend' || ((employe.etape === 'monte' || employe.etape === 'marche') && employe.tempsPaye <= 0)) return '😠'
-  const icones: Record<string, string> = { creuse: '⛏️', monte: '⏫', vide: '⛏️', descend: '⏬', quai: '🛤️', pousse: '🛤️', forge: '🔨', marche: '🚶' }
+  const icones: Record<string, string> = { creuse: '⛏️', monte: '⏫', vide: '⛏️', descend: '⏬', quai: '🛤️', pousse: '🛤️', forge: '🔨', marche: '🚶', taille: '💍' }
   return icones[employe.etape] ?? '⛏️'
 }

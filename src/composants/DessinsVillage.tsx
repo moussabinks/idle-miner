@@ -191,7 +191,7 @@ type PropsEvolutionMine = {
   x: number
   y: number
   miroir: boolean
-  niveau: number // le niveau de la mine (1 à 5), pour le panneau
+  niveau: number // le niveau de la mine (1 à 7), pour le panneau
   ascenseur: boolean // l'ascenseur est construit (on voit sa cabine)
   hauteurCabine: number // où est la cabine : 0 = en haut (au village), 1 = tout en bas
   passagers?: PassagerAscenseur[] // les caisses de minerais qui remontent (ou redescendent vides)
@@ -207,10 +207,11 @@ export type PassagerAscenseur = { f: number; pleine: boolean; contenu?: Partial<
 // redescend, pleine des minerais du niveau de la mine quand elle remonte.
 //   0 : vide ; 1 : pierre, charbon, fer ; 2 : + redstone ; 3 : + or et émeraude ; 4 : + diamant.
 const IMAGES_CAISSE = [0, 1, 2, 3, 4].map((n) => cheminPublic(`/images/batiments/caisse-ascenseur-${n}.svg`))
-// Le dessin plein selon le niveau de la mine (niveaux 2 et 3 : celui à la redstone).
-const CAISSE_DU_NIVEAU = [1, 1, 2, 2, 3, 4]
+// Le dessin plein selon le niveau de la mine (niveaux 2 et 3 : celui à la redstone). (26/10 : 7
+// niveaux ; le diamant n'arrive qu'au niveau 7, les niveaux 4 à 6 gardent la caisse à l'émeraude.)
+const CAISSE_DU_NIVEAU = [1, 1, 2, 2, 3, 3, 3, 4]
 function imageCaisse(pleine: boolean, niveauMine: number): string {
-  return IMAGES_CAISSE[pleine ? CAISSE_DU_NIVEAU[Math.max(1, Math.min(5, niveauMine))] : 0]
+  return IMAGES_CAISSE[pleine ? CAISSE_DU_NIVEAU[Math.max(1, Math.min(CAISSE_DU_NIVEAU.length - 1, niveauMine))] : 0]
 }
 
 // Les calques de la mine, dans le même cadre que mine.svg (mêmes pixels, 684 × 505) : le devant

@@ -1,7 +1,7 @@
 # ⚡ Générateur
 
-> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **accélère** tout ce qui est dans son **rayon** (23/10, de + 30 % à + 75 % selon son niveau) : **l'ascenseur de la mine** (si la mine est dans le rayon), **les wagonnets** (si tous les rails d'un trajet sont dans le rayon, son pousseur le pousse plus vite) et **la foreuse**. Un bon plus, pas un turbo.
-> Mis à jour pour la grande mise à jour du 25/10 : rayon de 12 à 30 cases (la clairière fait 40 × 40), nouveaux prix, ses niveaux suivent les **paliers** de la mine, plus de niveau du joueur pour le poser. Le panneau a été refait dans le nouveau style.
+> La machine à éclairs du village (22/10) : elle brûle de la **redstone** et **accélère** tout ce qui est dans son **rayon** (23/10, de + 30 % à + 75 % selon son niveau ; 26/10 : jusqu'à + 100 % avec 7 niveaux) : **l'ascenseur de la mine** (si la mine est dans le rayon), **les wagonnets** (si tous les rails d'un trajet sont dans le rayon, son pousseur le pousse plus vite), **la foreuse**, et depuis le 26/10 **la fonderie** et **la joaillerie**. Un bon plus, pas un turbo.
+> Mis à jour pour la grande mise à jour du 25/10 : rayon de 12 à 30 cases (la clairière fait 40 × 40), nouveaux prix, ses niveaux suivent les **paliers** de la mine, plus de niveau du joueur pour le poser. Le panneau a été refait dans le nouveau style. Mis à jour le 26/10 (la grosse mise à jour des gemmes) : 7 niveaux (rayon jusqu'à 36 cases, + 100 %), et il accélère aussi la fonderie et la joaillerie.
 
 ## Où et quand
 
@@ -10,12 +10,12 @@
 - **Prix pour le poser** : **3 500 $ + 80 fer + 30 redstone** (25/10 ; avant 4 000 $ + 100 fer + 40 redstone), une seule fois. Les minerais se prennent dans le coffre de la mine.
 - **La porte** : sur la face avant **droite** du dessin (à gauche s'il est retourné). On peut l'ouvrir de n'importe quel côté (à moins de 1 case).
 - **Le dessin au village** (25/10, SVG plat au contour d'encre, `public/images/batiments/generateur.svg`, dessiné par `generateur()` dans `outils/art/batiments.mjs`) : sur une dalle de 5 × 5 pavés, un socle en pierre et une grosse machine en métal à bande violette et couvercle sombre, une jauge sur la façade gauche, un panneau à l'éclair sur la façade droite (la porte), deux bobines de cuivre aux coins avec une boule rouge, et, au-dessus, un gros **cristal de redstone** pointu entouré d'étincelles. L'image ne bouge jamais (voir [../jeu/visuel-et-sons.md](../jeu/visuel-et-sons.md#11-la-fluidité--les-règles-à-respecter)).
-- **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse. »
+- **Description** (en haut du panneau) : « Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails, foreuse, fonderie et joaillerie. »
 - **Le rayon sur la carte** : un **cercle en pointillés jaunes** autour du générateur (une ellipse à l'écran, car la grille est en losange) :
   - bien visible (plus épais, et les pointillés tournent) quand on est devant le générateur, ou pendant qu'on le pose (on voit alors le rayon autour du fantôme, pratique pour bien le placer) ;
   - gris quand il ne donne pas de courant (éteint ou sans redstone) ;
   - **caché le reste du temps** (23/10 : avant, il restait affiché en petit tant qu'il donnait du courant).
-- **Le boost** (23/10) : dans l'onglet **🔌 Rayon et amélioration**, en grand et en or : « ⚡ Boost : + *B* % de vitesse », et ce qu'il accélère dans son rayon (ascenseur, wagonnets et pousseurs, foreuse). Chaque ligne de « Ce qu'il alimente » dit aussi « ✔ + *B* % de vitesse ! ». La fenêtre des rails, elle, ne parle plus d'électricité : c'est automatique dès que les rails sont dans le rayon.
+- **Le boost** (23/10) : dans l'onglet **🔌 Rayon et amélioration**, en grand et en or : « ⚡ Boost : + *B* % de vitesse », et ce qu'il accélère dans son rayon (ascenseur, wagonnets et pousseurs, foreuse, et depuis le 26/10 fonderie et joailliers). Chaque ligne de « Ce qu'il alimente » dit aussi « ✔ + *B* % de vitesse ! ». La fenêtre des rails, elle, ne parle plus d'électricité : c'est automatique dès que les rails sont dans le rayon.
 - **Bulles au-dessus** (`notifications.ts`) :
   - **🔴 « Plus de redstone ! »** (alerte rouge) quand il est **allumé** mais n'a plus de redstone ;
   - **🚧 « Rails coupés »** (alerte rouge, 26/10) quand un trajet de wagonnet qui part d'ici ou y arrive n'a plus de rails complets (un rail enlevé, un bâtiment déplacé) : « Rails coupés entre … : le wagonnet attend. Repose les rails ! ». La bulle est sur les deux bâtiments du trajet ;
@@ -39,6 +39,7 @@ Une petite liste qui dit où on en est :
 
 - **🛤️ Rails** : « pas encore de trajet de wagonnet », ou une ligne par trajet (« Mine → Marché : … ») : « ✔ électrique : son pousseur va plus vite ! » (23/10), « dans le rayon, mais le générateur ne donne pas de courant », « ✖ une partie des rails est hors du rayon : rapproche le générateur (ou agrandis son rayon) », ou « rails coupés ».
 - **⚙️ Foreuse** : « pas encore construite », « ✔ boostée ! », « dans le rayon, mais sans courant », ou « ✖ hors du rayon ».
+- (26/10) **🏭 Fonderie** et **🏪 Joaillerie**, une fois posées : « dans le rayon » ou « hors du rayon ». Dans le rayon (générateur allumé), la fonderie fond plus vite et les joailliers taillent plus vite.
 
 ### ⬆ Améliorer
 
@@ -51,10 +52,12 @@ Une ligne d'amélioration (carrés de niveaux, prix, bouton turquoise). Chaque n
 | 3 | 20 cases | + 50 % | 10 min | 3,75 cases/s | 8 000 $ + 150 fer + 90 redstone | 3 |
 | 4 | 25 cases | + 60 % | 13 min | 4 cases/s | 15 000 $ + 250 fer + 180 redstone | 4 |
 | 5 | 30 cases | + 75 % | 16 min | 4,4 cases/s | 35 000 $ + 400 fer + 350 redstone | 5 |
+| 6 | 33 cases | + 85 % | 19 min | 4,6 cases/s | 90 000 $ + 600 fer + 500 redstone | 6 |
+| 7 | 36 cases | + 100 % | 22 min | 5 cases/s | 220 000 $ + 800 redstone + 40 saphir | 7 |
 
 (Avant le 25/10 : rayon de 15 à 40 cases pour une clairière de 60 × 60, débloqué aux niveaux 6 à 15 du joueur. Avant le 23/10 : une « puissance » de × 1 à × 3, et le wagonnet électrique roulait tout seul.)
 
-Total des améliorations : 62 000 $ + 880 fer + 660 redstone (25/10, économie revue : avant 160 000 $). Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
+Total des améliorations : 372 000 $ + 1 480 fer + 1 960 redstone + 40 saphir (26/10 ; jusqu'au niveau 5 : 62 000 $ + 880 fer + 660 redstone ; avant l'économie revue du 25/10 : 160 000 $). Sans le palier, la ligne affiche « 🕳️ Mine *N* » ; elle a aussi son bouton violet 💎 pour payer en gemmes. Message : « ⚡ Générateur niveau *N* : rayon de *R* cases, + *B* % de vitesse dans son rayon, *M* min de réserve. »
 
 ## Règles et comportement
 
@@ -63,25 +66,27 @@ Total des améliorations : 62 000 $ + 880 fer + 660 redstone (25/10, économie r
 - **1 redstone = 30 secondes de courant** (`SECONDES_PAR_REDSTONE`), soit **2 redstone par minute** et **120 par heure**, quel que soit le niveau.
 - Le générateur ne brûle sa redstone que s'il est **posé et allumé**. Il donne du courant tant qu'il en reste (`generateurEnMarche`).
 - Quand il n'en a plus : « ⚡ Le générateur n'a plus de redstone : les rails ne sont plus électriques. »
-- **La réserve** (23/10, `reserveMaxGenerateur`) : il garde au plus **5 minutes** de redstone au niveau 1 (10 redstones), puis 7, 10, 13 et 16 minutes. À la main (« ⚡ La réserve du générateur est pleine. ») comme par les rails, on ne peut pas mettre plus. Avant, on pouvait le remplir sans limite (et le wagonnet jusqu'à 30 min) : sans pousseur, c'était trop fort.
+- **La réserve** (23/10, `reserveMaxGenerateur`) : il garde au plus **5 minutes** de redstone au niveau 1 (10 redstones), puis 7, 10, 13, 16, 19 et 22 minutes. À la main (« ⚡ La réserve du générateur est pleine. ») comme par les rails, on ne peut pas mettre plus. Avant, on pouvait le remplir sans limite (et le wagonnet jusqu'à 30 min) : sans pousseur, c'était trop fort.
 - **Plus de puisage** (23/10) : il ne se sert plus tout seul dans le coffre de la mine. Sa redstone arrive par les rails (un pousseur sur Mine → Générateur) ou à la main.
-- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, la bulle « 🛤️ Automatiser » sur les rails crée le trajet. Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à **sa réserve** (23/10 : 5 à 16 min selon son niveau, `placeRedstoneGenerateur`, `livrerRedstone` ; ce qui ne rentre pas reste dans le wagonnet). Le wagonnet du marché laisse alors cette redstone dans le coffre, **mais seulement si ce trajet a un pousseur embauché** (23/10, `trajetAutomatique`) : sans pousseur, rien ne l'emporterait, alors elle part au marché avec le reste. Voir [mine.md](mine.md#les-wagonnets).
+- **Le wagonnet de la redstone** (24/10) : avec des rails de la mine au générateur, la bulle « 🛤️ Automatiser » sur les rails crée le trajet. Ce trajet Mine → Générateur lui apporte la redstone du coffre jusqu'à **sa réserve** (23/10 : 5 à 16 min selon son niveau ; 26/10 : jusqu'à 22 min, `placeRedstoneGenerateur`, `livrerRedstone` ; ce qui ne rentre pas reste dans le wagonnet). Le wagonnet du marché laisse alors cette redstone dans le coffre, **mais seulement si ce trajet a un pousseur embauché** (23/10, `trajetAutomatique`) : sans pousseur, rien ne l'emporterait, alors elle part au marché avec le reste. Voir [mine.md](mine.md#les-wagonnets).
 - Astuce : la redstone sort de la mine dès le niveau 2 (10 % des blocs), puis 12 % aux niveaux suivants. Avec un pousseur sur Mine → Générateur, la mine nourrit toute seule son générateur.
 
 ### Le rayon
 
 - Le rayon est un **cercle** autour du **centre** du générateur (le milieu de ses 5 × 5 cases), mesuré en cases (`caseDansLeRayon`) : une case est dans le rayon si son centre est à une distance d'au plus *R* cases.
 - **Les rails** : un trajet est électrique si **toutes les cases de sa ligne** sont dans le rayon (`casesDansLeRayon`, `trajetElectrique` dans `wagonnet.ts`). Chaque trajet compte à part : Mine → Marché peut être électrique et Mine → Foreuse non. Un bout de rails qui ne sert à aucun trajet, hors du rayon, ne gêne pas.
-- **Un bâtiment** (la foreuse) est dans le rayon si **son centre** l'est (`batimentDansLeRayon`).
+- **Un bâtiment** (la foreuse, et depuis le 26/10 la fonderie et la joaillerie) est dans le rayon si **son centre** l'est (`batimentDansLeRayon`).
 - Le rayon compte même quand le générateur est éteint (pour le panneau), mais il ne donne du courant que s'il est allumé et a de la redstone.
 
 ### Ce que fait l'électricité
 
-Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerateur` = 1 + bonus) :
+Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (26/10 : jusqu'à + 100 % au niveau 7) (`multiplicateurGenerateur` = 1 + bonus) :
 
 - **Les wagonnets** (trajets électriques, `trajetElectrique`) : **son pousseur le pousse toujours** (il ne reste plus au quai), mais plus vite : 2,5 cases/s × sa vitesse × sa rareté × le multiplicateur. Sans pousseur payé, rien ne part. (Avant le 23/10 : le wagonnet roulait tout seul à 8 à 24 cases/s, bien trop vite, et le pousseur restait immobile au quai.)
 - **L'ascenseur de la mine** (la mine dans le rayon, `ascenseurAlimente`) : ses trajets sont plus courts (`secondesTrajetMineur` ÷ le multiplicateur), donc il remonte plus de blocs.
 - **La foreuse** (dans le rayon, `foreuseAlimentee`) : elle fore × le multiplicateur, sans brûler plus de charbon. Voir [foreuse.md](foreuse.md).
+- (26/10) **La fonderie** (dans le rayon, `atelierAlimente`) : elle fond × le multiplicateur (son four brûle toujours 1 charbon toutes les 12 s de travail). Voir [fonderie.md](fonderie.md).
+- (26/10) **La joaillerie** (dans le rayon, `atelierAlimente`) : chaque joaillier taille × le multiplicateur. Voir [joaillerie.md](joaillerie.md).
 
 ### Bien le placer
 
@@ -92,14 +97,14 @@ Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerate
 
 - **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine, puis « Générateur : vitesse + *N* % » (amélioration, 26/10 : avant, son rayon) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
 - **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
-- **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
+- **Le revenu « $/s »** du bandeau compte la foreuse boostée (et, 26/10, la fonderie et les joailliers boostés) ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
 - **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, et l'améliore quand il a deux fois le prix. Il le pose en (25, 27), contre la ligne de rails. Repère des tests : les rails sont électriques en **moins de 1 h 30** de jeu (mesuré le 25/10 : 15 minutes en médiane ; 55 minutes le 30/10).
 - **Événements et sons** : un niveau de plus joue la petite fanfare d'amélioration ; chaque vente d'un wagonnet au marché fait tinter 3 pièces discrètes.
 
 ## Fichiers du code
 
 - `src/jeu/donnees.ts` : le bâtiment (`BATIMENTS.generateur` : 3 500 $ + 80 fer + 30 redstone), `SECONDES_PAR_REDSTONE`, `NIVEAUX_GENERATEUR` (rayon, bonus, réserve, coût).
-- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `casesDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `foreuseAlimentee`), actions (`remplirGenerateur`, `basculerGenerateur`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
+- `src/jeu/generateur.ts` : tout le générateur : rayon (`caseDansLeRayon`, `casesDansLeRayon`, `batimentDansLeRayon`), courant (`generateurEnMarche`, `foreuseAlimentee`, `atelierAlimente` (26/10)), actions (`remplirGenerateur`, `basculerGenerateur`, `ameliorerGenerateur`) et le temps qui passe (`avancerGenerateur`).
 - `src/jeu/generateur.test.ts` : les tests (rayon, rails électriques, redstone, réserve, foreuse boostée).
 - `src/jeu/wagonnet.ts` : les trajets électriques (`trajetElectrique`, `railsAlimentes`), le wagonnet qui part tout seul et sa vitesse électrique ; le trajet Mine → Générateur qui lui apporte la redstone.
 - `src/jeu/foreuse.ts` : la vitesse de forage boostée (`vitesseForage`).

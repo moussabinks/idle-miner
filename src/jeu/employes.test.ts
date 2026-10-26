@@ -391,16 +391,18 @@ describe('le salaire d’un pousseur (23/10)', () => {
 })
 
 describe('la pioche des mineurs suit la mine (23/10)', () => {
-  it('pas de pioche en diamant avant la mine de diamant (25/10 : le palier 5)', () => {
+  it('pas de pioche en diamant avant la mine de diamant (26/10 : le palier 7)', () => {
     const etat = partie()
-    etat.niveauMine = 4
+    etat.niveauMine = 6
     embaucher(etat, hasard())
-    etat.employes[0].niveau = 3 // émeraude : la prochaine est le diamant
-    expect(NIVEAUX_EMPLOYE[4].nom).toBe('Diamant')
-    expect(verrouMinePioche(etat, etat.employes[0])).toBe('🕳️ Mine 5')
+    etat.employes[0].niveau = 5 // rubis : la prochaine est le diamant
+    expect(NIVEAUX_EMPLOYE[4].nom).toBe('Saphir')
+    expect(NIVEAUX_EMPLOYE[6].nom).toBe('Diamant')
+    expect(verrouMinePioche(etat, etat.employes[0])).toBe('🕳️ Mine 7')
     expect(peutAmeliorerEmploye(etat, etat.employes[0])).toBe(false)
     expect(ameliorerEmploye(etat, 0)).toEqual([])
-    etat.niveauMine = 5
+    etat.argent = 1_000_000
+    etat.niveauMine = 7
     expect(verrouMinePioche(etat, etat.employes[0])).toBeNull()
     expect(peutAmeliorerEmploye(etat, etat.employes[0])).toBe(true)
   })
@@ -454,11 +456,13 @@ describe('la fatigue du manager (23/10)', () => {
     ferme.employes[0].tempsPaye = 0
     avancerTemps(ferme, 30, hasard())
     expect(ferme.stats.salairesPayes).toBeGreaterThan(payes)
-    expect(ameliorerManager(etat)[0]).toContain('1 h')
-    expect(secondesEveilManager(etat)).toBe(60 * 60)
-    // (25/10) Son niveau 3 attend le palier 5 de la mine.
+    // (26/10) Son niveau 2 attend le palier 5 de la mine, son niveau 3 le palier 6.
     expect(ameliorerManager(etat)).toEqual([])
     etat.niveauMine = 5
+    expect(ameliorerManager(etat)[0]).toContain('1 h')
+    expect(secondesEveilManager(etat)).toBe(60 * 60)
+    expect(ameliorerManager(etat)).toEqual([])
+    etat.niveauMine = 6
     expect(ameliorerManager(etat)[0]).toContain('2 h')
   })
 })

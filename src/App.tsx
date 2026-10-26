@@ -22,6 +22,7 @@ import { MenuConstruction } from './composants/MenuConstruction'
 import { PanneauEmployes } from './composants/PanneauEmployes'
 import { PanneauMine } from './composants/PanneauMine'
 import { PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
+import { PanneauFonderie, PanneauJoaillerie } from './composants/PanneauxAteliers'
 import { Publicite } from './composants/Publicite'
 import { RecompensesQuotidiennes } from './composants/RecompensesQuotidiennes'
 import { Reglages } from './composants/Reglages'
@@ -78,6 +79,8 @@ const COULEURS_BATIMENTS: Record<IdBatiment, CouleurFenetre> = {
   employes: 'bleu',
   foreuse: 'orange',
   generateur: 'violet',
+  fonderie: 'orange',
+  joaillerie: 'violet',
 }
 
 // Les fenêtres qu'on peut ouvrir depuis les boutons du haut.
@@ -534,6 +537,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         {batimentActif === 'forgeron' && <PanneauPioches etat={etat} jouer={jouer} />}
         {batimentActif === 'foreuse' && <PanneauForeuse etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
+        {batimentActif === 'fonderie' && <PanneauFonderie etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
+        {batimentActif === 'joaillerie' && <PanneauJoaillerie etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
         {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
       </Fenetre>
     )

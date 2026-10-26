@@ -23,9 +23,24 @@ describe('bot de simulation (équilibrage)', () => {
   // (25/10 : les paliers ; le bot joue mieux qu'un joueur, qui mettra plutôt 5 à 8 h)
   // (25/10, économie revue : les paliers 3 à 5 coûtent bien moins cher) Avant : 3 h à 6 h.
   it('arrive au niveau 5 en 1 h à 3 h (médiane)', () => {
-    const m = mediane(parties.map((p) => minutes(p.temps)))
+    const m = mediane(parties.map((p) => minutes(p.tempsNiveaux[5])))
     expect(m).toBeGreaterThanOrEqual(60)
     expect(m).toBeLessThanOrEqual(3 * 60)
+  })
+
+  // (26/10 : la grosse mise à jour, saphir au niveau 5, rubis au 6, diamant au 7) La fin de partie
+  // prend quelques heures de plus.
+  it(`arrive au niveau ${NIVEAU_MINE_MAX} en 3 h à 7 h (médiane)`, () => {
+    const m = mediane(parties.map((p) => minutes(p.temps)))
+    expect(m).toBeGreaterThanOrEqual(3 * 60)
+    expect(m).toBeLessThanOrEqual(7 * 60)
+  })
+
+  it('fait tourner la fonderie et la joaillerie', () => {
+    for (const partie of parties) {
+      expect(partie.etat.fonderie.fabriques).toBeGreaterThan(100)
+      expect(partie.etat.joaillerie.fabriques).toBeGreaterThan(20)
+    }
   })
 
   it('monte de niveau petit à petit : niveau 5 après 8 minutes, niveau 10 après 1 heure (médiane)', () => {
@@ -34,7 +49,7 @@ describe('bot de simulation (équilibrage)', () => {
   })
 
   it('chaque niveau prend plus de temps que le précédent (médiane)', () => {
-    const durees = [2, 3, 4, 5].map((n) => mediane(parties.map((p) => (p.tempsNiveaux[n] ?? Infinity) - (p.tempsNiveaux[n - 1] ?? 0))))
+    const durees = Array.from({ length: NIVEAU_MINE_MAX - 1 }, (_, i) => i + 2).map((n) => mediane(parties.map((p) => (p.tempsNiveaux[n] ?? Infinity) - (p.tempsNiveaux[n - 1] ?? 0))))
     for (let i = 1; i < durees.length; i++) expect(durees[i]).toBeGreaterThan(durees[i - 1] * 0.8)
   })
 

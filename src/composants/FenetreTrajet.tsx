@@ -6,16 +6,18 @@
 //   - l'interrupteur : automatisation activée ou arrêtée ;
 //   - les minerais, en tuiles à toucher : vert = le wagonnet l'emporte, gris = il le laisse ;
 //   - l'aperçu du prochain voyage, qui change à chaque toucher.
+//   - (26/10) vers un atelier : ce qu'il refuse, en tuiles grisées « Refusé ici ».
 // Rien ne change tant qu'on n'a pas validé. Aucune règle du jeu ici : on lit l'état et on
 // appelle reglerTrajet / apercuTrajet (src/jeu/wagonnet.ts).
 
 import { useState } from 'react'
-import { BATIMENTS, BLOCS, LIAISONS, SECONDES_PAR_CHARBON, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { BATIMENTS, BLOCS, LIAISONS, SECONDES_PAR_CHARBON, SECONDES_PAR_CHARBON_FONDERIE, SECONDES_PAR_REDSTONE, type IdBloc, type IdLiaison } from '../jeu/donnees'
+import { charbonMaxFonderie } from '../jeu/ateliers'
 import { charbonMaxForeuse } from '../jeu/foreuse'
 import { reserveMaxGenerateur } from '../jeu/generateur'
 import { nombre, t } from '../jeu/langue'
-import type { EtatJeu, Inventaire } from '../jeu/mineur'
-import { apercuTrajet, exclusAffiches, objetFixe, objetsAuChoix, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
+import type { EtatJeu } from '../jeu/mineur'
+import { apercuTrajet, atelierDArrivee, exclusAffiches, objetFixe, objetsAuChoix, objetsRefuses, stockDuDepart, trajetDe, type ReglageTrajet } from '../jeu/wagonnet'
 import { nombreAbrege } from '../nombres'
 import { Barre } from './Barre'
 import { Fenetre } from './Fenetre'
@@ -35,11 +37,6 @@ type Props = {
   actionsRail?: { onDeplacer: () => void; onRetirer: () => void } | null
   // (26/10) Ouvrir le Personnel (pour agrandir le chariot d'un pousseur qui ne suit pas)
   onAllerAuPersonnel?: () => void
-}
-
-// Ce qu'il y a au départ du trajet (le coffre de la mine, ou le chariot de la foreuse).
-function stockDuDepart(etat: EtatJeu, liaison: IdLiaison): Inventaire {
-  return LIAISONS[liaison].depart === 'foreuse' ? etat.foreuse.chariot : etat.coffre.contenu
 }
 
 // « 45 s », « 2 min 05 »
@@ -67,8 +64,21 @@ function DessinTrajet({ liaison, actif }: { liaison: IdLiaison; actif: boolean }
   )
 }
 
-// La réserve que le wagonnet remplit (le charbon de la foreuse, la redstone du générateur).
+// La réserve que le wagonnet remplit (le charbon de la foreuse, la redstone du générateur, et
+// depuis le 26/10 le charbon du four de la fonderie).
 function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
+  if (atelierDArrivee(liaison) === 'fonderie') {
+    const max = charbonMaxFonderie(etat)
+    const actuel = Math.min(max, Math.ceil(etat.fonderie.carburant / SECONDES_PAR_CHARBON_FONDERIE))
+    return (
+      <div className="carte trajet-reserve">
+        <strong>
+          {BLOCS.charbon.emoji} {t('Il apporte aussi le charbon du four')}
+        </strong>
+        <Barre valeur={actuel} max={max} texte={`${nombre(actuel)} / ${nombre(max)}`} couleur="or" />
+      </div>
+    )
+  }
   const foreuse = liaison === 'mine-foreuse'
   const bloc = foreuse ? 'charbon' : 'redstone'
   const max = foreuse ? charbonMaxForeuse(etat) : Math.round(reserveMaxGenerateur(etat) / SECONDES_PAR_REDSTONE)
@@ -103,6 +113,8 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
   const stock = stockDuDepart(etat, liaison)
   const apercu = apercuTrajet(etat, liaison, reglage.exclus)
   const versLeMarche = info.arrivee === 'marche'
+  const atelier = atelierDArrivee(liaison)
+  const refuses = objetsRefuses(etat, liaison)
   const nouveau = liaisons.some((l) => trajetDe(etat, l) === null)
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
 
@@ -142,7 +154,11 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
       <DessinTrajet liaison={liaison} actif={reglage.actif} />
       <p className="trajet-description">{t('Un wagonnet {action}.', { action: t(info.description) })}</p>
       {/* (26/10) Son chariot ne suit pas la production : l'alerte en haut, et un bouton vers le Personnel */}
-      <AlerteChariot analyse={analyseWagonnet(etat, liaison)} batiment={info.depart === 'foreuse' ? t('la foreuse') : t('la mine')} onAllerAuPersonnel={onAllerAuPersonnel} />
+      <AlerteChariot
+        analyse={analyseWagonnet(etat, liaison)}
+        batiment={info.depart === 'foreuse' ? t('la foreuse') : info.depart === 'fonderie' ? t('la fonderie') : info.depart === 'joaillerie' ? t('la joaillerie') : t('la mine')}
+        onAllerAuPersonnel={onAllerAuPersonnel}
+      />
 
       <Interrupteur allume={reglage.actif} texte={reglage.actif ? t('Automatisation activée') : t('Automatisation arrêtée')} onBasculer={() => changer(liaison, { actif: !reglage.actif })} />
 
@@ -151,7 +167,7 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
           {choix.length > 0 && (
             <section className="trajet-objets">
               <div className="rangee trajet-objets-titre">
-                <h3 className="titre-section">{t('Ce qu’il vend')}</h3>
+                <h3 className="titre-section">{atelier ? t('Ce qu’il apporte') : t('Ce qu’il vend')}</h3>
                 <button className="btn btn-blanc btn-petit" onClick={() => changer(liaison, { exclus: [] })}>
                   {t('Tout')}
                 </button>
@@ -175,8 +191,27 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
                     </button>
                   )
                 })}
+                {/* (26/10) Ce que l'atelier refuse : grisé, on ne peut pas le choisir. */}
+                {refuses.map((bloc) => (
+                  <span key={bloc} className="objet-tuile objet-refuse" aria-disabled="true">
+                    <span className="objet-coche" aria-hidden="true">
+                      ✖
+                    </span>
+                    <span className="objet-icone" aria-hidden="true">
+                      {BLOCS[bloc].emoji}
+                    </span>
+                    <span className="objet-nom">{t(BLOCS[bloc].nom)}</span>
+                    <span className="objet-infos">{t('Refusé ici')}</span>
+                  </span>
+                ))}
               </div>
-              <p className="discret">{t('Vert : il l’emporte et le vend. Gris : il reste dans le coffre.')}</p>
+              <p className="discret">
+                {atelier === 'fonderie'
+                  ? t('Vert : il l’apporte à la fonderie. Gris : il reste au départ. La fonderie ne fond que le fer et l’or.')
+                  : atelier === 'joaillerie'
+                    ? t('Vert : il l’apporte à la joaillerie. Gris : il reste au départ. La joaillerie ne taille que les gemmes.')
+                    : t('Vert : il l’emporte et le vend. Gris : il reste dans le coffre.')}
+              </p>
             </section>
           )}
           {fixe && <Reserve etat={etat} liaison={liaison} />}

@@ -11,7 +11,30 @@
 
 // Ce qu'on trouve dans la mine (le lapis, la netherite, la lave, les coffres et les géodes sont
 // retirés depuis le 22/10).
-export type IdBloc = 'pierre' | 'charbon' | 'fer' | 'redstone' | 'or' | 'emeraude' | 'diamant'
+// (26/10, la grande mise à jour des gemmes) Deux gemmes de plus : le saphir (niveau 5 de la mine)
+// et le rubis (niveau 6) ; le diamant reste le plus rare (niveau 7). Et ce que fabriquent les
+// nouveaux bâtiments : les lingots (la fonderie fond le fer et l'or) et les bijoux (la joaillerie
+// taille les gemmes). Ce ne sont pas des blocs de la mine, mais ils se rangent, se transportent et
+// se vendent comme eux : c'est pourquoi ils sont dans la même liste.
+export type IdBloc =
+  | 'pierre'
+  | 'charbon'
+  | 'fer'
+  | 'redstone'
+  | 'or'
+  | 'emeraude'
+  | 'saphir'
+  | 'rubis'
+  | 'diamant'
+  | 'lingot_fer'
+  | 'lingot_or'
+  | 'bijou_emeraude'
+  | 'bijou_saphir'
+  | 'bijou_rubis'
+  | 'bijou_diamant'
+
+// « bloc » : ce qui sort de la mine ; « lingot » : de la fonderie ; « bijou » : de la joaillerie.
+export type SorteObjet = 'bloc' | 'lingot' | 'bijou'
 
 export type TypeBloc = {
   id: IdBloc
@@ -20,28 +43,45 @@ export type TypeBloc = {
   prix: number // prix de vente au marché, en $
   minerai: boolean // true = une bonne pioche peut le doubler
   dur: boolean // un bloc dur fait un bruit plus lourd quand il casse
+  sorte: SorteObjet
 }
 
+// (26/10) Un lingot vaut 2 fois son minerai, un bijou 2,5 fois sa gemme (voir la fonderie et la
+// joaillerie plus bas) : de quoi rapporter bien plus, sans casser l'économie (il faut du charbon,
+// des joailliers payés, et du temps).
 export const BLOCS: Record<IdBloc, TypeBloc> = {
-  pierre: { id: 'pierre', nom: 'Pierre', emoji: '🪨', prix: 1, minerai: false, dur: false },
-  charbon: { id: 'charbon', nom: 'Charbon', emoji: '⚫', prix: 5, minerai: true, dur: true },
-  fer: { id: 'fer', nom: 'Fer', emoji: '🔩', prix: 12, minerai: true, dur: true },
-  redstone: { id: 'redstone', nom: 'Redstone', emoji: '🔴', prix: 15, minerai: true, dur: true },
-  or: { id: 'or', nom: 'Or', emoji: '🟡', prix: 35, minerai: true, dur: true },
-  emeraude: { id: 'emeraude', nom: 'Émeraude', emoji: '💚', prix: 80, minerai: true, dur: true },
-  diamant: { id: 'diamant', nom: 'Diamant', emoji: '💎', prix: 100, minerai: true, dur: true },
+  pierre: { id: 'pierre', nom: 'Pierre', emoji: '🪨', prix: 1, minerai: false, dur: false, sorte: 'bloc' },
+  charbon: { id: 'charbon', nom: 'Charbon', emoji: '⚫', prix: 5, minerai: true, dur: true, sorte: 'bloc' },
+  fer: { id: 'fer', nom: 'Fer', emoji: '🔩', prix: 12, minerai: true, dur: true, sorte: 'bloc' },
+  redstone: { id: 'redstone', nom: 'Redstone', emoji: '🔴', prix: 15, minerai: true, dur: true, sorte: 'bloc' },
+  or: { id: 'or', nom: 'Or', emoji: '🟡', prix: 35, minerai: true, dur: true, sorte: 'bloc' },
+  emeraude: { id: 'emeraude', nom: 'Émeraude', emoji: '💚', prix: 80, minerai: true, dur: true, sorte: 'bloc' },
+  saphir: { id: 'saphir', nom: 'Saphir', emoji: '🔷', prix: 120, minerai: true, dur: true, sorte: 'bloc' },
+  rubis: { id: 'rubis', nom: 'Rubis', emoji: '🔺', prix: 170, minerai: true, dur: true, sorte: 'bloc' },
+  diamant: { id: 'diamant', nom: 'Diamant', emoji: '💎', prix: 240, minerai: true, dur: true, sorte: 'bloc' },
+  lingot_fer: { id: 'lingot_fer', nom: 'Lingot de fer', emoji: '⬜', prix: 24, minerai: false, dur: true, sorte: 'lingot' },
+  lingot_or: { id: 'lingot_or', nom: 'Lingot d’or', emoji: '🟨', prix: 70, minerai: false, dur: true, sorte: 'lingot' },
+  bijou_emeraude: { id: 'bijou_emeraude', nom: 'Collier d’émeraude', emoji: '📿', prix: 200, minerai: false, dur: true, sorte: 'bijou' },
+  bijou_saphir: { id: 'bijou_saphir', nom: 'Pendentif de saphir', emoji: '🧿', prix: 300, minerai: false, dur: true, sorte: 'bijou' },
+  bijou_rubis: { id: 'bijou_rubis', nom: 'Couronne de rubis', emoji: '🫅', prix: 425, minerai: false, dur: true, sorte: 'bijou' },
+  bijou_diamant: { id: 'bijou_diamant', nom: 'Bague de diamant', emoji: '💍', prix: 600, minerai: false, dur: true, sorte: 'bijou' },
 }
 
 export const LISTE_BLOCS = Object.keys(BLOCS) as IdBloc[]
 
 // Les minerais « rares » (un son brillant et une petite fête quand on en trouve).
-export const MINERAIS_RARES: IdBloc[] = ['or', 'emeraude', 'diamant']
+export const MINERAIS_RARES: IdBloc[] = ['or', 'emeraude', 'saphir', 'rubis', 'diamant']
+
+// (26/10) Ce que fond la fonderie, et ce que taille la joaillerie : le minerai (ou la gemme) → ce
+// qu'il devient. Les autres objets ne sont pas acceptés.
+export const LINGOT_DE: Partial<Record<IdBloc, IdBloc>> = { fer: 'lingot_fer', or: 'lingot_or' }
+export const BIJOU_DE: Partial<Record<IdBloc, IdBloc>> = { emeraude: 'bijou_emeraude', saphir: 'bijou_saphir', rubis: 'bijou_rubis', diamant: 'bijou_diamant' }
 
 // Le prix d'un achat : de l'argent, et des minerais (pris dans le coffre de la mine).
 export type Cout = { argent?: number; materiaux: Partial<Record<IdBloc, number>> }
 
 // ---------------------------------------------------------------------------
-// La mine : 5 niveaux (décidé le 22/10)
+// La mine : 7 niveaux (26/10 ; 5 avant)
 // ---------------------------------------------------------------------------
 
 // Chaque niveau ajoute un minerai, et rend les minerais rares plus fréquents. On achète le
@@ -71,17 +111,34 @@ export const NIVEAUX_MINE: NiveauMine[] = [
     debit: 0.5,
     cout: { argent: 22000, materiaux: { redstone: 100, or: 50 } },
   },
+  // (26/10) Le saphir au niveau 5, le rubis au 6 : le diamant reste le plus rare, tout au fond (7).
+  // Une partie qui était au niveau 5 (« Cœur de diamant ») y reste : il devient la Caverne de
+  // saphir, et ses diamants deviennent des saphirs (voir convertirVersion29).
   {
     niveau: 5,
-    nom: 'Cœur de diamant',
-    poids: { pierre: 40, charbon: 11, fer: 12, redstone: 12, or: 12, emeraude: 8, diamant: 5 },
+    nom: 'Caverne de saphir',
+    poids: { pierre: 40, charbon: 11, fer: 12, redstone: 12, or: 12, emeraude: 8, saphir: 5 },
     debit: 0.6,
     cout: { argent: 80000, materiaux: { or: 90, emeraude: 35 } },
   },
+  {
+    niveau: 6,
+    nom: 'Veine de rubis',
+    poids: { pierre: 36, charbon: 10, fer: 12, redstone: 11, or: 12, emeraude: 9, saphir: 7, rubis: 5 },
+    debit: 0.7,
+    cout: { argent: 260000, materiaux: { emeraude: 80, saphir: 40 } },
+  },
+  {
+    niveau: 7,
+    nom: 'Cœur de diamant',
+    poids: { pierre: 32, charbon: 10, fer: 11, redstone: 11, or: 12, emeraude: 9, saphir: 8, rubis: 7, diamant: 5 },
+    debit: 0.8,
+    cout: { argent: 800000, materiaux: { saphir: 80, rubis: 50 } },
+  },
 ]
 
-// Le nombre de niveaux de TOUTES les améliorations (25/10) : le même que la mine.
-export const NIVEAUX_PAR_AMELIORATION = 5
+// Le nombre de niveaux de TOUTES les améliorations (25/10) : le même que la mine (26/10 : 7).
+export const NIVEAUX_PAR_AMELIORATION = 7
 
 export const NIVEAU_MINE_MAX = NIVEAUX_MINE.length
 
@@ -93,6 +150,8 @@ export const NIVEAUX_COFFRE: { capacite: number; cout: Cout }[] = [
   { capacite: 800, cout: { argent: 2000, materiaux: { fer: 80 } } },
   { capacite: 2000, cout: { argent: 6000, materiaux: { redstone: 60, or: 20 } } },
   { capacite: 5000, cout: { argent: 18000, materiaux: { or: 60, emeraude: 20 } } },
+  { capacite: 10000, cout: { argent: 50000, materiaux: { emeraude: 40, saphir: 30 } } },
+  { capacite: 20000, cout: { argent: 150000, materiaux: { saphir: 50, rubis: 30 } } },
 ]
 
 // ---------------------------------------------------------------------------
@@ -156,14 +215,37 @@ export const PIOCHES: Pioche[] = [
     reparation: { argent: 300, materiaux: { emeraude: 4 } },
     couleur: '#2ee07a',
   },
+  // (26/10) La pioche du niveau 4 est en saphir (avant : en diamant, qui n'arrive plus qu'au
+  // niveau 7 de la mine). Une partie qui avait la pioche en diamant a donc maintenant celle en
+  // saphir, au même niveau.
   {
     niveau: 4,
-    nom: 'Diamant',
-    emoji: '💎',
+    nom: 'Saphir',
+    emoji: '🔷',
     doublement: 0.45,
     durabilite: 1000,
-    cout: { argent: 15000, materiaux: { diamant: 15 } },
-    reparation: { argent: 600, materiaux: { diamant: 3 } },
+    cout: { argent: 15000, materiaux: { saphir: 15 } },
+    reparation: { argent: 600, materiaux: { saphir: 3 } },
+    couleur: '#3a66e0',
+  },
+  {
+    niveau: 5,
+    nom: 'Rubis',
+    emoji: '🔺',
+    doublement: 0.52,
+    durabilite: 1300,
+    cout: { argent: 45000, materiaux: { rubis: 15 } },
+    reparation: { argent: 1500, materiaux: { rubis: 3 } },
+    couleur: '#e8304f',
+  },
+  {
+    niveau: 6,
+    nom: 'Diamant',
+    emoji: '💎',
+    doublement: 0.6,
+    durabilite: 1700,
+    cout: { argent: 130000, materiaux: { diamant: 15 } },
+    reparation: { argent: 4000, materiaux: { diamant: 3 } },
     couleur: '#4ee8dc',
   },
 ]
@@ -223,6 +305,9 @@ export const NIVEAUX_ASCENSEUR: NiveauAscenseur[] = [
   { niveau: 3, cout: { argent: 3000, materiaux: { fer: 90, redstone: 30 } }, secondesTrajet: 3.5, secondesChargement: 0.8, secondesVidage: 1.5, capacite: 40 },
   { niveau: 4, cout: { argent: 8000, materiaux: { redstone: 100, or: 40 } }, secondesTrajet: 2.6, secondesChargement: 0.6, secondesVidage: 1.2, capacite: 60 },
   { niveau: 5, cout: { argent: 22000, materiaux: { or: 80, emeraude: 30 } }, secondesTrajet: 2, secondesChargement: 0.4, secondesVidage: 0.8, capacite: 90 },
+  // (26/10) Deux niveaux de plus : 31 puis 51 blocs/s.
+  { niveau: 6, cout: { argent: 60000, materiaux: { or: 120, saphir: 30 } }, secondesTrajet: 1.6, secondesChargement: 0.35, secondesVidage: 0.7, capacite: 130 },
+  { niveau: 7, cout: { argent: 180000, materiaux: { saphir: 60, rubis: 30 } }, secondesTrajet: 1.3, secondesChargement: 0.3, secondesVidage: 0.6, capacite: 180 },
 ]
 
 // ---------------------------------------------------------------------------
@@ -241,8 +326,8 @@ export const EMPLOYES_PAR_NIVEAU = 1
 // par niveau de la mine, chaque place vaut plus : 500, 3 500, 15 000, 45 000, 130 000 $.)
 // (25/10) Le premier mineur ne coûte presque rien : le jeu doit tourner tout seul en 2 minutes.
 export const PRIX_EMBAUCHE = [50, 800, 3000, 8000, 20000, 45000, 100000, 220000, 500000, 1000000]
-// Les pousseurs : au plus un par trajet (4).
-export const PRIX_EMBAUCHE_POUSSEUR = [300, 1000, 2500, 5000]
+// Les pousseurs : au plus un par trajet (26/10 : 10 trajets possibles avec la fonderie et la joaillerie).
+export const PRIX_EMBAUCHE_POUSSEUR = [300, 1000, 2500, 5000, 9000, 15000, 25000, 40000, 60000, 90000]
 export const HAUSSE_APRES_LISTE = 2.2
 // Licencier un mineur coûte des indemnités : 40 % du prix de sa place dans l'équipe.
 export const PART_INDEMNITES = 0.4
@@ -281,7 +366,8 @@ export const SECONDES_PAR_PAIE = 5 * 60
 // émeraude, diamant) : pas de pioche en diamant avant la mine de diamant.
 // (25/10) Le salaire suit sa pioche (bois, fer, or, émeraude, diamant) : environ 30 % de ce
 // qu'il fait sortir de la mine.
-export const SALAIRES = [120, 300, 700, 1300, 2600]
+// (26/10) 7 pioches : bois, fer, or, émeraude, saphir, rubis, diamant.
+export const SALAIRES = [120, 300, 700, 1300, 2600, 4500, 7500]
 
 // L'équipement d'un mineur : une meilleure pioche le fait creuser plus vite. Son sac est le tas
 // qu'il remplit au fond de la mine en attendant que la caisse de l'ascenseur passe le prendre
@@ -292,7 +378,11 @@ export const NIVEAUX_EMPLOYE: { nom: string; vitesse: number; sac: number; cout:
   { nom: 'Fer', vitesse: 0.75, sac: 18, cout: { argent: 400, materiaux: {} } },
   { nom: 'Or', vitesse: 1, sac: 28, cout: { argent: 2500, materiaux: {} } },
   { nom: 'Émeraude', vitesse: 1.3, sac: 40, cout: { argent: 7000, materiaux: {} } },
-  { nom: 'Diamant', vitesse: 1.7, sac: 55, cout: { argent: 18000, materiaux: {} } },
+  // (26/10) La pioche du niveau 4 devient en saphir (un mineur qui avait celle en diamant a donc
+  // maintenant celle en saphir) ; puis le rubis et le diamant.
+  { nom: 'Saphir', vitesse: 1.7, sac: 55, cout: { argent: 18000, materiaux: {} } },
+  { nom: 'Rubis', vitesse: 2.2, sac: 75, cout: { argent: 45000, materiaux: {} } },
+  { nom: 'Diamant', vitesse: 2.8, sac: 100, cout: { argent: 120000, materiaux: {} } },
 ]
 
 // --- La rareté des mineurs (avec le recruteur, dès le niveau 4 de la mine) ---
@@ -322,8 +412,8 @@ export const LISTE_RARETES: IdRarete[] = ['commun', 'rare', 'epique', 'legendair
 export const NIVEAU_MINE_RECRUTEUR = 4
 export const NIVEAUX_RECRUTEUR: { cout: Cout; chances: Record<IdRarete, number> }[] = [
   { cout: { argent: 10000, materiaux: {} }, chances: { commun: 65, rare: 20, epique: 10, legendaire: 4, mythique: 1 } },
-  { cout: { argent: 25000, materiaux: {} }, chances: { commun: 57, rare: 23, epique: 12, legendaire: 6, mythique: 2 } },
-  { cout: { argent: 50000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8, mythique: 3 } },
+  { cout: { argent: 40000, materiaux: {} }, chances: { commun: 57, rare: 23, epique: 12, legendaire: 6, mythique: 2 } },
+  { cout: { argent: 140000, materiaux: {} }, chances: { commun: 50, rare: 25, epique: 14, legendaire: 8, mythique: 3 } },
 ]
 
 // --- Le manager (niveau 3 de la mine, avant le 23/10 : niveau 4) : il paie les salaires avec l'argent du joueur (23/10 : plus de trésorerie) ---
@@ -338,12 +428,13 @@ export const SECONDES_AVANT_PAIE_MANAGER = 60
 // (25/10) 3 niveaux : 30 min, 1 h, puis 2 h éveillé.
 export const NIVEAUX_MANAGER: { minutesEveil: number; cout: Cout }[] = [
   { minutesEveil: 30, cout: { materiaux: {} } },
-  { minutesEveil: 60, cout: { argent: 12000, materiaux: {} } },
-  { minutesEveil: 120, cout: { argent: 30000, materiaux: {} } },
+  { minutesEveil: 60, cout: { argent: 25000, materiaux: {} } },
+  { minutesEveil: 120, cout: { argent: 90000, materiaux: {} } },
 ]
 
 // (25/10) Le palier de la mine qu'il faut pour chaque niveau d'un chef (case 0 : l'embauche).
-export const PALIER_CHEF = { manager: [3, 4, 5], recruteur: [4, 5, 5] }
+// (26/10) Leur dernier niveau arrive au niveau 6 de la mine (la mine en a 7 maintenant).
+export const PALIER_CHEF = { manager: [3, 5, 6], recruteur: [4, 5, 6] }
 
 // ---------------------------------------------------------------------------
 // Les rails et le wagonnet
@@ -373,6 +464,8 @@ export const NIVEAUX_POUSSEUR: NiveauPousseur[] = [
   { nom: 'Robuste', vitesse: 1.4, cout: { argent: 2000, materiaux: {} } },
   { nom: 'Expert', vitesse: 1.65, cout: { argent: 5000, materiaux: {} } },
   { nom: 'Champion', vitesse: 1.9, cout: { argent: 12000, materiaux: {} } },
+  { nom: 'Maître', vitesse: 2.2, cout: { argent: 30000, materiaux: {} } },
+  { nom: 'Légende', vitesse: 2.6, cout: { argent: 70000, materiaux: {} } },
 ]
 // Les places du chariot d'un pousseur (à peu près ce que la mine et ses mineurs sortent pendant un
 // aller-retour d'environ 15 s : il suit tout juste, il faut l'agrandir quand on produit plus).
@@ -385,6 +478,9 @@ export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
   { places: 70, cout: { argent: 2500, materiaux: { fer: 100 } } },
   { places: 110, cout: { argent: 6000, materiaux: { fer: 200 } } },
   { places: 170, cout: { argent: 15000, materiaux: { fer: 400 } } },
+  // (26/10) Les deux derniers demandent des lingots de fer (la fonderie, niveau 5 de la mine).
+  { places: 260, cout: { argent: 40000, materiaux: { lingot_fer: 50 } } },
+  { places: 400, cout: { argent: 110000, materiaux: { lingot_fer: 120 } } },
 ]
 // (23/10) Le salaire d'un pousseur toutes les 5 minutes : une base, plus un peu pour chaque niveau
 // de vitesse et chaque niveau de chariot (× sa rareté) : 400 $ au départ, jusqu'à 2 600 $ au
@@ -397,7 +493,20 @@ export const SALAIRE_POUSSEUR_PAR_CHARIOT = 200
 // rails qu'il a posés. Un trajet relie un bâtiment de départ à un bâtiment d'arrivée (un seul
 // wagonnet par trajet) ; plusieurs trajets peuvent partager les mêmes rails (les wagonnets se
 // croisent sans se gêner).
-export type IdLiaison = 'mine-marche' | 'mine-foreuse' | 'mine-generateur' | 'foreuse-marche'
+// (26/10) Avec la fonderie et la joaillerie : la mine et la foreuse leur apportent leur minerai
+// (fer et or à la fonderie, avec du charbon pour son four ; les gemmes à la joaillerie), et elles
+// envoient leurs lingots et leurs bijoux au marché.
+export type IdLiaison =
+  | 'mine-marche'
+  | 'mine-foreuse'
+  | 'mine-generateur'
+  | 'foreuse-marche'
+  | 'mine-fonderie'
+  | 'mine-joaillerie'
+  | 'foreuse-fonderie'
+  | 'foreuse-joaillerie'
+  | 'fonderie-marche'
+  | 'joaillerie-marche'
 export type InfoLiaison = {
   id: IdLiaison
   depart: IdBatiment
@@ -410,10 +519,27 @@ export const LIAISONS: Record<IdLiaison, InfoLiaison> = {
   'mine-foreuse': { id: 'mine-foreuse', depart: 'puits', arrivee: 'foreuse', emoji: '🔥', description: 'apporte le charbon du coffre à la foreuse' },
   'mine-generateur': { id: 'mine-generateur', depart: 'puits', arrivee: 'generateur', emoji: '🔴', description: 'apporte la redstone du coffre au générateur' },
   'foreuse-marche': { id: 'foreuse-marche', depart: 'foreuse', arrivee: 'marche', emoji: '🛒', description: 'vend le chariot de la foreuse au marché' },
+  'mine-fonderie': { id: 'mine-fonderie', depart: 'puits', arrivee: 'fonderie', emoji: '🏭', description: 'apporte le fer, l’or et le charbon du coffre à la fonderie' },
+  'mine-joaillerie': { id: 'mine-joaillerie', depart: 'puits', arrivee: 'joaillerie', emoji: '🏪', description: 'apporte les gemmes du coffre à la joaillerie' },
+  'foreuse-fonderie': { id: 'foreuse-fonderie', depart: 'foreuse', arrivee: 'fonderie', emoji: '🏭', description: 'apporte le fer, l’or et le charbon du chariot de la foreuse à la fonderie' },
+  'foreuse-joaillerie': { id: 'foreuse-joaillerie', depart: 'foreuse', arrivee: 'joaillerie', emoji: '🏪', description: 'apporte les gemmes du chariot de la foreuse à la joaillerie' },
+  'fonderie-marche': { id: 'fonderie-marche', depart: 'fonderie', arrivee: 'marche', emoji: '🟨', description: 'vend les lingots de la fonderie au marché' },
+  'joaillerie-marche': { id: 'joaillerie-marche', depart: 'joaillerie', arrivee: 'marche', emoji: '💍', description: 'vend les bijoux de la joaillerie au marché' },
 }
-export const LISTE_LIAISONS: IdLiaison[] = ['mine-marche', 'mine-foreuse', 'mine-generateur', 'foreuse-marche']
+export const LISTE_LIAISONS: IdLiaison[] = [
+  'mine-marche',
+  'mine-foreuse',
+  'mine-generateur',
+  'foreuse-marche',
+  'mine-fonderie',
+  'mine-joaillerie',
+  'foreuse-fonderie',
+  'foreuse-joaillerie',
+  'fonderie-marche',
+  'joaillerie-marche',
+]
 // Les bâtiments où les rails peuvent arriver (les départs et arrivées des trajets).
-export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur']
+export const BATIMENTS_DES_RAILS: IdBatiment[] = ['puits', 'marche', 'foreuse', 'generateur', 'fonderie', 'joaillerie']
 
 
 // ---------------------------------------------------------------------------
@@ -438,6 +564,8 @@ export const NIVEAUX_GENERATEUR: { rayon: number; bonus: number; reserveMinutes:
   { rayon: 20, bonus: 0.5, reserveMinutes: 10, cout: { argent: 8000, materiaux: { fer: 150, redstone: 90 } } },
   { rayon: 25, bonus: 0.6, reserveMinutes: 13, cout: { argent: 15000, materiaux: { fer: 250, redstone: 180 } } },
   { rayon: 30, bonus: 0.75, reserveMinutes: 16, cout: { argent: 35000, materiaux: { fer: 400, redstone: 350 } } },
+  { rayon: 33, bonus: 0.85, reserveMinutes: 19, cout: { argent: 90000, materiaux: { fer: 600, redstone: 500 } } },
+  { rayon: 36, bonus: 1, reserveMinutes: 22, cout: { argent: 220000, materiaux: { redstone: 800, saphir: 40 } } },
 ]
 // (23/10) Il ne se sert plus tout seul dans le coffre de la mine : sa redstone arrive par les
 // rails (un pousseur sur Mine → Générateur) ou à la main.
@@ -458,6 +586,8 @@ export const NIVEAUX_FORAGE: { vitesse: number; reservoir: number; cout: Cout }[
   { vitesse: 1.6, reservoir: 30, cout: { argent: 6000, materiaux: { fer: 100, redstone: 60 } } },
   { vitesse: 2.4, reservoir: 40, cout: { argent: 14000, materiaux: { redstone: 150, or: 40 } } },
   { vitesse: 3.4, reservoir: 50, cout: { argent: 30000, materiaux: { or: 80, emeraude: 20 } } },
+  { vitesse: 4.6, reservoir: 60, cout: { argent: 80000, materiaux: { emeraude: 40, saphir: 20 } } },
+  { vitesse: 6, reservoir: 70, cout: { argent: 200000, materiaux: { saphir: 40, rubis: 20 } } },
 ]
 
 // (23/10, bis) Tout petit : environ 50 secondes de forage au même niveau de forage (sans
@@ -470,7 +600,53 @@ export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 90, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } } },
   { capacite: 140, cout: { argent: 14000, materiaux: { redstone: 150, or: 50 } } },
   { capacite: 200, cout: { argent: 30000, materiaux: { or: 100, emeraude: 25 } } },
+  // (26/10) Les deux derniers demandent des lingots de fer (la fonderie).
+  { capacite: 280, cout: { argent: 70000, materiaux: { lingot_fer: 60, saphir: 20 } } },
+  { capacite: 400, cout: { argent: 180000, materiaux: { lingot_fer: 150, rubis: 25 } } },
 ]
+
+// ---------------------------------------------------------------------------
+// La fonderie (26/10, niveau 5 de la mine) : elle fond le fer et l'or en lingots
+// ---------------------------------------------------------------------------
+
+// Elle brûle du charbon (1 charbon = 12 secondes de four) pendant qu'elle fond. Le minerai arrive
+// par les rails (de la mine ou de la foreuse) ou à la main ; les lingots attendent dans sa réserve
+// qu'on les vende (d'un clic, ou par un wagonnet Fonderie → Marché). Un lingot vaut 2 fois son
+// minerai. Dans le rayon du générateur allumé, elle va plus vite.
+export const SECONDES_PAR_CHARBON_FONDERIE = 12
+// « vitesse » : les lingots par seconde ; « stock » : les places de l'entrée (le minerai qui
+// attend) et de la réserve (les lingots) ; « reservoir » : le charbon qu'elle garde au plus.
+export const NIVEAUX_FONDERIE: { vitesse: number; stock: number; reservoir: number; cout: Cout }[] = [
+  { vitesse: 0.5, stock: 40, reservoir: 15, cout: { materiaux: {} } },
+  { vitesse: 0.8, stock: 70, reservoir: 22, cout: { argent: 60000, materiaux: { fer: 300, charbon: 100 } } },
+  { vitesse: 1.2, stock: 110, reservoir: 30, cout: { argent: 140000, materiaux: { or: 150, saphir: 20 } } },
+  { vitesse: 1.7, stock: 160, reservoir: 40, cout: { argent: 260000, materiaux: { or: 250, rubis: 20 } } },
+  { vitesse: 2.4, stock: 240, reservoir: 50, cout: { argent: 500000, materiaux: { saphir: 60, rubis: 40 } } },
+]
+// Le palier de la mine qu'il faut pour chaque niveau de la fonderie (case 0 : la construire).
+export const PALIER_FONDERIE = [5, 5, 6, 6, 7]
+
+// ---------------------------------------------------------------------------
+// La joaillerie (26/10, niveau 6 de la mine) : ses joailliers taillent les gemmes en bijoux
+// ---------------------------------------------------------------------------
+
+// Les gemmes arrivent par les rails ou à la main ; chaque joaillier (embauché au Personnel, avec
+// une rareté s'il y a le recruteur) en taille une à la fois. Un bijou vaut 2,5 fois sa gemme.
+// « etablis » : combien de joailliers peuvent y travailler ; « vitesse » : ses outils (un bijou
+// prend SECONDES_PAR_BIJOU ÷ vitesse ÷ la rareté du joaillier) ; « stock » : les places de
+// l'entrée et de la réserve.
+export const SECONDES_PAR_BIJOU = 10
+export const NIVEAUX_JOAILLERIE: { etablis: number; vitesse: number; stock: number; cout: Cout }[] = [
+  { etablis: 1, vitesse: 1, stock: 30, cout: { materiaux: {} } },
+  { etablis: 2, vitesse: 1.15, stock: 50, cout: { argent: 120000, materiaux: { saphir: 30 } } },
+  { etablis: 3, vitesse: 1.3, stock: 80, cout: { argent: 220000, materiaux: { rubis: 25 } } },
+  { etablis: 4, vitesse: 1.5, stock: 120, cout: { argent: 400000, materiaux: { rubis: 40, diamant: 10 } } },
+  { etablis: 5, vitesse: 1.75, stock: 180, cout: { argent: 700000, materiaux: { diamant: 25 } } },
+]
+export const PALIER_JOAILLERIE = [6, 6, 6, 7, 7]
+// Le prix de la 1re, 2e... embauche d'un joaillier, et son salaire de 5 minutes (× sa rareté).
+export const PRIX_EMBAUCHE_JOAILLIER = [8000, 20000, 45000, 90000, 160000]
+export const SALAIRE_JOAILLIER = 1500
 
 // ---------------------------------------------------------------------------
 // Le village en vue du ciel : une grande grille où l'on pose les bâtiments
@@ -483,7 +659,7 @@ export const TAILLE_GRILLE = 40
 // Les bâtiments du village. (L'arbre de prestige et l'enchanteur sont retirés pour l'instant :
 // leur code est dans archives/.)
 // (25/10) Le bazar est retiré : il n'y avait que des sacs à dos, et il n'y a plus de sac.
-export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'employes' | 'foreuse' | 'generateur'
+export type IdBatiment = 'puits' | 'marche' | 'forgeron' | 'employes' | 'foreuse' | 'generateur' | 'fonderie' | 'joaillerie'
 
 export type InfoBatiment = {
   id: IdBatiment
@@ -552,15 +728,35 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
     id: 'generateur',
     nom: 'Générateur',
     emoji: '⚡',
-    description: 'Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails et foreuse.',
+    description: 'Il brûle de la redstone et électrifie tout ce qui est dans son rayon : rails, foreuse, fonderie et joaillerie.',
     taille: 5,
     porte: 'droite',
     niveauMine: 2,
     cout: { argent: 3500, materiaux: { fer: 80, redstone: 30 } },
   },
+  fonderie: {
+    id: 'fonderie',
+    nom: 'Fonderie',
+    emoji: '🏭',
+    description: 'Elle fond le fer et l’or en lingots, qui valent 2 fois plus. Elle brûle du charbon.',
+    taille: 5,
+    porte: 'gauche',
+    niveauMine: 5,
+    cout: { argent: 40000, materiaux: { pierre: 300, fer: 200, charbon: 150 } },
+  },
+  joaillerie: {
+    id: 'joaillerie',
+    nom: 'Joaillerie',
+    emoji: '🏪',
+    description: 'Ses joailliers taillent les gemmes en bijoux, qui valent 2,5 fois plus.',
+    taille: 5,
+    porte: 'droite',
+    niveauMine: 6,
+    cout: { argent: 150000, materiaux: { emeraude: 40, saphir: 30 } },
+  },
 }
 // L'ordre du menu « Bâtiments », celui où ils se débloquent. La mine est déjà posée au début.
-export const LISTE_BATIMENTS: IdBatiment[] = ['employes', 'marche', 'forgeron', 'foreuse', 'generateur']
+export const LISTE_BATIMENTS: IdBatiment[] = ['employes', 'marche', 'forgeron', 'foreuse', 'generateur', 'fonderie', 'joaillerie']
 
 // Les chemins de pavés : seulement pour faire joli (5 $ la case).
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
@@ -654,7 +850,7 @@ export const NIVEAU_JOUEUR_MAX = 15
 // niveaux de la mine demandent un niveau du joueur : tout le reste suit les paliers de la mine
 // (voir NIVEAUX_MINE). Une fois débloqué, il faut quand même payer.
 export const NIVEAU_JOUEUR_POUR = {
-  batiments: { puits: 1, marche: 1, forgeron: 1, employes: 1, foreuse: 1, generateur: 1 } as Record<IdBatiment, number>,
+  batiments: { puits: 1, marche: 1, forgeron: 1, employes: 1, foreuse: 1, generateur: 1, fonderie: 1, joaillerie: 1 } as Record<IdBatiment, number>,
   rails: 2, // poser des rails (et donc créer des trajets de wagonnets)
-  mine: [1, 3, 5, 7, 9], // NIVEAUX_MINE : les 5 paliers
+  mine: [1, 3, 5, 7, 9, 11, 13], // NIVEAUX_MINE : les 7 paliers (26/10)
 }

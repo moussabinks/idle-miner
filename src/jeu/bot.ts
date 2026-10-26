@@ -6,11 +6,14 @@
 //   - quand le coffre se remplit, il le vend depuis la mine (25/10 : plus de sac ni de marche) ;
 //   - il pose ses bâtiments, embauche des mineurs, paie leurs salaires, améliore tout ;
 //   - il relie la mine au marché avec des rails, y envoie un wagonnet, met un mineur à le pousser, puis
-//     électrifie la ligne avec le générateur.
+//     électrifie la ligne avec le générateur ;
+//   - (26/10) il pose la fonderie et la joaillerie, y apporte son fer, son or et ses gemmes (sauf ce
+//     qu'il garde pour ses achats), remplit le four de charbon, embauche des joailliers.
 // Les achats se font sans compter la marche (on suppose qu'il passe devant en allant vendre).
 
 import { aleatoireAvecGraine, type Aleatoire } from './aleatoire'
-import { BATIMENTS, PIOCHES, SECONDES_PAR_PAIE, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { BATIMENTS, NIVEAU_MINE_MAX, PIOCHES, SECONDES_PAR_PAIE, type Cout, type IdBatiment, type IdBloc } from './donnees'
+import { ameliorerAtelier, apporterAuAtelier, atelierPose, objetsAcceptes, peutAmeliorerAtelier, prochainNiveauAtelier, remplirFonderie, vendreSortie, type IdAtelier } from './ateliers'
 import { construireBatiment, estPose, peutConstruire, peutPoserSol, poserSol } from './batiments'
 import {
   agrandirChariot,
@@ -22,6 +25,7 @@ import {
   embaucherPousseur,
   peutAgrandirChariot,
   peutEmbaucherPousseur,
+  embaucherJoaillier,
   embaucherManager,
   managerDebloque,
   nbSansSalaire,
@@ -73,6 +77,8 @@ const PLAN_DU_BOT: { id: IdBatiment; x: number; y: number }[] = [
   { id: 'forgeron', x: 26, y: 14 },
   { id: 'generateur', x: 25, y: 27 },
   { id: 'foreuse', x: 26, y: 21 },
+  { id: 'fonderie', x: 9, y: 15 },
+  { id: 'joaillerie', x: 26, y: 8 },
 ]
 
 // Les rails de la mine (dont le bas est en y = 24) au marché (dont le haut est en y = 28).
@@ -126,6 +132,11 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (estPose(etat, 'generateur')) couts.push({ materiaux: { redstone: 20 } })
     const pioche = PIOCHES[etat.meilleure + 1]
     if (pioche) couts.push(pioche.cout)
+    // (26/10) Le prochain niveau des ateliers (sinon la fonderie mange tout le fer de son amélioration).
+    for (const id of ['fonderie', 'joaillerie'] as IdAtelier[]) {
+      const prochain = prochainNiveauAtelier(etat, id)
+      if (prochain && atelierPose(etat, id) && debloque(etat, id, etat[id].niveau + 1)) couts.push(prochain.cout)
+    }
     return couts
   }
 
@@ -152,6 +163,28 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     vendreCoffre(etat)
     if (estPose(etat, 'foreuse')) vendreChariot(etat)
     allersRetours += 1
+  }
+
+  // (26/10) Les ateliers : il vend leur réserve, sauf les lingots qu'il garde pour ses achats.
+  function vendreAtelier(id: IdAtelier): void {
+    const lot: Inventaire = {}
+    for (const [bloc, n] of Object.entries(etat[id].sortie)) {
+      lot[bloc as IdBloc] = Math.max(0, (n ?? 0) - (etat.coffre.garder?.[bloc as IdBloc] ?? 0))
+    }
+    vendreSortie(etat, id, lot)
+  }
+
+  // Les ateliers : il y apporte ce qu'ils acceptent, remplit le four, les améliore, et vend leur
+  // réserve quand elle est à moitié pleine.
+  function faireTournerLesAteliers(): void {
+    for (const id of ['fonderie', 'joaillerie'] as IdAtelier[]) {
+      if (!atelierPose(etat, id)) continue
+      for (const bloc of objetsAcceptes(id)) apporterAuAtelier(etat, id, bloc)
+      const prochain = prochainNiveauAtelier(etat, id)
+      if (prochain && peutAmeliorerAtelier(etat, id) && etat.argent >= (prochain.cout.argent ?? 0) * 1.5 && gardeLaMine(prochain.cout)) ameliorerAtelier(etat, id)
+      vendreAtelier(id)
+    }
+    if (atelierPose(etat, 'fonderie') && etat.fonderie.carburant < 120) remplirFonderie(etat)
   }
 
   // (23/10) Les améliorations « en plus » (foreuse, chariot, générateur) ne prennent pas les
@@ -205,6 +238,9 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     }
     if (peutAmeliorerRecruteur(etat)) ameliorerRecruteur(etat)
     if (managerDebloque(etat) && !etat.manager.embauche && etat.argent >= 15000) embaucherManager(etat)
+    // (26/10) Les joailliers, dès qu'il y a un établi libre.
+    const prixJoaillier = prixEmbauche(etat, 'joaillier')
+    if (prixJoaillier !== null && etat.argent >= prixJoaillier + marge()) embaucherJoaillier(etat, aleatoire)
 
     // Un pousseur pour le wagonnet (27/10 : il en faut un même sur des rails électriques).
     const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
@@ -239,9 +275,10 @@ export function jouerPartie(aleatoire: Aleatoire, maxSecondes = 12 * 3600): Resu
     if (pousseurMarche && coutChariot && peutAgrandirChariot(etat, pousseurMarche) && gardeLaMine(coutChariot) && (coffreSeRemplit || etat.argent >= (coutChariot.argent ?? 0) * 2)) agrandirChariot(etat, indexPousseur)
   }
 
-  while (etat.niveauMine < 5 && temps < maxSecondes) {
+  while (etat.niveauMine < NIVEAU_MINE_MAX && temps < maxSecondes) {
     reglerGarde()
     acheterSiPossible()
+    faireTournerLesAteliers()
     // Sans wagonnet qui roule, il vend le coffre quand il est à moitié plein. (27/10 : le
     // wagonnet ne part qu'avec un pousseur payé, même électrique : sans paie, il vend lui-même.)
     const wagonnetActif = trajetDe(etat, 'mine-marche') !== null && etat.employes.some((e) => e.role === 'pousseur' && e.trajet === 'mine-marche' && e.tempsPaye > 0)

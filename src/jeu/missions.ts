@@ -173,6 +173,31 @@ function automatisation(etat: EtatJeu): Mission | null {
     if (!ligneDe(etat, 'foreuse-marche')) return mission('rails-foreuse-marche', '🛤️', t('Relie la foreuse au marché (rails) : elle vendra toute seule'), { construction: true })
     return mission('trajet-foreuse-marche', '🚃', t('Touche la bulle 🛤️ sur les rails foreuse → marché'), { stand: 'foreuse', pret: true })
   }
+  // (26/10) La fonderie : la relier à la mine (son minerai et son charbon), puis au marché.
+  if (batimentPose(etat.village, 'fonderie')) {
+    if (!trajetDe(etat, 'mine-fonderie')) {
+      if (!ligneDe(etat, 'mine-fonderie')) return mission('rails-mine-fonderie', '🛤️', t('Relie la fonderie à la mine (rails) : le fer, l’or et le charbon y iront tout seuls'), { construction: true })
+      return mission('trajet-mine-fonderie', '🚃', t('Touche la bulle 🛤️ sur les rails mine → fonderie'), { stand: 'fonderie', pret: true })
+    }
+    if (!trajetDe(etat, 'fonderie-marche')) {
+      if (!ligneDe(etat, 'fonderie-marche')) return mission('rails-fonderie-marche', '🛤️', t('Relie la fonderie au marché (rails) : ses lingots s’y vendront tout seuls'), { construction: true })
+      return mission('trajet-fonderie-marche', '🚃', t('Touche la bulle 🛤️ sur les rails fonderie → marché'), { stand: 'fonderie', pret: true })
+    }
+  }
+  // (26/10) La joaillerie : un joaillier, puis la relier à la mine (les gemmes), puis au marché.
+  if (batimentPose(etat.village, 'joaillerie')) {
+    if (!etat.employes.some((e) => e.role === 'joaillier') && batimentPose(etat.village, 'employes')) {
+      return mission('joaillier', '💍', t('Embauche un joaillier au Personnel : il taillera les gemmes'), { stand: 'employes', pret: true })
+    }
+    if (!trajetDe(etat, 'mine-joaillerie')) {
+      if (!ligneDe(etat, 'mine-joaillerie')) return mission('rails-mine-joaillerie', '🛤️', t('Relie la joaillerie à la mine (rails) : les gemmes y iront toutes seules'), { construction: true })
+      return mission('trajet-mine-joaillerie', '🚃', t('Touche la bulle 🛤️ sur les rails mine → joaillerie'), { stand: 'joaillerie', pret: true })
+    }
+    if (!trajetDe(etat, 'joaillerie-marche')) {
+      if (!ligneDe(etat, 'joaillerie-marche')) return mission('rails-joaillerie-marche', '🛤️', t('Relie la joaillerie au marché (rails) : ses bijoux s’y vendront tout seuls'), { construction: true })
+      return mission('trajet-joaillerie-marche', '🚃', t('Touche la bulle 🛤️ sur les rails joaillerie → marché'), { stand: 'joaillerie', pret: true })
+    }
+  }
   return null
 }
 

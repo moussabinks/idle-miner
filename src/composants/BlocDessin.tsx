@@ -7,13 +7,16 @@ import type { IdBloc } from '../jeu/donnees'
 const ENCRE = '#2a2140'
 
 // La couleur des pépites de chaque minerai (et un reflet plus clair).
-const PEPITES: Record<IdBloc, { couleur: string; clair: string } | null> = {
+// (26/10) Les lingots et les bijoux ne sont pas dans la mine : ils n'ont pas de pépites.
+const PEPITES: Partial<Record<IdBloc, { couleur: string; clair: string } | null>> = {
   pierre: null,
   charbon: { couleur: '#3d3a46', clair: '#6b6878' },
   fer: { couleur: '#e7c9a6', clair: '#fbe8d3' },
   redstone: { couleur: '#e2483d', clair: '#ff8a7a' },
   or: { couleur: '#f9d65a', clair: '#fff1a8' },
   emeraude: { couleur: '#3ccf7a', clair: '#a8f5c6' },
+  saphir: { couleur: '#3a66e0', clair: '#9db8ff' },
+  rubis: { couleur: '#e8304f', clair: '#ff9aab' },
   diamant: { couleur: '#5fe0e6', clair: '#c9fbfd' },
 }
 

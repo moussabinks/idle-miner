@@ -68,6 +68,9 @@ Autrement dit : 2,4 gemmes de plus chaque fois que le prix est multiplié par 10
 | Une amélioration à 20 000 $ | 20 000 $ | 9 💎 |
 | Générateur niveau 5 (35 000 $ + 400 fer + 350 redstone) | 45 050 $ | 9 💎 |
 | Mine niveau 5 (80 000 $ + 90 or + 35 émeraudes) | 85 950 $ | 10 💎 |
+| Mine niveau 7 (800 000 $ + 80 saphirs + 50 rubis, 26/10) | 818 100 $ | 10 💎 |
+
+(26/10) Avec les niveaux 6 et 7, beaucoup d'achats de fin de partie dépassent largement 51 000 $ (la joaillerie niveau 5 : 700 000 $ + 25 diamants) : ils coûtent tous **10 💎**, le plafond. Les lingots et les bijoux d'un prix comptent à leur prix de vente (`valeurEnDollars`).
 
 Côté code : une action d'achat ordinaire (agrandir le coffre, embaucher…) est lancée dans `acheterAvecGemmes(() => action)` (`mineur.ts`) : pendant ce temps, `payer` retire des gemmes au lieu de l'argent et des minerais. `peutPayerEnGemmes` dit si on en a assez.
 
@@ -77,9 +80,9 @@ On l'ouvre en touchant la case 💎 du bandeau. En haut, le solde de gemmes et u
 
 | Bonus | Effet | Durée | Prix |
 |---|---|---:|---:|
-| ⚡ **Production × 2** | La mine (ce qu'elle sort toute seule) et la foreuse creusent deux fois plus vite (`multiplicateurProduction`). | 15 min | 3 💎 |
-| 💰 **Ventes × 2** | Tout ce qu'on vend rapporte le double : le coffre, le chariot de la foreuse et les wagonnets (`multiplicateurVentes`, dans `valeurDe`). | 15 min | 3 💎 |
-| 👷 **Employés × 2** | Les mineurs creusent et les pousseurs poussent deux fois plus vite (`multiplicateurEmployes`). | 15 min | 3 💎 |
+| ⚡ **Production × 2** | La mine (ce qu'elle sort toute seule) et la foreuse creusent deux fois plus vite, et (26/10) la fonderie fond deux fois plus vite (`multiplicateurProduction`). | 15 min | 3 💎 |
+| 💰 **Ventes × 2** | Tout ce qu'on vend rapporte le double : le coffre, le chariot de la foreuse, la réserve des ateliers (26/10) et les wagonnets (`multiplicateurVentes`, dans `valeurDe`). | 15 min | 3 💎 |
+| 👷 **Employés × 2** | Les mineurs creusent, les pousseurs poussent et (26/10) les joailliers taillent deux fois plus vite (`multiplicateurEmployes`). | 15 min | 3 💎 |
 | ⛏️ **Fortune** (`clics`, avant « Clics en or ») | Chaque clic sur le bloc de la mine donne **3 blocs** au lieu d'un (en plus du doublement et des bonus de combo). | 5 min | 3 💎 |
 
 - Acheter un bonus **déjà en cours** ajoute sa durée à ce qui reste (`prolongerBoost`).

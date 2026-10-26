@@ -79,7 +79,16 @@ const MINERAIS: Record<IdBloc, { couleur: string; clair: string; cristal: boolea
   redstone: { couleur: '#e5484d', clair: '#ff8a8a', cristal: true },
   or: { couleur: '#f5c02e', clair: '#ffe27a', cristal: true },
   emeraude: { couleur: '#3cc47a', clair: '#8be8a8', cristal: true },
+  saphir: { couleur: '#3a66e0', clair: '#9db8ff', cristal: true },
+  rubis: { couleur: '#e8304f', clair: '#ff9aab', cristal: true },
   diamant: { couleur: '#5cc8f5', clair: '#b4ecff', cristal: true },
+  // (26/10) Ce que fabriquent la fonderie (des lingots) et la joaillerie (des bijoux).
+  lingot_fer: { couleur: '#c9ccd6', clair: '#eef0f6', cristal: false },
+  lingot_or: { couleur: '#f5c02e', clair: '#ffe27a', cristal: false },
+  bijou_emeraude: { couleur: '#3cc47a', clair: '#8be8a8', cristal: true },
+  bijou_saphir: { couleur: '#3a66e0', clair: '#9db8ff', cristal: true },
+  bijou_rubis: { couleur: '#e8304f', clair: '#ff9aab', cristal: true },
+  bijou_diamant: { couleur: '#5cc8f5', clair: '#b4ecff', cristal: true },
 }
 
 // Les formes des minerais (en tailles de minerai : x et y de -1 à 1).

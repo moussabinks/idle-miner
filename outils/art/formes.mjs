@@ -37,6 +37,8 @@ export const C = {
   or: '#f9d65a',
   emeraude: '#3ccf7a',
   diamant: '#5fe0e6',
+  saphir: '#2f5bd9', // (26/10)
+  rubis: '#d81b4a', // (26/10)
 }
 
 // Mélanger deux couleurs « #rrggbb » (t = 0 : la première, t = 1 : la seconde).
@@ -577,6 +579,84 @@ export const MINERAIS = {
       ],
     ],
     eclat: [76, 22],
+  },
+  // (26/10) Le saphir (un losange bleu roi) et le rubis (un triangle cramoisi), comme leurs icônes
+  // 🔷 et 🔺 : la joaillerie en a sur son établi et dans son coffre.
+  saphir: {
+    contour: [
+      [50, 6],
+      [88, 50],
+      [50, 94],
+      [12, 50],
+    ],
+    couleur: '#2f5bd9',
+    facettes: [
+      [
+        '#8fb0ff',
+        [
+          [50, 6],
+          [50, 28],
+          [31, 50],
+          [12, 50],
+        ],
+      ],
+      [
+        '#1b3796',
+        [
+          [88, 50],
+          [50, 94],
+          [50, 72],
+          [69, 50],
+        ],
+      ],
+      [
+        '#4874ec',
+        [
+          [50, 28],
+          [69, 50],
+          [50, 72],
+          [31, 50],
+        ],
+      ],
+    ],
+    eclat: [76, 22],
+  },
+  rubis: {
+    contour: [
+      [50, 8],
+      [94, 84],
+      [6, 84],
+    ],
+    couleur: '#d81b4a',
+    facettes: [
+      [
+        '#ff7095',
+        [
+          [50, 8],
+          [50, 38],
+          [30, 72],
+          [6, 84],
+        ],
+      ],
+      [
+        '#9c0f33',
+        [
+          [50, 8],
+          [94, 84],
+          [70, 72],
+          [50, 38],
+        ],
+      ],
+      [
+        '#e8325f',
+        [
+          [50, 38],
+          [70, 72],
+          [30, 72],
+        ],
+      ],
+    ],
+    eclat: [78, 24],
   },
 }
 

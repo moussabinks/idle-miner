@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenerateur } from '../jeu/generateur'
+import { fonderieEnMarche } from '../jeu/ateliers'
 import { foreuseEnMarche, vitesseForage } from '../jeu/foreuse'
 import { capaciteCoffre, nbDansCoffre, secondesTrajetMineur, secondesVidageAscenseur, type EtatJeu, type Employe } from '../jeu/mineur'
 import { caseQuai, cheminEmploye, hauteurNavette, lireNavette, passagersNavette } from '../jeu/employes'
@@ -486,7 +487,7 @@ export function VueVillage({
       )
       continue
     }
-    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" enMarche={b.id === 'foreuse' && foreuseEnMarche(etat)} />)
+    objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" enMarche={(b.id === 'foreuse' && foreuseEnMarche(etat)) || (b.id === 'fonderie' && fonderieEnMarche(etat))} />)
   }
 
   // Le fantôme de ce qu'on place.
@@ -529,6 +530,7 @@ export function VueVillage({
   }
   let enAttente = 0
   let auQuai = 0
+  let aLEtabli = 0
   etat.employes.forEach((mineur: Employe, index) => {
     const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{nomEmploye(mineur.nom)}</span>
     let position: { x: number; y: number } | null = null
@@ -570,6 +572,10 @@ export function VueVillage({
       } else if (maison) {
         position = devant(maison, 3 + auQuai++, 1.2)
       }
+    } else if (mineur.etape === 'taille') {
+      // (26/10) Le joaillier à son établi, devant la joaillerie.
+      const joaillerie = batimentPose(village, 'joaillerie')
+      if (joaillerie) position = devant(joaillerie, 1 + aLEtabli++, 1)
     } else if (mineur.etape === 'attend' && personnel) {
       position = devant(personnel, 2 + enAttente++, 1.6)
       colere = true

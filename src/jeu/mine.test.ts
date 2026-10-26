@@ -24,8 +24,8 @@ describe('la mine à 5 niveaux', () => {
   })
 
   it('la mine sort plus de blocs toute seule plus bas', () => {
-    for (let n = 2; n <= 5; n++) expect(infoNiveauMine(n).debit).toBeGreaterThan(infoNiveauMine(n - 1).debit)
-    expect(infoNiveauMine(9).niveau).toBe(5) // on ne sort pas de la liste
+    for (let n = 2; n <= 7; n++) expect(infoNiveauMine(n).debit).toBeGreaterThan(infoNiveauMine(n - 1).debit)
+    expect(infoNiveauMine(9).niveau).toBe(7) // on ne sort pas de la liste
   })
 })
 
@@ -40,6 +40,11 @@ describe('ce qu’on gagne au niveau suivant (27/10)', () => {
     expect(g.batiments).toEqual(expect.arrayContaining(['foreuse', 'generateur']))
     expect(gainsNiveauSuivant(2)!.manager).toBe(true)
     expect(gainsNiveauSuivant(3)!.recruteur).toBe(true)
-    expect(gainsNiveauSuivant(5)).toBeNull()
+    // (26/10) La fonderie au niveau 5, la joaillerie au 6, le diamant au 7.
+    expect(gainsNiveauSuivant(4)!.nouveaux).toEqual(['saphir'])
+    expect(gainsNiveauSuivant(4)!.batiments).toContain('fonderie')
+    expect(gainsNiveauSuivant(5)!.batiments).toContain('joaillerie')
+    expect(gainsNiveauSuivant(6)!.nouveaux).toEqual(['diamant'])
+    expect(gainsNiveauSuivant(7)).toBeNull()
   })
 })

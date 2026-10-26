@@ -106,6 +106,21 @@ export type Generateur = {
   allume: boolean // on peut l'éteindre pour garder sa redstone
 }
 
+// (26/10) Un atelier : la fonderie (le fer et l'or en lingots) ou la joaillerie (les gemmes en
+// bijoux). Le minerai attend dans son entrée, ce qu'il fabrique dans sa réserve (sa sortie).
+export type Atelier = {
+  niveau: number // index dans NIVEAUX_FONDERIE ou NIVEAUX_JOAILLERIE
+  entree: Inventaire // le minerai (ou les gemmes) qui attend d'être transformé
+  sortie: Inventaire // les lingots (ou les bijoux) prêts à vendre
+  progression: number // la fonderie : la part du prochain lingot (0 à 1)
+  carburant: number // la fonderie : les secondes de charbon qui restent (la joaillerie : 0)
+  fabriques: number // combien de lingots (ou de bijoux) il a fabriqués en tout
+}
+
+export function nouvelAtelier(): Atelier {
+  return { niveau: 0, entree: {}, sortie: {}, progression: 0, carburant: 0, fabriques: 0 }
+}
+
 // Un trajet de wagonnet (24/10) : le joueur l'a créé entre deux bâtiments reliés par des rails
 // (voir LIAISONS). Le wagonnet charge au départ, roule jusqu'à l'arrivée, y livre, puis revient.
 export type EtapeWagonnet = 'quai' | 'aller' | 'retour'
@@ -128,10 +143,12 @@ export type Trajet = {
 //   - un pousseur (embauché pour un trajet, 26/10) : il attend son wagonnet au quai, devant le
 //     bâtiment de départ de son trajet (« quai »), et le pousse jusqu'à l'arrivée et
 //     retour (« pousse ») ;
-//   - les deux marchent dans le village (« marche » : à la forge, au Personnel, à la mine),
+//   - un joaillier (26/10) : il travaille à la joaillerie (« taille ») : il taille les gemmes en
+//     bijoux, une à la fois (voir ateliers.ts) ;
+//   - tous marchent dans le village (« marche » : à la forge, au Personnel, à la mine),
 //     récupèrent leur pioche (« forge ») ou attendent leur salaire (« attend »).
-export type EtapeEmploye = 'creuse' | 'monte' | 'vide' | 'descend' | 'quai' | 'pousse' | 'marche' | 'forge' | 'attend'
-export type RoleEmploye = 'mineur' | 'pousseur'
+export type EtapeEmploye = 'creuse' | 'monte' | 'vide' | 'descend' | 'quai' | 'pousse' | 'marche' | 'forge' | 'attend' | 'taille'
+export type RoleEmploye = 'mineur' | 'pousseur' | 'joaillier'
 
 export type Employe = {
   nom: string
@@ -185,7 +202,7 @@ export type EtatJeu = {
   gemmes: number
   boosts: Boosts // les bonus de la boutique en cours (voir gemmes.ts)
   quotidien: Quotidien // la récompense du jour et la série de jours (voir gemmes.ts)
-  niveauMine: number // de 1 à 5
+  niveauMine: number // de 1 à 7
   coffre: Coffre
   prochainBloc: IdBloc // le bloc à cliquer devant la mine
   clics: number // les clics déjà donnés sur ce bloc (avec une pioche cassée, il en faut 2)
@@ -199,6 +216,9 @@ export type EtatJeu = {
   manager: Manager
   foreuse: Foreuse
   generateur: Generateur
+  // (26/10) Les nouveaux bâtiments du niveau 5 et 6 de la mine.
+  fonderie: Atelier
+  joaillerie: Atelier
   niveauWagonnets: number // (plus utilisé depuis le 23/10 : chaque pousseur a son chariot) l'ancienne taille de tous les wagonnets
   trajets: Trajet[]
   succes: string[]
@@ -225,7 +245,9 @@ export type EtatJeu = {
 // de l'absence (une partie de la version 24 reçoit l'ascenseur de niveau 1).
 // Version 29 (25/10, la grande mise à jour) : plus de sac ni de bazar, 5 niveaux pour tout,
 // clairière de 40 × 40, gemmes et récompenses quotidiennes (voir convertirVersion28).
-export const VERSION_ETAT = 29
+// Version 30 (26/10) : 7 niveaux (saphir, rubis, diamant), la fonderie et la joaillerie ; les
+// diamants d'une partie au niveau 5 deviennent des saphirs (voir convertirVersion29).
+export const VERSION_ETAT = 30
 export const VERSION_MINE_AUTOMATIQUE = 21
 
 // ---------------------------------------------------------------------------
@@ -268,6 +290,8 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     manager: { embauche: false, tempsPaye: 0 },
     foreuse: nouvelleForeuse(),
     generateur: nouveauGenerateur(),
+    fonderie: nouvelAtelier(),
+    joaillerie: nouvelAtelier(),
     niveauWagonnets: 0,
     trajets: [],
     succes: [],
@@ -335,9 +359,19 @@ export function rangerDansCoffre(etat: EtatJeu, bloc: IdBloc, nombre: number): n
 // Payer : avec l'argent et les minerais du coffre de la mine (ou avec des gemmes)
 // ---------------------------------------------------------------------------
 
-// Combien on a de ce minerai (dans le coffre de la mine).
+// (26/10) Les lingots et les bijoux attendent dans la réserve de leur atelier : un achat qui en
+// demande (le chariot d'un pousseur en lingots de fer...) les y prend aussi.
+function reserveDAtelier(etat: EtatJeu, bloc: IdBloc): Inventaire | null {
+  const sorte = BLOCS[bloc]?.sorte
+  if (sorte === 'lingot') return etat.fonderie?.sortie ?? null
+  if (sorte === 'bijou') return etat.joaillerie?.sortie ?? null
+  return null
+}
+
+// Combien on a de ce minerai (dans le coffre de la mine ; les lingots et les bijoux aussi dans la
+// réserve de leur atelier).
 export function disponible(etat: EtatJeu, bloc: IdBloc): number {
-  return etat.coffre.contenu[bloc] ?? 0
+  return (etat.coffre.contenu[bloc] ?? 0) + (reserveDAtelier(etat, bloc)?.[bloc] ?? 0)
 }
 
 export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
@@ -355,7 +389,14 @@ export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
 }
 
 export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
-  for (const [id, nombre] of Object.entries(materiaux)) retirerDe(etat.coffre.contenu, id as IdBloc, nombre ?? 0)
+  for (const [id, nombre] of Object.entries(materiaux)) {
+    const bloc = id as IdBloc
+    // D'abord le coffre, puis (lingots, bijoux) la réserve de l'atelier.
+    const duCoffre = Math.min(nombre ?? 0, etat.coffre.contenu[bloc] ?? 0)
+    retirerDe(etat.coffre.contenu, bloc, duCoffre)
+    const reserve = reserveDAtelier(etat, bloc)
+    if (reserve && (nombre ?? 0) > duCoffre) retirerDe(reserve, bloc, (nombre ?? 0) - duCoffre)
+  }
 }
 
 export function payer(etat: EtatJeu, cout: Cout): void {

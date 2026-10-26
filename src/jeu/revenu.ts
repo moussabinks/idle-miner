@@ -3,12 +3,14 @@
 //   - la mine toute seule : son débit × la valeur moyenne d'un bloc à ce niveau ;
 //   - chaque mineur employé (payé) : ce qu'il remonte par seconde (creusage et trajets compris),
 //     moins son salaire (et celui du manager) ;
-//   - la foreuse, quand elle tourne : sa vitesse × la valeur moyenne d'un bloc.
+//   - la foreuse, quand elle tourne : sa vitesse × la valeur moyenne d'un bloc ;
+//   - (26/10) la fonderie et la joaillerie : ce qu'elles ajoutent (un lingot vaut plus que son minerai).
 // Les clics du joueur ne sont pas comptés. C'est la valeur de ce qui sort de la mine : il faut
 // encore la vendre (à la main, ou avec le wagonnet). Ce n'est qu'une moyenne : le hasard des
 // minerais fait varier le vrai gain.
 
-import { SECONDES_PAR_PAIE } from './donnees'
+import { RARETES, SECONDES_PAR_PAIE } from './donnees'
+import { atelierPose, fabriqueParSeconde, plusValueParSeconde } from './ateliers'
 import { t } from './langue'
 import { blocsParSecondeEmploye, managerAuTravail, managerPaieLesSalaires, salaireEmploye, salaireManager } from './employes'
 import { foreuseEnMarche, vitesseForage } from './foreuse'
@@ -20,11 +22,15 @@ export type Revenu = {
   mine: number
   mineurs: number
   foreuse: number
+  ateliers: number // (26/10) la plus-value de la fonderie et de la joaillerie
   total: number
   // (26/10) Le wagonnet du coffre ne suit pas : il vend moins que ce qui sort de la mine. Le
   // « total » compte alors ce qu'il vend vraiment (le reste s'entasse dans le coffre).
   limiteParWagonnet: boolean
 }
+
+// La rareté d'un joaillier (×1 commun... ×5 mythique), pour sa vitesse.
+const rendement = (e: Employe) => (RARETES[e.rarete] ?? RARETES.commun).rendement
 
 // Ce que rapporte un mineur par seconde, avant son salaire.
 export function revenuBrutEmploye(etat: EtatJeu, mineur: Employe): number {
@@ -67,7 +73,8 @@ export function revenuParSeconde(etat: EtatJeu): Revenu {
   const sortDeLaMine = mine + brutMineurs
   const limiteParWagonnet = chariotTropPetit(wagonnet)
   const vendu = limiteParWagonnet && wagonnet ? Math.min(sortDeLaMine, wagonnet.debitMax * valeurMoyenneBloc(etat.niveauMine)) : sortDeLaMine
-  return { mine, mineurs, foreuse, total: vendu - salaires + foreuse, limiteParWagonnet }
+  const ateliers = plusValueParSeconde(etat, 'fonderie', rendement) + plusValueParSeconde(etat, 'joaillerie', rendement)
+  return { mine, mineurs, foreuse, ateliers, total: vendu - salaires + foreuse + ateliers, limiteParWagonnet }
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +98,7 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
   const valeur = valeurMoyenneBloc(etat.niveauMine)
   const mineurs = etat.employes.filter((e) => e.role === 'mineur')
   const pousseurs = etat.employes.filter((e) => e.role === 'pousseur')
+  const joaillierS = etat.employes.filter((e) => e.role === 'joaillier')
   const auTravail = mineurs.filter((m) => m.tempsPaye > 0)
   const brutMineurs = plein ? 0 : auTravail.reduce((total, m) => total + revenuBrutEmploye(etat, m), 0)
   const mine = plein ? 0 : debitMine(etat) * valeur
@@ -100,11 +108,24 @@ export function bilanParMinute(etat: EtatJeu): Bilan {
     { id: 'mineurs', icone: '👷', nom: t('Les mineurs'), detail: t('{n} au travail sur {total}', { n: auTravail.length, total: mineurs.length }), parMinute: brutMineurs * 60 },
     { id: 'foreuse', icone: '⚙️', nom: t('La foreuse'), detail: foreuseEnMarche(etat) ? t('elle fore') : t('à l’arrêt'), parMinute: foreuse * 60 },
   ]
+  // (26/10) Les ateliers : ce qu'ils ajoutent au prix du minerai.
+  if (atelierPose(etat, 'fonderie')) {
+    const enMarche = fabriqueParSeconde(etat, 'fonderie', rendement) > 0
+    gains.push({ id: 'fonderie', icone: '🏭', nom: t('La fonderie'), detail: enMarche ? t('les lingots valent plus que le minerai') : t('à l’arrêt'), parMinute: plusValueParSeconde(etat, 'fonderie', rendement) * 60 })
+  }
+  if (atelierPose(etat, 'joaillerie')) {
+    const enMarche = fabriqueParSeconde(etat, 'joaillerie', rendement) > 0
+    gains.push({ id: 'joaillerie', icone: '💍', nom: t('La joaillerie'), detail: enMarche ? t('les bijoux valent plus que les gemmes') : t('à l’arrêt'), parMinute: plusValueParSeconde(etat, 'joaillerie', rendement) * 60 })
+  }
   const paie = (liste: Employe[]) => liste.reduce((total, e) => total + salaireEmploye(e), 0) / (SECONDES_PAR_PAIE / 60)
   const depenses: LigneBilan[] = [
     { id: 'salaires-mineurs', icone: '⛏️', nom: t('Salaires des mineurs'), detail: mineurs.length > 1 ? t('{n} mineurs', { n: mineurs.length }) : t('{n} mineur', { n: mineurs.length }), parMinute: paie(mineurs) },
     { id: 'salaires-pousseurs', icone: '🛤️', nom: t('Salaires des pousseurs'), detail: pousseurs.length > 1 ? t('{n} pousseurs', { n: pousseurs.length }) : t('{n} pousseur', { n: pousseurs.length }), parMinute: paie(pousseurs) },
   ]
+  // (26/10) les joailliers
+  if (joaillierS.length > 0) {
+    depenses.push({ id: 'salaires-joailliers', icone: '💍', nom: t('Salaires des joailliers'), detail: joaillierS.length > 1 ? t('{n} joailliers', { n: joaillierS.length }) : t('{n} joaillier', { n: joaillierS.length }), parMinute: paie(joaillierS) })
+  }
   if (managerPaieLesSalaires(etat)) depenses.push({ id: 'manager', icone: '💼', nom: t('Salaire du manager'), detail: t('il paie tout le monde'), parMinute: salaireManager() / (SECONDES_PAR_PAIE / 60) })
   const totalGains = gains.reduce((total, l) => total + l.parMinute, 0)
   const totalDepenses = depenses.reduce((total, l) => total + l.parMinute, 0)

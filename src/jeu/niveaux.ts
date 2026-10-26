@@ -27,7 +27,11 @@ import {
   NIVEAUX_CHARIOT_POUSSEUR,
   NIVEAU_JOUEUR_MAX,
   NIVEAU_JOUEUR_POUR,
+  NIVEAUX_FONDERIE,
+  NIVEAUX_JOAILLERIE,
   PALIER_CHEF,
+  PALIER_FONDERIE,
+  PALIER_JOAILLERIE,
   PIOCHES,
   PRIX_MANAGER,
   XP_PAR,
@@ -77,7 +81,21 @@ export function progressionNiveau(etat: EtatJeu): { niveau: number; xp: number; 
 
 // Les choses qui ont des niveaux. « mine » se débloque avec le niveau du joueur ; les chefs
 // (recruteur, tempsManager) à un palier fixe (PALIER_CHEF) ; tout le reste avec le palier.
-export type ChoseANiveaux = 'mine' | 'coffre' | 'pioches' | 'ascenseur' | 'equipement' | 'pousseur' | 'chariotPousseur' | 'tempsManager' | 'generateur' | 'forage' | 'chariot' | 'recruteur'
+export type ChoseANiveaux =
+  | 'mine'
+  | 'coffre'
+  | 'pioches'
+  | 'ascenseur'
+  | 'equipement'
+  | 'pousseur'
+  | 'chariotPousseur'
+  | 'tempsManager'
+  | 'generateur'
+  | 'forage'
+  | 'chariot'
+  | 'recruteur'
+  | 'fonderie'
+  | 'joaillerie'
 
 // Le niveau du joueur qu'il faut pour descendre la mine au niveau « index + 1 ».
 export function niveauRequis(chose: 'mine', index: number): number {
@@ -95,6 +113,9 @@ export function palierRequis(chose: ChoseANiveaux, index: number): number | null
   if (chose === 'mine') return null
   if (chose === 'recruteur') return PALIER_CHEF.recruteur[Math.max(0, Math.min(index, PALIER_CHEF.recruteur.length - 1))]
   if (chose === 'tempsManager') return PALIER_CHEF.manager[Math.max(0, Math.min(index, PALIER_CHEF.manager.length - 1))]
+  // (26/10) La fonderie et la joaillerie arrivent tard : leurs niveaux ont leurs propres paliers.
+  if (chose === 'fonderie') return PALIER_FONDERIE[Math.max(0, Math.min(index, PALIER_FONDERIE.length - 1))]
+  if (chose === 'joaillerie') return PALIER_JOAILLERIE[Math.max(0, Math.min(index, PALIER_JOAILLERIE.length - 1))]
   return index + 1
 }
 
@@ -179,9 +200,12 @@ export function valeurInvestie(etat: EtatJeu): number {
   total += valeurNiveaux(NIVEAUX_FORAGE, etat.foreuse.niveauVitesse)
   total += valeurNiveaux(NIVEAUX_CHARIOT, etat.foreuse.niveauChariot)
   total += valeurNiveaux(NIVEAUX_GENERATEUR, etat.generateur.niveau)
+  total += valeurNiveaux(NIVEAUX_FONDERIE, etat.fonderie?.niveau ?? 0)
+  total += valeurNiveaux(NIVEAUX_JOAILLERIE, etat.joaillerie?.niveau ?? 0)
   for (let i = 0; i < etat.recruteur; i++) total += valeurCout(NIVEAUX_RECRUTEUR[i].cout)
   if (etat.manager.embauche) total += PRIX_MANAGER + valeurNiveaux(NIVEAUX_MANAGER, etat.manager.niveau ?? 0)
   for (const e of etat.employes) {
+    if (e.role === 'joaillier') continue // (un joaillier n'a pas d'amélioration)
     total += valeurNiveaux(e.role === 'pousseur' ? NIVEAUX_POUSSEUR : NIVEAUX_EMPLOYE, e.niveau)
     if (e.role === 'pousseur') total += valeurNiveaux(NIVEAUX_CHARIOT_POUSSEUR, e.chariot ?? 0)
   }
@@ -206,6 +230,8 @@ function compteurs(etat: EtatJeu): Record<Compteur, number> {
       etat.foreuse.niveauVitesse +
       etat.foreuse.niveauChariot +
       etat.generateur.niveau +
+      (etat.fonderie?.niveau ?? 0) +
+      (etat.joaillerie?.niveau ?? 0) +
       etat.recruteur +
       (etat.manager.embauche ? 1 : 0) +
       (etat.manager.niveau ?? 0) +

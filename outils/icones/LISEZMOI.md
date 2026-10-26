@@ -41,3 +41,26 @@ ajoute un dans le jeu. Les flèches et symboles de texte (→, ★, ✦, ▶) re
 ## Les icônes en images (25/10)
 
 `fabriquer.py` écrit aussi les minerais (la liste `ICONES_EN_IMAGE`) en fichiers SVG dans `public/images/icones/` (`u1F529.svg` pour 🔩...), avec les mêmes dessins que la police. Le composant `IconeImage.tsx` les affiche en `<img>` : c'est ce que font les bulles « +1 » qui s'envolent quand on casse un bloc à la mine, car dans ces bulles animées Safari ne prenait pas la police (il montrait les emojis d'Apple). Pour une nouvelle icône en image : l'ajouter à `ICONES_EN_IMAGE` et relancer le script.
+
+## Les minerais bruts, les lingots, les nouvelles gemmes et les bijoux (26/10)
+
+Avec la fonderie et la joaillerie (et les niveaux Saphir, Rubis, Diamant de la mine) :
+
+| Emoji | Ce que c'est | Le dessin |
+|---|---|---|
+| 🔩 | fer (brut) | un caillou gris avec des pépites beige rosé (le minerai de fer de Minecraft) |
+| 🟡 | or (brut) | le même caillou, avec des pépites dorées qui brillent |
+| ⬜ | lingot de fer | les deux lingots gris (avant, le dessin de 🔩) |
+| 🟨 | lingot d'or | la pyramide de trois lingots dorés (avant, le dessin de 🟡) |
+| 🔷 | saphir | une gemme en losange, bleu roi (le diamant 💎 est bleu ciel, à cinq côtés) |
+| 🔺 | rubis | une gemme taillée en triangle, rouge cramoisi (la redstone 🔴 est rouge orangé, à six côtés) |
+| 📿 | collier d'émeraude | une chaîne de perles dorées et une émeraude en pendentif |
+| 🧿 | pendentif de saphir | un médaillon en or au cordon de cuir, un saphir au milieu |
+| 🫅 | couronne de rubis | une couronne en or, des perles rouges et trois rubis (👑 reste la couronne du classement) |
+| 💍 | bague de diamant | un anneau en or et un diamant bleu ciel |
+| 🏭 | fonderie | un four en briques à la bouche qui rougeoie, sa cheminée qui fume, un lingot d'or |
+| 🏪 | joaillerie | une boutique à l'auvent violet, sa vitrine, une gemme en enseigne (💠 est déjà le diamant) |
+
+Les pépites (`_pepite()`, `_minerai_brut()`) sont entourées d'un petit creux sombre : sans lui, on
+ne les voyait plus à 16 px. Le saphir et le rubis ont aussi leur forme dans `outils/art/formes.mjs`
+(`minerai('saphir')`, `minerai('rubis')`).

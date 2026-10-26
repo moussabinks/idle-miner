@@ -16,6 +16,8 @@ const PLACES: Record<Exclude<IdBatiment, 'puits'>, [number, number]> = {
   employes: [9, 21],
   foreuse: [26, 21],
   generateur: [25, 27],
+  fonderie: [9, 15],
+  joaillerie: [26, 8],
 }
 
 function poser(etat: EtatJeu, ids: (keyof typeof PLACES)[]): void {
