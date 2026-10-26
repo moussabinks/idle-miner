@@ -615,7 +615,9 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
     <div className="panneau-bat panneau-personnel">
       <OngletsPanneau
         onglets={[
-          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 ? '!' : prix !== null && etat.argent >= prix ? '+' : null },
+          // (26/10) « ! » aussi dès qu'une place de mineur est libre (la mine vient de descendre d'un
+          // niveau : un mineur de plus), même sans encore l'argent pour l'embaucher
+          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 || prix !== null ? '!' : null },
           { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne || chefADebloque ? '!' : null },
         ]}
         actif={onglet}
