@@ -3,7 +3,8 @@
 import { describe, expect, it } from 'vitest'
 import { doublerAbsence, photoPartie, resumerAbsence, vendreCoffreAuRetour } from './absence'
 import { aleatoireAvecGraine } from './aleatoire'
-import { construireBatiment, poserSol, raisonSolImpossible, retirerSol } from './batiments'
+import { construireBatiment, poserSol, raisonSolImpossible,
+  stockSol, retirerSol } from './batiments'
 import { embaucher } from './employes'
 import { activerBonusCombo, avancerMine, bonusActif, chanceDoublement, cliquerMine, nbDansCoffre, valeurDe } from './mineur'
 import { missions } from './missions'
@@ -28,15 +29,22 @@ describe('les bonus de combo', () => {
 })
 
 describe('les rails', () => {
-  it('un rail retiré est remboursé, et on dit quand il n’y a plus de fer', () => {
+  it('un rail retiré va dans le stock, et on dit quand il n’y a plus de fer', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.coffre.contenu = { fer: 3 }
     poserSol(etat, 'rail', 20, 27)
     expect(etat.coffre.contenu.fer ?? 0).toBe(0)
     expect(raisonSolImpossible(etat, 'rail', 20, 28)).toContain('Plus de fer')
     retirerSol(etat, 'rail', 20, 27)
-    expect(etat.coffre.contenu.fer).toBe(3) // (25/10) le fer revient dans le coffre de la mine
+    // (26/10) il va dans le stock (avant : ses 3 fer revenaient dans le coffre)
+    expect(etat.coffre.contenu.fer ?? 0).toBe(0)
+    expect(stockSol(etat, 'rail')).toBe(1)
     expect(etat.village.rails).toEqual([])
+    // On le repose gratuitement, sans fer.
+    expect(raisonSolImpossible(etat, 'rail', 20, 28)).toBeNull()
+    poserSol(etat, 'rail', 20, 28)
+    expect(etat.village.rails).toEqual(['20,28'])
+    expect(stockSol(etat, 'rail')).toBe(0)
   })
 })
 

@@ -400,7 +400,7 @@ Plus de niveau du joueur pour les bâtiments (25/10 : tous au niveau 1 ; seul le
 
 | Élément | Prix | Remarques |
 |---|---|---|
-| 🛤️ Rail (1 case) | **3 fer** (`COUT_RAIL`) | à partir du niveau 2 du joueur ; remboursé (dans le coffre) quand on le retire |
+| 🛤️ Rail (1 case) | **3 fer** (`COUT_RAIL`) | à partir du niveau 2 du joueur ; quand on le retire, il va dans le stock (26/10) et se repose gratuitement |
 | 🪨 Chemin de pavés (1 case) | 5 $ (`COUT_CHEMIN`) | seulement joli ; remboursé quand on le retire |
 
 ### Vitesses

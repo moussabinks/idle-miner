@@ -77,7 +77,8 @@ function chargerOuCreer(idMonde: string): { etat: EtatJeu; resumeAbsence: Resume
   if (etat === null) return { etat: creerPartie(aleatoireNavigateur), resumeAbsence: null }
 
   const absence = Math.min(ABSENCE_MAX, secondesDepuisSauvegarde(stockage, idMonde))
-  if (absence < 30) return { etat, resumeAbsence: null }
+  // (26/10) Pendant une réorganisation du village, le jeu est en pause : pas d'absence à rattraper.
+  if (absence < 30 || etat.reorganisation) return { etat, resumeAbsence: null }
   const avant = photoPartie(etat)
   avancerTemps(etat, absence, aleatoireNavigateur)
   // (25/10) Le coffre, souvent plein au retour, est vendu tout seul.

@@ -19,6 +19,8 @@ const PAS_MAX = 60
 // (23/10) Jeu fermé comme jeu ouvert, le manager ne paie les salaires que tant qu'il est éveillé
 // (sa fatigue, voir employes.ts).
 export function avancerTemps(etat: EtatJeu, secondes: number, aleatoire: Aleatoire): string[] {
+  // (26/10) Pendant qu'on réorganise le village, le jeu est en pause (voir reorganiser.ts).
+  if (etat.reorganisation) return []
   const messages: string[] = []
   let reste = secondes
   while (reste > 1e-9) {

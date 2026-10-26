@@ -215,7 +215,7 @@ describe('les trajets des wagonnets', () => {
     retirerSol(etat, 'rail', 20, 27)
     avancerWagonnets(etat, 1)
     expect(trajetDe(etat, 'mine-marche')?.etape).toBe('quai')
-    expect(etat.coffre.contenu).toEqual({ fer: 13 }) // (25/10) + les 3 fer du rail retiré, rendus dans le coffre
+    expect(etat.coffre.contenu).toEqual({ fer: 10 }) // (26/10) le rail retiré va dans le stock
   })
 
   it('arrêter un trajet : le wagonnet disparaît, son chargement revient', () => {

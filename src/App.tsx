@@ -35,6 +35,7 @@ import { FenetreBilan } from './composants/FenetreBilan'
 import { niveauJoueur, prochainDeblocage } from './jeu/niveaux'
 import { FenetreRail } from './composants/FenetreRail'
 import { FenetreTrajet } from './composants/FenetreTrajet'
+import { BarreReorganisation } from './composants/BarreReorganisation'
 import { Tutoriel } from './composants/Tutoriel'
 import { avancerTutoriel, avecBouton, etapeFaite, etapeSuivante, etapeTutoriel, passerTutoriel } from './jeu/tutoriel'
 import { tailleFantome, type CibleVillage, type Fantome } from './composants/fantome'
@@ -52,8 +53,10 @@ import {
   poserSol,
   raisonSolImpossible,
   retirerSol,
+  stockSol,
   type TypeSol,
 } from './jeu/batiments'
+import { annulerReorganisation, batimentsRanges, commencerReorganisation, enReorganisation, peutTerminerReorganisation, rangerBatiment, reposerBatiment, terminerReorganisation } from './jeu/reorganiser'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
 import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, TAILLE_GRILLE, type IdBatiment, type IdLiaison } from './jeu/donnees'
 import { etatQuotidien, jourDe } from './jeu/gemmes'
@@ -146,7 +149,9 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   const [modifier, setModifier] = useState(false)
   // Le trajet qu'on regarde en embauchant un pousseur (au Personnel) : il brille sur la carte.
   const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
-  const edition = fantome !== null || pinceau !== null || modifier
+  // (26/10) Pendant une réorganisation du village (façon Clash of Clans), on reste en édition.
+  const reorganisation = enReorganisation(etat)
+  const edition = fantome !== null || pinceau !== null || modifier || reorganisation
   const [trajetsOuverts, setTrajetsOuvertsBrut] = useState<IdLiaison[] | null>(null)
   const [railTouche, setRailTouche] = useState<Case | null>(null)
   const setTrajetsOuverts = useCallback((liaisons: IdLiaison[] | null) => {
@@ -229,7 +234,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   function validerFantome() {
     const f = fantome
     if (!f || !fantomeLibre(f)) return
-    if (f.type === 'batiment') {
+    if (f.type === 'batiment' && reorganisation && !estPose(etat, f.id)) {
+      // (26/10) Un bâtiment de la barre de la réorganisation : on le repose, gratuitement.
+      jouer((e) => reposerBatiment(e, f.id, f.x, f.y, f.miroir))
+    } else if (f.type === 'batiment') {
       const nouveau = !estPose(etat, f.id)
       const apres = jouer((e) => (estPose(e, f.id) ? deplacerBatiment(e, f.id, f.x, f.y, f.miroir) : construireBatiment(e, f.id, f.x, f.y, f.miroir)))
       if (nouveau && estPose(apres, f.id)) {
@@ -393,7 +401,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
       setFantomeFixe(true)
       return
     }
-    if (modifier) {
+    if (modifier || reorganisation) {
       setFantomeFixe(true)
       if (cible?.type === 'batiment') {
         const b = batimentPose(etat.village, cible.id)
@@ -571,8 +579,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   const libre = fantomeLibre(fantome)
   let barre
   if (fantome !== null) {
-    const nouveau = fantome.type === 'batiment' && !estPose(etat, fantome.id)
+    const nouveau = fantome.type === 'batiment' && !estPose(etat, fantome.id) && !reorganisation
     const peutRetirer = fantome.type === 'sol' && fantome.de !== null
+    // (26/10) Pendant la réorganisation, un bâtiment posé peut retourner dans la barre.
+    const peutRanger = reorganisation && fantome.type === 'batiment' && estPose(etat, fantome.id)
     barre = (
       <div className="barre-edition">
         {!fantomeFixe && <p className="consigne">👆 {t('Touche la carte pour placer, puis valide. Glisse pour déplacer la carte.')}</p>}
@@ -588,6 +598,17 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           {peutRetirer && (
             <button className="btn btn-rose" onClick={retirerFantome}>
               🗑️ {t('Enlever')}
+            </button>
+          )}
+          {peutRanger && fantome.type === 'batiment' && (
+            <button
+              className="btn btn-blanc"
+              onClick={() => {
+                jouer((e) => rangerBatiment(e, fantome.id))
+                setFantome(null)
+              }}
+            >
+              📦 {t('Ranger')}
             </button>
           )}
           <button className="btn btn-vert" data-tuto="construire-ici" disabled={!libre} onClick={validerFantome}>
@@ -611,7 +632,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             : !dernier
               ? t('Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.')
               : t('Choisis où va le prochain rail avec les flèches, puis pose-le.')}{' '}
-          ({t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
+          ({stockSol(etat, 'rail') > 0 ? t('{n} rails en stock', { n: stockSol(etat, 'rail') }) : t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
         </p>
         <div className="rails-commandes">
@@ -653,7 +674,9 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   } else if (pinceau !== null) {
     barre = (
       <div className="barre-edition">
-        <p className="consigne">🪨 {t('Touche le sol pour poser un chemin ({n} $ la case).', { n: COUT_CHEMIN.argent ?? 0 })}</p>
+        <p className="consigne">
+          🪨 {stockSol(etat, 'chemin') > 0 ? t('Touche le sol pour poser un pavé ({n} en stock).', { n: stockSol(etat, 'chemin') }) : t('Touche le sol pour poser un chemin ({n} $ la case).', { n: COUT_CHEMIN.argent ?? 0 })}
+        </p>
         <div className="rangee rangee-centre">
           <button className="btn btn-jaune" onClick={() => setPinceau(null)}>
             {t('Terminé')}
@@ -661,11 +684,43 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         </div>
       </div>
     )
+  } else if (reorganisation) {
+    // (26/10) La réorganisation : la barre des bâtiments rangés, des rails et des pavés.
+    const ranges = batimentsRanges(etat)
+    barre = (
+      <BarreReorganisation
+        ranges={ranges.map((r) => r.id)}
+        rails={stockSol(etat, 'rail')}
+        chemins={stockSol(etat, 'chemin')}
+        peutTerminer={peutTerminerReorganisation(etat)}
+        onPoser={(id) => {
+          const r = ranges.find((x) => x.id === id)
+          setFantomeFixe(false)
+          setFantome({ type: 'batiment', id, ...placeProche(BATIMENTS[id].taille), miroir: r?.miroir ?? false })
+        }}
+        onPinceau={(sol) => {
+          setTraceRail(null)
+          setPinceau(sol)
+        }}
+        onAnnuler={() => {
+          jouer(annulerReorganisation)
+          setModifier(false)
+        }}
+        onTerminer={() => {
+          jouer(terminerReorganisation)
+          setModifier(false)
+        }}
+      />
+    )
   } else if (modifier) {
     barre = (
       <div className="barre-edition">
         <p className="consigne">✏️ {t('Touche un bâtiment, un rail ou un chemin pour le déplacer.')}</p>
         <div className="rangee rangee-centre">
+          {/* (26/10, demandé par le propriétaire) Tout ranger, façon Clash of Clans */}
+          <button className="btn btn-rose" onClick={() => jouer(commencerReorganisation)}>
+            📦 {t('Tout ranger')}
+          </button>
           <button className="btn btn-jaune" onClick={() => setModifier(false)}>
             {t('Terminé')}
           </button>
@@ -720,7 +775,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           <VueVillage
             etat={etat}
             joueur={joueur}
-            notifications={notificationsBatiments(etat)}
+            notifications={reorganisation ? {} : notificationsBatiments(etat)}
             batimentActif={batimentActif}
             fantome={fantome}
             fantomeLibre={libre}
@@ -764,7 +819,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
                 </button>
               </nav>
               {/* Pendant le tutoriel, la liste des tâches attend (elle arrive au « bravo »). */}
-              {(etapeTuto === null || etapeTuto === 'bravo') && <Missions etat={etat} onAllerAuStand={ouvrirBatiment} onConstruire={ouvrirConstruction} />}
+              {!reorganisation && (etapeTuto === null || etapeTuto === 'bravo') && <Missions etat={etat} onAllerAuStand={ouvrirBatiment} onConstruire={ouvrirConstruction} />}
             </div>
           </div>
 

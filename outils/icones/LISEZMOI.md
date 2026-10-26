@@ -83,3 +83,16 @@ diamant rond serti, ses facettes faites par `_facettes()`), `_emeraude_petite()`
 `_diamant_taille()` (💚 et 💎 en plus petit) ; le saphir et le rubis sont `_saphir()` et `_rubis()`.
 Chaque bijou garde une silhouette différente pour se lire à 16 px : un U et une gemme verte, un
 médaillon rond et bleu, une couronne, un anneau.
+
+## La poubelle 🗑️ (26/10, redessinée)
+
+La poubelle des boutons roses « Enlever » et « Retirer » est une vraie poubelle de métal gris bleuté vue de
+trois quarts (avant : un seau gris tout plat, comme l'emoji). Le seau est un tronc de cône :
+`_seau_point(theta, t)` donne un point de sa surface (theta fait le tour par devant, t descend) et
+`_seau_morceau()` un morceau de cette surface. Avec eux : cinq tons à plat (`POUBELLE_TONS`, clair à
+gauche, sombre à droite, comme un cylindre), six cannelures verticales (un creux sombre et un fil de
+lumière, plus serrées sur les côtés), un rebord en haut et un cerclage en bas, le dedans tout noir
+(`POUBELLE_CREUX`). Le couvercle bombé, avec sa poignée en arceau, est soulevé à gauche (il tourne
+autour de son bord droit), séparé du seau par un trait d'encre ; dessous dépasse une boule de papier
+froissé crème, à facettes (`_facettes()`, comme les gemmes) avec ses plis. Le gris bleuté se détache
+bien sur le rose du bouton (`btn-rose`), le crème, et le bleu nuit.
