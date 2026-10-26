@@ -57,12 +57,12 @@ export function photoPartie(etat: EtatJeu): PhotoPartie {
 }
 
 // (25/10) Au retour : on vend le coffre de la mine au marché (sauf ce que le joueur garde 📌).
-// (26/10) Et les bijoux de la joaillerie. Les lingots de la fonderie restent : ils paient
-// certaines améliorations (les chariots), le joueur les vend lui-même.
+// (26/10) Et la réserve de la fonderie (ses lingots) et de la joaillerie (ses bijoux).
 // Renvoie ce que la vente a rapporté.
 export function vendreCoffreAuRetour(etat: EtatJeu): number {
   const avant = etat.argent
   vendreCoffre(etat)
+  vendreSortie(etat, 'fonderie')
   vendreSortie(etat, 'joaillerie')
   return Math.round(etat.argent - avant)
 }

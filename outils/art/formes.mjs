@@ -335,9 +335,10 @@ export function rocher(x, y, largeur, hauteur, graine, couleur = C.pierre, trait
 // ---------------------------------------------------------------------------
 // Les minerais (25/10) : les mêmes formes que les icônes du jeu (outils/icones/dessins.py), pour
 // qu'on les reconnaisse au premier coup d'œil (et plus des petits cubes) : la pierre est un
-// caillou gris, le charbon un morceau noir à facettes, le fer et l'or des lingots, la redstone un
-// cristal rouge à six côtés, l'émeraude une gemme verte à huit côtés, le diamant une gemme bleu
-// ciel taillée.
+// caillou gris, le charbon un morceau noir à facettes, (26/10) le fer et l'or bruts un caillou avec
+// de grosses pépites de métal, la redstone un cristal rouge à six côtés, l'émeraude une gemme verte
+// à huit côtés, le diamant une gemme bleu ciel taillée. Les lingots (`lingotFer`, `lingotOr`) sont
+// ce que la fonderie en fait.
 // ---------------------------------------------------------------------------
 
 // Chaque minerai est dessiné dans un carré de 100 × 100 : son contour (la forme entière), sa
@@ -453,8 +454,9 @@ export const MINERAIS = {
     ],
     eclat: [38, 36],
   },
-  fer: lingot('#e3e9ef', '#a3aebb', '#6f7a87'),
-  or: lingot('#ffe68a', '#f5b82e', '#c98512'),
+  // (26/10) le fer et l'or bruts : voir plus bas (mineraiBrut) ; leurs lingots :
+  lingotFer: lingot('#eaf1f9', '#a3b2c4', '#6a7b90'),
+  lingotOr: lingot('#ffe98f', '#f5b82e', '#c98512'),
   redstone: {
     contour: [
       [50, 8],
@@ -634,6 +636,119 @@ function rubisTaille() {
   ], [84, 16])
 }
 
+// (26/10, redessinés) Le fer et l'or bruts, comme leurs icônes 🔩 et 🟡 : un caillou gris à
+// facettes (le dessus clair, la face de droite à l'ombre) et de grosses pépites de métal qui
+// couvrent presque la moitié du caillou, pour qu'on reconnaisse le minerai à sa couleur même en
+// tout petit. Le fer : trois pépites anguleuses rose-beige en filon ; l'or : des pépites rondes et
+// dodues, jaune d'or, et une étincelle. Chaque pépite : sa couleur, une facette claire en haut à
+// gauche, une ombre en bas à droite, un reflet blanc, et un petit trait sombre tout autour.
+const ROCHE_BRUTE = [
+  [10, 66],
+  [15, 38],
+  [36, 17],
+  [64, 13],
+  [87, 30],
+  [92, 62],
+  [74, 87],
+  [44, 92],
+  [20, 86],
+]
+
+// Une pépite : son contour, et ses tons (reflet, clair, couleur, ombre, creux autour).
+function pepite(contour, [reflet, clairT, couleur, ombre, creux]) {
+  const cx = contour.reduce((s, [x]) => s + x, 0) / contour.length
+  const cy = contour.reduce((s, [, y]) => s + y, 0) / contour.length
+  const l = Math.max(...contour.map(([x]) => x)) - Math.min(...contour.map(([x]) => x))
+  // (des polygones dans la pépite : le contour en plus petit, rapetissé vers un point en haut à
+  // gauche, la lumière) la couleur, qui laisse voir l'ombre en bas à droite ; puis la facette claire
+  const rapetisse = (k, vers) => contour.map(([x, y]) => [r1(cx - l * vers + (x - cx + l * vers) * k), r1(cy - l * vers + (y - cy + l * vers) * k)])
+  const milieu = rapetisse(0.84, 0.16)
+  const facette = rapetisse(0.5, 0.16)
+  return { contour, milieu, facette, couleur, clair: clairT, ombre, reflet, creux, centre: [r1(cx), r1(cy)], largeur: l }
+}
+
+function mineraiBrut(pepites, eclat) {
+  return {
+    contour: ROCHE_BRUTE,
+    couleur: '#a2a09a',
+    facettes: [
+      [
+        '#cfcdc6',
+        [
+          [36, 17],
+          [64, 13],
+          [72, 36],
+          [56, 50],
+          [30, 48],
+          [22, 34],
+        ],
+      ],
+      [
+        '#7f7e79',
+        [
+          [72, 36],
+          [87, 30],
+          [92, 62],
+          [74, 87],
+          [44, 92],
+          [56, 50],
+        ],
+      ],
+    ],
+    pepites,
+    eclat,
+  }
+}
+
+const TONS_FER = ['#fff4ec', '#fbd5c0', '#e5ad94', '#bf7f68', '#55332e']
+const TONS_OR = ['#fffbe3', '#ffe98f', '#f9c63a', '#d58f12', '#94590a']
+MINERAIS.fer = mineraiBrut(
+  [
+    [
+      [15, 42],
+      [27, 25],
+      [46, 26],
+      [50, 44],
+      [36, 58],
+      [16, 58],
+    ],
+    [
+      [42, 56],
+      [56, 38],
+      [74, 40],
+      [82, 58],
+      [68, 72],
+      [46, 70],
+    ],
+    [
+      [22, 70],
+      [34, 64],
+      [42, 76],
+      [34, 88],
+      [20, 84],
+    ],
+    [
+      [60, 22],
+      [72, 20],
+      [80, 30],
+      [72, 38],
+      [60, 34],
+    ],
+  ].map((c) => pepite(c, TONS_FER)),
+  null,
+)
+// (les pépites d'or : des ovales cabossés)
+const cabosse = (cx, cy, rx, ry, bosses) => bosses.map((k, i) => [r1(cx + rx * k * Math.cos((2 * Math.PI * i) / bosses.length)), r1(cy + ry * k * Math.sin((2 * Math.PI * i) / bosses.length))])
+MINERAIS.or = mineraiBrut(
+  [
+    cabosse(37, 45, 21, 18, [1, 0.86, 1.06, 0.92, 1.08, 0.88, 1, 0.84, 1.05, 0.93]),
+    cabosse(68, 62, 20, 18, [0.95, 1.08, 0.86, 1.02, 1.06, 0.88, 1.04, 0.9, 1, 0.94]),
+    cabosse(64, 28, 12, 10, [1, 0.86, 1.07, 0.9, 1.04, 0.88, 1.05, 0.95]),
+    cabosse(29, 77, 11, 9, [1, 0.86, 1.06, 0.92, 1.04, 0.88, 1.02]),
+  ].map((c) => pepite(c, TONS_OR)),
+  [84, 16],
+)
+
 MINERAIS.saphir = saphirTaille()
 MINERAIS.rubis = rubisTaille()
 
@@ -651,6 +766,14 @@ export function minerai(sorte, x, y, taille = 24, angle = 0, trait = 3) {
   let dedans = `<polygon points="${p(m.contour)}" fill="${m.couleur}"/>`
   for (const [couleur, facette] of m.facettes) dedans += `<polygon points="${p(facette)}" fill="${couleur}"${couleur === '#ffffff' ? ' opacity="0.75"' : ''}/>`
   if (m.rond) dedans += `<circle cx="${m.rond[0]}" cy="${m.rond[1]}" r="${m.rond[2]}" fill="${m.rond[3]}"/>`
+  // (26/10) les pépites du fer et de l'or bruts : l'ombre (avec le creux sombre autour), la
+  // couleur, la facette claire et le reflet
+  for (const pe of m.pepites ?? []) {
+    dedans += `<polygon points="${p(pe.contour)}" fill="${pe.ombre}" stroke="${pe.creux}" stroke-width="${r1(Math.max(4, 1.6 / k))}" stroke-linejoin="round"/>`
+    dedans += `<polygon points="${p(pe.milieu)}" fill="${pe.couleur}"/>`
+    dedans += `<polygon points="${p(pe.facette)}" fill="${pe.clair}"/>`
+    dedans += `<ellipse cx="${r1(pe.centre[0] - pe.largeur * 0.14)}" cy="${r1(pe.centre[1] - pe.largeur * 0.14)}" rx="${r1(pe.largeur * 0.17)}" ry="${r1(pe.largeur * 0.08)}" transform="rotate(-35 ${r1(pe.centre[0] - pe.largeur * 0.14)} ${r1(pe.centre[1] - pe.largeur * 0.14)})" fill="${pe.reflet}"/>`
+  }
   if (m.eclat && taille >= 18) dedans += eclatMinerai(m.eclat[0], m.eclat[1], 9)
   dedans += `<polygon points="${p(m.contour)}" fill="none" stroke="${C.encre}" stroke-width="${r1(trait / k)}"/>`
   return `<g transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(angle)}) scale(${Math.round(k * 1000) / 1000}) translate(-50 -55)">${dedans}</g>`

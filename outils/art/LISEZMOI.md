@@ -76,6 +76,13 @@ saphir (taillé en ovale) et le rubis (taillé en cœur) sont calculés par `gem
 table au milieu et une facette par côté, plus claire si elle regarde la lumière. Jamais de petits cubes :
 on doit reconnaître chaque minerai.
 
+(26/10) Le **fer** et l'**or** sont des minerais bruts, comme leurs icônes 🔩 et 🟡 (avant, des
+lingots) : un caillou gris à facettes (`mineraiBrut()`) et de grosses pépites de métal (`pepite()` :
+un creux sombre autour, l'ombre, la couleur, une facette claire et un reflet), anguleuses et
+rose-beige pour le fer, rondes et dorées pour l'or. Les lingots restent là où ils ont un sens :
+les sortes `lingotFer` et `lingotOr` de `minerai()` (un lingot d'or dans le coffre au trésor de la
+mine), et la pile de lingots de la fonderie (`lingot3d()` de `batiments.mjs`).
+
 ## Les arbres
 
 Chaque arbre a, à ses pieds, une petite **ombre plate d'un vert à peine plus sombre que l'herbe**

@@ -991,7 +991,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'La réserve de lingots est pleine : vends-la !': 'The ingot stock is full: sell it!',
   'Légende': 'Legend',
   'les bijoux valent plus que les gemmes': 'jewels are worth more than gems',
-  'Les lingots servent aussi à payer certaines améliorations (les chariots).': 'Ingots also pay for some upgrades (the carts).',
   'les lingots valent plus que le minerai': 'ingots are worth more than ore',
   'Lingot d’or': 'Gold ingot',
   'Lingot de fer': 'Iron ingot',

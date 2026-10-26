@@ -34,7 +34,6 @@ Le panneau (`PanneauFonderie` dans `PanneauxAteliers.tsx`) a **trois onglets**. 
 
 - La **même interface que le coffre de la mine** (`StockMinerais.tsx`) : « 🟨 Lingots » et sa jauge (rouge « Plein : la fonderie s'arrête ! »), le gros bouton **💰 Tout vendre · +X $**, et une ligne par lingot (sa quantité, son prix, **Vendre**). Pastille « ! » sur l'onglet quand elle est pleine.
 - La vente se fait **au prix du marché** (`vendreSortie`), × 2 pendant le bonus « 💰 Ventes × 2 ». Message : « 💰 Lingots vendus : +X $ ». L'argent compte dans l'argent gagné (succès, classement).
-- « Les lingots servent aussi à payer certaines améliorations (les chariots). » : un achat qui demande des lingots les prend d'abord dans le coffre de la mine, puis **dans cette réserve** (`disponible`, `payerMateriaux`).
 
 ### 3. ⬆️ Améliorer (5 niveaux)
 
@@ -61,11 +60,7 @@ Tous les niveaux : 960 000 $ + 300 fer + 100 charbon + 400 or + 80 saphir + 60 r
 - **L'entrée et la réserve** ont le même nombre de places (`stock`). Entrée pleine : on ne peut plus rien apporter, et les wagonnets repartent avec ce qui n'a pas trouvé de place. Réserve pleine : elle s'arrête (sans brûler de charbon).
 - **Ce qu'on garde 📌** : « Apporter » et le wagonnet de la mine ne prennent pas ce qu'on garde dans le coffre.
 - **Il n'y a qu'une seule fonderie**.
-- **Hors ligne** : quand on rouvre un monde, le jeu rattrape le temps passé (**8 heures au plus**) : elle fond tant qu'elle a du charbon, du minerai et de la place. Au retour, **sa réserve n'est pas vendue** (contrairement au coffre et aux bijoux, `vendreCoffreAuRetour`) : les lingots paient certaines améliorations (les chariots), le joueur les vend lui-même ou un wagonnet les emmène au marché.
-
-## Les trajets de wagonnets
-
-Trois trajets touchent la fonderie (voir [mine.md](mine.md#les-wagonnets) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets)). Pour qu'un trajet roule tout seul, il faut **un pousseur** embauché au Personnel pour lui (voir [personnel.md](personnel.md#3-les-pousseurs)) :
+- **Hors ligne** : quand on rouvre un monde, le jeu rattrape le temps passé (**8 heures au plus**) : elle fond tant qu'elle a du charbon, du minerai et de la place. Au retour, **sa réserve est vendue toute seule** avec le coffre de la mine (`vendreCoffreAuRetour`).md](mine.md#les-wagonnets) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets)). Pour qu'un trajet roule tout seul, il faut **un pousseur** embauché au Personnel pour lui (voir [personnel.md](personnel.md#3-les-pousseurs)) :
 
 | Trajet | Ce que fait le wagonnet |
 |---|---|
@@ -80,7 +75,7 @@ Trois trajets touchent la fonderie (voir [mine.md](mine.md#les-wagonnets) et [..
 ## Lien avec le reste du jeu
 
 - **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Fonderie » dès le niveau 5 de la mine ; une fois posée, « Relie la fonderie à la mine (rails) : le fer, l'or et le charbon y iront tout seuls », « Touche la bulle 🛤️ sur les rails mine → fonderie », puis « Relie la fonderie au marché (rails) : ses lingots s'y vendront tout seuls » et « Touche la bulle 🛤️ sur les rails fonderie → marché ». Dans les achats possibles : « Fonderie niveau *N* ».
-- **Les lingots de fer paient** les deux derniers niveaux du chariot des pousseurs (50 puis 120 lingots) et du chariot de la foreuse (60 puis 150 lingots).
+- (26/10) Les chariots se paient en **minerai de fer**, pas en lingots : les lingots servent seulement à être vendus.
 - **Revenus** (`revenu.ts`) : le « $/s » du bandeau compte **ce qu'elle ajoute** (`plusValueParSeconde` : les lingots par seconde × la différence moyenne entre le lingot et son minerai, selon ce qui attend à l'entrée) ; le bilan a une ligne « 🏭 La fonderie » (« les lingots valent plus que le minerai », ou « à l'arrêt »).
 - **Succès** : « 🟨 Fondeur » : fondre ton premier lingot (`fonderie.fabriques`).
 - **Le marché** montre les prix des lingots (« Prix du marché ») une fois la fonderie construite.
