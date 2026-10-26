@@ -5,11 +5,14 @@
 // Le top 10, une ligne chacun (les 3 premiers avec leur médaille) ; en bas, la place du joueur
 // et celui qu'il doit dépasser (« encore 3 000 $ pour dépasser Jade »).
 // Si le serveur ne répond pas au bout de quelques secondes : « Classement hors ligne ».
+// (26/10) Le bouton « Visiter » de chaque ligne emmène voir le village du joueur (Visite.tsx).
 
 import { useEffect, useState } from 'react'
 import { niveauMineAffiche, type LigneClassement } from '../jeu/classement'
 import { t } from '../jeu/langue'
-import { lireClassement, placeDuScore } from '../enLigne'
+import { lireClassement, lireVillage, placeDuScore } from '../enLigne'
+import type { EtatJeu } from '../jeu/mineur'
+import { preparerVisite } from '../jeu/visite'
 import type { Joueur } from '../enLigne'
 import { nombreAbrege } from '../nombres'
 
@@ -26,9 +29,10 @@ type Props = {
   dernierEnvoi: number | null // l'heure du dernier envoi du score ; quand elle change, on relit le classement
   monArgent: number // le plus d'argent gagné dans les mondes de ce navigateur
   onSeConnecter: () => void // « Entrer » : ouvre la fenêtre du compte
+  onVisiter?: (pseudo: string, partie: EtatJeu) => void // (26/10) « Visiter » : son village est chargé
 }
 
-export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter }: Props) {
+export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter, onVisiter }: Props) {
   const [lignes, setLignes] = useState<LigneClassement[] | null>(null) // null = en cours de chargement
   const [horsLigne, setHorsLigne] = useState(false)
   const [place, setPlace] = useState<{ devant: number; suivant: LigneClassement | null } | null>(null)
@@ -73,6 +77,23 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
     }
   }, [actualisation, dernierEnvoi, monArgent, joueur])
 
+  // (26/10) Le village qu'on est en train de charger (son pseudo), et le message s'il manque.
+  const [visiteEnCours, setVisiteEnCours] = useState<string | null>(null)
+  const [erreurVisite, setErreurVisite] = useState<string | null>(null)
+  function visiter(pseudo: string) {
+    if (!onVisiter || visiteEnCours) return
+    setVisiteEnCours(pseudo)
+    setErreurVisite(null)
+    lireVillage(pseudo)
+      .then((donnees) => {
+        const partie = donnees === null ? null : preparerVisite(donnees)
+        if (partie) onVisiter(pseudo, partie)
+        else setErreurVisite(t('{pseudo} n’a pas encore ouvert son village aux visites.', { pseudo }))
+      })
+      .catch(() => setErreurVisite(t('Impossible de joindre le serveur. Vérifie ta connexion.')))
+      .finally(() => setVisiteEnCours(null))
+  }
+
   const estMoi = (ligne: LigneClassement) => joueur !== null && ligne.pseudo.toLowerCase() === joueur.pseudo.toLowerCase()
 
   let contenu
@@ -94,6 +115,11 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
                 </span>
               )}
               <span className="classement-valeur">{nombreAbrege(ligne.argent)} $</span>
+              {onVisiter && !estMoi(ligne) && (
+                <button className="btn btn-bleu btn-petit classement-visiter" disabled={visiteEnCours !== null} onClick={() => visiter(ligne.pseudo)} aria-label={t('Visiter le village de {pseudo}', { pseudo: ligne.pseudo })}>
+                  {visiteEnCours === ligne.pseudo ? '⏳' : '🏡'} <span className="classement-visiter-texte">{t('Visiter')}</span>
+                </button>
+              )}
             </li>
           )
         })}
@@ -115,6 +141,7 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
         </button>
       </div>
       <div className="classement-defile">{contenu}</div>
+      {erreurVisite && <p className="classement-message discret">{erreurVisite}</p>}
 
       <div className="classement-toi">
         <span className="classement-toi-rang">{rang === null ? '?' : `#${rang}`}</span>

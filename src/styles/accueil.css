@@ -451,6 +451,18 @@
   white-space: nowrap;
 }
 
+/* (26/10) « Visiter » : le village du joueur. Sur un petit écran, l'icône seule. */
+.classement-visiter {
+  flex-shrink: 0;
+  min-height: 40px;
+}
+
+@media (max-width: 480px) {
+  .classement-visiter-texte {
+    display: none;
+  }
+}
+
 .classement-message {
   padding: 14px;
   border: var(--trait-fin) dashed var(--encre-douce);

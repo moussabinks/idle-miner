@@ -36,10 +36,11 @@ function remplir(texte: string, valeurs?: Record<string, string | number>): stri
 }
 
 // Le texte dans la langue du joueur. (En anglais, un prénom d'employé passé dans les {trous}
-// devient son prénom anglais : voir nomEmploye.)
+// devient son prénom anglais : voir nomEmploye. Sauf le {pseudo} d'un joueur (26/10) : un
+// joueur qui s'appelle « Noah » ne devient pas « Emma ».)
 export function t(texte: string, valeurs?: Record<string, string | number>): string {
   if (langueActuelle === 'fr') return remplir(texte, valeurs)
-  const traduites = valeurs && Object.fromEntries(Object.entries(valeurs).map(([cle, v]) => [cle, typeof v === 'string' ? nomEmploye(v) : v]))
+  const traduites = valeurs && Object.fromEntries(Object.entries(valeurs).map(([cle, v]) => [cle, typeof v === 'string' && cle !== 'pseudo' ? nomEmploye(v) : v]))
   return remplir(TRADUCTIONS_EN[texte] ?? texte, traduites)
 }
 

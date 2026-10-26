@@ -13,11 +13,13 @@ import {
   lireDerniereSynchro,
 } from './jeu/compte'
 import { meilleurScore } from './jeu/classement'
+import { villageAPartager } from './jeu/visite'
 import { exporterTout, importerTout, mondesDeLaCopie, type SauvegardeComplete } from './jeu/sauvegarde'
 import {
   creerCompte,
   envoyerMondes,
   envoyerScore,
+  envoyerVillage,
   joueurConnecte,
   seConnecter,
   seDeconnecter,
@@ -79,7 +81,12 @@ export function useCompte() {
       dateDernierScore.current = Date.now()
     } catch {
       // On réessaiera au prochain envoi.
+      return
     }
+    // (26/10) Le village du meilleur monde part avec le score, pour qu'on puisse le visiter depuis
+    // le classement. S'il est refusé (table pas encore créée...), tant pis.
+    const village = villageAPartager(parties)
+    if (village) await envoyerVillage(j, village).catch(() => {})
   }, [])
 
   const envoyer = useCallback(async (j: Joueur) => {

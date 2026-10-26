@@ -90,6 +90,8 @@ type Props = {
   // (23/10) Le rail proposé (doré) qu'on posera avec le bouton « Poser », et s'il peut l'être.
   railPropose?: { c: Case; ok: boolean; depuis: Case | null; sens: { x: number; y: number }; suivi: number } | null
   enEdition?: boolean // (26/10) Modifier, poser des rails... : la lisière de devant devient translucide
+  // (26/10) La visite du village d'un autre joueur : ni bulle, ni jauge, ni vente qui jaillit.
+  visite?: boolean
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -123,6 +125,7 @@ export function VueVillage({
   onOuvrirTrajet,
   railPropose = null,
   enEdition = false,
+  visite = false,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -496,7 +499,7 @@ export function VueVillage({
       // La mine : son image, et par-dessus ce qui évolue (cabine d'ascenseur, niveau).
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
-        <MineAnimee key="puits-evolution" etat={etat} x={b.x} y={b.y} miroir={b.miroir} />,
+        <MineAnimee key="puits-evolution" etat={etat} x={b.x} y={b.y} miroir={b.miroir} visite={visite} />,
       )
       continue
     }
@@ -629,7 +632,7 @@ export function VueVillage({
 
   // Les wagonnets sur les rails (un par trajet), et celui qui pousse chacun (toi ou un mineur),
   // juste derrière : chacun a sa propre animation, à chaque image (WagonnetVillage).
-  for (const trajet of etat.trajets) objets.push(<WagonnetVillage key={`w${trajet.liaison}`} etat={etat} trajet={trajet} />)
+  for (const trajet of etat.trajets) objets.push(<WagonnetVillage key={`w${trajet.liaison}`} etat={etat} trajet={trajet} sansVente={visite} />)
 
   // Les bulles de notification au-dessus des bâtiments.
   const bulles: ReactNode[] = []
@@ -896,7 +899,7 @@ export function VueVillage({
         <ObjetsPlage />
         <ForetDevant vue={vueForet} translucide={enEdition} />
         <AmbianceVillage />
-        <div className="bulles-village">{bulles}</div>
+        {!visite && <div className="bulles-village">{bulles}</div>}
       </div>
     </div>
   )
@@ -905,7 +908,7 @@ export function VueVillage({
 // Ce qui bouge sur la mine (27/10) : la caisse de l'ascenseur, ses passagers, et une mini-jauge
 // de ce qu'elle fait. (23/10) La caisse fait des allers-retours sans cesse (avancerNavette) : on
 // la dessine là où elle est, en glissant doucement d'une image à l'autre.
-function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: number; miroir: boolean }) {
+function MineAnimee({ etat, x, y, miroir, visite }: { etat: EtatJeu; x: number; y: number; miroir: boolean; visite: boolean }) {
   const caisse = lireNavette(etat)
   const cible = hauteurNavette(etat)
   const duree = secondesTrajetMineur(etat)
@@ -951,7 +954,7 @@ function MineAnimee({ etat, x, y, miroir }: { etat: EtatJeu; x: number; y: numbe
       <BoiteSvg x={x} y={y} taille={10} hauteur={130} classe="dessus-batiment" style={{ zIndex: profondeur(x + 5, y + 5) + 1 }}>
         <DessinEvolutionMine x={x} y={y} miroir={miroir} niveau={etat.niveauMine} ascenseur={etat.ascenseur.niveau > 0} hauteurCabine={hauteur} passagers={passagers} />
       </BoiteSvg>
-      {auTravail && enHaut && charge > 0 && (
+      {!visite && auTravail && enHaut && charge > 0 && (
         <MiniJauge
           x={dessus.x}
           y={dessus.y}

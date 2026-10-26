@@ -95,6 +95,7 @@ Visible par tout le monde (hors CrazyGames). Classé à l'**argent gagné en tou
 
 - En haut : « 🏆 Classement », l'étiquette verte « 💵 Argent gagné », et 🔄 (blanc, rond) pour le relire. Il se relit aussi tout seul toutes les 5 minutes.
 - **Le top 10** : une ligne par joueur, 🥇 🥈 🥉 pour les trois premiers, puis #4… ; le pseudo, 🕳️ le niveau de sa mine (affiché, mais il ne compte pas) et l'argent. Ta ligne est mise en avant.
+- **« 🏡 Visiter »** (26/10, bleu, l'icône seule sous 480 px) sur chaque ligne sauf la sienne : le village du joueur s'ouvre en plein écran (`Visite.tsx`), avec en haut « 🏡 Le village de Jade · ⭐ Niveau 15 · 🕳️ Mine niveau 4 » et en bas « 🚶 Rentrer » (ou Échap). On s'y promène sans rien pouvoir ouvrir, sans bulle ni message ; ses taupes travaillent toujours. Voir [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md#35-visiter-le-village-dun-joueur-2610).
 - **En bas, ta place** : « #7 » et « Toi · 12 k $ », puis « 🔥 Encore 3 k $ pour dépasser Jade », ou « 👑 Tu es le numéro 1 ! ». Sans compte : « Avec 12 k $, tu serais 7e ! » (ou « Joue pour entrer dans le classement ! ») et le bouton vert **Entrer**.
 - Messages : « Chargement du classement… », « ☁️ Classement hors ligne » (pas de réponse en 6 s), « Personne n'est encore classé : à toi d'être le premier ! ».
 

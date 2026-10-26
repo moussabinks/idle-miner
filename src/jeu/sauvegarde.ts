@@ -207,9 +207,18 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
   try {
     const texte = stockage.getItem(cleMonde(id))
     if (texte === null) return null
+    return lirePartie(JSON.parse(texte))
+  } catch {
+    return null
+  }
+}
+
+// (26/10) Une partie lue (le texte de la sauvegarde, déjà décodé), convertie à la version
+// actuelle ; null si elle n'est pas valide. Sert aussi aux villages qu'on visite (visite.ts).
+export function lirePartie(donnees: unknown): EtatJeu | null {
+  try {
     // Avec la mine automatique (version 21, le 22/10), toutes les parties d'avant repartent de
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
-    const donnees: unknown = JSON.parse(texte)
     const convertie = convertirVersion29(convertirVersion28(convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))))
     if (!estUnEtatValide(convertie)) return null
     // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie

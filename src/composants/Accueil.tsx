@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import { meilleurArgent } from '../jeu/classement'
 import { LANGUES, NOMS_LANGUES, langue, t, type Langue } from '../jeu/langue'
-import { creerPartie } from '../jeu/mineur'
+import { creerPartie, type EtatJeu } from '../jeu/mineur'
 import {
   NB_MONDES_MAX,
   charger,
@@ -203,9 +203,10 @@ type Props = {
   compte: Compte
   onJouer: (monde: InfoMonde) => void
   onLangue: (langue: Langue) => void // pour redessiner tout le jeu dans la nouvelle langue
+  onVisiter: (pseudo: string, partie: EtatJeu) => void // (26/10) visiter le village d'un joueur du classement
 }
 
-export function Accueil({ compte, onJouer, onLangue }: Props) {
+export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
   // Change à chaque modification : le composant se redessine et relit la liste des mondes.
   const [, setVersion] = useState(0)
   const mondes = listerMondes(stockage)
@@ -352,7 +353,7 @@ export function Accueil({ compte, onJouer, onLangue }: Props) {
         {/* À droite : le classement. */}
         {AVEC_COMPTES && (
           <section className="accueil-panneau accueil-classement">
-            <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} monArgent={monArgent} onSeConnecter={() => setCompteOuvert(true)} />
+            <CarteClassement joueur={compte.joueur} dernierEnvoi={compte.envoyeeLe} monArgent={monArgent} onSeConnecter={() => setCompteOuvert(true)} onVisiter={onVisiter} />
           </section>
         )}
       </div>
