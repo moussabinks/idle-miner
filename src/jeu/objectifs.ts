@@ -7,7 +7,8 @@ import { BATIMENTS, LISTE_BATIMENTS, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_EMPLOYE, 
 import { batimentDebloque } from './batiments'
 import { coutAmeliorationEmploye, coutChariotPousseur, verrouMinePioche, managerDebloque, prixEmbauche, prochainNiveauRecruteur, recruteurDebloque } from './employes'
 import { prochainNiveauChariot, prochainNiveauForage } from './foreuse'
-import { generateurPose, prochainNiveauGenerateur } from './generateur'
+// (26/10) La tâche du générateur montre la vitesse qu'il donne (avant : son rayon)
+import { generateurPose, prochainNiveauGenerateur, texteBonusGenerateur } from './generateur'
 import {
   coutPioche,
   peutPayer,
@@ -60,7 +61,7 @@ export function achatsPossibles(etat: EtatJeu): AchatPossible[] {
 
   if (generateurPose(etat)) {
     const prochain = prochainNiveauGenerateur(etat)
-    if (prochain && debloque(etat, 'generateur', etat.generateur.niveau + 1)) achats.push({ stand: 'generateur', nom: t('Générateur : rayon {rayon} cases', { rayon: prochain.rayon }), cout: prochain.cout })
+    if (prochain && debloque(etat, 'generateur', etat.generateur.niveau + 1)) achats.push({ stand: 'generateur', nom: t('Générateur : vitesse {bonus}', { bonus: texteBonusGenerateur(prochain.bonus) }), cout: prochain.cout })
   }
 
   if (pose('employes')) {

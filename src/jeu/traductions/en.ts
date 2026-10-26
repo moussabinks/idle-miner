@@ -763,7 +763,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Construire l’ascenseur': 'Build the elevator',
   'Forage {vitesse} blocs/s': 'Drilling {vitesse} blocks/s',
   'Chariot de la foreuse : {places} places': 'Drill cart: {places} slots',
-  'Générateur : rayon {rayon} cases': 'Generator: {rayon}-tile range',
+  'Générateur : vitesse {bonus}': 'Generator: speed {bonus}',
   'Pioche en {pioche} pour {nom}': '{pioche} pickaxe for {nom}',
   'Vitesse de {nom} : pousseur {vitesse}': '{nom}’s speed: {vitesse} pusher',
   'Chariot de {nom} : {places} places': '{nom}’s cart: {places} slots',

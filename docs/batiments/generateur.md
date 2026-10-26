@@ -90,7 +90,7 @@ Depuis le 23/10, tout va **+ 30 % à + 75 %** plus vite (`multiplicateurGenerate
 
 ## Lien avec le reste du jeu
 
-- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine, puis « Générateur : rayon *N* cases » (amélioration) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
+- **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Générateur » dès le niveau 2 de la mine, puis « Générateur : vitesse + *N* % » (amélioration, 26/10 : avant, son rayon) pour le niveau suivant. Une fois posé, les missions de l'automatisation sont « Mets de la redstone dans le générateur » et « Mets tous les rails dans le rayon du générateur ».
 - **Succès** (`succes.ts`) : « ⚡ Électricien : électrifier les rails avec le générateur » (au moins un trajet électrique).
 - **Le revenu « $/s »** du bandeau compte la foreuse boostée ; les wagonnets, eux, ne font que porter ce que la mine sort déjà.
 - **Le bot** (`bot.ts`) : il pose le générateur dès qu'il peut, le remplit de 10 redstone quand il lui reste moins de 2 minutes, et l'améliore quand il a deux fois le prix. Il le pose en (25, 27), contre la ligne de rails. Repère des tests : les rails sont électriques en **moins de 1 h 30** de jeu (mesuré le 25/10 : 15 minutes en médiane ; 55 minutes le 30/10).
