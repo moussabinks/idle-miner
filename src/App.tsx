@@ -780,6 +780,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             fantome={fantome}
             fantomeLibre={libre}
             fantomeFixe={fantomeFixe}
+            enEdition={edition}
             pinceau={pinceau !== null}
             typePinceau={pinceau}
             peutPeindre={(c) => pinceau !== null && peutPoserSol(etat, pinceau, c.x, c.y)}
@@ -819,7 +820,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
                 </button>
               </nav>
               {/* Pendant le tutoriel, la liste des tâches attend (elle arrive au « bravo »). */}
-              {!reorganisation && (etapeTuto === null || etapeTuto === 'bravo') && <Missions etat={etat} onAllerAuStand={ouvrirBatiment} onConstruire={ouvrirConstruction} />}
+              {!edition && (etapeTuto === null || etapeTuto === 'bravo') && <Missions etat={etat} onAllerAuStand={ouvrirBatiment} onConstruire={ouvrirConstruction} />}
             </div>
           </div>
 

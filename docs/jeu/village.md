@@ -90,6 +90,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
 
 **Les rails**
 
+- (26/10, demandé par le propriétaire) **Un rail proposé juste à côté d'un rail déjà posé** : sa flèche jaune continue la ligne (le bout de la ligne d'abord, `sensDeDepart` dans `traceRail.ts`). Et **en édition** (✏️ Modifier, poser des rails, réorganiser), la **lisière d'arbres de devant** (le premier rang, en bas de la clairière) devient **translucide**, pour voir les rails cachés derrière ; les autres arbres et les collines ne changent pas (`ForetVillage.tsx`, couche `foret-lisiere`). La liste des tâches se cache aussi pendant l'édition.
 - (26/10, demandé par le propriétaire) **À chaque rail posé, la caméra glisse en douceur** pour centrer le nouveau rail (`VueVillage.tsx`, `libre.douce`).
 - Les rails sont dans le menu Bâtiments, **à partir du niveau 2 du joueur** (25/10 ; avant, le niveau 3 : `NIVEAU_JOUEUR_POUR.rails`, `railsDebloques`), **3 fer la case** (`COUT_RAIL`). Avant, leur carte a un cadenas « 🔒 ⭐ 2 ». Chaque case posée rapporte 3 XP et chaque trajet créé 30 XP, une seule fois : retirer un rail puis le reposer ne redonne rien.
 - Un rail **occupe une seule case**, mais sa voie est **dessinée sur deux cases de large** (une demi-case de plus à gauche et à droite, talus compris) : voir « Les rails » dans [visuel-et-sons.md](visuel-et-sons.md).

@@ -173,7 +173,11 @@ function decouper(arbres: Arbre[]): Tuile[] {
 }
 
 const TUILES_DERRIERE = decouper(FORET.filter((a) => !a.devant))
-const TUILES_DEVANT = decouper(FORET.filter((a) => a.devant))
+// (26/10) La lisière de devant (le premier rang d'arbres, en bas de la clairière) a sa propre
+// couche : en édition, elle devient translucide, pour voir les rails cachés derrière. Les collines
+// et les montagnes de devant restent pleines (plus bas sur l'écran, elles passent par-dessus).
+const TUILES_LISIERE_DEVANT = decouper(FORET.filter((a) => a.devant && !a.paysage))
+const TUILES_DEVANT = decouper(FORET.filter((a) => a.devant && a.paysage))
 
 // Les images du décor, chargées une seule fois.
 const images: HTMLImageElement[] = []
@@ -236,7 +240,7 @@ function tuileEnImage(tuile: Tuile, densite: number, dessins: HTMLImageElement[]
   })
 }
 
-function CoucheForet({ tuiles, vue, classe, children }: { tuiles: Tuile[]; vue: VueForet; classe: string; children?: ReactNode }) {
+function CoucheForet({ tuiles, vue, classe, extra = '', children }: { tuiles: Tuile[]; vue: VueForet; classe: string; extra?: string; children?: ReactNode }) {
   // Pour chaque tuile : l'adresse de son image, et la densité à laquelle elle est dessinée.
   const [sources, setSources] = useState<(string | undefined)[]>(() => tuiles.map((_, i) => IMAGES_DE_BASE.get(`${classe}-${i}`)))
   const densites = useRef<number[]>(tuiles.map((_, i) => (IMAGES_DE_BASE.has(`${classe}-${i}`) ? 1 : 0)))
@@ -302,7 +306,7 @@ function CoucheForet({ tuiles, vue, classe, children }: { tuiles: Tuile[]; vue: 
   }, [pretes, tuiles, vue, classe])
 
   return (
-    <div className={`foret-village ${classe}`} aria-hidden="true">
+    <div className={`foret-village ${classe} ${extra}`} aria-hidden="true">
       {tuiles.map((tuile, i) =>
         sources[i] ? (
           <img key={i} className="tuile-foret" src={sources[i]} alt="" draggable={false} style={{ left: tuile.gauche, top: tuile.haut, width: tuile.largeur, height: tuile.hauteur }} />
@@ -353,6 +357,12 @@ export const ForetDerriere = memo(function ForetDerriere({ vue }: { vue: VueFore
 })
 
 // Le décor devant (en bas de la carte) : par-dessus les bâtiments et les personnages.
-export const ForetDevant = memo(function ForetDevant({ vue }: { vue: VueForet }) {
-  return <CoucheForet tuiles={TUILES_DEVANT} vue={vue} classe="foret-devant" />
+// « translucide » (26/10) : en édition, la lisière de devant laisse voir ce qui est derrière.
+export const ForetDevant = memo(function ForetDevant({ vue, translucide = false }: { vue: VueForet; translucide?: boolean }) {
+  return (
+    <>
+      <CoucheForet tuiles={TUILES_LISIERE_DEVANT} vue={vue} classe="foret-lisiere" extra={translucide ? 'lisiere-translucide' : ''} />
+      <CoucheForet tuiles={TUILES_DEVANT} vue={vue} classe="foret-devant" />
+    </>
+  )
 })

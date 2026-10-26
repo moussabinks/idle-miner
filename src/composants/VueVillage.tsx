@@ -89,6 +89,7 @@ type Props = {
   onOuvrirTrajet?: (liaisons: IdLiaison[]) => void // on touche la bulle « 🛤️ » d'un trajet à créer
   // (23/10) Le rail proposé (doré) qu'on posera avec le bouton « Poser », et s'il peut l'être.
   railPropose?: { c: Case; ok: boolean; depuis: Case | null; sens: { x: number; y: number }; suivi: number } | null
+  enEdition?: boolean // (26/10) Modifier, poser des rails... : la lisière de devant devient translucide
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -121,6 +122,7 @@ export function VueVillage({
   zonesRails = false,
   onOuvrirTrajet,
   railPropose = null,
+  enEdition = false,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -892,7 +894,7 @@ export function VueVillage({
         <EauPlage />
         <div className="objets-village">{objets}</div>
         <ObjetsPlage />
-        <ForetDevant vue={vueForet} />
+        <ForetDevant vue={vueForet} translucide={enEdition} />
         <AmbianceVillage />
         <div className="bulles-village">{bulles}</div>
       </div>
