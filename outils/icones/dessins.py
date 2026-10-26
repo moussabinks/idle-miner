@@ -162,7 +162,9 @@ def _gemme(couleurs, forme='hexa'):
         g = poly((30, 14), (70, 14), (90, 46), (50, 90), (10, 46))
         haut = poly((30, 14), (70, 14), (62, 32), (38, 32))
         gauche = poly((10, 46), (38, 32), (50, 90))
-        droite = poly((90, 46), (62, 32), (50, 90))
+        # (26/10) Les facettes tournent dans le même sens que la gemme : sinon, à leur union, le
+        # bord en bas à droite disparaissait (plus de contour d'encre de ce côté).
+        droite = poly((62, 32), (90, 46), (50, 90))
     return [
         (couleurs[0], g),
         (couleurs[1], haut),

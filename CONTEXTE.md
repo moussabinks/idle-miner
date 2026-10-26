@@ -273,3 +273,4 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 - **2026-10-26 (retours du propriétaire, 19)** : on peut remplacer un pousseur à tout moment, même pendant son trajet : la recrue reprend le wagonnet là où il était (le remplacement est immédiat, le wagonnet ne s'arrête pas).
 - **2026-10-26 (retours du propriétaire, 20)** : le rayon du générateur (« Afficher le rayon sur la carte ») se voyait à peine : intérieur teinté de jaune, trait d'encre sous les pointillés. Cache PWA v100.
 - **2026-10-26 (retours du propriétaire, 21)** : rayon du générateur réduit : 12, 15, 18, 21, 24, 26, 28 cases (avant jusqu'à 36) : au niveau max, il couvre toute la clairière depuis son milieu, sans la dépasser. Cache PWA v101.
+- **2026-10-26 (retours du propriétaire, 22)** : icône du diamant 💎 réparée : le contour d'encre manquait en bas à droite (une facette dessinée dans l'autre sens, `_gemme` dans `outils/icones/dessins.py`). Cache PWA v102.
