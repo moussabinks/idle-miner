@@ -1135,3 +1135,58 @@
   font-size: 0.9rem;
   background: var(--blanc);
 }
+
+/* (26/10) Le tableau des raretés du recruteur : rareté, chance, minage, salaire */
+.tableau-raretes {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.tableau-raretes-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.2fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 10px;
+  background: var(--blanc);
+}
+
+.tableau-raretes-entete {
+  border: none;
+  background: none;
+  padding-block: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--encre-douce);
+}
+
+@media (max-width: 640px) {
+  .tableau-raretes {
+    font-size: 0.75rem;
+  }
+
+  .tableau-raretes-ligne {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.7fr) minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 4px;
+    padding-inline: 5px;
+  }
+
+  .tableau-raretes .etiquette {
+    padding-inline: 5px;
+    font-size: 0.7rem;
+  }
+
+  .tableau-raretes-fois,
+  .tableau-raretes-icone {
+    display: none;
+  }
+}
+
+.tableau-raretes-ligne > span {
+  min-width: 0;
+  white-space: nowrap;
+}
