@@ -382,7 +382,9 @@ function besoinRedstone(etat: EtatJeu): number {
 // « exclus » : les objets décochés pour ce trajet (par défaut, ceux du trajet ; la fenêtre du
 // trajet en donne d'autres pour son aperçu).
 function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): number {
-  const garde = exclus ? exclus.includes(bloc) : exclusDe(etat, 'mine-marche').includes(bloc)
+  // (26/10) Un minerai qu'un atelier prend en priorité (voir atelierPrioritaire) n'est jamais gardé
+  // en entier : ce que l'atelier ne peut pas prendre part quand même au marché.
+  const garde = (exclus ? exclus.includes(bloc) : exclusDe(etat, 'mine-marche').includes(bloc)) && atelierPrioritaire(etat, 'puits', bloc) === null
   if (garde) return Infinity
   // (23/10) On ne garde le charbon ou la redstone pour la foreuse ou le générateur que si leur
   // wagonnet a un pousseur embauché : sinon, rien ne les emporterait, et ils restaient bloqués
@@ -395,6 +397,21 @@ function gardeDansLeCoffre(etat: EtatJeu, bloc: IdBloc, exclus?: IdBloc[]): numb
   return Math.max(fixe, pourLesAutres)
 }
 
+// (26/10, demandé par le propriétaire) La règle de priorité : quand un trajet automatique emmène
+// ce minerai du départ (la mine, la foreuse) vers un atelier, l'atelier passe en premier, et le
+// wagonnet du marché emporte seulement ce qu'il ne peut pas prendre (même si ce minerai est
+// décoché pour le marché). Sans ça, le fer et l'or que la fonderie n'arrivait pas à fondre
+// s'entassaient dans le coffre ou le chariot de la foreuse, jusqu'à les remplir.
+// Renvoie l'atelier qui passe en premier pour ce minerai, ou null.
+export function atelierPrioritaire(etat: EtatJeu, depart: IdBatiment, bloc: IdBloc): IdAtelier | null {
+  for (const liaison of LISTE_LIAISONS) {
+    const atelier = atelierDArrivee(liaison)
+    if (!atelier || LIAISONS[liaison].depart !== depart || !trajetAutomatique(etat, liaison)) continue
+    if (accepte(atelier, bloc) && objetEnvoye(etat, liaison, bloc)) return atelier
+  }
+  return null
+}
+
 // (26/10) Ce qu'un wagonnet vers le marché laisse au départ (la mine, ou la foreuse) pour les
 // ateliers : le minerai choisi pour un trajet automatique vers la fonderie ou la joaillerie, tant
 // qu'il y a de la place à leur entrée (et le charbon du four de la fonderie). S'ils sont pleins,
@@ -404,7 +421,9 @@ function reservePourLesAteliers(etat: EtatJeu, depart: IdBatiment, bloc: IdBloc)
   for (const liaison of LISTE_LIAISONS) {
     const atelier = atelierDArrivee(liaison)
     if (!atelier || LIAISONS[liaison].depart !== depart || !trajetAutomatique(etat, liaison)) continue
-    if (accepte(atelier, bloc) && objetEnvoye(etat, liaison, bloc)) reserve += placeEntree(etat, atelier)
+    // (la place libre à l'entrée, moins ce que son wagonnet y apporte déjà)
+    const enRoute = trajetDe(etat, liaison)?.etape === 'aller' ? totalObjets(trajetDe(etat, liaison)?.chargement ?? {}) : 0
+    if (accepte(atelier, bloc) && objetEnvoye(etat, liaison, bloc)) reserve += Math.max(0, placeEntree(etat, atelier) - enRoute)
     if (atelier === 'fonderie' && bloc === 'charbon') reserve += placeCharbonFonderie(etat)
   }
   return reserve
@@ -455,7 +474,7 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
       // (26/10) Il laisse au chariot ce qui part vers un atelier (trajet automatique).
       const exclus = exclusAutres ?? exclusDe(etat, liaison)
       return parPrix(etat.foreuse.chariot)
-        .filter(([bloc]) => !exclus.includes(bloc))
+        .filter(([bloc]) => !exclus.includes(bloc) || atelierPrioritaire(etat, 'foreuse', bloc) !== null)
         .map(([bloc, nombre]): [IdBloc, number] => [bloc, Math.max(0, nombre - reservePourLesAteliers(etat, 'foreuse', bloc))])
         .filter(([, nombre]) => nombre > 0)
     }
