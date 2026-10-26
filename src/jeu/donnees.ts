@@ -478,9 +478,9 @@ export const NIVEAUX_CHARIOT_POUSSEUR: { places: number; cout: Cout }[] = [
   { places: 70, cout: { argent: 2500, materiaux: { fer: 100 } } },
   { places: 110, cout: { argent: 6000, materiaux: { fer: 200 } } },
   { places: 170, cout: { argent: 15000, materiaux: { fer: 400 } } },
-  // (26/10) Les deux derniers demandent des lingots de fer (la fonderie, niveau 5 de la mine).
-  { places: 260, cout: { argent: 40000, materiaux: { lingot_fer: 50 } } },
-  { places: 400, cout: { argent: 110000, materiaux: { lingot_fer: 120 } } },
+  // (26/10, demandé par le propriétaire) Du minerai de fer, comme les autres (un temps, des lingots).
+  { places: 260, cout: { argent: 40000, materiaux: { fer: 700 } } },
+  { places: 400, cout: { argent: 110000, materiaux: { fer: 1100 } } },
 ]
 // (23/10) Le salaire d'un pousseur toutes les 5 minutes : une base, plus un peu pour chaque niveau
 // de vitesse et chaque niveau de chariot (× sa rareté) : 400 $ au départ, jusqu'à 2 600 $ au
@@ -600,9 +600,9 @@ export const NIVEAUX_CHARIOT: { capacite: number; cout: Cout }[] = [
   { capacite: 90, cout: { argent: 7000, materiaux: { fer: 120, redstone: 40 } } },
   { capacite: 140, cout: { argent: 14000, materiaux: { redstone: 150, or: 50 } } },
   { capacite: 200, cout: { argent: 30000, materiaux: { or: 100, emeraude: 25 } } },
-  // (26/10) Les deux derniers demandent des lingots de fer (la fonderie).
-  { capacite: 280, cout: { argent: 70000, materiaux: { lingot_fer: 60, saphir: 20 } } },
-  { capacite: 400, cout: { argent: 180000, materiaux: { lingot_fer: 150, rubis: 25 } } },
+  // (26/10, demandé par le propriétaire) Du minerai de fer (un temps, des lingots de fer).
+  { capacite: 280, cout: { argent: 70000, materiaux: { fer: 300, saphir: 20 } } },
+  { capacite: 400, cout: { argent: 180000, materiaux: { fer: 600, rubis: 25 } } },
 ]
 
 // ---------------------------------------------------------------------------

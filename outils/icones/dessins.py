@@ -157,59 +157,6 @@ def charbon():
     ]
 
 
-@icone('⬜')
-def lingot_fer():
-    # (26/10) Le lingot de fer (la fonderie le fabrique avec le fer brut) : un lingot de fer vu de
-    # trois quarts, et un deuxième derrière. (Avant, c'était le dessin du fer 🔩.)
-    def lingot(dx, dy):
-        dessus = poly((20 + dx, 30 + dy), (80 + dx, 30 + dy), (94 + dx, 54 + dy), (6 + dx, 54 + dy))
-        face = poly((6 + dx, 54 + dy), (94 + dx, 54 + dy), (86 + dx, 80 + dy), (14 + dx, 80 + dy))
-        return [
-            ('#8e9aa6', union(dessus, face)),
-            ('#d6dee6', dessus),
-            ('#ffffffb0', poly((26 + dx, 34 + dy), (52 + dx, 34 + dy), (48 + dx, 42 + dy), (22 + dx, 42 + dy))),
-            ('#66717d', poly((74 + dx, 54 + dy), (94 + dx, 54 + dy), (86 + dx, 80 + dy), (70 + dx, 80 + dy))),
-        ]
-
-    return lingot(0, -14) + lingot(0, 14)
-
-
-# (26/10) Le minerai brut : un caillou gris (comme la pierre 🪨) avec des pépites dedans, comme le
-# minerai de Minecraft. Le fer brut a des pépites beige rosé, l'or brut des pépites dorées qui
-# brillent. Chaque pépite est entourée d'un petit creux plus sombre, pour qu'on la voie bien même
-# en tout petit.
-PIERRE_MINERAI = ('#9b9a96', '#cfcdc6', '#6a6966')
-
-
-def _pepite(cx, cy, taille, angle=0):
-    """Une pépite cabossée (un petit polygone aux coins adoucis), au milieu en (cx, cy)."""
-    forme = [(-1, -0.75), (0.25, -1), (1, -0.35), (0.85, 0.65), (-0.1, 1), (-0.95, 0.45)]
-    p = poly(*[(cx + x * taille, cy + y * taille) for x, y in forme], arrondi=1.5)
-    return tourne(p, angle, cx, cy) if angle else p
-
-
-def _minerai_brut(couleurs, brille=False):
-    roche = poly((12, 68), (18, 38), (40, 18), (68, 16), (88, 38), (92, 68), (72, 88), (28, 88), arrondi=6)
-    couches = r(roche, PIERRE_MINERAI, brillance=False) + [
-        ('#b9b7b0', inter(roche, poly((40, 18), (68, 16), (62, 30), (38, 32)))),
-    ]
-    for cx, cy, taille, angle in ((34, 42, 13, -10), (66, 36, 11, 25), (60, 66, 14, 5), (28, 70, 9, 40)):
-        pepite = _pepite(cx, cy, taille, angle)
-        couches.append(('#57554f', moins(grossir(pepite, 2.5), pepite)))
-        couches += r(pepite, couleurs, d=3, brillance=False)
-        couches.append(('#ffffffc0', ellipse(cx - taille * 0.35, cy - taille * 0.4, taille * 0.32, taille * 0.2, -25)))
-    if brille:
-        couches.append(('#ffffffe0', eclat(80, 18, 9)))
-        couches.append(('#ffffffd0', eclat(20, 30, 6)))
-    return couches
-
-
-@icone('🔩')
-def fer():
-    # (26/10) Le fer brut (le minerai), à fondre en lingots ⬜ à la fonderie.
-    return _minerai_brut(('#e6b48f', '#ffd9bd', '#b77d58'))
-
-
 def _gemme(couleurs, forme='hexa'):
     if forme == 'hexa':
         g = poly((30, 14), (70, 14), (90, 46), (50, 90), (10, 46))
@@ -256,30 +203,6 @@ def redstone():
         ('#ffffffc0', ellipse(36, 26, 9, 4, -20)),
         ('#ffffffd0', eclat(74, 60, 7)),
     ]
-
-
-@icone('🟨')
-def lingot_or():
-    # (26/10) Le lingot d'or (la fonderie le fabrique avec l'or brut 🟡) : une pyramide de trois
-    # lingots dorés qui brillent (25/10 : c'était le dessin de l'or 🟡). Le lingot de fer ⬜, lui,
-    # est une pile de deux lingots gris.
-    def lingot(dx, dy):
-        dessus = poly((14 + dx, 0 + dy), (40 + dx, 0 + dy), (48 + dx, 12 + dy), (6 + dx, 12 + dy))
-        face = poly((6 + dx, 12 + dy), (48 + dx, 12 + dy), (44 + dx, 26 + dy), (10 + dx, 26 + dy))
-        return [
-            ('#c98512', union(dessus, face)),
-            ('#ffe68a', dessus),
-            ('#f5b82e', poly((6 + dx, 12 + dy), (40 + dx, 12 + dy), (38 + dx, 26 + dy), (10 + dx, 26 + dy))),
-            ('#ffffffc0', poly((16 + dx, 3 + dy), (30 + dx, 3 + dy), (28 + dx, 8 + dy), (14 + dx, 8 + dy))),
-        ]
-
-    return lingot(2, 60) + lingot(50, 60) + lingot(26, 34) + [('#ffffffe0', eclat(80, 26, 9))]
-
-
-@icone('🟡')
-def or_():
-    # (26/10) L'or brut (le minerai) : des pépites dorées qui brillent, à fondre en lingots 🟨.
-    return _minerai_brut(OR, brille=True)
 
 
 def _facettes(table, bord, couleurs, lumiere=225):

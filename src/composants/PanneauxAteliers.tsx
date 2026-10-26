@@ -144,7 +144,6 @@ function Reserve({ id }: { id: IdAtelier }) {
         aVendre={atelier.sortie}
         textePlein={id === 'fonderie' ? t('Plein : la fonderie s’arrête !') : t('Plein : les joailliers s’arrêtent !')}
       />
-      {id === 'fonderie' && <p className="discret">{t('Les lingots servent aussi à payer certaines améliorations (les chariots).')}</p>}
     </>
   )
 }

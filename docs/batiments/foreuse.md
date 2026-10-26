@@ -44,10 +44,10 @@ En haut du panneau, une carte d'état : sa vitesse (« 1 blocs/s »), **En march
 | 3 | 1,6 | 30 (10 min) | 6 000 $ + 100 fer + 60 redstone | 90 | 7 000 $ + 120 fer + 40 redstone | 56 s | 3 |
 | 4 | 2,4 | 40 (13 min 20) | 14 000 $ + 150 redstone + 40 or | 140 | 14 000 $ + 150 redstone + 50 or | 58 s | 4 |
 | 5 | 3,4 | 50 (16 min 40) | 30 000 $ + 80 or + 20 émeraude | 200 | 30 000 $ + 100 or + 25 émeraude | 59 s | 5 |
-| 6 | 4,6 | 60 (20 min) | 80 000 $ + 40 émeraude + 20 saphir | 280 | 70 000 $ + 60 lingots de fer + 20 saphir | 61 s | 6 |
-| 7 | 6 | 70 (23 min 20) | 200 000 $ + 40 saphir + 20 rubis | 400 | 180 000 $ + 150 lingots de fer + 25 rubis | 67 s | 7 |
+| 6 | 4,6 | 60 (20 min) | 80 000 $ + 40 émeraude + 20 saphir | 280 | 70 000 $ + 300 fer + 20 saphir | 61 s | 6 |
+| 7 | 6 | 70 (23 min 20) | 200 000 $ + 40 saphir + 20 rubis | 400 | 180 000 $ + 1700 fer + 25 rubis | 67 s | 7 |
 
-(« Plein en » : le chariot du même niveau que le forage, sans électricité, `secondesPourRemplir`.) Tout le forage : 333 000 $ + 150 fer + 230 redstone + 120 or + 60 émeraude + 60 saphir + 20 rubis. Tout le chariot : 305 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude + 20 saphir + 25 rubis + 210 lingots de fer. (Avant le 25/10 : 6 niveaux de chacun, débloqués par le niveau du joueur. Le 25/10 : 5 niveaux, 53 000 $ de forage et 55 000 $ de chariot.) Les deux derniers chariots se paient en **lingots de fer** (26/10) : la [fonderie](fonderie.md) les fabrique ; l'achat les prend dans le coffre de la mine, puis dans la réserve de la fonderie.
+(« Plein en » : le chariot du même niveau que le forage, sans électricité, `secondesPourRemplir`.) Tout le forage : 333 000 $ + 150 fer + 230 redstone + 120 or + 60 émeraude + 60 saphir + 20 rubis. Tout le chariot : 305 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude + 20 saphir + 25 rubis (26/10 : les deux derniers en minerai de fer, 300 puis 600 fer, plus en lingots). (Avant le 25/10 : 6 niveaux de chacun, débloqués par le niveau du joueur. Le 25/10 : 5 niveaux, 53 000 $ de forage et 55 000 $ de chariot.) Les deux derniers chariots se paient en **lingots de fer** (26/10) : la [fonderie](fonderie.md) les fabrique ; l'achat les prend dans le coffre de la mine, puis dans la réserve de la fonderie.
 
 Le chariot est **petit exprès** : il est plein en moins d'une minute. Il faut donc le vider souvent (sur place, ou avec le wagonnet Foreuse → Marché) et l'agrandir quand on améliore le forage, sinon il bloque la foreuse. Chaque ligne a aussi son bouton violet **💎** pour payer en gemmes. Messages : « ⚙️ Foreuse plus rapide : *N* blocs par seconde, *R* charbons de réservoir. », « 🛒 Chariot de la foreuse plus grand : *N* places. »
 
@@ -76,7 +76,7 @@ Dans cet onglet : les trajets qui partent de la foreuse (`PanneauTrajets`), et l
 ## Lien avec le reste du jeu
 
 - **Missions** (`missions.ts`, `objectifs.ts`) : « Construis : Foreuse » dès le niveau 2 de la mine ; une fois posée, « Forage *X* blocs/s » et « Chariot de la foreuse : *X* places » dans les achats possibles. Côté automatisation : « Relie la foreuse à la mine (rails) », « Touche la bulle 🛤️ sur les rails de la foreuse », puis « Relie la foreuse au marché (rails) : elle vendra toute seule ».
-- **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or, émeraudes, saphirs, rubis et lingots de fer (26/10) ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1). Le **générateur** la booste.
+- **Autres bâtiments** : elle se paie surtout en **fer et redstone**, puis en or, émeraudes, saphirs, et rubis (26/10) ; le **charbon** vient du coffre de la mine (18 % des blocs au niveau 1). Le **générateur** la booste.
 - **Revenus et statistiques** : le « $/s » compte la foreuse quand elle tourne (vitesse × valeur moyenne d'un bloc, `revenu.ts`) ; les statistiques comptent `argentForeuse` et `blocsForeuse`.
 - **Bot de simulation** (`bot.ts`) : il la pose dès qu'il peut, remet 10 charbons quand il lui reste moins d'une minute, vend son chariot en même temps que le coffre, et améliore le forage et le chariot quand il a plus de 3 000 $ (sans toucher aux minerais du prochain niveau de la mine).
 

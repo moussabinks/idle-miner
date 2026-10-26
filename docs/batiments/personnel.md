@@ -90,10 +90,10 @@ Un pousseur est un **métier à part** : on l'embauche **pour un seul trajet** (
 | 3 | Robuste × 1,4 | 2 000 $ | 70 | 2 500 $ + 100 fer | 3 |
 | 4 | Expert × 1,65 | 5 000 $ | 110 | 6 000 $ + 200 fer | 4 |
 | 5 | Champion × 1,9 | 12 000 $ | 170 | 15 000 $ + 400 fer | 5 |
-| 6 | Maître × 2,2 | 30 000 $ | 260 | 40 000 $ + 50 lingots de fer | 6 |
-| 7 | Légende × 2,6 | 70 000 $ | 400 | 110 000 $ + 120 lingots de fer | 7 |
+| 6 | Maître × 2,2 | 30 000 $ | 260 | 40 000 $ + 700 fer | 6 |
+| 7 | Légende × 2,6 | 70 000 $ | 400 | 110 000 $ + 1 100 fer | 7 |
 
-Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse lui-même a 20 places). (25/10 : plus de prix « × le niveau du joueur », et 5 niveaux au lieu de 5 et 7. 26/10 : 7 niveaux ; les deux derniers chariots se paient en **lingots de fer**, pris dans le coffre ou dans la réserve de la fonderie.) Si son chariot ne suit pas ce que sort le bâtiment de départ, une alerte le dit au panneau de la mine (ou de la foreuse, de la fonderie, de la joaillerie), avec un bouton vers le Personnel.
+Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse lui-même a 20 places). (25/10 : plus de prix « × le niveau du joueur », et 5 niveaux au lieu de 5 et 7. 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer**, comme les autres ; un temps, en lingots de fer.) Si son chariot ne suit pas ce que sort le bâtiment de départ, une alerte le dit au panneau de la mine (ou de la foreuse, de la fonderie, de la joaillerie), avec un bouton vers le Personnel.
 
 - **Son salaire** : **400 $** toutes les 5 minutes, **+ 250 $** par niveau de vitesse et **+ 200 $** par niveau de chariot (× sa rareté) : de 400 $ à 3 100 $ (26/10 ; 2 200 $ au plus avec 5 niveaux).
 - **Sa rareté** (avec le recruteur) : il pousse × 1 + (rendement − 1) ÷ 2 (`forcePousseur` : rare × 1,25, épique × 1,5, légendaire × 2, mythique × 3).

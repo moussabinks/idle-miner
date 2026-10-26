@@ -131,7 +131,7 @@ Total pour aller au niveau 7 : **1 168 800 $ + 140 fer + 140 redstone + 140 or +
 Total : 226 200 $ + 40 pierre + 80 fer + 60 redstone + 80 or + 60 émeraude + 80 saphir + 30 rubis (26/10 ; jusqu'au niveau 5 : 26 200 $).
 
 - **Plein** : plus de clic, plus de débit, et la caisse de l'ascenseur attend pour se vider.
-- **Payer** (`disponible`, `payerMateriaux`) : les minerais d'un prix se prennent **dans le coffre** (25/10 : il n'y a plus de sac). (26/10) Les lingots et les bijoux se prennent d'abord dans le coffre, puis dans la **réserve de leur atelier** (`reserveDAtelier`) : c'est ainsi que les lingots de fer de la fonderie paient les derniers chariots.
+- **Payer** (`disponible`, `payerMateriaux`) : les minerais d'un prix se prennent **dans le coffre** (25/10 : il n'y a plus de sac). (26/10) Les lingots et les bijoux se prennent d'abord dans le coffre, puis dans la **réserve de leur atelier** (`reserveDAtelier`) : (26/10 : plus aucun prix en lingots, les chariots se paient en minerai de fer.)
 - **Vendre** (25/10, `vendreCoffre`, `vendreMinerai`) : depuis le panneau de la mine, **au prix du marché** (`valeurDe`), sans marcher. « Tout vendre » vend tout le coffre **sauf ce qu'on garde** (`aVendreDuCoffre`). La **punaise 📌** d'un minerai (`basculerGarderTout`) le garde en entier (`GARDER_TOUT` = 1 milliard dans `coffre.garder`) : ni « Tout vendre », ni le wagonnet ne l'emportent. « Vendre » sur la ligne d'un minerai le vend même s'il est épinglé. L'argent compte dans `stats.argentGagne`.
 - À débit seul, le coffre de départ (100 places) est plein en **8 min 20** au niveau 1 ; un coffre de 5 000 places en **2 h 19** au niveau 5 (0,6 bloc/s), un coffre de 20 000 places en **6 h 57** au niveau 7 (0,8 bloc/s), sans compter les clics et les mineurs.
 
@@ -206,10 +206,10 @@ Total : 273 700 $ + 120 fer + 130 redstone + 240 or + 30 émeraude + 90 saphir +
 | 3 | 70 | 2 500 $ + 100 fer | Robuste × 1,4 | 2 000 $ | 3 |
 | 4 | 110 | 6 000 $ + 200 fer | Expert × 1,65 | 5 000 $ | 4 |
 | 5 | 170 | 15 000 $ + 400 fer | Champion × 1,9 | 12 000 $ | 5 |
-| 6 | 260 | 40 000 $ + 50 lingots de fer | Maître × 2,2 | 30 000 $ | 6 |
-| 7 | 400 | 110 000 $ + 120 lingots de fer | Légende × 2,6 | 70 000 $ | 7 |
+| 6 | 260 | 40 000 $ + 700 fer | Maître × 2,2 | 30 000 $ | 6 |
+| 7 | 400 | 110 000 $ + 1 100 fer | Légende × 2,6 | 70 000 $ | 7 |
 
-(25/10 : 5 niveaux, et plus de prix « × le niveau du joueur ». 26/10 : 7 niveaux ; les deux derniers chariots se paient en **lingots de fer**, ceux du coffre ou de la réserve de la fonderie. Le joueur qui pousse lui-même a le premier chariot, 20 places.) Pour un pousseur : 119 600 $ de vitesse, et 174 300 $ + 740 fer + 170 lingots de fer de chariot.
+(25/10 : 5 niveaux, et plus de prix « × le niveau du joueur ». 26/10 : 7 niveaux ; les deux derniers chariots se paient en **minerai de fer** (un temps, en lingots de fer). Le joueur qui pousse lui-même a le premier chariot, 20 places.) Pour un pousseur : 119 600 $ de vitesse, et 174 300 $ + 740 fer + 170 lingots de fer de chariot.
 
 - **Trajets** (`LIAISONS`, 10 depuis le 26/10 ; 4 avant) : Mine → Marché, Mine → Foreuse, Mine → Générateur, Foreuse → Marché, et (26/10) Mine → Fonderie, Mine → Joaillerie, Foreuse → Fonderie, Foreuse → Joaillerie, Fonderie → Marché, Joaillerie → Marché. Un wagonnet chacun, créés gratuitement par le joueur. Il faut **un pousseur payé** pour qu'un trajet roule tout seul, même électrique.
 - **Ligne** (`railsEntre`, `ligneDe`) : la suite de rails continue d'une case collée au bâtiment de départ à une case collée à celui d'arrivée, jamais en boucle (`feraitUneBoucle`). **Longueur d'un trajet** = cases de la ligne + 1 (`longueurTrajet`).
@@ -258,10 +258,10 @@ Améliorations (niveaux 2 à 7) : 372 000 $ + 1 480 fer + 1 960 redstone + 40 sa
 | 3 | 1,6 | 30 (10 min) | 6 000 $ + 100 fer + 60 redstone | 90 | 7 000 $ + 120 fer + 40 redstone | 3 |
 | 4 | 2,4 | 40 (13 min 20) | 14 000 $ + 150 redstone + 40 or | 140 | 14 000 $ + 150 redstone + 50 or | 4 |
 | 5 | 3,4 | 50 (16 min 40) | 30 000 $ + 80 or + 20 émeraude | 200 | 30 000 $ + 100 or + 25 émeraude | 5 |
-| 6 | 4,6 | 60 (20 min) | 80 000 $ + 40 émeraude + 20 saphir | 280 | 70 000 $ + 60 lingots de fer + 20 saphir | 6 |
-| 7 | 6 | 70 (23 min 20) | 200 000 $ + 40 saphir + 20 rubis | 400 | 180 000 $ + 150 lingots de fer + 25 rubis | 7 |
+| 6 | 4,6 | 60 (20 min) | 80 000 $ + 40 émeraude + 20 saphir | 280 | 70 000 $ + 300 fer + 20 saphir | 6 |
+| 7 | 6 | 70 (23 min 20) | 200 000 $ + 40 saphir + 20 rubis | 400 | 180 000 $ + 1700 fer + 25 rubis | 7 |
 
-Total du forage : 333 000 $ + 150 fer + 230 redstone + 120 or + 60 émeraude + 60 saphir + 20 rubis. Total du chariot : 305 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude + 20 saphir + 25 rubis + 210 lingots de fer (26/10 ; jusqu'au niveau 5 : 53 000 $ et 55 000 $).
+Total du forage : 333 000 $ + 150 fer + 230 redstone + 120 or + 60 émeraude + 60 saphir + 20 rubis. Total du chariot : 305 000 $ + 180 fer + 190 redstone + 150 or + 25 émeraude + 20 saphir + 25 rubis (26/10 : les deux derniers en minerai de fer, 300 puis 600 fer, plus en lingots) (26/10 ; jusqu'au niveau 5 : 53 000 $ et 55 000 $).
 
 - **Charbon** : 1 charbon = 20 s de forage, quelle que soit la vitesse (3 charbons par minute).
 - **Vitesse** = forage × bonus du générateur (dans le rayon) × 2 pendant le bonus « Production × 2 ».

@@ -31,7 +31,7 @@
 | [forgeron.md](../batiments/forgeron.md) | ⚒️ Forgeron : pioches, doublement, réparation | dès le début |
 | [foreuse.md](../batiments/foreuse.md) | ⚙️ Foreuse : machine au charbon qui fore seule ; son chariot se vend sur place | mine niveau 2 |
 | [generateur.md](../batiments/generateur.md) | ⚡ Générateur : redstone, rayon électrique, trajets électriques | mine niveau 2 |
-| [fonderie.md](../batiments/fonderie.md) | 🏭 Fonderie (26/10) : fond le fer et l'or en lingots (× 2), au charbon ; sa réserve se vend sur place ; ses lingots de fer paient les derniers chariots | mine niveau 5 |
+| [fonderie.md](../batiments/fonderie.md) | 🏭 Fonderie (26/10) : fond le fer et l'or en lingots (× 2), au charbon ; sa réserve se vend sur place  | mine niveau 5 |
 | [joaillerie.md](../batiments/joaillerie.md) | 🏪 Joaillerie (26/10) : ses joailliers taillent les gemmes en bijoux (× 2,5) ; sa réserve se vend sur place | mine niveau 6 |
 
 Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md), référence historique des règles), la revue avant CrazyGames ([../revue-crazygames.md](../revue-crazygames.md)), l'état du projet et le journal ([../../CONTEXTE.md](../../CONTEXTE.md)), les règles de code ([../../CLAUDE.md](../../CLAUDE.md)). Ce qui a été retiré le 22/10 (prestige, talents, enchanteur) est rangé dans `archives/` (voir `archives/README.md`). Le **bazar** (les sacs à dos) est retiré le 25/10.
@@ -109,7 +109,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Cadeau du jour** | (25/10) Une récompense par jour (gemmes, argent, parfois un bonus) ; revenir tous les jours fait monter la série jusqu'au gros lot du 7e jour. |
 | **Carburant** | Le charbon de la foreuse (1 charbon = 20 s), du four de la fonderie (1 charbon = 12 s, 26/10) ou la redstone du générateur (1 redstone = 30 s), comptés en secondes. |
 | **Chariot (de la foreuse)** | Là où la foreuse range ce qu'elle fore (25 à 400 places). On le **vend sur place** d'un clic, ou le wagonnet Foreuse → Marché l'emporte. |
-| **Chariot (d'un pousseur)** | Les places du wagonnet de son trajet (20 à 400 ; les deux derniers niveaux en lingots de fer), qu'on agrandit au Personnel. |
+| **Chariot (d'un pousseur)** | Les places du wagonnet de son trajet (20 à 400), qu'on agrandit au Personnel. |
 | **Chef** | Le manager et le recruteur : 3 niveaux chacun (`PALIER_CHEF` : le dernier au palier 6 depuis le 26/10). |
 | **Chemin (de pavés)** | Des pavés au sol (5 $ la case), seulement pour faire joli. |
 | **Clairière** | Le village vu du ciel : une grille de **40 × 40 cases** (60 × 60 avant le 25/10), entourée de forêt et d'une plage, avec la mine au milieu. |
@@ -131,7 +131,7 @@ Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#l
 | **Joaillier** | (26/10) Le troisième métier du Personnel : il taille une gemme à la fois à son établi de la joaillerie (1 500 $ / 5 min × sa rareté). |
 | **Ligne (de rails)** | Une suite de rails continue entre deux bâtiments. Les rails ne font jamais de boucle : entre deux bâtiments, une seule route. Sans ligne, pas de trajet. |
 | **Manager** | Débloqué au niveau 3 de la mine (5 000 $, puis 400 $ / 5 min) : il paie tous les salaires seul, avec l'argent du joueur, tant qu'il est éveillé (30 min, 1 h ou 2 h selon son niveau). Un interrupteur l'arrête. |
-| **Lingot** | (26/10) Ce que fond la fonderie : lingot de fer (24 $) et lingot d'or (70 $), 2 fois le minerai. Les lingots de fer paient aussi les derniers chariots. |
+| **Lingot** | (26/10) Ce que fond la fonderie : lingot de fer (24 $) et lingot d'or (70 $), 2 fois le minerai. |
 | **Marché** | Le bâtiment où arrivent les wagonnets : ils y vendent tout seuls. Il ne sert plus qu'à l'automatisation (25/10). |
 | **Minerai** | Un bloc qu'une pioche peut doubler : charbon, fer, redstone, or, émeraude, saphir, rubis, diamant (tout sauf la pierre ; ni les lingots, ni les bijoux). |
 | **Mission / tâche** | Une à trois choses à faire, en haut à droite : une urgence (salaires, coffre plein), un premier pas, un bâtiment, une étape de l'automatisation, ou l’amélioration la plus proche : seulement des choses faisables (25/10). |
