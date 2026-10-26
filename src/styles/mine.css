@@ -39,6 +39,11 @@
 
 .zone-bloc {
   overflow: hidden; /* (les éclats et les minerais qui s'envolent ne font pas déborder la fenêtre) */
+  /* (26/10) Cliquer vite = des doubles clics : Safari sélectionnait alors le texte de la jauge de
+     la pioche (un surlignage bleu fixe par-dessus). Rien ne se sélectionne dans cette zone. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   min-width: 0;
   display: flex;
   flex-direction: column;
