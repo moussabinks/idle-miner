@@ -531,8 +531,10 @@ export function VueVillage({
   }
   let enAttente = 0
   let auQuai = 0
-  let aLEtabli = 0
   etat.employes.forEach((mineur: Employe, index) => {
+    // (26/10, demandé par le propriétaire) Le joaillier ne se voit pas sur la carte : il travaille
+    // dans la joaillerie. On le montre seulement s'il attend son salaire au Personnel.
+    if (mineur.role === 'joaillier' && mineur.etape !== 'attend') return
     const etiquette = <span className={`etiquette-perso rarete-${mineur.rarete}`}>{nomEmploye(mineur.nom)}</span>
     let position: { x: number; y: number } | null = null
     let orientation: { sens: 1 | -1; vue: 'face' | 'dos' } = { sens: 1, vue: 'face' }
@@ -573,10 +575,6 @@ export function VueVillage({
       } else if (maison) {
         position = devant(maison, 3 + auQuai++, 1.2)
       }
-    } else if (mineur.etape === 'taille') {
-      // (26/10) Le joaillier à son établi, devant la joaillerie.
-      const joaillerie = batimentPose(village, 'joaillerie')
-      if (joaillerie) position = devant(joaillerie, 1 + aLEtabli++, 1)
     } else if (mineur.etape === 'attend' && personnel) {
       position = devant(personnel, 2 + enAttente++, 1.6)
       colere = true
