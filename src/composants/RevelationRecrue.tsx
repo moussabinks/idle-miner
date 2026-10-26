@@ -37,6 +37,8 @@ export function RevelationRecrue({ employe, onFermer }: Props) {
 
   const etoiles = '★'.repeat(rang + 1) + '☆'.repeat(LISTE_RARETES.length - rang - 1)
   const pousseur = employe.role === 'pousseur'
+  // (26/10) un joaillier taille les gemmes : il ne creuse pas
+  const joaillier = employe.role === 'joaillier'
   const bonus = pousseur ? forcePousseur(rarete.id) : rarete.rendement
 
   return (
@@ -61,9 +63,9 @@ export function RevelationRecrue({ employe, onFermer }: Props) {
           <div className="revelation-face revelation-face-avant" aria-hidden={!devoilee}>
             <span className="revelation-etoiles">{etoiles}</span>
             <span className="revelation-rarete">{t(rarete.nom)} !</span>
-            <span className="revelation-mineur">{pousseur ? '🛤️' : '👷'}</span>
+            <span className="revelation-mineur">{pousseur ? '🛤️' : joaillier ? '💍' : '👷'}</span>
             <strong className="revelation-nom">{nomEmploye(employe.nom)}</strong>
-            <span className="etiquette etiquette-jaune">{bonus > 1 ? (pousseur ? t('Pousse ×{n} plus vite', { n: nombre(bonus, 2) }) : t('Creuse ×{n} plus vite', { n: nombre(bonus, 2) })) : t('Solide et fiable')}</span>
+            <span className="etiquette etiquette-jaune">{bonus > 1 ? (pousseur ? t('Pousse ×{n} plus vite', { n: nombre(bonus, 2) }) : joaillier ? t('Taille ×{n} plus vite', { n: nombre(bonus, 2) }) : t('Creuse ×{n} plus vite', { n: nombre(bonus, 2) })) : t('Solide et fiable')}</span>
             {pousseur && employe.trajet && <span className="revelation-detail">🛤️ {nomTrajet(employe.trajet)}</span>}
             <span className="revelation-detail">💵 {t('{n} $ / 5 min', { n: nombre(salaireEmploye(employe)) })}</span>
           </div>
