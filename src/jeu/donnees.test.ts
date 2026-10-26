@@ -94,4 +94,12 @@ describe('les données du jeu', () => {
     expect(debit(NIVEAUX_ASCENSEUR[2])).toBeLessThan(huitMineursDiamant / 1.5)
     expect(debit(NIVEAUX_ASCENSEUR[6])).toBeGreaterThan(huitMineursDiamant * 2)
   })
+
+  // (26/10, demandé par le propriétaire) Jamais plus de 1 000 d'un même matériau dans un prix.
+  it('aucune amélioration ne coûte plus de 1 000 d’un matériau', () => {
+    const tables = [NIVEAUX_MINE, NIVEAUX_COFFRE, PIOCHES, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_POUSSEUR, NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT, NIVEAUX_MANAGER, NIVEAUX_RECRUTEUR] as { cout: { materiaux: Record<string, number | undefined> } }[][]
+    for (const table of tables) {
+      for (const { cout } of table) for (const n of Object.values(cout.materiaux)) expect(n ?? 0).toBeLessThanOrEqual(1000)
+    }
+  })
 })
