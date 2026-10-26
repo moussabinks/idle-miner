@@ -75,9 +75,10 @@ describe('le niveau du joueur (29/10)', () => {
   })
 
   it('(25/10) le niveau du joueur débloque les rails et les paliers de la mine', () => {
-    const niveaux = [2, 3, 4, 5, 6, 7, 8, 9, 10].filter((n) => deblocagesDuNiveau(n).length > 0)
+    const niveaux = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].filter((n) => deblocagesDuNiveau(n).length > 0)
     expect(niveaux).toEqual([NIVEAU_JOUEUR_POUR.rails, ...NIVEAU_JOUEUR_POUR.mine.slice(1)])
     expect(deblocagesDuNiveau(NIVEAU_JOUEUR_POUR.mine[4])[0]).toContain('Mine niveau 5')
+    expect(deblocagesDuNiveau(NIVEAU_JOUEUR_POUR.mine[6])[0]).toContain('Mine niveau 7')
   })
 
   it('(25/10) le reste suit le palier de la mine : le niveau N de tout au palier N', () => {

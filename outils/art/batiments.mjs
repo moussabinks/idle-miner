@@ -969,7 +969,6 @@ export function fonderie({ enMarche = false } = {}) {
   const joint = fonce(BRIQUE_FONDERIE, 0.3)
   const fonte = teintes(FONTE, '#2f2c3a', '#8a869c')
   const pierre = teintes(C.pierre, C.pierreFoncee, clair(C.pierre, 0.3))
-  const bois = teintes(C.bois, C.boisFonce)
 
   // Au fond à droite, le tas de charbon (le four en brûle beaucoup).
   tasDeCharbon(t, 4.05, 0.95, z, 1.15)

@@ -4,6 +4,7 @@
 //   - Embaucher : un mineur (il creuse tout seul au fond de la mine ; l'ascenseur remonte ce
 //     qu'il casse dans le coffre), ou un pousseur pour un trajet de wagonnet (le trajet brille
 //     sur la carte pendant qu'on le choisit) ;
+//   - (26/10) les joailliers, à la joaillerie (niveau 6 de la mine) : ils taillent les gemmes ;
 //   - Chefs : le manager (palier 3 de la mine : il paie les salaires avec ton argent) et le
 //     recruteur (palier 4 : chaque embauche a une rareté tirée au hasard).
 // Aucune règle du jeu ici : on lit l'état et on appelle les actions de src/jeu/employes.ts.
@@ -11,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
 import {
+  BLOCS,
   LIAISONS,
   LISTE_LIAISONS,
   LISTE_RARETES,
@@ -30,6 +32,7 @@ import {
 import {
   agrandirChariot,
   apercuRecrue,
+  bijouxParMinute,
   ameliorerEmploye,
   ameliorerManager,
   ameliorerRecruteur,
@@ -42,6 +45,7 @@ import {
   coutSalaires,
   depensesParPaie,
   embaucher,
+  embaucherJoaillier,
   embaucherManager,
   embaucherPousseur,
   fatigueManager,
@@ -62,6 +66,7 @@ import {
   peutAmeliorerEmploye,
   peutAmeliorerManager,
   peutAmeliorerRecruteur,
+  peutEmbaucherJoaillier,
   peutEmbaucherPousseur,
   peutPayerEmploye,
   peutPayerSalaires,
@@ -83,6 +88,7 @@ import {
   verrouMinePioche,
   vitesseEmploye,
 } from '../jeu/employes'
+import { gemmeEnCours, maxJoailliers } from '../jeu/ateliers'
 import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
@@ -202,7 +208,9 @@ function Salaires({ etat, jouer }: Props) {
 // La carte d'un employé : qui il est, ses chiffres, ses améliorations, et ses boutons.
 function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }: Props & { employe: Employe; index: number; onLicencier: () => void; onRemplacer: () => void }) {
   const pousseur = employe.role === 'pousseur'
+  const joaillier = employe.role === 'joaillier'
   const paye = employe.tempsPaye > 0
+  const gemme = joaillier ? gemmeEnCours(employe) : null
   const coutNiveau = coutAmeliorationEmploye(etat, employe)
   const verrouNiveau = verrouMinePioche(etat, employe)
   const pioche = NIVEAUX_EMPLOYE[employe.niveau]
@@ -237,6 +245,11 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           <>
             🛤️ {employe.trajet ? nomTrajet(employe.trajet) : t('Aucun trajet')} · 🛒 {t('{n} places', { n: placesChariot(employe) })}
           </>
+        ) : joaillier ? (
+          <>
+            💍 {t('{n} bijoux/min', { n: nombre(bijouxParMinute(etat, employe), 1) })}
+            {gemme && ` · ${BLOCS[gemme].emoji} ${t('{n} %', { n: Math.floor(employe.progression * 100) })}`}
+          </>
         ) : (
           <>
             ⛏️ {t('{n} blocs/s', { n: parSeconde(vitesseEmploye(employe)) })}
@@ -259,7 +272,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
         </label>
       )}
 
-      {!pousseur && (
+      {!pousseur && !joaillier && (
         <Amelioration
           icone="⛏️"
           titre={t('Pioche en {nom}', { nom: t(pioche.nom) })}
@@ -465,6 +478,41 @@ function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTra
   )
 }
 
+// (26/10) L'embauche d'un joaillier : autant que d'établis à la joaillerie.
+function EmbaucheJoaillier({ etat }: { etat: EtatJeu }) {
+  const prix = prixEmbauche(etat, 'joaillier')
+  const max = maxJoailliers(etat)
+  const avecRecruteur = etat.recruteur > 0
+  if (prix === null) {
+    return (
+      <div className="carte carte-creme">
+        <p className="discret">{t('Tous les établis sont pris. Améliore la joaillerie pour en avoir plus.')}</p>
+      </div>
+    )
+  }
+  const commun = bijouxParMinute(etat, { rarete: 'commun' })
+  const mythique = bijouxParMinute(etat, { rarete: 'mythique' })
+  return (
+    <Achat
+      icone="💍"
+      titre={`${t('Joaillier')} · ${nbDuRole(etat, 'joaillier')} / ${max}`}
+      effet={
+        <>
+          {avecRecruteur ? t('Sa rareté est une surprise : un joaillier rare taille plus vite !') : t('Il taille les gemmes de la joaillerie en bijoux. Ses 10 premières minutes sont payées.')}
+          <span className="stats-recrue">
+            <span className="etiquette">💍 {avecRecruteur ? t('{a} à {b} bijoux/min', { a: nombre(commun, 1), b: nombre(mythique, 1) }) : t('{n} bijoux/min', { n: nombre(commun, 1) })}</span>
+            <span className="etiquette">💵 {t('{n} $ / 5 min', { n: nombre(apercuRecrue('joaillier').salaire) })}</span>
+          </span>
+        </>
+      }
+      cout={{ argent: prix, materiaux: {} }}
+      possible={peutEmbaucherJoaillier(etat)}
+      action={(e) => embaucherJoaillier(e, aleatoireNavigateur)}
+      texte={t('Embaucher')}
+    />
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Les chefs
 // ---------------------------------------------------------------------------
@@ -594,7 +642,7 @@ function Recruteur({ etat }: { etat: EtatJeu }) {
           titre={t('Recruteur')}
           niveau={etat.recruteur}
           niveauMax={NIVEAUX_RECRUTEUR.length}
-          effet={etat.recruteur === 0 ? t('Chaque nouveau mineur aura une rareté tirée au hasard.') : t('Les mineurs rares sortent plus souvent.')}
+          effet={etat.recruteur === 0 ? t('Chaque nouveau mineur ou joaillier aura une rareté tirée au hasard.') : t('Les mineurs rares sortent plus souvent.')}
           cout={prochain?.cout ?? null}
           verrou={verrou(etat, 'recruteur', etat.recruteur)}
           possible={peutAmeliorerRecruteur(etat)}
@@ -645,7 +693,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
         onglets={[
           // (26/10) « ! » aussi dès qu'une place de mineur est libre (la mine vient de descendre d'un
           // niveau : un mineur de plus), même sans encore l'argent pour l'embaucher
-          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 || prix !== null ? '!' : null },
+          { id: 'personnel', titre: `👷 ${t('Personnel')}`, pastille: sansSalaire > 0 || prix !== null || prixEmbauche(etat, 'joaillier') !== null ? '!' : null },
           { id: 'chefs', titre: `💼 ${t('Chefs')}`, pastille: managerEnPanne || chefADebloque ? '!' : null },
         ]}
         actif={onglet}
@@ -660,7 +708,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
           (l'équipe, puis en embaucher un). La recrue qu'on est en train de dévoiler n'apparaît
           dans la liste qu'une fois sa carte montrée (sinon, on la voyait derrière avant). */}
       {onglet === 'personnel' &&
-        (['mineur', 'pousseur'] as const).map((role) => {
+        (['mineur', 'pousseur', 'joaillier'] as const).map((role) => {
           // (26/10) Les plus rares en haut (Mythique d'abord) ; à rareté égale, l'ordre d'embauche.
           // (« index » reste sa place dans l'équipe : les actions s'en servent.)
           const rang = (e: Employe) => LISTE_RARETES.indexOf(rareteDe(e).id)
@@ -670,9 +718,17 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
             .sort((a, b) => rang(b.e) - rang(a.e) || a.index - b.index)
           // (pas encore de trajet de wagonnet : pas de section pousseurs)
           if (role === 'pousseur' && liste.length === 0 && etat.trajets.length === 0) return null
+          // (pas de joaillerie : pas de section joailliers)
+          if (role === 'joaillier' && liste.length === 0 && !batimentPose(etat.village, 'joaillerie')) return null
+          const titre =
+            role === 'mineur'
+              ? `⛏️ ${t('Mineurs')} ${liste.length} / ${maxEmployes(etat)}`
+              : role === 'pousseur'
+                ? `🛤️ ${t('Pousseurs')} ${liste.length}`
+                : `💍 ${t('Joailliers')} ${liste.length} / ${maxJoailliers(etat)}`
           return (
             <section key={role} className="section-employes">
-              <h3 className="titre-section">{role === 'mineur' ? `⛏️ ${t('Mineurs')} ${liste.length} / ${maxEmployes(etat)}` : `🛤️ ${t('Pousseurs')} ${liste.length}`}</h3>
+              <h3 className="titre-section">{titre}</h3>
               {liste.length > 0 && (
                 <div className="grille-employes">
                   {liste.map(({ e, index }) => (
@@ -680,7 +736,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
                   ))}
                 </div>
               )}
-              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} />}
+              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : role === 'pousseur' ? <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} /> : <EmbaucheJoaillier etat={etat} />}
             </section>
           )
         })}

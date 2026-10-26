@@ -718,6 +718,10 @@ export function remplacerMineur(etat: EtatJeu, index: number, aleatoire: Aleatoi
   const rarete = tirerRarete(etat, aleatoire)
   // (sa gemme en cours repart à l'entrée de la joaillerie : voir avancerJoaillerie)
   etat.employes[index] = { ...ancien, nom, rarete, blocsCasses: 0 }
+  if (ancien.role === 'joaillier') {
+    if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend son établi.', { ancien: ancien.nom, nom })]
+    return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend son établi.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
+  }
   if (rarete === 'commun') return [t('🔄 {ancien} est parti(e) : {nom} prend sa place, avec sa pioche.', { ancien: ancien.nom, nom })]
   return [t('🔄 {ancien} est parti(e) : {nom} ({rarete} !) prend sa place, avec sa pioche.', { ancien: ancien.nom, nom, rarete: t(RARETES[rarete].nom).toLowerCase() })]
 }

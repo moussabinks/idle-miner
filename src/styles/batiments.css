@@ -1190,3 +1190,67 @@
   min-width: 0;
   white-space: nowrap;
 }
+
+/* (26/10) Les ateliers (fonderie, joaillerie) : ce qu'ils acceptent (« 🔩 → ⬜ »), et ce qu'ils
+   refusent, grisé. */
+.ligne-accepte-icones {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ligne-accepte-fleche {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--encre-douce);
+}
+
+.ligne-verrouillee {
+  opacity: 0.6;
+}
+
+.ligne-refuses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.ligne-refuses-icones {
+  display: inline-flex;
+  gap: 4px;
+  font-size: 1.2rem;
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.appel-joaillier {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.appel-joaillier p {
+  margin: 0;
+}
+
+/* (26/10) Une tuile d'objet que l'atelier refuse : grisée, en pointillés, on ne la touche pas. */
+.objet-tuile.objet-refuse {
+  cursor: default;
+  border-style: dashed;
+  background: var(--gris);
+  opacity: 0.6;
+}
+
+.objet-tuile.objet-refuse:active {
+  transform: none;
+}
+
+.objet-refuse .objet-icone {
+  filter: grayscale(1);
+}

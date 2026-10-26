@@ -37,6 +37,7 @@ import {
   reserveMaxGenerateur,
   texteBonusGenerateur,
 } from '../jeu/generateur'
+import { atelierPose, objetsAcceptes, produitDe } from '../jeu/ateliers'
 import { nombre, t } from '../jeu/langue'
 import { blocsDuNiveau } from '../jeu/mine'
 import { acheterPioche, coutPioche, coutReparation, disponible, equiper, peutAcheterPioche, peutPayer, peutReparer, reparer, valeurDe, type EtatJeu } from '../jeu/mineur'
@@ -75,7 +76,7 @@ function boostGenerateur(etat: EtatJeu): string {
 }
 
 // Une carte d'état, en haut d'un panneau : une grosse icône, ce qui se passe, et une étiquette.
-function CarteEtat({ icone, titre, etiquette, ok, children }: { icone: string; titre: string; etiquette: string; ok: boolean; children?: ReactNode }) {
+export function CarteEtat({ icone, titre, etiquette, ok, children }: { icone: string; titre: string; etiquette: string; ok: boolean; children?: ReactNode }) {
   return (
     <div className="carte carte-etat">
       <span className="carte-etat-icone" aria-hidden="true">
@@ -98,6 +99,12 @@ function CarteEtat({ icone, titre, etiquette, ok, children }: { icone: string; t
 // ---------------------------------------------------------------------------
 
 const VERS_LE_MARCHE = LISTE_LIAISONS.filter((l) => LIAISONS[l].arrivee === 'marche')
+
+// Ce lingot (ou ce bijou) sort d'un atelier construit, d'un minerai qu'on trouve déjà dans la mine.
+function produitDUnAtelier(etat: EtatJeu, bloc: IdBloc): boolean {
+  const duNiveau = blocsDuNiveau(etat.niveauMine)
+  return (['fonderie', 'joaillerie'] as const).some((id) => atelierPose(etat, id) && objetsAcceptes(id).some((minerai) => duNiveau.includes(minerai) && produitDe(id, minerai) === bloc))
+}
 
 export function PanneauMarche({ onReglerTrajet, onConstruireRails }: PropsPanneau) {
   const { etat } = useJeu()
@@ -141,7 +148,8 @@ export function PanneauMarche({ onReglerTrajet, onConstruireRails }: PropsPannea
       {/* (25/10) Les prix du marché : ce que rapporte chaque minerai (avant, dans la mine). */}
       <h3 className="titre-section">{t('Prix du marché')}</h3>
       <ul className="prix-marche">
-        {LISTE_BLOCS.filter((bloc) => bloc === 'pierre' || blocsDuNiveau(etat.niveauMine).includes(bloc))
+        {/* (26/10) avec les lingots et les bijoux, une fois la fonderie ou la joaillerie construite */}
+        {LISTE_BLOCS.filter((bloc) => bloc === 'pierre' || blocsDuNiveau(etat.niveauMine).includes(bloc) || produitDUnAtelier(etat, bloc))
           .sort((a, b) => BLOCS[b].prix - BLOCS[a].prix)
           .map((bloc) => (
             <li key={bloc} className="etiquette prix-marche-ligne">
@@ -406,6 +414,12 @@ function Alimentes() {
   })
   if (batimentPose(etat.village, 'foreuse')) {
     lignes.push({ cle: 'foreuse', nom: `${BATIMENTS.foreuse.emoji} ${t('Foreuse')}`, ok: batimentDansLeRayon(etat, 'foreuse'), texte: batimentDansLeRayon(etat, 'foreuse') ? t('dans le rayon') : t('hors du rayon') })
+  }
+  // (26/10) Les ateliers : ils vont plus vite dans le rayon.
+  for (const id of ['fonderie', 'joaillerie'] as const) {
+    if (!batimentPose(etat.village, id)) continue
+    const dedans = batimentDansLeRayon(etat, id)
+    lignes.push({ cle: id, nom: `${BATIMENTS[id].emoji} ${t(BATIMENTS[id].nom)}`, ok: dedans, texte: dedans ? t('dans le rayon') : t('hors du rayon') })
   }
   for (const trajet of etat.trajets) {
     const ligne = ligneDe(etat, trajet.liaison)

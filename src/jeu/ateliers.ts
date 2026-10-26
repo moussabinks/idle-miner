@@ -339,6 +339,40 @@ export function avancerJoaillerie(etat: EtatJeu, secondes: number, rendementDe: 
   return []
 }
 
+// ---------------------------------------------------------------------------
+// Ce que rapportent les ateliers (pour le « +X/s » et le bilan)
+// ---------------------------------------------------------------------------
+
+// Ce qu'un atelier fabrique par seconde en ce moment (les lingots ; les bijoux des joailliers qui
+// taillent). « rendementDe » : la rareté d'un joaillier (×1 commun... ×5 mythique).
+export function fabriqueParSeconde(etat: EtatJeu, id: IdAtelier, rendementDe: (e: Employe) => number): number {
+  if (id === 'fonderie') return fonderieEnMarche(etat) ? vitesseFonderie(etat) : 0
+  return joailliers(etat)
+    .filter((e) => joaillierAuTravail(e) && gemmeEnCours(e) !== null)
+    .reduce((total, e) => total + vitesseJoaillier(etat, rendementDe(e)), 0)
+}
+
+// Ce que l'atelier ajoute en moyenne à chaque objet transformé : le prix du lingot (ou du bijou)
+// moins celui du minerai, pondéré par ce qui attend à l'entrée (ou, entrée vide, à parts égales).
+export function plusValueMoyenne(etat: EtatJeu, id: IdAtelier): number {
+  const entree = atelierDe(etat, id).entree
+  const liste = Object.keys(entree).length > 0 ? (Object.entries(entree) as [IdBloc, number][]) : objetsAcceptes(id).map((b): [IdBloc, number] => [b, 1])
+  let total = 0
+  let nombreTotal = 0
+  for (const [bloc, n] of liste) {
+    const produit = produitDe(id, bloc)
+    if (!produit || n <= 0) continue
+    total += (BLOCS[produit].prix - BLOCS[bloc].prix) * n
+    nombreTotal += n
+  }
+  return nombreTotal > 0 ? total / nombreTotal : 0
+}
+
+// Ce que l'atelier ajoute par seconde (sa plus-value), en ce moment.
+export function plusValueParSeconde(etat: EtatJeu, id: IdAtelier, rendementDe: (e: Employe) => number): number {
+  return fabriqueParSeconde(etat, id, rendementDe) * plusValueMoyenne(etat, id)
+}
+
 // Ce que l'atelier a de quoi faire, pour les bulles et les tâches : « ⚫ plus de charbon »,
 // « plein », « personne au travail »...
 export function besoinCharbonFonderie(etat: EtatJeu): boolean {

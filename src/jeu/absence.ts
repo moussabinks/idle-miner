@@ -6,7 +6,9 @@
 // en grand est le BÉNÉFICE NET : ce que le joueur a en plus dans sa poche, salaires déduits.
 
 import type { EtatJeu } from './mineur'
-import { encaisser, nbDansCoffre, vendreCoffre } from './mineur'
+import { encaisser, nbDansCoffre, vendreCoffre, type Inventaire } from './mineur'
+import { vendreSortie } from './ateliers'
+import type { IdBloc } from './donnees'
 import { nbDansChariot } from './foreuse'
 import { managerActif, nbSansSalaire, prochainNiveauManager, secondesEveilManager } from './employes'
 import { nombre, t } from './langue'
@@ -56,10 +58,16 @@ export function photoPartie(etat: EtatJeu): PhotoPartie {
 }
 
 // (25/10) Au retour : on vend le coffre de la mine au marché (sauf ce que le joueur garde 📌).
+// (26/10) Et la réserve de la fonderie et de la joaillerie (sauf les lingots gardés 📌).
 // Renvoie ce que la vente a rapporté.
 export function vendreCoffreAuRetour(etat: EtatJeu): number {
   const avant = etat.argent
   vendreCoffre(etat)
+  for (const id of ['fonderie', 'joaillerie'] as const) {
+    const lot: Inventaire = {}
+    for (const [bloc, n] of Object.entries(etat[id].sortie)) lot[bloc as IdBloc] = Math.max(0, (n ?? 0) - (etat.coffre.garder?.[bloc as IdBloc] ?? 0))
+    vendreSortie(etat, id, lot)
+  }
   return Math.round(etat.argent - avant)
 }
 

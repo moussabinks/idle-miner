@@ -81,6 +81,9 @@ export const CALAGES: Record<IdBatiment, Calage> = {
   forgeron: { largeur: 354, hauteur: 417, gauche: { x: 12, y: 309.7 }, bas: { x: 177, y: 405.4 }, droite: { x: 342, y: 309.7 } },
   generateur: { largeur: 354, hauteur: 403, gauche: { x: 12, y: 295.7 }, bas: { x: 177, y: 391.4 }, droite: { x: 342, y: 295.7 } },
   marche: { largeur: 354, hauteur: 393, gauche: { x: 12, y: 285.7 }, bas: { x: 177, y: 381.4 }, droite: { x: 342, y: 285.7 } },
+  // (26/10) La fonderie est plus haute que les autres : sa fumée monte haut.
+  fonderie: { largeur: 354, hauteur: 443, gauche: { x: 12, y: 335.7 }, bas: { x: 177, y: 431.4 }, droite: { x: 342, y: 335.7 } },
+  joaillerie: { largeur: 354, hauteur: 409, gauche: { x: 12, y: 301.7 }, bas: { x: 177, y: 397.4 }, droite: { x: 342, y: 301.7 } },
 }
 
 // Les points utiles de l'image de la mine (pour ce que DessinsVillage dessine par-dessus : la
@@ -164,10 +167,15 @@ export const IMAGES_BATIMENTS: Record<IdBatiment, string> = {
   marche: cheminPublic('/images/batiments/marche.svg'),
   employes: cheminPublic('/images/batiments/employes.svg'),
   generateur: cheminPublic('/images/batiments/generateur.svg'),
+  fonderie: cheminPublic('/images/batiments/fonderie.svg'),
+  joaillerie: cheminPublic('/images/batiments/joaillerie.svg'),
 }
 
 // (26/10) La foreuse en marche : le même dessin, avec la mèche qui tourne (une animation dans le SVG).
 export const IMAGE_FOREUSE_ACTIVE = cheminPublic('/images/batiments/foreuse-active.svg')
+
+// (26/10) La fonderie qui fond : les flammes dansent, le creuset verse le métal dans le moule.
+export const IMAGE_FONDERIE_ACTIVE = cheminPublic('/images/batiments/fonderie-active.svg')
 
 // L'image à afficher pour un bâtiment. (25/10 : les dessins n'ont plus d'écritures, un bâtiment
 // retourné (miroir) utilise donc la même image, simplement retournée.)
