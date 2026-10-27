@@ -195,7 +195,7 @@
   /* --- Les gros boutons ronds du bas ----------------------------------------------------- */
 
   .interface-bas {
-    bottom: calc(var(--marge-bas) + 4px);
+    bottom: calc(var(--marge-bas) + 4px + var(--tuto-decale-bas, 0px));
   }
 
   .gros-rond {
