@@ -56,7 +56,8 @@
 bouge) : une toile de 18 × 18 cases, la colline au milieu, et le château mesuré sur deux axes tournés
 de 45° (u vers nous, v vers la droite de l'écran) : le mur de devant se voit de face, avec la tour
 de la porte, ses deux tours d'angle, deux tours plus hautes derrière, le donjon au milieu. Neuf : pierres crème, toits pointus bleu roi, drapeaux, bannière
-rouge à la couronne d'or, porte en bois aux clous dorés. En ruine : pierres gris lilas, murs au dessus
-déchiqueté (`murEnRuine`), tours cassées, donjon éventré, poutre tombée, mousse, éboulis.
+rouge à la couronne d'or, porte en bois aux clous dorés. En ruine (27/10, redessiné) : pierres gris lilas, murs au haut cassé en marches (`murEnRuine`,
+`profilCasse`) avec des pierres dessinées, tours creuses au bord cassé (`tourEnRuine` : on voit
+l'intérieur), donjon et tour de la porte creux (`blocCreux`), lierre qui pend, poutre tombée, éboulis.
 `fabriquer.mjs` affiche son calage (`CALAGE_CHATEAU` dans `src/composants/chateau.ts`) : la case (0, 0)
 de la toile est posée sur la case (-23, -23) de la grille.
