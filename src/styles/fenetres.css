@@ -31,15 +31,23 @@
   visibility: hidden;
 }
 
+/* (27/10) La boîte de la cible (--x, --y, --l, --h, --arrondi) est mesurée par Tutoriel.tsx : sa
+   vraie taille, ce qui dépasse (pastille, étiquette, ombre) et la place pour quand elle palpite.
+   L'anneau l'entoure à --ecart de distance : son bord intérieur reste toujours à 6 px de la
+   cible, sans jamais la toucher, et il a la même forme qu'elle (un rond reste un rond). */
+.tuto-cible {
+  --ecart: 14px; /* = 6 px de vide + 8 px d'anneau (5 de jaune, 3 d'encre à l'intérieur) */
+}
+
 /* Le voile sombre autour de la cible : un trou arrondi, et une ombre immense tout autour. */
 .tuto-trou {
   position: absolute;
   left: 0;
   top: 0;
-  width: calc(var(--l) + 16px);
-  height: calc(var(--h) + 16px);
-  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
-  border-radius: 18px;
+  width: calc(var(--l) + 2 * var(--ecart));
+  height: calc(var(--h) + 2 * var(--ecart));
+  transform: translate3d(calc(var(--x) - var(--ecart)), calc(var(--y) - var(--ecart)), 0);
+  border-radius: calc(var(--arrondi, 4px) + var(--ecart));
   box-shadow: 0 0 0 200vmax rgb(42 33 64 / 0.38);
   will-change: transform;
 }
@@ -54,9 +62,9 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: calc(var(--l) + 16px);
-  height: calc(var(--h) + 16px);
-  transform: translate3d(calc(var(--x) - 8px), calc(var(--y) - 8px), 0);
+  width: calc(var(--l) + 2 * var(--ecart));
+  height: calc(var(--h) + 2 * var(--ecart));
+  transform: translate3d(calc(var(--x) - var(--ecart)), calc(var(--y) - var(--ecart)), 0);
   will-change: transform;
 }
 
@@ -64,7 +72,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  border-radius: calc(var(--arrondi, 4px) + var(--ecart));
   border: 5px solid var(--jaune);
   outline: 3px solid var(--encre);
   box-shadow: inset 0 0 0 3px var(--encre);
@@ -102,7 +110,8 @@
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate3d(var(--centre), calc(var(--y) - 10px), 0);
+  /* (au-dessus de l'anneau : la cible, l'écart, et le contour de l'anneau) */
+  transform: translate3d(var(--centre), calc(var(--y) - var(--ecart) - 6px), 0);
   will-change: transform;
 }
 
@@ -111,7 +120,7 @@
 }
 
 .tuto-cible-dessous .tuto-fleche-place {
-  transform: translate3d(var(--centre), calc(var(--y) + var(--h) + 10px), 0);
+  transform: translate3d(var(--centre), calc(var(--y) + var(--h) + var(--ecart) + 6px), 0);
 }
 
 .tuto-fleche {
