@@ -1551,9 +1551,9 @@ g.grille-construction {
 .chateau-poussiere {
   position: absolute;
   left: var(--x);
-  bottom: 16%;
-  width: 96px;
-  height: 70px;
+  bottom: 24%;
+  width: 64px;
+  height: 46px;
   border: 3px solid #2a2140;
   border-radius: 50%;
   background: #efe6d6;

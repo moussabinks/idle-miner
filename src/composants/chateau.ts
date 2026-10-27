@@ -3,26 +3,28 @@
 // C'est seulement de l'affichage (la logique est dans src/jeu/chateau.ts).
 //
 // Les dessins (chateau-ruine.svg et chateau-neuf.svg) sont fabriqués par outils/art/chateau.mjs :
-// une toile de 16 × 16 cases, deux fois plus grande que le monde. Sa case (0, 0) est posée sur la
+// une toile de 18 × 18 cases, deux fois plus grande que le monde. Sa case (0, 0) est posée sur la
 // case (ORIGINE, ORIGINE) de la grille : le château est donc pile au-dessus du coin du haut de la
-// clairière, sur l'axe du milieu de l'écran.
+// clairière, sur l'axe du milieu de l'écran. (27/10) Il est tourné de 45° : sa porte est face à
+// nous, et le chemin monte tout droit vers elle.
 
 import { cheminPublic } from '../chemins'
 import { versEcran, type Point } from './iso'
 
 // Les chiffres affichés par outils/art/fabriquer.mjs (« CHÂTEAU ») : la taille du dessin, le coin du
-// haut de sa toile (la case 0, 0) et le pied de sa rampe, en pixels du dessin.
-export const CALAGE_CHATEAU = { largeur: 1080, hauteur: 1212, coin: { x: 540, y: 560 }, piedRampe: { x: 190.2, y: 1069.1 } }
+// haut de sa toile (la case 0, 0) et le pied de sa colline (où arrive le chemin), en pixels du dessin.
+export const CALAGE_CHATEAU = { largeur: 1212, hauteur: 1239, coin: { x: 606, y: 520 }, piedChemin: { x: 606, y: 1167.7 } }
 export const IMAGE_CHATEAU_RUINE = cheminPublic('/images/village/chateau/chateau-ruine.svg')
 export const IMAGE_CHATEAU_NEUF = cheminPublic('/images/village/chateau/chateau-neuf.svg')
 
 // Le dessin est deux fois plus grand que le monde.
 const ECHELLE = 0.5
 // La case de la grille où tombe la case (0, 0) de la toile du château.
-const ORIGINE = -22
-// Sur la toile : le milieu du château (8, 8) et le pied de la rampe (8 ; 18,6) (voir chateau.mjs).
-export const CENTRE_CHATEAU = { x: ORIGINE + 8, y: ORIGINE + 8 }
-export const PIED_RAMPE = { x: ORIGINE + 8, y: ORIGINE + 18.6 }
+const ORIGINE = -23
+// Sur la toile : le milieu du château (9, 9) et le pied de la colline, juste devant lui (17,9 ;
+// 17,9 : le rayon du pied de la colline, 11,2 cases, en diagonale), voir chateau.mjs.
+export const CENTRE_CHATEAU = { x: ORIGINE + 9, y: ORIGINE + 9 }
+export const PIED_CHEMIN = { x: ORIGINE + 9 + 11.2 / Math.SQRT2, y: ORIGINE + 9 + 11.2 / Math.SQRT2 }
 
 export type Rectangle = { x0: number; y0: number; x1: number; y1: number }
 
@@ -43,16 +45,14 @@ export function zoneChateau(): Rectangle {
   return { x0: c.x0 + l * 0.04, y0: c.y0 + h * 0.08, x1: c.x1 - l * 0.04, y1: c.y1 - h * 0.04 }
 }
 
-// Le chemin, en cases de la grille : du coin du haut de la clairière jusqu'au pied de la rampe.
-// Il fait une grande courbe douce vers la gauche (la rampe descend vers le bas à gauche).
+// Le chemin, en cases de la grille : du coin du haut de la clairière jusqu'au pied de la colline,
+// presque tout droit (vers le haut de l'écran), avec une petite ondulation.
 export const CHEMIN_CHATEAU: Point[] = [
   { x: 0.6, y: 0.6 },
-  { x: -1.2, y: -0.4 },
-  { x: -3.6, y: -0.9 },
-  { x: -6.2, y: -1.2 },
-  { x: -8.8, y: -1.9 },
-  { x: -11.4, y: -2.7 },
-  { x: PIED_RAMPE.x, y: PIED_RAMPE.y + 0.1 },
+  { x: -1.2, y: -0.9 },
+  { x: -2.9, y: -2.9 },
+  { x: -4.4, y: -4.7 },
+  { x: PIED_CHEMIN.x + 0.05, y: PIED_CHEMIN.y + 0.05 },
 ]
 
 // Le cadre du chemin, en pixels du monde (avec sa largeur).

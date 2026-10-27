@@ -837,13 +837,31 @@
   margin: 10px auto 4px;
 }
 
+/* Les feux d'artifice : le ciel s'assombrit le temps du spectacle (un voile bleu nuit), et la
+   toile des étincelles par-dessus. */
 .feux-artifice {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
   z-index: 60;
   pointer-events: none;
+  background: rgb(14 10 38 / 0.5);
+  animation: feux-nuit var(--duree, 10s) ease-in-out both;
+}
+.feux-artifice canvas {
+  width: 100%;
+  height: 100%;
+}
+@keyframes feux-nuit {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Sur téléphone, la quête passe sous le bandeau, en largeur (à côté des boutons ronds du haut). */
