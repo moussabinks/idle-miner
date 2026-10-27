@@ -385,12 +385,25 @@
 .classement-haut {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* (27/10, demandé par le propriétaire) Le trophée et « Classement » toujours sur une seule ligne,
+   dans toutes les langues (« Clasificación », « Leaderboard » passaient à la ligne) : c'est
+   l'étiquette « Argent gagné » qui se serre (et va à la ligne dans sa pastille s'il le faut). */
 .classement-haut h2 {
-  flex: 1;
-  font-size: 1.45rem;
+  flex: 1 0 auto;
+  font-size: 1.3rem;
+  white-space: nowrap;
+}
+
+.classement-haut .etiquette {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0.15em 0.6em;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .classement-actualiser {
