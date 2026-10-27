@@ -1,12 +1,14 @@
 // La boutique des gemmes (25/10) : regarder une publicité pour gagner une gemme, et dépenser ses
 // gemmes en bonus (production × 2, ventes × 2, employés × 2, fortune), 3 gemmes chacun.
 // (25/10) Et acheter des packs de gemmes avec de l'argent réel (Paiement.tsx).
+// (27/10) Sur CrazyGames, pas de packs : une carte « Bientôt disponible » à leur place (AVEC_PACKS).
 // Les règles sont dans src/jeu/gemmes.ts.
 
 import { useState } from 'react'
 import { BOOSTS, GEMMES_PAR_PUB, LISTE_BOOSTS, PACKS_GEMMES, acheterBoost, bonusPack, crediterPack, peutAcheterBoost, recompenserPub, secondesBoost, type PackGemmes } from '../jeu/gemmes'
 import { nombre, prixEuros, t } from '../jeu/langue'
 import { minutesSecondes } from '../nombres'
+import { AVEC_PACKS } from '../portail'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 import { Paiement } from './Paiement'
@@ -40,21 +42,34 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
       {/* (25/10) Acheter des gemmes. (27/10) Montré partout, mais pas encore payable en ligne :
           voir PAIEMENT_SIMULE dans src/portail.ts et Paiement.tsx. */}
       <h3 className="titre-section">{t('Acheter des gemmes')}</h3>
-      <div className="boutique-packs">
-        {PACKS_GEMMES.map((pack) => {
-          const bonus = bonusPack(pack)
-          return (
-            <button key={pack.id} className={`boutique-pack ${pack.etiquette ? 'boutique-pack-vedette' : ''}`} onClick={() => setEnPaiement(pack)}>
-              {pack.etiquette && <span className="boutique-pack-etiquette">{pack.etiquette === 'populaire' ? t('Populaire') : t('Meilleure offre')}</span>}
-              <span className="boutique-pack-gemmes">
-                <span aria-hidden="true">💎</span> {nombre(pack.gemmes)}
-              </span>
-              <span className="boutique-pack-bonus">{bonus > 0 ? t('+{n} % offert', { n: bonus }) : '\u00a0'}</span>
-              <span className="boutique-pack-prix">{prixEuros(pack.centimes)}</span>
-            </button>
-          )
-        })}
-      </div>
+      {!AVEC_PACKS && (
+        <div className="boutique-bientot carte">
+          <span className="boutique-video-icone" aria-hidden="true">
+            🔒
+          </span>
+          <span className="boutique-ligne-texte">
+            <strong>{t('Bientôt disponible')}</strong>
+            <span className="discret">{t('Les achats de gemmes arrivent très bientôt ! En attendant, regarde une publicité pour gagner des gemmes.')}</span>
+          </span>
+        </div>
+      )}
+      {AVEC_PACKS && (
+        <div className="boutique-packs">
+          {PACKS_GEMMES.map((pack) => {
+            const bonus = bonusPack(pack)
+            return (
+              <button key={pack.id} className={`boutique-pack ${pack.etiquette ? 'boutique-pack-vedette' : ''}`} onClick={() => setEnPaiement(pack)}>
+                {pack.etiquette && <span className="boutique-pack-etiquette">{pack.etiquette === 'populaire' ? t('Populaire') : t('Meilleure offre')}</span>}
+                <span className="boutique-pack-gemmes">
+                  <span aria-hidden="true">💎</span> {nombre(pack.gemmes)}
+                </span>
+                <span className="boutique-pack-bonus">{bonus > 0 ? t('+{n} % offert', { n: bonus }) : '\u00a0'}</span>
+                <span className="boutique-pack-prix">{prixEuros(pack.centimes)}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       <h3 className="titre-section">{t('Bonus')}</h3>
       {LISTE_BOOSTS.map((id) => {

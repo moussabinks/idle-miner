@@ -3,4 +3,5 @@
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config'
 import configVite from './vite.config.ts'
 
-export default mergeConfig(configVite, defineConfig({ test: { exclude: [...configDefaults.exclude, 'archives/**'] } }))
+// (27/10) La config de Vite est une fonction (une version par « mode ») : on prend la normale.
+export default mergeConfig(configVite({ command: 'serve', mode: 'test' }), defineConfig({ test: { exclude: [...configDefaults.exclude, 'archives/**'] } }))

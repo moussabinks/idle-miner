@@ -15,19 +15,25 @@ import './styles/batiments.css' // les panneaux des bâtiments, le Personnel, «
 import './styles/accueil.css' // l'écran d'accueil : les mondes, le classement, le compte
 import './styles/fenetres.css' // le tutoriel, la fête du niveau, les statistiques, le bilan, les gains
 import './styles/paysage.css' // (27/10) le téléphone couché : fenêtres en panneau à droite (en dernier)
-import App from './App.tsx'
 import { enregistrerServiceWorker } from './installation'
 import { initialiserLangue } from './langueNavigateur'
 import { initialiserPortail } from './portail'
 
-initialiserLangue()
-void initialiserPortail()
+// (27/10) On attend d'abord le SDK de CrazyGames (seulement dans la version portail : ailleurs,
+// c'est immédiat), parce qu'il branche la sauvegarde sur le compte CrazyGames du joueur. Le jeu
+// (App) n'est chargé qu'après : ses réglages (son, musique...) sont lus au bon endroit.
+async function demarrer() {
+  await initialiserPortail()
+  initialiserLangue()
+  const { default: App } = await import('./App.tsx')
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+void demarrer()
 
 // Le jeu marche aussi hors ligne et s'installe comme une application (voir public/sw.js).
 enregistrerServiceWorker()

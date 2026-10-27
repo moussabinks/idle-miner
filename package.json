@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:crazygames": "tsc -b && vite build --mode crazygames && node outils/crazygames/zipper.mjs",
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",

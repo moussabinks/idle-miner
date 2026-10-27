@@ -6,7 +6,8 @@
 // démarrait pas (écran blanc).
 // Ici, on essaie une fois : si le localStorage marche, on s'en sert ; sinon, on garde tout en
 // mémoire (la partie marche, mais elle sera perdue en fermant la page).
-// Plus tard, la version CrazyGames pourra remplacer ce stockage par celui de leur SDK.
+// (27/10) Dans la version CrazyGames, le stockage est ensuite branché sur leur SDK (le module
+// « Data », voir src/portail.ts) : la partie est gardée sur le compte CrazyGames du joueur.
 
 import type { Stockage } from './jeu/sauvegarde'
 
@@ -37,11 +38,26 @@ function choisirStockage(): { stockage: Stockage; persistant: boolean } {
 
 const choix = choisirStockage()
 
+// Là où le jeu range vraiment ses données (le localStorage, la mémoire, ou le SDK de CrazyGames).
+let fond: Stockage = choix.stockage
+
 // Le stockage à utiliser partout dans l'interface (au lieu de window.localStorage).
-export const stockage: Stockage = choix.stockage
+// Il passe tout à « fond », pour qu'on puisse le brancher ailleurs au démarrage.
+export const stockage: Stockage = {
+  getItem: (cle) => fond.getItem(cle),
+  setItem: (cle, valeur) => fond.setItem(cle, valeur),
+  removeItem: (cle) => fond.removeItem(cle),
+}
 
 // false : les parties ne seront pas gardées après la fermeture de la page (on peut le dire au joueur).
-export const stockagePersistant = choix.persistant
+export let stockagePersistant = choix.persistant
+
+// (27/10) Brancher le stockage ailleurs (le module Data du SDK de CrazyGames). À faire avant de
+// lire quoi que ce soit : main.tsx attend le SDK avant de charger le jeu.
+export function brancherStockage(nouveau: Stockage): void {
+  fond = nouveau
+  stockagePersistant = true
+}
 
 // Lire et écrire une petite valeur (un réglage), sans jamais lever d'erreur.
 export function lireReglage(cle: string): string | null {

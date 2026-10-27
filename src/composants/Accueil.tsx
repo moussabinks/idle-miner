@@ -7,6 +7,8 @@
 //   - à droite : le classement.
 // Sur téléphone, tout est empilé (on fait défiler) : le village en haut, puis les cartes.
 // Dans la version portail (CrazyGames), pas de compte ni de classement, ni d'installation.
+// (27/10) Son accueil est épuré : le bandeau s'aligne sur la carte « Jouer », et plus de numéro
+// de version en bas (accueil-portail dans src/styles/accueil.css).
 
 import { useEffect, useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
@@ -26,7 +28,7 @@ import {
 } from '../jeu/sauvegarde'
 import { choisirLangue } from '../langueNavigateur'
 import { nombreAbrege } from '../nombres'
-import { AVEC_COMPTES, AVEC_INSTALLATION } from '../portail'
+import { AVEC_COMPTES, AVEC_INSTALLATION, PORTAIL } from '../portail'
 import { stockage, stockagePersistant } from '../stockage'
 import type { Compte } from '../useCompte'
 import { ETAPES_DU_JEU } from './etapesDuJeu'
@@ -235,7 +237,7 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
   const monArgent = meilleurArgent(mondes.map((m) => charger(stockage, m.id)))
 
   return (
-    <div className={`accueil ${AVEC_COMPTES ? '' : 'accueil-sans-classement'}`}>
+    <div className={`accueil ${AVEC_COMPTES ? '' : 'accueil-sans-classement'} ${PORTAIL ? 'accueil-portail' : ''}`}>
       {/* Au fond : le petit village vivant, vu du ciel comme dans le jeu. */}
       <div className="accueil-scene">
         <SceneAccueil marges={AVEC_COMPTES ? MARGES_AVEC_CLASSEMENT : MARGES_SANS_CLASSEMENT} />
@@ -372,12 +374,15 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
         </ol>
       )}
 
-      {/* La version en ligne (commit et date du build) : pour vérifier que Vercel est à jour. */}
-      <p className="accueil-version">
-        {/* Le navigateur refuse la sauvegarde (navigation privée, site dans un cadre...) : on prévient. */}
-        {!stockagePersistant && <strong className="accueil-sans-sauvegarde">⚠️ {t('Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page.')} </strong>}
-        {t('Version {v}', { v: __VERSION_JEU__ })}
-      </p>
+      {/* La version en ligne (commit et date du build) : pour vérifier que Vercel est à jour.
+          (27/10) Pas sur CrazyGames : seulement l'avertissement, s'il y a lieu. */}
+      {(!PORTAIL || !stockagePersistant) && (
+        <p className="accueil-version">
+          {/* Le navigateur refuse la sauvegarde (navigation privée, site dans un cadre...) : on prévient. */}
+          {!stockagePersistant && <strong className="accueil-sans-sauvegarde">⚠️ {t('Ce navigateur ne garde pas les parties : elles seront perdues en fermant la page.')} </strong>}
+          {!PORTAIL && t('Version {v}', { v: __VERSION_JEU__ })}
+        </p>
+      )}
 
       {compteOuvert && AVEC_COMPTES && (
         <Fenetre titre={t('Ton compte')} icone="👤" couleur="bleu" taille="petite" onFermer={() => setCompteOuvert(false)}>

@@ -38,6 +38,14 @@
   gap: 2px;
 }
 
+/* (27/10) Sur CrazyGames, à la place des packs : une carte « Bientôt disponible ». */
+.boutique-bientot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f1eee6;
+}
+
 /* (25/10) Les packs de gemmes (argent réel) : quatre cartes, deux par ligne sur téléphone. */
 .boutique-packs {
   display: grid;
