@@ -55,9 +55,25 @@ const BOUTON_MINE = '[data-tuto="mine"]'
 const CHOIX_PERSONNEL = '[data-tuto="poser-employes"]'
 const batiment = (id: IdBatiment) => `[data-cible="batiment:${id}"]`
 
+// (27/10) Une fenêtre qui n'a rien à voir avec l'étape est ouverte (le menu Bâtiments pendant
+// « Ouvre le Personnel »...) : ce qu'il faut toucher est caché derrière. On fait d'abord fermer
+// la fenêtre (avant, l'anneau doré montrait un endroit caché, au milieu de la fenêtre).
+const FERMER_LA_FENETRE = (): Consigne => ({
+  titre: t('Ferme cette fenêtre'),
+  texte: t('Touche ✖, en haut à droite de la fenêtre.'),
+  geste: t('Ferme !'),
+  cible: '[data-tuto="fermer-fenetre"]',
+})
+
 // Le texte et la cible de chaque étape, selon ce qui est ouvert.
 function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Consigne {
   const aLaMine = ui.batimentOuvert === 'puits'
+  // Ce qui gêne chaque étape : une autre fenêtre que celle dont elle a besoin.
+  const autreFenetre =
+    ((etape === 'creuser' || etape === 'vendre') && (ui.menuConstruction || (ui.batimentOuvert !== null && !aLaMine))) ||
+    (etape === 'personnel' && ui.batimentOuvert !== null) ||
+    (etape === 'embaucher' && (ui.menuConstruction || (ui.batimentOuvert !== null && ui.batimentOuvert !== 'employes')))
+  if (autreFenetre) return FERMER_LA_FENETRE()
   switch (etape) {
     case 'bonjour':
     case 'bravo':

@@ -347,7 +347,7 @@ Pendant la partie, le zoom du navigateur (Ctrl + molette, Ctrl +/−, gestes Saf
 
 ## 13. Téléphone ou ordinateur
 
-**(27/10) Sur téléphone, le jeu se joue à l'horizontale** (`src/styles/paysage.css`, écran couché de moins de 520 px de haut) :
+**(27/10) Sur téléphone, le jeu se joue à l'horizontale** (`src/styles/paysage.css`, écran couché de moins de 620 px de haut ; 27/10 : 520 avant, pour aussi couvrir le petit cadre de CrazyGames) :
 
 - **Les fenêtres s'ouvrent en panneau sur la droite** (60 % de la largeur, 66 % pour la mine et le Personnel, toute la hauteur) : le village reste visible à gauche. Les petites fenêtres (confirmations) sont centrées en hauteur.
 - **Le bandeau** reste sur une ligne, plus petit ; **les boutons du coin** font 40 px ; **la quête et les tâches** (une à la fois) font 270 px de large et s'arrêtent au-dessus des gros boutons ronds (66 px et 52 px).

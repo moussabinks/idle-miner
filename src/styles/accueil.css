@@ -630,7 +630,7 @@
    Pas de classement à droite : le bandeau s'étire sur toute la largeur, aligné sur la carte
    « Jouer », au lieu de flotter au milieu d'un grand écran. */
 
-@media (min-width: 761px) and (min-height: 521px) {
+@media (min-width: 761px) and (min-height: 621px) {
   .accueil-portail .accueil-bandeau {
     left: 16px;
     width: calc(100% - 32px);

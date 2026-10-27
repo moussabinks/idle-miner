@@ -1,7 +1,9 @@
 /* =========================================================================
    (27/10, demandé par le propriétaire) Le téléphone tenu à l'horizontale (couché) : un écran
-   large mais pas haut (moins de 520 px). Le jeu se joue comme ça sur téléphone (tenu debout, un
-   message demande de le tourner : TournerTelephone.tsx).
+   large mais pas haut (moins de 620 px ; 27/10 : 520 avant, mais le petit cadre de CrazyGames sur
+   un ordinateur fait environ 1000 × 525 : avec la mise en page de grand écran, les fenêtres et le
+   tutoriel débordaient). Le jeu se joue comme ça sur téléphone (tenu debout, un message demande de
+   le tourner : TournerTelephone.tsx).
 
    - Les fenêtres ne prennent plus tout l'écran : elles s'ouvrent comme un panneau sur la droite,
      et le village reste visible à gauche (on voit ses taupes travailler pendant qu'on améliore).
@@ -11,8 +13,22 @@
    Ce fichier est chargé en dernier : il passe par-dessus les autres styles.
    ========================================================================= */
 
-@media (orientation: landscape) and (max-height: 520px) {
+@media (orientation: landscape) and (max-height: 620px) {
   /* --- Les fenêtres : un panneau sur la droite ------------------------------------------- */
+
+  /* (27/10) La carte du tutoriel à gauche, au-dessus du village : les fenêtres s'ouvrent à
+     droite, elle ne cache plus leur titre ni leurs onglets. */
+  .tuto-carte {
+    left: max(8px, env(safe-area-inset-left));
+    width: min(380px, calc(34vw - 16px));
+    translate: none;
+    gap: 8px;
+  }
+
+  .tuto-carte-pepite {
+    width: 44px;
+    height: 44px;
+  }
 
   .voile {
     justify-content: flex-end;
