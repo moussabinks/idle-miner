@@ -7,7 +7,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { BLOCS, DECORATIONS, type IdBatiment, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
-import { nomEmploye, t } from '../jeu/langue'
+import { t } from '../jeu/langue'
 import {
   batimentPose,
   cheminEntre,
@@ -148,6 +148,8 @@ for (const de of ['puits', 'foreuse', 'fonderie', 'joaillerie'] as IdBatiment[])
 
 // Les mineurs qui font des allers-retours : d'où à où, leur rareté (la couleur du casque), et un
 // décalage pour qu'ils ne marchent pas tous ensemble.
+// (27/10) Des prénoms de gourmandises (Noisette, Pépite...), traduits dans chaque langue avec t()
+// (avant, nomEmploye les laissait en français : ils ne sont pas dans NOMS_EMPLOYES).
 const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: IdRarete; decalage: number }[] = [
   { nom: 'Noisette', de: 'puits', vers: 'marche', rarete: 'legendaire', decalage: 0 },
   { nom: 'Pépite', de: 'puits', vers: 'forgeron', rarete: 'epique', decalage: 0.35 },
@@ -362,7 +364,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
         vue={sens.vue}
         marche={!etape.pause}
         classe="perso-mineur"
-        etiquette={<span className={`etiquette-perso rarete-${m.rarete}`}>{nomEmploye(m.nom)}</span>}
+        etiquette={<span className={`etiquette-perso rarete-${m.rarete}`}>{t(m.nom)}</span>}
       />,
     )
   })
@@ -412,7 +414,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
         vue={sens.vue}
         marche={!etape.pause}
         classe="perso-mineur perso-pousseur"
-        etiquette={<span className={`etiquette-perso rarete-${w.rarete}`}>{nomEmploye(w.nom)}</span>}
+        etiquette={<span className={`etiquette-perso rarete-${w.rarete}`}>{t(w.nom)}</span>}
       />,
     )
   }
