@@ -54,14 +54,20 @@ const ATTENTE_SDK_MAX = 6000
 // Charge le SDK (seulement dans la version portail). Le jeu démarre même si ça échoue.
 // main.tsx attend la fin avant de charger le jeu : le SDK prépare la sauvegarde du joueur
 // pendant son init, et il faut brancher le stockage dessus avant de lire les mondes.
+// (27/10) Après l'attente, le jeu se charge. Si le SDK arrive plus tard, on s'en sert quand même
+// (publicités, « le joueur joue »), mais sans changer de stockage : les mondes sont déjà lus.
+let attenteFinie = false
+
 export async function initialiserPortail(): Promise<void> {
   if (PORTAIL !== 'crazygames') return
   const tropLong = new Promise<void>((_, reject) => setTimeout(() => reject(new Error('SDK trop long')), ATTENTE_SDK_MAX))
   try {
     await Promise.race([chargerSdk(), tropLong])
-  } catch {
-    sdk = null
+  } catch (erreur) {
+    // (le SDK peut encore arriver : chargerSdk continue de son côté)
+    console.warn('[Mega Digger] SDK CrazyGames pas prêt au démarrage :', erreur)
   }
+  attenteFinie = true
 }
 
 async function chargerSdk(): Promise<void> {
@@ -75,10 +81,17 @@ async function chargerSdk(): Promise<void> {
   if (!window.CrazyGames) return
   await window.CrazyGames.SDK.init()
   sdk = window.CrazyGames.SDK
+  console.info('[Mega Digger] SDK CrazyGames prêt, environnement :', sdk.environment)
   // Hors de CrazyGames (le fichier ouvert sur un autre site), le SDK est « disabled » : on garde
   // le stockage du navigateur. Et on essaie d'abord le module Data : il ne marche que si la case
   // « Le jeu sauvegarde la progression » est cochée sur leur portail (voir docs/crazygames.md).
-  if (sdk.data && sdk.environment !== 'disabled' && moduleDataMarche(sdk.data)) brancherStockage(sdk.data)
+  if (!attenteFinie && sdk.data && sdk.environment !== 'disabled' && moduleDataMarche(sdk.data)) {
+    brancherStockage(sdk.data)
+    console.info('[Mega Digger] Sauvegarde : module Data de CrazyGames')
+  }
+  // (27/10) Le jeu a peut-être déjà dit « le joueur joue » avant que le SDK soit prêt : on le
+  // redit maintenant (sinon CrazyGames ne voyait jamais le premier gameplayStart).
+  if (etatVoulu === 'jeu') sdk.game.gameplayStart()
 }
 
 function moduleDataMarche(data: NonNullable<SdkCrazyGames['data']>): boolean {
@@ -107,11 +120,24 @@ export function pubRecompensee(quandFinie: () => void, quandRatee: () => void): 
   sdk.ad.requestAd('rewarded', { adFinished: quandFinie, adError: quandRatee })
 }
 
+// Ce que le jeu a dit en dernier (« le joueur joue » ou « il est dans un menu ») : retenu, pour le
+// redire au SDK s'il arrive après.
+let etatVoulu: 'jeu' | 'pause' | null = null
+
 export function jeuEnCours(): void {
+  if (etatVoulu === 'jeu') return
+  etatVoulu = 'jeu'
+  if (PORTAIL) console.info('[Mega Digger] gameplayStart', sdk ? '' : '(SDK pas encore prêt : envoyé dès qu’il arrive)')
   sdk?.game.gameplayStart()
 }
 
 export function jeuEnPause(): void {
+  if (etatVoulu === 'pause' || etatVoulu === null) {
+    etatVoulu = 'pause'
+    return // (rien à arrêter : le jeu n'avait pas encore commencé, ou c'est déjà dit)
+  }
+  etatVoulu = 'pause'
+  if (PORTAIL) console.info('[Mega Digger] gameplayStop')
   sdk?.game.gameplayStop()
 }
 

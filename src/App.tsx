@@ -604,6 +604,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     if (fenetreOuverte) jeuEnPause()
     else jeuEnCours()
   }, [fenetreOuverte])
+  // (27/10) Retour à l'écran d'accueil : CrazyGames sait que le joueur ne joue plus.
+  useEffect(() => () => jeuEnPause(), [])
   useEffect(() => {
     if (feteNiveau) grandMoment()
   }, [feteNiveau])
