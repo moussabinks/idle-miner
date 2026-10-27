@@ -532,14 +532,18 @@ export function VueVillage({
     )
   }
 
+  // (27/10, demandé par le propriétaire) En édition (Modifier, Tout ranger, poser un bâtiment ou
+  // des rails), le joueur disparaît le temps de l'édition, comme le personnel.
+  const joueurVisible = !pousse && !enEdition
+
   // Là où le joueur va : un petit repère doré qui pulse sur le sol (comme dans Clash of Clans).
-  if (joueur.destination && !pousse) {
+  if (joueur.destination && joueurVisible) {
     const d = versEcran(joueur.destination.x, joueur.destination.y)
     objets.push(<span key="destination" className="repere-destination" style={{ left: d.x, top: d.y, zIndex: profondeur(joueur.destination.x, joueur.destination.y) }} />)
   }
 
   // Le joueur (quand il pousse le wagonnet, il est dessiné avec lui, plus bas).
-  if (!pousse) {
+  if (joueurVisible) {
     objets.push(
       <Perso key="joueur" qui="joueur" x={joueur.x} y={joueur.y} sens={joueur.sens} vue={joueur.vue} marche={joueur.marche} saut={joueur.saut} classe="perso-joueur" />,
     )
