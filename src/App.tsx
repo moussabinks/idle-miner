@@ -414,6 +414,9 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   // La restauration en train de se jouer (l'animation du château), et le feu d'artifice (sa clé :
   // on peut le relancer depuis la fenêtre du château).
   const [restauration, setRestauration] = useState(false)
+  // (27/10, bug signalé par le propriétaire) Entre le paiement et le début de l'animation, la
+  // ruine reste affichée (avant : on voyait le château neuf une demi-seconde, puis la ruine).
+  const [ruineEnAttente, setRuineEnAttente] = useState(false)
   const [feuArtifice, setFeuArtifice] = useState<number | null>(null)
   // Vrai entre le paiement et la fin du feu d'artifice : la fenêtre de la victoire s'ouvrira.
   const [victoireAttendue, setVictoireAttendue] = useState(false)
@@ -436,8 +439,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     if (apres.chateau?.restaure !== true) return
     setChateauOuvert(false)
     setVictoireAttendue(true)
+    setRuineEnAttente(true)
     regarderChateau()
     window.setTimeout(() => {
+      setRuineEnAttente(false)
       setRestauration(true)
       sons.restaurationChateau()
       grandMoment()
@@ -876,6 +881,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y), depuis: traceRail.poses.at(-1) ?? null, sens: traceRail.sens, suivi: suiviRail } : null}
             onOuvrirTrajet={setTrajetsOuverts}
             restaurationChateau={restauration}
+            ruineEnAttente={ruineEnAttente}
             regard={regard}
           />
           <Gains gains={gains} />

@@ -97,6 +97,7 @@ type Props = {
   visite?: boolean
   // (27/10) Le château de la quête finale est en train d'être restauré (son animation).
   restaurationChateau?: boolean
+  ruineEnAttente?: boolean // (27/10) le château est payé, mais son animation n'a pas commencé : encore la ruine
   // (27/10) Un point du monde où la caméra doit aller (en douceur), quand « cle » change.
   regard?: { x: number; y: number; cle: number } | null
 }
@@ -134,6 +135,7 @@ export function VueVillage({
   enEdition = false,
   visite = false,
   restaurationChateau = false,
+  ruineEnAttente = false,
   regard = null,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
@@ -932,7 +934,7 @@ export function VueVillage({
             devant lui n'y est planté, paysage.ts), puis son chemin, d'un seul trait de la clairière
             jusqu'à la porte (il monte sur la colline). */}
         <ForetDerriere vue={vueForet} />
-        <ChateauVillage restaure={etat.chateau?.restaure === true} animation={restaurationChateau} touchable={!visite} />
+        <ChateauVillage restaure={etat.chateau?.restaure === true && !ruineEnAttente} animation={restaurationChateau} touchable={!visite} />
         <CheminChateau />
         {/* (25/10, fluidité) L'eau de la mer bouge (elle a sa propre couche) : elle passe après le
             décor du fond (ils ne se touchent jamais), sinon le navigateur met chaque image du décor

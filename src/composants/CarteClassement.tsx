@@ -1,14 +1,15 @@
 // Le classement des joueurs (leaderboard), sur l'écran d'accueil.
 // (25/10) Classé à l'argent GAGNÉ en tout (stats.argentGagne, le meilleur des mondes du joueur,
-// envoyé toutes les 5 minutes au plus). Le niveau de la mine est affiché à côté de chacun, mais
-// il ne compte pas. Tout le monde peut le voir ; pour y apparaître, il faut un compte.
+// envoyé toutes les 5 minutes au plus). (27/10, demandé par le propriétaire) Le niveau de la mine
+// n'est plus affiché : toute la place va au pseudo. Tout le monde peut le voir ; pour y
+// apparaître, il faut un compte.
 // Le top 10, une ligne chacun (les 3 premiers avec leur médaille) ; en bas, la place du joueur
 // et celui qu'il doit dépasser (« encore 3 000 $ pour dépasser Jade »).
 // Si le serveur ne répond pas au bout de quelques secondes : « Classement hors ligne ».
 // (26/10) Le bouton « Visiter » de chaque ligne emmène voir le village du joueur (Visite.tsx).
 
 import { useEffect, useState } from 'react'
-import { niveauMineAffiche, type LigneClassement } from '../jeu/classement'
+import type { LigneClassement } from '../jeu/classement'
 import { t } from '../jeu/langue'
 import { lireClassement, lireVillage, placeDuScore } from '../enLigne'
 import type { EtatJeu } from '../jeu/mineur'
@@ -104,16 +105,10 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
     contenu = (
       <ol className="classement-liste">
         {lignes.map((ligne, i) => {
-          const niveau = niveauMineAffiche(ligne)
           return (
             <li key={ligne.pseudo} className={`classement-ligne ${estMoi(ligne) ? 'classement-moi' : ''} ${i < 3 ? `classement-podium classement-${i + 1}` : ''}`} style={{ animationDelay: `${i * 40}ms` }}>
               <span className="classement-rang">{i < 3 ? MEDAILLES[i] : `#${i + 1}`}</span>
               <span className="classement-pseudo">{ligne.pseudo}</span>
-              {niveau !== null && (
-                <span className="etiquette classement-mine" title={t('Le niveau de sa mine (il ne compte pas dans le classement)')}>
-                  🕳️ {niveau}
-                </span>
-              )}
               <span className="classement-valeur">{nombreAbrege(ligne.argent)} $</span>
               {onVisiter && !estMoi(ligne) && (
                 <button className="btn btn-bleu btn-petit classement-visiter" disabled={visiteEnCours !== null} onClick={() => visiter(ligne.pseudo)} aria-label={t('Visiter le village de {pseudo}', { pseudo: ligne.pseudo })}>

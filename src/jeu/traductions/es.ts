@@ -108,7 +108,6 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Classement hors ligne': 'Clasificación sin conexión',
   'Chargement du classement…': 'Cargando la clasificación…',
   'Personne n’est encore classé : à toi d’être le premier !': 'Aún no hay nadie en la clasificación: ¡sé el primero!',
-  'Le niveau de sa mine (il ne compte pas dans le classement)': 'El nivel de su mina (no cuenta para la clasificación)',
   'Classement': 'Clasificación',
   'L’argent gagné en tout, dans le meilleur monde de chaque joueur': 'Dinero ganado en total, en el mejor mundo de cada jugador',
   'Argent gagné': 'Dinero ganado',
