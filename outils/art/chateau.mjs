@@ -38,7 +38,10 @@ const PIERRE_NEUVE = teintes('#f3e7cc', '#d8c6a2', '#fbf4e4')
 const SOCLE_NEUF = teintes(C.pierre, C.pierreFoncee)
 const TOIT = teintes('#5f7fe8', fonce('#5f7fe8', 0.25), clair('#5f7fe8', 0.2))
 // La ruine : des pierres grises et lilas, de la mousse.
-const PIERRE_RUINE = teintes('#bdb6cf', '#958daf', '#d3cde2')
+const PIERRE_RUINE = teintes('#aaa3c2', '#857ca3', '#cfc8e0')
+const INTERIEUR = '#7a7099' // l'intérieur sombre d'une tour éventrée
+const INTERIEUR_DONJON = '#9a91b8' // l'intérieur du donjon : des éboulis, plus clair
+const JOINT = '#8d84ab' // les joints des pierres
 const MOUSSE = '#7cc35e'
 const NUIT = '#3a3150'
 
@@ -152,24 +155,75 @@ function murNeuf(t, sens, u0, v0, u1, v1, z, hauteur) {
   if (sens === 'face') creneaux(t, sens, u0, v0, u1, v1, z + hauteur, PIERRE_NEUVE)
 }
 
-// Un mur en ruine : un seul bloc au dessus tout déchiqueté (une ligne brisée de hauteurs au hasard,
-// avec de grandes brèches).
+// Le profil du haut d'un mur cassé : des marches de hauteurs au hasard (des pierres tombées), de
+// temps en temps une grande brèche. Une liste de points [position le long du mur, hauteur], avec
+// deux points à chaque marche (le haut et le bas de la marche).
+function profilCasse(hasard, long, hMin, hMax, pas = [0.35, 0.7], breches = 0.14) {
+  const profil = []
+  let pos = 0
+  let avant = null
+  while (pos < long - 0.05) {
+    const h = hasard() < breches ? hMin * 0.35 + hasard() * 10 : hMin + hasard() * (hMax - hMin)
+    if (avant !== null) profil.push([pos, avant])
+    profil.push([pos, h])
+    avant = h
+    pos += pas[0] + hasard() * (pas[1] - pas[0])
+  }
+  profil.push([long, avant ?? hMin])
+  return profil
+}
+
+// La hauteur d'un profil à la position f.
+function hauteurDuProfil(profil, f) {
+  for (let i = profil.length - 1; i >= 0; i--) if (profil[i][0] <= f) return profil[i][1]
+  return profil[0][1]
+}
+
+// Des pierres dessinées sur une face qui nous regarde (u constant, de v0 sur « long » cases) : des
+// petits rectangles aux coins ronds, un peu plus sombres, sous le haut cassé du mur.
+function pierres(t, u, v0, long, z, profil, graine, nombre) {
+  const hasard = hasardAvecGraine(graine)
+  let dessin = ''
+  for (let i = 0; i < nombre; i++) {
+    const f = 0.15 + hasard() * (long - 0.3)
+    const haut = hauteurDuProfil(profil, f)
+    if (haut < 34) continue
+    const h = 10 + hasard() * (haut - 30)
+    const x = (f * PIXELS_PAR_CASE) - 13
+    dessin += `<rect x="${r1(x)}" y="${r1(-h - 6)}" width="${hasard() < 0.5 ? 26 : 18}" height="11" rx="3" fill="${fonce(PIERRE_RUINE.gauche, 0.08)}" stroke="${JOINT}" stroke-width="3"/>`
+  }
+  surFaceAvant(t, u, v0, z, dessin)
+}
+
+// Une branche de lierre qui pend du haut d'un mur (des feuilles rondes le long d'une tige qui ondule).
+function lierre(t, u, v, z, longueur, graine) {
+  const hasard = hasardAvecGraine(graine)
+  const [x, y] = t.pt(...g(u, v), z)
+  let tige = `M${r1(x)} ${r1(y)}`
+  const feuilles = []
+  for (let i = 1; i <= 5; i++) {
+    const yy = y + (longueur * i) / 5
+    const xx = x + (i % 2 ? 7 : -7) * (0.6 + hasard() * 0.6)
+    tige += ` Q${r1(x + (i % 2 ? -8 : 8))} ${r1(yy - longueur / 10)} ${r1(xx)} ${r1(yy)}`
+    feuilles.push([xx + (i % 2 ? 8 : -8), yy - 4])
+  }
+  t.ajouter(`<path d="${tige}" fill="none" stroke="${fonce(MOUSSE, 0.35)}" stroke-width="4"/>`)
+  for (const [fx, fy] of feuilles) t.ajouter(`<ellipse cx="${r1(fx)}" cy="${r1(fy)}" rx="8" ry="6" fill="${MOUSSE}" stroke="${C.encre}" stroke-width="3"/>`)
+}
+
+// Un mur en ruine : un seul bloc au dessus cassé en marches (des pierres tombées, des brèches),
+// avec des pierres dessinées sur sa face.
 function murEnRuine(t, sens, u0, v0, u1, v1, z, hauteur, graine) {
   const hasard = hasardAvecGraine(graine)
   const long = sens === 'face' ? v1 - v0 : u1 - u0
-  const profil = []
-  let pos = 0
-  while (pos < long) {
-    const breche = hasard() < 0.16
-    profil.push([pos, breche ? 18 + hasard() * 10 : hauteur * (0.4 + hasard() * 0.5)])
-    pos += sens === 'face' ? 0.3 + hasard() * 0.45 : 0.9 + hasard() * 0.8
-  }
-  profil.push([long, hauteur * (0.3 + hasard() * 0.4)])
+  // (les murs des côtés sont plus bas : vus par le dessus, hauts, ils faisaient des piliers)
+  const [hMin, hMax] = sens === 'face' ? [hauteur * 0.45, hauteur * 0.95] : [hauteur * 0.25, hauteur * 0.5]
+  const profil = profilCasse(hasard, long, hMin, hMax, sens === 'face' ? [0.35, 0.75] : [0.9, 1.6])
   // Un point du mur : f le long du mur, c = 0 (dos ou gauche) ou 1 (devant ou droite), h la hauteur.
   const point = (f, c, h) => [...(sens === 'face' ? g(c ? u1 : u0, v0 + f) : g(u0 + f, c ? v1 : v0)), z + h]
   const t3 = PIERRE_RUINE
   if (sens === 'face') {
-    // La face qui nous regarde, au haut déchiqueté.
+    // La face qui nous regarde, au haut cassé.
     t.poly([point(0, 1, 0), point(long, 1, 0), ...[...profil].reverse().map(([f, h]) => point(f, 1, h))], t3.gauche)
   } else {
     // Un mur de côté : on voit son bout (vers nous).
@@ -180,9 +234,110 @@ function murEnRuine(t, sens, u0, v0, u1, v1, z, hauteur, graine) {
   for (let i = 0; i < profil.length - 1; i++) {
     const [fa, ha] = profil[i]
     const [fb, hb] = profil[i + 1]
-    t.poly([point(fa, 0, ha), point(fa, 1, ha), point(fb, 1, hb), point(fb, 0, hb)], t3.haut, { trait: 0 })
+    if (fb - fa < 1e-6) continue
+    // (le dessus des murs des côtés un peu plus sombre : il s'efface derrière les tours)
+    t.poly([point(fa, 0, ha), point(fa, 1, ha), point(fb, 1, hb), point(fb, 0, hb)], sens === 'face' ? t3.haut : t3.gauche, { trait: 0 })
   }
   t.poly([...profil.map(([f, h]) => point(f, 0, h)), ...[...profil].reverse().map(([f, h]) => point(f, 1, h))], 'none', { trait: TRAIT_FIN })
+  if (sens === 'face') pierres(t, u1, v0, long, z, profil, graine + 100, Math.round(long * 2.2))
+}
+
+// Une tour en ruine (27/10) : creuse, le haut cassé en marches tout autour ; par-dessus le bord, on
+// voit l'intérieur sombre et le mur du fond, plus haut. Une fenêtre éventrée, du lierre.
+function tourEnRuine(t, u, v, r, z, hauteur, graine) {
+  const hasard = hasardAvecGraine(graine)
+  const [x, y] = g(u, v)
+  const [cx, yb] = t.pt(x, y, z)
+  const rx = r * DX * Math.SQRT2
+  const ry = r * 19.14 * Math.SQRT2
+  const epaisseur = 0.74 // le rayon de l'intérieur (la tour est creuse)
+  // Les hauteurs du bord, en marches : devant (de droite à gauche, en passant devant) et au fond.
+  const marches = (debut, fin, hMin, hMax) => {
+    const liste = []
+    const n = 7
+    let avant = null
+    for (let i = 0; i < n; i++) {
+      const a = debut + ((fin - debut) * i) / n
+      const h = hMin + hasard() * (hMax - hMin)
+      if (avant !== null) liste.push([a, avant])
+      liste.push([a, h])
+      avant = h
+    }
+    liste.push([fin, avant])
+    return liste
+  }
+  const devant = marches(0, Math.PI, hauteur * 0.72, hauteur)
+  const fond = marches(Math.PI, 2 * Math.PI, hauteur * 0.95, hauteur * 1.3)
+  // Un point du bord (angle a, hauteur h), à l'extérieur (k = 1) ou à l'intérieur (k = epaisseur).
+  const pt = (a, h, k = 1) => `${r1(cx + rx * k * Math.cos(a))},${r1(yb + ry * k * Math.sin(a) - h)}`
+  const liste = (points, k) => points.map(([a, h]) => pt(a, h, k)).join(' ')
+  const inverse = (points) => [...points].reverse()
+  // 1. L'intérieur : le mur du fond vu de dedans (sombre), jusqu'au bord de devant.
+  t.ajouter(`<polygon points="${liste(fond, epaisseur)} ${liste(devant, epaisseur)}" fill="${INTERIEUR}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  // 2. Le dessus du mur du fond (l'épaisseur de la pierre).
+  t.ajouter(`<polygon points="${liste(fond, 1)} ${liste(inverse(fond), epaisseur)}" fill="${PIERRE_RUINE.haut}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  // 3. Le corps de la tour, devant : du pied jusqu'au bord cassé, avec son ombre à droite.
+  const pied = Array.from({ length: 13 }, (_, i) => Math.PI - (i / 12) * Math.PI).map((a) => pt(a, 0)).join(' ')
+  const corps = `${pied} ${liste(devant, 1)}`
+  const id = t.nouvelId('tour')
+  t.defs.push(`<clipPath id="${id}"><polygon points="${corps}"/></clipPath>`)
+  t.ajouter(`<polygon points="${corps}" fill="${PIERRE_RUINE.gauche}"/>`)
+  t.ajouter(`<rect x="${r1(cx + rx * 0.3)}" y="${r1(yb - hauteur * 1.4)}" width="${r1(rx)}" height="${r1(hauteur * 1.4 + ry * 2)}" fill="${PIERRE_RUINE.droite}" clip-path="url(#${id})"/>`)
+  // Des pierres sur le corps (des rangées qui suivent la courbe de la tour).
+  let joints = ''
+  for (let i = 0; i < 9; i++) {
+    const a = 0.35 + hasard() * (Math.PI - 0.7)
+    const h = 14 + hasard() * (hauteur * 0.6)
+    const px = cx + rx * Math.cos(a)
+    const py = yb + ry * Math.sin(a) - h
+    joints += `<rect x="${r1(px - 11)}" y="${r1(py - 5)}" width="22" height="10" rx="3" fill="none" stroke="${JOINT}" stroke-width="3"/>`
+  }
+  t.ajouter(`<g clip-path="url(#${id})">${joints}</g>`)
+  t.ajouter(`<polygon points="${corps}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
+  // 4. Le dessus du bord de devant (l'épaisseur de la pierre).
+  t.ajouter(`<polygon points="${liste(devant, 1)} ${liste(inverse(devant), epaisseur)}" fill="${PIERRE_RUINE.haut}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  // Une fenêtre éventrée, et du lierre.
+  const fx = cx + rx * 0.15
+  const fy = yb + ry - hauteur * 0.5
+  t.ajouter(`<path d="M${r1(fx - 9)} ${r1(fy + 13)} V${r1(fy - 3)} A9 9 0 0 1 ${r1(fx + 9)} ${r1(fy - 3)} V${r1(fy + 13)} Z" fill="${NUIT}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  mousse(t, u + r * 0.75, v - r * 0.5, z + hauteur * 0.2, 0.8)
+}
+
+// Un bloc carré creux en ruine (le donjon, la tour de la porte) : la face de devant au haut cassé,
+// le mur du fond plus haut, vu de dedans (sombre), et le dessus des murs des côtés.
+function blocCreux(t, u0, v0, u1, v1, z, devant, fond, graine) {
+  const hasard = hasardAvecGraine(graine)
+  const e = 0.42 // l'épaisseur des murs
+  const long = v1 - v0
+  const pDevant = profilCasse(hasard, long, devant[0], devant[1], [0.3, 0.6], 0.1)
+  const pFond = profilCasse(hasard, long, fond[0], fond[1], [0.3, 0.6], 0.05)
+  const t3 = PIERRE_RUINE
+  const face = (u, profil, couleur) => t.poly([[...g(u, v0), z], [...g(u, v1), z], ...[...profil].reverse().map(([f, h]) => [...g(u, v0 + f), z + h])], couleur)
+  const dessus = (ua, ub, profil) => {
+    for (let i = 0; i < profil.length - 1; i++) {
+      const [fa, ha] = profil[i]
+      const [fb, hb] = profil[i + 1]
+      if (fb - fa < 1e-6) continue
+      t.poly([[...g(ua, v0 + fa), z + ha], [...g(ub, v0 + fa), z + ha], [...g(ub, v0 + fb), z + hb], [...g(ua, v0 + fb), z + hb]], t3.haut, { trait: 0 })
+    }
+    t.poly([...profil.map(([f, h]) => [...g(ua, v0 + f), z + h]), ...[...profil].reverse().map(([f, h]) => [...g(ub, v0 + f), z + h])], 'none', { trait: TRAIT_FIN })
+  }
+  // Le mur du fond (vu de dedans : sombre) et son dessus.
+  face(u0 + e, pFond, INTERIEUR_DONJON)
+  dessus(u0, u0 + e, pFond)
+  // Le dessus des murs des côtés : il descend du fond vers le devant.
+  for (const [va, vb, f] of [
+    [v0, v0 + e, 0],
+    [v1 - e, v1, long],
+  ]) {
+    const hf = hauteurDuProfil(pFond, Math.min(f, long - 0.01))
+    const hd = hauteurDuProfil(pDevant, Math.min(f, long - 0.01))
+    t.poly([[...g(u0, va), z + hf], [...g(u0, vb), z + hf], [...g(u1, vb), z + hd], [...g(u1, va), z + hd]], t3.haut, { trait: TRAIT_FIN })
+  }
+  // La face de devant, son dessus et ses pierres.
+  face(u1, pDevant, t3.gauche)
+  dessus(u1 - e, u1, pDevant)
+  pierres(t, u1, v0, long, z, pDevant, graine + 100, Math.round(long * 3))
 }
 
 // Une tour ronde, neuve (un toit pointu bleu et un drapeau doré) ou en ruine (cassée en haut).
@@ -206,18 +361,7 @@ function tour(t, u, v, r, z, hauteur, neuf, graine) {
     drapeau(t, cx, cy, pointe, graine)
     return
   }
-  const hasard = hasardAvecGraine(graine)
-  t.cylindre(cx, cy, r, z, z + hauteur, PIERRE_RUINE)
-  // Le haut est cassé : quelques blocs de hauteurs différentes sur le bord, côté fond.
-  for (let i = 0; i < 5; i++) {
-    const angle = Math.PI * (0.85 + i * 0.32)
-    const bx = cx + r * 0.72 * Math.cos(angle)
-    const by = cy + r * 0.72 * Math.sin(angle)
-    t.boite(bx - 0.22, by - 0.22, bx + 0.22, by + 0.22, z + hauteur, z + hauteur + 8 + hasard() * 30, PIERRE_RUINE)
-  }
-  const [fx, fy] = t.pt(...g(u + r * 0.9, v), z + hauteur * 0.55)
-  t.ajouter(`<path d="M${r1(fx - 9)} ${r1(fy + 12)} L${r1(fx - 10)} ${r1(fy - 6)} L${r1(fx - 2)} ${r1(fy - 16)} L${r1(fx + 5)} ${r1(fy - 9)} L${r1(fx + 10)} ${r1(fy - 13)} L${r1(fx + 9)} ${r1(fy + 12)} Z" fill="${NUIT}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
-  mousse(t, u + r * 0.8, v - r * 0.4, z + hauteur * 0.25, 0.9)
+  tourEnRuine(t, u, v, r, z, hauteur, graine)
 }
 
 // Une fenêtre en arc (neuve), en points du dessin.
@@ -300,13 +444,8 @@ function chateau(neuf) {
         `<path d="M${r1(l / 2 - 16)} -168 L${r1(l / 2 - 16)} -190 L${r1(l / 2 - 8)} -179 L${r1(l / 2)} -195 L${r1(l / 2 + 8)} -179 L${r1(l / 2 + 16)} -190 L${r1(l / 2 + 16)} -168 Z" fill="${C.jaune}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`,
     )
   } else {
-    // Le donjon en ruine : moins haut, le haut tout cassé, un grand trou dans le mur.
-    t.prisme(rectUV(-D, -D, D, D), z, z + 150, PIERRE_RUINE)
-    const hasard = hasardAvecGraine(7)
-    for (let i = 0; i < 6; i++) {
-      const f = i / 6
-      t.prisme(rectUV(-D, -D + 2 * D * f, -D + 0.6, -D + 2 * D * (f + 1 / 6)), z + 150, z + 160 + hasard() * 50, PIERRE_RUINE)
-    }
+    // Le donjon en ruine : creux, le haut cassé, un grand trou dans le mur de devant.
+    blocCreux(t, -D, -D, D, D, z, [135, 180], [165, 205], 7)
     const l = 2 * D * PIXELS_PAR_CASE
     surFaceAvant(
       t,
@@ -318,7 +457,8 @@ function chateau(neuf) {
         `<path d="M${r1(l * 0.86)} -130 l-8 14 l8 10 l-6 16" fill="none" stroke="${fonce(PIERRE_RUINE.gauche, 0.3)}" stroke-width="${TRAIT_FIN}"/>`,
     )
     mousse(t, D, -D + 0.6, z + 40, 1.2)
-    mousse(t, D, D - 0.8, z + 90, 1)
+    lierre(t, D, D - 0.6, z + 120, 70, 21)
+    lierre(t, D, -D + 1.4, z + 110, 55, 22)
     t.poutre([...g(D + 1.6, -0.6), z], [...g(D + 0.05, -1.2), z + 80], C.boisFonce, 8)
   }
 
@@ -331,7 +471,8 @@ function chateau(neuf) {
 
   // La porte : une tour carrée sur le mur de devant, face à nous.
   const hPorte = neuf ? 165 : 100
-  t.prisme(rectUV(S - 1.0, -P, S + 0.35, P), z, z + hPorte, neuf ? PIERRE_NEUVE : PIERRE_RUINE)
+  if (neuf) t.prisme(rectUV(S - 1.0, -P, S + 0.35, P), z, z + hPorte, PIERRE_NEUVE)
+  else blocCreux(t, S - 1.0, -P, S + 0.35, P, z, [80, 104], [98, 124], 8)
   if (neuf) creneaux(t, 'face', S + 0.05, -P, S + 0.35, P, z + hPorte, PIERRE_NEUVE)
   const m = P * PIXELS_PAR_CASE // le milieu de la face (en pixels depuis son bord gauche)
   surFaceAvant(
@@ -397,6 +538,8 @@ function chateau(neuf) {
     buisson(t, -1, -S - 1.4, z, 0.7, MOUSSE)
     mousse(t, S, -3.2, z + 40, 1)
     mousse(t, S, 3, z + 50, 1.1)
+    lierre(t, S, -2.2, z + 70, 50, 31)
+    lierre(t, S, 2.4, z + 60, 45, 32)
   }
   return t
 }
