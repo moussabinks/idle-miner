@@ -1014,6 +1014,20 @@
   object-fit: contain;
 }
 
+/* (27/10) Les décorations : des cartes plus petites (le dessin, le nom, le bouton). */
+.grille-decorations {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.decoration-image {
+  width: 96px;
+  height: 84px;
+}
+
+.decoration-carte .construire-texte h3 {
+  font-size: 1.05rem;
+}
+
 /* Les bâtiments déjà construits : une petite liste d'étiquettes, tout en bas. */
 .construits {
   list-style: none;
@@ -1056,6 +1070,28 @@
 
   .trajet-batiment {
     width: 60px;
+  }
+
+  /* (27/10) Les décorations : trois par ligne, petites, le dessin au-dessus. */
+  .grille-decorations {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .grille-decorations .construire-carte {
+    display: flex;
+    gap: 4px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+
+  .grille-decorations .decoration-image {
+    width: 56px;
+    height: 48px;
+  }
+
+  .decoration-carte .construire-texte h3 {
+    font-size: 0.9rem;
   }
 
   .trajet-batiment img {

@@ -19,6 +19,7 @@ import { Gains } from './composants/Gains'
 import { Hud } from './composants/Hud'
 import { FenetreStatistiques } from './composants/Statistiques'
 import { MenuConstruction } from './composants/MenuConstruction'
+import { decorationPosee, deplacerDecoration, placeLibrePourDecoration, poserDecoration, rangerDecoration } from './jeu/decorations'
 import { PanneauEmployes } from './composants/PanneauEmployes'
 import { PanneauMine } from './composants/PanneauMine'
 import { PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
@@ -66,7 +67,7 @@ import {
 } from './jeu/batiments'
 import { annulerReorganisation, batimentsRanges, commencerReorganisation, enReorganisation, peutTerminerReorganisation, rangerBatiment, reposerBatiment, terminerReorganisation } from './jeu/reorganiser'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
-import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, TAILLE_GRILLE, type IdBatiment, type IdLiaison } from './jeu/donnees'
+import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration, type IdLiaison } from './jeu/donnees'
 import { etatQuotidien, jourDe } from './jeu/gemmes'
 import { t, type Langue } from './jeu/langue'
 import { notificationsBatiments } from './jeu/notifications'
@@ -196,6 +197,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
       const ignorer: Occupant | null = estPose(etat, f.id) ? { type: 'batiment', id: f.id } : null
       return empriseLibre(etat.village, empriseBatiment(f), ignorer)
     }
+    if (f.type === 'decoration') return placeLibrePourDecoration(etat, f.id, f.x, f.y, f.n)
     if (f.sol === 'rail') return placePourUnRail(etat.village, f.x, f.y, f.de ?? null) === 'ok'
     const ignorer = f.de ? ({ type: f.sol, cle: cleCase(f.de.x, f.de.y) } as Occupant & { cle: string }) : null
     return empriseLibre(etat.village, { x: f.x, y: f.y, taille: 1 }, ignorer)
@@ -220,6 +222,13 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     setMenuConstruction(false)
     setFantomeFixe(false)
     setFantome({ type: 'batiment', id, ...placeProche(BATIMENTS[id].taille), miroir: false })
+  }
+
+  // (27/10) Une décoration choisie à l'onglet « Décorations » : on la place comme un bâtiment.
+  function choisirDecoration(id: IdDecoration) {
+    setMenuConstruction(false)
+    setFantomeFixe(false)
+    setFantome({ type: 'decoration', id, ...placeProche(DECORATIONS[id].taille), miroir: false, n: null })
   }
 
   function commencerPinceau(sol: TypeSol) {
@@ -252,6 +261,12 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         sons.construction()
         grandMoment()
       }
+    } else if (f.type === 'decoration') {
+      const n = f.n
+      if (n === null) {
+        jouer((e) => poserDecoration(e, f.id, f.x, f.y, f.miroir))
+        sons.construction()
+      } else jouer((e) => deplacerDecoration(e, n, f.x, f.y, f.miroir))
     } else if (f.de) jouer((e) => deplacerSol(e, f.sol, f.de as Case, { x: f.x, y: f.y }))
     setFantome(null)
   }
@@ -414,7 +429,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     setChateauOuvert(true)
     regarderChateau()
   }
-  // Payer les 20 millions : la fenêtre se ferme, la caméra va au château, la ruine tremble et le
+  // Payer les 10 millions : la fenêtre se ferme, la caméra va au château, la ruine tremble et le
   // château neuf jaillit, puis le feu d'artifice ; à la fin, la fenêtre de la victoire.
   function restaurer() {
     const apres = jouer(restaurerChateau)
@@ -452,6 +467,9 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
       if (cible?.type === 'batiment') {
         const b = batimentPose(etat.village, cible.id)
         if (b) setFantome({ type: 'batiment', id: b.id, x: b.x, y: b.y, miroir: b.miroir })
+      } else if (cible?.type === 'decoration') {
+        const d = decorationPosee(etat, cible.n)
+        if (d) setFantome({ type: 'decoration', id: d.id, x: d.x, y: d.y, miroir: d.miroir, n: d.n })
       } else if (cible?.type === 'rail' || cible?.type === 'chemin') {
         sensRetrait.current = null
         setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
@@ -651,6 +669,18 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
               🗑️ {t('Enlever')}
             </button>
           )}
+          {fantome.type === 'decoration' && fantome.n !== null && (
+            <button
+              className="btn btn-rose"
+              onClick={() => {
+                const n = fantome.n
+                if (n !== null) jouer((e) => rangerDecoration(e, n))
+                setFantome(null)
+              }}
+            >
+              📦 {t('Ranger')}
+            </button>
+          )}
           {peutRanger && fantome.type === 'batiment' && (
             <button
               className="btn btn-blanc"
@@ -766,7 +796,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   } else if (modifier) {
     barre = (
       <div className="barre-edition">
-        <p className="consigne">✏️ {t('Touche un bâtiment, un rail ou un chemin pour le déplacer.')}</p>
+        <p className="consigne">✏️ {t('Touche un bâtiment, un rail, un chemin ou une décoration pour le déplacer.')}</p>
         <div className="rangee rangee-centre">
           {/* (26/10, demandé par le propriétaire) Tout ranger, façon Clash of Clans */}
           <button className="btn btn-rose" onClick={() => jouer(commencerReorganisation)}>
@@ -885,7 +915,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         </div>
 
         {panneau}
-        {menuConstruction && <MenuConstruction etat={etat} onFermer={() => setMenuConstruction(false)} onPoserBatiment={poserBatiment} onPinceau={commencerPinceau} />}
+        {menuConstruction && <MenuConstruction etat={etat} onFermer={() => setMenuConstruction(false)} onPoserBatiment={poserBatiment} onPinceau={commencerPinceau} onDecoration={choisirDecoration} />}
         {fenetreHaut === 'succes' && (
           <Fenetre titre={t('Succès')} icone="🏅" couleur="jaune" onFermer={() => setFenetreHaut(null)}>
             <PanneauSucces etat={etat} />

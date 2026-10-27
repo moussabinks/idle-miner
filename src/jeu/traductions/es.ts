@@ -23,7 +23,6 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Poser ce rail': 'Colocar este riel',
   'Terminé': 'Listo',
   'Touche le sol pour poser un chemin ({n} $ la case).': 'Toca el suelo para poner un camino ({n} $ por casilla).',
-  'Touche un bâtiment, un rail ou un chemin pour le déplacer.': 'Toca un edificio, riel o camino para moverlo.',
   'La mine · coffre {n} / {max}': 'La mina · cofre {n} / {max}',
   'Mine': 'Mina',
   'pour marcher': 'para caminar',
@@ -459,6 +458,10 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Pépite': 'Pepita',
   'Caramel': 'Caramelo',
   'Biscotte': 'Galleta',
+  'Praline': 'Praliné',
+  'Chouquette': 'Buñuelo',
+  'Myrtille': 'Arándano',
+  'Galette': 'Rosquilla',
 
   // src/composants/Statistiques.tsx
   'Tes ventes': 'Tus ventas',
@@ -1080,4 +1083,11 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   // (27/10) Le téléphone tenu debout
   'Tourne ton téléphone': 'Gira tu teléfono',
   'Mega Digger se joue à l’horizontale.': 'Mega Digger se juega en horizontal.',
+
+  // (27/10) Les décorations reviennent
+  'Touche un bâtiment, un rail, un chemin ou une décoration pour le déplacer.': 'Toca un edificio, riel, camino o decoración para moverlo.',
+  '{n} × {n} case(s)': '{n} × {n} casilla(s)',
+  'Décorations': 'Decoraciones',
+  'Juste pour faire joli ! Pose-les où tu veux ; dans ✏️ Modifier, touche-les pour les déplacer, les retourner ou les ranger.': '¡Solo para que quede bonito! Ponlas donde quieras; en ✏️ Editar, tócalas para moverlas, girarlas o guardarlas.',
+  '📦 {nom} rangé(e) : {n} en stock.': '📦 {nom} guardado: {n} en reserva.',
 }

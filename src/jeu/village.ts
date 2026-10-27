@@ -12,8 +12,10 @@
 import {
   BATIMENTS,
   BATIMENTS_DES_RAILS,
+  DECORATIONS,
   TAILLE_GRILLE,
   type IdBatiment,
+  type IdDecoration,
 } from './donnees'
 
 // ---------------------------------------------------------------------------
@@ -29,11 +31,24 @@ export type BatimentPose = {
   miroir: boolean // le dessin est retourné (l'entrée passe de l'autre côté)
 }
 
+// (27/10) Une décoration posée. « n » : son numéro, pour la retrouver (on peut en poser
+// plusieurs pareilles).
+export type DecorationPosee = {
+  n: number
+  id: IdDecoration
+  x: number // la case du coin du haut
+  y: number
+  miroir: boolean
+}
+
 export type Village = {
   batiments: BatimentPose[]
   rails: string[] // les cases de rails, écrites « x,y »
   chemins: string[] // les cases de chemin de pavés
   batimentsVus: IdBatiment[] // les bâtiments débloqués déjà vus dans le menu (pour la pastille « Nouveau »)
+  // (27/10) Les décorations, et le numéro de la prochaine (absents dans les parties d'avant).
+  decorations?: DecorationPosee[]
+  prochainNumero?: number
 }
 
 // La mine est posée d'office au milieu de la clairière.
@@ -46,6 +61,8 @@ export function nouveauVillage(): Village {
     rails: [],
     chemins: [],
     batimentsVus: [],
+    decorations: [],
+    prochainNumero: 1,
   }
 }
 
@@ -70,6 +87,10 @@ export function empriseBatiment(b: { id: IdBatiment; x: number; y: number }): Em
   return { x: b.x, y: b.y, taille: BATIMENTS[b.id].taille }
 }
 
+export function empriseDecoration(d: { id: IdDecoration; x: number; y: number }): Emprise {
+  return { x: d.x, y: d.y, taille: DECORATIONS[d.id].taille }
+}
+
 export function casesDe(emprise: Emprise): Case[] {
   const cases: Case[] = []
   for (let dx = 0; dx < emprise.taille; dx++) for (let dy = 0; dy < emprise.taille; dy++) cases.push({ x: emprise.x + dx, y: emprise.y + dy })
@@ -85,6 +106,7 @@ export type Occupant =
   | { type: 'batiment'; id: IdBatiment }
   | { type: 'rail' }
   | { type: 'chemin' }
+  | { type: 'decoration'; n: number }
 
 // Toutes les cases occupées, et par quoi.
 export function occupation(village: Village): Map<string, Occupant> {
@@ -92,12 +114,14 @@ export function occupation(village: Village): Map<string, Occupant> {
   for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) cases.set(cleCase(c.x, c.y), { type: 'batiment', id: b.id })
   for (const cle of village.rails) cases.set(cle, { type: 'rail' })
   for (const cle of village.chemins) cases.set(cle, { type: 'chemin' })
+  for (const d of village.decorations ?? []) for (const c of casesDe(empriseDecoration(d))) cases.set(cleCase(c.x, c.y), { type: 'decoration', n: d.n })
   return cases
 }
 
 function memeOccupant(a: Occupant, b: Occupant): boolean {
   if (a.type !== b.type) return false
   if (a.type === 'batiment' && b.type === 'batiment') return a.id === b.id
+  if (a.type === 'decoration' && b.type === 'decoration') return a.n === b.n
   return true
 }
 

@@ -166,18 +166,18 @@ describe('sauvegarde', () => {
     expect(etat && niveauJoueur(etat)).toBe(NIVEAU_JOUEUR_POUR.mine[2])
   })
 
-  it('une partie avec des tenues et des décorations (retirées le 27/10) se charge sans elles', () => {
+  it('une partie avec des tenues (retirées le 27/10) se charge sans elles, et garde ses décorations (revenues le 27/10)', () => {
     const etat = creerPartie(aleatoireAvecGraine(1))
     const ancienne = {
       ...etat,
       tenue: { chapeau: 'bandana', haut: null },
       tenuesAchetees: ['bandana'],
       succes: [...etat.succes, 'paysagiste'],
-      village: { ...etat.village, decorations: [{ n: 1, id: 'buisson', x: 3, y: 3, miroir: false }], prochainNumero: 2 },
+      village: { ...etat.village, decorations: [{ n: 1, id: 'buisson', x: 3, y: 3, miroir: false }, { n: 2, id: 'disparue', x: 5, y: 5, miroir: false }], prochainNumero: 3 },
     }
     const stockage = fauxStockage()
     stockage.setItem(cleMonde('1'), JSON.stringify(ancienne))
-    expect(charger(stockage, '1')).toEqual(etat)
+    expect(charger(stockage, '1')).toEqual({ ...etat, village: { ...etat.village, decorations: [{ n: 1, id: 'buisson', x: 3, y: 3, miroir: false }], prochainNumero: 3 } })
   })
 
   it('compte le temps passé depuis la dernière sauvegarde', () => {

@@ -17,17 +17,17 @@
   agrandi, avec bien plus de montagnes autour du château (`paysage.ts` plante tout ce que la caméra peut
   voir ; rien n'est planté devant le château ni sur son chemin).
 - **On touche le château** (n'importe quand) : sa fenêtre s'ouvre (violette, 🏰). En ruine : son histoire,
-  une jauge `argent / 20 M`, et le gros bouton jaune **« 🏰 Restaurer le château · 20 M $ »** (grisé s'il
+  une jauge `argent / 10 M`, et le gros bouton jaune **« 🏰 Restaurer le château · 10 M $ »** (grisé s'il
   manque de l'argent, avec « Il te manque X $ »).
 - **La quête finale** apparaît en haut à droite (au-dessus des tâches ; sur téléphone, sous le bandeau)
   quand la fin du jeu approche : **la mine au niveau 7 et tous les bâtiments posés** (pas besoin d'avoir
   tout amélioré, ni les chariots des pousseurs). Elle montre la jauge de l'argent ; son bouton « Voir »
-  (« Go ! » en jaune quand on a les 20 M) emmène la caméra au château et ouvre sa fenêtre. Elle disparaît
+  (« Go ! » en jaune quand on a les 10 M) emmène la caméra au château et ouvre sa fenêtre. Elle disparaît
   une fois le château restauré.
 
 ## La restauration
 
-- Elle coûte **20 000 000 $** (`PRIX_CHATEAU`, dans `donnees.ts`), en argent seulement (pas de gemmes,
+- Elle coûte **10 000 000 $** (27/10 ; avant 20 000 000 $) (`PRIX_CHATEAU`, dans `donnees.ts`), en argent seulement (pas de gemmes,
   pas de minerais). Une seule fois : `etat.chateau = { restaure: true, tempsDeJeu }` (un champ facultatif :
   aucune conversion de sauvegarde).
 - Après le paiement : la fenêtre se ferme, la caméra glisse jusqu'au château, puis
@@ -47,8 +47,8 @@
 
 ## Combien de temps
 
-À la mine 7, le bot gagne environ 650 $/s (sans améliorer davantage) : 20 M demandent encore environ
-8 h 30 de jeu, moins en améliorant les paliers 7. C'est voulu : c'est le dernier objectif du jeu.
+À la mine 7, le bot gagne environ 650 $/s (sans améliorer davantage) : 10 M demandent encore environ
+4 h 15 de jeu, moins en améliorant les paliers 7. C'est voulu : c'est le dernier objectif du jeu.
 
 ## Les dessins
 

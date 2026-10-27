@@ -1,6 +1,7 @@
 // Réorganiser le village (26/10, demandé par le propriétaire, façon Clash of Clans).
 // Dans « ✏️ Modifier », le bouton « Tout ranger » enlève du village tous les bâtiments (la mine
-// aussi), les rails et les pavés : ils vont dans une barre en bas de l'écran. Le joueur les
+// aussi), les rails et les pavés (et, le 27/10, les décorations) : ils vont dans une barre en bas
+// de l'écran (les décorations, dans leur stock). Le joueur les
 // repose un par un où il veut, sur la clairière vide.
 //   - Pendant ce temps, le jeu est en PAUSE (rien ne creuse, rien ne roule : voir temps.ts).
 //   - On ne peut finir qu'une fois TOUS les bâtiments reposés. Les rails et les pavés qui restent
@@ -13,6 +14,7 @@ import type { IdBatiment } from './donnees'
 import { t } from './langue'
 import type { EtatJeu } from './mineur'
 import { batimentPose, empriseBatiment, empriseLibre } from './village'
+import { toutRangerDecorations } from './decorations'
 
 export function enReorganisation(etat: EtatJeu): boolean {
   return !!etat.reorganisation
@@ -26,12 +28,14 @@ export function commencerReorganisation(etat: EtatJeu): string[] {
   etat.reorganisation = {
     avant: structuredClone(village),
     stockAvant: { ...stock },
+    stockDecorationsAvant: { ...(etat.stockDecorations ?? {}) },
     ranges: village.batiments.map((b) => ({ id: b.id, miroir: b.miroir })),
   }
   etat.stockSol = { rail: stock.rail + village.rails.length, chemin: stock.chemin + village.chemins.length }
   village.batiments = []
   village.rails = []
   village.chemins = []
+  toutRangerDecorations(etat)
   return []
 }
 
@@ -83,6 +87,7 @@ export function annulerReorganisation(etat: EtatJeu): string[] {
   if (!reorganisation) return []
   etat.village = reorganisation.avant
   etat.stockSol = reorganisation.stockAvant
+  etat.stockDecorations = reorganisation.stockDecorationsAvant ?? {}
   etat.reorganisation = null
   return []
 }

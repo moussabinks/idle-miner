@@ -771,7 +771,7 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
 export const LISTE_BATIMENTS: IdBatiment[] = ['employes', 'marche', 'forgeron', 'foreuse', 'generateur', 'fonderie', 'joaillerie']
 
 // (27/10) La quête finale : restaurer le château en ruine, au fond de la carte (voir chateau.ts).
-export const PRIX_CHATEAU = 20_000_000
+export const PRIX_CHATEAU = 10_000_000 // (27/10, demandé par le propriétaire : avant 20 millions)
 
 // Les chemins de pavés : seulement pour faire joli (5 $ la case).
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
@@ -784,8 +784,10 @@ export const VITESSE_JOUEUR = 7.5 // (27/10 : 1,5 fois plus vite qu'avant)
 // Un mineur dont on a amélioré la pioche passe 3 s à la forge pour la récupérer.
 export const SECONDES_FORGE_EMPLOYE = 3
 
-// Les dessins du décor (fleurs, rochers, tonneaux, arbres...) : on ne les achète plus (27/10),
-// mais ils ornent la plage et le village de l'écran d'accueil.
+// Les décorations du village (fleurs, rochers, tonneaux, arbres...) : on ne les achetait plus
+// depuis le 27/10 (leurs dessins ornaient la plage et l'écran d'accueil) ; (27/10, demandé par le
+// propriétaire) elles reviennent à l'onglet « Décorations » du menu Construire. Juste pour faire
+// joli : elles ne rapportent rien. On les pose où l'on veut, on les déplace, on les range.
 export type IdDecoration =
   | 'fleurs-rouges'
   | 'fleurs-jaunes'
@@ -806,24 +808,28 @@ export type InfoDecoration = {
   id: IdDecoration
   nom: string
   taille: 1 | 2 // en cases
+  prix: number // en argent
 }
 
 export const DECORATIONS: Record<IdDecoration, InfoDecoration> = {
-  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1 },
-  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1 },
-  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1 },
-  buisson: { id: 'buisson', nom: 'Buisson', taille: 1 },
-  rocher: { id: 'rocher', nom: 'Rocher', taille: 1 },
-  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1 },
-  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1 },
-  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1 },
-  banc: { id: 'banc', nom: 'Banc', taille: 1 },
-  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2 },
-  sapin: { id: 'sapin', nom: 'Sapin', taille: 2 },
-  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2 },
-  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2 },
-  statue: { id: 'statue', nom: 'Statue de la taupe d’or', taille: 2 },
+  'fleurs-rouges': { id: 'fleurs-rouges', nom: 'Fleurs rouges', taille: 1, prix: 150 },
+  'fleurs-jaunes': { id: 'fleurs-jaunes', nom: 'Fleurs jaunes', taille: 1, prix: 150 },
+  'fleurs-violettes': { id: 'fleurs-violettes', nom: 'Fleurs violettes', taille: 1, prix: 150 },
+  buisson: { id: 'buisson', nom: 'Buisson', taille: 1, prix: 250 },
+  rocher: { id: 'rocher', nom: 'Rocher', taille: 1, prix: 250 },
+  tonneau: { id: 'tonneau', nom: 'Tonneau', taille: 1, prix: 400 },
+  caisse: { id: 'caisse', nom: 'Caisse de minerais', taille: 1, prix: 500 },
+  lanterne: { id: 'lanterne', nom: 'Lanterne', taille: 1, prix: 800 },
+  banc: { id: 'banc', nom: 'Banc', taille: 1, prix: 1200 },
+  arbre: { id: 'arbre', nom: 'Grand arbre', taille: 2, prix: 2000 },
+  sapin: { id: 'sapin', nom: 'Sapin', taille: 2, prix: 2000 },
+  cerisier: { id: 'cerisier', nom: 'Cerisier en fleurs', taille: 2, prix: 3500 },
+  fontaine: { id: 'fontaine', nom: 'Fontaine', taille: 2, prix: 15000 },
+  statue: { id: 'statue', nom: 'Statue de la taupe d’or', taille: 2, prix: 50000 },
 }
+
+// Dans l'ordre de l'onglet « Décorations » (des moins chères aux plus chères).
+export const LISTE_DECORATIONS = Object.keys(DECORATIONS) as IdDecoration[]
 
 // ---------------------------------------------------------------------------
 // Le niveau du joueur (29/10) : l'expérience (XP) et ce qu'elle débloque

@@ -6,8 +6,8 @@
 // La caméra : on fait glisser la carte avec la souris ou le doigt, on zoome avec la molette ou en
 // pinçant. Elle suit le joueur quand il marche.
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BATIMENTS, BATIMENTS_DES_RAILS, LIAISONS, RARETES, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdLiaison } from '../jeu/donnees'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { BATIMENTS, BATIMENTS_DES_RAILS, DECORATIONS, LIAISONS, RARETES, SECONDES_FORGE_EMPLOYE, VITESSE_MARCHE, type IdBatiment, type IdDecoration, type IdLiaison } from '../jeu/donnees'
 import { centreGenerateur, generateurEnMarche, rayonGenerateur, reserveMaxGenerateur } from '../jeu/generateur'
 import { fonderieEnMarche } from '../jeu/ateliers'
 import { rayonToujoursVisible } from '../rayonGenerateur'
@@ -34,6 +34,7 @@ import { nombre, nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
   CaseChemin,
+  DessinDecoration,
   RailsDuVillage,
   DessinEvolutionMine,
   type PassagerAscenseur,
@@ -56,6 +57,7 @@ import {
   LIMITES_CAMERA,
   devant,
   LARGEUR_MONDE,
+  hauteurDecoration,
   losange,
   orienter,
   profondeur,
@@ -479,7 +481,11 @@ export function VueVillage({
     let cible: CibleVillage | null = null
     // (un chemin juste à côté d'un bâtiment reste un chemin : App décide, selon le mode)
     const vise = batimentVise(e.clientX, e.clientY, false)
-    if (vise) cible = { type: 'batiment', id: vise }
+    // (27/10) Une décoration sur la case touchée passe avant le bâtiment d'à côté (dont le
+    // dessin déborde souvent un peu sur les cases autour).
+    const deco = occupation(village).get(`${c.x},${c.y}`)
+    if (deco?.type === 'decoration') cible = { type: 'decoration', n: deco.n }
+    else if (vise) cible = { type: 'batiment', id: vise }
     else if (chateauVise(e.clientX, e.clientY)) cible = { type: 'chateau' }
     else {
       const occupant = occupation(village).get(`${c.x},${c.y}`)
@@ -523,6 +529,15 @@ export function VueVillage({
       continue
     }
     objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" enMarche={(b.id === 'foreuse' && foreuseEnMarche(etat)) || (b.id === 'fonderie' && fonderieEnMarche(etat))} />)
+  }
+
+  // (27/10) Les décorations (celle qu'on déplace est remplacée par son fantôme).
+  for (const d of village.decorations ?? []) {
+    if (fantome?.type === 'decoration' && fantome.n === d.n) continue
+    objets.push(<Decoration key={`deco${d.n}`} id={d.id} x={d.x} y={d.y} miroir={d.miroir} />)
+  }
+  if (fantome?.type === 'decoration') {
+    objets.push(<Decoration key="fantome-deco" id={fantome.id} x={fantome.x} y={fantome.y} miroir={fantome.miroir} classe={`fantome ${fantomeLibre ? '' : 'fantome-bloque'}`} />)
   }
 
   // Le fantôme de ce qu'on place.
@@ -1002,6 +1017,16 @@ function mineursDansLaMine(etat: EtatJeu): number {
 }
 
 // Le cercle du rayon du générateur, vu du ciel (une ellipse : la grille est en losange).
+// (27/10) Une décoration posée au village (ou son fantôme), à sa profondeur.
+const Decoration = memo(function Decoration({ id, x, y, miroir, classe = '' }: { id: IdDecoration; x: number; y: number; miroir: boolean; classe?: string }) {
+  const taille = DECORATIONS[id].taille
+  return (
+    <BoiteSvg x={x} y={y} taille={taille} hauteur={hauteurDecoration(id)} classe={classe} style={{ zIndex: profondeur(x + taille / 2, y + taille / 2) }}>
+      <DessinDecoration id={id} x={x} y={y} taille={taille} miroir={miroir} />
+    </BoiteSvg>
+  )
+})
+
 function RayonGenerateur({ etat, batimentActif, fantome }: { etat: EtatJeu; batimentActif: IdBatiment | null; fantome: Fantome | null }) {
   // En plaçant le générateur, on voit le rayon autour du fantôme.
   const place = fantome?.type === 'batiment' && fantome.id === 'generateur'
