@@ -93,23 +93,25 @@
 }
 
 /* La flèche : au-dessus de la cible, au milieu d'un bâtiment, ou dessous si la cible est en haut. */
-/* (--milieu : le milieu de la cible, mais jamais collé au bord de l'écran, pour que
-   l'étiquette ne soit pas coupée) */
+/* (27/10) La flèche est toujours pile au milieu de la cible (--centre). Seule l'étiquette se
+   décale vers l'intérieur près d'un bord de l'écran (--milieu), pour ne pas être coupée (avant,
+   toute la flèche se décalait : elle ne montrait plus la croix ✖ d'une fenêtre, tout à droite). */
 .tuto-fleche-place {
-  --milieu: clamp(70px, calc(var(--x) + var(--l) / 2), calc(100vw - 70px));
+  --centre: calc(var(--x) + var(--l) / 2);
+  --milieu: clamp(70px, var(--centre), calc(100vw - 70px));
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate3d(var(--milieu), calc(var(--y) - 10px), 0);
+  transform: translate3d(var(--centre), calc(var(--y) - 10px), 0);
   will-change: transform;
 }
 
 .tuto-sur-batiment .tuto-fleche-place {
-  transform: translate3d(var(--milieu), calc(var(--y) + var(--h) / 2 - 40px), 0);
+  transform: translate3d(var(--centre), calc(var(--y) + var(--h) / 2 - 40px), 0);
 }
 
 .tuto-cible-dessous .tuto-fleche-place {
-  transform: translate3d(var(--milieu), calc(var(--y) + var(--h) + 10px), 0);
+  transform: translate3d(var(--centre), calc(var(--y) + var(--h) + 10px), 0);
 }
 
 .tuto-fleche {
@@ -130,6 +132,7 @@
 /* L'étiquette au-dessus de la flèche (« Touche ici ! »). */
 .tuto-geste {
   order: -1;
+  translate: calc(var(--milieu) - var(--centre)) 0;
   padding: 4px 12px;
   border: var(--trait) solid var(--encre);
   border-radius: 999px;
