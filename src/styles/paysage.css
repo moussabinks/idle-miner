@@ -413,6 +413,29 @@
   }
 }
 
+/* (27/10, demandé par le propriétaire) À la souris (un ordinateur : le petit cadre de CrazyGames),
+   les fenêtres restent au milieu de l'écran, comme en grand écran, et la carte du tutoriel en
+   haut au milieu (elle passe en bas quand ce qu'il faut toucher est en haut). Au doigt (téléphone
+   couché), le panneau à droite ne change pas. */
+@media (orientation: landscape) and (max-height: 620px) and (pointer: fine) {
+  .voile {
+    justify-content: center;
+    padding: 6px;
+  }
+
+  .fenetre,
+  .fenetre-petite,
+  .fenetre-grande {
+    animation: fenetre-arrive 0.18s ease-out;
+  }
+
+  .tuto-carte {
+    left: 50%;
+    width: min(440px, calc(100% - 24px));
+    translate: -50% 0;
+  }
+}
+
 @keyframes fenetre-glisse {
   from {
     transform: translateX(30px);
