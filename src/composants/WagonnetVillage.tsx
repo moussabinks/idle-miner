@@ -27,8 +27,8 @@ const RECUL_POUSSEUR = 1.15
 // La vente d'un wagonnet au marché (27/10) : quand il a fini de décharger, un « +X $ » doré
 // jaillit juste au-dessus de lui (par-dessus le marché), compte de 0 jusqu'au montant, avec une
 // onde, des étoiles, les minerais vendus qui sautent et une fontaine de pièces qui retombent.
-type Vente = { id: number; montant: number; x: number; y: number; objets: string[] }
-const DUREE_VENTE = 2000 // ms
+export type Vente = { id: number; montant: number; x: number; y: number; objets: string[] }
+export const DUREE_VENTE = 2000 // ms
 let prochaineVente = 0
 
 // La fontaine de pièces : 12 pièces en éventail, qui montent puis retombent.
@@ -45,7 +45,8 @@ const ETOILES = [
   { dx: 32, dy: -40, retard: 300 },
 ]
 
-function VenteWagonnet({ vente }: { vente: Vente }) {
+// (27/10) Aussi dans le village de l'écran d'accueil (SceneAccueil).
+export function VenteWagonnet({ vente }: { vente: Vente }) {
   // Le montant monte de 0 jusqu'au total en un peu moins d'une demi-seconde (ralenti à la fin).
   const [affiche, setAffiche] = useState(0)
   useEffect(() => {

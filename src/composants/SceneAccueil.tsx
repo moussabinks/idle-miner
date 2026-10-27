@@ -6,7 +6,7 @@
 // recadrée (« cover »).
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { DECORATIONS, type IdBatiment, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
+import { BLOCS, DECORATIONS, type IdBatiment, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
 import { nomEmploye, t } from '../jeu/langue'
 import {
   batimentPose,
@@ -22,6 +22,7 @@ import {
 } from '../jeu/village'
 import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, TerrainVillage } from './DessinsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
+import { DUREE_VENTE, VenteWagonnet } from './WagonnetVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
@@ -44,6 +45,8 @@ const BATIMENTS_SCENE: BatimentPose[] = [
   { id: 'foreuse', x: 17, y: 2, miroir: false },
   { id: 'joaillerie', x: 12, y: 27, miroir: false },
   { id: 'fonderie', x: 27, y: 12, miroir: false },
+  // (la forge, en bas à gauche du marché, sous la boucle de gauche)
+  { id: 'forgeron', x: 23, y: 34, miroir: true },
 ]
 
 // Les décorations, elles aussi de part et d'autre de l'axe (une case (x, y) et son reflet (y, x)).
@@ -141,7 +144,7 @@ for (const de of ['puits', 'foreuse', 'fonderie', 'joaillerie'] as IdBatiment[])
 // décalage pour qu'ils ne marchent pas tous ensemble.
 const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: IdRarete; decalage: number }[] = [
   { nom: 'Noisette', de: 'puits', vers: 'marche', rarete: 'legendaire', decalage: 0 },
-  { nom: 'Pépite', de: 'puits', vers: 'fonderie', rarete: 'epique', decalage: 0.35 },
+  { nom: 'Pépite', de: 'puits', vers: 'forgeron', rarete: 'epique', decalage: 0.35 },
   { nom: 'Caramel', de: 'puits', vers: 'marche', rarete: 'rare', decalage: 0.55 },
   { nom: 'Biscotte', de: 'puits', vers: 'employes', rarete: 'mythique', decalage: 0.8 },
 ]
@@ -157,20 +160,24 @@ const CADRE = { x: CENTRE_CADRE.x - 370, y: CENTRE_CADRE.y - 340, l: 740, h: 640
 
 // (27/10) Les wagonnets qui roulent vers le marché, chacun poussé par une taupe : d'où ils
 // partent, leur chargement, la rareté du pousseur et un décalage pour qu'ils ne partent pas ensemble.
-const WAGONNETS_SCENE: { de: IdBatiment; nom: string; rarete: IdRarete; contenu: Partial<Record<IdBloc, number>>; decalage: number }[] = [
-  { de: 'puits', nom: 'Khalil', rarete: 'mythique', contenu: { or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }, decalage: 0 },
-  { de: 'foreuse', nom: 'Sasha', rarete: 'legendaire', contenu: { charbon: 4, fer: 3, redstone: 3 }, decalage: 4 },
-  { de: 'fonderie', nom: 'Satine', rarete: 'epique', contenu: { lingot_or: 4, lingot_fer: 4 }, decalage: 9 },
-  { de: 'joaillerie', nom: 'Teo', rarete: 'legendaire', contenu: { bijou_diamant: 2, bijou_rubis: 2, bijou_saphir: 2 }, decalage: 13 },
+// « vente » : ce que rapporte son chargement au marché (le « +X $ » qui jaillit, comme dans le jeu).
+const WAGONNETS_SCENE: { de: IdBatiment; nom: string; rarete: IdRarete; contenu: Partial<Record<IdBloc, number>>; vente: number; decalage: number }[] = [
+  { de: 'puits', nom: 'Khalil', rarete: 'mythique', contenu: { or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }, vente: 11475, decalage: 0 },
+  { de: 'foreuse', nom: 'Sasha', rarete: 'legendaire', contenu: { charbon: 4, fer: 3, redstone: 3 }, vente: 3240, decalage: 4 },
+  { de: 'fonderie', nom: 'Satine', rarete: 'epique', contenu: { lingot_or: 4, lingot_fer: 4 }, vente: 6860, decalage: 9 },
+  { de: 'joaillerie', nom: 'Teo', rarete: 'legendaire', contenu: { bijou_diamant: 2, bijou_rubis: 2, bijou_saphir: 2 }, vente: 18900, decalage: 13 },
 ]
 // (le même écart entre le wagonnet et son pousseur que dans le jeu, voir WagonnetVillage)
 const ESSIEUX = 0.6
 const RECUL_POUSSEUR = 1.15
 
+// L'arrêt au bout de chaque aller (et du retour), en secondes.
+const PAUSE = 1.2
+
 // Une position le long d'un aller-retour : on va, on attend un peu, on revient.
 function allerRetour(longueur: number, vitesse: number, temps: number): { distance: number; retour: boolean; pause: boolean } {
   const trajet = longueur / vitesse
-  const pause = 1.2
+  const pause = PAUSE
   const cycle = 2 * (trajet + pause)
   const instant = ((temps % cycle) + cycle) % cycle
   if (instant < trajet) return { distance: instant * vitesse, retour: false, pause: false }
@@ -225,7 +232,7 @@ function objetsFixes(noms: { manager: string; recruteur: string }): ReactNode[] 
 
   // Le joueur, devant la mine.
   objets.push(
-    <Perso key="joueur" qui="joueur" x={25.6} y={33.6} sens={-1} vue="face" marche={false} classe="perso-joueur" />,
+    <Perso key="joueur" qui="joueur" x={22.2} y={36.8} sens={-1} vue="face" marche={false} classe="perso-joueur" />,
   )
 
   // Le manager et le recruteur, à leur poste devant le Personnel.
@@ -332,6 +339,24 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
     if (!trace) continue
     const longueur = longueurTrace(trace)
     const etape = allerRetour(longueur, VITESSE_WAGONNET, temps + w.decalage)
+    // La vente au marché : quand il a fini de décharger (au début du retour), le « +X $ » doré
+    // jaillit au bout de la voie pendant 2 secondes (un nouveau à chaque voyage).
+    const cycle = 2 * (longueur / VITESSE_WAGONNET + PAUSE)
+    const voyage = Math.floor((temps + w.decalage) / cycle)
+    const depuisLaVente = (temps + w.decalage) - voyage * cycle - (longueur / VITESSE_WAGONNET + PAUSE)
+    if (temps > 0 && depuisLaVente >= 0 && depuisLaVente < DUREE_VENTE / 1000) {
+      const bout = surLaTrace(trace, Math.max(0, longueur - ESSIEUX / 2))
+      const ou = versEcran(bout.x, bout.y)
+      const objetsVendus = Object.keys(w.contenu)
+        .sort((a, b) => BLOCS[b as IdBloc].prix - BLOCS[a as IdBloc].prix)
+        .slice(0, 3)
+        .map((id) => BLOCS[id as IdBloc].emoji)
+      objets.push(
+        <div key={`vente-${w.de}-${voyage}`} style={{ position: 'absolute', left: 0, top: 0, zIndex: 100000 }}>
+          <VenteWagonnet vente={{ id: voyage, montant: w.vente, x: ou.x, y: ou.y - 46, objets: objetsVendus }} />
+        </div>,
+      )
+    }
     const s = etape.distance
     const borne = (v: number) => Math.max(0, Math.min(longueur, v))
     const a = surLaTrace(trace, borne(s + ESSIEUX / 2))
