@@ -36,7 +36,7 @@
    L'anneau l'entoure à --ecart de distance : son bord intérieur reste toujours à 6 px de la
    cible, sans jamais la toucher, et il a la même forme qu'elle (un rond reste un rond). */
 .tuto-cible {
-  --ecart: 14px; /* = 6 px de vide + 8 px d'anneau (5 de jaune, 3 d'encre à l'intérieur) */
+  --ecart: 11px; /* = 3 px de vide + 8 px d'anneau (3 d'encre à l'intérieur, 5 de jaune) */
 }
 
 /* Le voile sombre autour de la cible : un trou arrondi, et une ombre immense tout autour. */
@@ -76,6 +76,7 @@
   border: 5px solid var(--jaune);
   outline: 3px solid var(--encre);
   box-shadow: inset 0 0 0 3px var(--encre);
+  /* (27/10) il pulse de 3 px vers l'extérieur (avant : +6 % de sa taille, il couvrait ses voisins) */
   animation: tuto-pulse 0.9s ease-in-out infinite;
 }
 
@@ -90,13 +91,18 @@
   border-radius: 50%;
 }
 
+/* (27/10) Trop près du bord de l'écran : l'anneau ne pulse pas (il en sortirait). */
+.tuto-sans-pouls .tuto-cercle::before {
+  animation: none;
+}
+
 @keyframes tuto-pulse {
   0%,
   100% {
-    scale: 1;
+    inset: 0;
   }
   50% {
-    scale: 1.06;
+    inset: -3px;
   }
 }
 
@@ -171,28 +177,10 @@
   }
 }
 
-/* (27/10) Un bouton à toucher : l'anneau doré est dessiné SUR le bouton lui-même (des ombres
-   pleines, écrites par Tutoriel.tsx), collé à son bord et de sa forme exacte ; la pastille « 3 »
-   et l'étiquette passent par-dessus. Le bouton ne grossit plus (il débordait sur l'anneau et sur
-   ses voisins) : c'est l'anneau qui pulse, de 0 à 2 px (--tuto-pouls). Un bâtiment de la carte
-   garde l'anneau rond du calque (.tuto-cercle). */
-@property --tuto-pouls {
-  syntax: '<length>';
-  inherits: false;
-  initial-value: 0px;
-}
-
+/* (27/10) La cible ne grossit plus (elle passait sous l'anneau) : c'est l'anneau qui pulse. Elle
+   ne « respire » pas non plus pendant l'étape (btn-attention, accueil-respire...). */
 [data-tuto-actif]:not(img):not([data-cible]) {
-  animation: tuto-pouls 0.9s ease-in-out infinite alternate !important;
-}
-
-@keyframes tuto-pouls {
-  from {
-    --tuto-pouls: 0px;
-  }
-  to {
-    --tuto-pouls: 2px;
-  }
+  animation: none !important;
 }
 
 /* (27/10) Pas de place libre pour la flèche (elle cacherait un texte) : l'anneau suffit. Un rond
@@ -207,10 +195,7 @@
   visibility: hidden;
 }
 
-/* (l'anneau du calque ne sert plus qu'aux bâtiments) */
-.tuto-cible:not(.tuto-sur-batiment) .tuto-cercle {
-  display: none;
-}
+
 
 /* La carte d'étape : Pépite à gauche, la consigne, et le ✖ pour passer le tutoriel. */
 .tuto-carte {

@@ -150,14 +150,22 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
 // d'une moitié de l'écran à l'autre.
 // Fait défiler (de haut en bas seulement) la boîte qui contient l'élément, pour qu'on le voie en
 // entier. (scrollIntoView ferait aussi défiler de côté une fenêtre trop large.)
-function defilerJusqua(element: Element) {
+// La boîte qui défile autour d'un élément (le corps d'une fenêtre), ou rien.
+function boiteQuiDefile(element: Element): HTMLElement | null {
   let boite = element.parentElement
   while (boite && !(boite.scrollHeight > boite.clientHeight && /auto|scroll/.test(getComputedStyle(boite).overflowY))) boite = boite.parentElement
+  return boite
+}
+
+function defilerJusqua(element: Element) {
+  const boite = boiteQuiDefile(element)
   if (!boite) return
   const r = element.getBoundingClientRect()
   const b = boite.getBoundingClientRect()
-  if (r.top < b.top) boite.scrollBy({ top: versCss(r.top - b.top) - 12, behavior: 'smooth' })
-  else if (r.bottom > b.bottom) boite.scrollBy({ top: versCss(r.bottom - b.bottom) + 12, behavior: 'smooth' })
+  // (27/10) avec la place pour l'anneau doré autour (PLACE_VOULUE)
+  const marge = (24 * 100) / Math.max(1, versCss(100)) // (24 px du CSS, en px de l'écran)
+  if (r.top - marge < b.top) boite.scrollBy({ top: versCss(r.top - b.top) - 24, behavior: 'smooth' })
+  else if (r.bottom + marge > b.bottom) boite.scrollBy({ top: versCss(r.bottom - b.bottom) + 24, behavior: 'smooth' })
 }
 
 // (27/10) La forme de la cible, mesurée pour que l'anneau doré ne la touche jamais :
@@ -202,69 +210,51 @@ function arrondiQuiContient(boite: { gauche: number; droite: number; haut: numbe
   return 0
 }
 
-// Ce que l'anneau prend autour de la cible : 8,5 px et 2 px de pouls (sur un bâtiment, l'anneau
-// du calque : --ecart, 14 px, et son contour, 3 px).
-const ANNEAU_HORS_CIBLE = 11
+// (27/10) L'anneau doré, le même que sur le site (épais : encre, 5 px de jaune, encre) : il entoure
+// la cible à --ecart (11 px, fenetres.css) avec 3 px de vide, son contour d'encre dépasse de 3 px
+// et il pulse de 3 px. Ce qu'il prend autour de la cible :
+const ANNEAU_HORS_CIBLE = 17
 
-// (27/10) La cible ne grossit plus (c'est l'anneau qui pulse) : rien à prévoir en plus.
-const PALPITE_MAX = 1
-
-// L'anneau doré dessiné sur le bouton lui-même (des ombres pleines, sous son contenu : la pastille
-// et l'étiquette passent par-dessus), de sa forme exacte : du crème, du jaune, puis l'encre. Son
-// épaisseur (au plus 8,5 px, et le pouls de 2 px, --tuto-pouls dans fenetres.css) se règle sur la
-// place libre autour du bouton : il ne touche jamais un voisin (2 px de vide au moins).
-const ANNEAU_MAX = 8.5
-const POULS = 2
-const VIDE_AVANT_VOISIN = 2
-
-// La place libre autour d'un élément (en px du CSS) : on sonde des points tout autour, de plus en
-// plus loin. Un point sur un des « parents » de l'élément (la fenêtre, la barre...) est libre ;
-// sur autre chose (un voisin, son texte...), il ne l'est pas.
-function placeLibre(element: Element): number {
+// (27/10) La place libre de chaque côté d'un élément (en px du CSS, jusqu'à « jusqua ») : jusqu'au
+// premier voisin (un texte, un bouton...) et jusqu'au bord de l'écran, séparément.
+type Cote = 'haut' | 'bas' | 'gauche' | 'droite'
+const COTES: Cote[] = ['haut', 'bas', 'gauche', 'droite']
+function espaceAutour(element: Element, jusqua: number): Record<Cote, { voisin: number; bord: number }> {
   const r = element.getBoundingClientRect()
-  const pas = Math.max(1, ANNEAU_MAX + POULS + VIDE_AVANT_VOISIN)
+  const ecran = (px: number) => (px * 100) / Math.max(1, versCss(100)) // px du CSS → écran
   const libre = (x: number, y: number) => {
-    if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return true // (le bord de l'écran : la barre du bas s'en écarte)
     const dessus = document.elementsFromPoint(x, y).find((e) => !e.closest('.tuto-cible, .tuto-carte'))
     return !dessus || dessus.contains(element) || element.contains(dessus)
   }
-  const ecran = (px: number) => px * (versCss(100) > 0 ? 100 / versCss(100) : 1) // px du CSS → px de l'écran
-  for (let d = 1; d <= pas; d++) {
-    const e = ecran(d)
-    for (let k = 0; k <= 8; k++) {
-      const fx = r.left + (r.width * k) / 8
-      const fy = r.top + (r.height * k) / 8
-      if (!libre(fx, r.top - e) || !libre(fx, r.bottom + e) || !libre(r.left - e, fy) || !libre(r.right + e, fy)) return d - 1
+  const resultat = {} as Record<Cote, { voisin: number; bord: number }>
+  for (const cote of COTES) {
+    const bord = versCss(cote === 'haut' ? r.top : cote === 'bas' ? window.innerHeight - r.bottom : cote === 'gauche' ? r.left : window.innerWidth - r.right)
+    let voisin = jusqua
+    sonde: for (let d = 1; d <= jusqua && d < bord; d++) {
+      const e = ecran(d)
+      for (let k = 1; k < 8; k++) {
+        const fx = r.left + (r.width * k) / 8
+        const fy = r.top + (r.height * k) / 8
+        const [x, y] = cote === 'haut' ? [fx, r.top - e] : cote === 'bas' ? [fx, r.bottom + e] : cote === 'gauche' ? [r.left - e, fy] : [r.right + e, fy]
+        if (!libre(x, y)) {
+          voisin = d - 1
+          break sonde
+        }
+      }
     }
+    resultat[cote] = { voisin, bord }
   }
-  return pas
+  return resultat
 }
 
-// Pose l'anneau sur un élément ; renvoie de quoi le retirer (son style d'avant).
-// « relief » : les ombres du bouton avant l'anneau (son relief), gardées dessous.
-function poserAnneau(element: Element, relief?: string): () => void {
-  if (!(element instanceof HTMLElement || element instanceof SVGElement)) return () => {}
-  const style = element.style
-  const avant = { ombre: style.boxShadow, arrondi: style.borderRadius }
-  const calcule = getComputedStyle(element)
-  if (relief === undefined) relief = calcule.boxShadow && calcule.boxShadow !== 'none' ? `, ${calcule.boxShadow}` : ''
-  // L'épaisseur : ce que permet la place libre (au moins 3 px pour qu'on le voie), et le pouls
-  // seulement s'il a la place.
-  const place = placeLibre(element) - VIDE_AVANT_VOISIN
-  const epaisseur = Math.max(3, Math.min(ANNEAU_MAX, place))
-  const pouls = place >= epaisseur + POULS ? 'var(--tuto-pouls, 0px)' : '0px'
-  const bord = (px: number) => `calc(${Math.round(px * 10) / 10}px + ${pouls})`
-  style.boxShadow =
-    [`0 0 0 ${bord(epaisseur * 0.24)} #fdf6e3`, `0 0 0 ${bord(epaisseur * 0.7)} #f9d65a`, `0 0 0 ${bord(epaisseur)} #2a2140`].join(', ') + relief
-  element.setAttribute('data-tuto-anneau', String(epaisseur + (pouls === '0px' ? 0 : POULS)))
-  // (une cible sans coins arrondis, comme le cube de la mine : un anneau aux coins doux)
-  if ((parseFloat(calcule.borderTopLeftRadius) || 0) === 0) style.borderRadius = '14px'
-  return () => {
-    style.boxShadow = avant.ombre
-    style.borderRadius = avant.arrondi
-    element.removeAttribute('data-tuto-anneau')
-  }
-}
+// La place que demande l'anneau autour de la cible, et 2 px de vide avant un voisin.
+const PLACE_VOULUE = 19
+// Au plus, la cible s'écarte de ses voisins de tant (pour ne pas bouleverser la fenêtre).
+const MARGE_MAX = 22
+
+// (27/10) La cible ne grossit plus (elle passait sous l'anneau) : c'est l'anneau qui pulse.
+const PALPITE_MAX = 1
+
 
 // (27/10) La flèche et son étiquette ne doivent cacher aucun texte ni bouton : on regarde si la
 // place est libre au-dessus de la cible (puis en dessous). Libre : la carte du village, ou le fond
@@ -302,9 +292,14 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
     let image = 0
     let defile = false
     let marquee: Element | null = null
-    let retirerAnneau = () => {}
-    let relief = ''
     let placeFleche: PlaceFleche | null = null
+    // La marge ajoutée à la cible de chaque côté pour l'écarter de ses voisins (et son style d'avant).
+    let marges: Record<Cote, number> = { haut: 0, bas: 0, gauche: 0, droite: 0 }
+    let margeAvant = ''
+    const rendreMarge = () => {
+      if (marquee instanceof HTMLElement || marquee instanceof SVGElement) marquee.style.margin = margeAvant
+      marges = { haut: 0, bas: 0, gauche: 0, droite: 0 }
+    }
     let forme: FormeCible | null = null
     // (27/10) Ce dont la barre du bas est décalée vers l'intérieur, pour que l'anneau autour de
     // Mine ou de Bâtiments ne sorte pas de l'écran (--tuto-decale-*, voir jeu.css).
@@ -317,24 +312,65 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
       if (!marquee || !marquee.isConnected || n++ % 15 === 0) {
         const element = document.querySelector(selecteur)
         if (element !== marquee) {
+          rendreMarge()
+          if (marquee instanceof HTMLElement) delete marquee.dataset.tutoMargeBase
           marquee?.removeAttribute('data-tuto-actif')
-          retirerAnneau()
-          retirerAnneau = () => {}
           // (on mesure la forme avant de poser l'anneau : il change ses ombres)
           forme = element ? formeDe(element) : null
           element?.setAttribute('data-tuto-actif', '')
-          if (element && !surBatiment) {
-            const ombre = getComputedStyle(element).boxShadow
-            relief = ombre && ombre !== 'none' ? `, ${ombre}` : ''
-            retirerAnneau = poserAnneau(element, relief)
-          }
           marquee = element
           defile = false
           placeFleche = null
-        } else if (marquee && !surBatiment && n % 30 === 1) {
-          // (toutes les demi-secondes : la place libre a pu changer, une fenêtre qui finit de s'ouvrir...)
-          retirerAnneau()
-          retirerAnneau = poserAnneau(marquee, relief)
+          margeAvant = element instanceof HTMLElement || element instanceof SVGElement ? element.style.margin : ''
+        }
+        // (toutes les demi-secondes : ce bloc tourne une image sur 15, n vaut alors 15k + 1) L'anneau a-t-il la place ? Sinon, la cible s'écarte de ses
+        // voisins (une marge, au plus MARGE_MAX), et près du bord de l'écran l'anneau ne pulse pas.
+        if (marquee && !surBatiment && (n % 30 === 1 || n < 3) && (marquee instanceof HTMLElement || marquee instanceof SVGElement)) {
+          const place = espaceAutour(marquee, PLACE_VOULUE)
+          const enBas = !!marquee.closest('.interface-bas') // (la barre du bas s'écarte toute seule des bords)
+          let serre = false
+          for (const cote of COTES) {
+            const { voisin, bord } = place[cote]
+            if (voisin < PLACE_VOULUE && voisin < bord) marges[cote] = Math.min(MARGE_MAX, marges[cote] + (PLACE_VOULUE - voisin))
+            if (!enBas && bord < ANNEAU_HORS_CIBLE) serre = true
+          }
+          // Les marges ne doivent pas pousser la cible hors de l'écran (une fenêtre qui ne défile
+          // pas) : si l'anneau n'y tient plus en haut ou en bas, on les reprend d'autant.
+          if (!enBas) {
+            const manqueBas = ANNEAU_HORS_CIBLE - place.bas.bord
+            const manqueHaut = ANNEAU_HORS_CIBLE - place.haut.bord
+            // (si la fenêtre peut encore défiler de ce côté, elle défile : les marges restent)
+            const defileur = boiteQuiDefile(marquee)
+            const peutDescendre = !!defileur && defileur.scrollTop + defileur.clientHeight < defileur.scrollHeight - 1
+            const peutMonter = !!defileur && defileur.scrollTop > 0
+            if (manqueBas > 0 && peutDescendre) defile = false
+            else if (manqueBas > 0) {
+              const reprise = Math.min(manqueBas, marges.haut + marges.bas)
+              const surHaut = Math.min(reprise, marges.haut)
+              marges.haut -= surHaut
+              marges.bas -= reprise - surHaut
+            }
+            if (manqueHaut > 0 && peutMonter) defile = false
+            else if (manqueHaut > 0) {
+              const reprise = Math.min(manqueHaut, marges.haut + marges.bas)
+              const surBas = Math.min(reprise, marges.bas)
+              marges.bas -= surBas
+              marges.haut -= reprise - surBas
+            }
+          }
+          const style = getComputedStyle(marquee)
+          const base = (cote: Cote) => parseFloat(cote === 'haut' ? style.marginTop : cote === 'bas' ? style.marginBottom : cote === 'gauche' ? style.marginLeft : style.marginRight) || 0
+          if (marquee.style.margin === margeAvant && COTES.some((c) => marges[c] > 0)) {
+            const de = { haut: base('haut'), bas: base('bas'), gauche: base('gauche'), droite: base('droite') }
+            marquee.dataset.tutoMargeBase = JSON.stringify(de)
+          }
+          const de = JSON.parse((marquee as HTMLElement).dataset.tutoMargeBase ?? '{"haut":0,"bas":0,"gauche":0,"droite":0}') as Record<Cote, number>
+          const nouvelle = `${de.haut + marges.haut}px ${de.droite + marges.droite}px ${de.bas + marges.bas}px ${de.gauche + marges.gauche}px`
+          if (COTES.some((c) => marges[c] > 0) && marquee.style.margin !== nouvelle) {
+            marquee.style.margin = nouvelle
+            defile = false // (la fenêtre redéfile pour montrer la cible et son anneau en entier)
+          }
+          calque.current?.classList.toggle('tuto-sans-pouls', serre)
         }
       }
       const r = marquee?.getBoundingClientRect() ?? null
@@ -426,7 +462,7 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
           racine.style.setProperty(`--tuto-decale-${cote}`, `${Math.round(decale[cote])}px`)
         }
       }
-      const cle = visible ? `${Math.round(boite.x)},${Math.round(boite.y)},${Math.round(boite.l)},${Math.round(boite.h)},${Math.round(boite.arrondi)},${marquee?.getAttribute('data-tuto-anneau') ?? ''}` : ''
+      const cle = visible ? `${Math.round(boite.x)},${Math.round(boite.y)},${Math.round(boite.l)},${Math.round(boite.h)},${Math.round(boite.arrondi)}` : ''
       if (visible && cle !== derniere && calque.current) {
         derniere = cle
         const style = calque.current.style
@@ -435,10 +471,6 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
         style.setProperty('--l', `${Math.round(boite.l)}px`)
         style.setProperty('--h', `${Math.round(boite.h)}px`)
         style.setProperty('--arrondi', `${Math.round(boite.arrondi)}px`)
-        // (27/10) Le trou du voile épouse l'anneau posé sur le bouton (sur un bâtiment : 14 px).
-        const anneau = parseFloat(marquee?.getAttribute('data-tuto-anneau') ?? '')
-        if (anneau > 0) style.setProperty('--ecart', `${anneau}px`)
-        else style.removeProperty('--ecart')
       }
       // La place de la flèche (une fois par demi-seconde : elle sonde l'écran).
       if (visible && marquee && (placeFleche === null || n % 30 === 2)) {
@@ -447,7 +479,7 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
           const centre = r.left + r.width / 2
           const ecran = (px: number) => (px * 100) / Math.max(1, versCss(100)) // px du CSS → écran
           const demi = ecran(48)
-          const ecart = ecran(Math.max(4, parseFloat(marquee.getAttribute('data-tuto-anneau') ?? '0') + 2))
+          const ecart = ecran(ANNEAU_HORS_CIBLE)
           const hauteurFleche = ecran(92) // la flèche (52 px), son étiquette et le rebond
           if (zoneLibre(marquee, centre - demi, r.top - ecart - hauteurFleche, centre + demi, r.top - ecart)) placeFleche = 'dessus'
           else if (zoneLibre(marquee, centre - demi, r.bottom + ecart, centre + demi, r.bottom + ecart + hauteurFleche)) placeFleche = 'dessous'
@@ -460,6 +492,9 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
       // (27/10) Un bâtiment montré : les bulles du village (« Abordable »...) se cachent, la flèche
       // passerait dessus (et le tutoriel dit déjà quoi faire).
       racine.classList.toggle('tuto-batiment', visible && surBatiment)
+      // (27/10) Un bouton montré : sur téléphone, la fenêtre laisse plus de place autour d'elle
+      // (paysage.css), pour que l'anneau autour de son ✖ ou de ses boutons reste dans l'écran.
+      racine.classList.toggle('tuto-bouton', visible && !surBatiment)
       const enHaut = visible && r.top + r.height / 2 < window.innerHeight * 0.5
       const avant = dernierSuivi.current
       if (visible !== avant.visible || dessous !== avant.dessous || sansFleche !== avant.sansFleche || sansVoile !== avant.sansVoile || enHaut !== avant.enHaut) {
@@ -472,8 +507,9 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
     return () => {
       cancelAnimationFrame(image)
       marquee?.removeAttribute('data-tuto-actif')
-      retirerAnneau()
-      racine.classList.remove('tuto-batiment')
+      racine.classList.remove('tuto-batiment', 'tuto-bouton')
+      rendreMarge()
+      if (marquee instanceof HTMLElement) delete marquee.dataset.tutoMargeBase
       for (const cote of ['gauche', 'droite', 'bas']) racine.style.removeProperty(`--tuto-decale-${cote}`)
     }
   }, [selecteur, calque, surBatiment])
