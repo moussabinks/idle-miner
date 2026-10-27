@@ -7,7 +7,8 @@
 //   - (27/10) pas de packs de gemmes payants : la boutique dit « Bientôt disponible » ;
 //   - (27/10) la sauvegarde passe par le module « Data » du SDK (gardée sur le compte CrazyGames) ;
 //   - les publicités récompensées passent par le SDK de CrazyGames (s'il est là), et on lui dit
-//     quand le joueur joue ou est dans un menu (gameplayStart / gameplayStop), et les grands
+//     quand le joueur joue (gameplayStart, dès qu'il entre dans la partie) ou non (gameplayStop :
+//     pendant une publicité, ou revenu à l'accueil ; 27/10), et les grands
 //     moments (happytime).
 // Sans SDK (en local, ou sur Vercel), tout reste comme avant : la fausse publicité de 30 s.
 // Fabriquer le fichier à envoyer à CrazyGames : npm run build:crazygames (voir docs/crazygames.md).

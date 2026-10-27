@@ -105,15 +105,23 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
 
   // --- La publicité (fausse pour l'instant, ou celle de CrazyGames) -----------
   const [pubEnCours, setPubEnCours] = useState<{ quandFinie: () => void } | null>(null)
+  // (27/10) Une publicité de CrazyGames est à l'écran (pour leur dire que le jeu est en pause).
+  const [pubSdkEnCours, setPubSdkEnCours] = useState(false)
   const regarderPub = useCallback((quandFinie: () => void) => {
     couperPourPub(true)
     if (sdkDisponible()) {
+      setPubSdkEnCours(true)
+      jeuEnPause() // (avant de demander la publicité)
       pubRecompensee(
         () => {
           couperPourPub(false)
+          setPubSdkEnCours(false)
           quandFinie()
         },
-        () => couperPourPub(false),
+        () => {
+          couperPourPub(false)
+          setPubSdkEnCours(false)
+        },
       )
       return
     }
@@ -597,13 +605,18 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     setFenetreHaut('quotidien')
   }
 
-  // Une fenêtre est-elle ouverte ? (la fête du niveau attend, et CrazyGames sait qu'on est en pause)
+  // Une fenêtre est-elle ouverte ? (la fête du niveau attend)
   const fenetreOuverte =
     batimentActif !== null || fenetreHaut !== null || menuConstruction || trajetsOuverts !== null || resumeAbsence !== null || pubEnCours !== null || chateauOuvert || restauration || feuArtifice !== null
+  // (27/10) Ce qu'on dit à CrazyGames : « le joueur joue » dès qu'il entre dans la partie (le jeu
+  // tourne tout seul, même fenêtres ouvertes : c'est un idle), « pause » seulement pendant une
+  // publicité (et au retour à l'accueil, plus bas). Avant, chaque fenêtre disait « pause », et si
+  // le cadeau du jour s'ouvrait à l'entrée, le premier gameplayStart attendait sa fermeture.
+  const pubALEcran = pubEnCours !== null || pubSdkEnCours
   useEffect(() => {
-    if (fenetreOuverte) jeuEnPause()
+    if (pubALEcran) jeuEnPause()
     else jeuEnCours()
-  }, [fenetreOuverte])
+  }, [pubALEcran])
   // (27/10) Retour à l'écran d'accueil : CrazyGames sait que le joueur ne joue plus.
   useEffect(() => () => jeuEnPause(), [])
   useEffect(() => {
