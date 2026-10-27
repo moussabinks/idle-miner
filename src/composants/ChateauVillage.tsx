@@ -84,7 +84,7 @@ export const ChateauVillage = memo(function ChateauVillage({ restaure, animation
         <span className="chateau-effets" aria-hidden="true">
           {/* La poussière autour du pied, les étincelles qui montent, l'éclair, les étoiles. */}
           {Array.from({ length: 14 }, (_, i) => (
-            <i key={`p${i}`} className="chateau-poussiere" style={{ ['--x' as string]: `${10 + i * 6.2}%`, animationDelay: `${(i % 5) * 110}ms` }} />
+            <i key={`p${i}`} className="chateau-poussiere" style={{ ['--x' as string]: `${26 + i * 3.7}%`, animationDelay: `${(i % 5) * 110}ms` }} />
           ))}
           {Array.from({ length: 14 }, (_, i) => (
             <i key={`e${i}`} className="chateau-etincelle" style={{ ['--x' as string]: `${18 + ((i * 37) % 64)}%`, animationDelay: `${300 + ((i * 97) % 1100)}ms` }} />

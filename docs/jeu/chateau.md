@@ -8,9 +8,10 @@
 ## Ce que voit le joueur
 
 - **Dès le début de la partie**, au fond de la carte, entre la chaîne de montagnes de gauche et celle de
-  droite, un **château en ruine** est posé sur une colline (une butte d'herbe, un plateau aux flancs de
-  roche et une rampe de terre). Un **chemin de terre** part du coin du haut de la clairière (les 3 arbres
-  de ce coin ont été enlevés) et monte jusqu'au pied de la rampe.
+  droite, un **château en ruine** est posé sur une **colline toute ronde, en herbe** (27/10 : plus de
+  falaise de roche ni de rampe). Il est **tourné de 45°** : sa grande porte est face à nous, au milieu du
+  mur de devant. Un **chemin de terre** part du coin du haut de la clairière (les 3 arbres de ce coin ont
+  été enlevés) et monte presque tout droit jusqu'à la porte.
 - La caméra monte bien plus haut qu'avant (`LIMITES_CAMERA.y0` : -560 au lieu de -140) : le décor a été
   agrandi, avec bien plus de montagnes autour du château (`paysage.ts` plante tout ce que la caméra peut
   voir ; rien n'est planté devant le château ni sur son chemin).
@@ -32,8 +33,11 @@
   1. la ruine **tremble** dans des nuages de poussière, des étincelles dorées montent (un grondement) ;
   2. un **éclair blanc**, et le château neuf **jaillit en rebondissant** au milieu de **rayons dorés** qui
      tournent et d'étoiles (cymbale et fanfare) ;
-  3. **7 secondes de feux d'artifice** sur tout l'écran (fusées, gerbes en anneau, en boule et
-     scintillantes, aux couleurs du jeu, avec le contour d'encre ; un sifflement et un « boum » par fusée) ;
+  3. **7 secondes de feux d'artifice** sur tout l'écran, réalistes (27/10) : le ciel s'assombrit, les
+     fusées montent avec une traînée d'étincelles, les gerbes brillent (la lumière s'additionne), laissent
+     des traînées, ralentissent dans l'air et retombent en scintillant ; six sortes de gerbes (pivoine,
+     chrysanthème, saule doré, anneau, palmier, crépitement) et un bouquet final ; un sifflement au
+     départ, un « boum » profond à l'éclatement, des pétillements ;
   4. la fenêtre de la victoire : **« Bravo, châtelain ! Le château est restauré : tu as fini Mega
      Digger ! »**, le temps de jeu qu'il a fallu, « ✨ Feu d'artifice » (pour le revoir) et « Continuer à
      jouer ». Le succès **« Châtelain »** 🏰.
@@ -49,9 +53,10 @@
 
 `outils/art/chateau.mjs` dessine les deux images (`public/images/village/chateau/chateau-ruine.svg` et
 `chateau-neuf.svg`), de la même taille et calées pareil (on passe de l'une à l'autre sans que rien ne
-bouge) : une toile de 16 × 16 cases, le château au milieu (10 × 10 cases), avec quatre tours rondes, un
-donjon, des murs crénelés et une porte. Neuf : pierres crème, toits pointus bleu roi, drapeaux, bannière
+bouge) : une toile de 18 × 18 cases, la colline au milieu, et le château mesuré sur deux axes tournés
+de 45° (u vers nous, v vers la droite de l'écran) : le mur de devant se voit de face, avec la tour
+de la porte, ses deux tours d'angle, deux tours plus hautes derrière, le donjon au milieu. Neuf : pierres crème, toits pointus bleu roi, drapeaux, bannière
 rouge à la couronne d'or, porte en bois aux clous dorés. En ruine : pierres gris lilas, murs au dessus
 déchiqueté (`murEnRuine`), tours cassées, donjon éventré, poutre tombée, mousse, éboulis.
 `fabriquer.mjs` affiche son calage (`CALAGE_CHATEAU` dans `src/composants/chateau.ts`) : la case (0, 0)
-de la toile est posée sur la case (-22, -22) de la grille.
+de la toile est posée sur la case (-23, -23) de la grille.

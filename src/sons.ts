@@ -203,6 +203,9 @@ function varier(valeur: number, ecart = 0.08): number {
 // Les sons du jeu
 // ---------------------------------------------------------------------------
 
+// (27/10) Le dernier crépitement des feux d'artifice (voir sons.crepitement).
+let dernierCrepitement = 0
+
 export const sons = {
   // Un coup de pioche sur le bloc (avec une pioche cassée, le premier des deux clics). (23/10)
   // Trois couches : le « tchk » sec du fer qui frappe, le petit tintement du métal, et le « toc »
@@ -444,10 +447,26 @@ export const sons = {
     for (let i = 0; i < 8; i++) note(varier(2600 + i * 180, 0.05), 2.3 + i * 0.06, 0.25, { type: 'sine', volume: 0.04 })
   },
 
-  // (27/10) Une fusée de feu d'artifice : le sifflement qui monte, puis le « boum » et ses crépitements.
-  feuArtifice(volume = 1) {
-    note(varier(900, 0.1), 0, 0.5, { type: 'sine', volume: 0.025 * volume, vers: 2200 })
-    bruit(0.5, 0.45, { filtre: 'lowpass', frequence: 900, vers: 120, volume: 0.32 * volume })
-    for (let i = 0; i < 6; i++) bruit(0.62 + i * 0.07 + Math.random() * 0.05, 0.04, { filtre: 'highpass', frequence: 5000, volume: 0.08 * volume })
+  // (27/10) Une fusée de feu d'artifice qui part : un sifflement qui monte, et un souffle.
+  fusee() {
+    note(varier(700, 0.15), 0, 0.9, { type: 'sine', volume: 0.018, vers: 2400 })
+    bruit(0, 0.5, { filtre: 'bandpass', frequence: 1800, vers: 4000, q: 1.5, volume: 0.05 })
+  },
+
+  // (27/10) La gerbe qui éclate : un « boum » sourd et profond, plus ou moins fort, avec son écho.
+  explosion(force = 1) {
+    const volume = varier(0.4, 0.2) * force
+    note(varier(70, 0.15), 0, 0.6, { type: 'sine', volume: volume * 0.6, vers: 35 })
+    bruit(0, 0.9, { filtre: 'lowpass', frequence: 1400, vers: 90, volume })
+    bruit(0.25, 0.8, { filtre: 'lowpass', frequence: 500, vers: 80, volume: volume * 0.25 })
+  },
+
+  // (27/10) Les étincelles qui pétillent (une gerbe « crépitement ») : au plus une fois tous les
+  // dixièmes de seconde, même si beaucoup d'étincelles pétillent en même temps.
+  crepitement() {
+    const maintenant = performance.now()
+    if (maintenant - dernierCrepitement < 100) return
+    dernierCrepitement = maintenant
+    for (let i = 0; i < 10; i++) bruit(i * 0.035 + Math.random() * 0.03, 0.03, { filtre: 'highpass', frequence: 4500, volume: 0.06 + Math.random() * 0.05 })
   },
 }
