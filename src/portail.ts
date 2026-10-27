@@ -23,6 +23,9 @@ export const PORTAIL: 'crazygames' | null = import.meta.env.VITE_PORTAIL === 'cr
 export const AVEC_COMPTES = PORTAIL === null
 // L'application à installer (PWA) : seulement hors portail.
 export const AVEC_INSTALLATION = PORTAIL === null
+// (27/10, demandé par le propriétaire) Plusieurs mondes (jusqu'à 5) : seulement hors portail. Sur
+// CrazyGames, un seul monde, et l'accueil n'a qu'un très gros bouton « Jouer ».
+export const AVEC_PLUSIEURS_MONDES = PORTAIL === null
 // (27/10) Les packs de gemmes contre de l'argent réel : seulement hors portail (sur CrazyGames,
 // la boutique dit « Bientôt disponible » à leur place, en attendant leur système de paiement).
 export const AVEC_PACKS = PORTAIL === null

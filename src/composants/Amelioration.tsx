@@ -5,7 +5,8 @@
 //   [ 300 places → 800 places ]                          3 000 $ · 80 🔩
 //
 //   - à gauche : le nom, le niveau (petits carrés), et ce que ça change (maintenant → après) ;
-//   - à droite : le bouton vert avec le prix, et le bouton violet pour payer en gemmes ;
+//   - à droite : le bouton vert avec le prix, et le bouton violet pour payer en gemmes (27/10 :
+//     ou « 🎁 Offert », quand une publicité a offert la prochaine amélioration) ;
 //   - ou « 🔒 Mine 3 » si ce n'est pas encore débloqué, ou « MAX ».
 //
 // « action » est l'action du jeu (par exemple agrandirCoffre) : le bouton vert la fait en payant
@@ -17,7 +18,7 @@ import { bornesGemmes } from '../jeu/prixGemmes'
 import { prixEnGemmes } from '../jeu/gemmes'
 import { niveauJoueur } from '../jeu/niveaux'
 import { t } from '../jeu/langue'
-import { acheterAvecGemmes, possibleEnGemmes, type EtatJeu } from '../jeu/mineur'
+import { acheterAvecGemmes, acheterGratuitement, possibleEnGemmes, possibleGratuitement, type EtatJeu } from '../jeu/mineur'
 import type { Action } from '../usePartie'
 import { useJeu } from './contexteJeu'
 import { PrixCout } from './PrixCout'
@@ -75,7 +76,7 @@ export function Niveaux({ niveau, max }: { niveau: number; max: number }) {
 // Le bouton vert (argent et minerais, avec le prix dessous) et le bouton violet (gemmes).
 export function BoutonsAchat({ etat, cout, possible, action, texte }: { etat: EtatJeu; cout: Cout; possible: boolean; action: Action; texte: string }) {
   const { jouer } = useJeu()
-  // (26/10) De 2 à 10 gemmes, selon ce que coûtent les autres améliorations possibles.
+  // (26/10) De 1 à 3 gemmes (27/10), selon ce que coûtent les autres améliorations possibles.
   const bornes = bornesGemmes(etat)
   const gemmes = prixEnGemmes(cout, bornes)
   // (25/10, FPS) L'essai copie toute la partie : on ne le refait pas à chaque tour d'horloge
@@ -85,20 +86,34 @@ export function BoutonsAchat({ etat, cout, possible, action, texte }: { etat: Et
   const assez = (etat.gemmes ?? 0) >= gemmes
   const cle = assez ? [etat.gemmes, gemmes, etat.niveauMine, niveauJoueur(etat), etat.employes.length, etat.village.batiments.length, JSON.stringify(cout)].join('|') : ''
   const enGemmes = useMemo(() => assez && possibleEnGemmes(etat, action, bornes), [cle]) // eslint-disable-line react-hooks/exhaustive-deps
+  // (27/10) Une amélioration offerte par une publicité : le bouton violet devient « 🎁 Offert ».
+  const offerte = etat.ameliorationOfferte === true
+  const cleOfferte = offerte ? [etat.niveauMine, niveauJoueur(etat), etat.employes.length, etat.village.batiments.length, JSON.stringify(cout)].join('|') : ''
+  const possibleOfferte = useMemo(() => offerte && possibleGratuitement(etat, action), [cleOfferte]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <span className="ligne-amelioration-boutons">
       <button className="btn btn-vert btn-petit" disabled={!possible} onClick={() => jouer(action)}>
         <span>{texte}</span>
         <PrixCout etat={etat} cout={cout} />
       </button>
-      <button
-        className="btn btn-gemmes btn-petit"
-        disabled={!enGemmes}
-        onClick={() => jouer((e) => acheterAvecGemmes(() => action(e), bornesGemmes(e)))}
-        title={t('Payer en gemmes, sans argent ni minerais')}
-      >
-        <span>💎 {gemmes}</span>
-      </button>
+      {offerte ? (
+        <button
+          className={`btn btn-gemmes btn-petit ${possibleOfferte ? 'btn-attention' : ''}`}
+          disabled={!possibleOfferte}
+          onClick={() => jouer((e) => acheterGratuitement(e, () => action(e)))}
+        >
+          <span>🎁 {t('Offert')}</span>
+        </button>
+      ) : (
+        <button
+          className="btn btn-gemmes btn-petit"
+          disabled={!enGemmes}
+          onClick={() => jouer((e) => acheterAvecGemmes(() => action(e), bornesGemmes(e)))}
+          title={t('Payer en gemmes, sans argent ni minerais')}
+        >
+          <span>💎 {gemmes}</span>
+        </button>
+      )}
     </span>
   )
 }

@@ -12,6 +12,8 @@
 | Comment | Combien | Code |
 |---|---:|---|
 | 📺 Regarder une **publicité** jusqu'au bout | **1 💎** | `GEMMES_PAR_PUB`, `recompenserPub` |
+| 📺 (27/10) Le rond violet **💰 Ventes × 2**, en bas à côté de la mine | pas de gemme : les **ventes × 2 pendant 10 min** (une seule à la fois ; le rond montre le temps qui reste) | `recompenserPubVentes`, `BoutonPubVentes` (`PubsProposees.tsx`) |
+| 📺 (27/10) Après un **achat en gemmes**, la fenêtre « Une amélioration offerte ? » | pas de gemme : la **prochaine amélioration offerte**, au choix (voir 2) | `offrirAmelioration`, `PropositionPub` |
 | ⭐ Gagner un **niveau du joueur** | **1 💎** par niveau (14 du niveau 2 au niveau 15 ; 3 avant le 25/10) | `GEMMES_PAR_NIVEAU`, dans `mettreAJourXp` (`niveaux.ts`) |
 | 🎁 Le **cadeau du jour** | 2 à 12 💎 selon le jour de la série (35 par semaine), plus des bonus | `RECOMPENSES_QUOTIDIENNES` |
 | 🎉 Une **ancienne partie** convertie le 25/10 | 10 💎 offertes (une fois) | `GEMMES_CADEAU` dans `sauvegarde.ts` |
@@ -49,13 +51,17 @@ Une nouvelle partie commence avec **0 gemme**. Le nombre de gemmes est affiché 
 
 Chaque ligne d'amélioration (`Amelioration.tsx`) a **deux boutons** : le vert, avec le prix en argent et en minerais, et le **violet 💎**, avec le prix en gemmes. Payer en gemmes ne prend **ni argent, ni minerais**. Les conditions restent les mêmes : il faut le **palier de la mine** (ou le niveau du joueur) qu'il faut pour cette amélioration.
 
-**Le prix en gemmes, depuis le 26/10** (demandé par le propriétaire) va de **2 à 10 gemmes**, **par proportionnalité** : on prend toutes les améliorations que le joueur peut faire en ce moment (débloquées à son palier, pas encore au maximum : `achatsPossibles` sans les constructions ; `bornesGemmes` dans `src/jeu/prixGemmes.ts`). La **moins chère** (en dollars, `valeurEnDollars`) coûte **2 gemmes**, la **plus chère 10 gemmes**, et les autres entre les deux, en proportion de leur prix :
+**Le prix en gemmes, depuis le 27/10** (demandé par le propriétaire) va de **1 à 3 gemmes** (`GEMMES_MIN`, `GEMMES_MAX` ; du 26/10 au 27/10 : de 2 à 10), **par proportionnalité** : on prend toutes les améliorations que le joueur peut faire en ce moment (débloquées à son palier, pas encore au maximum : `achatsPossibles` sans les constructions ; `bornesGemmes` dans `src/jeu/prixGemmes.ts`). La **moins chère** (en dollars, `valeurEnDollars`) coûte **1 gemme**, la **plus chère 3 gemmes**, et les autres entre les deux, en proportion de leur prix :
 
 ```
-prix en gemmes = arrondi( 2 + 8 × (valeur − la moins chère) / (la plus chère − la moins chère) ), entre 2 et 10
+prix en gemmes = arrondi( 1 + 2 × (valeur − la moins chère) / (la plus chère − la moins chère) ), entre 1 et 3
 ```
 
-Un achat hors de ces bornes (une réparation, un bâtiment) reste entre 2 et 10. Le prix affiché est calculé avant l'achat, et c'est celui qui est payé. Sans bornes (une seule amélioration possible), on garde la règle d'avant, ci-dessous (avec 2 gemmes au moins).
+Un achat hors de ces bornes (une réparation, un bâtiment) reste entre 1 et 3. Le prix affiché est calculé avant l'achat, et c'est celui qui est payé. Sans bornes (une seule amélioration possible) : `arrondi(1 + 0,5 × (log10(valeur en $) − 2))`, entre 1 et 3 (100 $ → 1 💎, 1 000 $ → 2 💎, 1 million → 3 💎).
+
+**L'amélioration offerte (27/10, demandé par le propriétaire)** : juste après une amélioration payée en gemmes (`payer`, dans `mineur.ts`, met `propositionPub`), une fenêtre propose **« Une amélioration offerte ? »** (`PropositionPub`, `src/composants/PubsProposees.tsx`). Si le joueur regarde la publicité jusqu'au bout (`offrirAmelioration`), sa **prochaine amélioration est gratuite, celle qu'il veut** (`ameliorationOfferte`) : tous les boutons violets deviennent **« 🎁 Offert »**, et le premier achat fait avec (`acheterGratuitement`) ne coûte rien (ni argent, ni minerais, ni gemmes), avec les mêmes cadenas qu'un achat normal. Elle ne sert qu'une fois, et elle reste là tant qu'elle n'a pas servi (même après avoir fermé le jeu). « Non merci » ferme la fenêtre ; on n'en reparle qu'au prochain achat en gemmes, et jamais tant qu'une amélioration offerte attend.
+
+**Du 26/10 au 27/10** : de 2 à 10 gemmes, avec la même proportion (`arrondi(2 + 8 × ...)`).
 
 **Avant le 26/10** : le prix en gemmes (`prixEnGemmes`, revu le 25/10) allait de **3 gemmes** (une petite amélioration) à **10 gemmes** (la plus grosse) : il faut regarder **3 à 10 publicités** pour payer une amélioration. Il dépend de ce que vaut l'achat en dollars (`valeurEnDollars` : l'argent, plus chaque minerai à son prix au marché) :
 

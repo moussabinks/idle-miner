@@ -13,9 +13,10 @@ Le même code fabrique deux versions du jeu :
 | Application à installer (PWA) | oui | non : ni service worker, ni manifeste, ni icônes d'application |
 | Publicités | la fausse publicité de 30 s | leur publicité récompensée (SDK v3) |
 | Sauvegarde | le stockage du navigateur | le module « Data » de leur SDK (gardée sur le compte CrazyGames du joueur) |
-| Menu principal | classement à droite, numéro de version en bas | bandeau aligné sur la carte « Jouer », pas de numéro de version |
+| Mondes | jusqu'à 5 | **un seul** (`AVEC_PLUSIEURS_MONDES`) : pas de liste de mondes ; dans ⚙️, « Menu principal » au lieu de « Changer de monde » |
+| Menu principal | classement à droite, numéro de version en bas | un **très gros bouton « Jouer »** (ou « Commencer ») qui respire, bandeau aligné dessus, pas de numéro de version |
 
-Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_COMPTES`, `AVEC_PACKS`, `AVEC_INSTALLATION`). **Ne pas copier le jeu** dans un autre dépôt : une modification propre à CrazyGames s'écrit dans le même code, sous `if (PORTAIL === 'crazygames')`.
+Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_COMPTES`, `AVEC_PACKS`, `AVEC_PLUSIEURS_MONDES`, `AVEC_INSTALLATION`). **Ne pas copier le jeu** dans un autre dépôt : une modification propre à CrazyGames s'écrit dans le même code, sous `if (PORTAIL === 'crazygames')`.
 
 ## Comment ça marche
 

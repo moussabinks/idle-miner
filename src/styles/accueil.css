@@ -638,6 +638,25 @@
   }
 }
 
+/* (27/10, demandé par le propriétaire) Un seul monde : le bouton « Jouer » (ou « Commencer »)
+   est énorme, et il respire pour attirer l'œil. */
+.accueil-portail .accueil-gros-bouton {
+  min-height: 150px;
+  gap: 6px;
+  border-radius: 28px;
+  font-size: 3rem;
+  animation: btn-respire 1.6s ease-in-out infinite;
+}
+
+.accueil-portail .accueil-gros-bouton small {
+  font-size: 1rem;
+}
+
+/* Un joueur qui revient : la carte n'a que le bouton, sans marge autour. */
+.accueil-portail .accueil-jouer:has(> .accueil-gros-bouton:only-child) {
+  padding: 10px;
+}
+
 /* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */
 
 @media (max-width: 1240px) {

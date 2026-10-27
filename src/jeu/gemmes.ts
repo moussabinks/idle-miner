@@ -7,7 +7,8 @@
 //     tous les jours : la série).
 // On s'en sert :
 //   - pour payer n'importe quelle amélioration sans argent ni minerais (le prix en gemmes dépend
-//     de ce qu'elle vaut, de 3 à 10 gemmes, voir prixEnGemmes) ;
+//     de ce qu'elle vaut, de 1 à 3 gemmes, voir prixEnGemmes) ; (27/10) et après, une publicité
+//     offre l'amélioration suivante (acheterGratuitement, dans mineur.ts) ;
 //   - à la boutique des gemmes : des bonus pour un temps (production × 2, ventes × 2...).
 //
 // Ce fichier ne dépend que des données : la partie (EtatJeu) est décrite dans mineur.ts.
@@ -87,6 +88,22 @@ export function recompenserPub(etat: EtatJeu): string[] {
   return [t('💎 +{n} gemme !', { n: GEMMES_PAR_PUB })]
 }
 
+// (27/10, demandé par le propriétaire) Le bouton toujours à l'écran (en bas, à côté de la mine) :
+// une publicité = les ventes doublées pendant 10 minutes. On ne peut la regarder qu'une fois le
+// bonus fini (le bouton montre le temps qui reste).
+export const MINUTES_VENTES_PUB = 10
+
+export function peutRegarderPubVentes(etat: EtatJeu): boolean {
+  return !boostActif(etat, 'ventes')
+}
+
+export function recompenserPubVentes(etat: EtatJeu): string[] {
+  if (!peutRegarderPubVentes(etat)) return []
+  prolongerBoost(etat, 'ventes', MINUTES_VENTES_PUB)
+  etat.stats.pubsVues = (etat.stats.pubsVues ?? 0) + 1
+  return [t('💰 Ventes × 2 pendant {minutes} min !', { minutes: MINUTES_VENTES_PUB })]
+}
+
 // ---------------------------------------------------------------------------
 // Payer en gemmes
 // ---------------------------------------------------------------------------
@@ -96,16 +113,16 @@ export function valeurEnDollars(cout: Cout): number {
   return (cout.argent ?? 0) + Object.entries(cout.materiaux).reduce((total, [bloc, n]) => total + (n ?? 0) * BLOCS[bloc as IdBloc].prix, 0)
 }
 
-// (26/10, demandé par le propriétaire) Le prix en gemmes d'un achat : de 2 gemmes à 10 gemmes
-// (2 à 10 publicités), **par proportionnalité** avec les améliorations que le joueur peut faire en
-// ce moment : la moins chère (en dollars) coûte 2 gemmes, la plus chère 10 gemmes, et les autres
-// entre les deux, selon leur prix (« bornes » : le prix de la moins chère et de la plus chère,
-// calculées par bornesGemmes dans prixGemmes.ts).
-// Sans bornes (ou une seule amélioration possible), on garde l'ancienne règle : 2,4 gemmes de plus
-// chaque fois que le prix est multiplié par 10, entre 2 et 10.
-export const GEMMES_MIN = 2
-export const GEMMES_MAX = 10
-const GEMMES_PAR_ZERO = 2.4
+// (26/10, demandé par le propriétaire) Le prix en gemmes d'un achat, **par proportionnalité** avec
+// les améliorations que le joueur peut faire en ce moment : la moins chère (en dollars) coûte
+// GEMMES_MIN, la plus chère GEMMES_MAX, et les autres entre les deux, selon leur prix (« bornes » :
+// le prix de la moins chère et de la plus chère, calculées par bornesGemmes dans prixGemmes.ts).
+// (27/10, demandé par le propriétaire) De 1 à 3 gemmes (avant, de 2 à 10).
+// Sans bornes (ou une seule amélioration possible) : une gemme de plus chaque fois que le prix est
+// multiplié par 100 (100 $ : 1 gemme, 10 000 $ : 2, 1 million : 3), entre 1 et 3.
+export const GEMMES_MIN = 1
+export const GEMMES_MAX = 3
+const GEMMES_PAR_ZERO = 0.5
 
 export type BornesGemmes = { min: number; max: number } // en dollars
 
@@ -116,7 +133,7 @@ export function prixEnGemmes(cout: Cout, bornes: BornesGemmes | null = null): nu
     const part = (valeur - bornes.min) / (bornes.max - bornes.min) // 0 : la moins chère, 1 : la plus chère
     prix = Math.round(GEMMES_MIN + part * (GEMMES_MAX - GEMMES_MIN))
   } else {
-    prix = Math.round(3 + GEMMES_PAR_ZERO * (Math.log10(valeur) - 2))
+    prix = Math.round(GEMMES_MIN + GEMMES_PAR_ZERO * (Math.log10(valeur) - 2))
   }
   return Math.min(GEMMES_MAX, Math.max(GEMMES_MIN, prix))
 }

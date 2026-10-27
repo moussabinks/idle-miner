@@ -206,6 +206,7 @@ La clairière de 40 × 40 cases vue du ciel (isométrique) : le décor, la mine 
 | Bouton | Où | Ce qu'il fait |
 |---|---|---|
 | **⛏️ Mine** (gros rond jaune, 88 px) | en bas à gauche | ouvre la fenêtre de la mine. Son anneau orange se remplit comme le coffre ; il respire quand le coffre est plein |
+| **💰 Ventes × 2** (rond violet, 27/10) | à droite de la mine, après le tutoriel | une publicité = les ventes doublées pendant 10 min (`PubsProposees.tsx`). Il respire, avec un petit ▶ ; pendant le bonus, il est vert pâle et montre le temps qui reste |
 | **✏️ Modifier** (rond blanc, plus petit) | en bas à droite | passe en mode Modifier (§ 7.2) |
 | **🏗️ Bâtiments** (gros rond vert) | en bas à droite | ouvre le menu **Construire** (§ 10). Une pastille dit combien de bâtiments sont nouveaux ou constructibles ; il respire alors |
 
