@@ -650,6 +650,38 @@
 
 .accueil-portail .accueil-gros-bouton small {
   font-size: 1rem;
+  /* (27/10) en entier, sur deux lignes s'il le faut (« Nugget the mole shows you how ») */
+  white-space: normal;
+  text-align: center;
+}
+
+/* (27/10) Un nouveau joueur : le gros bouton « Commencer » d'abord, les 4 étapes en dessous. */
+.accueil-portail .accueil-jouer .accueil-gros-bouton {
+  order: -1;
+}
+
+/* (27/10) Le cadre de CrazyGames est souvent bas (environ 1000 × 525 sur un portable) : les
+   4 étapes en petit (2 × 2, sans leur phrase), pour que tout tienne sans défiler. */
+@media (max-height: 760px) {
+  .accueil-portail .accueil-gros-bouton {
+    min-height: 120px;
+    font-size: 2.6rem;
+  }
+
+  .accueil-portail .accueil-etapes-liste {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .accueil-portail .accueil-etapes-liste li {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  .accueil-portail .accueil-etapes-liste .discret {
+    display: none;
+  }
 }
 
 /* Un joueur qui revient : la carte n'a que le bouton, sans marge autour. */
