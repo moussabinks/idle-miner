@@ -630,7 +630,7 @@
    Pas de classement à droite : le bandeau s'étire sur toute la largeur, aligné sur la carte
    « Jouer », au lieu de flotter au milieu d'un grand écran. */
 
-@media (min-width: 761px) and (min-height: 621px) {
+@media (min-width: 761px) and (min-height: 621px), (min-width: 761px) and (pointer: fine) {
   .accueil-portail .accueil-bandeau {
     left: 16px;
     width: calc(100% - 32px);
@@ -734,7 +734,7 @@
 
 /* (27/10) Le cadre de CrazyGames est souvent bas (environ 1000 × 525 sur un portable) : les
    4 étapes en petit (2 × 2, sans leur phrase), pour que tout tienne sans défiler. */
-@media (max-height: 760px) {
+@media (max-height: 760px) and (pointer: coarse) {
   .accueil-portail .accueil-gros-bouton {
     min-height: 120px;
     font-size: 2.6rem;
@@ -758,24 +758,42 @@
 
 /* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */
 
+/* (27/10) Interface réduite d'un bloc (src/echelle.ts) : ces règles suivent la largeur de
+   l'interface (classes largeur-1240 et largeur-960 sur <html>), pas celle de la fenêtre. */
 @media (max-width: 1240px) {
-  .accueil-etapes {
+  :root:not(.interface-reduite) .accueil-etapes {
     display: none;
   }
 }
 
+.largeur-1240 .accueil-etapes {
+  display: none;
+}
+
 @media (max-width: 960px) {
-  .accueil-accroche {
+  :root:not(.interface-reduite) .accueil-accroche {
     display: none;
   }
 
-  .accueil-jouer {
+  :root:not(.interface-reduite) .accueil-jouer {
     width: 360px;
   }
 
-  .accueil-classement {
+  :root:not(.interface-reduite) .accueil-classement {
     width: 330px;
   }
+}
+
+.largeur-960 .accueil-accroche {
+  display: none;
+}
+
+.largeur-960 .accueil-jouer {
+  width: 360px;
+}
+
+.largeur-960 .accueil-classement {
+  width: 330px;
 }
 
 /* --- Le téléphone : tout s'empile, on fait défiler ---------------------------------------- */

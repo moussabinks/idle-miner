@@ -568,7 +568,7 @@
 
 /* --- Téléphone : le bloc au-dessus du coffre -------------------------------- */
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .mine-colonnes {
     grid-template-columns: 1fr;
   }
@@ -589,7 +589,7 @@
      - téléphone : le bloc à gauche, ses compteurs à droite ; les minerais sur deux colonnes.
    ========================================================================= */
 
-@media (max-height: 760px) {
+@media (max-height: 760px) and (pointer: coarse) {
   .bloc-a-cliquer {
     height: 150px;
   }
@@ -619,7 +619,7 @@
   }
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .zone-bloc {
     display: grid;
     grid-template-columns: 104px minmax(0, 1fr);
@@ -736,7 +736,7 @@
 
 /* Écrans vraiment petits : le bloc rapetisse encore, et sur un petit téléphone les compteurs
    (cassés, record, clics/s) laissent leur place au coffre. */
-@media (max-height: 700px) {
+@media (max-height: 700px) and (pointer: coarse) {
   .bloc-a-cliquer {
     height: 128px;
   }
@@ -755,7 +755,7 @@
   }
 }
 
-@media (max-width: 640px) and (max-height: 700px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px) and (max-height: 700px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .compteurs {
     display: none;
   }
@@ -778,7 +778,7 @@
   }
 }
 
-@media (max-height: 700px) {
+@media (max-height: 700px) and (pointer: coarse) {
   .stock .btn-grand {
     min-height: 40px;
     padding-block: 0.2em;

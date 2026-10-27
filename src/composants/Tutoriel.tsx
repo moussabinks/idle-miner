@@ -23,6 +23,7 @@ import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 import { cheminPublic } from '../chemins'
+import { versCss } from '../echelle'
 
 // Ce que l'interface montre en ce moment (pour savoir où mettre la flèche).
 export type EtatInterface = {
@@ -153,8 +154,8 @@ function defilerJusqua(element: Element) {
   if (!boite) return
   const r = element.getBoundingClientRect()
   const b = boite.getBoundingClientRect()
-  if (r.top < b.top) boite.scrollBy({ top: r.top - b.top - 12, behavior: 'smooth' })
-  else if (r.bottom > b.bottom) boite.scrollBy({ top: r.bottom - b.bottom + 12, behavior: 'smooth' })
+  if (r.top < b.top) boite.scrollBy({ top: versCss(r.top - b.top) - 12, behavior: 'smooth' })
+  else if (r.bottom > b.bottom) boite.scrollBy({ top: versCss(r.bottom - b.bottom) + 12, behavior: 'smooth' })
 }
 
 type Suivi = {
@@ -196,12 +197,13 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
       if (visible && cle !== derniere && calque.current) {
         derniere = cle
         const style = calque.current.style
-        style.setProperty('--x', `${Math.round(r.left)}px`)
-        style.setProperty('--y', `${Math.round(r.top)}px`)
-        style.setProperty('--l', `${Math.round(r.width)}px`)
-        style.setProperty('--h', `${Math.round(r.height)}px`)
+        // (27/10) en positions du CSS : l'interface peut être réduite d'un bloc (src/echelle.ts)
+        style.setProperty('--x', `${Math.round(versCss(r.left))}px`)
+        style.setProperty('--y', `${Math.round(versCss(r.top))}px`)
+        style.setProperty('--l', `${Math.round(versCss(r.width))}px`)
+        style.setProperty('--h', `${Math.round(versCss(r.height))}px`)
       }
-      const dessous = visible && !surBatiment && r.top < 140
+      const dessous = visible && !surBatiment && versCss(r.top) < 140
       const enHaut = visible && r.top + r.height / 2 < window.innerHeight * 0.5
       const avant = dernierSuivi.current
       if (visible !== avant.visible || dessous !== avant.dessous || enHaut !== avant.enHaut) {

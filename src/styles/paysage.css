@@ -13,7 +13,7 @@
    Ce fichier est chargé en dernier : il passe par-dessus les autres styles.
    ========================================================================= */
 
-@media (orientation: landscape) and (max-height: 620px) {
+@media (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   /* --- Les fenêtres : un panneau sur la droite ------------------------------------------- */
 
   /* (27/10) La carte du tutoriel à gauche, au-dessus du village : les fenêtres s'ouvrent à
@@ -410,29 +410,6 @@
   /* Les langues dans les réglages : elles vont à la ligne. */
   .reglages-langues {
     flex-wrap: wrap;
-  }
-}
-
-/* (27/10, demandé par le propriétaire) À la souris (un ordinateur : le petit cadre de CrazyGames),
-   les fenêtres restent au milieu de l'écran, comme en grand écran, et la carte du tutoriel en
-   haut au milieu (elle passe en bas quand ce qu'il faut toucher est en haut). Au doigt (téléphone
-   couché), le panneau à droite ne change pas. */
-@media (orientation: landscape) and (max-height: 620px) and (pointer: fine) {
-  .voile {
-    justify-content: center;
-    padding: 6px;
-  }
-
-  .fenetre,
-  .fenetre-petite,
-  .fenetre-grande {
-    animation: fenetre-arrive 0.18s ease-out;
-  }
-
-  .tuto-carte {
-    left: 50%;
-    width: min(440px, calc(100% - 24px));
-    translate: -50% 0;
   }
 }
 
