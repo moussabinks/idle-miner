@@ -12,8 +12,9 @@ import { cheminPublic } from '../chemins'
 import { versEcran, type Point } from './iso'
 
 // Les chiffres affichés par outils/art/fabriquer.mjs (« CHÂTEAU ») : la taille du dessin, le coin du
-// haut de sa toile (la case 0, 0) et le pied de sa colline (où arrive le chemin), en pixels du dessin.
-export const CALAGE_CHATEAU = { largeur: 1212, hauteur: 1239, coin: { x: 606, y: 520 }, piedChemin: { x: 606, y: 1167.7 } }
+// haut de sa toile (la case 0, 0), le pied de sa colline et le pied de sa porte (où monte le
+// chemin), en pixels du dessin.
+export const CALAGE_CHATEAU = { largeur: 1212, hauteur: 1239, coin: { x: 606, y: 520 }, piedChemin: { x: 606, y: 1167.7 }, porte: { x: 606, y: 934.5 } }
 export const IMAGE_CHATEAU_RUINE = cheminPublic('/images/village/chateau/chateau-ruine.svg')
 export const IMAGE_CHATEAU_NEUF = cheminPublic('/images/village/chateau/chateau-neuf.svg')
 
@@ -45,19 +46,22 @@ export function zoneChateau(): Rectangle {
   return { x0: c.x0 + l * 0.04, y0: c.y0 + h * 0.08, x1: c.x1 - l * 0.04, y1: c.y1 - h * 0.04 }
 }
 
-// Le chemin, en cases de la grille : du coin du haut de la clairière jusqu'au pied de la colline,
-// presque tout droit (vers le haut de l'écran), avec une petite ondulation.
-export const CHEMIN_CHATEAU: Point[] = [
-  { x: 0.6, y: 0.6 },
-  { x: -1.2, y: -0.9 },
-  { x: -2.9, y: -2.9 },
-  { x: -4.4, y: -4.7 },
-  { x: PIED_CHEMIN.x + 0.05, y: PIED_CHEMIN.y + 0.05 },
-]
+// (27/10) Le chemin, en pixels du monde, d'un seul trait : du coin du haut de la clairière jusqu'au
+// pied de la porte du château (il monte sur la colline : le dessin du château n'a plus son propre
+// bout de chemin, il est partout pareil). Tout droit vers le haut de l'écran, avec une petite
+// ondulation dans l'herbe avant la colline.
+export function cheminChateau(): Point[] {
+  const depart = versEcran(0.6, 0.6)
+  const pied = versEcran(PIED_CHEMIN.x, PIED_CHEMIN.y)
+  const cadre = cadreChateau()
+  const porte = { x: cadre.x0 + CALAGE_CHATEAU.porte.x * ECHELLE, y: cadre.y0 + CALAGE_CHATEAU.porte.y * ECHELLE }
+  const entre = (k: number) => depart.y + (pied.y - depart.y) * k
+  return [depart, { x: depart.x - 7, y: entre(0.35) }, { x: depart.x + 6, y: entre(0.7) }, pied, porte]
+}
 
 // Le cadre du chemin, en pixels du monde (avec sa largeur).
 export function zoneChemin(): Rectangle {
-  const points = CHEMIN_CHATEAU.map((c) => versEcran(c.x, c.y))
+  const points = cheminChateau()
   const marge = 30
   return {
     x0: Math.min(...points.map((p) => p.x)) - marge,

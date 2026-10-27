@@ -11,7 +11,8 @@
   droite, un **château en ruine** est posé sur une **colline toute ronde, en herbe** (27/10 : plus de
   falaise de roche ni de rampe). Il est **tourné de 45°** : sa grande porte est face à nous, au milieu du
   mur de devant. Un **chemin de terre** part du coin du haut de la clairière (les 3 arbres de ce coin ont
-  été enlevés) et monte presque tout droit jusqu'à la porte.
+  été enlevés) et monte presque tout droit jusqu'à la porte, d'un seul trait (le même chemin dans l'herbe
+  et sur la colline).
 - La caméra monte bien plus haut qu'avant (`LIMITES_CAMERA.y0` : -560 au lieu de -140) : le décor a été
   agrandi, avec bien plus de montagnes autour du château (`paysage.ts` plante tout ce que la caméra peut
   voir ; rien n'est planté devant le château ni sur son chemin).
@@ -56,8 +57,12 @@
 bouge) : une toile de 18 × 18 cases, la colline au milieu, et le château mesuré sur deux axes tournés
 de 45° (u vers nous, v vers la droite de l'écran) : le mur de devant se voit de face, avec la tour
 de la porte, ses deux tours d'angle, deux tours plus hautes derrière, le donjon au milieu. Neuf : pierres crème, toits pointus bleu roi, drapeaux, bannière
-rouge à la couronne d'or, porte en bois aux clous dorés. En ruine (27/10, redessiné) : pierres gris lilas, murs au haut cassé en marches (`murEnRuine`,
-`profilCasse`) avec des pierres dessinées, tours creuses au bord cassé (`tourEnRuine` : on voit
-l'intérieur), donjon et tour de la porte creux (`blocCreux`), lierre qui pend, poutre tombée, éboulis.
+rouge à la couronne d'or, porte en bois aux clous dorés. En ruine (27/10, redessiné deux fois) : pierre grise chaude, murs au haut cassé en marches
+(`murEnRuine`, `profilCasse`) avec des pierres dessinées, tours pleines cassées en biais au bord
+ébréché, un créneau qui tient encore et de l'herbe dessus (`tourEnRuine`), donjon au toit brûlé (ses
+poutres noires dépassent) avec un petit arbre qui a poussé dessus (`donjonEnRuine`), porte en bois qui
+pend de travers (`porteEnRuine`), murs des côtés bas et envahis par l'herbe, lierre, éboulis.
+Le chemin n'est pas dans le dessin : le jeu le trace d'un seul trait, de la clairière jusqu'au pied
+de la porte (`cheminChateau()` dans `src/composants/chateau.ts`, le point `porte` du calage).
 `fabriquer.mjs` affiche son calage (`CALAGE_CHATEAU` dans `src/composants/chateau.ts`) : la case (0, 0)
 de la toile est posée sur la case (-23, -23) de la grille.

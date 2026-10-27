@@ -312,10 +312,10 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
         <TerrainVillage />
         <SolPlage />
         {SOL}
-        {/* (27/10) Le chemin du château et le château en ruine, comme au village */}
-        <CheminChateau />
+        {/* (27/10) Le château en ruine et son chemin, comme au village */}
         <ForetDerriere vue={vueForet} />
         <ChateauVillage restaure={false} animation={false} touchable={false} />
+        <CheminChateau />
         {/* (après le décor du fond : voir VueVillage) */}
         <EauPlage />
         <div className="objets-village">{objets}</div>
