@@ -645,7 +645,79 @@
   gap: 6px;
   border-radius: 28px;
   font-size: 3rem;
-  animation: btn-respire 1.6s ease-in-out infinite;
+  /* (27/10) Il respire sans jamais dépasser de sa carte : il rapetisse un peu, puis revient à
+     sa vraie taille (btn-respire le grossissait de 6 %, il débordait). */
+  animation: accueil-respire 1.6s ease-in-out infinite;
+}
+
+@keyframes accueil-respire {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+/* (27/10) Les 3 cases sous « Jouer » (Creuse, Embauche, Automatise) : une icône dans un rond de
+   couleur, et son mot. */
+.accueil-promesse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accueil-promesse li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px 8px;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--arrondi);
+  background: var(--blanc);
+  box-shadow: var(--ombre-petite);
+  text-align: center;
+}
+
+.accueil-promesse-icone {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.accueil-promesse li:nth-child(2) .accueil-promesse-icone {
+  background: var(--vert);
+}
+
+.accueil-promesse li:nth-child(3) .accueil-promesse-icone {
+  background: var(--ciel);
+}
+
+.accueil-promesse strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--police-titre);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sur CrazyGames, ces cases remplacent la barre des étapes en bas de l'écran. */
+.accueil-portail .accueil-etapes {
+  display: none;
 }
 
 .accueil-portail .accueil-gros-bouton small {
@@ -682,11 +754,6 @@
   .accueil-portail .accueil-etapes-liste .discret {
     display: none;
   }
-}
-
-/* Un joueur qui revient : la carte n'a que le bouton, sans marge autour. */
-.accueil-portail .accueil-jouer:has(> .accueil-gros-bouton:only-child) {
-  padding: 10px;
 }
 
 /* --- Les écrans moyens : les étapes du bas n'ont plus la place ---------------------------- */

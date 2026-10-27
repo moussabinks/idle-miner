@@ -267,7 +267,7 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
         {/* À gauche : Jouer et les mondes. */}
         <section className="accueil-panneau accueil-jouer">
           {dernierMonde ? (
-            <button className="btn btn-jaune btn-grand btn-large accueil-gros-bouton" disabled={bloque} onClick={() => onJouer(dernierMonde)} autoFocus={!AVEC_PLUSIEURS_MONDES}>
+            <button className="btn btn-jaune btn-grand btn-large accueil-gros-bouton" disabled={bloque} onClick={() => onJouer(dernierMonde)}>
               <span>▶ {t('Jouer')}</span>
               <small>
                 {/* (un seul monde sur CrazyGames : pas besoin de son nom) */}
@@ -298,6 +298,20 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
                 <small>{t('Pépite la taupe te guide pas à pas')}</small>
               </button>
             </>
+          )}
+
+          {/* (27/10, CrazyGames) Sous le gros bouton « Jouer » : ce qui attend le joueur, en 3 cases. */}
+          {dernierMonde && !AVEC_PLUSIEURS_MONDES && (
+            <ul className="accueil-promesse" aria-label={t('Comment jouer')}>
+              {ETAPES_DU_JEU.slice(0, 3).map((e) => (
+                <li key={e.titre}>
+                  <span className="accueil-promesse-icone" aria-hidden="true">
+                    {e.icone}
+                  </span>
+                  <strong>{t(e.titre)}</strong>
+                </li>
+              ))}
+            </ul>
           )}
 
           {mondes.length > 0 && AVEC_PLUSIEURS_MONDES && (
