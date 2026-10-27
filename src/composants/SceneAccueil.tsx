@@ -162,10 +162,10 @@ const CADRE = { x: CENTRE_CADRE.x - 370, y: CENTRE_CADRE.y - 340, l: 740, h: 640
 // partent, leur chargement, la rareté du pousseur et un décalage pour qu'ils ne partent pas ensemble.
 // « vente » : ce que rapporte son chargement au marché (le « +X $ » qui jaillit, comme dans le jeu).
 const WAGONNETS_SCENE: { de: IdBatiment; nom: string; rarete: IdRarete; contenu: Partial<Record<IdBloc, number>>; vente: number; decalage: number }[] = [
-  { de: 'puits', nom: 'Khalil', rarete: 'mythique', contenu: { or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }, vente: 11475, decalage: 0 },
-  { de: 'foreuse', nom: 'Sasha', rarete: 'legendaire', contenu: { charbon: 4, fer: 3, redstone: 3 }, vente: 3240, decalage: 4 },
-  { de: 'fonderie', nom: 'Satine', rarete: 'epique', contenu: { lingot_or: 4, lingot_fer: 4 }, vente: 6860, decalage: 9 },
-  { de: 'joaillerie', nom: 'Teo', rarete: 'legendaire', contenu: { bijou_diamant: 2, bijou_rubis: 2, bijou_saphir: 2 }, vente: 18900, decalage: 13 },
+  { de: 'puits', nom: 'Praline', rarete: 'mythique', contenu: { or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }, vente: 11475, decalage: 0 },
+  { de: 'foreuse', nom: 'Chouquette', rarete: 'legendaire', contenu: { charbon: 4, fer: 3, redstone: 3 }, vente: 3240, decalage: 4 },
+  { de: 'fonderie', nom: 'Myrtille', rarete: 'epique', contenu: { lingot_or: 4, lingot_fer: 4 }, vente: 6860, decalage: 9 },
+  { de: 'joaillerie', nom: 'Galette', rarete: 'legendaire', contenu: { bijou_diamant: 2, bijou_rubis: 2, bijou_saphir: 2 }, vente: 18900, decalage: 13 },
 ]
 // (le même écart entre le wagonnet et son pousseur que dans le jeu, voir WagonnetVillage)
 const ESSIEUX = 0.6

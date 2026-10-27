@@ -34,7 +34,7 @@ describe('le château de la quête finale (27/10)', () => {
     expect(queteChateauVisible(pasAuFond)).toBe(false)
   })
 
-  it('coûte 20 millions, payés en argent', () => {
+  it('coûte 10 millions, payés en argent', () => {
     const etat = finDePartie()
     etat.argent = PRIX_CHATEAU - 1
     expect(peutRestaurerChateau(etat)).toBe(false)

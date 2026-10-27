@@ -17,7 +17,7 @@
 | [equilibrage.md](equilibrage.md) | Toutes les tables de données et les formules (blocs, niveaux, coffre, pioches, ascenseur, wagonnets, générateur, foreuse, fonderie et joaillerie, mineurs, raretés, bâtiments, revenus, niveau du joueur, gemmes), le bot de simulation et les durées de jeu. |
 | [interface.md](interface.md) | L'écran : accueil, bandeau, tutoriel, carte du village, boutons, menus, panneaux, notifications, missions, téléphone. (Refait le 25/10 : style plat, taupes, dessins SVG.) |
 | [visuel-et-sons.md](visuel-et-sons.md) | Le style graphique, les animations, les bruitages et la musique (Web Audio), l'application installable. (Refait le 25/10 : style plat, taupes, dessins SVG.) |
-| [chateau.md](chateau.md) | **Nouveau (27/10)** : la quête finale : le château en ruine au fond de la carte, à restaurer pour 20 millions (la quête à la fin du jeu, l'animation et les feux d'artifice). |
+| [chateau.md](chateau.md) | **Nouveau (27/10)** : la quête finale : le château en ruine au fond de la carte, à restaurer pour 10 millions (la quête à la fin du jeu, l'animation et les feux d'artifice). |
 | [sauvegarde-et-en-ligne.md](sauvegarde-et-en-ligne.md) | Les 5 mondes dans le stockage du navigateur, les conversions des vieilles parties, le hors-ligne, les comptes Supabase et le classement. |
 | [architecture.md](architecture.md) | L'organisation du code (`src/jeu/` pur, composants React, `src/styles/`), les deux langues, la version CrazyGames, les tests et le déploiement. |
 
@@ -90,7 +90,7 @@ Pendant ce temps, la **mine toute seule**, les **mineurs** (tant qu'on paie leur
 | **5** | Caverne de saphir (26/10) | saphir | 160 000 $ + 180 or + 70 émeraudes | 9 | 0,6 bloc/s (36 / min) | 5 | **Fonderie** ; recruteur et manager niveau 2 ; palier 5 | ~1 h 50 |
 | **6** | Veine de rubis (26/10) | rubis | 650 000 $ + 200 émeraudes + 100 saphirs | 11 | 0,7 bloc/s (42 / min) | 6 | **Joaillerie** et joailliers ; recruteur et manager niveau 3 ; palier 6 | ~3 h 25 |
 | **7** | Cœur de diamant (26/10) | diamant | 2 400 000 $ + 240 saphirs + 150 rubis | 13 | 0,8 bloc/s (48 / min) | 7 | palier 7 (le dernier) | ~5 h 55 |
-| **Fin** | Le château (27/10) | — | 20 000 000 $ | — | — | — | la quête finale : restaurer le château ([chateau.md](chateau.md)) | ~8 h de plus |
+| **Fin** | Le château (27/10) | — | 10 000 000 $ | — | — | — | la quête finale : restaurer le château ([chateau.md](chateau.md)) | ~4 h de plus |
 
 Les temps du bot (médiane de 10 parties, voir [equilibrage.md](equilibrage.md#le-bot-de-simulation)) donnent l'ordre de grandeur pour un joueur qui clique 2 fois par seconde : niveau 2 en 2 à 10 minutes, niveau 5 en 1 h à 3 h (un vrai joueur met plutôt 2 h 30 à 4 h), et (26/10) niveau 7 en 4 h à 9 h. (26/10) Les prix des niveaux 5 à 7 comprennent la **hausse de la fin de partie** (× 2, × 2,5, × 3, voir [equilibrage.md](equilibrage.md)) : avant, le bot y arrivait vers 1 h 40, 2 h 57 et 5 h 08. Avant le 26/10, la mine s'arrêtait au niveau 5 (le diamant), et le manager niveau 2 arrivait au niveau 4. Le 25/10, l'économie a été revue (paliers 3 à 5 et embauches moins chers) : avant, il fallait 3 h à 6 h pour le niveau 5. Avant le 25/10, il fallait 15 à 40 minutes pour le niveau 2 et 6 à 9 h pour le niveau 5. Le détail des niveaux du joueur est dans [niveaux.md](niveaux.md).
 

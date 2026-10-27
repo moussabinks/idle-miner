@@ -31,6 +31,7 @@ import {
   type IdBloc,
   type IdRarete,
   type IdBatiment,
+  type IdDecoration,
   type IdLiaison,
   type NiveauAscenseur,
   type Pioche,
@@ -238,6 +239,9 @@ export type EtatJeu = {
   // (26/10) Les rails et les pavés rangés en stock (retirés, ou restés dans la barre en
   // réorganisant le village) : on les repose gratuitement. Absent : rien en stock.
   stockSol?: { rail: number; chemin: number }
+  // (27/10) Les décorations rangées (enlevées du village, ou en réorganisant) : elles se reposent
+  // gratuitement. Absent : rien en stock.
+  stockDecorations?: Partial<Record<IdDecoration, number>>
   // (26/10) Le village en cours de réorganisation (façon Clash of Clans, voir reorganiser.ts) :
   // le jeu est en pause tant qu'il n'est pas fini. Absent ou null : pas de réorganisation.
   reorganisation?: Reorganisation | null
@@ -251,6 +255,7 @@ export type EtatJeu = {
 export type Reorganisation = {
   avant: Village
   stockAvant: { rail: number; chemin: number }
+  stockDecorationsAvant?: Partial<Record<IdDecoration, number>> // (27/10)
   ranges: { id: IdBatiment; miroir: boolean }[]
 }
 

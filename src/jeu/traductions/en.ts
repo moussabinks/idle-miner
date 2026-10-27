@@ -23,7 +23,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Poser ce rail': 'Place this rail',
   'Terminé': 'Done',
   'Touche le sol pour poser un chemin ({n} $ la case).': 'Tap the ground to lay a path ({n} $ per tile).',
-  'Touche un bâtiment, un rail ou un chemin pour le déplacer.': 'Tap a building, rail or path to move it.',
   'La mine · coffre {n} / {max}': 'The mine · chest {n} / {max}',
   'Mine': 'Mine',
   'pour marcher': 'to walk',
@@ -459,6 +458,10 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Pépite': 'Nugget',
   'Caramel': 'Caramel',
   'Biscotte': 'Biscuit',
+  'Praline': 'Praline',
+  'Chouquette': 'Puff',
+  'Myrtille': 'Blueberry',
+  'Galette': 'Cookie',
 
   // src/composants/Statistiques.tsx
   'Tes ventes': 'Your sales',
@@ -1080,4 +1083,11 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   // (27/10) Le téléphone tenu debout
   'Tourne ton téléphone': 'Turn your phone',
   'Mega Digger se joue à l’horizontale.': 'Mega Digger is played sideways.',
+
+  // (27/10) Les décorations reviennent
+  'Touche un bâtiment, un rail, un chemin ou une décoration pour le déplacer.': 'Tap a building, rail, path or decoration to move it.',
+  '{n} × {n} case(s)': '{n} × {n} tile(s)',
+  'Décorations': 'Decorations',
+  'Juste pour faire joli ! Pose-les où tu veux ; dans ✏️ Modifier, touche-les pour les déplacer, les retourner ou les ranger.': 'Just for looks! Place them anywhere; in ✏️ Edit, tap them to move, flip or store them.',
+  '📦 {nom} rangé(e) : {n} en stock.': '📦 {nom} stored: {n} in stock.',
 }

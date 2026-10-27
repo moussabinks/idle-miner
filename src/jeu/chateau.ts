@@ -1,6 +1,6 @@
 // La quête finale (27/10, demandé par le propriétaire) : au fond de la carte, entre les deux
 // chaînes de montagnes, un château en ruine attend depuis le début de la partie. Le restaurer coûte
-// 20 millions (PRIX_CHATEAU) : c'est l'objectif de fin du jeu. Une fois payé, le château devient
+// 10 millions (PRIX_CHATEAU) : c'est l'objectif de fin du jeu. Une fois payé, le château devient
 // flambant neuf (une grande animation et des feux d'artifice), et la partie continue.
 //
 // On peut toucher le château à tout moment pour voir son prix. La quête, elle, n'apparaît dans la

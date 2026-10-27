@@ -2,13 +2,15 @@
 //   - en haut, en grand, les bâtiments qui restent à construire : leur image, leur prix et
 //     « Construire » (ou le cadenas : ce qu'il faut pour les débloquer) ;
 //   - les rails et les chemins de pavés ;
-//   - en bas, en tout petit, ceux qui sont déjà construits.
+//   - en bas, en tout petit, ceux qui sont déjà construits ;
+//   - (27/10, demandé par le propriétaire) un deuxième onglet, « Décorations » : fleurs,
+//     buissons, bancs, arbres, fontaine... juste pour faire joli.
 // On en choisit un, puis on le pose où on veut sur la carte. Les minerais se paient avec ceux du
 // coffre de la mine.
 // Aucune règle du jeu ici : on lit l'état et on appelle les fonctions de src/jeu/batiments.ts.
 
-import type { ReactNode } from 'react'
-import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, LISTE_BATIMENTS, NIVEAU_JOUEUR_POUR, type Cout, type IdBatiment } from '../jeu/donnees'
+import { useState, type ReactNode } from 'react'
+import { BATIMENTS, BLOCS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, LISTE_BATIMENTS, LISTE_DECORATIONS, NIVEAU_JOUEUR_POUR, type Cout, type IdBatiment, type IdDecoration } from '../jeu/donnees'
 import { batimentDebloque, estPose, nouveautesBatiments, peutConstruire, stockSol, type TypeSol } from '../jeu/batiments'
 import { nombre, t } from '../jeu/langue'
 import { disponible, peutPayer, type EtatJeu } from '../jeu/mineur'
@@ -16,7 +18,10 @@ import { niveauPourBatiment, railsDebloques, verrouNiveau } from '../jeu/niveaux
 import { nombreAbrege } from '../nombres'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
-import { IMAGES_BATIMENTS } from './iso'
+import { IMAGES_BATIMENTS, hauteurDecoration, versEcran } from './iso'
+import { DessinDecoration } from './DessinsVillage'
+import { OngletsPanneau } from './OngletsPanneau'
+import { coutDecoration, peutAcheterDecoration, stockDecoration } from '../jeu/decorations'
 import { PrixCout } from './PrixCout'
 import { cheminPublic } from '../chemins'
 
@@ -25,6 +30,7 @@ type Props = {
   onFermer: () => void
   onPoserBatiment: (id: IdBatiment) => void
   onPinceau: (sol: TypeSol) => void
+  onDecoration: (id: IdDecoration) => void
 }
 
 // Le prix d'une construction (« Gratuit ! » s'il n'y a rien à payer).
@@ -98,7 +104,39 @@ function LigneSol({ icone, titre, effet, cout, verrou, onPoser, stock = 0 }: { i
   )
 }
 
-export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }: Props) {
+// (27/10) Une décoration : son dessin (le même qu'au village), son nom, sa taille, et son prix
+// dans le bouton (« Gratuit » s'il en reste dans le stock).
+function CarteDecoration({ id, onChoisir }: { id: IdDecoration; onChoisir: () => void }) {
+  const { etat } = useJeu()
+  const info = DECORATIONS[id]
+  const stock = stockDecoration(etat, id)
+  const possible = peutAcheterDecoration(etat, id)
+  // Le cadre du dessin, comme sa boîte au village (posé sur la case 0, 0).
+  const taille = info.taille
+  const gauche = versEcran(0, taille).x - 8
+  const droite = versEcran(taille, 0).x + 8
+  const haut = versEcran(0, 0).y - hauteurDecoration(id)
+  const bas = versEcran(taille, taille).y + 8
+  return (
+    <article className={`carte construire-carte decoration-carte ${possible ? 'construire-possible' : ''}`}>
+      {stock > 0 && <span className="etiquette etiquette-vert construire-nouveau">{t('{n} en stock', { n: nombre(stock) })}</span>}
+      <svg className="construire-image decoration-image" viewBox={`${gauche} ${haut} ${droite - gauche} ${bas - haut}`} aria-hidden="true">
+        <DessinDecoration id={id} x={0} y={0} taille={taille} miroir={false} />
+      </svg>
+      <div className="construire-texte">
+        <h3>{t(info.nom)}</h3>
+        <p className="discret">{t('{n} × {n} case(s)', { n: taille })}</p>
+      </div>
+      <button className="btn btn-vert construire-bouton" disabled={!possible} onClick={onChoisir}>
+        <span>{t('Poser')}</span>
+        {stock > 0 ? <span className="prix">{t('Gratuit')}</span> : <Prix etat={etat} cout={coutDecoration(id)} />}
+      </button>
+    </article>
+  )
+}
+
+export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau, onDecoration }: Props) {
+  const [onglet, setOnglet] = useState<'batiments' | 'decorations'>('batiments')
   const nouveautes = nouveautesBatiments(etat)
   const aConstruire = LISTE_BATIMENTS.filter((id) => !estPose(etat, id))
   // Les débloqués d'abord (dans l'ordre du jeu), puis ceux sous cadenas.
@@ -122,38 +160,62 @@ export function MenuConstruction({ etat, onFermer, onPoserBatiment, onPinceau }:
         )}
       </div>
 
-      {tries.length > 0 ? (
-        <div className="grille-construire">
-          {tries.map((id) => (
-            <CarteBatiment key={id} id={id} nouveau={nouveautes.includes(id)} onPoser={() => onPoserBatiment(id)} />
-          ))}
-        </div>
-      ) : (
-        <p className="carte carte-creme">🎉 {t('Tous les bâtiments sont construits !')}</p>
+      <OngletsPanneau
+        onglets={[
+          { id: 'batiments', titre: `🏗️ ${t('Bâtiments')}` },
+          { id: 'decorations', titre: `🍀 ${t('Décorations')}` },
+        ]}
+        actif={onglet}
+        onChoisir={setOnglet}
+      />
+
+      {onglet === 'decorations' && (
+        <>
+          <p className="discret">{t('Juste pour faire joli ! Pose-les où tu veux ; dans ✏️ Modifier, touche-les pour les déplacer, les retourner ou les ranger.')}</p>
+          <div className="grille-construire grille-decorations">
+            {LISTE_DECORATIONS.map((id) => (
+              <CarteDecoration key={id} id={id} onChoisir={() => onDecoration(id)} />
+            ))}
+          </div>
+        </>
       )}
 
-      <h3 className="titre-section">{t('Rails et chemins')}</h3>
-      <LigneSol
-        icone={<img className="construire-sol-image" src={cheminPublic('/images/batiments/rails.svg')} alt="" width={56} height={56} draggable={false} />}
-        titre={t('Rails')}
-        effet={t('Relie deux bâtiments : un wagonnet roulera dessus. Prix par case.')}
-        cout={COUT_RAIL}
-        verrou={railsDebloques(etat) ? null : `⭐ ${NIVEAU_JOUEUR_POUR.rails}`}
-        onPoser={() => onPinceau('rail')}
-        stock={stockSol(etat, 'rail')}
-      />
-      <LigneSol icone="🪨" titre={t('Chemin de pavés')} effet={t('Juste pour faire joli ! Prix par case.')} cout={COUT_CHEMIN} verrou={null} onPoser={() => onPinceau('chemin')} stock={stockSol(etat, 'chemin')} />
-
-      {construits.length > 0 && (
+      {onglet === 'batiments' && (
         <>
-          <h3 className="titre-section">{t('Déjà construits')}</h3>
-          <ul className="construits">
-            {construits.map((id) => (
-              <li key={id} className="etiquette etiquette-vert">
-                ✔ {BATIMENTS[id].emoji} {t(BATIMENTS[id].nom)}
-              </li>
-            ))}
-          </ul>
+          {tries.length > 0 ? (
+            <div className="grille-construire">
+              {tries.map((id) => (
+                <CarteBatiment key={id} id={id} nouveau={nouveautes.includes(id)} onPoser={() => onPoserBatiment(id)} />
+              ))}
+            </div>
+          ) : (
+            <p className="carte carte-creme">🎉 {t('Tous les bâtiments sont construits !')}</p>
+          )}
+
+          <h3 className="titre-section">{t('Rails et chemins')}</h3>
+          <LigneSol
+            icone={<img className="construire-sol-image" src={cheminPublic('/images/batiments/rails.svg')} alt="" width={56} height={56} draggable={false} />}
+            titre={t('Rails')}
+            effet={t('Relie deux bâtiments : un wagonnet roulera dessus. Prix par case.')}
+            cout={COUT_RAIL}
+            verrou={railsDebloques(etat) ? null : `⭐ ${NIVEAU_JOUEUR_POUR.rails}`}
+            onPoser={() => onPinceau('rail')}
+            stock={stockSol(etat, 'rail')}
+          />
+          <LigneSol icone="🪨" titre={t('Chemin de pavés')} effet={t('Juste pour faire joli ! Prix par case.')} cout={COUT_CHEMIN} verrou={null} onPoser={() => onPinceau('chemin')} stock={stockSol(etat, 'chemin')} />
+
+          {construits.length > 0 && (
+            <>
+              <h3 className="titre-section">{t('Déjà construits')}</h3>
+              <ul className="construits">
+                {construits.map((id) => (
+                  <li key={id} className="etiquette etiquette-vert">
+                    ✔ {BATIMENTS[id].emoji} {t(BATIMENTS[id].nom)}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </>
       )}
     </Fenetre>

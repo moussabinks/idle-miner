@@ -5,11 +5,11 @@
 // On passe le « stockage » en paramètre : en jeu c'est window.localStorage,
 // dans les tests c'est un faux stockage en mémoire.
 
-import { BLOCS, LIAISONS, TAILLE_GRILLE, type IdBatiment, type IdBloc, type IdLiaison } from './donnees'
+import { BLOCS, DECORATIONS, LIAISONS, TAILLE_GRILLE, type IdBatiment, type IdBloc, type IdLiaison } from './donnees'
 import { VERSION_ETAT, VERSION_MINE_AUTOMATIQUE, ajouterA, nouvelAtelier, nouveauTrajet, type EtatJeu, type Inventaire } from './mineur'
 import { donnerXpAVieillePartie, recordsDeDepart } from './niveaux'
 import { t } from './langue'
-import { empriseBatiment, empriseLibre, lireCle, railsMineMarche, POSITION_MINE, type BatimentPose, type Village } from './village'
+import { empriseBatiment, empriseLibre, lireCle, railsMineMarche, POSITION_MINE, type BatimentPose, type DecorationPosee, type Village } from './village'
 
 export const NB_MONDES_MAX = 5
 
@@ -213,6 +213,15 @@ export function charger(stockage: Stockage, id: string): EtatJeu | null {
   }
 }
 
+// (27/10) Les décorations d'une partie lue : seulement celles qui existent, bien écrites.
+function decorationsValides(liste: unknown): DecorationPosee[] {
+  if (!Array.isArray(liste)) return []
+  return liste.filter(
+    (d): d is DecorationPosee =>
+      typeof d === 'object' && d !== null && d.id in DECORATIONS && Number.isInteger(d.n) && Number.isInteger(d.x) && Number.isInteger(d.y),
+  ).map((d) => ({ ...d, miroir: !!d.miroir }))
+}
+
 // (26/10) Une partie lue (le texte de la sauvegarde, déjà décodé), convertie à la version
 // actuelle ; null si elle n'est pas valide. Sert aussi aux villages qu'on visite (visite.ts).
 export function lirePartie(donnees: unknown): EtatJeu | null {
@@ -221,12 +230,13 @@ export function lirePartie(donnees: unknown): EtatJeu | null {
     // zéro (plus de prestige ni de profondeur) : une partie plus ancienne renvoie null.
     const convertie = convertirVersion29(convertirVersion28(convertirVersion27(convertirVersion26(convertirVersion25(convertirVersion24(convertirVersion23(convertirVersion22(convertirVersion21(donnees)))))))))
     if (!estUnEtatValide(convertie)) return null
-    // Les tenues du Bazar et les décorations du village ont été retirées (27/10) : on oublie
-    // celles des anciennes parties (et le succès « Paysagiste »).
+    // Les tenues du Bazar ont été retirées (27/10) : on oublie celles des anciennes parties (et
+    // le succès « Paysagiste »). (27/10) Les décorations sont revenues : celles d'une ancienne
+    // partie sont gardées (sauf une décoration qui n'existe plus).
     const { tenue: _tenue, tenuesAchetees: _tenuesAchetees, tresorerie, ...etat } = convertie as EtatJeu & { tenue?: unknown; tenuesAchetees?: unknown; tresorerie?: number }
     // (23/10) Plus de trésorerie : le manager paie avec l'argent du joueur. Ce qui y restait revient dans sa poche.
     if (typeof tresorerie === 'number' && tresorerie > 0) etat.argent += tresorerie
-    const { decorations: _decorations, prochainNumero: _prochainNumero, ...village } = etat.village as typeof etat.village & { decorations?: unknown; prochainNumero?: unknown }
+    const village = { ...etat.village, decorations: decorationsValides(etat.village.decorations) }
     return { ...etat, village, succes: etat.succes.filter((id) => id !== 'paysagiste') }
   } catch {
     return null

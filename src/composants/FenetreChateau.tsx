@@ -1,5 +1,5 @@
 // La fenêtre du château (27/10), quand on le touche au fond de la carte.
-//   - En ruine : son histoire, ce qu'il coûte (20 millions), une jauge de l'argent qu'on a, et le
+//   - En ruine : son histoire, ce qu'il coûte (10 millions), une jauge de l'argent qu'on a, et le
 //     gros bouton jaune « Restaurer le château ».
 //   - Restauré (et juste après la restauration, « victoire ») : bravo, tu as fini Mega Digger !
 //     Le temps qu'il a fallu, et de quoi revoir le feu d'artifice.
