@@ -61,7 +61,10 @@ rouge à la couronne d'or, porte en bois aux clous dorés. En ruine (27/10, rede
 (`murEnRuine`, `profilCasse`) avec des pierres dessinées, tours pleines cassées en biais au bord
 ébréché, un créneau qui tient encore et de l'herbe dessus (`tourEnRuine`), donjon au toit brûlé (ses
 poutres noires dépassent) avec un petit arbre qui a poussé dessus (`donjonEnRuine`), porte en bois qui
-pend de travers (`porteEnRuine`), murs des côtés bas et envahis par l'herbe, lierre, éboulis.
+pend de travers (`porteEnRuine`), murs des côtés bas, un peu de lierre, éboulis ; et ses détails
+(`detailsRuine`) : bannière déchirée, meurtrières, blocs de créneaux tombés, tonneau, roue de charrette
+cassée, épée plantée, toile d'araignée, corbeaux. Sur la colline (les deux dessins, `detailsColline`) :
+des fleurs, des champignons rouges à pois, des touffes d'herbe, des cailloux, des buissons à baies.
 Le chemin n'est pas dans le dessin : le jeu le trace d'un seul trait, de la clairière jusqu'au pied
 de la porte (`cheminChateau()` dans `src/composants/chateau.ts`, le point `porte` du calage).
 `fabriquer.mjs` affiche son calage (`CALAGE_CHATEAU` dans `src/composants/chateau.ts`) : la case (0, 0)
