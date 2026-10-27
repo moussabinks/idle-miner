@@ -216,6 +216,8 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
   const [nouveauNom, setNouveauNom] = useState('')
   const [nouveauOuvert, setNouveauOuvert] = useState(false)
   const [compteOuvert, setCompteOuvert] = useState(false)
+  // (27/10, CrazyGames : un seul monde) La confirmation de « Recommencer à zéro ».
+  const [confirmerRemise, setConfirmerRemise] = useState(false)
   // Le serveur des comptes met trop longtemps à répondre : on laisse jouer quand même.
   const [attenteFinie, setAttenteFinie] = useState(false)
   useEffect(() => {
@@ -312,6 +314,28 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
                 </li>
               ))}
             </ul>
+          )}
+          {/* (27/10, CrazyGames) Un seul monde : on peut le recommencer à zéro, en petit, sous les cases. */}
+          {dernierMonde && !AVEC_PLUSIEURS_MONDES && (
+            <button className="btn btn-blanc btn-petit accueil-recommencer" disabled={bloque} onClick={() => setConfirmerRemise(true)}>
+              🔄 {t('Recommencer à zéro')}
+            </button>
+          )}
+          {confirmerRemise && dernierMonde && (
+            <Confirmation
+              titre={t('Recommencer à zéro ?')}
+              danger
+              texteConfirmer={t('Tout effacer')}
+              onAnnuler={() => setConfirmerRemise(false)}
+              onConfirmer={() => {
+                setConfirmerRemise(false)
+                // Le monde est effacé : l'accueil montre « Commencer », pour une toute nouvelle partie.
+                supprimerMonde(stockage, dernierMonde.id)
+                setVersion((v) => v + 1)
+              }}
+            >
+              {t('La partie du monde « {nom} » sera effacée (village et succès compris). Impossible de revenir en arrière.', { nom: dernierMonde.nom })}
+            </Confirmation>
           )}
 
           {mondes.length > 0 && AVEC_PLUSIEURS_MONDES && (
