@@ -372,9 +372,11 @@
 
 .interface-bas {
   position: absolute;
-  left: var(--marge-gauche);
-  right: var(--marge-droite);
-  bottom: calc(var(--marge-bas) + 10px); /* (de la place pour l’étiquette des ronds) */
+  /* (27/10) --tuto-decale-* : pendant le tutoriel, la barre s'écarte des bords juste assez pour
+     que l'anneau doré autour de Mine ou de Bâtiments reste dans l'écran (Tutoriel.tsx). */
+  left: calc(var(--marge-gauche) + var(--tuto-decale-gauche, 0px));
+  right: calc(var(--marge-droite) + var(--tuto-decale-droite, 0px));
+  bottom: calc(var(--marge-bas) + 10px + var(--tuto-decale-bas, 0px)); /* (de la place pour l’étiquette des ronds) */
 }
 
 .barre-village {

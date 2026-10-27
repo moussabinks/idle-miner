@@ -86,7 +86,9 @@ function consigne(etape: IdEtapeTutoriel, etat: EtatJeu, ui: EtatInterface): Con
             titre: t('Casse {n} blocs : {fait} / {n}', { n: BLOCS_TUTORIEL, fait: Math.min(etat.stats.blocsCasses, BLOCS_TUTORIEL) }),
             texte: t('Clique sur le bloc, encore et encore ! Tout va dans le coffre de la mine.'),
             geste: t('Clique vite !'),
-            cible: '[data-tuto="bloc"]',
+            // (27/10) l'anneau autour du cube lui-même : autour de tout le bouton (aussi large que la
+            // fenêtre), il passait sur le titre « Niveau 1 » et sur les jauges
+            cible: '[data-tuto="bloc"] .bloc-pousse',
           }
         : {
             titre: t('Ouvre ta mine'),
@@ -200,16 +202,97 @@ function arrondiQuiContient(boite: { gauche: number; droite: number; haut: numbe
   return 0
 }
 
-// La cible palpite jusqu'à 6 % plus grande (tuto-cible-palpite, dans fenetres.css) : l'anneau
-// laisse la place pour sa plus grande taille.
-const PALPITE_MAX = 1.06
+// Ce que l'anneau prend autour de la cible : 8,5 px et 2 px de pouls (sur un bâtiment, l'anneau
+// du calque : --ecart, 14 px, et son contour, 3 px).
+const ANNEAU_HORS_CIBLE = 11
+
+// (27/10) La cible ne grossit plus (c'est l'anneau qui pulse) : rien à prévoir en plus.
+const PALPITE_MAX = 1
+
+// L'anneau doré dessiné sur le bouton lui-même (des ombres pleines, sous son contenu : la pastille
+// et l'étiquette passent par-dessus), de sa forme exacte : du crème, du jaune, puis l'encre. Son
+// épaisseur (au plus 8,5 px, et le pouls de 2 px, --tuto-pouls dans fenetres.css) se règle sur la
+// place libre autour du bouton : il ne touche jamais un voisin (2 px de vide au moins).
+const ANNEAU_MAX = 8.5
+const POULS = 2
+const VIDE_AVANT_VOISIN = 2
+
+// La place libre autour d'un élément (en px du CSS) : on sonde des points tout autour, de plus en
+// plus loin. Un point sur un des « parents » de l'élément (la fenêtre, la barre...) est libre ;
+// sur autre chose (un voisin, son texte...), il ne l'est pas.
+function placeLibre(element: Element): number {
+  const r = element.getBoundingClientRect()
+  const pas = Math.max(1, ANNEAU_MAX + POULS + VIDE_AVANT_VOISIN)
+  const libre = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return true // (le bord de l'écran : la barre du bas s'en écarte)
+    const dessus = document.elementsFromPoint(x, y).find((e) => !e.closest('.tuto-cible, .tuto-carte'))
+    return !dessus || dessus.contains(element) || element.contains(dessus)
+  }
+  const ecran = (px: number) => px * (versCss(100) > 0 ? 100 / versCss(100) : 1) // px du CSS → px de l'écran
+  for (let d = 1; d <= pas; d++) {
+    const e = ecran(d)
+    for (let k = 0; k <= 8; k++) {
+      const fx = r.left + (r.width * k) / 8
+      const fy = r.top + (r.height * k) / 8
+      if (!libre(fx, r.top - e) || !libre(fx, r.bottom + e) || !libre(r.left - e, fy) || !libre(r.right + e, fy)) return d - 1
+    }
+  }
+  return pas
+}
+
+// Pose l'anneau sur un élément ; renvoie de quoi le retirer (son style d'avant).
+// « relief » : les ombres du bouton avant l'anneau (son relief), gardées dessous.
+function poserAnneau(element: Element, relief?: string): () => void {
+  if (!(element instanceof HTMLElement || element instanceof SVGElement)) return () => {}
+  const style = element.style
+  const avant = { ombre: style.boxShadow, arrondi: style.borderRadius }
+  const calcule = getComputedStyle(element)
+  if (relief === undefined) relief = calcule.boxShadow && calcule.boxShadow !== 'none' ? `, ${calcule.boxShadow}` : ''
+  // L'épaisseur : ce que permet la place libre (au moins 3 px pour qu'on le voie), et le pouls
+  // seulement s'il a la place.
+  const place = placeLibre(element) - VIDE_AVANT_VOISIN
+  const epaisseur = Math.max(3, Math.min(ANNEAU_MAX, place))
+  const pouls = place >= epaisseur + POULS ? 'var(--tuto-pouls, 0px)' : '0px'
+  const bord = (px: number) => `calc(${Math.round(px * 10) / 10}px + ${pouls})`
+  style.boxShadow =
+    [`0 0 0 ${bord(epaisseur * 0.24)} #fdf6e3`, `0 0 0 ${bord(epaisseur * 0.7)} #f9d65a`, `0 0 0 ${bord(epaisseur)} #2a2140`].join(', ') + relief
+  element.setAttribute('data-tuto-anneau', String(epaisseur + (pouls === '0px' ? 0 : POULS)))
+  // (une cible sans coins arrondis, comme le cube de la mine : un anneau aux coins doux)
+  if ((parseFloat(calcule.borderTopLeftRadius) || 0) === 0) style.borderRadius = '14px'
+  return () => {
+    style.boxShadow = avant.ombre
+    style.borderRadius = avant.arrondi
+    element.removeAttribute('data-tuto-anneau')
+  }
+}
+
+// (27/10) La flèche et son étiquette ne doivent cacher aucun texte ni bouton : on regarde si la
+// place est libre au-dessus de la cible (puis en dessous). Libre : la carte du village, ou le fond
+// de la fenêtre où est la cible ; pris : tout le reste de l'interface (un texte, une jauge...).
+function zoneLibre(cible: Element, gauche: number, haut: number, droite: number, bas: number): boolean {
+  if (haut < 0 || bas > window.innerHeight || gauche < 0 || droite > window.innerWidth) return false
+  for (let i = 0; i <= 6; i++) {
+    for (let j = 0; j <= 4; j++) {
+      const x = gauche + ((droite - gauche) * i) / 6
+      const y = haut + ((bas - haut) * j) / 4
+      const dessus = document.elementsFromPoint(x, y).find((e) => !e.closest('.tuto-cible, .tuto-carte'))
+      if (!dessus || dessus.contains(cible) || cible.contains(dessus)) continue
+      if (dessus.closest('.fenetre, .interface-haut, .interface-bas, .barre-edition, .voile')) return false
+    }
+  }
+  return true
+}
+
+type PlaceFleche = 'dessus' | 'dessous' | 'aucune'
 
 type Suivi = {
   visible: boolean
-  dessous: boolean // la cible est tout en haut : la flèche passe dessous
+  dessous: boolean // la flèche passe dessous (pas de place libre au-dessus)
+  sansFleche: boolean // ni au-dessus ni en dessous : pas de flèche (l'anneau suffit)
+  sansVoile: boolean // un rond de la barre (pastille, étiquette) : pas de voile sombre autour
   enHaut: boolean // la cible est dans le haut de l'écran : la carte d'étape va en bas
 }
-const SUIVI_VIDE: Suivi = { visible: false, dessous: false, enHaut: false }
+const SUIVI_VIDE: Suivi = { visible: false, dessous: false, sansFleche: false, sansVoile: false, enHaut: false }
 
 function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDivElement | null>, surBatiment: boolean): Suivi {
   const [suivi, setSuivi] = useState<Suivi>(SUIVI_VIDE)
@@ -219,7 +302,14 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
     let image = 0
     let defile = false
     let marquee: Element | null = null
+    let retirerAnneau = () => {}
+    let relief = ''
+    let placeFleche: PlaceFleche | null = null
     let forme: FormeCible | null = null
+    // (27/10) Ce dont la barre du bas est décalée vers l'intérieur, pour que l'anneau autour de
+    // Mine ou de Bâtiments ne sorte pas de l'écran (--tuto-decale-*, voir jeu.css).
+    const decale = { gauche: 0, droite: 0, bas: 0 }
+    const racine = document.documentElement
     let derniere = ''
     let n = 0
     const suivre = () => {
@@ -228,11 +318,24 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
         const element = document.querySelector(selecteur)
         if (element !== marquee) {
           marquee?.removeAttribute('data-tuto-actif')
+          retirerAnneau()
+          retirerAnneau = () => {}
+          // (on mesure la forme avant de poser l'anneau : il change ses ombres)
+          forme = element ? formeDe(element) : null
           element?.setAttribute('data-tuto-actif', '')
+          if (element && !surBatiment) {
+            const ombre = getComputedStyle(element).boxShadow
+            relief = ombre && ombre !== 'none' ? `, ${ombre}` : ''
+            retirerAnneau = poserAnneau(element, relief)
+          }
           marquee = element
           defile = false
+          placeFleche = null
+        } else if (marquee && !surBatiment && n % 30 === 1) {
+          // (toutes les demi-secondes : la place libre a pu changer, une fenêtre qui finit de s'ouvrir...)
+          retirerAnneau()
+          retirerAnneau = poserAnneau(marquee, relief)
         }
-        forme = marquee ? formeDe(marquee) : null
       }
       const r = marquee?.getBoundingClientRect() ?? null
       // Un bouton dans une fenêtre : on la fait défiler jusqu'à lui (une fois).
@@ -306,7 +409,24 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
           : Math.min((forme?.arrondi ?? 12) * PALPITE_MAX, Math.min(l, h) / 2)
         boite = { x: milieuX + gauche, y: milieuY + haut, l, h, arrondi }
       }
-      const cle = visible ? `${Math.round(boite.x)},${Math.round(boite.y)},${Math.round(boite.l)},${Math.round(boite.h)},${Math.round(boite.arrondi)}` : ''
+      // L'anneau (et son pouls) tient-il dans l'écran ? Sinon, pour un bouton de la barre du bas,
+      // on décale la barre de ce qui manque (au fil des images, jusqu'à ce que ça tienne juste).
+      if (visible && marquee?.closest('.interface-bas')) {
+        const marge = ANNEAU_HORS_CIBLE + Math.max(boite.l, boite.h) * 0.03 + 4
+        const largeurEcran = versCss(window.innerWidth)
+        const hauteurEcran = versCss(window.innerHeight)
+        const nouveau = {
+          gauche: Math.max(0, decale.gauche + (marge - boite.x)),
+          droite: Math.max(0, decale.droite + (boite.x + boite.l + marge - largeurEcran)),
+          bas: Math.max(0, decale.bas + (boite.y + boite.h + marge - hauteurEcran)),
+        }
+        for (const cote of ['gauche', 'droite', 'bas'] as const) {
+          if (Math.abs(nouveau[cote] - decale[cote]) < 0.5) continue
+          decale[cote] = nouveau[cote]
+          racine.style.setProperty(`--tuto-decale-${cote}`, `${Math.round(decale[cote])}px`)
+        }
+      }
+      const cle = visible ? `${Math.round(boite.x)},${Math.round(boite.y)},${Math.round(boite.l)},${Math.round(boite.h)},${Math.round(boite.arrondi)},${marquee?.getAttribute('data-tuto-anneau') ?? ''}` : ''
       if (visible && cle !== derniere && calque.current) {
         derniere = cle
         const style = calque.current.style
@@ -315,12 +435,35 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
         style.setProperty('--l', `${Math.round(boite.l)}px`)
         style.setProperty('--h', `${Math.round(boite.h)}px`)
         style.setProperty('--arrondi', `${Math.round(boite.arrondi)}px`)
+        // (27/10) Le trou du voile épouse l'anneau posé sur le bouton (sur un bâtiment : 14 px).
+        const anneau = parseFloat(marquee?.getAttribute('data-tuto-anneau') ?? '')
+        if (anneau > 0) style.setProperty('--ecart', `${anneau}px`)
+        else style.removeProperty('--ecart')
       }
-      const dessous = visible && !surBatiment && boite.y < 140
+      // La place de la flèche (une fois par demi-seconde : elle sonde l'écran).
+      if (visible && marquee && (placeFleche === null || n % 30 === 2)) {
+        if (surBatiment) placeFleche = 'dessus'
+        else {
+          const centre = r.left + r.width / 2
+          const ecran = (px: number) => (px * 100) / Math.max(1, versCss(100)) // px du CSS → écran
+          const demi = ecran(48)
+          const ecart = ecran(Math.max(4, parseFloat(marquee.getAttribute('data-tuto-anneau') ?? '0') + 2))
+          const hauteurFleche = ecran(92) // la flèche (52 px), son étiquette et le rebond
+          if (zoneLibre(marquee, centre - demi, r.top - ecart - hauteurFleche, centre + demi, r.top - ecart)) placeFleche = 'dessus'
+          else if (zoneLibre(marquee, centre - demi, r.bottom + ecart, centre + demi, r.bottom + ecart + hauteurFleche)) placeFleche = 'dessous'
+          else placeFleche = 'aucune'
+        }
+      }
+      const dessous = visible && placeFleche === 'dessous'
+      const sansFleche = visible && placeFleche === 'aucune'
+      const sansVoile = visible && !surBatiment && (forme?.debordants.length ?? 0) > 0
+      // (27/10) Un bâtiment montré : les bulles du village (« Abordable »...) se cachent, la flèche
+      // passerait dessus (et le tutoriel dit déjà quoi faire).
+      racine.classList.toggle('tuto-batiment', visible && surBatiment)
       const enHaut = visible && r.top + r.height / 2 < window.innerHeight * 0.5
       const avant = dernierSuivi.current
-      if (visible !== avant.visible || dessous !== avant.dessous || enHaut !== avant.enHaut) {
-        dernierSuivi.current = { visible, dessous, enHaut }
+      if (visible !== avant.visible || dessous !== avant.dessous || sansFleche !== avant.sansFleche || sansVoile !== avant.sansVoile || enHaut !== avant.enHaut) {
+        dernierSuivi.current = { visible, dessous, sansFleche, sansVoile, enHaut }
         setSuivi(dernierSuivi.current)
       }
       image = requestAnimationFrame(suivre)
@@ -329,6 +472,9 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
     return () => {
       cancelAnimationFrame(image)
       marquee?.removeAttribute('data-tuto-actif')
+      retirerAnneau()
+      racine.classList.remove('tuto-batiment')
+      for (const cote of ['gauche', 'droite', 'bas']) racine.style.removeProperty(`--tuto-decale-${cote}`)
     }
   }, [selecteur, calque, surBatiment])
   return selecteur ? suivi : SUIVI_VIDE
@@ -493,7 +639,7 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
       {c.cible && (
         <div
           ref={calque}
-          className={`tuto-cible ${suivi.visible ? '' : 'tuto-cible-cachee'} ${surBatiment ? 'tuto-sur-batiment' : ''} ${suivi.dessous ? 'tuto-cible-dessous' : ''}`}
+          className={`tuto-cible ${suivi.visible ? '' : 'tuto-cible-cachee'} ${surBatiment ? 'tuto-sur-batiment' : ''} ${suivi.dessous ? 'tuto-cible-dessous' : ''} ${suivi.sansFleche ? 'tuto-sans-fleche' : ''} ${suivi.sansVoile ? 'tuto-sans-voile' : ''}`}
           aria-hidden="true"
         >
           {/* Le voile sombre autour de la cible (immobile), puis l'anneau doré qui pulse. */}
