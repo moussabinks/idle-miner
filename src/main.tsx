@@ -15,6 +15,7 @@ import './styles/accueil.css' // l'écran d'accueil : les mondes, le classement,
 import './styles/fenetres.css' // le tutoriel, la fête du niveau, les statistiques, le bilan, les gains
 import './styles/paysage.css' // (27/10) le téléphone couché : fenêtres en panneau à droite (en dernier)
 import { enregistrerServiceWorker } from './installation'
+import { initialiserEchelle } from './echelle'
 import { initialiserLangue } from './langueNavigateur'
 import { initialiserPortail } from './portail'
 
@@ -24,6 +25,7 @@ import { initialiserPortail } from './portail'
 async function demarrer() {
   await initialiserPortail()
   initialiserLangue()
+  initialiserEchelle() // (27/10) l'interface réduite d'un bloc sur un petit écran d'ordinateur
   const { default: App } = await import('./App.tsx')
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

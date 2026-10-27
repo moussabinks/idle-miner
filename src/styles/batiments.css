@@ -477,7 +477,7 @@
 }
 
 /* Sur téléphone, les onglets d'un panneau passent sur deux lignes plutôt que de déborder. */
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .panneau-bat .onglets {
     flex-wrap: wrap;
     border-radius: 22px;
@@ -538,7 +538,7 @@
 
 .revelation-carte {
   position: relative;
-  width: min(260px, 72vw);
+  width: min(260px, calc(var(--vw, 1vw) * 72));
   height: 340px;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.2, 1.4, 0.4, 1);
@@ -1038,7 +1038,7 @@
   gap: 6px;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .grille-construire {
     grid-template-columns: 1fr;
   }
@@ -1200,7 +1200,7 @@
   color: var(--encre-douce);
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .tableau-raretes {
     font-size: 0.75rem;
   }

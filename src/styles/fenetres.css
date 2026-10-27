@@ -98,7 +98,7 @@
    toute la flèche se décalait : elle ne montrait plus la croix ✖ d'une fenêtre, tout à droite). */
 .tuto-fleche-place {
   --centre: calc(var(--x) + var(--l) / 2);
-  --milieu: clamp(70px, var(--centre), calc(100vw - 70px));
+  --milieu: clamp(70px, var(--centre), calc(var(--vw, 1vw) * 100 - 70px));
   position: absolute;
   left: 0;
   top: 0;
@@ -781,7 +781,7 @@
   font-size: 0.85rem;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .stat-tuiles {
     grid-template-columns: 1fr 1fr;
   }
@@ -938,7 +938,7 @@
   font-size: 0.95rem;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
   .bilan-colonnes {
     grid-template-columns: 1fr;
   }

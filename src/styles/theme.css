@@ -364,7 +364,7 @@ kbd {
   display: flex;
   flex-direction: column;
   width: min(560px, 100%);
-  max-height: calc(100dvh - 32px);
+  max-height: calc(var(--vh, 1dvh) * 100 - 32px);
   border: 4px solid var(--encre);
   border-radius: 24px;
   background: var(--creme);
@@ -468,7 +468,7 @@ kbd {
   .fenetre-petite,
   .fenetre-grande {
     width: 100%;
-    max-height: 88dvh;
+    max-height: calc(var(--vh, 1dvh) * 88);
     border-radius: 24px 24px 0 0;
     border-bottom: none;
     box-shadow: none;
@@ -771,7 +771,7 @@ kbd {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: min(440px, calc(100vw - 32px));
+  width: min(440px, calc(var(--vw, 1vw) * 100 - 32px));
   pointer-events: none;
 }
 
@@ -833,7 +833,7 @@ kbd {
    resserre (bandeau, marges, onglets) pour défiler le moins possible.
    ========================================================================= */
 
-@media (max-width: 640px), (max-height: 760px) {
+@media (max-width: 640px), (max-height: 760px) and (pointer: coarse) {
   .fenetre-entete {
     padding: 6px 8px 6px 14px;
     border-bottom-width: 3px;
@@ -868,7 +868,7 @@ kbd {
   .fenetre,
   .fenetre-petite,
   .fenetre-grande {
-    max-height: 94dvh;
+    max-height: calc(var(--vh, 1dvh) * 94);
   }
 }
 
@@ -876,7 +876,7 @@ kbd {
   .fenetre,
   .fenetre-petite,
   .fenetre-grande {
-    max-height: 97dvh;
+    max-height: calc(var(--vh, 1dvh) * 97);
   }
 }
 

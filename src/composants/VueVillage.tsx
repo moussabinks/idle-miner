@@ -70,6 +70,7 @@ import {
   type Point,
 } from './iso'
 import { IconeImage } from './IconeImage'
+import { versCss } from '../echelle'
 
 type Props = {
   etat: EtatJeu
@@ -337,8 +338,9 @@ export function VueVillage({
     (sx: number, sy: number): Point => {
       const c = afficheeRef.current // ce qu'on voit vraiment à l'écran
       const rect = conteneurRef.current?.getBoundingClientRect()
-      const ox = rect ? sx - rect.left : sx
-      const oy = rect ? sy - rect.top : sy
+      // (27/10) en positions du CSS : l'interface peut être réduite d'un bloc (src/echelle.ts)
+      const ox = versCss(rect ? sx - rect.left : sx)
+      const oy = versCss(rect ? sy - rect.top : sy)
       return { x: (ox - milieuX) / c.z + c.cx, y: (oy - taille.h / 2) / c.z + c.cy }
     },
     [taille, milieuX],
@@ -406,8 +408,9 @@ export function VueVillage({
     }
     const g = geste.current
     if (!g) return
-    const dx = e.clientX - g.depart.x
-    const dy = e.clientY - g.depart.y
+    // (en positions du CSS : l'interface peut être réduite d'un bloc, src/echelle.ts)
+    const dx = versCss(e.clientX - g.depart.x)
+    const dy = versCss(e.clientY - g.depart.y)
     if (!g.deplace && Math.hypot(dx, dy) > 7) g.deplace = true
     if (!g.deplace) return
     if (g.mode === 'fantome') onGlisser(caseSous(e.clientX, e.clientY))
@@ -501,7 +504,7 @@ export function VueVillage({
     // Le point du monde sous la souris, d'après la caméra visée (les crans s'enchaînent bien).
     const c = cameraVisee()
     const rect = conteneurRef.current?.getBoundingClientRect()
-    const m = { x: (e.clientX - (rect?.left ?? 0) - milieuX) / c.z + c.cx, y: (e.clientY - (rect?.top ?? 0) - taille.h / 2) / c.z + c.cy }
+    const m = { x: (versCss(e.clientX - (rect?.left ?? 0)) - milieuX) / c.z + c.cx, y: (versCss(e.clientY - (rect?.top ?? 0)) - taille.h / 2) / c.z + c.cy }
     // Un cran de molette zoome d'environ 15 % (29/10 : avant, presque du double, c'était trop).
     // Firefox compte parfois en lignes (deltaMode 1) : une ligne vaut environ 33 pixels.
     const brut = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY
