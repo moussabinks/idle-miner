@@ -28,7 +28,10 @@ export function Perso({ x, y, qui, sens, vue, marche, saut = 0, etiquette, class
   return (
     <div
       className={`perso-village ${marche ? 'perso-marche' : ''} ${estJoueur ? 'perso-heros' : ''} ${classe}`}
-      style={{ left: e.x, top: e.y, zIndex: profondeur(x, y) + 5, ['--sens' as string]: sens }}
+      // (27/10, FPS) Placé par une translation (pas de left/top : le navigateur refaisait la mise
+      // en page à chaque pas). Une translation fixe ne met pas le personnage dans une couche à
+      // part : il est dessiné avec le reste de la carte, comme avant.
+      style={{ transform: `translate(${e.x}px, ${e.y}px)`, zIndex: profondeur(x, y) + 5, ['--sens' as string]: sens }}
     >
       {/* Le joueur a un anneau doré sous les pieds (comme le héros de Clash of Clans). */}
       {estJoueur && <span className="perso-anneau" />}

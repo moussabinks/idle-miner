@@ -2,9 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 // Les polices (25/10) : servies par le jeu lui-même (plus de Google Fonts : le jeu marche hors
 // ligne et dans la page d'un autre site). Lilita One pour les titres, Nunito pour le texte.
-import '@fontsource/lilita-one/latin-400.css'
-import '@fontsource/nunito/latin-700.css'
-import '@fontsource/nunito/latin-900.css'
+// (27/10) En woff2 seulement : voir polices.css.
+import './polices.css'
 import './icones.css' // la police des icônes cartoon (avant tout le reste)
 import './village.css' // le dessin du village (la carte, les bâtiments, les personnages)
 import './styles/theme.css' // les briques du style : couleurs, boutons, fenêtres...

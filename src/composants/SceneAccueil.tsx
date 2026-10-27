@@ -21,13 +21,16 @@ import {
   type Village,
 } from '../jeu/village'
 import { BoiteSvg, CaseChemin, RailsDuVillage, DessinDecoration, DessinEvolutionMine, TerrainVillage } from './DessinsVillage'
-import { DessinWagonnet3D } from './Wagonnet3D'
+import { WagonnetPose } from './Wagonnet3D'
 import { DUREE_VENTE, VenteWagonnet } from './WagonnetVillage'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
 import { ChateauVillage, CheminChateau } from './ChateauVillage'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, longueurTrace, orienter, profondeur, surLaTrace, surLeChemin, traceDeLaVoie, versEcran } from './iso'
+
+// Un wagonnet vide (toujours le même objet : son dessin n'est pas refait à chaque image).
+const VIDE = {}
 
 // ---------------------------------------------------------------------------
 // Le village de la scène (posé une fois pour toutes)
@@ -397,20 +400,9 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
     const dy = (etape.retour ? -1 : 1) * (a.y - b.y || a.dy)
     const pousseur = surLaTrace(trace, borne(s + (etape.retour ? RECUL_POUSSEUR : -RECUL_POUSSEUR)))
     const sens = orienter(dx, dy)
-    const e = versEcran(ici.x, ici.y)
     objets.push(
-      <svg
-        key={`wagonnet-${w.de}`}
-        className="wagonnet-village"
-        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}
-        viewBox={`${e.x - 40} ${e.y - 44} 80 64`}
-        width={80}
-        height={64}
-        aria-hidden="true"
-      >
-        {/* (plein à l'aller, vide au retour : il a tout vendu au marché) */}
-        <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={etape.retour ? 0 : 0.8} contenu={etape.retour ? {} : w.contenu} />
-      </svg>,
+      // (plein à l'aller, vide au retour : il a tout vendu au marché)
+      <WagonnetPose key={`wagonnet-${w.de}`} x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={etape.retour ? 0 : 0.8} contenu={etape.retour ? VIDE : w.contenu} />,
       <Perso
         key={`pousseur-${w.de}`}
         qui={w.rarete}

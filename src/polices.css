@@ -1,0 +1,28 @@
+/* Les polices du jeu (25/10), servies par le jeu lui-même (paquets @fontsource) : Lilita One pour
+   les titres, Nunito pour le texte.
+   (27/10) On ne prend que le format woff2, que tous les navigateurs d'aujourd'hui lisent : les
+   fichiers .woff de secours des paquets étaient copiés dans le jeu sans jamais servir. */
+
+@font-face {
+  font-family: 'Lilita One';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('../node_modules/@fontsource/lilita-one/files/lilita-one-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('../node_modules/@fontsource/nunito/files/nunito-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url('../node_modules/@fontsource/nunito/files/nunito-latin-900-normal.woff2') format('woff2');
+}

@@ -162,9 +162,18 @@ export function porte(b: BatimentPose): { x: number; y: number } {
 }
 
 // Les cases où l'on ne peut pas marcher : les bâtiments.
+// (27/10, FPS) Gardées en mémoire tant que les bâtiments n'ont pas bougé : le personnage et les
+// trajets les demandaient à chaque pas. (On compare la liste des bâtiments posés : un bâtiment
+// ajouté, retiré ou déplacé la change.) Ne pas modifier l'ensemble rendu.
+const dernieresCasesBloquees = new WeakMap<BatimentPose[], { signature: string; cases: Set<string> }>()
+
 export function casesBloquees(village: Village): Set<string> {
+  const signature = village.batiments.map((b) => `${b.id}:${b.x}:${b.y}:${b.miroir ? 1 : 0}`).join('|')
+  const deja = dernieresCasesBloquees.get(village.batiments)
+  if (deja && deja.signature === signature) return deja.cases
   const bloquees = new Set<string>()
   for (const b of village.batiments) for (const c of casesDe(empriseBatiment(b))) bloquees.add(cleCase(c.x, c.y))
+  dernieresCasesBloquees.set(village.batiments, { signature, cases: bloquees })
   return bloquees
 }
 

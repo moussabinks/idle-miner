@@ -9,7 +9,7 @@
 // - Les autres fichiers du site (icônes, manifeste, images du village) : le cache d'abord, puis on le met à jour.
 // - Supabase (comptes, classement) n'est jamais mis en cache : ce n'est pas notre site.
 
-const CACHE = 'idle-miner-v125'
+const CACHE = 'idle-miner-v126'
 // (25/10) Les chemins sont relatifs au dossier du jeu (il peut être servi dans un sous-dossier).
 // On ne range d'avance que le strict nécessaire ; les images (bâtiments, personnages, arbres,
 // rails) sont rangées la première fois qu'elles sont chargées (cachePuisMiseAJour) : la liste ne

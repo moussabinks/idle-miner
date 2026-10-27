@@ -81,6 +81,21 @@ for (let i = 0; i < 35; i++) {
   REFLETS.push({ x, d: distanceRivage(x) + 0.8 + hasard() * 16, r: 3 + hasard() * 5, teinte: hasard() })
 }
 
+// (27/10, FPS) Un reflet change de lumière par paliers (toutes les 0,25 s : voir reflet-plage dans
+// village.css). Chacun avait son propre décalage, au hasard : il y avait donc toujours un reflet
+// qui changeait, et le navigateur redessinait toute l'eau à chaque image. Les décalages sont
+// maintenant arrondis au quart de seconde (le hasard reste le même, à 0,125 s près), et les reflets
+// qui ont le même décalage sont animés ensemble : l'eau n'est redessinée que 4 fois par seconde.
+const PALIER_REFLET = 0.25 // s
+const GROUPES_REFLETS = (() => {
+  const groupes = new Map<number, Point2[]>()
+  for (const r of REFLETS) {
+    const retard = Math.round((r.teinte * 4) / PALIER_REFLET) * PALIER_REFLET
+    groupes.set(retard, [...(groupes.get(retard) ?? []), r])
+  }
+  return [...groupes.entries()].sort((a, b) => a[0] - b[0])
+})()
+
 // Le sol de la plage, dans sa propre couche juste au-dessus du terrain (le damier). Il ne bouge
 // pas : il est figé en image (ImageFigee), comme le terrain. Ce qui bouge (reflets, écume,
 // vagues) est à part, dans EauPlage.
@@ -142,21 +157,14 @@ export const EauPlage = memo(function EauPlage() {
         </clipPath>
       </defs>
       <g clipPath="url(#cadre-eau)">
-        {REFLETS.map((r, i) => {
-          const e = ecran(r.x, r.d)
-          return (
-            <path
-              key={`f${i}`}
-              className="reflet-mer"
-              style={{ animationDelay: `${(r.teinte * 4).toFixed(2)}s` }}
-              d={`M${e.x - r.r} ${e.y} q${r.r / 2} ${-r.r * 0.45} ${r.r} 0 t${r.r} 0`}
-              stroke="#ffffff"
-              strokeWidth="1.8"
-              fill="none"
-              strokeLinecap="round"
-            />
-          )
-        })}
+        {GROUPES_REFLETS.map(([retard, reflets]) => (
+          <g key={`f${retard}`} className="reflet-mer" style={{ animationDelay: `${retard.toFixed(2)}s` }}>
+            {reflets.map((r, i) => {
+              const e = ecran(r.x, r.d)
+              return <path key={i} d={`M${e.x - r.r} ${e.y} q${r.r / 2} ${-r.r * 0.45} ${r.r} 0 t${r.r} 0`} stroke="#ffffff" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            })}
+          </g>
+        ))}
         {/* Les vagues : des traits blancs pointillés, parallèles au rivage. */}
         <path className="vague" d={ligne((x) => rivage(x) + 0.6, -45, N + 40)} stroke="#ffffff" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="18 16" />
         <path className="vague vague-2" d={ligne((x) => rivage(x) + 1.6, -45, N + 40)} stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeDasharray="10 26" opacity="0.8" />

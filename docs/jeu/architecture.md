@@ -103,6 +103,8 @@ Retirés : le 25/10, tout ce qui touchait au **sac** (`SACS`, `prendreDuCoffre`,
 | `langueNavigateur.ts` | **Nouveau (25/10)** : la langue au démarrage (celle choisie dans les réglages, clé `idle-miner-langue`, sinon celle du navigateur) |
 | `useCompte.ts` | Hook du compte en ligne : session, synchronisation des mondes, envoi du score |
 | `enLigne.ts` | Le seul fichier qui parle à Supabase (comptes, sauvegardes, classement) |
+| `enLigneAbsent.ts` | (27/10) Les mêmes fonctions, vides : il remplace `enLigne.ts` dans la version CrazyGames (alias dans `vite.config.ts`), sans la bibliothèque de Supabase |
+| `polices.css` | (27/10) Les polices du jeu (Lilita One, Nunito), en woff2 seulement |
 | `useJoueurVillage.ts` | La taupe du joueur dans le village : position, flèches du clavier, marche jusqu'à une case ou un bâtiment, saut (affichage seulement) |
 | `useCompteur.ts` | Un nombre qui défile jusqu'à sa nouvelle valeur (compteur d'argent) |
 | `evenements.ts` | Compare l'état avant/après une action pour en tirer des `Evenement` (casse, vente, achat, amélioration, pioche cassée, wagonnet) |

@@ -8,7 +8,7 @@ Le même code fabrique deux versions du jeu :
 | --- | --- | --- |
 | Commande | `npm run build` (Vercel la lance tout seul) | `npm run build:crazygames` |
 | Dossier | `dist/` | `dist-crazygames/`, et le ZIP `mega-digger-crazygames.zip` à la racine du projet |
-| Comptes, classement, visites (Supabase) | oui | non : le jeu ne parle jamais à Supabase (`AVEC_COMPTES`) |
+| Comptes, classement, visites (Supabase) | oui | non : le jeu ne parle jamais à Supabase (`AVEC_COMPTES`), et (27/10) la bibliothèque de Supabase n'est même pas dans le jeu : `vite.config.ts` met `src/enLigneAbsent.ts` (les mêmes fonctions, vides) à la place de `src/enLigne.ts` |
 | Packs de gemmes payants | montrés, « Bientôt disponible » au paiement | retirés : une carte « Bientôt disponible » à leur place (`AVEC_PACKS`) |
 | Application à installer (PWA) | oui | non : ni service worker, ni manifeste, ni icônes d'application |
 | Publicités | la fausse publicité de 30 s | leur publicité récompensée (SDK v3) |
@@ -26,7 +26,7 @@ Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_COMPTES`, `AVE
 ## Publier (à faire par le propriétaire)
 
 1. Compte développeur sur developer.crazygames.com.
-2. `npm run build:crazygames`, puis envoyer `mega-digger-crazygames.zip` (environ 0,9 Mo ; la limite de CrazyGames est de 50 Mo, 20 Mo pour la page d'accueil mobile, et 1 500 fichiers).
+2. `npm run build:crazygames`, puis envoyer `mega-digger-crazygames.zip` (environ 0,8 Mo, 221 fichiers ; la limite de CrazyGames est de 50 Mo, 20 Mo pour la page d'accueil mobile, et 1 500 fichiers).
 3. Dans le formulaire, **cocher « Le jeu sauvegarde la progression »** : sans ça, leur module Data est coupé (le jeu garde alors le stockage du navigateur).
 4. Tester dans leur **QA Tool** : la publicité récompensée donne 1 💎, le son se coupe pendant la pub, la partie revient après un rechargement, le jeu se joue sur téléphone à l'horizontale.
 5. La fiche : titre, description en anglais, commandes (souris, ou doigt sur téléphone), catégories (Idle, Clicker), la vignette et la vidéo.
