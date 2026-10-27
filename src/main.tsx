@@ -14,6 +14,7 @@ import './styles/gemmes.css' // les gemmes, la publicité, le cadeau du jour, le
 import './styles/batiments.css' // les panneaux des bâtiments, le Personnel, « Construire », les trajets
 import './styles/accueil.css' // l'écran d'accueil : les mondes, le classement, le compte
 import './styles/fenetres.css' // le tutoriel, la fête du niveau, les statistiques, le bilan, les gains
+import './styles/paysage.css' // (27/10) le téléphone couché : fenêtres en panneau à droite (en dernier)
 import App from './App.tsx'
 import { enregistrerServiceWorker } from './installation'
 import { initialiserLangue } from './langueNavigateur'

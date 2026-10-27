@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { changerLangue, langue, nomEmploye, nombre, pluriel, t } from './langue'
 import { TRADUCTIONS_EN } from './traductions/en'
+import { TRADUCTIONS_ES } from './traductions/es'
+import { TRADUCTIONS_PT } from './traductions/pt'
 
 // Une traduction ajoutée juste pour ces tests (en.ts peut encore être presque vide).
 const CLE_DE_TEST = '💰 Vente de test : +{gain} $ pour {nom}'
@@ -55,6 +57,21 @@ describe('les langues', () => {
     expect(pluriel(0, 'mineur', 'mineurs')).toBe('mineur')
     expect(pluriel(3, 'mineur', 'mineurs')).toBe('mineurs')
   })
+
+  // (27/10) L'espagnol et le portugais traduisent tout ce que l'anglais traduit, avec les mêmes {trous}.
+  for (const [nom, table] of [
+    ['es', TRADUCTIONS_ES],
+    ['pt', TRADUCTIONS_PT],
+  ] as const) {
+    it(`la traduction ${nom} est complète et garde les mêmes {trous}`, () => {
+      const trous = (texte: string) => [...texte.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
+      const manquantes = Object.keys(TRADUCTIONS_EN).filter((francais) => !(francais in table))
+      expect(manquantes, `textes sans traduction (${nom})`).toEqual([])
+      for (const [francais, traduit] of Object.entries(table)) {
+        expect(trous(traduit), `traduction ${nom} de « ${francais} »`).toEqual(trous(francais))
+      }
+    })
+  }
 
   it('chaque traduction anglaise garde les mêmes {trous} que le texte français', () => {
     const trous = (texte: string) => [...texte.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()

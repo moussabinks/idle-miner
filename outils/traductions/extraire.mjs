@@ -10,7 +10,8 @@
 //        pierre: { id: 'pierre', nom: 'Pierre', ... }
 //      L'interface les traduit au moment de les afficher : t(BLOCS[bloc].nom).
 //
-// Puis il compare avec la traduction anglaise (src/jeu/traductions/en.ts) et affiche :
+// Puis il compare avec la traduction anglaise (src/jeu/traductions/en.ts) et affiche (27/10 : aussi
+// les textes pas encore traduits en espagnol, es.ts, et en portugais, pt.ts) :
 //   - les textes qui n'ont pas encore de traduction anglaise ;
 //   - les traductions qui ne servent plus (le texte français a changé ou a disparu).
 //
@@ -208,11 +209,11 @@ function textesDuFichier(chemin) {
   return { appels, tables, illisibles }
 }
 
-// Les clés de la traduction anglaise : chaque texte suivi de « : » dans en.ts.
-function clesAnglaises() {
-  const code = sansCommentaires(readFileSync(FICHIER_ANGLAIS, 'utf8'))
+// Les clés d'une traduction : chaque texte suivi de « : » dans son fichier (en.ts par défaut).
+function clesAnglaises(fichier = FICHIER_ANGLAIS, table = 'TRADUCTIONS_EN') {
+  const code = sansCommentaires(readFileSync(fichier, 'utf8'))
   const cles = new Set()
-  const debutObjet = code.indexOf('{', code.indexOf('TRADUCTIONS_EN'))
+  const debutObjet = code.indexOf('{', code.indexOf(table))
   let i = debutObjet + 1
   while (i < code.length) {
     const c = code[i]
@@ -271,11 +272,27 @@ if (illisibles.length > 0) {
   for (const ligne of illisibles) console.log(`   ${ligne}`)
   console.log('')
 }
-if (manquants.length === 0 && inutiles.length === 0) console.log('✅ Tout est traduit.')
+// (27/10) L'espagnol et le portugais : les textes qui n'y sont pas encore traduits.
+let manquantsAutres = 0
+for (const [nom, fichier, table] of [
+  ['espagnole', 'es.ts', 'TRADUCTIONS_ES'],
+  ['portugaise', 'pt.ts', 'TRADUCTIONS_PT'],
+]) {
+  const cles = clesAnglaises(join(dirname(FICHIER_ANGLAIS), fichier), table)
+  const sans = [...textes.keys()].filter((texte) => !cles.has(texte))
+  manquantsAutres += sans.length
+  if (sans.length > 0) {
+    console.log(`❌ ${sans.length} texte(s) sans traduction ${nom} (${fichier}) :`)
+    for (const texte of sans.slice(0, 30)) console.log(`   ${JSON.stringify(texte)}`)
+    if (sans.length > 30) console.log(`   ... et ${sans.length - 30} autres`)
+    console.log('')
+  }
+}
+if (manquants.length === 0 && inutiles.length === 0 && manquantsAutres === 0) console.log('✅ Tout est traduit.')
 
 if (arguments_.includes('--ecrire')) {
   const aTraduire = Object.fromEntries(manquants.map((texte) => [texte, '']))
   writeFileSync(FICHIER_MANQUANTES, JSON.stringify(aTraduire, null, 2) + '\n')
   console.log(`📝 Écrit : ${relative(RACINE, FICHIER_MANQUANTES)} (${manquants.length} textes à traduire).`)
 }
-if (arguments_.includes('--verifier') && manquants.length > 0) process.exit(1)
+if (arguments_.includes('--verifier') && manquants.length + manquantsAutres > 0) process.exit(1)

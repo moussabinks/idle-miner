@@ -3,12 +3,12 @@
 
 import { useState } from 'react'
 import { PSEUDO_MAX } from '../jeu/compte'
-import { langue, t } from '../jeu/langue'
+import { formatLangue, t } from '../jeu/langue'
 import type { Compte } from '../useCompte'
 
 // « 14:05 » aujourd'hui, sinon « 18/10 à 14:05 ».
 function heure(date: number): string {
-  const format = langue() === 'fr' ? 'fr-FR' : 'en-GB'
+  const format = formatLangue()
   const jour = new Date(date)
   const texte = jour.toLocaleTimeString(format, { hour: '2-digit', minute: '2-digit' })
   if (jour.toDateString() === new Date().toDateString()) return texte

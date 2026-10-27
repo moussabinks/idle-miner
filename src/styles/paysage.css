@@ -1,0 +1,427 @@
+/* =========================================================================
+   (27/10, demandé par le propriétaire) Le téléphone tenu à l'horizontale (couché) : un écran
+   large mais pas haut (moins de 520 px). Le jeu se joue comme ça sur téléphone (tenu debout, un
+   message demande de le tourner : TournerTelephone.tsx).
+
+   - Les fenêtres ne prennent plus tout l'écran : elles s'ouvrent comme un panneau sur la droite,
+     et le village reste visible à gauche (on voit ses taupes travailler pendant qu'on améliore).
+   - Le bandeau du haut, les boutons ronds, la liste des tâches et la quête se font petits.
+   - L'accueil : un bandeau mince en haut, les deux panneaux côte à côte, qui défilent.
+
+   Ce fichier est chargé en dernier : il passe par-dessus les autres styles.
+   ========================================================================= */
+
+@media (orientation: landscape) and (max-height: 520px) {
+  /* --- Les fenêtres : un panneau sur la droite ------------------------------------------- */
+
+  .voile {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 6px max(6px, env(safe-area-inset-right)) 6px 6px;
+  }
+
+  .fenetre,
+  .fenetre-petite,
+  .fenetre-grande {
+    width: min(540px, 60vw);
+    max-height: none;
+    height: auto;
+    border-radius: 20px;
+    border-bottom: 4px solid var(--encre);
+    box-shadow: 0 4px 0 var(--encre);
+    padding-bottom: 0;
+    animation: fenetre-glisse 0.2s ease-out;
+  }
+
+  /* Les grandes fenêtres (la mine, le Personnel) un peu plus larges, les petites plus étroites. */
+  .fenetre-grande {
+    width: min(620px, 66vw);
+  }
+
+  .fenetre-petite {
+    width: min(420px, 52vw);
+    align-self: center;
+    height: auto;
+    max-height: calc(100dvh - 12px);
+  }
+
+  .fenetre-entete {
+    padding: 4px 6px 4px 12px;
+    gap: 8px;
+  }
+
+  .fenetre-entete h2 {
+    font-size: 1.1rem;
+  }
+
+  .fenetre-icone {
+    font-size: 1.25rem;
+  }
+
+  .fenetre-entete .btn-rond {
+    width: 40px;
+    height: 40px;
+  }
+
+  .fenetre-corps {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .fenetre-pied {
+    padding: 8px 10px 10px;
+  }
+
+  /* --- Le bandeau du haut et ses boutons --------------------------------------------------- */
+
+  .interface-haut {
+    gap: 6px;
+  }
+
+  .hud {
+    gap: 4px;
+  }
+
+  .hud-ligne {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .hud-case {
+    min-height: 36px;
+    padding: 2px 8px 2px 4px;
+    font-size: 0.82rem;
+    border-radius: 13px;
+  }
+
+  .hud-icone {
+    width: 26px;
+    height: 26px;
+    font-size: 0.95rem;
+  }
+
+  .hud-jauge {
+    width: 44px;
+  }
+
+  .boutons-haut {
+    gap: 5px;
+  }
+
+  .boutons-haut .btn-rond {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+  }
+
+  .interface-haut-droite {
+    gap: 6px;
+    /* (la colonne de droite s'arrête au-dessus des gros boutons ronds du bas) */
+    max-height: calc(100dvh - var(--marge-haut) - 96px);
+  }
+
+  /* La liste des tâches : plus étroite, une seule tâche à la fois, elle défile si besoin. */
+  .taches {
+    width: min(270px, 36vw);
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .taches-titre {
+    min-height: 32px;
+    font-size: 0.95rem;
+  }
+
+  .tache-suivante {
+    display: none;
+  }
+
+  .tache {
+    padding: 5px 8px;
+    gap: 6px;
+  }
+
+  .tache-texte {
+    font-size: 0.8rem;
+  }
+
+  .tache-icone {
+    font-size: 1.15rem;
+  }
+
+  /* La quête finale : en une ligne, plus petite. */
+  .quete-chateau {
+    width: min(270px, 36vw);
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .quete-icone {
+    width: 32px;
+    height: 32px;
+    font-size: 1.15rem;
+  }
+
+  .quete-titre {
+    font-size: 0.7rem;
+  }
+
+  .quete-texte {
+    font-size: 0.82rem;
+  }
+
+  /* Les messages, plus haut (sous le bandeau) et plus petits. */
+  .messages {
+    top: 50px;
+    width: min(380px, 50vw);
+  }
+
+  /* --- Les gros boutons ronds du bas ----------------------------------------------------- */
+
+  .interface-bas {
+    bottom: calc(var(--marge-bas) + 4px);
+  }
+
+  .gros-rond {
+    width: 66px;
+    height: 66px;
+  }
+
+  .gros-rond-icone {
+    font-size: 1.8rem;
+  }
+
+  .gros-rond-texte {
+    bottom: -9px;
+    font-size: 0.72rem;
+  }
+
+  .gros-rond-petit {
+    width: 52px;
+    height: 52px;
+  }
+
+  .gros-rond-petit .gros-rond-icone {
+    font-size: 1.25rem;
+  }
+
+  /* La barre des constructions (poser, rails...) : plus basse, plus étroite. */
+  .barre-edition {
+    max-width: min(620px, 74vw);
+    margin-inline: auto;
+    gap: 6px;
+    padding: 6px 10px;
+  }
+
+  .barre-edition .consigne {
+    font-size: 0.8rem;
+  }
+
+  /* --- L'accueil ------------------------------------------------------------------------ */
+
+  /* (sous 760 px de large, accueil.css empile tout comme sur un téléphone debout : ici, on
+     garde la mise en page en largeur, sans défiler la page) */
+  .accueil {
+    overflow: hidden;
+  }
+
+  .accueil-scene {
+    bottom: 0;
+    height: auto;
+  }
+
+  .accueil-bandeau {
+    position: absolute;
+    left: 50%;
+    width: calc(100% - 16px);
+    margin: 0;
+    translate: -50% 0;
+    flex-wrap: nowrap;
+  }
+
+  .accueil-bandeau-droite {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .accueil-contenu {
+    position: absolute;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 0;
+    padding: 0;
+  }
+
+  .accueil-panneau,
+  .accueil-jouer,
+  .accueil-classement {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .accueil-version {
+    position: absolute;
+    right: 8px;
+    bottom: 4px;
+    margin: 0;
+  }
+
+  .accueil-bandeau {
+    top: 6px;
+    padding: 4px 10px;
+    gap: 8px;
+    border-radius: 16px;
+    box-shadow: 0 4px 0 var(--encre);
+  }
+
+  .accueil-logo-icone {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+  }
+
+  .accueil-logo {
+    font-size: 1.3rem;
+  }
+
+  .accueil-accroche {
+    display: none;
+  }
+
+  /* Les langues : seulement les drapeaux (le nom de la langue reste lu par les lecteurs d'écran). */
+  .accueil-langues .onglet {
+    min-width: 40px;
+    min-height: 36px;
+    padding: 2px 6px;
+    font-size: 0;
+  }
+
+  .accueil-langues .onglet .drapeau {
+    width: 26px;
+    height: 18px;
+  }
+
+  .accueil-contenu {
+    top: 62px;
+    bottom: 8px;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+  }
+
+  .accueil-panneau {
+    padding: 10px;
+    gap: 8px;
+    border-radius: 18px;
+  }
+
+  .accueil-jouer {
+    width: min(360px, 46vw);
+  }
+
+  .accueil-classement {
+    width: min(340px, 44vw);
+  }
+
+  .accueil-gros-bouton {
+    min-height: 56px;
+    font-size: 1.35rem;
+  }
+
+  .accueil-etapes {
+    display: none;
+  }
+
+  /* Un nouveau joueur : le bouton Commencer d'abord, puis les 4 étapes en petit (2 × 2, sans
+     leur phrase). */
+  .accueil-jouer .accueil-gros-bouton {
+    order: -1;
+  }
+
+  .accueil-etapes-liste {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .accueil-etapes-liste li {
+    gap: 6px;
+    padding: 4px 6px;
+    font-size: 0.82rem;
+  }
+
+  .accueil-etapes-liste .accueil-etape-icone {
+    display: none;
+  }
+
+  .accueil-etapes-liste .discret {
+    display: none;
+  }
+
+  /* La fenêtre du château : son dessin plus petit (le texte et le bouton restent visibles). */
+  .fenetre-chateau .chateau-vignette {
+    width: auto;
+    height: 110px;
+  }
+
+  /* Les langues dans les réglages : elles vont à la ligne. */
+  .reglages-langues {
+    flex-wrap: wrap;
+  }
+}
+
+@keyframes fenetre-glisse {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}
+
+/* =========================================================================
+   Le téléphone tenu debout : le jeu demande de le tourner (TournerTelephone.tsx). Seulement sur
+   un écran tactile étroit : un ordinateur avec une fenêtre étroite n'est pas concerné.
+   ========================================================================= */
+
+.tourner-telephone {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 600px) and (pointer: coarse) {
+  .tourner-telephone {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+    background: var(--creme);
+    color: var(--encre);
+    text-align: center;
+  }
+
+  .tourner-telephone-dessin {
+    width: 110px;
+    height: 110px;
+    animation: tourner-telephone 2s ease-in-out infinite;
+  }
+
+  .tourner-telephone strong {
+    font-family: var(--police-titre);
+    font-size: 1.6rem;
+  }
+}
+
+@keyframes tourner-telephone {
+  0%,
+  25% {
+    transform: rotate(0deg);
+  }
+  55%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}

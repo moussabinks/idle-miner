@@ -1077,4 +1077,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Ta mine continue de tourner : tu peux encore gagner de l’argent et monter au classement.': 'Your mine keeps running: you can still earn money and climb the leaderboard.',
   'Ton château': 'Your castle',
   'Un vieux château en ruine domine la vallée, entre les montagnes. Restaure-le pour devenir le maître des lieux : c’est la quête finale de Mega Digger !': 'An old ruined castle looks over the valley, between the mountains. Restore it to become the lord of the land: it’s the final quest of Mega Digger!',
+  // (27/10) Le téléphone tenu debout
+  'Tourne ton téléphone': 'Turn your phone',
+  'Mega Digger se joue à l’horizontale.': 'Mega Digger is played sideways.',
 }
