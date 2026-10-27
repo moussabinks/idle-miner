@@ -294,7 +294,7 @@ Les compteurs de la partie (`Statistiques` dans `mineur.ts`) :
 | `tempsDeJeu` | le temps de jeu, en secondes (hors ligne compris) : il sert aussi d'horloge aux bonus |
 | `pubsVues` | (25/10) les publicités regardées jusqu'au bout |
 
-La fenêtre montre 4 tuiles (💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ Mine niveau *N*, ⏱️ Temps de jeu), « 💰 D'où vient ton argent » (une barre en 3 : 💰 Toi (le coffre vendu à la main ; la réserve des ateliers vendue d'un clic compte aussi ici), 🛤️ Wagonnet, ⚙️ Foreuse ; `argentParSource`), « 🧱 Tes blocs cassés en cliquant » (les 12 sortes les plus cassées, `blocsLesPlusCasses`) et une liste (blocs sortis de la mine, des mineurs, de la foreuse, voyages, salaires, diamants). Il n'y a plus d'onglet « Depuis le début » (il servait aux prestiges).
+La fenêtre montre 4 tuiles (💵 Argent gagné, ⛏️ Blocs cassés, 🕳️ Mine niveau *N*, ⏱️ Temps de jeu : depuis le 27/10, seulement le temps passé le jeu ouvert et à l’écran, `stats.tempsOuvert`), « 💰 D'où vient ton argent » (une barre en 3 : 💰 Toi (le coffre vendu à la main ; la réserve des ateliers vendue d'un clic compte aussi ici), 🛤️ Wagonnet, ⚙️ Foreuse ; `argentParSource`), « 🧱 Tes blocs cassés en cliquant » (les 12 sortes les plus cassées, `blocsLesPlusCasses`) et une liste (blocs sortis de la mine, des mineurs, de la foreuse, voyages, salaires, diamants). Il n'y a plus d'onglet « Depuis le début » (il servait aux prestiges).
 
 ---
 

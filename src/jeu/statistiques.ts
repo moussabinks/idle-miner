@@ -17,3 +17,12 @@ export function argentParSource(stats: Statistiques): { joueur: number; wagonnet
 export function blocsLesPlusCasses(stats: Statistiques): [IdBloc, number][] {
   return (Object.entries(stats.blocsParType) as [IdBloc, number][]).filter(([, n]) => n > 0).sort(([, a], [, b]) => b - a)
 }
+
+// (27/10, demandé par le propriétaire) Le temps de jeu de l'écran 📊 : seulement le temps passé
+// le jeu ouvert et à l'écran (pas les absences, quand le manager fait tourner la partie). Une
+// horloge qui saute d'un coup (ordinateur en veille...) compte au plus TIC_MAX secondes.
+const TIC_MAX = 5
+
+export function ajouterTempsOuvert(stats: Statistiques, secondes: number): void {
+  stats.tempsOuvert = (stats.tempsOuvert ?? 0) + Math.max(0, Math.min(TIC_MAX, secondes))
+}

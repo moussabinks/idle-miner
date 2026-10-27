@@ -11,6 +11,7 @@ import { photoPartie, resumerAbsence, vendreCoffreAuRetour, type ResumeAbsence }
 import { charger, marquerJoue, sauvegarder, secondesDepuisSauvegarde } from './jeu/sauvegarde'
 import { verifierSucces } from './jeu/succes'
 import { avancerTemps } from './jeu/temps'
+import { ajouterTempsOuvert } from './jeu/statistiques'
 import { joueurPousse } from './jeu/wagonnet'
 import { evenementsEntre, type Evenement } from './evenements'
 import { sons } from './sons'
@@ -198,7 +199,13 @@ export function usePartie(idMonde: string) {
       const maintenant = performance.now()
       const secondes = Math.min(ABSENCE_MAX, (maintenant - derniereFois) / 1000)
       derniereFois = maintenant
-      if (secondes > 0) jouer((e) => avancerTemps(e, secondes, aleatoireNavigateur))
+      if (secondes <= 0) return
+      // (27/10) Le temps « jeu ouvert » de l'écran 📊 : seulement quand le jeu est à l'écran.
+      const visible = document.visibilityState === 'visible'
+      jouer((e) => {
+        if (visible) ajouterTempsOuvert(e.stats, secondes)
+        return avancerTemps(e, secondes, aleatoireNavigateur)
+      })
     }
     // L'horloge bat toujours (même quand les images de l'écran s'arrêtent, onglet caché).
     const horloge = setInterval(avancer, INTERVALLE_HORLOGE)

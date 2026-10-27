@@ -108,7 +108,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Classement hors ligne': 'Leaderboard offline',
   'Chargement du classement…': 'Loading leaderboard…',
   'Personne n’est encore classé : à toi d’être le premier !': 'Nobody’s ranked yet: be the first!',
-  'Le niveau de sa mine (il ne compte pas dans le classement)': 'Their mine level (doesn’t count for the ranking)',
   'Classement': 'Leaderboard',
   'L’argent gagné en tout, dans le meilleur monde de chaque joueur': 'Total money earned, in each player’s best world',
   'Argent gagné': 'Money earned',

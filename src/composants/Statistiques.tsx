@@ -111,7 +111,7 @@ export function FenetreStatistiques({ etat, onFermer }: { etat: EtatJeu; onFerme
         <Tuile emoji="💵" titre={t('Argent gagné')} valeur={`${nombre(stats.argentGagne)} $`} />
         <Tuile emoji="⛏️" titre={t('Blocs cassés')} valeur={nombre(stats.blocsCasses)} />
         <Tuile emoji="🕳️" titre={t('Mine')} valeur={t('niveau {n}', { n: etat.niveauMine })} />
-        <Tuile emoji="⏱️" titre={t('Temps de jeu')} valeur={duree(stats.tempsDeJeu)} />
+        <Tuile emoji="⏱️" titre={t('Temps de jeu')} valeur={duree(stats.tempsOuvert ?? 0)} />
       </div>
 
       <div className="stat-colonnes">

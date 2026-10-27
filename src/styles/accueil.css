@@ -411,9 +411,9 @@
 .classement-ligne {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 40px;
-  padding: 4px 10px;
+  padding: 4px 6px 4px 8px;
   border: var(--trait) solid var(--encre);
   border-radius: 12px;
   background: var(--blanc);
@@ -426,7 +426,7 @@
 
 .classement-rang {
   flex-shrink: 0;
-  width: 40px;
+  width: 28px;
   font-family: var(--police-titre);
   font-size: 1.05rem;
   color: var(--encre-douce);
@@ -443,6 +443,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 900;
+  font-size: 0.92rem;
 }
 
 .classement-valeur {
@@ -452,9 +453,13 @@
 }
 
 /* (26/10) « Visiter » : le village du joueur. Sur un petit écran, l'icône seule. */
-.classement-visiter {
+/* (27/10, demandé par le propriétaire) Un bouton plus petit : la place va au pseudo. */
+.classement-visiter.btn {
   flex-shrink: 0;
   min-height: 40px;
+  gap: 3px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 480px) {

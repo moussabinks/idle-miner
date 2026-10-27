@@ -298,5 +298,58 @@ export function planterPaysage(): Plante[] {
     }
   })
 
+  // 4. (27/10, demandé par le propriétaire) Autour de la colline du château, il y avait beaucoup
+  // d'herbe vide : des bosquets, des sapins, des buissons et des rochers, tout autour d'elle (sans
+  // jamais la toucher, ni toucher son chemin).
+  grille(2.2, 1.4, (x, y) => {
+    const d = Math.hypot(x - CENTRE_CHATEAU.x, y - CENTRE_CHATEAU.y)
+    if (d < RAYON_COLLINE + 0.5 || d > RAYON_COLLINE + 8 || dehors(x, y) < 1.2 || hasard() < 0.1) return
+    // (si la place manque, de plus en plus bas)
+    for (const sorte of [tirer(AUTOUR_DU_CHATEAU), 'colline-buisson', 'colline-fleurie', 'colline-petite', 'rochers'] as SorteVignette[]) {
+      const p = { sorte, x, y, echelle: ECHELLE }
+      if (possibleAutourDuChateau(p)) {
+        plantes.push(p)
+        return
+      }
+    }
+  })
+
   return plantes
+}
+
+// (27/10) Ce qui pousse autour de la colline du château.
+const AUTOUR_DU_CHATEAU: Tirage = [
+  { sorte: 'bosquet', poids: 2.5 },
+  { sorte: 'colline-buisson', poids: 2 },
+  { sorte: 'colline-sapins', poids: 1.5 },
+  { sorte: 'rochers', poids: 0.7 },
+  { sorte: 'colline-fleurie', poids: 1.4 },
+  { sorte: 'colline-petite', poids: 0.8 },
+]
+
+// Le rayon du pied de la colline du château, en cases (voir chateau.mjs).
+const RAYON_COLLINE = 11.2
+
+// Une vignette autour du château : dans la vue, ni sur la plage ni devant la cascade, et jamais
+// sur la colline (ni sur sa bosse, ni sur le château) ni sur le chemin. La colline est un cercle
+// de cases : à l'écran, une ellipse, qu'on agrandit vers le haut pour couvrir sa bosse.
+function possibleAutourDuChateau(p: Plante): boolean {
+  const { x0, y0, x1, y1 } = LIMITES_CAMERA
+  const cadre = cadreDe(p)
+  if (!seCroisent(cadre, { x0: x0 - 40, y0: y0 - 20, x1: x1 + 40, y1: y1 + 40 })) return false
+  if (surLaPlage(p.x, p.y + 0.4)) return false
+  if (seCroisent(cadre, zoneChemin())) return false
+  if (zonesAGarder().some((g) => seCroisent(g.zone, cadre))) return false
+  // (les vignettes ont un peu de vide autour de leur dessin)
+  const l = cadre.x1 - cadre.x0
+  const h = cadre.y1 - cadre.y0
+  const dessin = { x0: cadre.x0 + l * 0.12, y0: cadre.y0 + h * 0.25, x1: cadre.x1 - l * 0.12, y1: cadre.y1 - h * 0.1 }
+  const centre = versEcran(CENTRE_CHATEAU.x, CENTRE_CHATEAU.y)
+  const bosse = 60
+  const rx = RAYON_COLLINE * DEMI_LARGEUR * Math.SQRT2 + 12
+  const ry = RAYON_COLLINE * (versEcran(1, 1).y - versEcran(0, 0).y) * (Math.SQRT2 / 2) + bosse / 2 + 12
+  const cy = centre.y - bosse / 2
+  const px = Math.max(dessin.x0, Math.min(centre.x, dessin.x1)) - centre.x
+  const py = Math.max(dessin.y0, Math.min(cy, dessin.y1)) - cy
+  return (px / rx) ** 2 + (py / ry) ** 2 >= 1
 }

@@ -57,7 +57,8 @@ export type Statistiques = {
   blocsMineurs: number
   diamantsTrouves: number
   salairesPayes: number // les salaires payés aux mineurs et au manager
-  tempsDeJeu: number // en secondes
+  tempsDeJeu: number // en secondes (le temps de la partie, absences comprises : le manager travaille)
+  tempsOuvert?: number // (27/10) en secondes : le temps passé le jeu ouvert, à l'écran (absent : 0)
   voyagesWagonnet: number
   meilleurCombo?: number // (23/10) le plus long combo de clics (absent : 0)
   pubsVues?: number // (25/10) les publicités regardées (absent : 0)
