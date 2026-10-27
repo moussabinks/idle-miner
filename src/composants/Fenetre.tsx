@@ -60,7 +60,7 @@ export function Fenetre({ titre, icone, couleur = 'vert', taille = 'moyenne', vo
           )}
           <h2 id={idTitre}>{titre}</h2>
           {fermable && (
-            <button className="btn btn-blanc btn-rond" onClick={onFermer} aria-label={t('Fermer')}>
+            <button className="btn btn-blanc btn-rond" onClick={onFermer} aria-label={t('Fermer')} data-tuto="fermer-fenetre">
               ✖
             </button>
           )}

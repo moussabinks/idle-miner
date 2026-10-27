@@ -1100,4 +1100,8 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Menu principal': 'Menu principal',
   '💰 Ventes × 2 pendant {minutes} min !': '💰 Vendas × 2 por {minutes} min!',
   '🎁 Ta prochaine amélioration est offerte : choisis-la !': '🎁 Sua próxima melhoria é grátis: escolha!',
+  // (27/10) Le tutoriel : fermer une fenêtre qui gêne
+  'Ferme cette fenêtre': 'Feche esta janela',
+  'Touche ✖, en haut à droite de la fenêtre.': 'Toque em ✖, no canto superior direito da janela.',
+  'Ferme !': 'Feche!',
 }
