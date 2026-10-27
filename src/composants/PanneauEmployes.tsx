@@ -93,7 +93,7 @@ import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
 import { batimentPose } from '../jeu/village'
-import { forcePousseur, ligneDe, placesChariot } from '../jeu/wagonnet'
+import { forcePousseur, ligneDe, placesChariot, placesReelles } from '../jeu/wagonnet'
 import { nombreAbrege } from '../nombres'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -227,6 +227,8 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
   const vitesseSuivante = pousseur ? (NIVEAUX_POUSSEUR[employe.niveau + 1] ?? null) : null
   const chariotSuivant = pousseur ? (NIVEAUX_CHARIOT_POUSSEUR[(employe.chariot ?? 0) + 1] ?? null) : null
   const coutChariot = coutChariotPousseur(etat, employe)
+  // (27/10) Les vraies places de son chariot : agrandi d'autant que sa vitesse est adoucie.
+  const places = (n: number) => placesReelles(etat, n, employe.trajet, employe)
   // Avec une nouvelle pioche, combien il creuserait.
   const avecPiocheSuivante = piocheSuivante ? vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) : 0
   const trajetsPossibles = LISTE_LIAISONS.filter((l) => l === employe.trajet || (ligneDe(etat, l) !== null && !trajetPris(etat, l)))
@@ -250,7 +252,7 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
       <p className="carte-employe-chiffres">
         {pousseur ? (
           <>
-            🛤️ {employe.trajet ? nomTrajet(employe.trajet) : t('Aucun trajet')} · 🛒 {t('{n} places', { n: placesChariot(employe) })}
+            🛤️ {employe.trajet ? nomTrajet(employe.trajet) : t('Aucun trajet')} · 🛒 {t('{n} places', { n: places(placesChariot(employe)) })}
           </>
         ) : joaillier ? (
           <>
@@ -333,10 +335,10 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           effet={
             chariotSuivant ? (
               <>
-                {t('{n} places', { n: placesChariot(employe) })} → <strong>{t('{n} places', { n: chariotSuivant.places })}</strong>
+                {t('{n} places', { n: places(placesChariot(employe)) })} → <strong>{t('{n} places', { n: places(chariotSuivant.places) })}</strong>
               </>
             ) : (
-              t('{n} places', { n: placesChariot(employe) })
+              t('{n} places', { n: places(placesChariot(employe)) })
             )
           }
           cout={chariotSuivant ? coutChariot : null}

@@ -447,6 +447,16 @@ export const COUT_RAIL: Cout = { materiaux: { fer: 3 } }
 // Les vitesses, en cases par seconde.
 export const VITESSE_POUSSE_JOUEUR = 3
 export const VITESSE_POUSSE_MINEUR = 2.5
+// (27/10, demandé par le propriétaire) En fin de partie, les pousseurs allaient « hyper vite » sur
+// la carte : rareté (× 3 au plus), niveau de vitesse (× 2,6), générateur (× 2) et bonus de la
+// boutique (× 2) se multipliaient, jusqu'à 78 cases par seconde (26 fois le joueur). Leur vitesse
+// est maintenant adoucie au-dessus de VITESSE_DOUCE_POUSSEUR : elle monte encore un peu (au plus
+// ~6,5 cases/s), et leur chariot grandit d'autant pour qu'ils transportent toujours autant (voir
+// vitesseAdoucie et compensationChariot dans wagonnet.ts).
+// Pour revenir à l'ancienne vitesse (sans adoucir ni agrandir le chariot) : mettre false.
+export const ADOUCIR_VITESSE_POUSSEURS = true
+export const VITESSE_DOUCE_POUSSEUR = 3.75 // cases par seconde (1,5 fois un pousseur débutant)
+export const FORCE_ADOUCISSEMENT = 0.25 // au-dessus : chaque doublement de vitesse ne fait que + 17 %
 // Le temps pour charger le wagonnet au départ, et pour le vider (ou vendre) à l'arrivée : toujours
 // 1 seconde (23/10).
 export const SECONDES_CHARGEMENT_WAGONNET = 1

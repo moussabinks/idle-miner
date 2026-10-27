@@ -196,6 +196,7 @@ Total : 745 700 $ + 120 fer + 130 redstone + 500 or + 60 émeraude + 255 saphir 
 | `COUT_RAIL` | 3 fer la case (à partir du niveau 2 du joueur), rendus quand on retire le rail |
 | `VITESSE_POUSSE_JOUEUR` | 3 cases/s |
 | `VITESSE_POUSSE_MINEUR` | 2,5 cases/s × la vitesse du pousseur (`NIVEAUX_POUSSEUR`) × sa rareté (`forcePousseur`) |
+| `VITESSE_DOUCE_POUSSEUR` (27/10) | 3,75 cases/s : au-dessus, la vitesse vue sur la carte est **adoucie** (`vitesseAdoucie` : × (1 + 0,25 × ln(v / 3,75)), au plus ~6,6 cases/s au lieu de 78), et le **chariot grandit d'autant** (`compensationChariot` : le rapport des durées d'aller-retour) : le pousseur transporte toujours autant par seconde. Interrupteur : `ADOUCIR_VITESSE_POUSSEURS` (false = comme avant). |
 | électrique | la vitesse du pousseur × (1 + bonus du générateur) : × 1,3 à × 2 (26/10 ; × 1,75 avec 5 niveaux) |
 | sur sa lancée (électrique sans courant) | 1,25 case/s |
 
