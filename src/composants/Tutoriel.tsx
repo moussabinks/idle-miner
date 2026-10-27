@@ -158,6 +158,52 @@ function defilerJusqua(element: Element) {
   else if (r.bottom > b.bottom) boite.scrollBy({ top: versCss(r.bottom - b.bottom) + 12, behavior: 'smooth' })
 }
 
+// (27/10) La forme de la cible, mesurée pour que l'anneau doré ne la touche jamais :
+//   - sa vraie taille (offsetWidth : sans l'animation qui la fait palpiter ou respirer) ;
+//   - ce qui dépasse d'elle (la pastille « 3 », l'étiquette « Bâtiments » sous un rond) et son
+//     ombre portée (le relief sous les boutons) ;
+//   - l'arrondi de ses coins (un rond reste un rond : l'anneau prend la même forme).
+// Les positions sont celles du CSS (versCss), par rapport au milieu de la cible.
+type FormeCible = { debordants: Element[]; ombreBas: number; arrondi: number; rond: boolean }
+
+function formeDe(element: Element): FormeCible {
+  const style = getComputedStyle(element)
+  // Les morceaux posés en absolu (pastilles, étiquettes) : ils peuvent dépasser de la cible.
+  const debordants = [...element.querySelectorAll('*')].filter((e) => getComputedStyle(e).position === 'absolute').slice(0, 6)
+  // L'ombre dure sous les boutons (« 0px 5px 0px ») : elle allonge le bouton vers le bas.
+  let ombreBas = 0
+  for (const ombre of style.boxShadow.split(/,(?![^(]*\))/)) {
+    if (ombre.includes('inset')) continue
+    const nombres = ombre.replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g)
+    if (nombres && nombres.length >= 2) ombreBas = Math.max(ombreBas, parseFloat(nombres[1]))
+  }
+  const largeur = element instanceof HTMLElement ? element.offsetWidth : 0
+  const hauteur = element instanceof HTMLElement ? element.offsetHeight : 0
+  const brut = style.borderTopLeftRadius
+  const arrondi = brut.endsWith('%') ? (parseFloat(brut) / 100) * Math.min(largeur, hauteur) : parseFloat(brut) || 0
+  const rond = largeur > 0 && arrondi >= Math.min(largeur, hauteur) / 2 - 1
+  return { debordants, ombreBas, arrondi: Math.min(arrondi, Math.min(largeur, hauteur) / 2), rond }
+}
+
+// Le plus grand arrondi des coins d'une boîte tel que tous les points restent dedans (ils sont à
+// l'intérieur de la boîte, mais un coin trop arrondi en couperait un).
+function arrondiQuiContient(boite: { gauche: number; droite: number; haut: number; bas: number }, points: [number, number][]): number {
+  const maximum = Math.min(boite.droite - boite.gauche, boite.bas - boite.haut) / 2
+  const dedans = (rayon: number) =>
+    points.every(([x, y]) => {
+      // le centre de l'arrondi du coin le plus proche du point
+      const cx = x < boite.gauche + rayon ? boite.gauche + rayon : x > boite.droite - rayon ? boite.droite - rayon : x
+      const cy = y < boite.haut + rayon ? boite.haut + rayon : y > boite.bas - rayon ? boite.bas - rayon : y
+      return Math.hypot(x - cx, y - cy) <= rayon + 0.5
+    })
+  for (let rayon = maximum; rayon > 0; rayon -= 1) if (dedans(rayon)) return rayon
+  return 0
+}
+
+// La cible palpite jusqu'à 6 % plus grande (tuto-cible-palpite, dans fenetres.css) : l'anneau
+// laisse la place pour sa plus grande taille.
+const PALPITE_MAX = 1.06
+
 type Suivi = {
   visible: boolean
   dessous: boolean // la cible est tout en haut : la flèche passe dessous
@@ -173,6 +219,7 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
     let image = 0
     let defile = false
     let marquee: Element | null = null
+    let forme: FormeCible | null = null
     let derniere = ''
     let n = 0
     const suivre = () => {
@@ -185,6 +232,7 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
           marquee = element
           defile = false
         }
+        forme = marquee ? formeDe(marquee) : null
       }
       const r = marquee?.getBoundingClientRect() ?? null
       // Un bouton dans une fenêtre : on la fait défiler jusqu'à lui (une fois).
@@ -193,17 +241,82 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
         defile = true
       }
       const visible = r !== null && r.width > 0
-      const cle = visible ? `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}` : ''
+      // La boîte à entourer (en positions du CSS : l'interface peut être réduite d'un bloc,
+      // src/echelle.ts) : la cible à sa vraie taille, autour de son milieu, plus ce qui dépasse.
+      let boite = { x: 0, y: 0, l: 0, h: 0, arrondi: 18 }
+      if (visible && marquee) {
+        const milieuX = versCss(r.left + r.width / 2)
+        const milieuY = versCss(r.top + r.height / 2)
+        const vraieLargeur = marquee instanceof HTMLElement && marquee.offsetWidth > 0 ? marquee.offsetWidth : versCss(r.width)
+        const vraieHauteur = marquee instanceof HTMLElement && marquee.offsetHeight > 0 ? marquee.offsetHeight : versCss(r.height)
+        // (l'échelle de l'animation en ce moment : pour ramener ce qui dépasse à sa vraie place)
+        const animation = versCss(r.width) / vraieLargeur || 1
+        let gauche = -vraieLargeur / 2
+        let droite = vraieLargeur / 2
+        let haut = -vraieHauteur / 2
+        let bas = vraieHauteur / 2 + (forme?.ombreBas ?? 0)
+        // Le contour de chaque morceau (des points par rapport au milieu de la cible) : pour un rond,
+        // l'anneau longe ces points au plus près (voir arrondiQuiContient).
+        const contour: [number, number][] = []
+        const ajouterRond = (cx: number, cy: number, r: number) => {
+          for (let k = 0; k < 32; k++) contour.push([cx + Math.cos((k / 32) * Math.PI * 2) * r, cy + Math.sin((k / 32) * Math.PI * 2) * r])
+        }
+        // le rond lui-même, et son ombre dure en dessous
+        ajouterRond(0, 0, vraieLargeur / 2)
+        if (forme?.ombreBas) ajouterRond(0, forme.ombreBas, vraieLargeur / 2)
+        for (const morceau of forme?.debordants ?? []) {
+          const m = morceau.getBoundingClientRect()
+          if (m.width <= 0) continue
+          const g = (versCss(m.left) - milieuX) / animation
+          const d = (versCss(m.right) - milieuX) / animation
+          const hh = (versCss(m.top) - milieuY) / animation
+          const bb = (versCss(m.bottom) - milieuY) / animation
+          gauche = Math.min(gauche, g)
+          droite = Math.max(droite, d)
+          haut = Math.min(haut, hh)
+          bas = Math.max(bas, bb)
+          // une pastille ronde compte comme un rond, le reste par les coins de sa boîte (arrondis)
+          const rayonMorceau = Math.min(d - g, bb - hh) / 2
+          const arrondiMorceau = parseFloat(getComputedStyle(morceau).borderTopLeftRadius) || 0
+          if (arrondiMorceau >= rayonMorceau - 1 && Math.abs(d - g - (bb - hh)) < 2) ajouterRond((g + d) / 2, (hh + bb) / 2, rayonMorceau)
+          else {
+            const a = Math.min(arrondiMorceau, rayonMorceau)
+            for (const [cx, cy, sx, sy] of [[g + a, hh + a, -1, -1], [d - a, hh + a, 1, -1], [g + a, bb - a, -1, 1], [d - a, bb - a, 1, 1]])
+              for (let k = 0; k <= 6; k++) {
+                const angle = (k / 6) * (Math.PI / 2)
+                contour.push([cx + sx * Math.cos(angle) * a, cy + sy * Math.sin(angle) * a])
+              }
+          }
+        }
+        // La place pour la plus grande taille de la cible quand elle palpite (autour de son milieu).
+        if (!surBatiment) {
+          gauche *= PALPITE_MAX
+          droite *= PALPITE_MAX
+          haut *= PALPITE_MAX
+          bas *= PALPITE_MAX
+        }
+        const l = droite - gauche
+        const h = bas - haut
+        // Un rond : les coins les plus arrondis possible sans toucher aucun morceau (un vrai rond
+        // s'il n'y a rien autour ; sinon, l'anneau longe le rond, la pastille et l'étiquette).
+        // Sinon, les mêmes coins arrondis que la cible.
+        const echelleContour = surBatiment ? 1 : PALPITE_MAX
+        const arrondi = forme?.rond
+          ? arrondiQuiContient({ gauche, droite, haut, bas }, contour.map(([x, y]) => [x * echelleContour, y * echelleContour]))
+          : Math.min((forme?.arrondi ?? 12) * PALPITE_MAX, Math.min(l, h) / 2)
+        boite = { x: milieuX + gauche, y: milieuY + haut, l, h, arrondi }
+      }
+      const cle = visible ? `${Math.round(boite.x)},${Math.round(boite.y)},${Math.round(boite.l)},${Math.round(boite.h)},${Math.round(boite.arrondi)}` : ''
       if (visible && cle !== derniere && calque.current) {
         derniere = cle
         const style = calque.current.style
-        // (27/10) en positions du CSS : l'interface peut être réduite d'un bloc (src/echelle.ts)
-        style.setProperty('--x', `${Math.round(versCss(r.left))}px`)
-        style.setProperty('--y', `${Math.round(versCss(r.top))}px`)
-        style.setProperty('--l', `${Math.round(versCss(r.width))}px`)
-        style.setProperty('--h', `${Math.round(versCss(r.height))}px`)
+        style.setProperty('--x', `${Math.round(boite.x)}px`)
+        style.setProperty('--y', `${Math.round(boite.y)}px`)
+        style.setProperty('--l', `${Math.round(boite.l)}px`)
+        style.setProperty('--h', `${Math.round(boite.h)}px`)
+        style.setProperty('--arrondi', `${Math.round(boite.arrondi)}px`)
       }
-      const dessous = visible && !surBatiment && versCss(r.top) < 140
+      const dessous = visible && !surBatiment && boite.y < 140
       const enHaut = visible && r.top + r.height / 2 < window.innerHeight * 0.5
       const avant = dernierSuivi.current
       if (visible !== avant.visible || dessous !== avant.dessous || enHaut !== avant.enHaut) {
