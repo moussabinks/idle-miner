@@ -63,8 +63,11 @@ const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: bool
   { id: 'lanterne', x: 22, y: 11 },
   { id: 'buisson', x: 11, y: 19 },
   { id: 'buisson', x: 19, y: 11 },
-  // Sous le générateur, une fontaine sur l'axe ; dans les boucles du marché, des bancs, des fleurs.
+  // Sous le générateur, une fontaine sur l'axe, et (27/10) une de chaque côté de lui ; dans les
+  // boucles du marché, des bancs, des fleurs.
   { id: 'fontaine', x: 22, y: 22 },
+  { id: 'fontaine', x: 14, y: 21 },
+  { id: 'fontaine', x: 21, y: 14 },
   { id: 'buisson', x: 26, y: 26 },
   { id: 'fleurs-violettes', x: 25, y: 25 },
   { id: 'lanterne', x: 27, y: 25 },
@@ -151,7 +154,25 @@ const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: Id
 
 // Les mineurs marchent à 4 cases par seconde dans le jeu : ici un peu moins, c'est plus joli.
 const VITESSE_SCENE = 2.2
-const VITESSE_WAGONNET = 2.5
+// (27/10, demandé par le propriétaire : 1,5 fois plus vite, avant 2,5)
+const VITESSE_WAGONNET = 3.75
+
+// (27/10) L'ascenseur de la mine monte plein de minerais, se vide en haut, redescend vide, se
+// remplit en bas, et recommence (en secondes).
+const ASCENSEUR = { trajet: 1.1, arret: 0.35 }
+const CONTENU_ASCENSEUR = { or: 3, diamant: 2, emeraude: 2, rubis: 2, saphir: 1 }
+
+// La hauteur de la caisse (0 : en haut, 1 : au fond) et si elle est pleine, à ce moment.
+function caisseAscenseur(temps: number): { f: number; pleine: boolean } {
+  const { trajet, arret } = ASCENSEUR
+  const cycle = 2 * (trajet + arret)
+  const t = ((temps % cycle) + cycle) % cycle
+  const doux = (k: number) => k * k * (3 - 2 * k) // (elle démarre et s'arrête en douceur)
+  if (t < trajet) return { f: 1 - doux(t / trajet), pleine: true } // elle monte
+  if (t < trajet + arret) return { f: 0, pleine: true } // en haut : on la vide
+  if (t < 2 * trajet + arret) return { f: doux((t - trajet - arret) / trajet), pleine: false } // elle redescend
+  return { f: 1, pleine: false } // au fond : on la remplit
+}
 
 // Le rectangle du monde (en pixels) où tient tout le village de la scène : centré sur l'axe du
 // village, un peu au-dessus du générateur (la mine, en haut, est haute).
@@ -212,12 +233,11 @@ function objetsFixes(noms: { manager: string; recruteur: string }): ReactNode[] 
     if (b.id === 'puits') {
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
-        <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
-          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} niveau={7} ascenseur hauteurCabine={0.35} />
-        </BoiteSvg>,
+        // (son ascenseur, qui bouge, est dessiné à chaque image : voir SceneAccueil)
       )
     } else {
-      objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" />)
+      // (27/10, demandé par le propriétaire) La foreuse fore : sa mèche tourne, comme au village.
+      objets.push(<ImageBatiment key={b.id} id={b.id} x={b.x} y={b.y} miroir={b.miroir} classe="" enMarche={b.id === 'foreuse'} />)
     }
   }
   // Les décorations du décor (on ne les achète plus dans le jeu, mais elles ornent l'accueil).
@@ -309,6 +329,17 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
   const nomRecruteur = t('Recruteur')
   const objetsFixesDeLaScene = useMemo(() => objetsFixes({ manager: nomManager, recruteur: nomRecruteur }), [nomManager, nomRecruteur])
   const objets: ReactNode[] = [...objetsFixesDeLaScene]
+
+  // L'ascenseur de la mine, qui monte et redescend.
+  const mine = VILLAGE.batiments.find((b) => b.id === 'puits')
+  if (mine) {
+    const caisse = caisseAscenseur(temps)
+    objets.push(
+      <BoiteSvg key="puits-evolution" x={mine.x} y={mine.y} taille={10} hauteur={130} style={{ zIndex: profondeur(mine.x + 5, mine.y + 5) + 1 }}>
+        <DessinEvolutionMine x={mine.x} y={mine.y} miroir={mine.miroir} niveau={7} ascenseur hauteurCabine={caisse.f} passagers={[{ f: caisse.f, pleine: caisse.pleine, contenu: CONTENU_ASCENSEUR }]} />
+      </BoiteSvg>,
+    )
+  }
 
   // Les mineurs qui vont et viennent.
   MINEURS_SCENE.forEach((m, i) => {
