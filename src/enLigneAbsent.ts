@@ -5,13 +5,14 @@
 // parlent à aucun serveur.
 
 import type { LigneClassement, Score } from './jeu/classement'
+import { t } from './jeu/langue'
 import type { SauvegardeEnLigne } from './jeu/compte'
 import type { EtatJeu } from './jeu/mineur'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
 
 export type Joueur = { id: string; pseudo: string }
 
-const SANS_COMPTES = 'Pas de comptes dans cette version du jeu.'
+const SANS_COMPTES = t('Pas de comptes dans cette version du jeu.')
 
 export async function joueurConnecte(): Promise<Joueur | null> {
   return null

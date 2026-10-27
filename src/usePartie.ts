@@ -16,6 +16,7 @@ import { joueurPousse } from './jeu/wagonnet'
 import { evenementsEntre, type Evenement } from './evenements'
 import { sons } from './sons'
 import { stockage } from './stockage'
+import { t } from './jeu/langue'
 
 export type Toast = { id: number; texte: string; succes: boolean }
 export type Gain = { id: number; montant: number; vente: boolean }
@@ -155,7 +156,8 @@ export function usePartie(idMonde: string) {
       afficherToasts([
         // (23/10 : un niveau gagné a sa grande fenêtre, FeteNiveau : pas de message en plus)
         ...messages.filter((texte) => !texte.startsWith('🎉')).map((texte) => ({ id: prochainId++, texte, succes: false })),
-        ...succes.map((s) => ({ id: prochainId++, texte: `${s.emoji} Succès : ${s.titre}`, succes: true })),
+        // (27/10) traduit, avec le nom du succès traduit (avant : « Succès : » en français partout)
+        ...succes.map((s) => ({ id: prochainId++, texte: t('{emoji} Succès : {titre}', { emoji: s.emoji, titre: t(s.titre) }), succes: true })),
       ])
       const evenements = evenementsEntre(ancien, copie)
       // La grande animation seulement pour tes ventes ; un petit « +X $ » pour le reste (wagonnet...).

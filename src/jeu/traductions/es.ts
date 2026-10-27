@@ -1104,4 +1104,13 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Ferme cette fenêtre': 'Cierra esta ventana',
   'Touche ✖, en haut à droite de la fenêtre.': 'Toca ✖, arriba a la derecha de la ventana.',
   'Ferme !': '¡Cierra!',
+  // (27/10) Le message des succès, les erreurs des comptes
+  "{emoji} Succès : {titre}": "{emoji} Logro: {titre}",
+  "Pseudo ou mot de passe incorrect.": "Nombre de usuario o contraseña incorrectos.",
+  "Ce pseudo est déjà pris.": "Este nombre de usuario ya está en uso.",
+  "Ce compte attend une confirmation par email : désactive « Confirm email » dans Supabase.": "Esta cuenta espera una confirmación por correo: desactiva «Confirm email» en Supabase.",
+  "Trop d’essais : réessaie dans quelques minutes.": "Demasiados intentos: vuelve a intentarlo en unos minutos.",
+  "Erreur du serveur : {message}": "Error del servidor: {message}",
+  "Compte créé, mais Supabase demande une confirmation par email : désactive « Confirm email » dans Supabase.": "Cuenta creada, pero Supabase pide una confirmación por correo: desactiva «Confirm email» en Supabase.",
+  "Pas de comptes dans cette version du jeu.": "No hay cuentas en esta versión del juego.",
 }

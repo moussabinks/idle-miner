@@ -9,6 +9,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { LigneClassement, Score } from './jeu/classement'
 import { emailDuPseudo, type SauvegardeEnLigne } from './jeu/compte'
+import { t } from './jeu/langue'
 import type { EtatJeu } from './jeu/mineur'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
 
@@ -31,14 +32,15 @@ export async function joueurConnecte(): Promise<Joueur | null> {
   return { id: utilisateur.id, pseudo: String(utilisateur.user_metadata.pseudo ?? 'Joueur') }
 }
 
-// Les messages d'erreur de Supabase (en anglais) traduits pour le joueur.
+// Les messages d'erreur de Supabase (en anglais) traduits pour le joueur, dans sa langue (27/10 :
+// avant, toujours en français).
 function traduireErreur(message: string): string {
-  if (message.includes('Invalid login credentials')) return 'Pseudo ou mot de passe incorrect.'
-  if (message.includes('already registered')) return 'Ce pseudo est déjà pris.'
-  if (message.includes('Email not confirmed')) return 'Ce compte attend une confirmation par email : désactive « Confirm email » dans Supabase.'
-  if (message.includes('rate limit')) return 'Trop d’essais : réessaie dans quelques minutes.'
-  if (message.includes('Failed to fetch')) return 'Impossible de joindre le serveur. Vérifie ta connexion.'
-  return `Erreur du serveur : ${message}`
+  if (message.includes('Invalid login credentials')) return t('Pseudo ou mot de passe incorrect.')
+  if (message.includes('already registered')) return t('Ce pseudo est déjà pris.')
+  if (message.includes('Email not confirmed')) return t('Ce compte attend une confirmation par email : désactive « Confirm email » dans Supabase.')
+  if (message.includes('rate limit')) return t('Trop d’essais : réessaie dans quelques minutes.')
+  if (message.includes('Failed to fetch')) return t('Impossible de joindre le serveur. Vérifie ta connexion.')
+  return t('Erreur du serveur : {message}', { message })
 }
 
 // Renvoie le joueur, ou un message d'erreur.
@@ -50,7 +52,7 @@ export async function creerCompte(pseudo: string, motDePasse: string): Promise<J
   })
   if (error) return traduireErreur(error.message)
   // Sans session, Supabase attend une confirmation par email (qu'il ne pourra jamais envoyer).
-  if (!data.user || !data.session) return 'Compte créé, mais Supabase demande une confirmation par email : désactive « Confirm email » dans Supabase.'
+  if (!data.user || !data.session) return t('Compte créé, mais Supabase demande une confirmation par email : désactive « Confirm email » dans Supabase.')
   return { id: data.user.id, pseudo: pseudo.trim() }
 }
 
