@@ -164,7 +164,7 @@ Dans l'ordre : d'abord ce qui empêche de publier, puis ce qui retient le joueur
 - [x] Stockage sûr : un seul objet `stockage` avec try/catch et repli en mémoire (`src/stockage.ts`)
 - [x] `base: './'` dans Vite et chemins relatifs pour images, polices, sons (`import.meta.env.BASE_URL`)
 - [x] Version « portail » : sans service worker, manifest, carte d'installation, comptes Supabase (`VITE_PORTAIL=crazygames`, `src/portail.ts`)
-- [x] SDK CrazyGames : `gameplayStart/Stop`, `happytime` et publicités récompensées (l'adaptateur de `src/portail.ts`, **pas encore testé avec le vrai SDK** ; la sauvegarde par le module Data reste à faire)
+- [x] SDK CrazyGames : `gameplayStart/Stop`, `happytime` et publicités récompensées (l'adaptateur de `src/portail.ts`, **pas encore testé avec le vrai SDK** ; 27/10 : la sauvegarde passe par le module Data, voir [crazygames.md](crazygames.md))
 - [x] Police servie par le jeu (finalement Lilita One et Nunito, par `@fontsource` ; plus de Google Fonts)
 - [ ] Remplacer les `window.confirm` par `Confirmation` (presque : recommencer et supprimer un monde passent par la fenêtre du jeu ; **il reste celui des mondes à la connexion**, `useCompte.ts`)
 - [x] Traduction anglaise (textes sortis dans un fichier par langue) : `t()`, `src/jeu/traductions/en.ts`, `npm run traductions` (le mécanisme ; `en.ts` reste à remplir)

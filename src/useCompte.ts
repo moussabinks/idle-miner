@@ -26,6 +26,7 @@ import {
   telechargerMondes,
   type Joueur,
 } from './enLigne'
+import { AVEC_COMPTES } from './portail'
 import { stockage } from './stockage'
 
 // Toutes les 20 s, on envoie les mondes s'ils ont changé.
@@ -51,7 +52,8 @@ export type QuestionMondes = {
 
 export function useCompte() {
   const [joueur, setJoueur] = useState<Joueur | null>(null)
-  const [statut, setStatut] = useState<StatutCompte>('chargement')
+  // (27/10) Sans comptes (version CrazyGames), on est déconnecté dès le départ.
+  const [statut, setStatut] = useState<StatutCompte>(AVEC_COMPTES ? 'chargement' : 'deconnecte')
   const [envoyeeLe, setEnvoyeeLe] = useState<number | null>(null)
   // Change quand les mondes du navigateur ont été remplacés par ceux du compte (l'accueil se redessine).
   const [versionMondes, setVersionMondes] = useState(0)
@@ -157,6 +159,8 @@ export function useCompte() {
   useEffect(() => {
     if (demarre.current) return // en mode développement, React lance cet effet deux fois
     demarre.current = true
+    // (27/10) La version CrazyGames n'a pas de comptes : on ne parle jamais au serveur.
+    if (!AVEC_COMPTES) return
     joueurConnecte()
       .then((j) => {
         if (j === null) {

@@ -11,7 +11,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - **Vite + React + TypeScript**, côté navigateur. Le seul « backend » est **Supabase** (décidé le 19/10), pour les comptes, la sauvegarde en ligne et le classement : pas de serveur à nous. Le jeu doit toujours marcher sans lui (tout reste dans le stockage du navigateur).
 - **Vitest** pour les tests (`npm test`), **oxlint** pour le lint (`npm run lint`).
 - Hébergement **Vercel** : chaque push sur `main` déploie la prod, et chaque Pull Request a son lien de preview.
-- **CrazyGames** (25/10) : une version « portail » se fabrique avec `VITE_PORTAIL=crazygames npm run build` (`src/portail.ts` : sans comptes, sans application à installer, publicités par le SDK de CrazyGames). Les chemins sont relatifs (`base: './'` dans `vite.config.ts`) : écrire les chemins des fichiers de `public/` avec `import.meta.env.BASE_URL`, jamais `/images/...`.
+- **CrazyGames** (25/10) : une version « portail » se fabrique avec `npm run build:crazygames` (27/10 : dans `dist-crazygames/`, et le ZIP `mega-digger-crazygames.zip` prêt à envoyer ; `src/portail.ts` : sans comptes, classement ni visites, sans packs de gemmes payants, sans application à installer, publicités et sauvegarde par le SDK de CrazyGames). Un seul code pour les deux versions, jamais de copie : voir [docs/crazygames.md](docs/crazygames.md). Les chemins sont relatifs (`base: './'` dans `vite.config.ts`) : écrire les chemins des fichiers de `public/` avec `import.meta.env.BASE_URL`, jamais `/images/...`.
 - Code sur GitHub, à deux développeurs : on passe par des branches et des PR, jamais de push direct sur `main`.
 - **À chaque modification demandée** : une fois les tests, le lint et le build au vert, on crée la Pull Request et on la fusionne dans `main` (demandé le 19/10), pour que Vercel mette la nouvelle version en ligne tout de suite.
 
@@ -20,6 +20,7 @@ L'état d'avancement, les décisions en attente et la feuille de route sont dans
 - `npm run dev` : serveur local (http://localhost:5173)
 - `npm test` : tests unitaires
 - `npm run build` : vérification TypeScript et build de production (c'est ce que lance Vercel)
+- `npm run build:crazygames` : la version CrazyGames et son ZIP (voir [docs/crazygames.md](docs/crazygames.md))
 - `npm run traductions` : les textes du jeu qui n'ont pas encore leur traduction anglaise
 
 ## Architecture

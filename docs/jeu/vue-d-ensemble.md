@@ -35,7 +35,7 @@
 | [fonderie.md](../batiments/fonderie.md) | 🏭 Fonderie (26/10) : fond le fer et l'or en lingots (× 2), au charbon ; sa réserve se vend sur place  | mine niveau 5 |
 | [joaillerie.md](../batiments/joaillerie.md) | 🏪 Joaillerie (26/10) : ses joailliers taillent les gemmes en bijoux (× 2,5) ; sa réserve se vend sur place | mine niveau 6 |
 
-Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md), référence historique des règles), la revue avant CrazyGames ([../revue-crazygames.md](../revue-crazygames.md)), l'état du projet et le journal ([../../CONTEXTE.md](../../CONTEXTE.md)), les règles de code ([../../CLAUDE.md](../../CLAUDE.md)). Ce qui a été retiré le 22/10 (prestige, talents, enchanteur) est rangé dans `archives/` (voir `archives/README.md`). Le **bazar** (les sacs à dos) est retiré le 25/10.
+Autres documents du dépôt : la spec de la v1 Python ([../idle_miner_v1.md](../idle_miner_v1.md), référence historique des règles), la revue avant CrazyGames ([../revue-crazygames.md](../revue-crazygames.md)), comment publier sur CrazyGames ([../crazygames.md](../crazygames.md)), l'état du projet et le journal ([../../CONTEXTE.md](../../CONTEXTE.md)), les règles de code ([../../CLAUDE.md](../../CLAUDE.md)). Ce qui a été retiré le 22/10 (prestige, talents, enchanteur) est rangé dans `archives/` (voir `archives/README.md`). Le **bazar** (les sacs à dos) est retiré le 25/10.
 
 ## Le concept
 
