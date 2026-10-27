@@ -461,6 +461,62 @@
   background: var(--vert);
 }
 
+/* (27/10) À gauche : la mine, et à côté le rond violet de la publicité « Ventes × 2 »
+   (PubsProposees.tsx). Pendant le bonus, il est vert pâle et montre le temps qui reste. */
+.barre-village-gauche {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.gros-rond-pub {
+  background: var(--violet);
+}
+
+.gros-rond-pub:disabled {
+  cursor: default;
+}
+
+.gros-rond-pub-actif {
+  background: #c9f0b8;
+}
+
+.gros-rond-pub-actif:active {
+  transform: none;
+  box-shadow: 0 5px 0 var(--encre);
+}
+
+/* Le petit ▶ de la vidéo, en haut à droite du rond. */
+.gros-rond-pub-video {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+/* La fenêtre qui propose une publicité après un achat en gemmes. */
+.proposition-pub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proposition-pub-icone {
+  font-size: 2.6rem;
+}
+
+.proposition-pub p {
+  font-weight: 700;
+}
+
 .gros-rond-petit {
   width: 64px;
   height: 64px;

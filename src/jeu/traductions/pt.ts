@@ -1089,4 +1089,15 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Décorations': 'Decorações',
   'Juste pour faire joli ! Pose-les où tu veux ; dans ✏️ Modifier, touche-les pour les déplacer, les retourner ou les ranger.': 'Só para enfeitar! Coloque onde quiser; em ✏️ Editar, toque nelas para mover, virar ou guardar.',
   '📦 {nom} rangé(e) : {n} en stock.': '📦 {nom} guardado: {n} no estoque.',
+  // (27/10) Les publicités proposées, le menu CrazyGames
+  'Offert': 'Grátis',
+  'Une amélioration offerte ?': 'Uma melhoria grátis?',
+  'Non merci': 'Não, obrigado',
+  'Regarder une pub': 'Ver um anúncio',
+  'Regarde une publicité, et ta prochaine amélioration est gratuite : celle que tu veux !': 'Veja um anúncio e sua próxima melhoria sai de graça: a que você quiser!',
+  'Regarder une pub : ventes × 2 pendant {minutes} min': 'Ver um anúncio: vendas × 2 por {minutes} min',
+  'Ventes × 2 : encore {temps}': 'Vendas × 2: faltam {temps}',
+  'Menu principal': 'Menu principal',
+  '💰 Ventes × 2 pendant {minutes} min !': '💰 Vendas × 2 por {minutes} min!',
+  '🎁 Ta prochaine amélioration est offerte : choisis-la !': '🎁 Sua próxima melhoria é grátis: escolha!',
 }

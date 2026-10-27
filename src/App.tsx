@@ -25,6 +25,7 @@ import { PanneauMine } from './composants/PanneauMine'
 import { PanneauForeuse, PanneauGenerateur, PanneauMarche, PanneauPioches, PanneauSucces } from './composants/Panneaux'
 import { PanneauFonderie, PanneauJoaillerie } from './composants/PanneauxAteliers'
 import { Publicite } from './composants/Publicite'
+import { BoutonPubVentes, PropositionPub } from './composants/PubsProposees'
 import { RecompensesQuotidiennes } from './composants/RecompensesQuotidiennes'
 import { Reglages } from './composants/Reglages'
 import { Toasts } from './composants/Toasts'
@@ -817,18 +818,22 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     barre = (
       // De gros boutons ronds posés sur la carte : la mine en bas à gauche, la construction en bas à droite.
       <div className="barre-village">
-        <button
-          className={`gros-rond gros-rond-mine ${coffreRempli ? 'btn-attention' : ''}`}
-          style={{ ['--remplissage' as string]: `${Math.round(remplissageCoffre * 100)}%` }}
-          onClick={() => ouvrirBatiment('puits')}
-          data-tuto="mine"
-          title={t('La mine · coffre {n} / {max}', { n: nbDansCoffre(etat), max: capaciteCoffre(etat) })}
-        >
-          <span className="gros-rond-icone" aria-hidden="true">
-            ⛏️
-          </span>
-          <span className="gros-rond-texte">{t('Mine')}</span>
-        </button>
+        <div className="barre-village-gauche">
+          <button
+            className={`gros-rond gros-rond-mine ${coffreRempli ? 'btn-attention' : ''}`}
+            style={{ ['--remplissage' as string]: `${Math.round(remplissageCoffre * 100)}%` }}
+            onClick={() => ouvrirBatiment('puits')}
+            data-tuto="mine"
+            title={t('La mine · coffre {n} / {max}', { n: nbDansCoffre(etat), max: capaciteCoffre(etat) })}
+          >
+            <span className="gros-rond-icone" aria-hidden="true">
+              ⛏️
+            </span>
+            <span className="gros-rond-texte">{t('Mine')}</span>
+          </button>
+          {/* (27/10) Toujours là (après le tutoriel) : une publicité pour les ventes × 2 pendant 10 min. */}
+          {etapeTuto === null && <BoutonPubVentes />}
+        </div>
         {!flechesUtilisees && (
           <p className="aide-clavier">
             <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> {t('pour marcher')}
@@ -1002,6 +1007,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           />
         )}
         {feteNiveau && !fenetreOuverte && <FeteNiveau avant={feteNiveau.avant} niveau={feteNiveau.apres} prochain={prochainDeblocage(etat)} onFermer={() => setFeteNiveau(null)} />}
+        {/* (27/10) Après un achat en gemmes : une publicité pour une amélioration offerte. */}
+        {etat.propositionPub && !pubEnCours && <PropositionPub />}
         {pubEnCours && (
           <Publicite
             onFinie={() => {

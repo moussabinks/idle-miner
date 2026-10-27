@@ -1,7 +1,7 @@
 // Les bornes du prix en gemmes (26/10, demandé par le propriétaire) : parmi toutes les
 // améliorations que le joueur peut faire en ce moment (débloquées à son palier, pas encore au
 // maximum), le prix en dollars de la moins chère et de la plus chère. La moins chère coûte
-// 2 gemmes, la plus chère 10, les autres entre les deux (prixEnGemmes, dans gemmes.ts).
+// 1 gemme, la plus chère 3, les autres entre les deux (prixEnGemmes, dans gemmes.ts).
 // Les constructions de bâtiments ne comptent pas : ce ne sont pas des améliorations.
 
 import { prixEnGemmes, valeurEnDollars, type BornesGemmes } from './gemmes'

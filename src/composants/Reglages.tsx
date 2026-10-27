@@ -1,5 +1,6 @@
 // Les réglages (25/10) : une fenêtre (le bouton ⚙️ en haut à droite). Le monde en cours, le son,
 // la musique, la langue, l'aide, changer de monde, et recommencer à zéro (avec confirmation).
+// (27/10) Sur CrazyGames (un seul monde) : pas de nom de monde, et « Menu principal ».
 
 import { useState } from 'react'
 import { basculerMusique, musiqueActive } from '../ambiance'
@@ -9,6 +10,7 @@ import { basculerSon, sonActif } from '../sons'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 import { Drapeau } from './Drapeau'
+import { AVEC_PLUSIEURS_MONDES } from '../portail'
 
 type Props = {
   nomMonde: string
@@ -25,9 +27,11 @@ export function Reglages({ nomMonde, onFermer, onChangerDeMonde, onRecommencer, 
   const [confirmer, setConfirmer] = useState(false)
   return (
     <Fenetre titre={t('Réglages')} icone="⚙️" couleur="bleu" taille="petite" onFermer={onFermer}>
-      <p className="reglages-monde">
-        🌍 <strong>{nomMonde}</strong>
-      </p>
+      {AVEC_PLUSIEURS_MONDES && (
+        <p className="reglages-monde">
+          🌍 <strong>{nomMonde}</strong>
+        </p>
+      )}
       <div className="reglages-liste">
         <button className="btn btn-blanc btn-large" onClick={() => setSon(basculerSon())}>
           {son ? `🔊 ${t('Son : oui')}` : `🔇 ${t('Son : non')}`}
@@ -53,7 +57,7 @@ export function Reglages({ nomMonde, onFermer, onChangerDeMonde, onRecommencer, 
           ❔ {t('Comment jouer')}
         </button>
         <button className="btn btn-bleu btn-large" onClick={onChangerDeMonde}>
-          🌍 {t('Changer de monde')}
+          {AVEC_PLUSIEURS_MONDES ? `🌍 ${t('Changer de monde')}` : `🏡 ${t('Menu principal')}`}
         </button>
         <button className="btn btn-rose btn-large" onClick={() => setConfirmer(true)}>
           🔄 {t('Recommencer à zéro')}

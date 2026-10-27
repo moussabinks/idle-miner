@@ -204,6 +204,11 @@ export type EtatJeu = {
   // récompenses quotidiennes. Elles paient une amélioration sans argent ni minerais, ou un bonus.
   gemmes: number
   boosts: Boosts // les bonus de la boutique en cours (voir gemmes.ts)
+  // (27/10) Après un achat en gemmes, le jeu propose une publicité (propositionPub) ; regardée,
+  // elle offre la prochaine amélioration, au choix du joueur (ameliorationOfferte : voir
+  // acheterGratuitement). Absents des vieilles parties : false.
+  propositionPub?: boolean
+  ameliorationOfferte?: boolean
   quotidien: Quotidien // la récompense du jour et la série de jours (voir gemmes.ts)
   niveauMine: number // de 1 à 7
   coffre: Coffre
@@ -408,8 +413,13 @@ export function possede(etat: EtatJeu, materiaux: Inventaire): boolean {
 let paiementEnGemmes = false
 // (26/10) Les bornes du prix en gemmes pendant cet achat (voir prixEnGemmes).
 let bornesEnCours: BornesGemmes | null = null
+// (27/10) L'amélioration offerte : pendant acheterGratuitement, on ne paie rien. « offertePayee »
+// dit si l'achat a bien eu lieu (alors l'amélioration offerte est utilisée).
+let paiementOffert = false
+let offertePayee = false
 
 export function peutPayer(etat: EtatJeu, cout: Cout): boolean {
+  if (paiementOffert) return true
   if (paiementEnGemmes) return (etat.gemmes ?? 0) >= prixEnGemmes(cout, bornesEnCours)
   return etat.argent >= (cout.argent ?? 0) && possede(etat, cout.materiaux)
 }
@@ -426,8 +436,14 @@ export function payerMateriaux(etat: EtatJeu, materiaux: Inventaire): void {
 }
 
 export function payer(etat: EtatJeu, cout: Cout): void {
+  if (paiementOffert) {
+    offertePayee = true
+    return
+  }
   if (paiementEnGemmes) {
     etat.gemmes = (etat.gemmes ?? 0) - prixEnGemmes(cout, bornesEnCours)
+    // (27/10) Le jeu propose une publicité pour une amélioration offerte (s'il n'y en a pas déjà une).
+    if (!etat.ameliorationOfferte) etat.propositionPub = true
     return
   }
   etat.argent -= cout.argent ?? 0
@@ -454,6 +470,44 @@ export function possibleEnGemmes(etat: EtatJeu, action: (e: EtatJeu) => string[]
   const copie = structuredClone(etat)
   acheterAvecGemmes(() => action(copie), bornes)
   return copie.gemmes < etat.gemmes
+}
+
+// (27/10) Fait un achat sans rien payer, avec l'amélioration offerte par une publicité (celle que
+// le joueur choisit). Elle ne sert qu'une fois : seulement si l'achat a bien eu lieu.
+export function acheterGratuitement(etat: EtatJeu, action: () => string[]): string[] {
+  if (!etat.ameliorationOfferte) return []
+  paiementOffert = true
+  offertePayee = false
+  try {
+    const messages = action()
+    if (offertePayee) etat.ameliorationOfferte = false
+    return messages
+  } finally {
+    paiementOffert = false
+    offertePayee = false
+  }
+}
+
+// L'action réussirait-elle avec l'amélioration offerte ? On l'essaie sur une copie de la partie.
+export function possibleGratuitement(etat: EtatJeu, action: (e: EtatJeu) => string[]): boolean {
+  if (!etat.ameliorationOfferte) return false
+  const copie = structuredClone(etat)
+  acheterGratuitement(copie, () => action(copie))
+  return !copie.ameliorationOfferte
+}
+
+// (27/10) La réponse à la proposition de publicité : regardée jusqu'au bout, la prochaine
+// amélioration est offerte ; refusée, on n'en parle plus (jusqu'au prochain achat en gemmes).
+export function offrirAmelioration(etat: EtatJeu): string[] {
+  etat.propositionPub = false
+  etat.ameliorationOfferte = true
+  etat.stats.pubsVues = (etat.stats.pubsVues ?? 0) + 1
+  return [t('🎁 Ta prochaine amélioration est offerte : choisis-la !')]
+}
+
+export function refuserPropositionPub(etat: EtatJeu): string[] {
+  etat.propositionPub = false
+  return []
 }
 
 // Pourrait-on faire cet achat en gemmes ?

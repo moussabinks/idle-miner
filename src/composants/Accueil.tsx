@@ -8,7 +8,8 @@
 // Sur téléphone, tout est empilé (on fait défiler) : le village en haut, puis les cartes.
 // Dans la version portail (CrazyGames), pas de compte ni de classement, ni d'installation.
 // (27/10) Son accueil est épuré : le bandeau s'aligne sur la carte « Jouer », et plus de numéro
-// de version en bas (accueil-portail dans src/styles/accueil.css).
+// de version en bas (accueil-portail dans src/styles/accueil.css). Un seul monde
+// (AVEC_PLUSIEURS_MONDES) : pas de liste de mondes, seulement un très gros bouton « Jouer ».
 
 import { useEffect, useState } from 'react'
 import { aleatoireNavigateur } from '../jeu/aleatoire'
@@ -28,7 +29,7 @@ import {
 } from '../jeu/sauvegarde'
 import { choisirLangue } from '../langueNavigateur'
 import { nombreAbrege } from '../nombres'
-import { AVEC_COMPTES, AVEC_INSTALLATION, PORTAIL } from '../portail'
+import { AVEC_COMPTES, AVEC_INSTALLATION, AVEC_PLUSIEURS_MONDES, PORTAIL } from '../portail'
 import { stockage, stockagePersistant } from '../stockage'
 import type { Compte } from '../useCompte'
 import { ETAPES_DU_JEU } from './etapesDuJeu'
@@ -266,11 +267,13 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
         {/* À gauche : Jouer et les mondes. */}
         <section className="accueil-panneau accueil-jouer">
           {dernierMonde ? (
-            <button className="btn btn-jaune btn-grand btn-large accueil-gros-bouton" disabled={bloque} onClick={() => onJouer(dernierMonde)}>
+            <button className="btn btn-jaune btn-grand btn-large accueil-gros-bouton" disabled={bloque} onClick={() => onJouer(dernierMonde)} autoFocus={!AVEC_PLUSIEURS_MONDES}>
               <span>▶ {t('Jouer')}</span>
               <small>
-                {dernierMonde.nom}
-                {etatDernier ? ` · 🕳️ ${t('niveau {n}', { n: etatDernier.niveauMine })} · ${nombreAbrege(etatDernier.argent)} $` : ''}
+                {/* (un seul monde sur CrazyGames : pas besoin de son nom) */}
+                {[AVEC_PLUSIEURS_MONDES ? dernierMonde.nom : '', etatDernier ? `🕳️ ${t('niveau {n}', { n: etatDernier.niveauMine })} · ${nombreAbrege(etatDernier.argent)} $` : '']
+                  .filter(Boolean)
+                  .join(' · ')}
               </small>
             </button>
           ) : (
@@ -297,7 +300,7 @@ export function Accueil({ compte, onJouer, onLangue, onVisiter }: Props) {
             </>
           )}
 
-          {mondes.length > 0 && (
+          {mondes.length > 0 && AVEC_PLUSIEURS_MONDES && (
             <>
               <h2 className="titre-section accueil-titre-mondes">
                 {t('Tes mondes')} <span className="etiquette">{mondes.length} / {NB_MONDES_MAX}</span>

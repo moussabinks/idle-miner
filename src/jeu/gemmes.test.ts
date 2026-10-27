@@ -18,13 +18,31 @@ import {
   PACKS_GEMMES,
   bonusPack,
   crediterPack,
+  MINUTES_VENTES_PUB,
+  peutRegarderPubVentes,
   recompenserPub,
+  recompenserPubVentes,
   recupererQuotidien,
   secondesBoost,
   veille,
 } from './gemmes'
 import { bornesGemmes, prixEnGemmesPour } from './prixGemmes'
-import { acheterAvecGemmes, agrandirCoffre, avancerMine, capaciteCoffre, creerPartie, debitMine, peutPayer, peutPayerEnGemmes, vendreCoffre, type EtatJeu } from './mineur'
+import {
+  acheterAvecGemmes,
+  acheterGratuitement,
+  agrandirCoffre,
+  avancerMine,
+  capaciteCoffre,
+  creerPartie,
+  debitMine,
+  offrirAmelioration,
+  peutPayer,
+  peutPayerEnGemmes,
+  possibleGratuitement,
+  refuserPropositionPub,
+  vendreCoffre,
+  type EtatJeu,
+} from './mineur'
 import { mettreAJourXp, xpTotalePourNiveau } from './niveaux'
 import { partieDeTest } from './partieDeTest'
 
@@ -33,17 +51,17 @@ function partie(): EtatJeu {
 }
 
 describe('le prix en gemmes', () => {
-  // (26/10) Par proportionnalité : la moins chère des améliorations possibles 2 gemmes, la plus
-  // chère 10, les autres entre les deux.
-  it('(26/10) de 2 gemmes (la moins chère) à 10 (la plus chère), en proportion', () => {
+  // (26/10) Par proportionnalité : la moins chère des améliorations possibles GEMMES_MIN, la plus
+  // chère GEMMES_MAX, les autres entre les deux. (27/10) De 1 à 3 gemmes.
+  it('(27/10) de 1 gemme (la moins chère) à 3 (la plus chère), en proportion', () => {
     const bornes = { min: 1000, max: 9000 }
-    expect(prixEnGemmes({ argent: 1000, materiaux: {} }, bornes)).toBe(2)
-    expect(prixEnGemmes({ argent: 9000, materiaux: {} }, bornes)).toBe(10)
-    expect(prixEnGemmes({ argent: 5000, materiaux: {} }, bornes)).toBe(6)
-    expect(prixEnGemmes({ argent: 2000, materiaux: {} }, bornes)).toBe(3)
-    // Hors des bornes (une réparation, un bâtiment...), on reste entre 2 et 10.
-    expect(prixEnGemmes({ argent: 50, materiaux: {} }, bornes)).toBe(2)
-    expect(prixEnGemmes({ argent: 90_000, materiaux: {} }, bornes)).toBe(10)
+    expect(prixEnGemmes({ argent: 1000, materiaux: {} }, bornes)).toBe(1)
+    expect(prixEnGemmes({ argent: 9000, materiaux: {} }, bornes)).toBe(3)
+    expect(prixEnGemmes({ argent: 5000, materiaux: {} }, bornes)).toBe(2)
+    expect(prixEnGemmes({ argent: 2000, materiaux: {} }, bornes)).toBe(1)
+    // Hors des bornes (une réparation, un bâtiment...), on reste entre 1 et 3.
+    expect(prixEnGemmes({ argent: 50, materiaux: {} }, bornes)).toBe(1)
+    expect(prixEnGemmes({ argent: 90_000, materiaux: {} }, bornes)).toBe(3)
   })
 
   it('les bornes : la moins chère et la plus chère des améliorations possibles', () => {
@@ -52,27 +70,30 @@ describe('le prix en gemmes', () => {
     const bornes = bornesGemmes(etat)!
     expect(bornes.min).toBeGreaterThan(0)
     expect(bornes.max).toBeGreaterThanOrEqual(bornes.min)
-    expect(prixEnGemmesPour(etat, { argent: bornes.min, materiaux: {} })).toBe(2)
+    expect(prixEnGemmesPour(etat, { argent: bornes.min, materiaux: {} })).toBe(1)
   })
 
-  it('(25/10) sans bornes : de 2 gemmes pour une petite amélioration à 10 pour la plus grosse', () => {
-    expect(prixEnGemmes({ materiaux: {} })).toBe(2)
-    expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(2)
-    expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(5)
-    expect(prixEnGemmes({ argent: 10_000, materiaux: {} })).toBe(8)
-    expect(prixEnGemmes({ argent: 80_000, materiaux: {} })).toBe(10)
-    expect(prixEnGemmes({ argent: 10_000_000, materiaux: {} })).toBe(10)
-    // Les minerais comptent à leur prix au marché : 200 $ + 40 pierres = 240 $ → 4 gemmes.
-    expect(prixEnGemmes({ argent: 200, materiaux: { pierre: 40 } })).toBe(4)
+  it('(27/10) sans bornes : de 1 gemme pour une petite amélioration à 3 pour la plus grosse', () => {
+    expect(prixEnGemmes({ materiaux: {} })).toBe(1)
+    expect(prixEnGemmes({ argent: 50, materiaux: {} })).toBe(1)
+    expect(prixEnGemmes({ argent: 1000, materiaux: {} })).toBe(2)
+    expect(prixEnGemmes({ argent: 10_000, materiaux: {} })).toBe(2)
+    expect(prixEnGemmes({ argent: 1_000_000, materiaux: {} })).toBe(3)
+    expect(prixEnGemmes({ argent: 10_000_000, materiaux: {} })).toBe(3)
+    // Les minerais comptent à leur prix au marché : 200 $ + 40 pierres = 240 $ → 1 gemme.
+    expect(prixEnGemmes({ argent: 200, materiaux: { pierre: 40 } })).toBe(1)
   })
 
-  it('aucune amélioration du jeu ne coûte plus de 10 gemmes', () => {
+  it('aucune amélioration du jeu ne coûte plus de 3 gemmes, ni moins de 1', () => {
     const tables = [NIVEAUX_MINE, NIVEAUX_COFFRE, NIVEAUX_ASCENSEUR, NIVEAUX_EMPLOYE, NIVEAUX_GENERATEUR, NIVEAUX_FORAGE, NIVEAUX_CHARIOT]
     for (const table of tables) {
-      for (const { cout } of table) expect(prixEnGemmes(cout)).toBeLessThanOrEqual(10)
+      for (const { cout } of table) {
+        expect(prixEnGemmes(cout)).toBeLessThanOrEqual(3)
+        expect(prixEnGemmes(cout)).toBeGreaterThanOrEqual(1)
+      }
     }
-    // La plus grosse (descendre au niveau 5) coûte les 10 gemmes.
-    expect(prixEnGemmes(NIVEAUX_MINE[4].cout)).toBe(10)
+    // La plus grosse (descendre au dernier niveau) coûte les 3 gemmes.
+    expect(prixEnGemmes(NIVEAUX_MINE[NIVEAUX_MINE.length - 1].cout)).toBe(3)
   })
 })
 
@@ -289,3 +310,75 @@ describe('(25/10) les packs de gemmes (argent réel)', () => {
   })
 })
 
+
+describe('(27/10) l’amélioration offerte par une publicité, après un achat en gemmes', () => {
+  it('payer en gemmes propose une publicité ; regardée, la prochaine amélioration est offerte', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    etat.gemmes = 10
+    expect(etat.propositionPub).toBeFalsy()
+    acheterAvecGemmes(() => agrandirCoffre(etat))
+    expect(etat.propositionPub).toBe(true)
+    offrirAmelioration(etat)
+    expect(etat.propositionPub).toBe(false)
+    expect(etat.ameliorationOfferte).toBe(true)
+    // L'amélioration offerte : sans argent, ni minerais, ni gemmes.
+    etat.niveauMine = 3
+    const gemmes = etat.gemmes
+    expect(possibleGratuitement(etat, agrandirCoffre)).toBe(true)
+    expect(acheterGratuitement(etat, () => agrandirCoffre(etat))[0]).toContain('Coffre agrandi')
+    expect(etat.coffre.niveau).toBe(2)
+    expect(etat.gemmes).toBe(gemmes)
+    expect(etat.argent).toBe(0)
+    // Elle ne sert qu'une fois.
+    expect(etat.ameliorationOfferte).toBe(false)
+    expect(acheterGratuitement(etat, () => agrandirCoffre(etat))).toEqual([])
+  })
+
+  it('un achat impossible (pas encore débloqué) ne gâche pas l’amélioration offerte', () => {
+    const etat = partie()
+    etat.ameliorationOfferte = true
+    expect(possibleGratuitement(etat, agrandirCoffre)).toBe(false) // palier 1 : coffre bloqué
+    expect(acheterGratuitement(etat, () => agrandirCoffre(etat))).toEqual([])
+    expect(etat.ameliorationOfferte).toBe(true)
+  })
+
+  it('pas de proposition tant qu’une amélioration offerte attend, ni après un refus', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    etat.gemmes = 10
+    acheterAvecGemmes(() => agrandirCoffre(etat))
+    refuserPropositionPub(etat)
+    expect(etat.propositionPub).toBe(false)
+    expect(etat.ameliorationOfferte).toBeFalsy()
+    etat.ameliorationOfferte = true
+    etat.niveauMine = 3
+    acheterAvecGemmes(() => agrandirCoffre(etat))
+    expect(etat.propositionPub).toBe(false)
+  })
+
+  it('l’essai d’un achat en gemmes (sur une copie) ne propose rien', () => {
+    const etat = partie()
+    etat.niveauMine = 2
+    etat.gemmes = 10
+    possibleGratuitement(etat, agrandirCoffre)
+    expect(etat.propositionPub).toBeFalsy()
+  })
+})
+
+describe('(27/10) la publicité « Ventes × 2 » du bouton en bas', () => {
+  it('double les ventes pendant 10 minutes, puis on peut la regarder à nouveau', () => {
+    const etat = partie()
+    expect(peutRegarderPubVentes(etat)).toBe(true)
+    recompenserPubVentes(etat)
+    expect(multiplicateurVentes(etat)).toBe(2)
+    expect(secondesBoost(etat, 'ventes')).toBe(MINUTES_VENTES_PUB * 60)
+    // Pendant le bonus, pas de deuxième publicité.
+    expect(peutRegarderPubVentes(etat)).toBe(false)
+    expect(recompenserPubVentes(etat)).toEqual([])
+    expect(secondesBoost(etat, 'ventes')).toBe(MINUTES_VENTES_PUB * 60)
+    etat.stats.tempsDeJeu += MINUTES_VENTES_PUB * 60
+    expect(multiplicateurVentes(etat)).toBe(1)
+    expect(peutRegarderPubVentes(etat)).toBe(true)
+  })
+})
