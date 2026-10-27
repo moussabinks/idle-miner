@@ -25,6 +25,7 @@ import { DessinWagonnet3D } from './Wagonnet3D'
 import { ImageBatiment, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
+import { ChateauVillage, CheminChateau } from './ChateauVillage'
 import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
 
 // ---------------------------------------------------------------------------
@@ -311,7 +312,10 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
         <TerrainVillage />
         <SolPlage />
         {SOL}
+        {/* (27/10) Le chemin du château et le château en ruine, comme au village */}
+        <CheminChateau />
         <ForetDerriere vue={vueForet} />
+        <ChateauVillage restaure={false} animation={false} touchable={false} />
         {/* (après le décor du fond : voir VueVillage) */}
         <EauPlage />
         <div className="objets-village">{objets}</div>

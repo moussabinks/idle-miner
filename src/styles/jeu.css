@@ -744,3 +744,122 @@
   top: -8px;
   right: -6px;
 }
+
+/* =========================================================================
+   (27/10) La quête finale du château (QueteChateau.tsx), au-dessus des tâches, sa fenêtre
+   (FenetreChateau.tsx) et les feux d'artifice (FeuxArtifice.tsx)
+   ========================================================================= */
+
+.quete-chateau {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(330px, 46vw);
+  padding: 8px 10px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 18px;
+  background: var(--violet);
+  box-shadow: var(--ombre);
+  color: var(--blanc);
+  pointer-events: auto;
+}
+
+.quete-prete {
+  background: var(--violet-fonce);
+}
+
+.quete-icone {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 50%;
+  background: var(--jaune);
+  font-size: 1.6rem;
+}
+
+.quete-corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quete-titre {
+  font-family: var(--police-titre);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--jaune);
+}
+
+.quete-texte {
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1.15;
+}
+
+.quete-chateau .tache-compte {
+  color: var(--blanc);
+}
+
+.fenetre-chateau .chateau-vignette {
+  display: block;
+  width: min(300px, 76%);
+  /* (le haut du dessin est vide : la place des tours du château neuf) */
+  aspect-ratio: 1080 / 860;
+  object-fit: cover;
+  object-position: 50% 100%;
+  margin: 0 auto 6px;
+}
+
+.chateau-texte {
+  margin: 6px 0;
+  text-align: center;
+}
+
+.chateau-prix {
+  width: 100%;
+  max-width: 360px;
+  margin: 10px auto;
+}
+
+.chateau-prix .jauge {
+  display: block;
+}
+
+.chateau-restaurer {
+  display: flex;
+  margin: 10px auto 4px;
+}
+
+.feux-artifice {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* Sur téléphone, la quête passe sous le bandeau, en largeur (à côté des boutons ronds du haut). */
+@media (max-width: 640px) {
+  .quete-chateau {
+    position: fixed;
+    top: calc(var(--marge-haut) + 100px);
+    left: var(--marge-gauche);
+    right: calc(var(--marge-droite) + 50px);
+    width: auto;
+    padding: 6px 8px;
+  }
+
+  .quete-icone {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+}

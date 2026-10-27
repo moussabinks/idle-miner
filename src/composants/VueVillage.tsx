@@ -42,6 +42,7 @@ import {
   TerrainVillage,
 } from './DessinsVillage'
 import { AmbianceVillage } from './AmbianceVillage'
+import { ChateauVillage, CheminChateau } from './ChateauVillage'
 import { WagonnetVillage } from './WagonnetVillage'
 import { EtiquetteVillage, ImageBatiment, MiniJauge, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
@@ -92,6 +93,10 @@ type Props = {
   enEdition?: boolean // (26/10) Modifier, poser des rails... : la lisière de devant devient translucide
   // (26/10) La visite du village d'un autre joueur : ni bulle, ni jauge, ni vente qui jaillit.
   visite?: boolean
+  // (27/10) Le château de la quête finale est en train d'être restauré (son animation).
+  restaurationChateau?: boolean
+  // (27/10) Un point du monde où la caméra doit aller (en douceur), quand « cle » change.
+  regard?: { x: number; y: number; cle: number } | null
 }
 
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
@@ -126,6 +131,8 @@ export function VueVillage({
   railPropose = null,
   enEdition = false,
   visite = false,
+  restaurationChateau = false,
+  regard = null,
 }: Props) {
   const conteneurRef = useRef<HTMLDivElement>(null)
   const [taille, setTaille] = useState({ l: 800, h: 600 })
@@ -222,6 +229,12 @@ export function VueVillage({
       const y = taille.h / 2 + (p.y - vue.cy) * z
       if (x < taille.l * 0.12 || x > taille.l * 0.88 || y < taille.h * 0.15 || y > taille.h * 0.55) setLibre({ cx: p.x, cy: p.y + (taille.h * 0.12) / z })
     }
+  }
+  // (27/10) Aller voir un point du monde (le château) : la caméra y glisse en douceur.
+  const [regardVu, setRegardVu] = useState<number | null>(null)
+  if (regard && regard.cle !== regardVu) {
+    setRegardVu(regard.cle)
+    setLibre({ cx: regard.x, cy: regard.y, douce: true })
   }
   const suivi = pousse && wagonnet ? wagonnet : joueur
   const ecranJoueur = versEcran(suivi.x, suivi.y)
@@ -426,6 +439,11 @@ export function VueVillage({
   }
   const [survol, setSurvol] = useState<IdBatiment | null>(null)
 
+  // (27/10) Le château est-il sous ce point (son dessin, pas le vide autour) ?
+  function chateauVise(sx: number, sy: number): boolean {
+    return document.elementsFromPoint(sx, sy).some((element) => element.getAttribute('data-cible') === 'chateau' && element instanceof HTMLImageElement && pixelDessine(element, sx, sy, false))
+  }
+
   // Les mineurs qui viennent d'être embauchés (leurs noms), pendant quelques secondes.
   const nomsEmployes = etat.employes.map((m) => m.nom).join('|')
   const [nomsAvant, setNomsAvant] = useState(nomsEmployes)
@@ -462,6 +480,7 @@ export function VueVillage({
     // (un chemin juste à côté d'un bâtiment reste un chemin : App décide, selon le mode)
     const vise = batimentVise(e.clientX, e.clientY, false)
     if (vise) cible = { type: 'batiment', id: vise }
+    else if (chateauVise(e.clientX, e.clientY)) cible = { type: 'chateau' }
     else {
       const occupant = occupation(village).get(`${c.x},${c.y}`)
       if (occupant?.type === 'rail') cible = { type: 'rail', x: c.x, y: c.y }
@@ -890,7 +909,11 @@ export function VueVillage({
         <TerrainVillage />
         <SolPlage />
         {sol}
+        {/* (27/10) Le chemin du château, sur l'herbe, puis le château sur sa colline : juste
+            après le décor du fond (rien de ce qui est devant lui n'y est planté, paysage.ts). */}
+        <CheminChateau />
         <ForetDerriere vue={vueForet} />
+        <ChateauVillage restaure={etat.chateau?.restaure === true} animation={restaurationChateau} touchable={!visite} />
         {/* (25/10, fluidité) L'eau de la mer bouge (elle a sa propre couche) : elle passe après le
             décor du fond (ils ne se touchent jamais), sinon le navigateur met chaque image du décor
             dans sa propre couche aussi, et le jeu ralentit. */}

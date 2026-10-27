@@ -842,6 +842,41 @@ def maison():
     return r(murs, ('#f2dfb8', '#fff3d8', '#c9ad7c'), brillance=False) + [('#c9ad7c', toit_plein)] + r(toit, ROUGE, d=3, brillance=False) + r(porte, BOIS, d=2, brillance=False) + r(rect(64, 58, 10, 10, 2), BLEU, d=2, brillance=False)
 
 
+@icone('🏰')
+def chateau():
+    # (27/10) Le château de la quête finale, restauré : un donjon au toit pointu bleu roi, deux tours
+    # rondes aux toits pointus et leurs fanions, un mur crénelé en pierre crème, et la grande porte
+    # en bois en arc.
+    pierre = ('#f3e7cc', '#fffaf0', '#cdb88f')
+    toit = ('#5f7fe8', '#a9bcff', '#3a56b8')
+    donjon = rect(34, 30, 32, 40, 2)
+    toit_donjon = poly((29, 33), (50, 5), (71, 33), arrondi=2)
+    tour_g = rect(7, 44, 21, 48, 3)
+    toit_g = poly((3, 46), (17.5, 15), (32, 46), arrondi=2)
+    tour_d = rect(72, 44, 21, 48, 3)
+    toit_d = poly((68, 46), (82.5, 15), (97, 46), arrondi=2)
+    mur = union(rect(25, 60, 50, 32, 2), *[rect(x, 53, 7, 9, 1.5) for x in (26, 36.5, 46.5, 56.5, 67)])
+    porte = svg('M 40 92 L 40 78 Q 40 67 50 67 Q 60 67 60 78 L 60 92 Z')
+    fenetres = union(rect(14.5, 56, 6, 11, 3), rect(79.5, 56, 6, 11, 3), rect(46, 40, 8, 13, 4))
+    fanions = union(poly((17.5, 6), (29, 9.5), (17.5, 13)), poly((82.5, 6), (94, 9.5), (82.5, 13)))
+    mats = union(trait([(17.5, 16), (17.5, 5)], 2.5), trait([(82.5, 16), (82.5, 5)], 2.5))
+    return (
+        r(donjon, pierre, d=3, brillance=False)
+        + r(toit_donjon, toit, d=3, bx=42, by=18)
+        + [(FONCE, fenetres)]
+        + [(NOIR[0], mats)]
+        + r(fanions, ROUGE, d=1.5, brillance=False)
+        + r(tour_g, pierre, d=3, brillance=False)
+        + r(tour_d, pierre, d=3, brillance=False)
+        + [(FONCE, inter(fenetres, union(tour_g, tour_d)))]
+        + r(toit_g, toit, d=3, bx=13, by=30, brx=4, bry=6)
+        + r(toit_d, toit, d=3, bx=78, by=30, brx=4, bry=6)
+        + r(mur, pierre, d=3, brillance=False)
+        + r(porte, BOIS, d=2, brillance=False)
+        + [(BOIS[2], trait([(50, 68), (50, 92)], 2.5)), (OR[0], cercle(54.5, 81, 1.8))]
+    )
+
+
 @icone('🛗')
 def ascenseur():
     cabine = rect(16, 10, 68, 82, 8)

@@ -10,6 +10,7 @@ export type CibleVillage =
   | { type: 'batiment'; id: IdBatiment }
   | { type: 'rail'; x: number; y: number }
   | { type: 'chemin'; x: number; y: number }
+  | { type: 'chateau' } // (27/10) le château de la quête finale, au fond de la carte
 
 // L'élément qu'on est en train de placer (ou de déplacer), avant de le poser.
 export type Fantome =

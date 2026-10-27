@@ -35,6 +35,7 @@ ont changé, les recopier dans le jeu :
 | `mine.mjs` | La mine (10 × 10) : le puits et ses parois pleines de minerais, le chevalement, la petite butte de rochers de la galerie (`butte()`, une courbe qui passe par les points de son contour) et son wagonnet, les filons (`filon()`) et les tas de minerais (`tasDeMinerais()`), le coffre au trésor ; son calque de devant (`mine-devant.svg`), les 8 caisses de l'ascenseur et les points utiles pour le jeu |
 | `arbres.mjs` | Les 7 arbres : rond, nuage, sapin, buisson, cerisier, automne (jaune) et palmier |
 | `montagnes.mjs` | Le paysage (25/10) : les montagnes enneigées (`montagne()`, la table `MONTAGNES_SIMPLES`, la montagne à la cascade et celle à la galerie de mine), leurs filons (`filon()`), cristaux et fissures, et les collines (`colline()`, `garnirColline()`), un bosquet de sapins et des rochers |
+| `chateau.mjs` | (27/10) Le château de la quête finale, en ruine et restauré (`public/images/village/chateau/`) : sa colline (`butte()`), ses tours, son donjon, ses murs (`murEnRuine()` pour la ruine) ; son calage (`CALAGE_CHATEAU` dans `src/composants/chateau.ts`) est affiché par `fabriquer.mjs` |
 | `fabriquer.mjs` | Lance tout, écrit les fichiers et affiche les calages |
 
 ## Comment c'est dessiné

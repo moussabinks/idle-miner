@@ -760,6 +760,9 @@ export const BATIMENTS: Record<IdBatiment, InfoBatiment> = {
 // L'ordre du menu « Bâtiments », celui où ils se débloquent. La mine est déjà posée au début.
 export const LISTE_BATIMENTS: IdBatiment[] = ['employes', 'marche', 'forgeron', 'foreuse', 'generateur', 'fonderie', 'joaillerie']
 
+// (27/10) La quête finale : restaurer le château en ruine, au fond de la carte (voir chateau.ts).
+export const PRIX_CHATEAU = 20_000_000
+
 // Les chemins de pavés : seulement pour faire joli (5 $ la case).
 export const COUT_CHEMIN: Cout = { argent: 5, materiaux: {} }
 

@@ -19,6 +19,7 @@ import { TAILLE_GRILLE } from '../jeu/donnees'
 import { cheminPublic } from '../chemins'
 import { DEMI_LARGEUR, LIMITES_CAMERA, profondeur, versEcran, versGrille, type Point } from './iso'
 import { surLaPlage } from './plage'
+import { CENTRE_CHATEAU, zoneChateau, zoneChemin } from './chateau'
 
 const N = TAILLE_GRILLE
 
@@ -176,6 +177,8 @@ export function planterPaysage(): Plante[] {
   // Ce que la caméra peut voir, avec une marge (une vignette qui dépasse à peine est gardée).
   const vue: Rectangle = { x0: x0 - 40, y0: y0 - 20, x1: x1 + 40, y1: y1 + 40 }
   const garder = zonesAGarder()
+  const chateau = zoneChateau()
+  const chemin = zoneChemin()
   const plantes: Plante[] = [CASCADE, GROTTE]
 
   // Peut-on planter cette vignette ici ?
@@ -200,6 +203,9 @@ export function planterPaysage(): Plante[] {
     }
     // Rien devant la cascade ni devant la galerie.
     if (garder.some((g) => profondeur(p.x, p.y) > g.profondeur - 300 && seCroisent(g.zone, cadre))) return false
+    // (27/10) Rien devant le château (ce qui est derrière, il le cache), et rien sur son chemin.
+    if (seCroisent(chateau, cadre) && profondeur(p.x, p.y) > profondeur(CENTRE_CHATEAU.x, CENTRE_CHATEAU.y) - 300) return false
+    if (seCroisent(chemin, cadre)) return false
     // Devant la clairière : jamais plus haut que le pied des arbres de la lisière.
     if (deDevant(p.x, p.y)) {
       const plafond = Math.max(plafondDevant(cadre.x0 + 10), plafondDevant(cadre.x1 - 10), plafondDevant((cadre.x0 + cadre.x1) / 2))

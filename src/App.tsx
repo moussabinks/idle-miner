@@ -29,6 +29,12 @@ import { Reglages } from './composants/Reglages'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { Visite } from './composants/Visite'
+import { FenetreChateau } from './composants/FenetreChateau'
+import { FeuxArtifice } from './composants/FeuxArtifice'
+import { QueteChateau } from './composants/QueteChateau'
+import { CENTRE_CHATEAU } from './composants/chateau'
+import { versEcran } from './composants/iso'
+import { queteChateauVisible, restaurerChateau } from './jeu/chateau'
 import { FenetreAbsence } from './composants/FenetreAbsence'
 import { FenetreQuelsMondes } from './composants/FenetreQuelsMondes'
 import { FeteNiveau } from './composants/FeteNiveau'
@@ -386,6 +392,44 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     [etat.village, village, joueur, pousse],
   )
 
+  // --- Le château de la quête finale (27/10) ----------------------------------------------------
+  const [chateauOuvert, setChateauOuvert] = useState(false)
+  const [victoire, setVictoire] = useState(false)
+  // La restauration en train de se jouer (l'animation du château), et le feu d'artifice (sa clé :
+  // on peut le relancer depuis la fenêtre du château).
+  const [restauration, setRestauration] = useState(false)
+  const [feuArtifice, setFeuArtifice] = useState<number | null>(null)
+  // Vrai entre le paiement et la fin du feu d'artifice : la fenêtre de la victoire s'ouvrira.
+  const [victoireAttendue, setVictoireAttendue] = useState(false)
+  // Où la caméra doit aller (le château), et un compteur pour y retourner à chaque fois.
+  const [regard, setRegard] = useState<{ x: number; y: number; cle: number } | null>(null)
+  const regarderChateau = useCallback(() => {
+    const centre = versEcran(CENTRE_CHATEAU.x, CENTRE_CHATEAU.y)
+    setRegard((r) => ({ x: centre.x, y: centre.y - 70, cle: (r?.cle ?? 0) + 1 }))
+  }, [])
+  function ouvrirChateau() {
+    setBatimentOuvert(null)
+    setVictoire(false)
+    setChateauOuvert(true)
+    regarderChateau()
+  }
+  // Payer les 20 millions : la fenêtre se ferme, la caméra va au château, la ruine tremble et le
+  // château neuf jaillit, puis le feu d'artifice ; à la fin, la fenêtre de la victoire.
+  function restaurer() {
+    const apres = jouer(restaurerChateau)
+    if (apres.chateau?.restaure !== true) return
+    setChateauOuvert(false)
+    setVictoireAttendue(true)
+    regarderChateau()
+    window.setTimeout(() => {
+      setRestauration(true)
+      sons.restaurationChateau()
+      grandMoment()
+    }, 700)
+    window.setTimeout(() => setFeuArtifice(Date.now()), 2200)
+    window.setTimeout(() => setRestauration(false), 5200)
+  }
+
   // Un bâtiment ouvert où quelque chose vient de se débloquer (recruteur, manager) : sa
   // notification « Nouveau » disparaît.
   const aDecouvrirIci = batimentActif ? decouvertesAMontrer(etat).filter((id) => DECOUVERTES[id].stand === batimentActif) : []
@@ -411,6 +455,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         sensRetrait.current = null
         setFantome({ type: 'sol', sol: cible.type, x: cible.x, y: cible.y, de: { x: cible.x, y: cible.y } })
       }
+      return
+    }
+    if (cible?.type === 'chateau') {
+      ouvrirChateau()
       return
     }
     if (cible?.type === 'rail') {
@@ -525,7 +573,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   }
 
   // Une fenêtre est-elle ouverte ? (la fête du niveau attend, et CrazyGames sait qu'on est en pause)
-  const fenetreOuverte = batimentActif !== null || fenetreHaut !== null || menuConstruction || trajetsOuverts !== null || resumeAbsence !== null || pubEnCours !== null
+  const fenetreOuverte =
+    batimentActif !== null || fenetreHaut !== null || menuConstruction || trajetsOuverts !== null || resumeAbsence !== null || pubEnCours !== null || chateauOuvert || restauration || feuArtifice !== null
   useEffect(() => {
     if (fenetreOuverte) jeuEnPause()
     else jeuEnCours()
@@ -795,6 +844,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             zonesRails={pinceau === 'rail' || (fantome?.type === 'sol' && fantome.sol === 'rail')}
             railPropose={traceRail ? { c: traceRail.propose, ok: peutPoserSol(etat, 'rail', traceRail.propose.x, traceRail.propose.y), depuis: traceRail.poses.at(-1) ?? null, sens: traceRail.sens, suivi: suiviRail } : null}
             onOuvrirTrajet={setTrajetsOuverts}
+            restaurationChateau={restauration}
+            regard={regard}
           />
           <Gains gains={gains} />
         </main>
@@ -820,6 +871,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
                   ⚙️
                 </button>
               </nav>
+              {/* (27/10) La quête finale, à la fin du jeu : au-dessus des tâches. */}
+              {!edition && queteChateauVisible(etat) && <QueteChateau etat={etat} onVoir={ouvrirChateau} />}
               {/* Pendant le tutoriel, la liste des tâches attend (elle arrive au « bravo »). */}
               {!edition && (etapeTuto === null || etapeTuto === 'bravo') && <Missions etat={etat} onAllerAuStand={ouvrirBatiment} onConstruire={ouvrirConstruction} />}
             </div>
@@ -883,6 +936,34 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         )}
         {trajetsOuverts && trajetsOuverts.length === 0 && railTouche && <FenetreRail onDeplacer={deplacerRailTouche} onRetirer={retirerRailTouche} onFermer={fermerTrajets} />}
         {resumeAbsence && <FenetreAbsence resume={resumeAbsence} onFermer={recupererAbsence} />}
+        {chateauOuvert && (
+          <FenetreChateau
+            etat={etat}
+            victoire={victoire}
+            onRestaurer={restaurer}
+            onFeuArtifice={() => {
+              setChateauOuvert(false)
+              regarderChateau()
+              setFeuArtifice(Date.now())
+            }}
+            onFermer={() => setChateauOuvert(false)}
+          />
+        )}
+        {feuArtifice !== null && (
+          <FeuxArtifice
+            key={feuArtifice}
+            duree={7}
+            onFini={() => {
+              setFeuArtifice(null)
+              // (après la restauration, la fenêtre de la victoire)
+              if (victoireAttendue) {
+                setVictoireAttendue(false)
+                setVictoire(true)
+                setChateauOuvert(true)
+              }
+            }}
+          />
+        )}
         {feteNiveau && !fenetreOuverte && <FeteNiveau avant={feteNiveau.avant} niveau={feteNiveau.apres} prochain={prochainDeblocage(etat)} onFermer={() => setFeteNiveau(null)} />}
         {pubEnCours && (
           <Publicite
