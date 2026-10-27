@@ -70,8 +70,18 @@ export function nomEmploye(nom: string): string {
 
 // Un nombre écrit à la façon de la langue : « 1 250 » en français, « 1,250 » en anglais,
 // « 1.250 » en espagnol et en portugais.
+// (27/10, FPS) Le format d'une langue est préparé une seule fois, puis gardé : toLocaleString
+// le refaisait à chaque nombre affiché (des centaines de fois par seconde). Même résultat.
+const formatsNombres = new Map<string, Intl.NumberFormat>()
+
 export function nombre(n: number, chiffresApresVirgule = 0): string {
-  return n.toLocaleString(FORMATS[langueActuelle], { maximumFractionDigits: chiffresApresVirgule })
+  const cle = `${langueActuelle}|${chiffresApresVirgule}`
+  let format = formatsNombres.get(cle)
+  if (!format) {
+    format = new Intl.NumberFormat(FORMATS[langueActuelle], { maximumFractionDigits: chiffresApresVirgule })
+    formatsNombres.set(cle, format)
+  }
+  return format.format(n)
 }
 
 // (25/10) Un prix en euros, à la façon de la langue : « 1,99 € » en français, « €1.99 » en anglais.

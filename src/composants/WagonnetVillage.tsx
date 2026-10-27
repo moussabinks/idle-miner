@@ -13,8 +13,8 @@ import { totalObjets, valeurDe, type EtatJeu, type Inventaire, type Trajet } fro
 import { capaciteTrajet, ligneDe, longueurTrajet, vitesseTrajet } from '../jeu/wagonnet'
 import { sons } from '../sons'
 import { Perso } from './ElementsVillage'
-import { DessinWagonnet3D } from './Wagonnet3D'
-import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
+import { WagonnetPose } from './Wagonnet3D'
+import { longueurTrace, orienter, surLaTrace, traceDeLaVoie, versEcran } from './iso'
 import { nombre, nomEmploye } from '../jeu/langue'
 
 // Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
@@ -182,7 +182,6 @@ export function WagonnetVillage({ etat, trajet: w, sansVente = false }: { etat: 
   const orientation = orienter(dx, dy)
   const roule = w.etape !== 'quai'
   const mineur = roule && !joueurPousse ? etat.employes.find((m) => m.nom === w.pousseur && m.etape === 'pousse') : undefined
-  const e = versEcran(ici.x, ici.y)
   // À l'arrêt pour charger (au départ) ou pour livrer (à l'arrivée) : la distance est négative
   // pendant ce temps-là (voir wagonnet.ts). Le pousseur attend à l'arrêt, sans marcher (28/10).
   // (27/10, demandé par le propriétaire : plus de jauge « Vente » au marché, le « +X $ » suffit)
@@ -190,16 +189,7 @@ export function WagonnetVillage({ etat, trajet: w, sansVente = false }: { etat: 
   return (
     <>
       {ventesVisibles}
-      <svg
-        className={`wagonnet-village ${electrique ? 'wagonnet-electrique' : ''}`}
-        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}
-        viewBox={`${e.x - 40} ${e.y - 44} 80 64`}
-        width={80}
-        height={64}
-        aria-hidden="true"
-      >
-        <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={remplissage} contenu={w.chargement} />
-      </svg>
+      <WagonnetPose x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={remplissage} contenu={w.chargement} classe={electrique ? 'wagonnet-electrique' : ''} />
       {joueurPousse && <Perso qui="joueur" x={pousseurIci.x} y={pousseurIci.y} sens={orientation.sens} vue={orientation.vue} marche={!enPause} classe="perso-joueur perso-pousseur" />}
       {mineur && (
         <Perso

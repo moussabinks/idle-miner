@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 
 // La version du jeu, affichée en petit sur l'écran d'accueil : le commit Git et la date du
@@ -47,6 +48,9 @@ export default defineConfig(({ mode }) => {
   const dossier = crazygames ? 'dist-crazygames' : 'dist'
   return {
     plugins: crazygames ? [react(), sansApplication(dossier)] : [react()],
+    // (27/10) Sur CrazyGames, pas de comptes : enLigneAbsent.ts remplace enLigne.ts, et la
+    // bibliothèque de Supabase n'est pas copiée dans le jeu.
+    resolve: crazygames ? { alias: [{ find: /^(\.\.?\/)+enLigne$/, replacement: fileURLToPath(new URL('./src/enLigneAbsent.ts', import.meta.url)) }] } : {},
     // (25/10) Des chemins relatifs : le jeu marche aussi servi dans un sous-dossier (CrazyGames).
     base: './',
     build: { outDir: dossier },

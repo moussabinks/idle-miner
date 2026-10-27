@@ -4,17 +4,21 @@
 // émeraude, diamant), plus ou moins haut selon ce qu'il porte : vide, à moitié plein, ou plein à
 // ras bord (avec un petit tas qui dépasse).
 //
-// C'est un petit modèle en 3D, recalculé à chaque image : chaque face est un polygone en 3D,
-// projeté dans la vue du village (la même que les rails). Comme il est recalculé, il peut tourner
-// d'un tout petit angle à la fois : il prend les virages en douceur.
+// C'est un petit modèle en 3D : chaque face est un polygone en 3D, projeté dans la vue du village
+// (la même que les rails). Il peut tourner d'un tout petit angle à la fois : il prend les virages
+// en douceur.
+// (27/10, FPS) Il est dessiné autour de son milieu (0, 0), et WagonnetPose le place avec une
+// simple translation : en ligne droite, le dessin ne change pas, seule sa position bouge (avant,
+// ses 40 polygones étaient recalculés et redessinés à chaque image). Le rendu est le même.
 // Le style : des aplats de couleur (une seule nuance plus foncée pour les côtés), un contour
 // d'encre épais sur chaque face, ni dégradé ni lumière.
 //
 // Les coordonnées : en cases. « a » va vers l'avant du wagonnet, « b » vers sa gauche, « z » vers
 // le haut (0 : le sol ; le dessus des rails est à 0,17).
 
+import { memo } from 'react'
 import type { IdBloc } from '../jeu/donnees'
-import { versEcran } from './iso'
+import { DEMI_HAUTEUR, DEMI_LARGEUR, profondeur, versEcran } from './iso'
 import { minerais } from './minerais'
 
 type P3 = [number, number, number]
@@ -131,34 +135,85 @@ function mineraisDe(contenu: Partial<Record<IdBloc, number>>): IdBloc[] {
   return liste
 }
 
-// --- Le dessin ----------------------------------------------------------------------------------
-type Props = {
+// --- Le placement --------------------------------------------------------------------------------
+type PropsPose = {
   x: number // le milieu du wagonnet, sur la grille (en cases)
   y: number
   dx: number // sa direction (vers l'avant)
   dy: number
   remplissage: number // de 0 (vide) à 1 (plein)
   contenu: Partial<Record<IdBloc, number>> // ce qu'il porte (pour les couleurs des minerais)
+  classe?: string
 }
 
-export function DessinWagonnet3D({ x, y, dx, dy, remplissage, contenu }: Props) {
+// Le wagonnet posé dans le village : un petit dessin (80 × 64) déplacé par une translation (pas de
+// left/top, qui obligeaient le navigateur à refaire la mise en page à chaque image).
+export function WagonnetPose({ x, y, dx, dy, remplissage, contenu, classe = '' }: PropsPose) {
+  const e = versEcran(x, y)
+  // La direction, à un dix-millième près : en ligne droite, elle ne bouge plus d'une image à
+  // l'autre (des poussières de calcul), et le dessin n'est pas refait.
   const l = Math.hypot(dx, dy) || 1
-  const avX = dx / l // vers l'avant
-  const avY = dy / l
+  const avX = Math.round((dx / l) * 10000) / 10000
+  const avY = Math.round((dy / l) * 10000) / 10000
+  return (
+    <svg
+      className={`wagonnet-village ${classe}`}
+      style={{ transform: `translate(${e.x - 40}px, ${e.y - 44}px)`, zIndex: profondeur(x, y) + 4 }}
+      viewBox="-40 -44 80 64"
+      width={80}
+      height={64}
+      aria-hidden="true"
+    >
+      <DessinWagonnet3D avX={avX} avY={avY} remplissage={remplissage} contenu={contenu} />
+    </svg>
+  )
+}
+
+// --- Le dessin ----------------------------------------------------------------------------------
+type Props = {
+  avX: number // sa direction (vers l'avant, de longueur 1)
+  avY: number
+  remplissage: number // de 0 (vide) à 1 (plein)
+  contenu: Partial<Record<IdBloc, number>> // ce qu'il porte (pour les couleurs des minerais)
+}
+
+// Le même chargement ? (la partie est recopiée à chaque tic : on compare ce qu'il contient)
+function memeContenu(a: Partial<Record<IdBloc, number>>, b: Partial<Record<IdBloc, number>>): boolean {
+  if (a === b) return true
+  const cles = Object.keys(a) as IdBloc[]
+  if (cles.length !== Object.keys(b).length) return false
+  return cles.every((cle) => a[cle] === b[cle])
+}
+
+// Le dessin n'est refait que si le wagonnet tourne, se remplit ou change de chargement.
+const DessinWagonnet3D = memo(
+  function DessinWagonnet3D({ avX, avY, remplissage, contenu }: Props) {
+    return <ModeleWagonnet avX={avX} avY={avY} remplissage={remplissage} contenu={contenu} />
+  },
+  (avant, apres) => avant.avX === apres.avX && avant.avY === apres.avY && avant.remplissage === apres.remplissage && memeContenu(avant.contenu, apres.contenu),
+)
+
+// Un point de la grille, par rapport au milieu du wagonnet → l'écran, par rapport à son milieu
+// (la même projection que versEcran, sans l'origine du monde).
+function versEcranRelatif(gx: number, gy: number): Point {
+  return { x: (gx - gy) * DEMI_LARGEUR, y: (gx + gy) * DEMI_HAUTEUR }
+}
+
+function ModeleWagonnet({ avX, avY, remplissage, contenu }: Props) {
   const gaX = -avY // vers la gauche
   const gaY = avX
-  // Un point du wagonnet (a, b, z) → la grille en 3D.
-  const monde = (a: number, b: number, z: number): P3 => [x + a * avX + b * gaX, y + a * avY + b * gaY, z]
+  // Un point du wagonnet (a, b, z) → la grille en 3D (par rapport à son milieu).
+  const monde = (a: number, b: number, z: number): P3 => [a * avX + b * gaX, a * avY + b * gaY, z]
   // → l'écran.
   const ecran = (p: P3): Point => {
-    const e = versEcran(p[0], p[1])
+    const e = versEcranRelatif(p[0], p[1])
     return { x: e.x, y: e.y - p[2] * HAUTEUR_Z }
   }
   // Une liste de points 3D → le texte « x,y x,y ... » d'un polygone.
   const pts = (liste: P3[]) => {
     let texte = ''
     for (const p of liste) {
-      const e = versEcran(p[0], p[1])
+      const e = versEcranRelatif(p[0], p[1])
       texte += `${e.x.toFixed(1)},${(e.y - p[2] * HAUTEUR_Z).toFixed(1)} `
     }
     return texte

@@ -24,19 +24,25 @@ const OISEAUX = Array.from({ length: 3 }, (_, i) => ({ y: 180 + i * 320 + hasard
 const NUAGES = Array.from({ length: 4 }, (_, i) => ({ y: 150 + i * 300 + hasard() * 120, taille: 260 + hasard() * 220, duree: 90 + hasard() * 60, retard: -i * 35 - hasard() * 20 }))
 
 // Un papillon : deux ailes qui battent (vu de dessus).
+// (27/10, FPS) Chaque aile est un petit dessin à part, posé au même endroit, qui bat avec une
+// transformation CSS : avant, l'aile était un groupe dans le dessin du papillon, et chaque
+// battement obligeait le navigateur à recalculer ses formes (plus de 2 000 fois par seconde pour
+// les 9 papillons). Le dessin est le même.
 function Papillon({ couleur }: { couleur: string }) {
   return (
-    <svg className="papillon-dessin" viewBox="-6 -5 12 10" width="12" height="10">
-      <g className="aile-gauche">
+    <span className="papillon-dessin">
+      <svg className="aile-gauche" viewBox="-6 -5 12 10" width="12" height="10">
         <ellipse cx="-2.6" cy="-1.4" rx="2.8" ry="2.2" fill={couleur} stroke="rgb(0 0 0 / 0.35)" strokeWidth="0.4" />
         <ellipse cx="-2" cy="1.8" rx="1.8" ry="1.5" fill={couleur} stroke="rgb(0 0 0 / 0.35)" strokeWidth="0.4" />
-      </g>
-      <g className="aile-droite">
+      </svg>
+      <svg className="aile-droite" viewBox="-6 -5 12 10" width="12" height="10">
         <ellipse cx="2.6" cy="-1.4" rx="2.8" ry="2.2" fill={couleur} stroke="rgb(0 0 0 / 0.35)" strokeWidth="0.4" />
         <ellipse cx="2" cy="1.8" rx="1.8" ry="1.5" fill={couleur} stroke="rgb(0 0 0 / 0.35)" strokeWidth="0.4" />
-      </g>
-      <rect x="-0.4" y="-3" width="0.8" height="6" rx="0.4" fill="#3a2410" />
-    </svg>
+      </svg>
+      <svg className="corps-papillon" viewBox="-6 -5 12 10" width="12" height="10">
+        <rect x="-0.4" y="-3" width="0.8" height="6" rx="0.4" fill="#3a2410" />
+      </svg>
+    </span>
   )
 }
 
