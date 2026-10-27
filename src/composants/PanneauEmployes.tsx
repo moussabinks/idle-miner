@@ -93,7 +93,7 @@ import { nombre, nomEmploye, t } from '../jeu/langue'
 import type { Employe, EtatJeu } from '../jeu/mineur'
 import { verrou } from '../jeu/niveaux'
 import { batimentPose } from '../jeu/village'
-import { forcePousseur, ligneDe, placesChariot, placesReelles } from '../jeu/wagonnet'
+import { forcePousseur, ligneDe, placesChariot, placesReelles, vitesseAdoucie, vitesseBrute } from '../jeu/wagonnet'
 import { nombreAbrege } from '../nombres'
 import type { Action } from '../usePartie'
 import { Achat, Amelioration } from './Amelioration'
@@ -229,6 +229,15 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
   const coutChariot = coutChariotPousseur(etat, employe)
   // (27/10) Les vraies places de son chariot : agrandi d'autant que sa vitesse est adoucie.
   const places = (n: number) => placesReelles(etat, n, employe.trajet, employe)
+  // (27/10) Sur son trajet, à ce niveau de vitesse : ce qu'on voit sur la carte (cases/s) et les
+  // places de son chariot (agrandi d'autant que sa vitesse est adoucie).
+  const auNiveau = (niveau: number) => {
+    if (!employe.trajet) return null
+    const e = { ...employe, niveau }
+    return { vitesse: vitesseAdoucie(vitesseBrute(etat, employe.trajet, e)), places: placesReelles(etat, placesChariot(e), employe.trajet, e) }
+  }
+  const maintenant = pousseur ? auNiveau(employe.niveau) : null
+  const ensuite = pousseur && vitesseSuivante ? auNiveau(employe.niveau + 1) : null
   // Avec une nouvelle pioche, combien il creuserait.
   const avecPiocheSuivante = piocheSuivante ? vitesseEmploye({ ...employe, niveau: employe.niveau + 1 }) : 0
   const trajetsPossibles = LISTE_LIAISONS.filter((l) => l === employe.trajet || (ligneDe(etat, l) !== null && !trajetPris(etat, l)))
@@ -307,7 +316,21 @@ function CarteEmploye({ etat, jouer, employe, index, onLicencier, onRemplacer }:
           niveau={employe.niveau + 1}
           niveauMax={NIVEAUX_POUSSEUR.length}
           effet={
-            vitesseSuivante ? (
+            maintenant ? (
+              ensuite ? (
+                <>
+                  {t('{n} cases/s', { n: nombre(maintenant.vitesse, 1) })} → <strong>{t('{n} cases/s', { n: nombre(ensuite.vitesse, 1) })}</strong>
+                  {ensuite.places > maintenant.places && (
+                    <>
+                      {' · 🛒 '}
+                      {nombre(maintenant.places)} → <strong>{t('{n} places', { n: ensuite.places })}</strong>
+                    </>
+                  )}
+                </>
+              ) : (
+                t('{n} cases/s', { n: nombre(maintenant.vitesse, 1) })
+              )
+            ) : vitesseSuivante ? (
               <>
                 ×{nombre(vitesse.vitesse, 2)} → <strong>×{nombre(vitesseSuivante.vitesse, 2)}</strong>
               </>

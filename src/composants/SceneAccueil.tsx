@@ -1,12 +1,12 @@
-// Le décor du haut de l'écran d'accueil (20/10) : un petit village tout fait, dessiné comme dans
-// le jeu (la clairière, la mine au milieu, des bâtiments, des décorations, des rails), avec des
-// taupes qui vont et viennent entre la mine, le marché et la forge, et un wagonnet qui roule.
-// (25/10) Replacé sur la clairière de 40 × 40 cases (la mine au milieu, en 15 ; 15).
+// Le décor du fond de l'écran d'accueil (20/10) : un village tout fait, dessiné comme dans le jeu
+// (la clairière, la mine, les bâtiments, des décorations, des rails), avec des taupes qui vont et
+// viennent et des wagonnets qui roulent. (27/10) C'est le village de rêve de la fin de partie,
+// copié sur celui du propriétaire (voir BATIMENTS_SCENE).
 // Rien n'est joué ici : c'est une image qui bouge. Elle remplit toute sa boîte, comme une photo
 // recadrée (« cover »).
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { DECORATIONS, type IdBatiment, type IdDecoration, type IdRarete } from '../jeu/donnees'
+import { DECORATIONS, type IdBatiment, type IdBloc, type IdDecoration, type IdRarete } from '../jeu/donnees'
 import { nomEmploye, t } from '../jeu/langue'
 import {
   batimentPose,
@@ -15,7 +15,7 @@ import {
   lireCle,
   longueurChemin,
   nouveauVillage,
-  railsMineMarche,
+  railsEntre,
   type BatimentPose,
   type Case,
   type Village,
@@ -26,77 +26,99 @@ import { ImageBatiment, Perso } from './ElementsVillage'
 import { EauPlage, ObjetsPlage, SolPlage } from './PlageVillage'
 import { ForetDerriere, ForetDevant } from './ForetVillage'
 import { ChateauVillage, CheminChateau } from './ChateauVillage'
-import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, orienter, profondeur, surLeChemin, versEcran } from './iso'
+import { HAUTEUR_MONDE, LARGEUR_MONDE, LIMITES_TERRAIN, devant, hauteurDecoration, longueurTrace, orienter, profondeur, surLaTrace, surLeChemin, traceDeLaVoie, versEcran } from './iso'
 
 // ---------------------------------------------------------------------------
 // Le village de la scène (posé une fois pour toutes)
 // ---------------------------------------------------------------------------
 
-// Le village tout autour de la mine (qui est au milieu de la clairière).
+// (27/10, demandé par le propriétaire) Le village de rêve de la fin de partie, celui du
+// propriétaire : tout est posé, symétrique de part et d'autre de l'axe mine → générateur → marché
+// (le milieu de l'écran). Les rails font un losange autour du générateur, les ateliers s'y
+// branchent, et deux boucles descendent jusqu'au marché.
 const BATIMENTS_SCENE: BatimentPose[] = [
-  { id: 'puits', x: 15, y: 15, miroir: false },
-  { id: 'marche', x: 13, y: 27, miroir: true },
-  { id: 'forgeron', x: 27, y: 19, miroir: true },
-  { id: 'employes', x: 6, y: 20, miroir: false },
-  { id: 'foreuse', x: 26, y: 27, miroir: false },
-  { id: 'generateur', x: 27, y: 8, miroir: false },
+  { id: 'puits', x: 4, y: 4, miroir: false },
+  { id: 'generateur', x: 17, y: 17, miroir: false },
+  { id: 'marche', x: 28, y: 28, miroir: false },
+  { id: 'employes', x: 2, y: 17, miroir: false },
+  { id: 'foreuse', x: 17, y: 2, miroir: false },
+  { id: 'joaillerie', x: 12, y: 27, miroir: false },
+  { id: 'fonderie', x: 27, y: 12, miroir: false },
 ]
 
+// Les décorations, elles aussi de part et d'autre de l'axe (une case (x, y) et son reflet (y, x)).
 const DECORATIONS_SCENE: { id: IdDecoration; x: number; y: number; miroir?: boolean }[] = [
-  { id: 'fontaine', x: 22, y: 28 },
-  { id: 'statue', x: 11, y: 15 },
-  { id: 'cerisier', x: 3, y: 14 },
-  { id: 'cerisier', x: 32, y: 24 },
-  { id: 'sapin', x: 2, y: 18 },
-  { id: 'sapin', x: 32, y: 14 },
-  { id: 'arbre', x: 3, y: 27 },
-  { id: 'arbre', x: 24, y: 5 },
-  { id: 'arbre', x: 20, y: 34 },
-  { id: 'lanterne', x: 21, y: 26 },
-  { id: 'lanterne', x: 25, y: 26 },
-  { id: 'lanterne', x: 12, y: 25 },
-  { id: 'tonneau', x: 19, y: 30 },
-  { id: 'caisse', x: 20, y: 30 },
-  { id: 'banc', x: 25, y: 30, miroir: true },
-  { id: 'rocher', x: 33, y: 18 },
-  { id: 'buisson', x: 5, y: 26 },
-  { id: 'buisson', x: 31, y: 18 },
-  { id: 'fleurs-rouges', x: 12, y: 19 },
-  { id: 'fleurs-jaunes', x: 13, y: 20 },
-  { id: 'fleurs-violettes', x: 12, y: 24 },
-  { id: 'fleurs-rouges', x: 26, y: 15 },
-  { id: 'fleurs-jaunes', x: 25, y: 14 },
-  { id: 'fleurs-violettes', x: 17, y: 11 },
-  { id: 'fleurs-jaunes', x: 16, y: 12 },
-  { id: 'fleurs-rouges', x: 24, y: 33 },
-  { id: 'cerisier', x: 33, y: 4 },
-  { id: 'sapin', x: 29, y: 3 },
-  { id: 'arbre', x: 36, y: 9 },
-  { id: 'fleurs-jaunes', x: 34, y: 11 },
-  { id: 'fleurs-violettes', x: 26, y: 6 },
-  { id: 'buisson', x: 35, y: 13 },
-  { id: 'rocher', x: 30, y: 14 },
-  { id: 'lanterne', x: 26, y: 10 },
+  // Entre la mine et le générateur : des fleurs sur l'axe, et des lanternes.
+  { id: 'fleurs-violettes', x: 15, y: 15 },
+  { id: 'fleurs-jaunes', x: 16, y: 15 },
+  { id: 'fleurs-jaunes', x: 15, y: 16 },
+  { id: 'fleurs-rouges', x: 12, y: 16 },
+  { id: 'fleurs-rouges', x: 16, y: 12 },
+  { id: 'fleurs-jaunes', x: 13, y: 18 },
+  { id: 'fleurs-jaunes', x: 18, y: 13 },
+  { id: 'lanterne', x: 11, y: 22 },
+  { id: 'lanterne', x: 22, y: 11 },
+  { id: 'buisson', x: 11, y: 19 },
+  { id: 'buisson', x: 19, y: 11 },
+  // Sous le générateur, une fontaine sur l'axe ; dans les boucles du marché, des bancs, des fleurs.
+  { id: 'fontaine', x: 22, y: 22 },
+  { id: 'buisson', x: 26, y: 26 },
+  { id: 'fleurs-violettes', x: 25, y: 25 },
+  { id: 'lanterne', x: 27, y: 25 },
+  { id: 'lanterne', x: 25, y: 27 },
+  { id: 'banc', x: 22, y: 27 },
+  { id: 'banc', x: 27, y: 22, miroir: true },
+  { id: 'fleurs-rouges', x: 21, y: 26 },
+  { id: 'fleurs-rouges', x: 26, y: 21 },
+  { id: 'fleurs-jaunes', x: 23, y: 28 },
+  { id: 'fleurs-jaunes', x: 28, y: 23 },
+  { id: 'buisson', x: 21, y: 28 },
+  { id: 'buisson', x: 28, y: 21 },
+  // Autour : des arbres, des tonneaux et des caisses devant les bâtiments.
+  { id: 'cerisier', x: 4, y: 25 },
+  { id: 'cerisier', x: 25, y: 4 },
+  { id: 'arbre', x: 7, y: 31 },
+  { id: 'arbre', x: 31, y: 7 },
+  { id: 'sapin', x: 3, y: 34 },
+  { id: 'sapin', x: 34, y: 3 },
+  { id: 'fleurs-violettes', x: 8, y: 27 },
+  { id: 'fleurs-violettes', x: 27, y: 8 },
+  { id: 'tonneau', x: 33, y: 29 },
+  { id: 'caisse', x: 29, y: 33 },
+  { id: 'rocher', x: 36, y: 30 },
+  { id: 'rocher', x: 30, y: 36 },
+  { id: 'fleurs-jaunes', x: 18, y: 8 },
+  { id: 'fleurs-jaunes', x: 8, y: 22 },
 ]
 
-// Les rails de la mine au marché (avec un virage), et des chemins de pavés vers le Personnel
-// et vers la forge.
+// Les rails, en lignes droites : de (x0, y0) à (x1, y1), case par case.
+function ligne(x0: number, y0: number, x1: number, y1: number): Case[] {
+  const cases: Case[] = []
+  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))
+  for (let i = 0; i <= n; i++) cases.push({ x: x0 + Math.sign(x1 - x0) * i, y: y0 + Math.sign(y1 - y0) * i })
+  return cases
+}
+
+// Le losange autour du générateur (il part des deux faces du bas de la mine et se referme sous
+// le générateur), les branches vers la foreuse, la fonderie, la joaillerie et le générateur, et
+// les deux boucles qui prolongent les branches du générateur jusqu'au marché.
 const RAILS_SCENE: Case[] = [
-  { x: 19, y: 25 },
-  { x: 19, y: 26 },
-  { x: 19, y: 27 },
-  { x: 18, y: 27 },
+  ...ligne(14, 10, 24, 10),
+  ...ligne(24, 11, 24, 24),
+  ...ligne(10, 14, 10, 24),
+  ...ligne(11, 24, 23, 24),
+  ...ligne(20, 7, 20, 9),
+  ...ligne(25, 14, 26, 14),
+  ...ligne(14, 25, 14, 26),
+  ...ligne(22, 19, 23, 19),
+  ...ligne(19, 22, 19, 23),
+  ...ligne(25, 19, 30, 19),
+  ...ligne(30, 20, 30, 27),
+  ...ligne(19, 25, 19, 30),
+  ...ligne(20, 30, 27, 30),
 ]
-const CHEMINS_SCENE: Case[] = [
-  { x: 12, y: 22 },
-  { x: 13, y: 22 },
-  { x: 14, y: 22 },
-  { x: 25, y: 24 },
-  { x: 26, y: 24 },
-  { x: 27, y: 24 },
-  { x: 28, y: 24 },
-  { x: 29, y: 24 },
-]
+// Des pavés devant le Personnel.
+const CHEMINS_SCENE: Case[] = [7, 8, 9].flatMap((x) => [18, 19, 20].map((y) => ({ x, y })))
 
 function villageDeLaScene(): Village {
   const village = nouveauVillage()
@@ -108,11 +130,18 @@ function villageDeLaScene(): Village {
 
 const VILLAGE = villageDeLaScene()
 
+// La voie de chaque wagonnet (une courbe douce dans les virages, comme dans le jeu), calculée une fois.
+const TRACES: Partial<Record<IdBatiment, { x: number; y: number }[]>> = {}
+for (const de of ['puits', 'foreuse', 'fonderie', 'joaillerie'] as IdBatiment[]) {
+  const rails = railsEntre(VILLAGE, de, 'marche')
+  if (rails) TRACES[de] = traceDeLaVoie(VILLAGE, rails, de, 'marche')
+}
+
 // Les mineurs qui font des allers-retours : d'où à où, leur rareté (la couleur du casque), et un
 // décalage pour qu'ils ne marchent pas tous ensemble.
 const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: IdRarete; decalage: number }[] = [
   { nom: 'Noisette', de: 'puits', vers: 'marche', rarete: 'legendaire', decalage: 0 },
-  { nom: 'Pépite', de: 'puits', vers: 'forgeron', rarete: 'epique', decalage: 0.35 },
+  { nom: 'Pépite', de: 'puits', vers: 'fonderie', rarete: 'epique', decalage: 0.35 },
   { nom: 'Caramel', de: 'puits', vers: 'marche', rarete: 'rare', decalage: 0.55 },
   { nom: 'Biscotte', de: 'puits', vers: 'employes', rarete: 'mythique', decalage: 0.8 },
 ]
@@ -121,10 +150,22 @@ const MINEURS_SCENE: { nom: string; de: IdBatiment; vers: IdBatiment; rarete: Id
 const VITESSE_SCENE = 2.2
 const VITESSE_WAGONNET = 2.5
 
-// Le rectangle du monde (en pixels) où tient tout le village de la scène : centré un peu
-// au-dessus de la mine (les bâtiments sont hauts), sur la case (19,2 ; 14,4).
-const CENTRE_CADRE = versEcran(19.2, 14.4)
-const CADRE = { x: CENTRE_CADRE.x - 350, y: CENTRE_CADRE.y - 280, l: 700, h: 560 }
+// Le rectangle du monde (en pixels) où tient tout le village de la scène : centré sur l'axe du
+// village, un peu au-dessus du générateur (la mine, en haut, est haute).
+const CENTRE_CADRE = versEcran(18, 18)
+const CADRE = { x: CENTRE_CADRE.x - 370, y: CENTRE_CADRE.y - 340, l: 740, h: 640 }
+
+// (27/10) Les wagonnets qui roulent vers le marché, chacun poussé par une taupe : d'où ils
+// partent, leur chargement, la rareté du pousseur et un décalage pour qu'ils ne partent pas ensemble.
+const WAGONNETS_SCENE: { de: IdBatiment; nom: string; rarete: IdRarete; contenu: Partial<Record<IdBloc, number>>; decalage: number }[] = [
+  { de: 'puits', nom: 'Khalil', rarete: 'mythique', contenu: { or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }, decalage: 0 },
+  { de: 'foreuse', nom: 'Sasha', rarete: 'legendaire', contenu: { charbon: 4, fer: 3, redstone: 3 }, decalage: 4 },
+  { de: 'fonderie', nom: 'Satine', rarete: 'epique', contenu: { lingot_or: 4, lingot_fer: 4 }, decalage: 9 },
+  { de: 'joaillerie', nom: 'Teo', rarete: 'legendaire', contenu: { bijou_diamant: 2, bijou_rubis: 2, bijou_saphir: 2 }, decalage: 13 },
+]
+// (le même écart entre le wagonnet et son pousseur que dans le jeu, voir WagonnetVillage)
+const ESSIEUX = 0.6
+const RECUL_POUSSEUR = 1.15
 
 // Une position le long d'un aller-retour : on va, on attend un peu, on revient.
 function allerRetour(longueur: number, vitesse: number, temps: number): { distance: number; retour: boolean; pause: boolean } {
@@ -165,7 +206,7 @@ function objetsFixes(noms: { manager: string; recruteur: string }): ReactNode[] 
       objets.push(
         <ImageBatiment key="puits" id="puits" x={b.x} y={b.y} miroir={b.miroir} classe="" />,
         <BoiteSvg key="puits-evolution" x={b.x} y={b.y} taille={10} hauteur={130} style={{ zIndex: profondeur(b.x + 5, b.y + 5) + 1 }}>
-          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} niveau={3} ascenseur hauteurCabine={0.35} />
+          <DessinEvolutionMine x={b.x} y={b.y} miroir={b.miroir} niveau={7} ascenseur hauteurCabine={0.35} />
         </BoiteSvg>,
       )
     } else {
@@ -184,7 +225,7 @@ function objetsFixes(noms: { manager: string; recruteur: string }): ReactNode[] 
 
   // Le joueur, devant la mine.
   objets.push(
-    <Perso key="joueur" qui="joueur" x={21.6} y={26.4} sens={-1} vue="face" marche={false} classe="perso-joueur" />,
+    <Perso key="joueur" qui="joueur" x={25.6} y={33.6} sens={-1} vue="face" marche={false} classe="perso-joueur" />,
   )
 
   // Le manager et le recruteur, à leur poste devant le Personnel.
@@ -246,7 +287,7 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
   const centreX = large ? margeGauche + largeurLibre / 2 : taille.l / 2
   const centreY = large ? taille.h / 2 : taille.h * 0.62
   // Le point du monde qu'on met là : le milieu du village, ou le milieu de la mine sur téléphone.
-  const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(20, 21)
+  const vise = large ? { x: CADRE.x + CADRE.l / 2, y: CADRE.y + CADRE.h / 2 } : versEcran(18, 19)
   const borner = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
   const gauche = borner(vise.x - centreX / z, x0, x1 - taille.l / z)
   const haut = borner(vise.y - centreY / z, y0, y1 - taille.h / z)
@@ -285,24 +326,46 @@ export function SceneAccueil({ marges }: { marges?: { gauche: number; droite: nu
     )
   })
 
-  // Le wagonnet qui fait la navette sur les rails.
-  const rails = railsMineMarche(VILLAGE)
-  if (rails) {
-    const longueur = longueurChemin(rails)
-    const point = surLeChemin(rails, allerRetour(longueur, VITESSE_WAGONNET, temps).distance)
-    const e = versEcran(point.x, point.y)
+  // Les wagonnets qui font la navette jusqu'au marché, avec leur pousseur derrière eux.
+  for (const w of WAGONNETS_SCENE) {
+    const trace = TRACES[w.de]
+    if (!trace) continue
+    const longueur = longueurTrace(trace)
+    const etape = allerRetour(longueur, VITESSE_WAGONNET, temps + w.decalage)
+    const s = etape.distance
+    const borne = (v: number) => Math.max(0, Math.min(longueur, v))
+    const a = surLaTrace(trace, borne(s + ESSIEUX / 2))
+    const b = surLaTrace(trace, borne(s - ESSIEUX / 2))
+    const ici = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    const dx = (etape.retour ? -1 : 1) * (a.x - b.x || a.dx)
+    const dy = (etape.retour ? -1 : 1) * (a.y - b.y || a.dy)
+    const pousseur = surLaTrace(trace, borne(s + (etape.retour ? RECUL_POUSSEUR : -RECUL_POUSSEUR)))
+    const sens = orienter(dx, dy)
+    const e = versEcran(ici.x, ici.y)
     objets.push(
       <svg
-        key="wagonnet"
+        key={`wagonnet-${w.de}`}
         className="wagonnet-village"
-        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(point.x, point.y) + 4 }}
+        style={{ left: e.x - 40, top: e.y - 44, zIndex: profondeur(ici.x, ici.y) + 4 }}
         viewBox={`${e.x - 40} ${e.y - 44} 80 64`}
         width={80}
         height={64}
         aria-hidden="true"
       >
-        <DessinWagonnet3D x={point.x} y={point.y} dx={point.dx} dy={point.dy} remplissage={0.8} contenu={{ or: 3, diamant: 2, emeraude: 2, charbon: 3, pierre: 2 }} />
+        {/* (plein à l'aller, vide au retour : il a tout vendu au marché) */}
+        <DessinWagonnet3D x={ici.x} y={ici.y} dx={dx} dy={dy} remplissage={etape.retour ? 0 : 0.8} contenu={etape.retour ? {} : w.contenu} />
       </svg>,
+      <Perso
+        key={`pousseur-${w.de}`}
+        qui={w.rarete}
+        x={pousseur.x}
+        y={pousseur.y}
+        sens={sens.sens}
+        vue={sens.vue}
+        marche={!etape.pause}
+        classe="perso-mineur perso-pousseur"
+        etiquette={<span className={`etiquette-perso rarete-${w.rarete}`}>{nomEmploye(w.nom)}</span>}
+      />,
     )
   }
 
