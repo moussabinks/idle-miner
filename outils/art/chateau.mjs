@@ -39,7 +39,6 @@ const TOIT = teintes('#5f7fe8', fonce('#5f7fe8', 0.25), clair('#5f7fe8', 0.2))
 const PIERRE_RUINE = teintes('#bdb4a6', '#968c7f', '#cdc5b7')
 const JOINT = '#9f9586' // les joints des pierres
 const MOUSSE = '#7cc35e'
-const HERBE_MUR = '#8cc96a' // l'herbe qui a poussé sur le haut des murs en ruine
 const NUIT = '#3a3150'
 
 // Un point (u, v) du château → une case de la toile (x, y).
@@ -60,7 +59,7 @@ function surFaceAvant(t, u, v, z, contenu) {
 // La colline : une grande butte d'herbe toute ronde (sans falaise)
 // ---------------------------------------------------------------------------
 
-function colline(t, neuf) {
+function colline(t) {
   const H = HAUTEUR_COLLINE
   const [cx, yHaut] = t.pt(CENTRE, CENTRE, H)
   const [, yBas] = t.pt(CENTRE, CENTRE, 0)
@@ -83,22 +82,90 @@ function colline(t, neuf) {
   // La lumière : une grande tache claire en haut à gauche.
   t.ajouter(`<ellipse cx="${r1(cx - rxH * 0.35)}" cy="${r1(yHaut - ryH * 0.2)}" rx="${r1(rxH * 0.6)}" ry="${r1(ryH * 0.55)}" fill="${HERBE_CLAIRE}" clip-path="url(#${id})"/>`)
   t.ajouter(`<path d="${dessus}" fill="none" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
-  // Des touffes d'herbe et des fleurs sur les flancs.
-  const hasard = hasardAvecGraine(neuf ? 5 : 6)
-  for (let i = 0; i < 14; i++) {
-    const angle = Math.PI * (0.08 + hasard() * 0.84) // devant seulement
-    const r = RAYON_HAUT + 0.6 + hasard() * (RAYON_PIED - RAYON_HAUT - 1)
-    const f = (r - RAYON_HAUT) / (RAYON_PIED - RAYON_HAUT)
-    const [px, py] = t.pt(CENTRE + r * Math.cos(angle) * 0.72 + r * Math.sin(angle) * 0.72, CENTRE - r * Math.cos(angle) * 0.72 + r * Math.sin(angle) * 0.72, H * (1 - f) ** 1.5)
-    if (i % 3 === 0) {
-      const couleur = [C.jaune, C.rose, C.blanc, C.violet][i % 4]
-      t.ajouter(`<circle cx="${r1(px)}" cy="${r1(py)}" r="6" fill="${couleur}" stroke="${C.encre}" stroke-width="3"/><circle cx="${r1(px)}" cy="${r1(py)}" r="2" fill="${C.jaune}"/>`)
-    } else {
-      t.ajouter(`<path d="M${r1(px - 10)} ${r1(py)} l4 -12 l3 9 l4 -14 l3 12 l4 -9 l2 14" fill="none" stroke="${HERBE_OMBRE}" stroke-width="4"/>`)
-    }
-  }
+  // (27/10) Plein de petits détails sur la colline (les mêmes pour la ruine et le château neuf) :
+  // des fleurs, des champignons, des cailloux, des touffes d'herbe, des buissons à baies. Jamais sur
+  // le chemin, ni sous le château.
+  detailsColline(t)
+
   // (27/10) Le chemin n'est plus dans le dessin : le jeu le dessine d'un seul trait, de la
   // clairière jusqu'à la porte (ChateauVillage.tsx), pour qu'il soit partout pareil.
+}
+
+// La hauteur de la colline à la distance r de son milieu (en cases) : plate en haut, puis la pente.
+function hauteurColline(r) {
+  if (r <= RAYON_HAUT) return HAUTEUR_COLLINE
+  const f = Math.min(1, (r - RAYON_HAUT) / (RAYON_PIED - RAYON_HAUT))
+  return HAUTEUR_COLLINE * (1 - f) ** 1.5
+}
+
+// Une petite fleur à cinq pétales ronds et son cœur jaune, sur sa tige.
+function petiteFleur(x, y, couleur, k = 1) {
+  const petales = Array.from({ length: 5 }, (_, i) => {
+    const a = (i / 5) * 2 * Math.PI - Math.PI / 2
+    return `<circle cx="${r1(x + Math.cos(a) * 5 * k)}" cy="${r1(y - 12 * k + Math.sin(a) * 4.2 * k)}" r="${r1(3.8 * k)}" fill="${couleur}" stroke="${C.encre}" stroke-width="2.2"/>`
+  }).join('')
+  return (
+    `<path d="M${r1(x)} ${r1(y)} Q${r1(x - 3)} ${r1(y - 6 * k)} ${r1(x)} ${r1(y - 11 * k)}" stroke="${HERBE_OMBRE}" stroke-width="3" fill="none"/>` +
+    petales +
+    `<circle cx="${r1(x)}" cy="${r1(y - 12 * k)}" r="${r1(2.6 * k)}" fill="${C.jaune}" stroke="${C.encre}" stroke-width="1.8"/>`
+  )
+}
+
+// Un champignon à chapeau rouge et pois blancs (parfois deux).
+function champignon(x, y, k = 1) {
+  const un = (cx, cy, kk) =>
+    `<path d="M${r1(cx - 4 * kk)} ${r1(cy)} L${r1(cx - 3 * kk)} ${r1(cy - 10 * kk)} L${r1(cx + 3 * kk)} ${r1(cy - 10 * kk)} L${r1(cx + 4 * kk)} ${r1(cy)} Z" fill="${C.creme}" stroke="${C.encre}" stroke-width="2.5"/>` +
+    `<path d="M${r1(cx - 11 * kk)} ${r1(cy - 9 * kk)} Q${r1(cx - 10 * kk)} ${r1(cy - 22 * kk)} ${r1(cx)} ${r1(cy - 22 * kk)} Q${r1(cx + 10 * kk)} ${r1(cy - 22 * kk)} ${r1(cx + 11 * kk)} ${r1(cy - 9 * kk)} Z" fill="#e8452f" stroke="${C.encre}" stroke-width="2.5"/>` +
+    `<circle cx="${r1(cx - 4 * kk)}" cy="${r1(cy - 16 * kk)}" r="${r1(2.2 * kk)}" fill="${C.blanc}"/><circle cx="${r1(cx + 4 * kk)}" cy="${r1(cy - 13 * kk)}" r="${r1(1.8 * kk)}" fill="${C.blanc}"/><circle cx="${r1(cx + 1 * kk)}" cy="${r1(cy - 19 * kk)}" r="${r1(1.4 * kk)}" fill="${C.blanc}"/>`
+  return un(x, y, k) + (k > 0.9 ? un(x + 13 * k, y + 3, k * 0.65) : '')
+}
+
+// Une touffe d'herbe pointue.
+function touffeHerbe(x, y, k = 1) {
+  return `<path d="M${r1(x - 9 * k)} ${r1(y)} L${r1(x - 6 * k)} ${r1(y - 12 * k)} L${r1(x - 2 * k)} ${r1(y - 3 * k)} L${r1(x + 1 * k)} ${r1(y - 16 * k)} L${r1(x + 4 * k)} ${r1(y - 3 * k)} L${r1(x + 8 * k)} ${r1(y - 11 * k)} L${r1(x + 10 * k)} ${r1(y)} Z" fill="${HERBE_OMBRE}" stroke="${C.encre}" stroke-width="2.2" stroke-linejoin="round"/>`
+}
+
+// Un petit buisson rond aux baies rouges.
+function buissonBaies(x, y, k = 1) {
+  return (
+    `<path d="M${r1(x - 16 * k)} ${r1(y)} Q${r1(x - 19 * k)} ${r1(y - 16 * k)} ${r1(x - 6 * k)} ${r1(y - 17 * k)} Q${r1(x)} ${r1(y - 27 * k)} ${r1(x + 9 * k)} ${r1(y - 18 * k)} Q${r1(x + 20 * k)} ${r1(y - 15 * k)} ${r1(x + 16 * k)} ${r1(y)} Z" fill="${C.feuillage}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+    [
+      [-7, -9],
+      [3, -13],
+      [8, -6],
+    ]
+      .map(([dx, dy]) => `<circle cx="${r1(x + dx * k)}" cy="${r1(y + dy * k)}" r="${r1(2.8 * k)}" fill="#e8452f" stroke="${C.encre}" stroke-width="1.6"/>`)
+      .join('')
+  )
+}
+
+function detailsColline(t) {
+  const hasard = hasardAvecGraine(77)
+  const choses = []
+  let essais = 0
+  while (choses.length < 70 && essais < 600) {
+    essais += 1
+    // Un point au hasard sur la moitié de devant de la colline (u : vers nous, v : de côté).
+    const u = -3 + hasard() * (RAYON_PIED + 3)
+    const v = (hasard() * 2 - 1) * RAYON_PIED
+    const r = Math.hypot(u, v)
+    if (r > RAYON_PIED - 0.5) continue
+    if (Math.abs(v) < 1.15 && u > S - 0.5) continue // le chemin
+    if (Math.abs(v) < S + 1.5 && u < S + 0.9) continue // sous le château
+    if (choses.some((c) => Math.hypot(c.u - u, c.v - v) < 0.7)) continue
+    choses.push({ u, v, r, sorte: hasard() })
+  }
+  // Du fond vers l'avant : ce qui est plus bas sur l'écran passe devant.
+  choses.sort((a, b) => a.u - b.u)
+  const couleurs = [C.jaune, C.rose, C.blanc, C.violet, '#7fb8ff', C.orange]
+  for (const c of choses) {
+    const [x, y] = t.pt(...g(c.u, c.v), hauteurColline(c.r))
+    if (c.sorte < 0.42) t.ajouter(petiteFleur(x, y, couleurs[Math.floor(c.sorte * 100) % couleurs.length], 0.9 + (c.sorte % 0.1) * 3))
+    else if (c.sorte < 0.68) t.ajouter(touffeHerbe(x, y, 0.9 + (c.sorte % 0.1) * 4))
+    else if (c.sorte < 0.8) t.ajouter(champignon(x, y, c.sorte < 0.74 ? 1 : 0.8))
+    else if (c.sorte < 0.92) t.ajouter(rocher(x, y, 18 + (c.sorte % 0.05) * 200, 12 + (c.sorte % 0.05) * 120, Math.round(c.sorte * 1000), '#c9ccd6', 3))
+    else t.ajouter(buissonBaies(x, y, 1))
+  }
 }
 
 // Un petit buisson rond.
@@ -212,13 +279,13 @@ function murEnRuine(t, sens, u0, v0, u1, v1, z, hauteur, graine) {
   }
   // Le dessus : d'abord tout d'un bloc (pas de fente), puis morceau par morceau (sans contour),
   // puis un seul contour tout autour.
-  const couleurDessus = sens === 'face' ? t3.haut : HERBE_MUR
+  const couleurDessus = sens === 'face' ? t3.haut : t3.gauche
   t.poly([...profil.map(([f, h]) => point(f, 0, h)), ...[...profil].reverse().map(([f, h]) => point(f, 1, h))], couleurDessus, { trait: 0 })
   for (let i = 0; i < profil.length - 1; i++) {
     const [fa, ha] = profil[i]
     const [fb, hb] = profil[i + 1]
     if (fb - fa < 1e-6) continue
-    // (le dessus des murs des côtés, bas et envahis par l'herbe : il s'efface derrière les tours)
+    // (le dessus des murs des côtés, plus sombre : il s'efface derrière les tours)
     t.poly([point(fa, 0, ha), point(fa, 1, ha), point(fb, 1, hb), point(fb, 0, hb)], couleurDessus, { trait: 0 })
   }
   t.poly([...profil.map(([f, h]) => point(f, 0, h)), ...[...profil].reverse().map(([f, h]) => point(f, 1, h))], 'none', { trait: TRAIT_FIN })
@@ -245,9 +312,11 @@ function tourEnRuine(t, u, v, r, z, hauteur, graine, versLaGauche = true) {
   // 1. Le dessus (une ellipse penchée), à plat, éclairé.
   const dessus = Array.from({ length: 33 }, (_, i) => (i / 32) * 2 * Math.PI).map((a) => pt(a, h(a)))
   t.ajouter(`<polygon points="${txt(dessus)}" fill="${PIERRE_RUINE.haut}" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
-  // De l'herbe et un petit buisson ont poussé sur le dessus.
-  const [hx, hy] = pt(Math.PI * 1.35, h(Math.PI * 1.35))
-  t.ajouter(`<ellipse cx="${r1((hx + cx) / 2)}" cy="${r1((hy + yb - h(0)) / 2)}" rx="${r1(rx * 0.5)}" ry="${r1(ry * 0.45)}" fill="${HERBE_MUR}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
+  // Des pierres tombées sur le dessus, et (une tour sur deux) un corbeau perché.
+  const [hx, hy] = pt(Math.PI * 1.4, h(Math.PI * 1.4))
+  const [px0, py0] = [(hx + cx) / 2, (hy + yb - h(0)) / 2]
+  t.ajouter(rocher(px0, py0 + 4, 26, 16, graine + 300, PIERRE_RUINE.gauche, 3))
+  if (graine % 2) t.ajouter(corbeau(cx + rx * 0.2, yb - h(0) - ry * 0.3))
   // 2. Le corps, devant : son bord du haut est ébréché (des pierres qui manquent, en marches).
   const bord = []
   const n = 9
@@ -284,7 +353,6 @@ function tourEnRuine(t, u, v, r, z, hauteur, graine, versLaGauche = true) {
   // Une fenêtre noire (un peu de travers), et de la mousse au pied.
   const [wx, wy] = pt(Math.PI * 0.5, hBas * 0.5)
   t.ajouter(`<path d="M${r1(wx - 8)} ${r1(wy + 12)} V${r1(wy - 2)} A8 8 0 0 1 ${r1(wx + 8)} ${r1(wy - 2)} V${r1(wy + 12)} Z" fill="${NUIT}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>`)
-  mousse(t, u + r * 0.75, v - r * 0.5, z + 10, 0.8)
 }
 
 // Le donjon en ruine (27/10, redessiné) : plein, son toit a brûlé (il en reste les poutres noires
@@ -427,22 +495,13 @@ function drapeau(t, cx, cy, z, graine) {
   )
 }
 
-// Une touffe de mousse et de lierre accrochée à un mur.
-function mousse(t, u, v, z, k = 1) {
-  const [px, py] = t.pt(...g(u, v), z)
-  t.ajouter(
-    `<path d="M${r1(px - 16 * k)} ${r1(py + 6 * k)} Q${r1(px - 20 * k)} ${r1(py - 10 * k)} ${r1(px - 6 * k)} ${r1(py - 12 * k)} Q${r1(px + 2 * k)} ${r1(py - 24 * k)} ${r1(px + 12 * k)} ${r1(py - 12 * k)} Q${r1(px + 22 * k)} ${r1(py - 6 * k)} ${r1(px + 14 * k)} ${r1(py + 8 * k)} Q${r1(px)} ${r1(py + 16 * k)} ${r1(px - 16 * k)} ${r1(py + 6 * k)} Z" fill="${MOUSSE}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
-      `<path d="M${r1(px + 4 * k)} ${r1(py + 10 * k)} q4 14 -2 26" fill="none" stroke="${fonce(MOUSSE, 0.25)}" stroke-width="4"/>`,
-  )
-}
-
 // ---------------------------------------------------------------------------
 // Le château
 // ---------------------------------------------------------------------------
 
 function chateau(neuf) {
   const t = new Toile({ taille: TAILLE, haut: 520, bas: 30 })
-  colline(t, neuf)
+  colline(t)
   const z = HAUTEUR_COLLINE
   const rTour = 1.2
   const hMur = 110
@@ -488,8 +547,7 @@ function chateau(neuf) {
     )
   } else {
     donjonEnRuine(t, D, z)
-    lierre(t, D, D - 0.5, z + 115, 60, 21)
-    lierre(t, D, -D + 0.7, z + 150, 70, 22)
+    lierre(t, D, D - 0.5, z + 115, 50, 21)
   }
 
   // Devant : le mur de devant (avec la porte au milieu) et ses deux tours.
@@ -561,14 +619,78 @@ function chateau(neuf) {
       t.ajouter(rocher(px, py, l, h, graine, PIERRE_RUINE.gauche, TRAIT))
       t.ajouter(rocher(px + l * 0.35, py + 6, l * 0.5, h * 0.5, graine + 10, PIERRE_RUINE.droite, TRAIT_FIN))
     }
-    buisson(t, S + 1.6, 1.2, z, 0.8, MOUSSE)
-    buisson(t, -1, -S - 1.4, z, 0.7, MOUSSE)
-    mousse(t, S, -3.2, z + 40, 1)
-    mousse(t, S, 3, z + 50, 1.1)
-    lierre(t, S, -2.2, z + 70, 50, 31)
-    lierre(t, S, 2.4, z + 60, 45, 32)
+    lierre(t, S, 2.4, z + 60, 40, 32)
+    detailsRuine(t, z)
   }
   return t
+}
+
+// Un corbeau noir perché (vu de côté, tourné vers la gauche), en points du dessin.
+function corbeau(x, y) {
+  return (
+    `<path d="M${r1(x + 14)} ${r1(y - 4)} Q${r1(x + 4)} ${r1(y - 20)} ${r1(x - 8)} ${r1(y - 14)} L${r1(x - 16)} ${r1(y - 12)} L${r1(x - 8)} ${r1(y - 9)} Q${r1(x - 6)} ${r1(y + 2)} ${r1(x + 6)} ${r1(y)} L${r1(x + 22)} ${r1(y + 4)} Z" fill="#3a3346" stroke="${C.encre}" stroke-width="2.5"/>` +
+    `<circle cx="${r1(x - 6)}" cy="${r1(y - 14)}" r="2" fill="${C.blanc}"/>` +
+    `<path d="M${r1(x + 1)} ${r1(y + 1)} V${r1(y + 7)} M${r1(x + 6)} ${r1(y + 1)} V${r1(y + 7)}" stroke="${C.orange}" stroke-width="2.5"/>`
+  )
+}
+
+// Les détails de la ruine (27/10) : une bannière déchirée qui pend du donjon, des meurtrières sur
+// les murs de devant, des blocs de créneaux tombés, un tonneau et une roue de charrette cassée près
+// de la porte, une vieille épée plantée dans l'herbe, des toiles d'araignée.
+function detailsRuine(t, z) {
+  const D = 2.1
+  // La bannière : un tissu rouge délavé, déchiré en bas, sur la face du donjon.
+  const l = 2 * D * PIXELS_PAR_CASE
+  surFaceAvant(
+    t,
+    D,
+    -D,
+    z,
+    `<path d="M${r1(l * 0.2 - 22)} -118 H${r1(l * 0.2 + 22)} L${r1(l * 0.2 + 20)} -60 L${r1(l * 0.2 + 10)} -72 L${r1(l * 0.2 + 2)} -52 L${r1(l * 0.2 - 8)} -70 L${r1(l * 0.2 - 20)} -56 Z" fill="#c4706a" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<path d="M${r1(l * 0.2 - 26)} -118 H${r1(l * 0.2 + 26)}" stroke="${C.boisFonce}" stroke-width="6" stroke-linecap="round"/>` +
+      `<path d="M${r1(l * 0.2 - 8)} -102 L${r1(l * 0.2 - 8)} -90 L${r1(l * 0.2 - 3)} -96 L${r1(l * 0.2 + 2)} -88 L${r1(l * 0.2 + 7)} -96 L${r1(l * 0.2 + 10)} -90 L${r1(l * 0.2 + 10)} -102 Z" fill="#d9b26a" stroke="${C.encre}" stroke-width="2"/>`,
+  )
+  // Des meurtrières (des fentes noires) sur les deux murs de devant.
+  for (const v of [-3.5, -2.3, 2.3, 3.5]) surFaceAvant(t, S, v, z, `<rect x="-3" y="-62" width="6" height="22" rx="2" fill="${NUIT}" stroke="${C.encre}" stroke-width="2"/>`)
+  // Des blocs de créneaux tombés au pied des murs (des petits cubes de pierre, un peu de travers).
+  for (const [u, v, k] of [
+    [S + 0.75, -3.8, 1],
+    [S + 0.6, -1.9, 0.8],
+    [S + 0.8, 3.1, 0.9],
+    [S + 1.4, 4.1, 0.7],
+  ]) {
+    t.prisme(rectUV(u - 0.18 * k, v - 0.2 * k, u + 0.18 * k, v + 0.2 * k), z, z + 16 * k, PIERRE_RUINE, { trait: TRAIT_FIN })
+  }
+  // Un vieux tonneau couché et une roue de charrette cassée, à gauche de la porte.
+  const [tx, ty] = t.pt(...g(S + 1.1, -2.2), z)
+  t.ajouter(
+    `<ellipse cx="${r1(tx)}" cy="${r1(ty - 10)}" rx="16" ry="11" fill="${C.bois}" stroke="${C.encre}" stroke-width="${TRAIT_FIN}"/>` +
+      `<path d="M${r1(tx - 14)} ${r1(ty - 14)} Q${r1(tx)} ${r1(ty - 18)} ${r1(tx + 14)} ${r1(ty - 14)} M${r1(tx - 14)} ${r1(ty - 6)} Q${r1(tx)} ${r1(ty - 2)} ${r1(tx + 14)} ${r1(ty - 6)}" stroke="${C.boisFonce}" stroke-width="3" fill="none"/>` +
+      `<ellipse cx="${r1(tx + 15)}" cy="${r1(ty - 10)}" rx="5" ry="10" fill="${C.boisFonce}" stroke="${C.encre}" stroke-width="2.5"/>`,
+  )
+  const [wx, wy] = t.pt(...g(S + 1.2, 1.9), z)
+  t.ajouter(
+    `<path d="M${r1(wx - 16)} ${r1(wy - 6)} A16 9 0 1 1 ${r1(wx + 12)} ${r1(wy + 4)}" fill="none" stroke="${C.encre}" stroke-width="9"/>` +
+      `<path d="M${r1(wx - 16)} ${r1(wy - 6)} A16 9 0 1 1 ${r1(wx + 12)} ${r1(wy + 4)}" fill="none" stroke="${C.bois}" stroke-width="4"/>` +
+      `<path d="M${r1(wx)} ${r1(wy - 2)} L${r1(wx - 10)} ${r1(wy - 10)} M${r1(wx)} ${r1(wy - 2)} L${r1(wx + 12)} ${r1(wy - 8)} M${r1(wx)} ${r1(wy - 2)} L${r1(wx + 3)} ${r1(wy + 7)}" stroke="${C.boisFonce}" stroke-width="3"/>` +
+      `<circle cx="${r1(wx)}" cy="${r1(wy - 2)}" r="4" fill="${C.boisFonce}" stroke="${C.encre}" stroke-width="2"/>`,
+  )
+  // Une vieille épée plantée dans l'herbe, à droite.
+  const [ex, ey] = t.pt(...g(S + 1.8, 3.3), z)
+  t.ajouter(
+    `<path d="M${r1(ex + 3)} ${r1(ey)} L${r1(ex)} ${r1(ey - 30)} L${r1(ex + 4)} ${r1(ey - 36)} L${r1(ex + 7)} ${r1(ey - 30)} Z" fill="${C.metal}" stroke="${C.encre}" stroke-width="2.5"/>` +
+      `<path d="M${r1(ex - 6)} ${r1(ey - 30)} H${r1(ex + 14)}" stroke="${C.encre}" stroke-width="7" stroke-linecap="round"/><path d="M${r1(ex - 6)} ${r1(ey - 30)} H${r1(ex + 14)}" stroke="#b07a3a" stroke-width="3" stroke-linecap="round"/>` +
+      `<path d="M${r1(ex + 4)} ${r1(ey - 31)} V${r1(ey - 42)}" stroke="${C.encre}" stroke-width="6" stroke-linecap="round"/><path d="M${r1(ex + 4)} ${r1(ey - 31)} V${r1(ey - 42)}" stroke="${C.boisFonce}" stroke-width="2.5" stroke-linecap="round"/>`,
+  )
+  // Une toile d'araignée dans le coin de la porte.
+  const P = 1.35
+  surFaceAvant(
+    t,
+    S + 0.35,
+    -P,
+    z,
+    `<g stroke="${C.blanc}" stroke-width="1.6" fill="none" opacity="0.85"><path d="M${r1(P * PIXELS_PAR_CASE - 30)} -50 l-14 -14 M${r1(P * PIXELS_PAR_CASE - 30)} -50 l-18 2 M${r1(P * PIXELS_PAR_CASE - 30)} -50 l-4 -18"/><path d="M${r1(P * PIXELS_PAR_CASE - 39)} -59 q-3 4 -9 1 M${r1(P * PIXELS_PAR_CASE - 36)} -62 q-7 -1 -9 -8"/></g>`,
+  )
 }
 
 // Les deux dessins, et le calage pour le jeu.
