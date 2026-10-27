@@ -29,6 +29,7 @@ import { Reglages } from './composants/Reglages'
 import { Toasts } from './composants/Toasts'
 import { VueVillage } from './composants/VueVillage'
 import { Visite } from './composants/Visite'
+import { TournerTelephone } from './composants/TournerTelephone'
 import { FenetreChateau } from './composants/FenetreChateau'
 import { FeuxArtifice } from './composants/FeuxArtifice'
 import { QueteChateau } from './composants/QueteChateau'
@@ -995,10 +996,18 @@ function App() {
   const compte = useCompte()
   // (la question « quels mondes garder ? » peut venir sur l'accueil ou pendant la partie)
   const question = compte.question && <FenetreQuelsMondes question={compte.question} />
-  if (monde === null && visite !== null) return <Visite pseudo={visite.pseudo} partie={visite.partie} onRentrer={() => setVisite(null)} />
+  // (27/10) Sur téléphone tenu debout, un écran demande de le tourner (il est par-dessus tout).
+  if (monde === null && visite !== null)
+    return (
+      <>
+        <Visite pseudo={visite.pseudo} partie={visite.partie} onRentrer={() => setVisite(null)} />
+        <TournerTelephone />
+      </>
+    )
   if (monde === null)
     return (
       <>
+        <TournerTelephone />
         <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} onVisiter={(pseudo, partie) => setVisite({ pseudo, partie })} />
         {question}
       </>
@@ -1012,6 +1021,7 @@ function App() {
   return (
     <>
       <Jeu key={monde.id} monde={monde} onQuitter={quitter} onLangue={setLangue} />
+      <TournerTelephone />
       {question}
     </>
   )

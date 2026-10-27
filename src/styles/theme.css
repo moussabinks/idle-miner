@@ -328,7 +328,8 @@ kbd {
      - un voile (sombre pour les fenêtres importantes, transparent pour les bâtiments) ;
      - une carte crème au gros contour, avec un bandeau de couleur en haut (le titre) ;
      - un bouton ✖ rond en haut à droite ; Échap et un clic à côté ferment aussi.
-   Sur téléphone, elle monte du bas de l'écran (comme une feuille).
+   Sur téléphone tenu debout, elle monte du bas de l'écran (comme une feuille) ; couché (27/10),
+   c'est un panneau sur la droite (paysage.css).
    ========================================================================= */
 
 .voile {

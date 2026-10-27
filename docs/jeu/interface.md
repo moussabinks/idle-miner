@@ -346,6 +346,14 @@ Pendant la partie, le zoom du navigateur (Ctrl + molette, Ctrl +/−, gestes Saf
 
 ## 13. Téléphone ou ordinateur
 
+**(27/10) Sur téléphone, le jeu se joue à l'horizontale** (`src/styles/paysage.css`, écran couché de moins de 520 px de haut) :
+
+- **Les fenêtres s'ouvrent en panneau sur la droite** (60 % de la largeur, 66 % pour la mine et le Personnel, toute la hauteur) : le village reste visible à gauche. Les petites fenêtres (confirmations) sont centrées en hauteur.
+- **Le bandeau** reste sur une ligne, plus petit ; **les boutons du coin** font 40 px ; **la quête et les tâches** (une à la fois) font 270 px de large et s'arrêtent au-dessus des gros boutons ronds (66 px et 52 px).
+- **L'accueil** : un bandeau mince (les langues en drapeaux seuls), les deux panneaux côte à côte qui défilent, le bouton Commencer avant les 4 étapes (en 2 × 2, sans leur phrase).
+- Le contenu des fenêtres prend sa mise en page « téléphone » (mine sur une colonne, cartes de construction en ligne...).
+- **Tenu debout** (écran tactile de moins de 600 px de large), un écran crème « Tourne ton téléphone » (`TournerTelephone.tsx`) cache le jeu ; l'appli installée demande l'horizontale (`manifest.webmanifest`). Ce qui suit (téléphone debout) reste pour un ordinateur à fenêtre étroite.
+
 Le jeu se joue au pouce (`@media (max-width: 640px)` dans `theme.css` et `jeu.css`) :
 
 - **Les fenêtres montent du bas de l'écran** (comme une feuille), sur toute la largeur et au plus 88 % de la hauteur.

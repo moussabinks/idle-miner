@@ -568,7 +568,7 @@
 
 /* --- Téléphone : le bloc au-dessus du coffre -------------------------------- */
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 520px) {
   .mine-colonnes {
     grid-template-columns: 1fr;
   }
@@ -619,7 +619,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 640px), (orientation: landscape) and (max-height: 520px) {
   .zone-bloc {
     display: grid;
     grid-template-columns: 104px minmax(0, 1fr);
@@ -755,7 +755,7 @@
   }
 }
 
-@media (max-width: 640px) and (max-height: 700px) {
+@media (max-width: 640px) and (max-height: 700px), (orientation: landscape) and (max-height: 520px) {
   .compteurs {
     display: none;
   }

@@ -15,7 +15,7 @@ import { sons } from '../sons'
 import { Perso } from './ElementsVillage'
 import { DessinWagonnet3D } from './Wagonnet3D'
 import { longueurTrace, orienter, profondeur, surLaTrace, traceDeLaVoie, versEcran } from './iso'
-import { nomEmploye } from '../jeu/langue'
+import { nombre, nomEmploye } from '../jeu/langue'
 
 // Les deux essieux sont à cette distance l'un de l'autre (en cases, le long de la voie) : le
 // wagonnet se place entre eux et regarde de l'un vers l'autre. Dans un virage, il tourne donc
@@ -77,7 +77,7 @@ function VenteWagonnet({ vente }: { vente: Vente }) {
         </b>
       ))}
       <span className={`vente-texte ${fini ? 'vente-fini' : ''} ${vente.montant >= 500 ? 'vente-grosse' : ''}`}>
-        +{affiche.toLocaleString('fr-FR')} $
+        +{nombre(affiche)} $
       </span>
     </span>
   )
