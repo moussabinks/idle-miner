@@ -28,7 +28,7 @@ Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_COMPTES`, `AVE
 1. Compte développeur sur developer.crazygames.com.
 2. `npm run build:crazygames`, puis envoyer `mega-digger-crazygames.zip` (environ 0,8 Mo, 221 fichiers ; la limite de CrazyGames est de 50 Mo, 20 Mo pour la page d'accueil mobile, et 1 500 fichiers).
 3. Dans le formulaire, **cocher « Le jeu sauvegarde la progression »** : sans ça, leur module Data est coupé (le jeu garde alors le stockage du navigateur).
-4. Tester dans leur **QA Tool** : la publicité récompensée donne 1 💎, le son se coupe pendant la pub, la partie revient après un rechargement, le jeu se joue sur téléphone à l'horizontale.
+4. Tester dans leur **QA Tool** (avec « SDK Debug » ; la console montre aussi les messages « [Mega Digger] » : SDK prêt, sauvegarde par le module Data, gameplayStart/Stop) : la publicité récompensée donne 1 💎, le son se coupe pendant la pub, la partie revient après un rechargement, le jeu se joue sur téléphone à l'horizontale.
 5. La fiche : titre, description en anglais, commandes (souris, ou doigt sur téléphone), catégories (Idle, Clicker), la vignette et la vidéo.
 6. Leur revue, puis un premier lancement à un petit public (« Basic Launch »), élargi selon le temps de jeu et le retour des joueurs.
 
