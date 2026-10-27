@@ -45,6 +45,8 @@ export const SUCCES: Succes[] = [
   { id: 'millionnaire', emoji: '🤑', get titre() { return t('Magnat') }, get description() { return t('Gagner 100 000 $') }, condition: (e) => e.stats.argentGagne >= 100000 },
   { id: 'vrai_millionnaire', emoji: '👑', get titre() { return t('Millionnaire') }, get description() { return t('Gagner 1 000 000 $') }, condition: (e) => e.stats.argentGagne >= 1000000 },
   { id: 'architecte', emoji: '🏗️', get titre() { return t('Architecte') }, get description() { return t('Construire tous les bâtiments du village') }, condition: (e) => LISTE_BATIMENTS.every((id) => e.village.batiments.some((b) => b.id === id)) },
+  // (27/10) La quête finale.
+  { id: 'chateau', emoji: '🏰', get titre() { return t('Châtelain') }, get description() { return t('Restaurer le château, au fond de la carte') }, condition: (e) => e.chateau?.restaure === true },
 ]
 
 // Débloque les nouveaux succès et renvoie la liste de ceux qui viennent d'être obtenus.

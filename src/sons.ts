@@ -430,4 +430,24 @@ export const sons = {
     note(120, 0, 0.35, { type: 'sawtooth', volume: 0.05, vers: 480 })
     bruit(0.05, 0.25, { filtre: 'highpass', frequence: 3500, volume: 0.08 })
   },
+
+  // (27/10) La restauration du château : la ruine gronde et tremble (1,6 s), puis un « whoosh » qui
+  // monte, un grand coup de cymbale et une fanfare royale.
+  restaurationChateau() {
+    bruit(0, 1.6, { filtre: 'lowpass', frequence: 160, vers: 420, volume: 0.35 })
+    for (let i = 0; i < 8; i++) bruit(i * 0.18, 0.12, { filtre: 'bandpass', frequence: varier(600, 0.3), volume: 0.12 })
+    bruit(1.1, 0.5, { filtre: 'bandpass', frequence: 400, vers: 5000, q: 2, volume: 0.18 })
+    bruit(1.6, 1.4, { filtre: 'highpass', frequence: 4000, volume: 0.16 })
+    // La fanfare : do mi sol do, puis un grand accord tenu.
+    ;[523, 659, 784, 1047].forEach((f, i) => note(f, 1.65 + i * 0.13, 0.28, { type: 'square', volume: 0.07 }))
+    ;[523, 659, 784, 1047, 1319].forEach((f) => note(f, 2.2, 1.6, { type: 'triangle', volume: 0.08 }))
+    for (let i = 0; i < 8; i++) note(varier(2600 + i * 180, 0.05), 2.3 + i * 0.06, 0.25, { type: 'sine', volume: 0.04 })
+  },
+
+  // (27/10) Une fusée de feu d'artifice : le sifflement qui monte, puis le « boum » et ses crépitements.
+  feuArtifice(volume = 1) {
+    note(varier(900, 0.1), 0, 0.5, { type: 'sine', volume: 0.025 * volume, vers: 2200 })
+    bruit(0.5, 0.45, { filtre: 'lowpass', frequence: 900, vers: 120, volume: 0.32 * volume })
+    for (let i = 0; i < 6; i++) bruit(0.62 + i * 0.07 + Math.random() * 0.05, 0.04, { filtre: 'highpass', frequence: 5000, volume: 0.08 * volume })
+  },
 }

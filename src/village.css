@@ -1421,3 +1421,241 @@ g.grille-construction {
   width: 1.15em;
   height: 1.15em;
 }
+
+/* =========================================================================
+   (27/10) Le château de la quête finale (ChateauVillage.tsx) : son chemin, le château sur sa
+   colline, et l'animation de sa restauration.
+   ========================================================================= */
+
+.chemin-chateau {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.chateau-village {
+  position: absolute;
+  pointer-events: none;
+}
+
+.chateau-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  user-select: none;
+  /* (le toucher est vérifié au pixel près par VueVillage, data-cible) */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* (sur l'accueil et pendant une visite, on ne peut pas l'ouvrir) */
+.chateau-inerte .chateau-image {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* La restauration (environ 3,4 s) : la ruine tremble (0 à 1,6 s), un éclair blanc (1,6 s), le
+   château neuf jaillit en rebondissant ; des rayons dorés tournent derrière lui. */
+.chateau-en-restauration .chateau-ruine {
+  animation: chateau-tremble 1.7s ease-in both;
+}
+.chateau-en-restauration .chateau-neuf {
+  transform-origin: 50% 82%;
+  animation: chateau-jaillit 1.2s 1.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+@keyframes chateau-tremble {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate(-3px, 1px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate(3px, -1px);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 4px) scale(0.98);
+  }
+}
+
+@keyframes chateau-jaillit {
+  0% {
+    opacity: 0;
+    transform: scale(0.7, 0.4);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Les rayons dorés : un soleil de rayons qui tourne doucement derrière le château. */
+.chateau-rayons {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 150%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(249, 214, 90, 0.55) 0deg 9deg, rgba(249, 214, 90, 0) 9deg 22deg);
+  mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+  opacity: 0;
+  animation:
+    chateau-rayons-tourne 8s linear infinite,
+    chateau-rayons-apparait 3.6s 1.4s ease-out both;
+}
+@keyframes chateau-rayons-tourne {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes chateau-rayons-apparait {
+  0% {
+    opacity: 0;
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.chateau-effets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* La poussière qui roule au pied de la ruine. */
+.chateau-poussiere {
+  position: absolute;
+  left: var(--x);
+  bottom: 16%;
+  width: 96px;
+  height: 70px;
+  border: 3px solid #2a2140;
+  border-radius: 50%;
+  background: #efe6d6;
+  opacity: 0;
+  animation: chateau-poussiere 1.5s ease-out both;
+}
+@keyframes chateau-poussiere {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -110px) scale(1.8);
+  }
+}
+
+/* Les étincelles dorées qui montent de la ruine. */
+.chateau-etincelle {
+  position: absolute;
+  left: var(--x);
+  bottom: 30%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #2a2140;
+  border-radius: 50%;
+  background: #f9d65a;
+  opacity: 0;
+  animation: chateau-etincelle 1.2s ease-out both;
+}
+@keyframes chateau-etincelle {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-220px) scale(1.1);
+  }
+}
+
+/* L'éclair blanc, au moment où le château neuf apparaît. */
+.chateau-eclair {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  animation: chateau-eclair 0.9s 1.45s ease-out both;
+}
+@keyframes chateau-eclair {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(18);
+  }
+}
+
+/* Les étoiles qui scintillent autour du château neuf. */
+.chateau-etoile {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  font-size: 34px;
+  font-weight: normal;
+  opacity: 0;
+  animation: chateau-etoile 1.4s ease-out both;
+}
+@keyframes chateau-etoile {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-40deg);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.3) rotate(10deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(30deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chateau-en-restauration .chateau-ruine,
+  .chateau-en-restauration .chateau-neuf,
+  .chateau-rayons {
+    animation-duration: 0.01s;
+  }
+}

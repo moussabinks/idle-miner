@@ -241,6 +241,9 @@ export type EtatJeu = {
   // (26/10) Le village en cours de réorganisation (façon Clash of Clans, voir reorganiser.ts) :
   // le jeu est en pause tant qu'il n'est pas fini. Absent ou null : pas de réorganisation.
   reorganisation?: Reorganisation | null
+  // (27/10) Le château de la quête finale (voir chateau.ts) : restauré ou pas, et à quel moment de
+  // la partie (stats.tempsDeJeu). Absent : encore en ruine.
+  chateau?: { restaure: boolean; tempsDeJeu: number }
 }
 
 // (26/10) Une réorganisation du village : le village d'avant (pour « Annuler ») et les bâtiments

@@ -26,7 +26,9 @@ export type Point = { x: number; y: number }
 
 // Jusqu'où la caméra peut aller (en pixels du monde) : la clairière et une bande de forêt tout
 // autour. On ne voit jamais le bord du décor (la forêt continue bien plus loin).
-export const LIMITES_CAMERA = { x0: -80, y0: -140, x1: LARGEUR_MONDE + 78, y1: HAUTEUR_MONDE - 4 }
+// (27/10) Bien plus haut qu'avant (y0 : -140) : on monte voir le château de la quête finale, sur sa
+// colline au milieu des montagnes (src/composants/chateau.ts).
+export const LIMITES_CAMERA = { x0: -80, y0: -560, x1: LARGEUR_MONDE + 78, y1: HAUTEUR_MONDE - 4 }
 // Le terrain dessiné (l'herbe sous la forêt) déborde largement des limites de la caméra.
 export const LIMITES_TERRAIN = { x0: -700, y0: -700, x1: LARGEUR_MONDE + 700, y1: HAUTEUR_MONDE + 680 }
 

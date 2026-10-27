@@ -71,6 +71,8 @@ function planterForet(): Arbre[] {
   const planter = (x: number, y: number, taille: number) => {
     // Pas d'arbre sur la plage ni dans la mer (en bas à gauche, voir PlageVillage).
     if (surLaPlage(x, y)) return
+    // (27/10) Ni sur les trois arbres du coin du haut : le chemin du château passe par là.
+    if (x + y < 1) return
     const sorte = tirerSorte()
     const miroir = hasard() < 0.5
     const p = versEcran(x, y)

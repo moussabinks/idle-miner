@@ -17,11 +17,13 @@ import { employes, fonderie, forgeron, foreuse, generateur, iconeRails, joailler
 import { mine } from './mine.mjs'
 import { arbres } from './arbres.mjs'
 import { montagnes } from './montagnes.mjs'
+import { chateaux } from './chateau.mjs'
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const BATIMENTS = join(RACINE, 'public/images/batiments')
 const ARBRES = join(RACINE, 'public/images/village/arbres')
 const PAYSAGE = join(RACINE, 'public/images/village/paysage')
+const CHATEAU = join(RACINE, 'public/images/village/chateau')
 
 function ecrire(dossier, nom, contenu) {
   mkdirSync(dossier, { recursive: true })
@@ -64,6 +66,11 @@ for (const arbre of lesArbres) ecrire(ARBRES, `${arbre.nom}.svg`, arbre.svg)
 const lePaysage = montagnes()
 for (const vignette of lePaysage) ecrire(PAYSAGE, `${vignette.nom}.svg`, vignette.svg)
 
+// (27/10) Le château de la quête finale : en ruine, puis restauré.
+const leChateau = chateaux()
+ecrire(CHATEAU, 'chateau-ruine.svg', leChateau.ruine)
+ecrire(CHATEAU, 'chateau-neuf.svg', leChateau.neuf)
+
 // Les chiffres à recopier dans le jeu.
 console.log('CALAGES (src/composants/iso.ts) :')
 for (const [id, c] of Object.entries(calages)) {
@@ -80,3 +87,5 @@ for (const v of lePaysage) {
   console.log(`  '${v.nom}': vignette('${v.nom}', ${v.largeur}, ${v.hauteur}, ${v.pied.x}, ${v.pied.y}),`)
   if (v.cascade) console.log(`  (EAU_CASCADE) { x: ${v.cascade.x}, y: ${v.cascade.y}, largeur: ${v.cascade.largeur}, hauteur: ${v.cascade.hauteur} }`)
 }
+console.log('\nCHÂTEAU (src/composants/chateau.ts, CALAGE_CHATEAU) :')
+console.log(`  ${JSON.stringify(leChateau.calage)}`)
