@@ -24,7 +24,9 @@
 //     pousse plus vite (+ 30 % à + 75 %, 23/10 : il ne « lance » plus le wagonnet).
 
 import {
+  ADOUCIR_VITESSE_POUSSEURS,
   BLOCS,
+  FORCE_ADOUCISSEMENT,
   LIAISONS,
   LISTE_LIAISONS,
   NIVEAUX_POUSSEUR,
@@ -32,6 +34,7 @@ import {
   RARETES,
   SECONDES_CHARGEMENT_WAGONNET,
   VITESSE_POUSSE_JOUEUR,
+  VITESSE_DOUCE_POUSSEUR,
   VITESSE_POUSSE_MINEUR,
   type IdBatiment,
   type IdBloc,
@@ -191,7 +194,7 @@ export function apercuTrajet(etat: EtatJeu, liaison: IdLiaison, exclus: IdBloc[]
   const valeur = versLeMarche ? valeurDe(Object.fromEntries(objets), etat) : 0
   const pousseur = etat.employes.find((e) => e.role === 'pousseur' && e.trajet === liaison && e.tempsPaye > 0)
   const moteur = pousseur ? (trajetElectrique(etat, liaison) ? 'electricite' : 'pousseur') : 'toi'
-  const vitesse = pousseur ? VITESSE_POUSSE_MINEUR * forcePousseur(pousseur.rarete) * niveauPousseur(pousseur).vitesse * (moteur === 'electricite' ? multiplicateurGenerateur(etat) : 1) : VITESSE_POUSSE_JOUEUR
+  const vitesse = pousseur ? vitesseAdoucie(vitesseBrute(etat, liaison, pousseur)) : VITESSE_POUSSE_JOUEUR
   const secondes = secondesAllerRetour(etat, liaison, vitesse)
   return { objets, places, valeur, moteur, secondes, parMinute: secondes > 0 ? (valeur / secondes) * 60 : 0 }
 }
@@ -284,9 +287,18 @@ export function placesChariot(employe: Employe | null): number {
   return NIVEAUX_CHARIOT_POUSSEUR[niveau].places
 }
 
-// Combien de places a le wagonnet de ce trajet : le chariot de son pousseur (23/10).
+// Combien de places a le wagonnet de ce trajet : le chariot de son pousseur (23/10), agrandi
+// autant qu'il le faut pour compenser sa vitesse adoucie (27/10, voir compensationChariot).
 export function capaciteTrajet(etat: EtatJeu, liaison: IdLiaison): number {
-  return placesChariot(pousseurDuTrajet(etat, liaison))
+  const pousseur = pousseurDuTrajet(etat, liaison)
+  return placesReelles(etat, placesChariot(pousseur), liaison, pousseur)
+}
+
+// (27/10) Les places d'un chariot de cette taille sur ce trajet, une fois la compensation comptée
+// (sans pousseur, le joueur pousse à sa vitesse : rien à compenser).
+export function placesReelles(etat: EtatJeu, places: number, liaison: IdLiaison | null, pousseur: Employe | null): number {
+  if (!pousseur || !liaison) return places
+  return Math.ceil(places * compensationChariot(etat, liaison, pousseur))
 }
 
 // Le temps de chaque arrêt (charger au départ, décharger ou vendre à l'arrivée) : toujours 1 s (23/10).
@@ -329,14 +341,47 @@ export function railsAlimentes(etat: EtatJeu): boolean {
 // vite).
 export function vitesseTrajet(etat: EtatJeu, trajet: Trajet, pousseur = trajet.pousseur): number {
   if (pousseur === 'joueur') return VITESSE_POUSSE_JOUEUR
-  const bonus = trajetElectrique(etat, trajet.liaison) ? multiplicateurGenerateur(etat) : 1
   // (« electricite » : une vieille partie, un wagonnet parti tout seul ; il finit son voyage)
-  if (pousseur === 'electricite') return VITESSE_POUSSE_MINEUR * bonus
-  // Un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard), et un
-  // pousseur amélioré aussi (23/10 : sa vitesse).
-  // (25/10) Le bonus « Employés × 2 » de la boutique : il pousse deux fois plus vite.
-  const employe = etat.employes.find((e) => e.nom === pousseur)
+  if (pousseur === 'electricite') {
+    const bonus = trajetElectrique(etat, trajet.liaison) ? multiplicateurGenerateur(etat) : 1
+    return vitesseAdoucie(VITESSE_POUSSE_MINEUR * bonus)
+  }
+  const employe = etat.employes.find((e) => e.nom === pousseur) ?? null
+  return vitesseAdoucie(vitesseBrute(etat, trajet.liaison, employe))
+}
+
+// La vitesse « de force » d'un pousseur sur ce trajet (cases par seconde), avant d'être adoucie :
+// un pousseur rare pousse plus vite (avec le recruteur, sa rareté est tirée au hasard), un
+// pousseur amélioré aussi (23/10 : sa vitesse), sur des rails électriques aussi, et (25/10) le
+// bonus « Employés × 2 » de la boutique le fait pousser deux fois plus vite.
+export function vitesseBrute(etat: EtatJeu, liaison: IdLiaison, employe: Employe | null): number {
+  const bonus = trajetElectrique(etat, liaison) ? multiplicateurGenerateur(etat) : 1
   return VITESSE_POUSSE_MINEUR * (employe ? forcePousseur(employe.rarete) * niveauPousseur(employe).vitesse : 1) * bonus * multiplicateurEmployes(etat)
+}
+
+// (27/10, demandé par le propriétaire) La vitesse qu'on voit sur la carte : jusqu'à
+// VITESSE_DOUCE_POUSSEUR, la même ; au-dessus, elle monte de moins en moins (chaque doublement ne
+// fait plus que + 17 %). Un mythique au maximum, avec le générateur et le bonus de la boutique,
+// va à ~6,6 cases/s au lieu de 78.
+export function vitesseAdoucie(vitesse: number): number {
+  if (!ADOUCIR_VITESSE_POUSSEURS || vitesse <= VITESSE_DOUCE_POUSSEUR) return vitesse
+  return VITESSE_DOUCE_POUSSEUR * (1 + FORCE_ADOUCISSEMENT * Math.log(vitesse / VITESSE_DOUCE_POUSSEUR))
+}
+
+// (27/10) Ce qu'un pousseur perd en vitesse, il le regagne en places : son chariot est agrandi
+// juste assez pour transporter autant de minerai par seconde qu'avant. On compare la durée d'un
+// aller-retour (chargement et vidage compris) à la vitesse adoucie et à sa vitesse « de force ».
+// 1 : rien à compenser.
+export function compensationChariot(etat: EtatJeu, liaison: IdLiaison, employe: Employe): number {
+  const brute = vitesseBrute(etat, liaison, employe)
+  const douce = vitesseAdoucie(brute)
+  const ligne = ligneDe(etat, liaison)
+  if (douce >= brute || !ligne) return 1
+  return secondesAllerRetourLigne(ligne, douce) / secondesAllerRetourLigne(ligne, brute)
+}
+
+function secondesAllerRetourLigne(ligne: Case[], vitesse: number): number {
+  return (2 * longueurTrajet(ligne)) / vitesse + 2 * SECONDES_CHARGEMENT_WAGONNET
 }
 
 // Combien de fois plus vite pousse un pousseur, selon sa rareté : la moitié du bonus d'un

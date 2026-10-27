@@ -3,7 +3,7 @@ import { partieDeTest } from './partieDeTest'
 import { aleatoireAvecGraine } from './aleatoire'
 import { deplacerSol, peutPoserSol, poserSol, retirerSol } from './batiments'
 import { agrandirChariot, ameliorerEmploye, coutChariotPousseur, embaucher, embaucherPousseur, peutEmbaucherPousseur } from './employes'
-import { NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON } from './donnees'
+import { NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON, VITESSE_DOUCE_POUSSEUR } from './donnees'
 import { type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
 import { feraitUneBoucle } from './village'
@@ -12,7 +12,9 @@ import {
   avancerWagonnets,
   forcePousseur,
   capaciteTrajet,
+  compensationChariot,
   choixWagonnet,
+  placesChariot,
   reglerWagonnet,
   secondesArret,
   creerTrajet,
@@ -36,6 +38,8 @@ import {
   supprimerTrajet,
   trajetDe,
   trajetElectrique,
+  vitesseAdoucie,
+  vitesseBrute,
   vitesseTrajet,
 } from './wagonnet'
 
@@ -447,5 +451,40 @@ describe('garder un nombre fixe dans le coffre (23/10)', () => {
     reglerWagonnet(etat, 'fer', 'vendre')
     expect(choixWagonnet(etat, 'fer')).toEqual({ choix: 'vendre', nombre: 0 })
     expect(aCharger(etat, 'mine-marche')).toBe(70)
+  })
+})
+
+describe('les pousseurs ne vont plus hyper vite en fin de partie (27/10)', () => {
+  it('la vitesse est la même en bas, et adoucie au-dessus de VITESSE_DOUCE_POUSSEUR', () => {
+    expect(vitesseAdoucie(2.5)).toBe(2.5)
+    expect(vitesseAdoucie(VITESSE_DOUCE_POUSSEUR)).toBe(VITESSE_DOUCE_POUSSEUR)
+    // Un mythique au maximum, générateur à fond, avec le bonus de la boutique : 78 cases/s avant.
+    expect(vitesseAdoucie(78)).toBeLessThan(7)
+    expect(vitesseAdoucie(39)).toBeGreaterThan(vitesseAdoucie(13))
+  })
+
+  it('son chariot grandit d’autant : il transporte autant par seconde qu’avant', () => {
+    const etat = partieAvecTrajet()
+    ajouterPousseur(etat, 'mine-marche')
+    const pousseur = etat.employes.find((e) => e.role === 'pousseur')!
+    Object.assign(pousseur, { rarete: 'mythique', niveau: NIVEAUX_POUSSEUR.length - 1, chariot: NIVEAUX_CHARIOT_POUSSEUR.length - 1 })
+    const ligne = ligneDe(etat, 'mine-marche')!
+    expect(ligne).not.toBeNull()
+    const brute = vitesseBrute(etat, 'mine-marche', pousseur)
+    const douce = vitesseTrajet(etat, trajetDe(etat, 'mine-marche')!, pousseur.nom)
+    expect(douce).toBeLessThan(brute)
+    expect(compensationChariot(etat, 'mine-marche', pousseur)).toBeGreaterThan(1)
+    const avant = placesChariot(pousseur) / secondesAllerRetour(etat, 'mine-marche', brute)
+    const apres = capaciteTrajet(etat, 'mine-marche') / secondesAllerRetour(etat, 'mine-marche', douce)
+    expect(apres).toBeGreaterThanOrEqual(avant)
+    expect(apres).toBeLessThan(avant * 1.01)
+  })
+
+  it('un pousseur débutant n’est pas touché', () => {
+    const etat = partieAvecTrajet()
+    ajouterPousseur(etat, 'mine-marche')
+    const pousseur = etat.employes.find((e) => e.role === 'pousseur')!
+    expect(compensationChariot(etat, 'mine-marche', pousseur)).toBe(1)
+    expect(capaciteTrajet(etat, 'mine-marche')).toBe(placesChariot(pousseur))
   })
 })

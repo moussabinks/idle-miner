@@ -97,6 +97,7 @@ Le **chariot** est la seule façon d'agrandir un wagonnet (le joueur qui pousse 
 
 - **Son salaire** : **400 $** toutes les 5 minutes, **+ 250 $** par niveau de vitesse et **+ 200 $** par niveau de chariot (× sa rareté) : de 400 $ à 3 100 $ (26/10 ; 2 200 $ au plus avec 5 niveaux).
 - **Sa rareté** (avec le recruteur) : il pousse × 1 + (rendement − 1) ÷ 2 (`forcePousseur` : rare × 1,25, épique × 1,5, légendaire × 2, mythique × 3).
+- **(27/10) Vitesse adoucie, chariot agrandi** : au-dessus de 3,75 cases/s, sa vitesse sur la carte monte de moins en moins (au plus ~6,6 cases/s, avant jusqu'à 78 en fin de partie), et son chariot grandit d'autant, pour transporter toujours autant par seconde. Les places affichées au Personnel sont les vraies (chariot × la compensation). Voir [../jeu/village.md](../jeu/village.md) ; interrupteur `ADOUCIR_VITESSE_POUSSEURS` dans `donnees.ts`.
 
 ### 3 bis. Les joailliers (26/10)
 
