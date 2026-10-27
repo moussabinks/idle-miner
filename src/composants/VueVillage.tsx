@@ -909,11 +909,12 @@ export function VueVillage({
         <TerrainVillage />
         <SolPlage />
         {sol}
-        {/* (27/10) Le chemin du château, sur l'herbe, puis le château sur sa colline : juste
-            après le décor du fond (rien de ce qui est devant lui n'y est planté, paysage.ts). */}
-        <CheminChateau />
+        {/* (27/10) Le château sur sa colline, juste après le décor du fond (rien de ce qui est
+            devant lui n'y est planté, paysage.ts), puis son chemin, d'un seul trait de la clairière
+            jusqu'à la porte (il monte sur la colline). */}
         <ForetDerriere vue={vueForet} />
         <ChateauVillage restaure={etat.chateau?.restaure === true} animation={restaurationChateau} touchable={!visite} />
+        <CheminChateau />
         {/* (25/10, fluidité) L'eau de la mer bouge (elle a sa propre couche) : elle passe après le
             décor du fond (ils ne se touchent jamais), sinon le navigateur met chaque image du décor
             dans sa propre couche aussi, et le jeu ralentit. */}

@@ -7,10 +7,9 @@
 // dorés et d'étoiles. Les feux d'artifice sont à part (FeuxArtifice.tsx), par-dessus tout l'écran.
 
 import { memo } from 'react'
-import { versEcran } from './iso'
-import { CHEMIN_CHATEAU, IMAGE_CHATEAU_NEUF, IMAGE_CHATEAU_RUINE, cadreChateau, zoneChemin } from './chateau'
+import { IMAGE_CHATEAU_NEUF, IMAGE_CHATEAU_RUINE, cadreChateau, cheminChateau, zoneChemin } from './chateau'
 
-// Le chemin de terre : une courbe douce qui passe par les points de CHEMIN_CHATEAU (une courbe de
+// Le chemin de terre : une courbe douce qui passe par les points du chemin (une courbe de
 // Catmull-Rom, changée en courbes de Bézier pour le SVG).
 function courbe(points: { x: number; y: number }[]): string {
   let d = `M${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
@@ -28,17 +27,18 @@ function courbe(points: { x: number; y: number }[]): string {
 
 // Des petits cailloux plats au bord du chemin (toujours aux mêmes places).
 const CAILLOUX = [
-  [0.12, -1],
-  [0.27, 1],
-  [0.4, -1],
-  [0.55, 1],
-  [0.68, -1],
-  [0.83, 1],
+  [0.1, -1],
+  [0.22, 1],
+  [0.36, -1],
+  [0.5, 1],
+  [0.62, -1],
+  [0.78, 1],
+  [0.9, -1],
 ] as const
 
 export const CheminChateau = memo(function CheminChateau() {
   const zone = zoneChemin()
-  const points = CHEMIN_CHATEAU.map((c) => versEcran(c.x, c.y)).map((p) => ({ x: p.x - zone.x0, y: p.y - zone.y0 }))
+  const points = cheminChateau().map((p) => ({ x: p.x - zone.x0, y: p.y - zone.y0 }))
   const d = courbe(points)
   // Les cailloux : à peu près le long du chemin (entre deux points), d'un côté ou de l'autre.
   const cailloux = CAILLOUX.map(([t, cote]) => {
@@ -54,9 +54,10 @@ export const CheminChateau = memo(function CheminChateau() {
   })
   return (
     <svg className="chemin-chateau" style={{ left: zone.x0, top: zone.y0 }} width={zone.x1 - zone.x0} height={zone.y1 - zone.y0} aria-hidden="true">
-      <path d={d} fill="none" stroke="#2a2140" strokeWidth={34} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" stroke="#d9b27c" strokeWidth={27} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" stroke="#e8c995" strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="14 22" />
+      {/* (bouts plats : le haut s'arrête pile au pied de la porte) */}
+      <path d={d} fill="none" stroke="#2a2140" strokeWidth={34} strokeLinecap="butt" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#d9b27c" strokeWidth={27} strokeLinecap="butt" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#e8c995" strokeWidth={10} strokeLinecap="butt" strokeLinejoin="round" strokeDasharray="14 22" />
       {cailloux.map((c, i) => (
         <ellipse key={i} cx={c.x} cy={c.y} rx={5} ry={3.4} fill="#c9ccd6" stroke="#2a2140" strokeWidth={2} />
       ))}
