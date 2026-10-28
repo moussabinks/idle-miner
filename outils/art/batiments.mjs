@@ -67,7 +67,10 @@ function tonneau(t, x, y, z, r = 0.3, hauteur = 34) {
 // Le marché : un étal à l'auvent rayé rouge et blanc, des caisses de minerais, une grosse pièce
 // ---------------------------------------------------------------------------
 
-export function marche() {
+// (28/10) « miroir » : le dessin du marché retourné dans le village (le jeu le retourne d'un bloc,
+// scaleX(-1)). Le signe « $ » de la pièce est alors dessiné à l'envers ici, pour qu'une fois tout
+// le bâtiment retourné, il se lise dans le bon sens (marche-miroir.svg).
+export function marche({ miroir = false } = {}) {
   const t = new Toile({ taille: 5, haut: 190 })
   dalle(t, 5)
   const z = DALLE
@@ -166,9 +169,9 @@ export function marche() {
   t.ajouter(`<ellipse cx="${r1(px)}" cy="${r1(py)}" rx="30" ry="32" fill="${C.or}" stroke="${C.encre}" stroke-width="${TRAIT}"/>`)
   t.ajouter(`<ellipse cx="${r1(px)}" cy="${r1(py)}" rx="20" ry="22" fill="none" stroke="${fonce(C.or, 0.2)}" stroke-width="${TRAIT_FIN}"/>`)
   // Le signe « $ », dessiné au trait.
-  t.ajouter(
-    `<path d="M${r1(px + 8)} ${r1(py - 9)} Q${r1(px + 6)} ${r1(py - 14)} ${r1(px)} ${r1(py - 14)} Q${r1(px - 9)} ${r1(py - 14)} ${r1(px - 9)} ${r1(py - 6)} Q${r1(px - 9)} ${r1(py)} ${r1(px)} ${r1(py)} Q${r1(px + 9)} ${r1(py)} ${r1(px + 9)} ${r1(py + 7)} Q${r1(px + 9)} ${r1(py + 14)} ${r1(px)} ${r1(py + 14)} Q${r1(px - 6)} ${r1(py + 14)} ${r1(px - 8)} ${r1(py + 9)} M${r1(px)} ${r1(py - 20)} L${r1(px)} ${r1(py + 20)}" stroke="${C.encre}" stroke-width="5" fill="none"/>`,
-  )
+  const signe =
+    `<path d="M${r1(px + 8)} ${r1(py - 9)} Q${r1(px + 6)} ${r1(py - 14)} ${r1(px)} ${r1(py - 14)} Q${r1(px - 9)} ${r1(py - 14)} ${r1(px - 9)} ${r1(py - 6)} Q${r1(px - 9)} ${r1(py)} ${r1(px)} ${r1(py)} Q${r1(px + 9)} ${r1(py)} ${r1(px + 9)} ${r1(py + 7)} Q${r1(px + 9)} ${r1(py + 14)} ${r1(px)} ${r1(py + 14)} Q${r1(px - 6)} ${r1(py + 14)} ${r1(px - 8)} ${r1(py + 9)} M${r1(px)} ${r1(py - 20)} L${r1(px)} ${r1(py + 20)}" stroke="${C.encre}" stroke-width="5" fill="none"/>`
+  t.ajouter(miroir ? `<g transform="translate(${r1(2 * px)} 0) scale(-1 1)">${signe}</g>` : signe)
   t.ajouter(`<ellipse cx="${r1(px - 13)}" cy="${r1(py - 15)}" rx="5" ry="7" fill="${C.blanc}" opacity="0.75"/>`)
 
   // Devant l'étal : une caisse de charbon, un tonneau, un tas de pièces.

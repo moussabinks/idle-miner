@@ -8,6 +8,7 @@
 - **Quand le poser** : dès le début (il n'a pas de cadenas), mais il ne sert à rien sans rails. La mission **« Construis le marché (gratuit) : le wagonnet y vendra tout seul »** arrive au bon moment : quand on a vendu une première fois, embauché un mineur et atteint le **niveau 2 du joueur** (les rails). Construire un bâtiment rapporte 70 XP.
 - **Le poser** : menu **🏗️ Bâtiments** → carte « 💰 Marché » → **🏗️ Poser** ; un fantôme suit le doigt ou la souris (vert si la place est libre, rouge sinon), **✔ Construire ici** le pose. **✏️ Modifier** permet ensuite de le déplacer ou de le retourner gratuitement.
 - **La porte** : sur la face avant **gauche** du dessin (à droite s'il est retourné).
+- **Retourné** (28/10) : le « $ » de la grosse pièce reste dans le bon sens (image `marche-miroir.svg`).
 - **Le dessin au village** (25/10, SVG plat au contour d'encre, `public/images/batiments/marche.svg`, dessiné par `marche()` dans `outils/art/batiments.mjs`) : sur une dalle de 5 × 5 pavés, un étal à l'auvent rayé rouge et blanc, une étagère de bocaux de minerais, un comptoir et ses caisses, une grosse pièce d'or plantée au-dessus, et devant, une caisse de charbon, un tonneau et un tas de pièces.
 - **Description** : « Relie-le à la mine avec des rails : le wagonnet y vend tout seul le coffre. »
 - **Bulles au-dessus** (`notifications.ts`) : **🚧 « Rails coupés »** (alerte rouge) quand un trajet qui arrive ici n'a plus de rails complets (la même bulle est sur son bâtiment de départ). Le marché n'a pas d'amélioration. (La bulle 🎒 « sac plein » a disparu avec le sac.)

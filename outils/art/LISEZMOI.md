@@ -49,7 +49,7 @@ ont changé, les recopier dans le jeu :
   faces tournées vers nous (`Toile.volume`).
 - On dessine **du fond vers l'avant** : ce qui est dessiné après passe devant.
 - Le contour fait 6 pixels du dessin (3 pixels à l'écran au zoom 1), 4 pour les petits détails.
-- Aucune écriture sur les bâtiments : un bâtiment retourné (miroir) utilise la même image.
+- Aucune écriture sur les bâtiments : un bâtiment retourné (miroir) utilise la même image. (28/10) Sauf le marché : le « $ » de sa pièce se lirait à l'envers, `marche-miroir.svg` a donc le « $ » dessiné à l'envers (`marche({ miroir: true })`), et le jeu prend cette image quand le marché est retourné (`imageBatiment(id, miroir)` dans `src/composants/iso.ts`).
 - La porte de chaque bâtiment est du côté donné dans `src/jeu/donnees.ts` (`porte`) : « gauche »
   = la façade en bas à gauche, « droite » = celle en bas à droite.
 
