@@ -59,13 +59,19 @@
     padding: 18px max(18px, env(safe-area-inset-right)) 18px max(18px, env(safe-area-inset-left));
   }
 
+  /* (28/10, demandé par le propriétaire) Seules les fenêtres pleines d'informations prennent toute
+     la largeur : les bâtiments (dont la mine), Construire, la boutique, le bilan, les
+     statistiques, les succès et le cadeau du jour (classe « fenetre-pleine »). Les autres (le
+     retour d'absence, les réglages, le château, l'aide, un niveau gagné...) restent au milieu de
+     l'écran, à la taille de ce qu'elles montrent. */
   .fenetre,
   .fenetre-petite,
   .fenetre-grande {
-    width: 100%;
+    width: min(620px, 100%);
     max-width: none;
-    max-height: none;
+    max-height: 100%;
     height: auto;
+    align-self: center;
     border-width: 3px;
     border-radius: 18px;
     border-bottom: 3px solid var(--encre);
@@ -74,12 +80,16 @@
     animation: fenetre-monte 0.18s ease-out;
   }
 
-  /* Une petite question (une confirmation, « Quels mondes garder ? ») reste une petite fenêtre au
-     milieu de l'écran : ce n'est pas un menu. */
+  .fenetre-pleine,
+  .fenetre-batiment,
+  .fenetre-construire {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  /* Une petite question (une confirmation, un rail seul) : encore plus étroite. */
   .fenetre-confirmation {
     width: min(480px, 100%);
-    align-self: center;
-    max-height: 100%;
   }
 
   /* (28/10) Pendant le tutoriel, sa carte est à gauche : la fenêtre reste un panneau à droite,
@@ -695,52 +705,53 @@
     overflow: hidden;
   }
 
+  /* (28/10, demandé par le propriétaire) Les 5 premiers seulement, en grandes cases qui se
+     partagent la hauteur : lisibles, et rien ne défile. */
   .classement-liste {
     display: grid;
     flex: 1;
-    grid-template-rows: repeat(10, minmax(0, 1fr));
-    gap: 3px;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+    gap: 5px;
     min-height: 0;
   }
 
-  .classement-liste > li:nth-child(n + 11) {
+  .classement-liste > li:nth-child(n + 6) {
     display: none;
   }
 
   .classement-ligne {
     min-height: 0;
-    gap: 4px;
-    padding: 0 2px 0 5px;
+    gap: 6px;
+    padding: 0 4px 0 8px;
     border-width: 2px;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
   }
 
-  .classement-rang,
+  .classement-rang {
+    width: 30px;
+    font-size: 1rem;
+  }
+
   .classement-podium .classement-rang {
-    width: 24px;
-    font-size: 0.8rem;
+    font-size: 1.3rem;
   }
 
   .classement-pseudo,
   .classement-valeur {
-    font-size: 0.78rem;
+    font-size: 0.95rem;
   }
 
   .classement-visiter.btn {
-    align-self: stretch;
-    min-height: 0;
-    margin-block: 2px;
-    padding: 0 7px;
+    align-self: center;
+    min-height: 30px;
+    max-height: calc(100% - 6px);
+    padding: 0 8px;
     border-width: 2px;
-    border-radius: 7px;
-    box-shadow: none;
-    font-size: 0.62rem;
+    border-radius: 9px;
+    box-shadow: 0 2px 0 var(--encre);
+    font-size: 0.75rem;
     line-height: 1;
-  }
-
-  .classement-visiter-texte {
-    display: none;
   }
 
   .classement-message {

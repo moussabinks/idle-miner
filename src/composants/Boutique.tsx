@@ -18,7 +18,7 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
   // Le pack qu'on est en train de payer (sa fenêtre de paiement est ouverte).
   const [enPaiement, setEnPaiement] = useState<PackGemmes | null>(null)
   return (
-    <Fenetre titre={t('Boutique des gemmes')} icone="💎" couleur="violet" onFermer={onFermer}>
+    <Fenetre titre={t('Boutique des gemmes')} icone="💎" couleur="violet" classe="fenetre-pleine" onFermer={onFermer}>
       <div className="boutique-solde">
         <span aria-hidden="true">💎</span>
         <strong>{nombre(etat.gemmes)}</strong>

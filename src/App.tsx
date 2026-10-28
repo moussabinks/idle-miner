@@ -943,7 +943,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         {panneau}
         {menuConstruction && <MenuConstruction etat={etat} onFermer={() => setMenuConstruction(false)} onPoserBatiment={poserBatiment} onPinceau={commencerPinceau} onDecoration={choisirDecoration} />}
         {fenetreHaut === 'succes' && (
-          <Fenetre titre={t('Succès')} icone="🏅" couleur="jaune" onFermer={() => setFenetreHaut(null)}>
+          <Fenetre titre={t('Succès')} icone="🏅" couleur="jaune" classe="fenetre-pleine" onFermer={() => setFenetreHaut(null)}>
             <PanneauSucces etat={etat} />
           </Fenetre>
         )}

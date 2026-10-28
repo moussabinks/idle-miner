@@ -71,7 +71,7 @@ export function FenetreBilan({ etat, onFermer }: Props) {
   // La part des gains qui part en salaires (la jauge du haut).
   const part = bilan.totalGains > 0 ? Math.min(1, bilan.totalDepenses / bilan.totalGains) : bilan.totalDepenses > 0 ? 1 : 0
   return (
-    <Fenetre titre={t('Mon bilan')} icone="💰" couleur="vert" devant onFermer={onFermer} classe={`bilan bilan-${v.sorte}`}>
+    <Fenetre titre={t('Mon bilan')} icone="💰" couleur="vert" devant onFermer={onFermer} classe={`bilan bilan-${v.sorte} fenetre-pleine`}>
       {/* Le solde, en grand, avec la mascotte. */}
       <div className="carte bilan-solde">
         <span className="bilan-mascotte" aria-hidden="true">

@@ -36,7 +36,7 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
   if (ouvert) return <CadeauOuvert {...ouvert} onFermer={onFermer} />
 
   return (
-    <Fenetre titre={t('Cadeau du jour')} icone="🎁" couleur="jaune" onFermer={onFermer}>
+    <Fenetre titre={t('Cadeau du jour')} icone="🎁" couleur="jaune" classe="fenetre-pleine" onFermer={onFermer}>
       {serie >= 2 && <p className="quotidien-serie">🔥 {t('Série : {n} jours de suite !', { n: serie })}</p>}
       <p className="discret">{t('Reviens chaque jour : plus ta série est longue, plus le cadeau est gros. Le 7e jour, c’est le gros lot !')}</p>
       <ol className="quotidien-jours">
