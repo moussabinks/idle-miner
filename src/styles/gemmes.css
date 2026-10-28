@@ -53,7 +53,8 @@
   gap: 8px;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
+/* (28/10) Plus sur le téléphone couché : ses fenêtres prennent toute la largeur. */
+@media (max-width: 640px) {
   .boutique-packs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

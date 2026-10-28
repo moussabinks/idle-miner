@@ -643,6 +643,14 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
   const surBatiment = c?.cible?.startsWith('[data-cible') ?? false
   const calque = useRef<HTMLDivElement>(null)
   const suivi = useSuiviCible(c?.cible ?? null, calque, surBatiment)
+  // (28/10) Pendant une étape avec la carte du tutoriel (pas le bonjour ni le bravo, qui sont des
+  // fenêtres) : sur téléphone couché, les fenêtres restent un panneau à droite, pour que la carte,
+  // à gauche, ne cache rien (paysage.css). Ailleurs, elles prennent toute la largeur.
+  const avecCarte = etape !== null && etape !== 'bonjour' && etape !== 'bravo'
+  useEffect(() => {
+    document.documentElement.classList.toggle('tuto-en-cours', avecCarte)
+    return () => document.documentElement.classList.remove('tuto-en-cours')
+  }, [avecCarte])
   if (!etape || !c) return null
 
   const fenetrePasser = confirmer && (

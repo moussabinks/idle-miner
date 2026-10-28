@@ -23,6 +23,7 @@ export function Confirmation({ titre, children, texteConfirmer, danger = false, 
       icone={danger ? '⚠️' : '❓'}
       couleur={danger ? 'rose' : 'jaune'}
       taille="petite"
+      classe="fenetre-confirmation"
       devant
       onFermer={onAnnuler}
       pied={
