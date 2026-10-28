@@ -9,6 +9,8 @@
      et le village reste visible à gauche (on voit ses taupes travailler pendant qu'on améliore).
    - Le bandeau du haut, les boutons ronds, la liste des tâches et la quête se font petits.
    - L'accueil : un bandeau mince en haut, les deux panneaux côte à côte, qui défilent.
+   - (28/10) Tout est plus mince (bandeau, tâches, ronds, en-têtes et onglets des fenêtres) : le
+     village reste le héros de l'écran. Le plein écran, lui, est dans src/pleinEcran.ts.
 
    Ce fichier est chargé en dernier : il passe par-dessus les autres styles.
    ========================================================================= */
@@ -30,6 +32,12 @@
     height: 44px;
   }
 
+  /* (28/10) Le bâtiment à toucher est à gauche : la carte passe à droite, pour ne pas le cacher. */
+  .tuto-carte-cible-a-gauche {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+  }
+
   .voile {
     justify-content: flex-end;
     align-items: stretch;
@@ -45,7 +53,7 @@
   .fenetre,
   .fenetre-petite,
   .fenetre-grande {
-    width: min(540px, 60vw);
+    width: min(520px, 58vw);
     max-height: none;
     height: auto;
     border-radius: 20px;
@@ -57,7 +65,7 @@
 
   /* Les grandes fenêtres (la mine, le Personnel) un peu plus larges, les petites plus étroites. */
   .fenetre-grande {
-    width: min(620px, 66vw);
+    width: min(600px, 64vw);
   }
 
   .fenetre-petite {
@@ -67,31 +75,52 @@
     max-height: calc(100dvh - 12px);
   }
 
+  /* (28/10) L'en-tête et les onglets plus minces : la place va au contenu (sur 390 px de haut,
+     ils en prenaient plus d'un quart). La ✖ garde 40 px : on la touche sans viser. */
   .fenetre-entete {
-    padding: 4px 6px 4px 12px;
-    gap: 8px;
+    padding: 0 4px 0 10px;
+    gap: 6px;
+    min-height: 44px;
+    border-bottom-width: 3px;
   }
 
   .fenetre-entete h2 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .fenetre-icone {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 
   .fenetre-entete .btn-rond {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
+    margin-block: 2px;
+    font-size: 0.95rem;
   }
 
   .fenetre-corps {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 6px 8px;
+    gap: 6px;
   }
 
   .fenetre-pied {
-    padding: 8px 10px 10px;
+    padding: 6px 8px 8px;
+    gap: 8px;
+  }
+
+  .onglets {
+    gap: 4px;
+    padding: 3px;
+  }
+
+  .onglet {
+    min-height: 34px;
+    padding: 0.2em 0.7em;
+    font-size: 0.85rem;
   }
 
   /* --- Le bandeau du haut et ses boutons --------------------------------------------------- */
@@ -109,49 +138,75 @@
     gap: 4px;
   }
 
+  /* (28/10) Le bandeau sur une seule ligne, plus mince (rien ne passe à la ligne, même à
+     740 px de large : l'argent « 3,9 k $ » se coupait en deux). */
   .hud-case {
-    min-height: 36px;
-    padding: 2px 8px 2px 4px;
-    font-size: 0.82rem;
-    border-radius: 13px;
+    min-height: 34px;
+    padding: 1px 8px 1px 3px;
+    gap: 4px;
+    font-size: 0.8rem;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .hud-valeurs small,
+  .hud-case small {
+    font-size: 0.68rem;
   }
 
   .hud-icone {
-    width: 26px;
-    height: 26px;
-    font-size: 0.95rem;
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+  }
+
+  .hud-badge {
+    min-width: 15px;
+    height: 15px;
+    right: -6px;
+    bottom: -5px;
+    font-size: 0.6rem;
   }
 
   .hud-jauge {
-    width: 44px;
+    width: 38px;
+  }
+
+  .hud-boosts .etiquette {
+    padding: 1px 6px;
+    font-size: 0.7rem;
   }
 
   .boutons-haut {
-    gap: 5px;
+    gap: 4px;
   }
 
   .boutons-haut .btn-rond {
     width: 40px;
     height: 40px;
-    font-size: 1.05rem;
+    font-size: 1rem;
+    border-width: 3px;
   }
 
   .interface-haut-droite {
-    gap: 6px;
+    gap: 5px;
     /* (la colonne de droite s'arrête au-dessus des gros boutons ronds du bas) */
-    max-height: calc(100dvh - var(--marge-haut) - 96px);
+    max-height: calc(var(--vh, 1dvh) * 100 - var(--marge-haut) - 84px);
   }
 
-  /* La liste des tâches : plus étroite, une seule tâche à la fois, elle défile si besoin. */
+  /* La liste des tâches : plus étroite, une seule tâche à la fois, elle défile si besoin.
+     (28/10) Encore plus étroite : le village doit rester le héros de l'écran. */
   .taches {
-    width: min(270px, 36vw);
+    width: min(240px, 31vw);
     min-height: 0;
     overflow-y: auto;
+    border-radius: 14px;
   }
 
   .taches-titre {
-    min-height: 32px;
-    font-size: 0.95rem;
+    min-height: 30px;
+    padding: 2px 10px;
+    font-size: 0.88rem;
   }
 
   .tache-suivante {
@@ -159,37 +214,52 @@
   }
 
   .tache {
-    padding: 5px 8px;
+    padding: 4px 6px 4px 8px;
     gap: 6px;
   }
 
   .tache-texte {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
+    line-height: 1.15;
   }
 
   .tache-icone {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
-  /* La quête finale : en une ligne, plus petite. */
+  .tache .btn-petit {
+    min-height: 36px;
+    padding: 0.2em 0.7em;
+    font-size: 0.8rem;
+  }
+
+  /* La quête finale : en une ligne, plus petite (28/10 : sans son petit titre « Quête finale »,
+     l'icône du château suffit). */
   .quete-chateau {
-    width: min(270px, 36vw);
-    padding: 4px 8px;
+    width: min(240px, 31vw);
+    padding: 3px 6px;
     gap: 6px;
+    border-radius: 14px;
   }
 
   .quete-icone {
-    width: 32px;
-    height: 32px;
-    font-size: 1.15rem;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
   }
 
   .quete-titre {
-    font-size: 0.7rem;
+    display: none;
   }
 
   .quete-texte {
-    font-size: 0.82rem;
+    font-size: 0.76rem;
+  }
+
+  .quete-chateau .btn-petit {
+    min-height: 36px;
+    padding: 0.2em 0.7em;
+    font-size: 0.8rem;
   }
 
   /* Les messages, plus haut (sous le bandeau) et plus petits. */
@@ -204,27 +274,37 @@
     bottom: calc(var(--marge-bas) + 4px + var(--tuto-decale-bas, 0px));
   }
 
+  /* (28/10) Un peu plus petits : ils restent faciles à toucher au pouce (bien plus de 40 px),
+     mais cachent moins le village. */
   .gros-rond {
-    width: 66px;
-    height: 66px;
+    width: 60px;
+    height: 60px;
+    border-width: 3px;
+    box-shadow: 0 4px 0 var(--encre);
   }
 
   .gros-rond-icone {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 
   .gros-rond-texte {
     bottom: -9px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
   .gros-rond-petit {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
   }
 
   .gros-rond-petit .gros-rond-icone {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+  }
+
+  .barre-village,
+  .barre-village-droite,
+  .barre-village-gauche {
+    gap: 8px;
   }
 
   /* La barre des constructions (poser, rails...) : plus basse, plus étroite. */
@@ -427,6 +507,40 @@
 }
 
 /* =========================================================================
+   (28/10) Au doigt (téléphone, tablette), le jeu se comporte comme une application :
+   - pas de « tirer pour rafraîchir » ni d'élastique en bout de page (on rechargeait le jeu en
+     glissant vers le bas) ;
+   - un appui long ne sélectionne pas le texte et n'ouvre pas le menu du navigateur (on appuie
+     longtemps sur le bloc, sur un bouton...) ; les champs de texte restent sélectionnables ;
+   - les icônes des boutons ne grossissent pas quand le téléphone change de sens.
+   ========================================================================= */
+
+@media (pointer: coarse) {
+  html,
+  body {
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .jeu,
+  .voile {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .jeu input,
+  .jeu textarea,
+  .voile input,
+  .voile textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
+}
+
+/* =========================================================================
    Le téléphone tenu debout : le jeu demande de le tourner (TournerTelephone.tsx). Seulement sur
    un écran tactile étroit : un ordinateur avec une fenêtre étroite n'est pas concerné.
    ========================================================================= */
@@ -460,6 +574,11 @@
   .tourner-telephone strong {
     font-family: var(--police-titre);
     font-size: 1.6rem;
+  }
+
+  /* (28/10) Le bouton « Jouer en plein écran » (le jeu se tourne tout seul, voir pleinEcran.ts). */
+  .tourner-telephone .btn {
+    width: min(320px, 100%);
   }
 }
 

@@ -1113,4 +1113,7 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   "Erreur du serveur : {message}": "Erro do servidor: {message}",
   "Compte créé, mais Supabase demande une confirmation par email : désactive « Confirm email » dans Supabase.": "Conta criada, mas o Supabase pede uma confirmação por e-mail: desative “Confirm email” no Supabase.",
   "Pas de comptes dans cette version du jeu.": "Não há contas nesta versão do jogo.",
+  "Plein écran : oui": "Tela cheia: sim",
+  "Plein écran : non": "Tela cheia: não",
+  "Jouer en plein écran": "Jogar em tela cheia",
 }

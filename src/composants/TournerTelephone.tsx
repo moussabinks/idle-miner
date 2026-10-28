@@ -2,8 +2,11 @@
 // un écran crème demande de tourner le téléphone (un dessin de téléphone qui pivote). Il n'apparaît
 // que sur un écran tactile étroit tenu debout (voir src/styles/paysage.css) : rien ne change sur
 // un ordinateur.
+// (28/10) Si le navigateur sait passer en plein écran (Android), un bouton le fait et verrouille
+// l'écran à l'horizontale : le jeu se tourne tout seul, sans avoir à tourner le téléphone.
 
 import { t } from '../jeu/langue'
+import { entrerPleinEcran, pleinEcranPossible } from '../pleinEcran'
 
 export function TournerTelephone() {
   return (
@@ -17,6 +20,11 @@ export function TournerTelephone() {
       </svg>
       <strong>{t('Tourne ton téléphone')}</strong>
       <p>{t('Mega Digger se joue à l’horizontale.')}</p>
+      {pleinEcranPossible() && (
+        <button className="btn btn-jaune btn-large" onClick={() => void entrerPleinEcran()}>
+          📲 {t('Jouer en plein écran')}
+        </button>
+      )}
     </div>
   )
 }

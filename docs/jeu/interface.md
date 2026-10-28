@@ -349,11 +349,14 @@ Pendant la partie, le zoom du navigateur (Ctrl + molette, Ctrl +/−, gestes Saf
 
 **(27/10) Sur téléphone, le jeu se joue à l'horizontale** (`src/styles/paysage.css`, écran couché de moins de 620 px de haut ; 27/10 : 520 avant, pour aussi couvrir le petit cadre de CrazyGames) :
 
-- **Les fenêtres s'ouvrent en panneau sur la droite** (60 % de la largeur, 66 % pour la mine et le Personnel, toute la hauteur) : le village reste visible à gauche. Les petites fenêtres (confirmations) sont centrées en hauteur.
-- **Le bandeau** reste sur une ligne, plus petit ; **les boutons du coin** font 40 px ; **la quête et les tâches** (une à la fois) font 270 px de large et s'arrêtent au-dessus des gros boutons ronds (66 px et 52 px).
+- **(28/10) Plein écran** (`src/pleinEcran.ts`) : au premier toucher, le jeu passe en plein écran (plus de barre d'adresse ni de barre du système) et verrouille l'écran à l'horizontale (Android). Si le joueur en sort, on ne le force pas : **📲 Plein écran** dans les réglages le remet. Pas sur CrazyGames (leur page s'en occupe), ni sur iPhone (Safari ne sait pas : l'appli installée est déjà en plein écran, le bouton n'apparaît pas).
+- **Les fenêtres s'ouvrent en panneau sur la droite** (58 % de la largeur, 64 % pour la mine et le Personnel, toute la hauteur) : le village et l'argent du bandeau restent visibles à gauche. Les petites fenêtres (confirmations) sont centrées en hauteur. (28/10) L'en-tête (44 px, ✖ de 38 px) et les onglets (34 px) sont plus minces : la place va au contenu (à 740 × 360, le bloc de la mine et « Tout vendre » tiennent sans défiler).
+- **Le bandeau** reste sur une ligne sans jamais passer à la ligne (34 px de haut) ; **les boutons du coin** font 40 px ; **la quête** (sans son petit titre) **et les tâches** (une à la fois) font 240 px de large au plus (31 % de l'écran) et s'arrêtent au-dessus des gros boutons ronds (60 px et 48 px).
+- **Le tutoriel** : sa carte est à gauche, au-dessus du village ; (28/10) quand le bâtiment à toucher est dans la moitié gauche de l'écran (« Ouvre le Personnel »), elle passe à droite pour ne pas le cacher (`tuto-carte-cible-a-gauche`).
+- **(28/10) Comme une application, au doigt** : pas de « tirer pour rafraîchir », pas de sélection de texte ni de menu du navigateur sur un appui long (les champs de texte restent sélectionnables).
 - **L'accueil** : un bandeau mince (les langues en drapeaux seuls), les deux panneaux côte à côte qui défilent, le bouton Commencer avant les 4 étapes (en 2 × 2, sans leur phrase).
 - Le contenu des fenêtres prend sa mise en page « téléphone » (mine sur une colonne, cartes de construction en ligne...).
-- **Tenu debout** (écran tactile de moins de 600 px de large), un écran crème « Tourne ton téléphone » (`TournerTelephone.tsx`) cache le jeu ; l'appli installée demande l'horizontale (`manifest.webmanifest`). Ce qui suit (téléphone debout) reste pour un ordinateur à fenêtre étroite.
+- **Tenu debout** (écran tactile de moins de 600 px de large), un écran crème « Tourne ton téléphone » (`TournerTelephone.tsx`) cache le jeu ; (28/10) si le navigateur sait passer en plein écran, un bouton **📲 Jouer en plein écran** le fait et tourne le jeu tout seul ; l'appli installée demande l'horizontale (`manifest.webmanifest`). Ce qui suit (téléphone debout) reste pour un ordinateur à fenêtre étroite.
 
 Le jeu se joue au pouce (`@media (max-width: 640px)` dans `theme.css` et `jeu.css`) :
 

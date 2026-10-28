@@ -281,8 +281,11 @@ type Suivi = {
   sansFleche: boolean // ni au-dessus ni en dessous : pas de flèche (l'anneau suffit)
   sansVoile: boolean // un rond de la barre (pastille, étiquette) : pas de voile sombre autour
   enHaut: boolean // la cible est dans le haut de l'écran : la carte d'étape va en bas
+  // (28/10) la cible est un bâtiment de la carte, dans la moitié gauche de l'écran : sur téléphone couché, la
+  // carte d'étape (à gauche) passe à droite, sinon elle cachait le bâtiment à toucher (paysage.css)
+  aGauche: boolean
 }
-const SUIVI_VIDE: Suivi = { visible: false, dessous: false, sansFleche: false, sansVoile: false, enHaut: false }
+const SUIVI_VIDE: Suivi = { visible: false, dessous: false, sansFleche: false, sansVoile: false, enHaut: false, aGauche: false }
 
 function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDivElement | null>, surBatiment: boolean): Suivi {
   const [suivi, setSuivi] = useState<Suivi>(SUIVI_VIDE)
@@ -496,9 +499,10 @@ function useSuiviCible(selecteur: string | null, calque: React.RefObject<HTMLDiv
       // (paysage.css), pour que l'anneau autour de son ✖ ou de ses boutons reste dans l'écran.
       racine.classList.toggle('tuto-bouton', visible && !surBatiment)
       const enHaut = visible && r.top + r.height / 2 < window.innerHeight * 0.5
+      const aGauche = visible && surBatiment && r.left + r.width / 2 < window.innerWidth * 0.5
       const avant = dernierSuivi.current
-      if (visible !== avant.visible || dessous !== avant.dessous || sansFleche !== avant.sansFleche || sansVoile !== avant.sansVoile || enHaut !== avant.enHaut) {
-        dernierSuivi.current = { visible, dessous, sansFleche, sansVoile, enHaut }
+      if (visible !== avant.visible || dessous !== avant.dessous || sansFleche !== avant.sansFleche || sansVoile !== avant.sansVoile || enHaut !== avant.enHaut || aGauche !== avant.aGauche) {
+        dernierSuivi.current = { visible, dessous, sansFleche, sansVoile, enHaut, aGauche }
         setSuivi(dernierSuivi.current)
       }
       image = requestAnimationFrame(suivre)
@@ -693,7 +697,7 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
           </div>
         </div>
       )}
-      <section key={`${etape}-${c.titre.split(':')[0]}`} className={`tuto-carte ${suivi.enHaut ? 'tuto-carte-en-bas' : ''}`} role="status" aria-live="polite" aria-label={t('Tutoriel')}>
+      <section key={`${etape}-${c.titre.split(':')[0]}`} className={`tuto-carte ${suivi.enHaut ? 'tuto-carte-en-bas' : ''} ${suivi.aGauche ? 'tuto-carte-cible-a-gauche' : ''}`} role="status" aria-live="polite" aria-label={t('Tutoriel')}>
         <img className="tuto-carte-pepite" src={PORTRAIT_PEPITE} alt="" draggable={false} />
         <div className="tuto-carte-texte">
           <div className="tuto-progression" aria-label={t('Étape {n} sur {max}', { n: numero, max: etapesAction.length })}>

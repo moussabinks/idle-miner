@@ -18,6 +18,7 @@ import { enregistrerServiceWorker } from './installation'
 import { initialiserEchelle } from './echelle'
 import { initialiserLangue } from './langueNavigateur'
 import { initialiserPortail } from './portail'
+import { initialiserPleinEcran } from './pleinEcran'
 
 // (27/10) On attend d'abord le SDK de CrazyGames (seulement dans la version portail : ailleurs,
 // c'est immédiat), parce qu'il branche la sauvegarde sur le compte CrazyGames du joueur. Le jeu
@@ -26,6 +27,7 @@ async function demarrer() {
   await initialiserPortail()
   initialiserLangue()
   initialiserEchelle() // (27/10) l'interface réduite d'un bloc sur un petit écran d'ordinateur
+  initialiserPleinEcran() // (28/10) sur téléphone, le premier toucher met le jeu en plein écran
   const { default: App } = await import('./App.tsx')
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
