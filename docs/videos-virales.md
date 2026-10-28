@@ -90,7 +90,7 @@ Même déroulé que 30 s, avec **deux rebondissements**, et une **relance d'atte
 | --- | --- | --- |
 | Taille | 1080 × 1920, 30 ou 60 images/s | 1920 × 1080, 30 ou 60 images/s |
 | Cadrage | Le jeu est horizontal : **ne pas le réduire** avec de grosses bandes noires. Recadrer sur l'action (le bloc, le chiffre, le bâtiment) et suivre l'action avec des panoramiques. Si on montre tout l'écran du jeu, le mettre au milieu et remplir le haut et le bas avec le texte et un fond flou ou coloré du jeu | Tout l'écran du jeu, avec des zooms sur les moments forts |
-| Zones à éviter (interface de l'appli) | Le texte reste **entre 12 % et 70 % de la hauteur**, et à **plus de 15 % du bord droit** (boutons j'aime / commentaires) et **5 % du bord gauche**. Le bas (titre, pseudo) et le haut (onglets) sont cachés | Garder 5 % de marge sur tous les bords |
+| Zones à éviter (interface de l'appli) | Le texte reste **entre 12 % et 72 % de la hauteur**, et **entre 6 % et 80 % de la largeur** (à droite, les boutons j'aime / commentaires / partage). Le bas (pseudo, description, musique) et le haut (onglets) sont cachés. Voir la partie 7 | Marges de 6 % à gauche et à droite, 8 % en haut, **15 % en bas** (barre de lecture) |
 | Taille du texte | Au moins 5 % de la hauteur de l'écran (≈ 90 px) pour le hook, 3,5 % pour les sous-titres | Au moins 5 % de la hauteur |
 
 ---
@@ -226,6 +226,24 @@ La bibliothèque de sons prête à l'emploi (avec son `sons.json` complet et son
 ---
 
 ## 7. Le texte à l'écran
+
+### La zone sûre : jamais de texte près des bords
+
+Sur les réseaux, l'application affiche ses propres éléments **par-dessus la vidéo** : en bas, le pseudo du compte, la description et le nom de la musique ; à droite, les boutons j'aime, commentaires, partage et la photo du compte ; en haut, les onglets (« Abonnements », « Pour toi »). Un texte placé dessous est caché ou illisible, et un élément à lire près d'un bord tire l'œil vers ce bord. **Le regard doit rester au centre de l'écran.**
+
+La règle : **aucun texte, chiffre important, lien du CTA ou élément à lire en dehors de la zone sûre.**
+
+| Format | Zone sûre (où le texte a le droit d'être) | En pixels |
+| --- | --- | --- |
+| Vertical 1080 × 1920 (TikTok, Reels, Shorts) | De **12 % à 72 %** de la hauteur, de **6 % à 80 %** de la largeur (la marge de droite est plus grande, à cause des boutons) | x de 65 à 865, y de 230 à 1380 |
+| Horizontal 1920 × 1080 (YouTube, X) | **6 %** de marge à gauche et à droite, **8 %** en haut, **15 %** en bas (barre de lecture, sous-titres de la plateforme) | x de 115 à 1805, y de 86 à 918 |
+
+- **Ce qui doit être lu** (hook, sous-titres, chiffres, étiquettes « +5 000 $ », lien du CTA) reste dans la zone sûre, et de préférence **dans son tiers central**.
+- **L'action importante** (le bloc qu'on casse, le curseur, le compteur) est cadrée au centre elle aussi : pas de clic ni de chiffre important dans les marges.
+- **Ce qui peut déborder** : le décor du jeu et les overlays décoratifs (flammes en bas, pluie, confettis, vignette), qui ne se lisent pas.
+- Le kit fournit des **gabarits** (`zones-sures/gabarit-vertical.png` et `gabarit-horizontal.png`) : posés par-dessus une vidéo, ils montrent en rouge hachuré les zones interdites au texte. Le programme peut s'en servir pour vérifier chaque vidéo.
+
+### La mise en forme
 
 - **Le hook écrit** apparaît dès la **première image** (pas de pop d'apparition sur le tout premier texte : il doit déjà être là), reste 1,5 à 3 s.
 - **Police épaisse et ronde**, blanche ou jaune, avec un **contour noir épais** ou un fond coloré : lisible sur n'importe quelle image du jeu. Pour Mega Digger, la police du jeu (Lilita One) avec le contour bleu nuit du jeu.
@@ -364,7 +382,7 @@ Règles :
 Le montage ne peut être bon que si l'enregistrement l'est :
 
 - **Enregistrer en très haute définition** (4K, ou au moins 1440p) et à 60 images/s : on pourra zoomer et ralentir sans flou.
-- **Agrandir le curseur** et afficher un **rond à chaque clic**.
+- **Masquer le vrai curseur** de la souris pendant l'enregistrement, et noter la position et l'instant de chaque clic : le montage pose ensuite le curseur du kit et son effet de clic (partie 14).
 - **Jouer comme un humain** : pas de clics parfaitement réguliers ni de mouvements téléportés. Des trajets de souris courbes, un peu d'hésitation.
 - **Marquer les moments forts** pendant la partie (un journal avec l'heure exacte) : achat, niveau gagné, gros gain, déblocage, record d'argent, erreur. C'est là que le montage mettra ses zooms et ses sons. Pour Mega Digger, la liste des événements du jeu (niveaux, ventes, embauches) peut servir directement.
 - **Couper les sons de l'interface** gênants et la musique du jeu si une autre musique est ajoutée (garder les bruitages : clics, blocs, cha-ching).
@@ -384,7 +402,69 @@ Le montage ne peut être bon que si l'enregistrement l'est :
 
 ---
 
-## 13. La liste de contrôle avant de publier
+## 13. Les overlays (effets par-dessus l'image)
+
+Un overlay est une vidéo posée **par-dessus** le jeu : des flammes en bas de l'écran, de la pluie, des confettis, une pluie de billets… Bien utilisé, il dit l'émotion du moment en une image ; mal utilisé, il cache le jeu. Le kit en fournit 23, en vertical et en horizontal, chacun avec sa fiche dans `overlays/overlays.json`.
+
+**Deux sortes de fichiers :**
+
+- **Transparents** (`overlays/transparents/`, WebM avec couche alpha) : dessinés pour le kit. On les pose tels quels. Avec ffmpeg, il faut forcer le décodeur `libvpx-vp9` pour garder la transparence (`ffmpeg -c:v libvpx-vp9 -i overlay.webm …`), sinon le fond devient noir.
+- **Sur fond noir** (`overlays/sur-fond-noir/`, MP4, vraies images de feu, fumée, lumière, de Mixkit) : on les pose en **mode de fusion « screen » (écran)**, qui fait disparaître le noir.
+
+**Les règles :**
+
+- **Un overlay a toujours un sens** : il accompagne un moment (le désarroi, le gros gain, le climax), jamais pour décorer.
+- **Un seul à la fois**, et au plus 2 overlays différents dans une vidéo de 10 à 20 s, 3 dans une vidéo de 30 s.
+- **Fondu de 0,3 s** à l'entrée et à la sortie ; ils bouclent sans coupure, on les répète autant qu'il faut.
+- **Toujours avec leur son** : chaque fiche donne les familles de sons qui vont avec. L'ambiance (feu, pluie, vent) dure autant que l'overlay ; l'effet (embrasement, tonnerre, cotillon) tombe sur son apparition.
+- **Le texte passe au-dessus** de l'overlay et reste lisible ; un overlay ne couvre jamais le lien du CTA.
+
+| Moment de la vidéo | Overlay | Sons qui vont avec |
+| --- | --- | --- |
+| Le joueur est « en feu » (série, record, production qui explose) | `flammes-et-cendres-bas`, `flammes-cotes`, `braises-montantes` | `embrasement` à l'apparition, `feu` en ambiance |
+| Le désarroi (il a tout perdu) | `pluie-sur-ecran` (après la cloche) | `cloche`, puis `pluie` et `tonnerre` lointain |
+| Le moment gênant, le vide | `vent-et-broussaille` | `grillons` (musique coupée), `vent` |
+| Le gros gain | `pluie-de-billets` | `caisse`, `pieces` |
+| Le climax, le défi réussi | `confettis` | `cotillon`, `foule`, `fanfare` |
+| Un objet rare, un diamant | `paillettes`, `eblouissement` | `magie`, `ding` |
+| La montée en puissance, l'accéléré | `lignes-de-vitesse` | `whoosh`, `riser` |
+| La grosse révélation, le rebondissement | `eclair-flash` | `tonnerre` |
+| La révélation « divine » (château restauré) | `rayons-divins`, `lumiere-chaude` | `choeur` |
+| Danger, erreur à éviter | `vignette-alerte` | `alarme`, `buzzer` |
+| Un POV, un enregistrement | `cadre-rec` | `bip-camera` |
+| Le flashback (« au début, j'avais 0 $ ») | image en noir et blanc + `grain-de-film` | `projecteur`, `rembobinage` |
+| Après une explosion, un échec qui part en fumée | `fumee-bas`, `etincelles-montantes` | `explosion` |
+| Montrer un détail (« regarde ce chiffre ») | `cercle-et-fleche`, déplacé sur la cible | `pop` |
+
+---
+
+## 14. Le curseur
+
+Le spectateur doit voir **où** et **quand** on clique. Le kit fournit 7 curseurs dessinés (`curseurs-et-clics/`, détails dans `curseurs.json`), testés sur de vraies images du jeu, vues à la taille d'un téléphone :
+
+| Rang | Curseur | Avis |
+| --- | --- | --- |
+| 1 (par défaut) | `fleche-cartoon` : flèche blanche, gros contour bleu nuit, ombre dure | Se voit sur tous les fonds testés, même sur les boutons jaunes, et a le style du jeu |
+| 2 | `fleche-noire` : flèche noire au contour blanc | Le plus contrasté sur les fonds clairs ; fait « vraie partie sur ordinateur » |
+| 3 | `main-cartoon` : main dessinée qui pointe | Le plus clair pour un tuto (« clique ici ») ; se voit un peu moins sur le crème et le sable |
+| 4 | `fleche-classique` : flèche blanche au contour noir fin | Se perd sur les fonds très clairs |
+| 5 | `fleche-jaune` | Disparaît sur les boutons jaunes du jeu : à éviter dans la mine |
+| 6 | `pioche` | Thème du jeu, mais plus fine : seulement en gros plan, en plus grand |
+| 7 | `rond-tactile` | Pour un POV « sur téléphone » ; ne montre pas la direction |
+
+**Les règles :**
+
+- **Un seul curseur par vidéo**, du début à la fin.
+- **Taille** : 10 % de la largeur en vertical (110 px sur 1080), 6 % en horizontal. Jamais moins de 8 % en vertical : sur un téléphone, il devient un point.
+- **Le clic** : le curseur « s'enfonce » (version appuyée, 0,1 s) et une **onde** s'agrandit sous sa pointe (`effets-de-clic/onde-blanche.webm`, ou `onde-jaune.webm` pour les clics importants), avec un son de clic si le jeu n'en fait pas.
+- **Le mouvement** : des trajets courbes et doux (0,3 à 0,6 s), qui accélèrent puis freinent ; le curseur s'arrête 0,15 s sur la cible avant de cliquer. Jamais de téléportation.
+- **Les clics rapides** (casser des blocs) : le curseur reste immobile et seule l'onde se répète, 6 fois par seconde au plus.
+- **Il reste dans la zone sûre** et ne passe jamais sur le texte ; on le cache pendant les plans sans clic de plus de 2 s et pendant le CTA.
+- **Pas d'emoji de main du système** (ni Apple, ni Android) : seulement les curseurs du kit.
+
+---
+
+## 15. La liste de contrôle avant de publier
 
 - [ ] La première image est de l'action, avec le hook écrit dessus.
 - [ ] Le hook se lit en moins de 1,5 s, et l'image le prouve.
@@ -396,7 +476,9 @@ Le montage ne peut être bon que si l'enregistrement l'est :
 - [ ] Une seule version par famille de sons dans toute la vidéo (un seul clavier, un seul whoosh…).
 - [ ] Tous les sons et la musique ont une licence (ou la musique est ajoutée dans l'appli).
 - [ ] Volume à −14 LUFS, musique sous les effets.
-- [ ] Sous-titres sur toute la vidéo, dans les zones visibles du format.
+- [ ] Aucun texte, chiffre ou lien hors de la zone sûre (vérifier avec le gabarit) ; sous-titres sur toute la vidéo.
+- [ ] Chaque overlay accompagne un moment précis, avec ses sons, et ne cache ni le texte ni le CTA.
+- [ ] Un seul curseur, assez gros, avec une onde à chaque clic.
 - [ ] Le climax tient la promesse du hook.
 - [ ] Le CTA final montre le **site du jeu** (pas un portail) au moins 2,5 s, au centre.
 - [ ] La description répète le lien, avec 3 à 5 hashtags.
