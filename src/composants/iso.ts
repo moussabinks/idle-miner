@@ -179,9 +179,14 @@ export const IMAGE_FOREUSE_ACTIVE = cheminPublic('/images/batiments/foreuse-acti
 // (26/10) La fonderie qui fond : les flammes dansent, le creuset verse le métal dans le moule.
 export const IMAGE_FONDERIE_ACTIVE = cheminPublic('/images/batiments/fonderie-active.svg')
 
+// (28/10) Le marché retourné : son image a le « $ » de la pièce dessiné à l'envers, pour qu'il se
+// lise dans le bon sens une fois le bâtiment retourné (outils/art, marche-miroir.svg).
+const IMAGE_MARCHE_MIROIR = cheminPublic('/images/batiments/marche-miroir.svg')
+
 // L'image à afficher pour un bâtiment. (25/10 : les dessins n'ont plus d'écritures, un bâtiment
-// retourné (miroir) utilise donc la même image, simplement retournée.)
-export function imageBatiment(id: IdBatiment): string {
+// retourné (miroir) utilise donc la même image, simplement retournée ; sauf le marché, 28/10.)
+export function imageBatiment(id: IdBatiment, miroir = false): string {
+  if (miroir && id === 'marche') return IMAGE_MARCHE_MIROIR
   return IMAGES_BATIMENTS[id]
 }
 

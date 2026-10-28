@@ -49,6 +49,9 @@ for (const [id, fichier, dessiner] of [
 ecrire(BATIMENTS, 'foreuse-active.svg', foreuse({ enMarche: true }).svg())
 // (26/10) La fonderie en marche : le feu danse, le creuset verse le métal fondu, la fumée monte.
 ecrire(BATIMENTS, 'fonderie-active.svg', fonderie({ enMarche: true }).svg())
+// (28/10) Le marché retourné : le même dessin, avec le « $ » à l'envers (il se lit bien une fois
+// le bâtiment retourné dans le village).
+ecrire(BATIMENTS, 'marche-miroir.svg', marche({ miroir: true }).svg())
 ecrire(BATIMENTS, 'rails.svg', iconeRails().svg())
 
 // La mine, son calque de devant et les caisses de l'ascenseur.
