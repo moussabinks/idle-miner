@@ -158,7 +158,9 @@ Oui pour une **bibliothèque de sons**, mais pas n'importe comment :
 
 ### Le catalogue des sons à avoir
 
-Pour chaque catégorie, avoir **3 à 5 variantes**, et ne jamais réutiliser le même fichier deux fois de suite dans une vidéo.
+Pour chaque catégorie, avoir **3 à 5 variantes**, pour que deux vidéos ne se ressemblent pas.
+
+**Une seule version d'un même son par vidéo.** Les versions d'un même son forment une **famille** (le clavier, le whoosh, le FAAH, le vine boom, la cloche…). La première fois qu'une vidéo a besoin d'un son de la famille, le programme en tire une version au hasard, puis il réutilise **exactement le même fichier** chaque fois que la famille revient dans cette vidéo. Par exemple, s'il existe 4 sons de clavier, une vidéo n'en utilise qu'un, du début à la fin. On varie d'une vidéo à l'autre, jamais à l'intérieur d'une vidéo : deux claviers ou deux whoosh différents dans la même vidéo sonnent faux, comme deux montages collés.
 
 | Catégorie | Le son | Quand le mettre | Fréquence |
 | --- | --- | --- | --- |
@@ -171,6 +173,7 @@ Pour chaque catégorie, avoir **3 à 5 variantes**, et ne jamais réutiliser le 
 | `exclamation` | **Cri de surprise court type « FAAH »**, « oh ! » | Un moment de stupeur : le chiffre fou, le rebondissement, l'erreur énorme | **1 ou 2 par vidéo au plus** |
 | `stop` | **Record scratch** (disque rayé) | Arrêt sur image, « attends... », rebondissement | 1 par vidéo |
 | `echec` | Trombone triste, « bruh », buzzer | Une erreur, un échec, un coffre plein | 1 par vidéo |
+| `desarroi` | **Cloche funèbre** (le glas, façon cloche de l'Undertaker), avec ou sans petite mélodie triste | Le joueur perd tout d'un coup : il mise tout et perd, l'argent retombe à 0 $. Couper la musique et laisser résonner sur un arrêt sur image | 1 par vidéo |
 | `montee` | **Riser** (son qui monte en tension) | Les 1 à 2 s avant le climax | 1 par vidéo |
 | `explosion-joie` | Foule « ooooh », applaudissements, **klaxon** (« airhorn ») | Le climax | 1 par vidéo |
 | `accelere` | Rembobinage / avance rapide, tic-tac d'horloge | Les passages accélérés, « 1 heure plus tard » | À chaque accéléré |
@@ -187,6 +190,7 @@ Le **« FAAH »** est un cri d'exclamation venu d'un streamer en 2024, devenu vi
 | La musique sous les effets | **−8 à −12 dB** plus bas que les effets ; elle **baisse automatiquement** pendant un effet fort ou une voix (« ducking ») |
 | Les sons du jeu lui-même | Les garder (ils font « vrai »), un peu sous les effets ajoutés |
 | Calage | Le **pic** du son tombe **sur l'image exacte** de l'action (ou 1 image avant). Un son en retard paraît faux |
+| Une version par famille | Dans une vidéo, **toujours le même fichier** pour une même famille de sons (voir plus haut) |
 | Densité | **Au plus 2 effets en même temps**, et au moins 0,3 s entre deux effets « mèmes » (`impact`, `exclamation`, `stop`, `echec`) |
 | Silence | Un **demi-temps de silence** (0,2 à 0,4 s, musique coupée) juste avant le climax le rend bien plus fort |
 | Fin | La musique se termine **sur le CTA**, pas avant, pas en fondu de 5 s |
@@ -194,21 +198,30 @@ Le **« FAAH »** est un cri d'exclamation venu d'un streamer en 2024, devenu vi
 ### Exemple de fiche `sons.json`
 
 ```json
-[
-  {
-    "fichier": "impact/boom-grave-02.wav",
-    "categorie": "impact",
-    "intensite": 3,
-    "duree": 1.4,
-    "pic": 0.03,
-    "licence": "Pixabay Content License",
-    "source": "https://pixabay.com/...",
-    "ajoute_le": "2026-10-28"
-  }
-]
+{
+  "fichier": "impact/vine-boom-01.wav",
+  "categorie": "impact",
+  "nom": "vine-boom-01",
+  "famille": "vine-boom",
+  "description": "Le « vine boom » : le boom grave des mèmes",
+  "usage": "La révélation, le chiffre fou, le zoom d'impact",
+  "intensite": 3,
+  "gain_conseille_db": 0,
+  "duree": 1.2,
+  "pic": 0.03,
+  "commercial_ok": false,
+  "licence": "inconnue (son mème)",
+  "source": "https://remotion.media/vine-boom.wav",
+  "ajoute_le": "2026-10-28"
+}
 ```
 
-`intensite` va de 1 (discret) à 3 (fort) : le programme met les sons forts sur les moments forts, et ne met jamais deux sons d'intensité 3 à moins de 3 s d'écart.
+- `famille` : les versions d'un même son ; **une seule par vidéo**.
+- `intensite` va de 1 (discret) à 3 (fort) : le programme met les sons forts sur les moments forts, et ne met jamais deux sons d'intensité 3 à moins de 3 s d'écart. `gain_conseille_db` dit de combien baisser le son au mixage (les sons sont tous livrés au même volume).
+- `pic` : début du son = image de l'action − `pic`.
+- `commercial_ok` : `false` pour les sons mèmes ou protégés ; le programme les écarte des vidéos sponsorisées et des comptes professionnels.
+
+La bibliothèque de sons prête à l'emploi (avec son `sons.json` complet et son `LISEZMOI.md`) est livrée à part, dans un ZIP.
 
 ---
 
@@ -380,6 +393,7 @@ Le montage ne peut être bon que si l'enregistrement l'est :
 - [ ] Les textes restent le temps d'être lus (1 s + 0,3 s par mot).
 - [ ] Les zooms d'impact tombent sur les moments forts, pas plus d'un toutes les 2 s.
 - [ ] Chaque moment fort a son son, calé sur l'image ; au plus 1 ou 2 sons « exclamation ».
+- [ ] Une seule version par famille de sons dans toute la vidéo (un seul clavier, un seul whoosh…).
 - [ ] Tous les sons et la musique ont une licence (ou la musique est ajoutée dans l'appli).
 - [ ] Volume à −14 LUFS, musique sous les effets.
 - [ ] Sous-titres sur toute la vidéo, dans les zones visibles du format.
