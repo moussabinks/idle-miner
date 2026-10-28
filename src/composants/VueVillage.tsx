@@ -30,6 +30,7 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
+import { noterGeste, SUR_TELEPHONE } from '../fluidite'
 import { nombre, nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
@@ -361,6 +362,18 @@ export function VueVillage({
     return c.x >= fantome.x && c.y >= fantome.y && c.x < fantome.x + taille && c.y < fantome.y + taille
   }
 
+  // (28/10, fluidité sur téléphone) Pendant qu'on fait glisser la carte ou qu'on pince : l'horloge
+  // redessine moins souvent, et les animations du décor s'arrêtent (« geste-en-cours », village.css).
+  const finAnimationsRef = useRef(0)
+  function surGeste() {
+    if (!SUR_TELEPHONE) return
+    noterGeste()
+    conteneurRef.current?.classList.add('geste-en-cours')
+    window.clearTimeout(finAnimationsRef.current)
+    finAnimationsRef.current = window.setTimeout(() => conteneurRef.current?.classList.remove('geste-en-cours'), 250)
+  }
+  useEffect(() => () => window.clearTimeout(finAnimationsRef.current), [])
+
   function pointerDown(e: React.PointerEvent) {
     conteneurRef.current?.setPointerCapture(e.pointerId)
     pointeurs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -399,6 +412,7 @@ export function VueVillage({
     }
     pointeurs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pincement.current && pointeurs.current.size >= 2) {
+      surGeste()
       const [a, b] = [...pointeurs.current.values()]
       const distance = Math.hypot(a.x - b.x, a.y - b.y)
       const depart = pincement.current
@@ -416,6 +430,7 @@ export function VueVillage({
     if (g.mode === 'fantome') onGlisser(caseSous(e.clientX, e.clientY))
     else {
       g.mode = 'carte'
+      surGeste()
       viser(borner({ ...g.camera, cx: g.camera.cx - dx / g.camera.z, cy: g.camera.cy - dy / g.camera.z }), false)
     }
   }
@@ -906,7 +921,13 @@ export function VueVillage({
   }, [visibleX0, visibleY0, visibleX1, visibleY1, zoomArrondi])
   // La plage est-elle à l'écran ? Sinon, ses animations s'arrêtent (voir BOITES_PLAGE).
   const plageVisible = BOITES_PLAGE.some((b) => vueForet.x1 > b.x0 && vueForet.x0 < b.x1 && vueForet.y1 > b.y0 && vueForet.y0 < b.y1)
+  // (28/10, fluidité sur téléphone) Après un dézoom, la carte reste nette sans être redessinée
+  // (elle est simplement plus petite) : on ne la redessine que si on a zoomé plus près qu'à la
+  // dernière fois. Le téléphone saccadait à chaque dézoom.
+  const zoomDessineRef = useRef(zoomArrondi)
   useEffect(() => {
+    if (SUR_TELEPHONE && zoomArrondi <= zoomDessineRef.current) return
+    zoomDessineRef.current = zoomArrondi
     let image = 0
     const minuteur = window.setTimeout(() => {
       setCoucheRapide(false)

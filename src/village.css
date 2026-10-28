@@ -1681,3 +1681,39 @@ g.grille-construction {
     animation-duration: 0.01s;
   }
 }
+
+/* =========================================================================
+   (28/10, demandé par le propriétaire) La fluidité sur téléphone (au doigt seulement : rien ne
+   change sur un ordinateur). Voir aussi src/fluidite.ts.
+   ========================================================================= */
+
+@media (pointer: coarse) {
+  /* Le petit décor dessiné en SVG ne bouge plus : chaque image, le téléphone devait le redessiner
+     (les ailes des papillons, les reflets et l'écume de la mer, les lueurs, la flamme, les crabes).
+     Les papillons, les oiseaux et les nuages se déplacent toujours. */
+  .papillon-dessin .aile-gauche,
+  .papillon-dessin .aile-droite,
+  .eau-plage .reflet-mer,
+  .objets-plage .ecume-rocher,
+  .objets-plage .flamme,
+  .objets-plage .crabe,
+  .objets-plage .lueur-lanterne,
+  .objets-plage .lueur-feu,
+  .oiseau {
+    animation-play-state: paused;
+  }
+
+  /* L'horloge du jeu bat 10 fois par seconde : les personnages glissent d'un point au suivant au
+     lieu de sauter (le héros, lui, est déplacé à chaque image : pas besoin). */
+  .perso-village:not(.perso-heros) {
+    transition: transform 0.1s linear;
+  }
+
+  /* Pendant qu'on fait glisser la carte ou qu'on pince : tout le décor s'arrête, le téléphone ne
+     fait que déplacer l'image (VueVillage pose la classe, et l'enlève dès que le doigt s'arrête). */
+  .geste-en-cours .monde-village *,
+  .geste-en-cours .monde-village *::before,
+  .geste-en-cours .monde-village *::after {
+    animation-play-state: paused !important;
+  }
+}

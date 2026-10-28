@@ -22,6 +22,7 @@ import { ARBRES } from './arbres'
 import { surLaPlage } from './plage'
 import { DEMI_LARGEUR, profondeur, versEcran } from './iso'
 import { VIGNETTES, deDevant, eauDeLaCascade, planterPaysage, type SorteVignette } from './paysage'
+import { SUR_TELEPHONE } from '../fluidite'
 
 // Toutes les images du décor : les arbres (dans l'ordre d'ARBRES), puis les vignettes du paysage.
 const SORTES_PAYSAGE = Object.keys(VIGNETTES) as SorteVignette[]
@@ -265,13 +266,23 @@ function CoucheForet({ tuiles, vue, classe, extra = '', children }: { tuiles: Tu
   // garde son image d'avant.
   useEffect(() => {
     if (!pretes) return
-    const ecran = window.devicePixelRatio || 1
-    const voulue = Math.min(3, Math.max(1, Math.ceil(vue.z * ecran * 2) / 2))
+    // (28/10, fluidité sur téléphone) Un écran compté comme 2 pixels par point au plus, et au plus
+    // 2 pixels par pixel du monde (au lieu de 3) : sur un téléphone, c'est déjà net, chaque tuile
+    // se dessine plus de deux fois plus vite, et carte dézoomée, les tuiles n'ont rien à redessiner.
+    const ecran = SUR_TELEPHONE ? Math.min(2, window.devicePixelRatio || 1) : window.devicePixelRatio || 1
+    const densiteMax = SUR_TELEPHONE ? 2 : 3
+    // (sur téléphone, arrondie au plus proche plutôt qu'au-dessus : un peu moins de tuiles à redessiner)
+    const paliers = vue.z * ecran * 2
+    const voulue = Math.min(densiteMax, Math.max(1, (SUR_TELEPHONE ? Math.round(paliers) : Math.ceil(paliers)) / 2))
     const aFaire: { i: number; densite: number; visible: boolean }[] = []
     tuiles.forEach((tuile, i) => {
       const visible = tuile.gauche < vue.x1 && tuile.gauche + tuile.largeur > vue.x0 && tuile.haut < vue.y1 && tuile.haut + tuile.hauteur > vue.y0
       const densite = visible ? voulue : Math.min(voulue, 1)
-      if (densites.current[i] !== densite) aFaire.push({ i, densite, visible })
+      // (28/10) Sur téléphone, une tuile déjà plus nette que voulu n'est pas redessinée (après un
+      // dézoom, le téléphone redessinait toutes les tuiles en moins net : c'était la grosse
+      // saccade). Elle n'est redessinée que pour devenir plus nette.
+      const dejaAssez = SUR_TELEPHONE && densites.current[i] >= densite
+      if (densites.current[i] !== densite && !dejaAssez) aFaire.push({ i, densite, visible })
     })
     aFaire.sort((a, b) => Number(b.visible) - Number(a.visible))
     let annule = false

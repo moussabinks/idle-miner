@@ -106,7 +106,7 @@ function BlocsCasses({ stats }: { stats: Stats }) {
 export function FenetreStatistiques({ etat, onFermer }: { etat: EtatJeu; onFermer: () => void }) {
   const stats = etat.stats
   return (
-    <Fenetre titre={t('Statistiques')} icone="📊" couleur="bleu" taille="grande" onFermer={onFermer}>
+    <Fenetre titre={t('Statistiques')} icone="📊" couleur="bleu" taille="grande" classe="fenetre-pleine" onFermer={onFermer}>
       <div className="stat-tuiles">
         <Tuile emoji="💵" titre={t('Argent gagné')} valeur={`${nombre(stats.argentGagne)} $`} />
         <Tuile emoji="⛏️" titre={t('Blocs cassés')} valeur={nombre(stats.blocsCasses)} />
