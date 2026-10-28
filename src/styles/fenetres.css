@@ -799,7 +799,8 @@
   font-size: 0.85rem;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
+/* (28/10) Plus sur le téléphone couché : ses fenêtres prennent toute la largeur. */
+@media (max-width: 640px) {
   .stat-tuiles {
     grid-template-columns: 1fr 1fr;
   }
@@ -956,7 +957,8 @@
   font-size: 0.95rem;
 }
 
-@media (max-width: 640px), (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
+/* (28/10) Plus sur le téléphone couché : ses fenêtres prennent toute la largeur. */
+@media (max-width: 640px) {
   .bilan-colonnes {
     grid-template-columns: 1fr;
   }

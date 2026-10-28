@@ -449,6 +449,66 @@ kbd {
   flex-shrink: 0;
 }
 
+/* (28/10) Le milieu de la fenêtre : la zone qui défile, et sa barre de défilement (Fenetre.tsx). */
+.fenetre-milieu {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* La barre de défilement dessinée par le jeu : seulement au doigt (à la souris, l'ordinateur
+   montre déjà la sienne). Elle est large de 20 px pour qu'on l'attrape facilement, mais seul un
+   rail fin se voit, avec sa poignée. */
+.fenetre-defilement {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .fenetre-corps {
+    scrollbar-width: none;
+  }
+
+  .fenetre-corps::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fenetre-defilement {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    bottom: 6px;
+    z-index: 2;
+    display: block;
+    width: 20px;
+    touch-action: none;
+    cursor: pointer;
+  }
+
+  .fenetre-defilement::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 4px;
+    width: 8px;
+    border: var(--trait-fin) solid var(--encre);
+    border-radius: 999px;
+    background: var(--creme-fonce);
+  }
+
+  .fenetre-defilement i {
+    position: absolute;
+    right: 4px;
+    width: 8px;
+    min-height: 16px;
+    border: var(--trait-fin) solid var(--encre);
+    border-radius: 999px;
+    background: var(--violet-fonce);
+  }
+}
+
 .fenetre-pied {
   display: flex;
   flex-wrap: wrap;

@@ -28,7 +28,7 @@ export function BoutonsRail({ onDeplacer, onRetirer }: Pick<Props, 'onDeplacer' 
 
 export function FenetreRail({ onDeplacer, onRetirer, onFermer }: Props) {
   return (
-    <Fenetre titre={t('Rail')} icone="🛤️" couleur="bleu" taille="petite" onFermer={onFermer} pied={<BoutonsRail onDeplacer={onDeplacer} onRetirer={onRetirer} />}>
+    <Fenetre titre={t('Rail')} icone="🛤️" couleur="bleu" taille="petite" classe="fenetre-confirmation" onFermer={onFermer} pied={<BoutonsRail onDeplacer={onDeplacer} onRetirer={onRetirer} />}>
       <p>{t('Ce rail ne relie encore rien. Continue la voie jusqu’à un autre bâtiment : un wagonnet pourra y rouler.')}</p>
     </Fenetre>
   )

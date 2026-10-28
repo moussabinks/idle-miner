@@ -16,7 +16,13 @@
    ========================================================================= */
 
 @media (orientation: landscape) and (max-height: 620px) and (pointer: coarse) {
-  /* --- Les fenêtres : un panneau sur la droite ------------------------------------------- */
+  /* (28/10, demandé par le propriétaire) Tous les textes du jeu un peu plus petits : ils sont
+     écrits en « rem », la taille de base de la page (16 px d'habitude, 14 px ici). */
+  html {
+    font-size: 14px;
+  }
+
+  /* --- Les fenêtres : toute la largeur de l'écran ----------------------------------------- */
 
   /* (27/10) La carte du tutoriel à gauche, au-dessus du village : les fenêtres s'ouvrent à
      droite, elle ne cache plus leur titre ni leurs onglets. */
@@ -38,49 +44,62 @@
     right: max(8px, env(safe-area-inset-right));
   }
 
+  /* (28/10, demandé par le propriétaire) Les fenêtres prennent toute la largeur de l'écran, au
+     milieu, avec la même marge de sécurité à gauche et à droite (l'encoche de l'iPhone), et toute
+     la hauteur : on voit le plus de choses possible sans défiler. */
   .voile {
-    justify-content: flex-end;
+    justify-content: center;
     align-items: stretch;
-    padding: 6px max(6px, env(safe-area-inset-right)) 6px 6px;
+    padding: 6px max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   }
 
   /* (27/10) Le tutoriel montre un bouton d'une fenêtre : plus de place autour d'elle, pour que
      l'anneau doré (17 px autour du bouton) reste dans l'écran (Tutoriel.tsx, tuto-bouton). */
   .tuto-bouton .voile {
-    padding: 18px max(18px, env(safe-area-inset-right)) 18px 18px;
+    padding: 18px max(18px, env(safe-area-inset-right)) 18px max(18px, env(safe-area-inset-left));
   }
 
   .fenetre,
   .fenetre-petite,
   .fenetre-grande {
-    width: min(520px, 58vw);
+    width: 100%;
+    max-width: none;
     max-height: none;
     height: auto;
-    border-radius: 20px;
-    border-bottom: 4px solid var(--encre);
-    box-shadow: 0 4px 0 var(--encre);
+    border-width: 3px;
+    border-radius: 18px;
+    border-bottom: 3px solid var(--encre);
+    box-shadow: 0 3px 0 var(--encre);
     padding-bottom: 0;
-    animation: fenetre-glisse 0.2s ease-out;
+    animation: fenetre-monte 0.18s ease-out;
   }
 
-  /* Les grandes fenêtres (la mine, le Personnel) un peu plus larges, les petites plus étroites. */
-  .fenetre-grande {
+  /* Une petite question (une confirmation, « Quels mondes garder ? ») reste une petite fenêtre au
+     milieu de l'écran : ce n'est pas un menu. */
+  .fenetre-confirmation {
+    width: min(480px, 100%);
+    align-self: center;
+    max-height: 100%;
+  }
+
+  /* (28/10) Pendant le tutoriel, sa carte est à gauche : la fenêtre reste un panneau à droite,
+     pour que la carte ne cache rien (Tutoriel.tsx pose la classe tuto-en-cours). */
+  .tuto-en-cours .voile {
+    justify-content: flex-end;
+  }
+
+  .tuto-en-cours .fenetre,
+  .tuto-en-cours .fenetre-petite,
+  .tuto-en-cours .fenetre-grande {
     width: min(600px, 64vw);
   }
 
-  .fenetre-petite {
-    width: min(420px, 52vw);
-    align-self: center;
-    height: auto;
-    max-height: calc(100dvh - 12px);
-  }
-
-  /* (28/10) L'en-tête et les onglets plus minces : la place va au contenu (sur 390 px de haut,
-     ils en prenaient plus d'un quart). La ✖ garde 40 px : on la touche sans viser. */
+  /* (28/10) L'en-tête et les onglets minces : la place va au contenu. La ✖ reste ronde et bien
+     visible, à droite. */
   .fenetre-entete {
-    padding: 0 4px 0 10px;
+    padding: 0 3px 0 10px;
     gap: 6px;
-    min-height: 44px;
+    min-height: 38px;
     border-bottom-width: 3px;
   }
 
@@ -92,35 +111,187 @@
   }
 
   .fenetre-icone {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .fenetre-entete .btn-rond {
-    width: 38px;
-    height: 38px;
-    margin-block: 2px;
-    font-size: 0.95rem;
+    width: 34px;
+    height: 34px;
+    margin-block: 1px;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
+    font-size: 0.85rem;
   }
 
+  /* (la place à droite : la barre de défilement de la fenêtre, voir Fenetre.tsx) */
   .fenetre-corps {
-    padding: 6px 8px;
+    padding: 6px 16px 8px 8px;
     gap: 6px;
   }
 
   .fenetre-pied {
-    padding: 6px 8px 8px;
+    padding: 5px 8px 6px;
     gap: 8px;
+    border-top-width: 2px;
   }
 
   .onglets {
-    gap: 4px;
-    padding: 3px;
+    gap: 3px;
+    padding: 2px;
   }
 
   .onglet {
-    min-height: 34px;
-    padding: 0.2em 0.7em;
+    min-height: 30px;
+    padding: 0.15em 0.6em;
     font-size: 0.85rem;
+  }
+
+  /* (28/10) Dans les fenêtres, tout est plus petit (le texte suit la taille de base de la page,
+     14 px ici : voir « html » plus bas) : les boutons, les cartes, les jauges. */
+  .fenetre .btn {
+    min-height: 34px;
+    padding: 0.3em 0.75em;
+    border-width: 2px;
+    border-radius: 11px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  .fenetre .btn-petit {
+    min-height: 30px;
+    padding: 0.2em 0.6em;
+    border-radius: 10px;
+  }
+
+  .fenetre .btn-grand {
+    min-height: 42px;
+    padding: 0.3em 1em;
+    font-size: 1.15rem;
+    border-radius: 14px;
+  }
+
+  .fenetre .btn:disabled {
+    box-shadow: 0 2px 0 var(--gris-fonce);
+  }
+
+  .fenetre .carte {
+    padding: 6px 8px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  /* --- (28/10) Le contenu des fenêtres, maintenant larges ----------------------------------- */
+
+  /* La mine, onglet Creuser : le bloc à gauche (gros, c'est lui qu'on tape), le coffre à droite. */
+  .mine-colonnes {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 8px;
+  }
+
+  .zone-bloc {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .bloc-a-cliquer {
+    height: 128px;
+  }
+
+  .bloc-pousse {
+    width: 120px;
+    height: 120px;
+  }
+
+  .panneau-mine,
+  .mine-droite {
+    gap: 6px;
+  }
+
+  /* Les longues listes (améliorations, employés, wagonnets, pioches, mineurs...) sur deux
+     colonnes : deux fois moins à faire défiler. Ce qui doit rester en largeur (le palier de la
+     mine, une alerte, une phrase) prend les deux colonnes. */
+  .panneau-bat,
+  .liste-ameliorations,
+  .mine-droite {
+    gap: 6px;
+  }
+
+  .liste-lignes,
+  .grille-employes,
+  .liste-ameliorations,
+  .production-mineurs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .liste-ameliorations > .carte-palier,
+  .liste-ameliorations > .carte-goulot,
+  .liste-ameliorations > p,
+  .liste-lignes > p,
+  .grille-employes > p {
+    grid-column: 1 / -1;
+  }
+
+  /* Construire : les bâtiments à poser sur deux colonnes, les décorations sur cinq. */
+  .grille-construire {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .grille-decorations {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .grille-decorations .construire-carte {
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .grille-decorations .decoration-image {
+    width: 44px;
+    height: 36px;
+  }
+
+  /* La boutique : les paquets de gemmes moins hauts. */
+  .boutique-pack {
+    min-height: 0;
+    padding: 12px 4px 6px;
+    border-width: 2px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  /* Les statistiques : les petites cases sur trois colonnes. */
+  .stat-petits {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Les lignes d'amélioration, plus serrées. */
+  .ligne-amelioration {
+    gap: 6px;
+    padding: 4px 6px 4px 8px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .ligne-amelioration-texte {
+    gap: 1px;
+  }
+
+  .ligne-amelioration-boutons {
+    gap: 4px;
+  }
+
+  .ligne-amelioration-boutons .btn {
+    min-width: 0;
+    gap: 0;
+  }
+
+  .titre-section {
+    font-size: 0.95rem;
   }
 
   /* --- Le bandeau du haut et ses boutons --------------------------------------------------- */
@@ -138,42 +309,76 @@
     gap: 4px;
   }
 
-  /* (28/10) Le bandeau sur une seule ligne, plus mince (rien ne passe à la ligne, même à
-     740 px de large : l'argent « 3,9 k $ » se coupait en deux). */
+  /* (28/10, demandé par le propriétaire) Le bandeau sur une seule ligne, petit : rien ne passe
+     à la ligne (« 496 $ » se coupait en deux, le minuteur des salaires aussi). */
   .hud-case {
-    min-height: 34px;
-    padding: 1px 8px 1px 3px;
+    min-height: 30px;
+    padding: 1px 7px 1px 3px;
     gap: 4px;
     font-size: 0.8rem;
-    border-radius: 12px;
+    border-width: 2px;
+    border-radius: 11px;
+    box-shadow: 0 2px 0 var(--encre);
     white-space: nowrap;
   }
 
+  .hud-valeurs {
+    gap: 0;
+  }
+
+  .hud-valeurs strong,
+  .hud-gemmes strong {
+    font-size: 0.9rem;
+    line-height: 1.05;
+  }
+
   .hud-valeurs small,
-  .hud-case small {
+  .hud-case small,
+  .hud-minuteur {
     font-size: 0.68rem;
+    line-height: 1.05;
   }
 
   .hud-icone {
+    width: 22px;
+    height: 22px;
+    border-width: 2px;
+    font-size: 0.8rem;
+  }
+
+  .hud-medaille {
     width: 24px;
     height: 24px;
+    border-width: 2px;
     font-size: 0.85rem;
   }
 
+  .hud-niveau {
+    padding-right: 7px;
+  }
+
+  .hud-plus {
+    width: 18px;
+    height: 18px;
+    font-size: 0.8rem;
+  }
+
   .hud-badge {
-    min-width: 15px;
-    height: 15px;
+    min-width: 14px;
+    height: 14px;
     right: -6px;
     bottom: -5px;
-    font-size: 0.6rem;
+    font-size: 0.58rem;
+    line-height: 11px;
   }
 
   .hud-jauge {
-    width: 38px;
+    width: 34px;
+    height: 8px;
   }
 
   .hud-boosts .etiquette {
-    padding: 1px 6px;
+    padding: 0 6px;
     font-size: 0.7rem;
   }
 
@@ -182,10 +387,21 @@
   }
 
   .boutons-haut .btn-rond {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-    border-width: 3px;
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
+  }
+
+  /* (28/10, demandé par le propriétaire) Plus près des bords : sur iPhone, la marge de sécurité
+     (l'encoche, ~47 à 59 px de chaque côté) laissait un grand vide à droite des tâches. On en
+     garde une partie : le haut de l'écran est libre (l'encoche est au milieu de la hauteur). */
+  .jeu {
+    --marge-gauche: max(8px, calc(env(safe-area-inset-left) - 30px));
+    --marge-droite: max(8px, calc(env(safe-area-inset-right) - 30px));
+    --marge-haut: max(6px, env(safe-area-inset-top));
+    --marge-bas: max(8px, env(safe-area-inset-bottom));
   }
 
   .interface-haut-droite {
@@ -197,16 +413,18 @@
   /* La liste des tâches : plus étroite, une seule tâche à la fois, elle défile si besoin.
      (28/10) Encore plus étroite : le village doit rester le héros de l'écran. */
   .taches {
-    width: min(240px, 31vw);
+    width: min(220px, 27vw);
     min-height: 0;
     overflow-y: auto;
-    border-radius: 14px;
+    border-width: 2px;
+    border-radius: 12px;
+    box-shadow: 0 3px 0 var(--encre);
   }
 
   .taches-titre {
-    min-height: 30px;
-    padding: 2px 10px;
-    font-size: 0.88rem;
+    min-height: 26px;
+    padding: 1px 8px;
+    font-size: 0.85rem;
   }
 
   .tache-suivante {
@@ -214,8 +432,8 @@
   }
 
   .tache {
-    padding: 4px 6px 4px 8px;
-    gap: 6px;
+    padding: 3px 5px 3px 7px;
+    gap: 5px;
   }
 
   .tache-texte {
@@ -227,25 +445,31 @@
     font-size: 1.05rem;
   }
 
-  .tache .btn-petit {
-    min-height: 36px;
-    padding: 0.2em 0.7em;
+  .tache .btn-petit,
+  .quete-chateau .btn-petit {
+    min-height: 30px;
+    padding: 0.15em 0.6em;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
     font-size: 0.8rem;
   }
 
   /* La quête finale : en une ligne, plus petite (28/10 : sans son petit titre « Quête finale »,
      l'icône du château suffit). */
   .quete-chateau {
-    width: min(240px, 31vw);
+    width: min(220px, 27vw);
+    border-width: 2px;
+    box-shadow: 0 3px 0 var(--encre);
     padding: 3px 6px;
     gap: 6px;
     border-radius: 14px;
   }
 
   .quete-icone {
-    width: 28px;
-    height: 28px;
-    font-size: 1rem;
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+    font-size: 0.85rem;
   }
 
   .quete-titre {
@@ -254,12 +478,6 @@
 
   .quete-texte {
     font-size: 0.76rem;
-  }
-
-  .quete-chateau .btn-petit {
-    min-height: 36px;
-    padding: 0.2em 0.7em;
-    font-size: 0.8rem;
   }
 
   /* Les messages, plus haut (sous le bandeau) et plus petits. */
@@ -363,29 +581,47 @@
     overflow-y: auto;
   }
 
+  /* (28/10) La version en bas à gauche, sous les mondes (à droite, elle passait sur le
+     classement). */
   .accueil-version {
     position: absolute;
-    right: 8px;
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
     bottom: 4px;
+    z-index: 0;
     margin: 0;
   }
 
+  .accueil-contenu {
+    z-index: 1;
+  }
+
+  /* (28/10) Le bandeau plus mince, et dans les marges de sécurité (l'encoche de l'iPhone). */
   .accueil-bandeau {
-    top: 6px;
-    padding: 4px 10px;
+    top: 5px;
+    width: calc(100% - max(8px, env(safe-area-inset-left)) - max(8px, env(safe-area-inset-right)));
+    padding: 2px 6px 2px 8px;
     gap: 8px;
-    border-radius: 16px;
-    box-shadow: 0 4px 0 var(--encre);
+    border-width: 3px;
+    border-radius: 14px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  .accueil-bandeau .btn {
+    min-height: 32px;
+    padding: 0.2em 0.7em;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
   }
 
   .accueil-logo-icone {
-    width: 34px;
-    height: 34px;
-    font-size: 1.1rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.95rem;
   }
 
   .accueil-logo {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
   }
 
   .accueil-accroche {
@@ -394,9 +630,9 @@
 
   /* Les langues : seulement les drapeaux (le nom de la langue reste lu par les lecteurs d'écran). */
   .accueil-langues .onglet {
-    min-width: 40px;
-    min-height: 36px;
-    padding: 2px 6px;
+    min-width: 36px;
+    min-height: 28px;
+    padding: 1px 5px;
     font-size: 0;
   }
 
@@ -406,16 +642,134 @@
   }
 
   .accueil-contenu {
-    top: 62px;
-    bottom: 8px;
+    top: 48px;
+    bottom: 6px;
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));
   }
 
   .accueil-panneau {
-    padding: 10px;
-    gap: 8px;
-    border-radius: 18px;
+    padding: 8px;
+    gap: 6px;
+    border-width: 3px;
+    border-radius: 16px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  /* (28/10, demandé par le propriétaire) Le classement sans défiler : les 10 premiers, en lignes
+     fines qui se partagent la hauteur de l'écran (la suite reste dans la version ordinateur). */
+  .accueil-classement {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .classement {
+    flex: 1;
+    gap: 4px;
+  }
+
+  .classement-haut h2 {
+    font-size: 1.05rem;
+  }
+
+  .classement-haut .etiquette {
+    font-size: 0.68rem;
+  }
+
+  .classement-actualiser.btn {
+    width: 28px;
+    height: 28px;
+    min-height: 0;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
+    font-size: 0.8rem;
+  }
+
+  .classement-defile {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .classement-liste {
+    display: grid;
+    flex: 1;
+    grid-template-rows: repeat(10, minmax(0, 1fr));
+    gap: 3px;
+    min-height: 0;
+  }
+
+  .classement-liste > li:nth-child(n + 11) {
+    display: none;
+  }
+
+  .classement-ligne {
+    min-height: 0;
+    gap: 4px;
+    padding: 0 2px 0 5px;
+    border-width: 2px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .classement-rang,
+  .classement-podium .classement-rang {
+    width: 24px;
+    font-size: 0.8rem;
+  }
+
+  .classement-pseudo,
+  .classement-valeur {
+    font-size: 0.78rem;
+  }
+
+  .classement-visiter.btn {
+    align-self: stretch;
+    min-height: 0;
+    margin-block: 2px;
+    padding: 0 7px;
+    border-width: 2px;
+    border-radius: 7px;
+    box-shadow: none;
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  .classement-visiter-texte {
+    display: none;
+  }
+
+  .classement-message {
+    padding: 8px;
+  }
+
+  .classement-toi {
+    gap: 6px;
+    padding: 3px 4px 3px 6px;
+    border-width: 2px;
+    border-radius: 10px;
+  }
+
+  .classement-toi-rang {
+    min-width: 34px;
+    padding: 0 4px;
+    font-size: 0.85rem;
+  }
+
+  .classement-toi-texte {
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  .classement-toi .btn {
+    min-height: 28px;
+    padding: 0.1em 0.6em;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
   }
 
   .accueil-jouer {
@@ -427,8 +781,97 @@
   }
 
   .accueil-gros-bouton {
-    min-height: 56px;
-    font-size: 1.35rem;
+    min-height: 44px;
+    padding-block: 0.2em;
+    gap: 0;
+    font-size: 1.2rem;
+  }
+
+  .accueil-gros-bouton small {
+    font-size: 0.75rem;
+  }
+
+  .accueil-jouer .btn {
+    border-width: 3px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  .accueil-jouer .btn:not(.accueil-gros-bouton):not(.btn-rond) {
+    min-height: 34px;
+    padding: 0.2em 0.8em;
+  }
+
+  /* (28/10, demandé par le propriétaire) Les mondes sur une ligne fine chacun : les 5 tiennent
+     sans défiler (le panneau ne défile que si on ouvre les réglages d'un monde, « ⋯ »). */
+  .accueil-mondes {
+    gap: 4px;
+  }
+
+  .accueil-monde {
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .accueil-monde-haut {
+    gap: 6px;
+    padding: 1px 3px 1px 5px;
+  }
+
+  .accueil-monde-pastille {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+
+  .accueil-monde-texte {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .accueil-monde-nom {
+    flex-shrink: 0;
+    max-width: 45%;
+  }
+
+  .accueil-monde-nom {
+    font-size: 0.85rem;
+    line-height: 1.15;
+  }
+
+  .accueil-monde-infos {
+    flex-wrap: nowrap;
+    gap: 0 6px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .accueil-monde .btn-rond {
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
+    box-shadow: 0 2px 0 var(--encre);
+    font-size: 0.8rem;
+  }
+
+  .accueil-monde-actions {
+    gap: 4px;
+    padding: 0 5px 5px;
+  }
+
+  .accueil-titre-mondes {
+    font-size: 0.85rem;
+  }
+
+  .accueil-panneau > * {
+    flex-shrink: 0;
+  }
+
+  .accueil-jouer > .discret {
+    font-size: 0.7rem;
+    line-height: 1.2;
   }
 
   /* (27/10) La version CrazyGames : le gros bouton « Jouer » reste gros. */
@@ -499,9 +942,24 @@
   }
 }
 
+/* (28/10) Un téléphone couché un peu plus haut (à partir de 420 px) : la place de montrer les
+   compteurs de la mine (cassés, record, clics/s) sous le bloc. */
+@media (orientation: landscape) and (min-height: 420px) and (max-height: 620px) and (pointer: coarse) {
+  .compteurs {
+    display: grid;
+  }
+}
+
 @keyframes fenetre-glisse {
   from {
     transform: translateX(30px);
+    opacity: 0;
+  }
+}
+
+@keyframes fenetre-monte {
+  from {
+    transform: translateY(14px);
     opacity: 0;
   }
 }
