@@ -258,7 +258,9 @@ describe('les trajets des wagonnets', () => {
 
   // (26/10, bug du propriétaire) Le charbon gardé 📌 (pour une amélioration de la fonderie) ne part
   // plus à la foreuse : avant, ce wagonnet emportait tout le charbon du coffre.
-  it('Mine → Foreuse : il laisse dans le coffre le charbon gardé', () => {
+  // (29/10, demandé par le propriétaire) Sauf ce qui manque à son réservoir : le combustible
+  // passe même gardé, mais jamais le surplus (qui serait vendu dans le chariot).
+  it('Mine → Foreuse : il ne prend du charbon gardé que ce qui manque au réservoir', () => {
     const etat = partie()
     etat.niveauMine = 2
     etat.village.batiments.push({ id: 'foreuse', x: 28, y: 18, miroir: false })
@@ -266,11 +268,20 @@ describe('les trajets des wagonnets', () => {
     for (let x = 25; x <= 27; x++) poserSol(etat, 'rail', x, 20)
     creerTrajet(etat, 'mine-foreuse')
     etat.foreuse.carburant = 0
+    const reservoir = NIVEAUX_FORAGE[etat.foreuse.niveauVitesse].reservoir
     etat.coffre.contenu = { charbon: 30 }
     etat.coffre.garder = { charbon: 25 }
-    expect(aCharger(etat, 'mine-foreuse')).toBe(5)
+    // 5 charbons libres, mais il en manque « reservoir » : il prend ce qui manque, pas plus.
+    expect(aCharger(etat, 'mine-foreuse')).toBe(Math.min(30, reservoir))
     etat.coffre.garder = { charbon: 100 }
+    expect(aCharger(etat, 'mine-foreuse')).toBe(Math.min(30, reservoir))
+    // Réservoir plein : il ne touche pas au charbon gardé.
+    etat.foreuse.carburant = reservoir * SECONDES_PAR_CHARBON
     expect(aCharger(etat, 'mine-foreuse')).toBe(0)
+    // Peu gardé : il emporte tout le charbon libre (le surplus va dans le chariot).
+    etat.foreuse.carburant = 0
+    etat.coffre.garder = { charbon: 2 }
+    expect(aCharger(etat, 'mine-foreuse')).toBe(Math.max(28, Math.min(30, reservoir)))
   })
 
   it('Foreuse → Marché : il vend le chariot de la foreuse', () => {
