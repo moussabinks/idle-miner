@@ -15,7 +15,6 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Touche le sol là où commence ta voie, juste à côté d’un bâtiment.': 'Toque no chão onde sua linha começa, bem ao lado de um prédio.',
   'Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.': 'O trilho dourado mostra onde ele vai. Toque em outro espaço para movê-lo.',
   'Choisis où va le prochain rail avec les flèches, puis pose-le.': 'Escolha com as setas para onde vai o próximo trilho e coloque-o.',
-  '{n} 🔩 fer le rail': '{n} 🔩 ferro por trilho',
   'Gauche': 'Esquerda',
   'Tout droit': 'Em frente',
   'Droite': 'Direita',
@@ -1026,7 +1025,6 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Taille ×{n} plus vite': 'Lapida ×{n} mais rápido',
   // (26/10) Réorganiser le village
   '{n} en stock': '{n} em estoque',
-  '{n} rails en stock': '{n} trilhos em estoque',
   '🏡 Nouveau village enregistré !': '🏡 Nova vila salva!',
   '🪨 Pavé rangé : {n} en stock.': '🪨 Pedra guardada: {n} em estoque.',
   '🛤️ Rail rangé : {n} en stock.': '🛤️ Trilho guardado: {n} em estoque.',

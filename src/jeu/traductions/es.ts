@@ -15,7 +15,6 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Touche le sol là où commence ta voie, juste à côté d’un bâtiment.': 'Toca el suelo donde empieza tu vía, justo al lado de un edificio.',
   'Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.': 'El riel dorado muestra dónde irá. Toca otra casilla para moverlo.',
   'Choisis où va le prochain rail avec les flèches, puis pose-le.': 'Elige con las flechas dónde va el siguiente riel y colócalo.',
-  '{n} 🔩 fer le rail': '{n} 🔩 hierro por riel',
   'Gauche': 'Izquierda',
   'Tout droit': 'Recto',
   'Droite': 'Derecha',
@@ -1026,7 +1025,6 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   'Taille ×{n} plus vite': 'Talla ×{n} más rápido',
   // (26/10) Réorganiser le village
   '{n} en stock': '{n} en reserva',
-  '{n} rails en stock': '{n} rieles en reserva',
   '🏡 Nouveau village enregistré !': '🏡 ¡Nueva aldea guardada!',
   '🪨 Pavé rangé : {n} en stock.': '🪨 Adoquín guardado: {n} en reserva.',
   '🛤️ Rail rangé : {n} en stock.': '🛤️ Riel guardado: {n} en reserva.',
