@@ -53,6 +53,7 @@ export function FenetreAbsence({ resume, onFermer }: Props) {
       icone="☀️"
       couleur="jaune"
       devant
+      classe="fenetre-absence"
       onFermer={onFermer}
       pied={
         <>

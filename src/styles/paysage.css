@@ -218,6 +218,76 @@
     gap: 6px;
   }
 
+  /* (29/10, demandé par le propriétaire) Le bloc à droite, sous le pouce droit ; le coffre, la
+     vente, « Garder » et le niveau suivant à gauche. */
+  .mine-colonnes {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+
+  .mine-colonnes > .zone-bloc {
+    order: 2;
+  }
+
+  /* (29/10) Les boutons ne débordent jamais du cadre de leur ligne (sur iPhone, « Garder »
+     dépassait en bas) : un peu plus d'air dans la ligne, une ombre plus courte sur les boutons. */
+  .stock-ligne {
+    align-items: center;
+    padding: 4px 4px 5px 6px;
+  }
+
+  .stock-ligne .btn,
+  .ligne-amelioration .btn,
+  .carte .btn {
+    box-shadow: 0 2px 0 var(--encre);
+  }
+
+  .stock-ligne .btn {
+    min-height: 30px;
+    padding-block: 0.15em;
+  }
+
+  .ligne-amelioration {
+    padding-bottom: 6px;
+  }
+
+  /* (29/10) Le retour d'absence tient sur un écran, sans défiler : les lignes sur deux colonnes,
+     le bénéfice en une ligne, les phrases en petit. */
+  .absence-lignes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .absence-lignes li {
+    gap: 6px;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+
+  .absence-gains {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 10px;
+    padding: 4px 10px;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+
+  .absence-total {
+    grid-row: span 2;
+    font-size: 1.5rem;
+    white-space: nowrap;
+  }
+
+  .absence-gains .discret,
+  .fenetre-absence .discret,
+  .fenetre-absence .texte-alerte {
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
   /* Les longues listes (améliorations, employés, wagonnets, pioches, mineurs...) sur deux
      colonnes : deux fois moins à faire défiler. Ce qui doit rester en largeur (le palier de la
      mine, une alerte, une phrase) prend les deux colonnes. */

@@ -1109,6 +1109,5 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   "Placer": "Colocar",
   "Retour": "Volver",
   "Fer : {n}": "Hierro: {n}",
-  "de quoi poser {n} rail(s)": "para {n} raíl(es)",
   "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 Nada de cuadradito: 4 raíles no pueden formar un cuadrado de 2 × 2.",
 }
