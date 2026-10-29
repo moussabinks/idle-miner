@@ -1115,4 +1115,5 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   "Plein écran : oui": "Pantalla completa: sí",
   "Plein écran : non": "Pantalla completa: no",
   "Jouer en plein écran": "Jugar en pantalla completa",
+  "Recruter un pousseur": "Contratar un empujador",
 }

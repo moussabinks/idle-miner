@@ -957,6 +957,15 @@
   font-size: 1.5rem;
 }
 
+/* (29/10) Pas de pousseur : le message, et dessous le bouton vert « Recruter un pousseur ». */
+.trajet-sans-pousseur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
 .trajet-actions-rail {
   display: flex;
   flex-wrap: wrap;
