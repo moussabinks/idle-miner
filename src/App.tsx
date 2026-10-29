@@ -749,6 +749,11 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           </span>
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
         </p>
+        {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça fait
+            (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez. */}
+        <p className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
+          🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
+        </p>
         <div className="rails-commandes">
           {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en
               haut, tout droit ; à gauche et à droite, les virages ; en bas, demi-tour (la voie
