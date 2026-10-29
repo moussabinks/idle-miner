@@ -64,7 +64,7 @@ Tous les niveaux : 2 620 000 $ + 600 fer + 200 charbon + 1 010 or + 230 saphir +
 
 | Trajet | Ce que fait le wagonnet |
 |---|---|
-| 🏭 **Mine → Fonderie** | il apporte le fer et l'or **choisis** du coffre de la mine (sans dépasser la place de l'entrée, les plus chers d'abord, sauf ce qu'on garde 📌), **et** le charbon qui manque au four (`objetFixe`). |
+| 🏭 **Mine → Fonderie** | il apporte le fer et l'or **choisis** du coffre de la mine (sans dépasser la place de l'entrée, les plus chers d'abord, sauf ce qu'on garde 📌), **et** le charbon qui manque au four (`objetFixe` ; 29/10 : même le charbon gardé 📌, seulement ce qui manque au four). |
 | 🏭 **Foreuse → Fonderie** | la même chose, depuis le chariot de la foreuse. |
 | 🟨 **Fonderie → Marché** | il emporte les lingots choisis de la réserve et les vend au marché. |
 

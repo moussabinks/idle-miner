@@ -8,6 +8,8 @@ import { remplirFonderie } from './ateliers'
 import { aleatoireAvecGraine } from './aleatoire'
 import { partieDeTest } from './partieDeTest'
 import type { EtatJeu } from './mineur'
+import { poserSol } from './batiments'
+import { aCharger, creerTrajet } from './wagonnet'
 
 // Une partie au niveau 5 de la mine, avec le générateur, la foreuse et la fonderie posés.
 function partie(): EtatJeu {
@@ -42,5 +44,37 @@ describe('remplir à la main', () => {
     expect(etat.foreuse.carburant).toBeGreaterThan(0)
     remplirFonderie(etat)
     expect(etat.fonderie.carburant).toBeGreaterThan(0)
+  })
+})
+
+// (29/10, demandé par le propriétaire) Les wagonnets aussi : le charbon gardé 📌 part au four de
+// la fonderie, et la redstone gardée au générateur (seulement ce qui leur manque).
+describe('les wagonnets et le combustible gardé 📌', () => {
+  // Le bâtiment en (18, 30), relié à la mine par 5 rails (comme dans wagonnet.test.ts).
+  function partieRelieeA(id: 'fonderie' | 'generateur'): EtatJeu {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    etat.niveauMine = 5
+    etat.village.batiments.push({ id, x: 18, y: 30, miroir: false })
+    etat.coffre.contenu = { fer: 15 }
+    for (let y = 25; y <= 29; y++) poserSol(etat, 'rail', 20, y)
+    return etat
+  }
+
+  it('Mine → Fonderie emporte le charbon qui manque au four, même gardé', () => {
+    const etat = partieRelieeA('fonderie')
+    creerTrajet(etat, 'mine-fonderie')
+    etat.fonderie.carburant = 0
+    etat.coffre.contenu = { charbon: 40 }
+    etat.coffre.garder = { charbon: 40 }
+    expect(aCharger(etat, 'mine-fonderie')).toBeGreaterThan(0)
+  })
+
+  it('Mine → Générateur emporte la redstone qui manque, même gardée', () => {
+    const etat = partieRelieeA('generateur')
+    creerTrajet(etat, 'mine-generateur')
+    etat.generateur.carburant = 0
+    etat.coffre.contenu = { redstone: 40 }
+    etat.coffre.garder = { redstone: 40 }
+    expect(aCharger(etat, 'mine-generateur')).toBeGreaterThan(0)
   })
 })
