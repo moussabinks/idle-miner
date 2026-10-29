@@ -306,6 +306,56 @@
   gap: 8px;
 }
 
+/* (29/10, demandé par le propriétaire) Chaque métier dans un grand encadré de sa couleur, avec un
+   gros titre en bandeau : on voit tout de suite où finissent les mineurs et où commencent les
+   pousseurs (des joueurs passaient de l'un à l'autre sans le voir). L'embauche est en haut. */
+.section-mineur,
+.section-pousseur,
+.section-joaillier {
+  padding: 10px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 18px;
+  box-shadow: var(--ombre);
+}
+
+.section-mineur {
+  background: #ffdfae;
+}
+
+.section-pousseur {
+  background: #c9e4fb;
+}
+
+.section-joaillier {
+  background: #ddd0ff;
+}
+
+.section-employes + .section-employes {
+  margin-top: 10px;
+}
+
+.section-employes-titre {
+  align-self: flex-start;
+  padding: 4px 14px;
+  border: var(--trait) solid var(--encre);
+  border-radius: 12px;
+  box-shadow: var(--ombre-petite);
+  font-size: 1.3rem;
+  color: var(--encre);
+}
+
+.section-mineur .section-employes-titre {
+  background: var(--orange);
+}
+
+.section-pousseur .section-employes-titre {
+  background: var(--ciel);
+}
+
+.section-joaillier .section-employes-titre {
+  background: var(--violet);
+}
+
 .grille-employes {
   display: flex;
   flex-direction: column;

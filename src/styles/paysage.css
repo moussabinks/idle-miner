@@ -279,6 +279,26 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* (29/10) Le Personnel : les encadrés des métiers, plus serrés. */
+  .section-mineur,
+  .section-pousseur,
+  .section-joaillier {
+    padding: 6px;
+    border-width: 2px;
+    border-radius: 14px;
+    box-shadow: 0 3px 0 var(--encre);
+  }
+
+  .section-employes + .section-employes {
+    margin-top: 6px;
+  }
+
+  .section-employes-titre {
+    padding: 2px 10px;
+    border-width: 2px;
+    font-size: 1.05rem;
+  }
+
   /* Les lignes d'amélioration, plus serrées. */
   .ligne-amelioration {
     gap: 6px;

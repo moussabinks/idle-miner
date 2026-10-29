@@ -415,10 +415,8 @@ function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
   const avecRecruteur = etat.recruteur > 0
   if (prix === null) {
     return (
+      // (29/10) Le nombre de mineurs est déjà dans le titre de la section : juste la phrase.
       <div className="carte carte-creme">
-        <strong>
-          ⛏️ {t('Mineurs')} {nbDuRole(etat, 'mineur')} / {max}
-        </strong>
         <p className="discret">{t('Tu as tous tes mineurs. Chaque niveau de la mine te permet d’en embaucher un de plus.')}</p>
       </div>
     )
@@ -468,7 +466,6 @@ function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTra
   if (trajets.length === 0) return null
   return (
     <>
-      <h3 className="titre-section">{t('Pousseur')}</h3>
       <p className="discret">{t('Il pousse le wagonnet d’un seul trajet. Choisis lequel :')}</p>
       <div className="choix-trajets" role="radiogroup">
         {trajets.map((l) => {
@@ -743,9 +740,13 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
         <p className="carte carte-creme vide-equipe">{t('Personne pour l’instant. Tes mineurs creuseront pour toi, même jeu fermé !')}</p>
       )}
       {onglet === 'personnel' && etat.employes.length > 0 && !managerPaieLesSalaires(etat) && <Salaires etat={etat} jouer={jouer} />}
-      {/* (26/10) Deux sections : les mineurs (l'équipe, puis en recruter un), et les pousseurs
-          (l'équipe, puis en embaucher un). La recrue qu'on est en train de dévoiler n'apparaît
-          dans la liste qu'une fois sa carte montrée (sinon, on la voyait derrière avant). */}
+      {/* (26/10) Une section par métier : les mineurs, les pousseurs, les joailliers. La recrue
+          qu'on est en train de dévoiler n'apparaît dans la liste qu'une fois sa carte montrée
+          (sinon, on la voyait derrière avant).
+          (29/10, demandé par le propriétaire : des joueurs cherchaient où embaucher un mineur et
+          arrivaient aux pousseurs sans le voir) Chaque section est un grand encadré de sa couleur
+          (mineurs en orange, pousseurs en bleu, joailliers en violet) avec un gros titre, et
+          l'embauche est EN HAUT de sa section, au-dessus de la liste. */}
       {onglet === 'personnel' &&
         (['mineur', 'pousseur', 'joaillier'] as const).map((role) => {
           // (26/10) Les plus rares en haut (Mythique d'abord) ; à rareté égale, l'ordre d'embauche.
@@ -766,8 +767,9 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
                 ? `🛤️ ${t('Pousseurs')} ${liste.length}`
                 : `💍 ${t('Joailliers')} ${liste.length} / ${maxJoailliers(etat)}`
           return (
-            <section key={role} className="section-employes">
-              <h3 className="titre-section">{titre}</h3>
+            <section key={role} className={`section-employes section-${role}`}>
+              <h3 className="section-employes-titre">{titre}</h3>
+              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : role === 'pousseur' ? <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} /> : <EmbaucheJoaillier etat={etat} />}
               {liste.length > 0 && (
                 <div className="grille-employes">
                   {liste.map(({ e, index }) => (
@@ -775,7 +777,6 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
                   ))}
                 </div>
               )}
-              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : role === 'pousseur' ? <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} /> : <EmbaucheJoaillier etat={etat} />}
             </section>
           )
         })}

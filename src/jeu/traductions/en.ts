@@ -278,7 +278,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Il creuse tout seul au fond de la mine. Ses 5 premières minutes sont payées.': 'Digs on their own at the bottom of the mine. Their first 5 minutes are paid.',
   'Sa rareté est une surprise ! Ses 5 premières minutes sont payées.': 'Their rarity is a surprise! Their first 5 minutes are paid.',
   'Embaucher': 'Hire',
-  'Pousseur': 'Pusher',
   'Il pousse le wagonnet d’un seul trajet. Choisis lequel :': 'Pushes the minecart on one route. Pick which one:',
   'Libre': 'Free',
   'Pas de rails': 'No rails',
