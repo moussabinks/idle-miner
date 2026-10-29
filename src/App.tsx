@@ -741,13 +741,13 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             : !dernier
               ? t('Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.')
               : t('Choisis où va le prochain rail avec les flèches, puis pose-le.')}{' '}
-          ({stockSol(etat, 'rail') > 0 ? t('{n} rails en stock', { n: stockSol(etat, 'rail') }) : t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
+          {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça
+              fait (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez.
+              (29/10, plus compact) Dans la même ligne que la consigne, plus de ligne à part. */}
+          <span className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
+            🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
+          </span>
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
-        </p>
-        {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça fait
-            (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez. */}
-        <p className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
-          🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
         </p>
         <div className="rails-commandes">
           {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en
@@ -772,22 +772,22 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
               </button>
             </div>
           )}
+          {/* (29/10, plus compact) Tout sur une rangée : la croix, « Placer », puis « Retirer » et
+              « Retour » l'un sur l'autre. */}
+          {tr && (
+            <button className="btn btn-vert btn-grand rails-placer" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
+              🛤️ {t('Placer')}
+            </button>
+          )}
           <div className="rails-cote">
             {tr && (
-              <button className="btn btn-vert btn-grand rails-placer" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
-                🛤️ {t('Placer')}
+              <button className="btn btn-rose btn-petit" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
+                🗑️ {t('Retirer')}
               </button>
             )}
-            <div className="rails-cote-bas">
-              {tr && (
-                <button className="btn btn-rose btn-petit" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
-                  🗑️ {t('Retirer')}
-                </button>
-              )}
-              <button className="btn btn-blanc btn-petit rails-retour" onClick={() => setPinceau(null)}>
-                ← {t('Retour')}
-              </button>
-            </div>
+            <button className="btn btn-blanc btn-petit rails-retour" onClick={() => setPinceau(null)}>
+              ← {t('Retour')}
+            </button>
           </div>
         </div>
       </div>

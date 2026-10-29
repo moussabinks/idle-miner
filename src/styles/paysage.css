@@ -567,6 +567,26 @@
     font-size: 0.8rem;
   }
 
+  /* (29/10) Poser des rails, au doigt : encore un peu plus serré. */
+  .barre-edition:has(.rails-commandes) {
+    padding: 4px 8px 6px;
+    gap: 4px;
+  }
+
+  .barre-edition:has(.rails-commandes) .consigne {
+    font-size: 0.72rem;
+  }
+
+  .croix-rails {
+    grid-template-columns: repeat(3, 42px);
+    grid-template-rows: repeat(2, 36px);
+  }
+
+  .rails-placer {
+    min-width: 100px;
+    font-size: 1.1rem;
+  }
+
   /* --- L'accueil ------------------------------------------------------------------------ */
 
   /* (sous 760 px de large, accueil.css empile tout comme sur un téléphone debout : ici, on

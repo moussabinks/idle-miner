@@ -15,7 +15,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Touche le sol là où commence ta voie, juste à côté d’un bâtiment.': 'Tap the ground where your track starts, right next to a building.',
   'Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.': 'The golden rail shows where it goes. Tap another tile to move it.',
   'Choisis où va le prochain rail avec les flèches, puis pose-le.': 'Pick where the next rail goes with the arrows, then place it.',
-  '{n} 🔩 fer le rail': '{n} 🔩 iron per rail',
   'Gauche': 'Left',
   'Tout droit': 'Straight',
   'Droite': 'Right',
@@ -1026,7 +1025,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Taille ×{n} plus vite': 'Cuts ×{n} faster',
   // (26/10) Réorganiser le village
   '{n} en stock': '{n} in stock',
-  '{n} rails en stock': '{n} rails in stock',
   '🏡 Nouveau village enregistré !': '🏡 New village saved!',
   '🪨 Pavé rangé : {n} en stock.': '🪨 Paving stone stored: {n} in stock.',
   '🛤️ Rail rangé : {n} en stock.': '🛤️ Rail stored: {n} in stock.',

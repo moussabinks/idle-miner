@@ -656,59 +656,68 @@
 .barre-edition:has(.rails-commandes) {
   width: fit-content;
   max-width: 100%;
-  padding: 8px 14px 10px;
+  padding: 6px 10px 8px;
   gap: 6px;
 }
 
+/* (29/10, plus compact) La consigne aussi large que les commandes : une ou deux lignes. */
 .barre-edition:has(.rails-commandes) .consigne {
-  max-width: 340px;
+  max-width: 400px;
   margin: 0 auto;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
 }
 
 .rails-fer {
-  align-self: center;
-  font-size: 0.85rem;
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
+/* (29/10, plus compact) Une seule rangée : la croix (2 rangs de flèches), « Placer », puis
+   « Retirer » et « Retour » l'un sur l'autre. */
 .rails-commandes {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 32px;
+  gap: 10px;
 }
 
 .rails-cote {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-/* (29/10) « Placer » : le gros bouton vert, bien à part de la croix et de « Retour » (blanc, plus
-   petit, en dessous) : on ne les confond plus. */
-.rails-placer {
-  min-width: 150px;
-  min-height: 60px;
-  font-size: 1.4rem;
-}
-
-.rails-cote-bas {
-  display: flex;
-  gap: 8px;
   justify-content: space-between;
+  gap: 6px;
+}
+
+/* (29/10) « Placer » : le gros bouton vert, bien à part de la croix et de « Retour » (blanc) : on
+   ne les confond plus. */
+.rails-placer {
+  min-width: 112px;
+  min-height: 0;
+  padding: 0.2em 0.8em;
+  font-size: 1.25rem;
 }
 
 .rails-retour {
-  min-width: 90px;
+  min-width: 0;
 }
 
+.rails-cote .btn {
+  flex: 1;
+  min-height: 36px;
+}
+
+/* La croix sur deux rangs, comme les flèches d'un clavier : tout droit en haut au milieu, les
+   virages à gauche et à droite, le demi-tour en dessous. */
 .croix-rails {
   display: grid;
-  grid-template-columns: repeat(3, 50px);
-  grid-template-rows: repeat(3, 44px);
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(2, 38px);
   grid-template-areas:
-    '. haut .'
-    'gauche centre droite'
+    'gauche haut droite'
     '. bas .';
   gap: 4px;
 }
@@ -717,12 +726,14 @@
   min-width: 0;
   min-height: 0;
   padding: 0;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
 .fleche-croix {
   display: block;
+  width: 26px;
+  height: 26px;
 }
 
 .croix-haut {
