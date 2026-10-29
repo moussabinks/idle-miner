@@ -45,7 +45,7 @@ Le panneau (`PanneauEmployes.tsx`, refait le 25/10) a **trois onglets** :
 
 (Les 6e et 7e places s'ouvrent aux niveaux 6 et 7 de la mine, depuis le 26/10. Avant le 25/10 : 500 $, 3 500 $, 15 000 $, 45 000 $ et 130 000 $ ; puis, avant l'économie revue du 25/10 : 50 $, 1 200 $, 7 000 $, 25 000 $ et 80 000 $.) La liste continue (220 000, 500 000 et 1 000 000 $), puis chaque embauche coûterait 2,2 fois la précédente (`HAUSSE_APRES_LISTE`). Les prix sont arrondis à la dizaine sous 1 000 $, à la centaine au-dessus. Une embauche peut aussi se payer en gemmes. Chaque embauche rapporte **40 XP** (une seule fois : licencier puis réembaucher ne redonne rien).
 
-- Le nouveau mineur reçoit un **prénom au hasard** pas encore pris (Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot, Romain, Dodo, Guewen ; avec un numéro si tous sont pris).
+- Le nouveau mineur reçoit un **prénom au hasard** pas encore pris (Raphaël, Moussa, Tom, Noah, Samy, Valou, Marion, Enya, Kaïnae, Teo, Fredo, Satine, Nils, Arthur, Sasha, Florian, Khalil, Margot, Romain, Dodo, Guewen, Alexis, Leyhan, Maïane ; avec un numéro si tous sont pris).
 - Il commence avec une **pioche en bois** et **ses 5 premières minutes de salaire comprises**. Il sort du Personnel, marche jusqu'à la mine et descend dans la caisse de l'ascenseur.
 - Avec le recruteur, sa **rareté est tirée au hasard** et une animation la dévoile (`RevelationRecrue.tsx`).
 
