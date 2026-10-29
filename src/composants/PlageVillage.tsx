@@ -408,12 +408,12 @@ function TracesDePas({ de, vers }: { de: [number, number]; vers: [number, number
   return <g className="traces-de-pas">{pas}</g>
 }
 
-// Un petit crabe qui se promène de côté sur le sable mouillé.
-function Crabe({ x, d, retard }: { x: number; d: number; retard: number }) {
+// Un petit crabe sur le sable mouillé. (29/10, demandé par le propriétaire) Il ne bouge plus.
+function Crabe({ x, d }: { x: number; d: number }) {
   const c = ecran(x, d)
   return (
     <g transform={`translate(${c.x} ${c.y})`}>
-      <g className="crabe" style={{ animationDelay: `${retard}s` }}>
+      <g className="crabe">
         <ellipse cx="0" cy="1" rx="5" ry="1.6" fill="#e2c27e" />
         <path d="M-4 -1 l-2.5 2 M-3 0 l-2 2.4 M4 -1 l2.5 2 M3 0 l2 2.4" stroke={ENCRE} strokeWidth="1" strokeLinecap="round" />
         <ellipse cx="0" cy="-1.6" rx="4.4" ry="2.8" fill="#ee6b6b" stroke={ENCRE} strokeWidth="0.9" />
@@ -513,12 +513,9 @@ function objetsDeLaPlage(): ObjetPlage[] {
     ajouter(x, d, <BoisFlotte key={`bois${x}`} x={x} d={d} angle={angle} />)
   }
   ajouter(26, 2.2, <TracesDePas key="traces" de={[PONTON.x - 0.4, 1.9]} vers={[22.5, 3.4]} />)
-  for (const [x, retard] of [
-    [19.5, 0],
-    [44.5, 2.3],
-  ] as [number, number][]) {
+  for (const x of [19.5, 44.5]) {
     const d = distanceRivage(x) - 0.55
-    ajouter(x, d, <Crabe key={`crabe${x}`} x={x} d={d} retard={retard} />)
+    ajouter(x, d, <Crabe key={`crabe${x}`} x={x} d={d} />)
   }
   // Des étoiles de mer et des coquillages sur le sable mouillé.
   const h = aleatoireAvecGraine(77)
