@@ -278,7 +278,6 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Il creuse tout seul au fond de la mine. Ses 5 premières minutes sont payées.': 'Cava sozinho no fundo da mina. Os 5 primeiros minutos já estão pagos.',
   'Sa rareté est une surprise ! Ses 5 premières minutes sont payées.': 'A raridade é surpresa! Os 5 primeiros minutos já estão pagos.',
   'Embaucher': 'Contratar',
-  'Pousseur': 'Empurrador',
   'Il pousse le wagonnet d’un seul trajet. Choisis lequel :': 'Empurra o carrinho de uma só rota. Escolha qual:',
   'Libre': 'Livre',
   'Pas de rails': 'Sem trilhos',
