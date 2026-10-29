@@ -108,9 +108,14 @@ export function usePartie(idMonde: string) {
   const afficherToasts = useCallback((nouveaux: Toast[]) => {
     if (nouveaux.length === 0) return
     setToasts((anciens) => {
-      // On évite d'empiler deux fois le même message.
-      const textes = new Set(anciens.map((t) => t.texte))
-      return [...anciens, ...nouveaux.filter((t) => !textes.has(t.texte))].slice(-5)
+      // (29/10, demandé par le propriétaire) Un message qui ne diffère d'un autre que par ses
+      // nombres (« 🛤️ Rail rangé : 3 en stock. », puis « 4 en stock »...) le remplace : seul le
+      // dernier reste à l'écran (avant, en retirant plein de rails d'un coup, ils s'empilaient).
+      const famille = (texte: string) => texte.replace(/[\d\s.,]+/g, '#')
+      const familles = new Set(nouveaux.map((t) => famille(t.texte)))
+      const gardes = anciens.filter((t) => !familles.has(famille(t.texte)))
+      const derniers = nouveaux.filter((t, i) => nouveaux.findLastIndex((n) => famille(n.texte) === famille(t.texte)) === i)
+      return [...gardes, ...derniers].slice(-5)
     })
     for (const t of nouveaux) {
       setTimeout(() => setToasts((liste) => liste.filter((x) => x.id !== t.id)), DUREE_TOAST)

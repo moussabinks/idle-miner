@@ -741,18 +741,12 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
             : !dernier
               ? t('Le rail doré montre où il sera posé. Touche une autre case pour le déplacer.')
               : t('Choisis où va le prochain rail avec les flèches, puis pose-le.')}{' '}
-          {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça
-              fait (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez.
-              (29/10, plus compact) Dans la même ligne que la consigne, plus de ligne à part. */}
-          <span className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
-            🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
+          {/* (29/10, demandé par le propriétaire) Un mini indicateur : le fer du coffre, en direct
+              (rose quand il n'y en a plus assez pour un rail). */}
+          <span className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`} aria-label={t('Fer : {n}', { n: nombre(ferPourRails) })}>
+            🔩 {nombre(ferPourRails)}
           </span>
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
-        </p>
-        {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça fait
-            (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez. */}
-        <p className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
-          🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
         </p>
         <div className="rails-commandes">
           {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en
