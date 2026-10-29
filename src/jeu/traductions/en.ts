@@ -183,13 +183,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Ce que tu paies': 'What you pay',
   'Les gains sont la valeur des blocs produits, une fois vendus. Tes clics ne sont pas comptés.': 'Earnings are the value of the blocks produced, once sold. Your clicks don’t count.',
 
-  // src/composants/FenetreQuelsMondes.tsx
-  'Quels mondes garder ?': 'Which worlds to keep?',
-  'Garder ceux d’ici': 'Keep the ones here',
-  'Prendre ceux du compte': 'Use the account’s',
-  'Ton compte a déjà {n} monde(s) en ligne, sauvegardé(s) le {date}, et ce navigateur a d’autres mondes.': 'Your account already has {n} world(s) online, saved on {date}, and this browser has other worlds.',
-  'Ceux que tu ne gardes pas seront remplacés.': 'The ones you don’t keep will be replaced.',
-
   // src/composants/FenetreRail.tsx
   'Déplacer': 'Move',
   'Retirer': 'Remove',

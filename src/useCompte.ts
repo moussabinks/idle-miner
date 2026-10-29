@@ -14,7 +14,7 @@ import {
 } from './jeu/compte'
 import { meilleurScore } from './jeu/classement'
 import { villageAPartager } from './jeu/visite'
-import { exporterTout, importerTout, mondesDeLaCopie, type SauvegardeComplete } from './jeu/sauvegarde'
+import { exporterTout, importerTout, type SauvegardeComplete } from './jeu/sauvegarde'
 import {
   creerCompte,
   envoyerMondes,
@@ -41,15 +41,6 @@ export type StatutCompte =
   | 'a-jour'
   | 'hors-ligne' // le serveur ne répond pas : on réessaie tout seul
 
-// La question posée quand le compte et le navigateur ont chacun des mondes différents (25/10 : une
-// fenêtre du jeu, FenetreQuelsMondes.tsx, au lieu de la boîte grise du navigateur, qui est bloquée
-// quand le jeu est dans la page d'un autre site).
-export type QuestionMondes = {
-  nombre: number // le nombre de mondes du compte
-  envoyeeLe: number // la date de leur sauvegarde en ligne
-  repondre: (recuperer: boolean) => void // true : prendre ceux du compte ; false : garder ceux du navigateur
-}
-
 export function useCompte() {
   const [joueur, setJoueur] = useState<Joueur | null>(null)
   // (27/10) Sans comptes (version CrazyGames), on est déconnecté dès le départ.
@@ -57,8 +48,6 @@ export function useCompte() {
   const [envoyeeLe, setEnvoyeeLe] = useState<number | null>(null)
   // Change quand les mondes du navigateur ont été remplacés par ceux du compte (l'accueil se redessine).
   const [versionMondes, setVersionMondes] = useState(0)
-  // La question en attente de réponse (null : pas de question).
-  const [question, setQuestion] = useState<QuestionMondes | null>(null)
 
   // Le texte des mondes au dernier échange : on n'envoie rien tant qu'il n'a pas changé.
   const dernierEnvoi = useRef('')
@@ -110,7 +99,8 @@ export function useCompte() {
     setStatut('a-jour')
   }, [envoyerLeScore])
 
-  // Le premier échange après la connexion : envoyer, récupérer, ou demander au joueur.
+  // Le premier échange après la connexion : envoyer ses mondes, ou récupérer ceux du compte
+  // (29/10 : sans jamais rien demander, le compte gagne ; voir choisirSynchro).
   const synchroniser = useCallback(
     async (j: Joueur) => {
       if (occupe.current) return
@@ -119,15 +109,7 @@ export function useCompte() {
       try {
         const enLigne = await telechargerMondes(j)
         const local = exporterTout(stockage)
-        let choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(stockage))
-        if (choix === 'demander' && enLigne) {
-          // On attend que le joueur réponde dans la fenêtre.
-          const recuperer = await new Promise<boolean>((repondre) =>
-            setQuestion({ nombre: mondesDeLaCopie(enLigne.parties).length, envoyeeLe: enLigne.envoyeeLe, repondre }),
-          )
-          setQuestion(null)
-          choix = recuperer ? 'recuperer' : 'envoyer'
-        }
+        const choix = choisirSynchro(local, enLigne, j.id, lireDerniereSynchro(stockage))
         pret.current = true
 
         if (choix === 'recuperer' && enLigne) {
@@ -223,7 +205,7 @@ export function useCompte() {
     if (joueur && pret.current && !occupe.current) void envoyer(joueur)
   }, [joueur, envoyer])
 
-  return { joueur, statut, envoyeeLe, versionMondes, question, connecter, deconnecter, envoyerMaintenant }
+  return { joueur, statut, envoyeeLe, versionMondes, connecter, deconnecter, envoyerMaintenant }
 }
 
 export type Compte = ReturnType<typeof useCompte>

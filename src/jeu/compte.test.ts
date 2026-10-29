@@ -75,13 +75,14 @@ describe('synchronisation à la connexion', () => {
     expect(choisirSynchro(copieAvec(2), enLigne(2, 5000), 'joueur', { joueur: 'joueur', envoyeeLe: 5000 })).toBe('envoyer')
   })
 
-  it("demande au joueur si quelqu'un a envoyé d'autres mondes depuis", () => {
+  // (29/10, demandé par le propriétaire) Plus de question : le compte gagne toujours.
+  it("prend les mondes du compte, sans demander, si quelqu'un a envoyé d'autres mondes depuis", () => {
     // Un autre appareil a envoyé ses mondes après le dernier échange de ce navigateur.
-    expect(choisirSynchro(copieAvec(2), enLigne(2, 9000), 'joueur', { joueur: 'joueur', envoyeeLe: 5000 })).toBe('demander')
+    expect(choisirSynchro(copieAvec(2), enLigne(2, 9000), 'joueur', { joueur: 'joueur', envoyeeLe: 5000 })).toBe('recuperer')
     // Ce navigateur a fait son dernier échange avec un autre compte.
-    expect(choisirSynchro(copieAvec(2), enLigne(2, 5000), 'joueur', { joueur: 'autre', envoyeeLe: 5000 })).toBe('demander')
-    // Jamais d'échange depuis ce navigateur.
-    expect(choisirSynchro(copieAvec(1), enLigne(1), 'joueur', null)).toBe('demander')
+    expect(choisirSynchro(copieAvec(2), enLigne(2, 5000), 'joueur', { joueur: 'autre', envoyeeLe: 5000 })).toBe('recuperer')
+    // Jamais d'échange depuis ce navigateur (un nouveau navigateur qui a déjà des mondes).
+    expect(choisirSynchro(copieAvec(1), enLigne(1), 'joueur', null)).toBe('recuperer')
   })
 
   it('retient le dernier échange dans le stockage', () => {
