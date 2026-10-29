@@ -10,7 +10,7 @@
 // sa réserve (23/10 : 5 minutes au niveau 1, un peu plus à chaque niveau).
 
 import { BATIMENTS, NIVEAUX_GENERATEUR, SECONDES_PAR_REDSTONE, type IdBatiment } from './donnees'
-import { disponible, garderDansLeCoffre, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
+import { disponible, payer, payerMateriaux, peutPayer, type EtatJeu } from './mineur'
 import { batimentPose, type BatimentPose, type Case } from './village'
 import { debloque } from './niveaux'
 import { t } from './langue'
@@ -106,11 +106,20 @@ export function ascenseurAlimente(etat: EtatJeu): boolean {
 // ---------------------------------------------------------------------------
 
 // Met de la redstone (du coffre de la mine) dans le générateur. nombre = Infinity : tout.
+// (28/10, bug signalé par le propriétaire) Le joueur remplit lui-même : on prend toute la redstone
+// du coffre, même celle qu'il garde 📌 (la punaise empêche seulement de la vendre, comme pour les
+// améliorations). Avant, avec sa redstone gardée, le bouton « Remplir » marchait mais rien ne
+// rentrait, et le jeu disait « Il te faut de la redstone (niveau 2 de la mine) » alors que le
+// joueur avait passé le niveau 2.
 export function remplirGenerateur(etat: EtatJeu, nombre: number): string[] {
   if (!generateurPose(etat)) return []
-  // (26/10) Ce que le joueur garde 📌 dans le coffre reste dans le coffre.
-  const mis = Math.min(nombre, Math.max(0, disponible(etat, 'redstone') - garderDansLeCoffre(etat, 'redstone')), placeRedstoneGenerateur(etat))
-  if (mis <= 0) return placeRedstoneGenerateur(etat) === 0 && disponible(etat, 'redstone') > 0 ? [t('⚡ La réserve du générateur est pleine.')] : [t('🔴 Il te faut de la redstone (niveau 2 de la mine).')]
+  const mis = Math.min(nombre, disponible(etat, 'redstone'), placeRedstoneGenerateur(etat))
+  if (mis <= 0) {
+    if (placeRedstoneGenerateur(etat) === 0) return [t('⚡ La réserve du générateur est pleine.')]
+    // Pas de redstone du tout : avant le niveau 2, la mine n'en sort pas encore ; après, il faut
+    // attendre qu'elle en sorte (ou creuser).
+    return etat.niveauMine < 2 ? [t('🔴 Il te faut de la redstone (niveau 2 de la mine).')] : [`🔴 ${t('Plus de redstone dans le coffre de la mine.')}`]
+  }
   payerMateriaux(etat, { redstone: mis })
   etat.generateur.carburant += mis * SECONDES_PAR_REDSTONE
   return [t('⚡ +{n} redstone dans le générateur.', { n: mis })]

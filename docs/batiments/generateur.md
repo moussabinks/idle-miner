@@ -30,7 +30,7 @@
 - Un badge : **Allumé** (vert), **Éteint**, ou **Plus de redstone**.
 - « Rayon : *N* cases (le cercle jaune sur la carte). Tout ce qui est dedans va **+ *B* %** plus vite : l’ascenseur de la mine, les wagonnets (leurs rails entiers dans le cercle) et la foreuse. » (23/10)
 - Une barre rouge : la redstone qui reste, en minutes, face à sa **réserve** (23/10 : « Redstone : 3 min / 5 min »).
-- « 1 redstone = 30 s · tu en as *N* (coffre de la mine) », puis les boutons **+1**, **+10** et **Tout** (anthracite, comme le charbon de la foreuse). La redstone se prend dans le **coffre de la mine** (une punaise 📌 sur la redstone, au panneau de la mine, évite de la vendre). Sans redstone : « 🔴 Il te faut de la redstone (niveau 2 de la mine). »
+- « 1 redstone = 30 s · tu en as *N* (coffre de la mine) », puis les boutons **+1**, **+10** et **Tout** (anthracite, comme le charbon de la foreuse). La redstone se prend dans le **coffre de la mine**, **même celle qu'on garde 📌** (28/10 : la punaise empêche seulement de la vendre ; avant, avec la redstone gardée, « Remplir » ne mettait rien et disait « Il te faut de la redstone (niveau 2 de la mine) » à un joueur qui avait passé le niveau 2). Sans redstone : « 🔴 Il te faut de la redstone (niveau 2 de la mine). » avant le niveau 2, « 🔴 Plus de redstone dans le coffre de la mine. » après.
 - **⏸ Éteindre / ▶ Allumer** (gris) : éteint, le générateur **garde sa redstone** et ne la brûle pas (mais il ne donne plus de courant).
 - « 🛤️ Pour qu'il ne s'arrête jamais, embauche un pousseur sur le trajet Mine → Générateur : il apporte la redstone du coffre. La réserve grandit à chaque niveau. » (23/10 : le **puisage** dans le coffre est retiré, il contournait les pousseurs.)
 

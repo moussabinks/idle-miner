@@ -236,8 +236,10 @@ export function apporterAuAtelier(etat: EtatJeu, id: IdAtelier, bloc: IdBloc): s
 // Remplit le four de la fonderie avec le charbon du coffre de la mine.
 export function remplirFonderie(etat: EtatJeu): string[] {
   if (!atelierPose(etat, 'fonderie')) return []
-  // (26/10) Ce que le joueur garde 📌 dans le coffre reste dans le coffre.
-  const mis = Math.min(Math.max(0, disponible(etat, 'charbon') - garderDansLeCoffre(etat, 'charbon')), placeCharbonFonderie(etat))
+  // (28/10) Le joueur remplit lui-même : on prend tout le charbon du coffre, même celui qu'il garde
+  // 📌 (la punaise empêche seulement de le vendre ; le bouton le comptait déjà, mais rien ne
+  // rentrait).
+  const mis = Math.min(disponible(etat, 'charbon'), placeCharbonFonderie(etat))
   if (mis <= 0) return placeCharbonFonderie(etat) === 0 ? [t('🔥 Le four de la fonderie est plein.')] : [t('⚫ Il te faut du charbon dans le coffre de la mine.')]
   payerMateriaux(etat, { charbon: mis })
   etat.fonderie.carburant += mis * SECONDES_PAR_CHARBON_FONDERIE
