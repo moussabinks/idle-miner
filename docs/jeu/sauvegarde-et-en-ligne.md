@@ -289,9 +289,9 @@ Aucun envoi n'a lieu avant la fin du premier échange (`pret`), pour ne pas écr
 | Aucun monde nulle part | `rien` |
 | Des mondes en ligne, aucun dans le navigateur | `recuperer` |
 | Les deux ont des mondes, et `idle-miner-derniere-synchro` dit que **ce navigateur** a fait le dernier échange avec **ce compte** et que l'heure `envoyeeLe` en ligne est la même (personne n'a envoyé depuis) | `envoyer` (les mondes du navigateur sont la suite de ceux en ligne) |
-| Les deux ont des mondes, sinon | `demander` |
+| Les deux ont des mondes, sinon (un nouveau navigateur, un autre appareil a joué depuis, ou un autre compte) | `recuperer` |
 
-`demander` ouvre une boîte `window.confirm` (encore à remplacer par la fenêtre du jeu, voir [../revue-crazygames.md](../revue-crazygames.md)) : « Ton compte a déjà N mondes en ligne (sauvegardés le JJ/MM/AA HH:MM), et ce navigateur a d'autres mondes. OK : jouer avec les mondes de ton compte (ceux de ce navigateur seront remplacés). Annuler : garder les mondes de ce navigateur (ils remplaceront ceux de ton compte). »
+(29/10, demandé par le propriétaire) **Plus de question** : connecté, c'est toujours la sauvegarde du compte qui gagne, sur tous les appareils, et les mondes de ce navigateur sont remplacés sans rien demander. Avant, ce cas donnait `demander` et la fenêtre « ☁️ Quels mondes garder ? » (`FenetreQuelsMondes.tsx`, retirée).
 
 - `recuperer` : `importerTout` (les mondes du navigateur sont remplacés), on note la dernière synchro, `versionMondes` augmente (l'accueil redessine les cartes), puis on envoie le score.
 - `envoyer` : envoi forcé de tous les mondes du navigateur (ceux du compte sont écrasés).

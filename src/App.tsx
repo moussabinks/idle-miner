@@ -39,7 +39,6 @@ import { CENTRE_CHATEAU } from './composants/chateau'
 import { versEcran } from './composants/iso'
 import { queteChateauVisible, restaurerChateau } from './jeu/chateau'
 import { FenetreAbsence } from './composants/FenetreAbsence'
-import { FenetreQuelsMondes } from './composants/FenetreQuelsMondes'
 import { FeteNiveau } from './composants/FeteNiveau'
 import { FenetreBilan } from './composants/FenetreBilan'
 import { niveauJoueur, prochainDeblocage } from './jeu/niveaux'
@@ -1069,8 +1068,6 @@ function App() {
   const [, setLangue] = useState<Langue | null>(null)
   // Le compte reste ouvert pendant la partie : il recopie les mondes en ligne régulièrement.
   const compte = useCompte()
-  // (la question « quels mondes garder ? » peut venir sur l'accueil ou pendant la partie)
-  const question = compte.question && <FenetreQuelsMondes question={compte.question} />
   // (27/10) Sur téléphone tenu debout, un écran demande de le tourner (il est par-dessus tout).
   if (monde === null && visite !== null)
     return (
@@ -1084,7 +1081,6 @@ function App() {
       <>
         <TournerTelephone />
         <Accueil compte={compte} onJouer={setMonde} onLangue={setLangue} onVisiter={(pseudo, partie) => setVisite({ pseudo, partie })} />
-        {question}
       </>
     )
 
@@ -1097,7 +1093,6 @@ function App() {
     <>
       <Jeu key={monde.id} monde={monde} onQuitter={quitter} onLangue={setLangue} />
       <TournerTelephone />
-      {question}
     </>
   )
 }

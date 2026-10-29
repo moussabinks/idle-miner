@@ -39,7 +39,6 @@ Tout le texte du jeu tutoie le joueur, en français ou en anglais (voir § 15). 
 - Le compte (`useCompte`) reste ouvert pendant la partie. En quittant le jeu, la partie part tout de suite en ligne (`envoyerMaintenant`).
 - Changer de monde recrée le jeu (`key={monde.id}`) : rien de l'ancien monde ne reste.
 - Changer de langue redessine tout (`onLangue`).
-- La fenêtre « Quels mondes garder ? » (§ 10) peut s'ouvrir par-dessus les deux écrans.
 
 ---
 
@@ -298,7 +297,6 @@ Les briques CSS (`src/styles/theme.css`) : `.btn` (§ 14), `.fenetre`, `.carte` 
 | **❔ Comment jouer** (`Aide.tsx`, bleue) | Réglages | les 4 étapes du jeu, et les gestes de la carte et du clavier |
 | **☀️ Bon retour, mineur !** (`FenetreAbsence.tsx`, jaune) | le retour sur un monde | ce que l'absence a fait (mineurs, mine, foreuse), l'argent ligne par ligne (wagonnets, coffre et réserve des ateliers vendus au retour, autres ventes, − salaires), le **bénéfice net** en grand, les salaires en retard, la durée couverte (manager) ; **📺 Doubler · +… $** (violet, une pub) et **Continuer** (jaune) |
 | **⭐ Niveau supérieur !** (`FeteNiveau.tsx`, jaune, petite) | un niveau du joueur gagné | elle attend que les autres fenêtres soient fermées ; l'étoile et le chiffre qui monte, des confettis, « 💎 Gemmes gagnées », chaque chose débloquée (« Nouveau ! »), ce qui attend au niveau suivant ; **🎉 Génial !** (ne se ferme pas pendant la première seconde) |
-| **☁️ Quels mondes garder ?** (`FenetreQuelsMondes.tsx`, bleue) | la connexion, quand compte et navigateur ont des mondes différents | **📲 Garder ceux d'ici** (blanc) ou **☁️ Prendre ceux du compte** (jaune) ; impossible à fermer sans choisir |
 
 **Le tutoriel** (`Tutoriel.tsx`) : Pépite la taupe guide le joueur jusqu'au premier mineur embauché.
 - Au début, la fenêtre « Bienvenue, mineur ! » : les 4 étapes, **C'est parti !** (jaune) et **Passer le tutoriel** (blanc, avec confirmation).

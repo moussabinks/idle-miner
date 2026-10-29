@@ -67,10 +67,12 @@ export function ecrireDerniereSynchro(stockage: Stockage, synchro: DerniereSynch
 
 // Ce qu'il faut faire en se connectant :
 //   « envoyer »   : les mondes de ce navigateur partent en ligne (ils sont les plus récents) ;
-//   « recuperer » : les mondes du compte remplacent ceux du navigateur (qui n'en a pas) ;
-//   « demander »  : les deux ont des mondes différents, c'est au joueur de choisir ;
+//   « recuperer » : les mondes du compte remplacent ceux du navigateur ;
 //   « rien »      : il n'y a rien à faire.
-export type ChoixSynchro = 'envoyer' | 'recuperer' | 'demander' | 'rien'
+// (29/10, demandé par le propriétaire) Plus de question « Quels mondes garder ? » : connecté, c'est
+// toujours la sauvegarde du compte qui compte, sur tous les appareils. Avant, un nouveau navigateur
+// qui avait déjà des mondes demandait lesquels garder.
+export type ChoixSynchro = 'envoyer' | 'recuperer' | 'rien'
 
 export function choisirSynchro(
   local: SauvegardeComplete,
@@ -88,5 +90,7 @@ export function choisirSynchro(
   // depuis : ses mondes sont la suite de ceux en ligne, on peut les envoyer sans risque.
   if (enLigne !== null && derniere?.joueur === joueur && derniere.envoyeeLe === enLigne.envoyeeLe) return 'envoyer'
 
-  return 'demander'
+  // Sinon (un nouveau navigateur, un autre appareil a joué depuis, ou un autre compte) : les mondes
+  // du compte remplacent ceux de ce navigateur, sans rien demander.
+  return 'recuperer'
 }
