@@ -69,12 +69,12 @@ import { annulerReorganisation, batimentsRanges, commencerReorganisation, enReor
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
 import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration, type IdLiaison } from './jeu/donnees'
 import { etatQuotidien, jourDe } from './jeu/gemmes'
-import { t, type Langue } from './jeu/langue'
+import { nombre, t, type Langue } from './jeu/langue'
 import { notificationsBatiments } from './jeu/notifications'
 import type { InfoMonde } from './jeu/sauvegarde'
 import { SUCCES } from './jeu/succes'
 import { MARGE_CLIC_BATIMENT, batimentProcheDe, batimentPose, caseAccesProche, cleCase, empriseBatiment, empriseLibre, type Case, type Occupant } from './jeu/village'
-import { capaciteCoffre, coffrePlein, nbDansCoffre, type EtatJeu } from './jeu/mineur'
+import { capaciteCoffre, coffrePlein, disponible, nbDansCoffre, type EtatJeu } from './jeu/mineur'
 import { joueurPousse, liaisonsSurLaCase, reglerTrajet, trajetsAProposer, type ReglageTrajet } from './jeu/wagonnet'
 import { grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
 import { useCompte } from './useCompte'
@@ -730,6 +730,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     const okPropose = tr !== null && peutPoserSol(etat, 'rail', tr.propose.x, tr.propose.y)
     const raison = tr && !okPropose ? (raisonSolImpossible(etat, 'rail', tr.propose.x, tr.propose.y) ?? t('Case déjà prise : touche une autre case, ou tourne.')) : null
     const virage = tr && dernier ? virageEntre(tr.sensVoie, tr.sens) : null
+    const ferPourRails = disponible(etat, 'fer')
+    const coutFerRail = COUT_RAIL.materiaux.fer ?? 0
     barre = (
       <div className="barre-edition">
         <p className="consigne">
@@ -741,6 +743,11 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
               : t('Choisis où va le prochain rail avec les flèches, puis pose-le.')}{' '}
           ({stockSol(etat, 'rail') > 0 ? t('{n} rails en stock', { n: stockSol(etat, 'rail') }) : t('{n} 🔩 fer le rail', { n: COUT_RAIL.materiaux.fer ?? 0 })})
           {raison && <span className="texte-alerte"> ⚠️ {raison}</span>}
+        </p>
+        {/* (29/10, demandé par le propriétaire) Le fer qu'on a, en direct, et combien de rails ça fait
+            (avant, on ne voyait que le prix d'un rail). Rose quand il n'y en a plus assez. */}
+        <p className={`etiquette rails-fer ${ferPourRails < coutFerRail && stockSol(etat, 'rail') === 0 ? 'etiquette-rose' : ''}`}>
+          🔩 {t('Fer : {n}', { n: nombre(ferPourRails) })} · {t('de quoi poser {n} rail(s)', { n: nombre(stockSol(etat, 'rail') + Math.floor(ferPourRails / Math.max(1, coutFerRail))) })}
         </p>
         <div className="rails-commandes">
           {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en

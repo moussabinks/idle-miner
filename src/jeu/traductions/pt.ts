@@ -1111,4 +1111,6 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   "Recruter un pousseur": "Contratar um empurrador",
   "Placer": "Colocar",
   "Retour": "Voltar",
+  "Fer : {n}": "Ferro: {n}",
+  "de quoi poser {n} rail(s)": "dá para {n} trilho(s)",
 }
