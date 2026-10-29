@@ -14,7 +14,7 @@ import {
 import { payer, peutPayer, type EtatJeu } from './mineur'
 import { niveauAtteint, niveauPourBatiment, railsDebloques } from './niveaux'
 import { t } from './langue'
-import { batimentPose, cleCase, empriseBatiment, empriseLibre, feraitUneBoucle, voieDegagee, type Occupant, type Village } from './village'
+import { batimentPose, cleCase, empriseBatiment, empriseLibre, formeraitUnCarre, voieDegagee, type Occupant, type Village } from './village'
 
 // ---------------------------------------------------------------------------
 // Les bâtiments
@@ -94,8 +94,9 @@ function listeSol(etat: EtatJeu, type: TypeSol): string[] {
 
 // (25/10) Des fonctions et pas des constantes : le texte est traduit au moment où on le dit
 // (une constante serait traduite une seule fois, au chargement du jeu, avant le choix de la langue).
+// (29/10) Les boucles sont permises : seul un carré de 2 × 2 rails est refusé.
 export function messageBoucle(): string {
-  return t('🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.')
+  return t('🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.')
 }
 export function messageBords(): string {
   return t('🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.')
@@ -103,7 +104,7 @@ export function messageBords(): string {
 
 // Peut-on mettre un rail sur cette case (« de » : la case d'où on le déplace, s'il y en a une) ?
 //   - 'occupee' : la case est prise (ou un chemin, un bâtiment... est déjà là) ;
-//   - 'boucle' : les rails tourneraient en rond ;
+//   - 'boucle' : les rails fermeraient un petit carré de 2 × 2 (29/10 : les autres boucles sont permises) ;
 //   - 'bords' : sa voie (ou celle de ses voisins, qui change de forme) passerait sur un bâtiment,
 //     une décoration ou un chemin ;
 //   - 'ok' : on peut.
@@ -111,7 +112,7 @@ export function placePourUnRail(village: Village, x: number, y: number, de: { x:
   const cleDe = de ? cleCase(de.x, de.y) : null
   const ignorer = cleDe ? ({ type: 'rail', cle: cleDe } as Occupant & { cle: string }) : null
   if (!empriseLibre(village, { x, y, taille: 1 }, ignorer, true)) return 'occupee'
-  if (feraitUneBoucle(village, x, y, cleDe)) return 'boucle'
+  if (formeraitUnCarre(village, x, y, cleDe)) return 'boucle'
   const rails = [...village.rails.filter((c) => c !== cleDe), cleCase(x, y)]
   if (!voieDegagee({ ...village, rails })) return 'bords'
   return 'ok'

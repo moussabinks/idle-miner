@@ -6,7 +6,7 @@ import { agrandirChariot, ameliorerEmploye, coutChariotPousseur, embaucher, emba
 import { NIVEAUX_CHARIOT_POUSSEUR, NIVEAUX_FORAGE, NIVEAUX_POUSSEUR, SECONDES_PAR_CHARBON, VITESSE_DOUCE_POUSSEUR } from './donnees'
 import { type EtatJeu } from './mineur'
 import { avancerTemps } from './temps'
-import { feraitUneBoucle } from './village'
+import { formeraitUnCarre } from './village'
 import {
   aCharger,
   avancerWagonnets,
@@ -338,30 +338,43 @@ describe('les trajets des wagonnets', () => {
   })
 })
 
-describe('pas de boucle dans les rails', () => {
+// (29/10, demandé par le propriétaire) Les boucles sont permises, sauf le petit carré de 2 × 2.
+describe('les boucles dans les rails', () => {
   it('on ne peut pas fermer un carré de 2 × 2', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.coffre.contenu = { fer: 30 }
     poserSol(etat, 'rail', 5, 5)
     poserSol(etat, 'rail', 6, 5)
     poserSol(etat, 'rail', 6, 6)
-    expect(feraitUneBoucle(etat.village, 5, 6)).toBe(true)
+    expect(formeraitUnCarre(etat.village, 5, 6)).toBe(true)
     expect(peutPoserSol(etat, 'rail', 5, 6)).toBe(false)
-    expect(poserSol(etat, 'rail', 5, 6)[0]).toContain('boucle')
+    expect(poserSol(etat, 'rail', 5, 6)[0]).toContain('2 × 2')
     expect(etat.village.rails).toHaveLength(3)
   })
 
-  it('ni une grande boucle, même en déplaçant un rail', () => {
+  it('une grande boucle est permise, même en déplaçant un rail', () => {
     const etat = partieDeTest(aleatoireAvecGraine(1))
     etat.coffre.contenu = { fer: 60 }
     // Un U : (5,5) → (8,5) → (8,7) → (5,7), il manque (5,6).
     for (const [x, y] of [[5, 5], [6, 5], [7, 5], [8, 5], [8, 6], [8, 7], [7, 7], [6, 7], [5, 7]]) poserSol(etat, 'rail', x, y)
     poserSol(etat, 'rail', 12, 12)
-    expect(peutPoserSol(etat, 'rail', 5, 6)).toBe(false)
+    expect(peutPoserSol(etat, 'rail', 5, 6)).toBe(true)
     deplacerSol(etat, 'rail', { x: 12, y: 12 }, { x: 5, y: 6 })
-    expect(etat.village.rails).toContain('12,12')
+    expect(etat.village.rails).toContain('5,6')
+    expect(etat.village.rails).not.toContain('12,12')
     // Un embranchement (un T) reste possible.
     expect(peutPoserSol(etat, 'rail', 9, 6)).toBe(true)
+  })
+
+  it('avec une boucle, le wagonnet prend la route la plus courte', () => {
+    const etat = partie()
+    // Une boucle : un détour de la ligne Mine → Marché (de 20,26 à 20,28), par x = 22.
+    etat.coffre.contenu = { fer: 60 }
+    for (const [x, y] of [[21, 26], [22, 26], [22, 27], [22, 28], [21, 28]]) poserSol(etat, 'rail', x, y)
+    expect(etat.village.rails).toContain('21,28') // la boucle est bien fermée
+    const ligne = ligneDe(etat, 'mine-marche')
+    expect(ligne).not.toBeNull()
+    expect(ligne!.every((c) => c.x === 20)).toBe(true)
   })
 })
 

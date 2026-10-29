@@ -104,7 +104,7 @@ Depuis le 24/10, **c'est le joueur qui choisit où vont les wagonnets** : au dé
   - **dès que les rails relient deux bâtiments** (un nouveau trajet possible), la pose s'arrête (plus de rail « dans la main » : un clic de plus n'en pose pas un par erreur) et la **fenêtre du trajet** s'ouvre tout de suite, pour l'automatiser.
 - On n'achète qu'une sorte de rail. Les rails **se raccordent tout seuls** : en ligne droite, en virage, en T ou en croix (`raccordsRail`). Le dessin : des tuiles SVG plates fabriquées par `outils/art/rails.mjs` (voir [visuel-et-sons.md](visuel-et-sons.md#les-rails-et-les-wagonnets)).
 - Un rail collé à un bâtiment des trajets (mine, marché, foreuse, générateur, fonderie, joaillerie : `BATIMENTS_DES_RAILS`) ne se raccorde à lui que **s'il est un bout de ligne**. Un rail qui passe le long d'un bâtiment ne s'y raccorde pas.
-- **Pas de boucle** : les rails ne peuvent jamais tourner en rond (`feraitUneBoucle` dans `village.ts`, vérifié en posant et en déplaçant un rail). Un rail qui fermerait une boucle n'est pas posé, et le jeu dit « 🔁 Pas de boucle : les rails vont d’un bâtiment à un autre. ». Entre deux bâtiments, il n'y a donc **qu'une seule route**.
+- **Les boucles** (29/10, demandé par le propriétaire ; avant, interdites) : les rails peuvent tourner en rond (faire le tour de la mine...). Entre deux bâtiments, le wagonnet prend toujours **la route la plus courte** (`railsEntre`). Seul un **carré de 2 × 2 rails** est refusé (`formeraitUnCarre` dans `village.ts`, vérifié en posant et en déplaçant un rail) : « 🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2. »
 
 **Les trajets**
 
@@ -217,7 +217,7 @@ La bulle ✨ disparaît quand on arrive devant le Personnel. Au-dessus de la min
 | Fichier | Rôle |
 |---|---|
 | `src/jeu/donnees.ts` (section « Le village en vue du ciel ») | Grille, `BATIMENTS` (taille, porte, niveau de mine, prix), `COUT_RAIL`, `COUT_CHEMIN`, vitesses, `DECORATIONS` (seulement nom et taille : les dessins de la plage et de l'écran d'accueil). |
-| `src/jeu/village.ts` | La géométrie : cases occupées, portes, cases d'accès, chemins à pied (A\*), rails entre deux bâtiments (`railsEntre`, `railsMineMarche`), raccords des rails, pas de boucle (`feraitUneBoucle`). |
+| `src/jeu/village.ts` | La géométrie : cases occupées, portes, cases d'accès, chemins à pied (A\*), rails entre deux bâtiments (`railsEntre`, `railsMineMarche`), raccords des rails, pas de carré de 2 × 2 (`formeraitUnCarre`). |
 | `src/jeu/batiments.ts` | Les actions : construire, déplacer, retourner, poser et enlever rails (sans boucle) et chemins (remboursés depuis le 30/10, `retirerSol` ; `raisonSolImpossible` dit pourquoi on ne peut pas poser). |
 | `src/jeu/wagonnet.ts` | Les trajets des wagonnets : créer, arrêter, chargement, pousseur, électricité, vitesse, livraison, retour. |
 | `src/jeu/generateur.ts` | Le rayon du générateur (`casesDansLeRayon`). |

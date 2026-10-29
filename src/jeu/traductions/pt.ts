@@ -534,7 +534,6 @@ export const TRADUCTIONS_PT: Record<string, string> = {
 
   // src/jeu/batiments.ts
   '🏗️ {nom} construit !': '🏗️ {nom} construído!',
-  '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.': '🔁 Sem loops: os trilhos vão de um prédio a outro.',
   '🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.': '🚧 Sem espaço: a linha passa meio espaço de cada lado do trilho.',
   '🔩 Plus de fer : un rail coûte {fer} fer (dans le coffre de la mine). Va creuser !': '🔩 Sem ferro: um trilho custa {fer} ferro (do baú da mina). Vá cavar!',
   "💵 Pas assez d'argent : un chemin coûte {argent} $.": '💵 Dinheiro insuficiente: um caminho custa {argent} $.',
@@ -1111,4 +1110,5 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   "Retour": "Voltar",
   "Fer : {n}": "Ferro: {n}",
   "de quoi poser {n} rail(s)": "dá para {n} trilho(s)",
+  "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 Nada de quadradinho: 4 trilhos não podem formar um quadrado de 2 × 2.",
 }
