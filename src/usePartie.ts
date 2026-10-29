@@ -16,7 +16,7 @@ import { joueurPousse } from './jeu/wagonnet'
 import { evenementsEntre, type Evenement } from './evenements'
 import { sons } from './sons'
 import { stockage } from './stockage'
-import { INTERVALLE_HORLOGE, SUR_TELEPHONE, ticEnAttente } from './fluidite' // (28/10) 20 tics/s, 10 sur téléphone
+import { INTERVALLE_HORLOGE, SUR_TELEPHONE } from './fluidite' // (28/10) 20 tics/s, 10 sur téléphone
 import { t } from './jeu/langue'
 
 export type Toast = { id: number; texte: string; succes: boolean }
@@ -204,9 +204,6 @@ export function usePartie(idMonde: string) {
     let derniereFois = performance.now()
     const avancer = () => {
       const maintenant = performance.now()
-      // (28/10) Sur téléphone, pendant qu'on fait glisser la carte, on redessine bien moins souvent
-      // (le temps n'est pas perdu : le tic suivant avance de tout ce qui s'est passé).
-      if (document.visibilityState === 'visible' && ticEnAttente(maintenant - derniereFois, maintenant)) return
       const secondes = Math.min(ABSENCE_MAX, (maintenant - derniereFois) / 1000)
       derniereFois = maintenant
       if (secondes <= 0) return

@@ -30,7 +30,6 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
-import { noterGeste } from '../fluidite'
 import { nombre, nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
@@ -362,21 +361,20 @@ export function VueVillage({
     return c.x >= fantome.x && c.y >= fantome.y && c.x < fantome.x + taille && c.y < fantome.y + taille
   }
 
-  // (28/10, fluidité sur téléphone) Pendant qu'on fait glisser la carte ou qu'on pince : l'horloge
-  // redessine moins souvent, et les animations du décor s'arrêtent (« geste-en-cours », village.css).
-  // (29/10, demandé par le propriétaire : des saccades en zoomant vite) Sur tous les appareils.
-  // Chaque petite animation du décor (papillons, nuages, taupes qui respirent, bulles...) a son
-  // propre « calque » dans le navigateur : en zoomant, il les redessinait tous à chaque image
-  // (110 calques). Pendant le geste, ces éléments reçoivent la classe « sans-animation »
-  // (village.css : il ne reste qu'une vingtaine de calques), puis on la retire et chaque animation
-  // reprend là où elle en était, comme si elle avait continué.
+  // (29/10, demandé par le propriétaire : des saccades en zoomant vite) Chaque petite animation
+  // du décor (nuages, oiseaux, reflets de la mer, taupes qui respirent, bulles...) a son propre
+  // « calque » dans le navigateur : en zoomant, il les redessinait tous à chaque image. Pendant le
+  // geste, ces éléments reçoivent la classe « sans-animation » (village.css), puis on la retire et
+  // chaque animation reprend là où elle en était.
+  // (29/10, demandé par le propriétaire : « en zoomant, il ne doit rien se passer de visible ») :
+  // seulement ceux qui sont loin de l'écran (à plus d'une demi-largeur d'écran du bord). Tout ce
+  // qu'on voit continue : l'ascenseur, les wagonnets, les oiseaux, et l'horloge du jeu.
   // (Une simple pause gardait les calques. Une classe sur toute la carte faisait recalculer le
-  // style de ses ~1 300 éléments : ici, seulement la soixantaine d'éléments animés.)
+  // style de ses ~1 300 éléments : ici, seulement les éléments animés.)
   const finAnimationsRef = useRef(0)
-  const retireesRef = useRef<AnimationsRetirees>({ liste: [] })
+  const retireesRef = useRef<AnimationsRetirees>({ pendantLeGeste: false, liste: [] })
   function surGeste() {
-    noterGeste()
-    retirerAnimations(mondeRef.current, retireesRef.current)
+    retirerAnimations(mondeRef.current, retireesRef.current, conteneurRef.current?.getBoundingClientRect())
     window.clearTimeout(finAnimationsRef.current)
     finAnimationsRef.current = window.setTimeout(() => reprendreAnimations(retireesRef.current), 250)
   }
@@ -987,14 +985,14 @@ export function VueVillage({
 // (29/10) Les animations retirées pendant un geste (voir surGeste dans VueVillage) : pour chaque
 // élément, ses animations (leur nom et où elles en étaient) et le style qu'on lui a figé.
 type ElementFige = { element: HTMLElement | SVGElement; animations: { nom: string; temps: number }[]; fige: [string, string][] }
-type AnimationsRetirees = { liste: ElementFige[] }
+type AnimationsRetirees = { pendantLeGeste: boolean; liste: ElementFige[] }
 
 const nomAnimation = (a: Animation) => ('animationName' in a ? String((a as CSSAnimation).animationName) : null)
 // Une animation CSS de l'élément lui-même (pas de son ::before ou ::after : « sans-animation »
 // ne les touche pas, elles continuent).
 const animationDeLElement = (a: Animation) => nomAnimation(a) !== null && !(a.effect as KeyframeEffect | null)?.pseudoElement
 
-// Le geste commence : les éléments animés de la carte reçoivent « sans-animation » (village.css),
+// Le geste commence : les éléments animés loin de l'écran reçoivent « sans-animation » (village.css),
 // qui leur retire leur couche à part (le navigateur n'a plus qu'une image à déplacer).
 // (29/10, demandé par le propriétaire) Sans animation, un élément revenait d'un coup à sa place
 // de départ : les oiseaux et les crabes se téléportaient, l'ombre d'un nuage sautait (on aurait
@@ -1003,13 +1001,29 @@ const animationDeLElement = (a: Animation) => nomAnimation(a) !== null && !(a.ef
 // (29/10) Pour chaque élément, toutes ses animations ensemble, même celles qui sont finies (sinon,
 // en revenant, l'arrivée d'une bulle se rejouait à chaque geste : bulle aplatie, puis disparue),
 // et jamais celles de ses ::before / ::after (l'onde d'une alerte agrandissait toute la bulle).
-function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetirees): void {
-  if (retirees.liste.length > 0 || !monde) return
+// (Pendant le geste, à chaque mouvement, ceux qui s'approchent de l'écran reprennent tout de suite :
+// en dézoomant vite, l'écran s'agrandit d'un coup.)
+function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetirees, ecran: DOMRect | undefined): void {
+  if (!monde || !ecran) return
+  // L'écran, élargi d'une demi-largeur (et d'une demi-hauteur) de chaque côté : ce qui y entre en
+  // faisant glisser la carte bouge déjà.
+  const marge = { x: ecran.width / 2, y: ecran.height / 2 }
+  const presDeLEcran = (r: DOMRect) => r.right > ecran.left - marge.x && r.left < ecran.right + marge.x && r.bottom > ecran.top - marge.y && r.top < ecran.bottom + marge.y
+  if (retirees.pendantLeGeste) {
+    const proches = retirees.liste.filter((r) => presDeLEcran(r.element.getBoundingClientRect()))
+    if (proches.length > 0) {
+      retirees.liste = retirees.liste.filter((r) => !proches.includes(r))
+      reprendre(proches)
+    }
+    return
+  }
+  retirees.pendantLeGeste = true
   const elements = new Set<HTMLElement | SVGElement>()
   for (const a of monde.getAnimations?.({ subtree: true }) ?? []) {
     const cible = (a.effect as KeyframeEffect | null)?.target
     if ((cible instanceof HTMLElement || cible instanceof SVGElement) && animationDeLElement(a) && (a.playState === 'running' || a.playState === 'paused')) elements.add(cible)
   }
+  for (const element of elements) if (presDeLEcran(element.getBoundingClientRect())) elements.delete(element)
   for (const element of elements) {
     const animations = element.getAnimations().filter(animationDeLElement)
     // Les propriétés que ses animations font bouger, et leur valeur à cet instant.
@@ -1035,6 +1049,11 @@ function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetire
 function reprendreAnimations(retirees: AnimationsRetirees): void {
   const liste = retirees.liste
   retirees.liste = []
+  retirees.pendantLeGeste = false
+  reprendre(liste)
+}
+
+function reprendre(liste: ElementFige[]): void {
   for (const { element, fige } of liste) {
     element.classList.remove('sans-animation')
     for (const [p, avant] of fige) element.style.setProperty(p, avant)
