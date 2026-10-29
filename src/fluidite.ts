@@ -5,9 +5,10 @@
 // seulement (pointer: coarse), on allège donc deux choses ; l'ordinateur ne change pas :
 //   - l'horloge du jeu redessine l'écran 10 fois par seconde au lieu de 20 (les personnages
 //     glissent d'un point à l'autre en douceur, voir village.css) ;
-//   - pendant qu'on fait glisser la carte ou qu'on pince pour zoomer, l'horloge ne redessine plus
-//     rien (au plus 2 fois par seconde) et les animations du décor s'arrêtent (la classe
-//     « geste-en-cours », voir village.css) : le téléphone ne fait que déplacer l'image.
+//   - pendant qu'on fait glisser la carte, qu'on pince ou qu'on zoome à la molette, l'horloge ne
+//     redessine plus rien (au plus 2 fois par seconde) et les animations du décor sont en pause
+//     (VueVillage, surGeste) : le navigateur ne fait que déplacer l'image. (29/10 : sur tous les
+//     appareils, ordinateur compris.)
 // Le jeu, lui, ne s'arrête jamais : à chaque tic, il avance de tout le temps passé depuis le
 // précédent (usePartie.ts).
 
@@ -23,9 +24,11 @@ const FIN_DE_GESTE = 200
 
 let dernierMouvement = -Infinity
 
-// La carte vient de bouger sous le doigt (VueVillage l'appelle à chaque mouvement).
+// La carte vient de bouger sous le doigt ou la souris (VueVillage l'appelle à chaque mouvement,
+// et à chaque cran de molette). (29/10) Sur tous les appareils : pendant un geste, l'horloge ne
+// redessine qu'au plus 2 fois par seconde.
 export function noterGeste(): void {
-  if (SUR_TELEPHONE) dernierMouvement = performance.now()
+  dernierMouvement = performance.now()
 }
 
 export function gesteEnCours(maintenant = performance.now()): boolean {

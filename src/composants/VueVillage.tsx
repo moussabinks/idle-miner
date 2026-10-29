@@ -30,7 +30,7 @@ import {
 import type { EtatJoueurVillage } from '../useJoueurVillage'
 import { tailleFantome, type CibleVillage, type Fantome } from './fantome'
 import { pixelDessine } from './toucheImage'
-import { noterGeste, SUR_TELEPHONE } from '../fluidite'
+import { noterGeste } from '../fluidite'
 import { nombre, nomEmploye, t } from '../jeu/langue'
 import {
   BoiteSvg,
@@ -364,13 +364,21 @@ export function VueVillage({
 
   // (28/10, fluidité sur téléphone) Pendant qu'on fait glisser la carte ou qu'on pince : l'horloge
   // redessine moins souvent, et les animations du décor s'arrêtent (« geste-en-cours », village.css).
+  // (29/10, demandé par le propriétaire : des saccades en zoomant vite) Sur tous les appareils.
+  // Chaque petite animation du décor (papillons, nuages, taupes qui respirent, bulles...) a son
+  // propre « calque » dans le navigateur : en zoomant, il les redessinait tous à chaque image
+  // (110 calques). Pendant le geste, ces éléments reçoivent la classe « sans-animation »
+  // (village.css : il ne reste qu'une vingtaine de calques), puis on la retire et chaque animation
+  // reprend là où elle en était, comme si elle avait continué.
+  // (Une simple pause gardait les calques. Une classe sur toute la carte faisait recalculer le
+  // style de ses ~1 300 éléments : ici, seulement la soixantaine d'éléments animés.)
   const finAnimationsRef = useRef(0)
+  const retireesRef = useRef<AnimationsRetirees>({ debut: 0, liste: [] })
   function surGeste() {
-    if (!SUR_TELEPHONE) return
     noterGeste()
-    conteneurRef.current?.classList.add('geste-en-cours')
+    retirerAnimations(mondeRef.current, retireesRef.current)
     window.clearTimeout(finAnimationsRef.current)
-    finAnimationsRef.current = window.setTimeout(() => conteneurRef.current?.classList.remove('geste-en-cours'), 250)
+    finAnimationsRef.current = window.setTimeout(() => reprendreAnimations(retireesRef.current), 250)
   }
   useEffect(() => () => window.clearTimeout(finAnimationsRef.current), [])
 
@@ -516,6 +524,7 @@ export function VueVillage({
   }
 
   function molette(e: React.WheelEvent) {
+    surGeste()
     // Le point du monde sous la souris, d'après la caméra visée (les crans s'enchaînent bien).
     const c = cameraVisee()
     const rect = conteneurRef.current?.getBoundingClientRect()
@@ -921,18 +930,19 @@ export function VueVillage({
   }, [visibleX0, visibleY0, visibleX1, visibleY1, zoomArrondi])
   // La plage est-elle à l'écran ? Sinon, ses animations s'arrêtent (voir BOITES_PLAGE).
   const plageVisible = BOITES_PLAGE.some((b) => vueForet.x1 > b.x0 && vueForet.x0 < b.x1 && vueForet.y1 > b.y0 && vueForet.y0 < b.y1)
-  // (28/10, fluidité sur téléphone) Après un dézoom, la carte reste nette sans être redessinée
-  // (elle est simplement plus petite) : on ne la redessine que si on a zoomé plus près qu'à la
-  // dernière fois. Le téléphone saccadait à chaque dézoom.
+  // (28/10, fluidité) Après un dézoom, la carte reste nette sans être redessinée (elle est
+  // simplement plus petite) : on ne la redessine que si on a zoomé plus près qu'à la dernière fois
+  // (29/10 : sur tous les appareils, avec une marge de 10 %, et seulement une fois le zoom bien
+  // arrêté, 400 ms : en zoomant et dézoomant vite, elle était redessinée en entier sans arrêt).
   const zoomDessineRef = useRef(zoomArrondi)
   useEffect(() => {
-    if (SUR_TELEPHONE && zoomArrondi <= zoomDessineRef.current) return
-    zoomDessineRef.current = zoomArrondi
+    if (zoomArrondi <= zoomDessineRef.current * 1.1) return
     let image = 0
     const minuteur = window.setTimeout(() => {
+      zoomDessineRef.current = zoomArrondi
       setCoucheRapide(false)
       image = requestAnimationFrame(() => requestAnimationFrame(() => setCoucheRapide(true)))
-    }, 220)
+    }, 400)
     return () => {
       clearTimeout(minuteur)
       cancelAnimationFrame(image)
@@ -972,6 +982,34 @@ export function VueVillage({
       </div>
     </div>
   )
+}
+
+// (29/10) Les animations retirées pendant un geste (voir surGeste dans VueVillage) : quand le geste
+// a commencé, et pour chaque élément, le nom de son animation et où elle en était.
+type AnimationsRetirees = { debut: number; liste: { element: Element; nom: string; temps: number }[] }
+
+// Le geste commence : les éléments animés de la carte reçoivent « sans-animation » (village.css).
+function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetirees): void {
+  if (retirees.liste.length > 0 || !monde) return
+  retirees.debut = performance.now()
+  for (const a of monde.getAnimations?.({ subtree: true }) ?? []) {
+    const cible = (a.effect as KeyframeEffect | null)?.target
+    if (!(cible instanceof Element) || (a.playState !== 'running' && a.playState !== 'paused') || !('animationName' in a)) continue
+    retirees.liste.push({ element: cible, nom: String((a as CSSAnimation).animationName), temps: typeof a.currentTime === 'number' ? a.currentTime : 0 })
+  }
+  for (const { element } of retirees.liste) element.classList.add('sans-animation')
+}
+
+// Le geste est fini : chaque animation revient, là où elle en serait si elle avait continué.
+function reprendreAnimations(retirees: AnimationsRetirees): void {
+  const ecoule = performance.now() - retirees.debut
+  const liste = retirees.liste
+  retirees.liste = []
+  for (const { element } of liste) element.classList.remove('sans-animation')
+  for (const { element, nom, temps } of liste) {
+    const reprise = element.getAnimations().find((a) => 'animationName' in a && (a as CSSAnimation).animationName === nom)
+    if (reprise) reprise.currentTime = temps + ecoule
+  }
 }
 
 // Ce qui bouge sur la mine (27/10) : la caisse de l'ascenseur, ses passagers, et une mini-jauge

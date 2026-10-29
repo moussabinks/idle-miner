@@ -1700,7 +1700,9 @@ g.grille-construction {
   .objets-plage .lueur-lanterne,
   .objets-plage .lueur-feu,
   .oiseau {
-    animation-play-state: paused;
+    /* (29/10) « none » et pas « paused » : une animation en pause garde son calque, que le
+       navigateur redessinait à chaque image en zoomant (une soixantaine de calques). */
+    animation: none;
   }
 
   /* L'horloge du jeu bat 10 fois par seconde : les personnages glissent d'un point au suivant au
@@ -1708,12 +1710,11 @@ g.grille-construction {
   .perso-village:not(.perso-heros) {
     transition: transform 0.1s linear;
   }
+}
 
-  /* Pendant qu'on fait glisser la carte ou qu'on pince : tout le décor s'arrête, le téléphone ne
-     fait que déplacer l'image (VueVillage pose la classe, et l'enlève dès que le doigt s'arrête). */
-  .geste-en-cours .monde-village *,
-  .geste-en-cours .monde-village *::before,
-  .geste-en-cours .monde-village *::after {
-    animation-play-state: paused !important;
-  }
+/* (29/10) Pendant qu'on fait glisser la carte ou qu'on zoome : les éléments animés n'ont plus
+   d'animation (VueVillage, surGeste), le navigateur n'a plus leurs calques à redessiner à chaque
+   image. Elles reprennent là où elles en étaient dès que le geste s'arrête. */
+.sans-animation {
+  animation: none !important;
 }
