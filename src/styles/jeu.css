@@ -679,6 +679,24 @@
   gap: 12px;
 }
 
+/* (29/10) « Placer » : le gros bouton vert, bien à part de la croix et de « Retour » (blanc, plus
+   petit, en dessous) : on ne les confond plus. */
+.rails-placer {
+  min-width: 150px;
+  min-height: 60px;
+  font-size: 1.4rem;
+}
+
+.rails-cote-bas {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.rails-retour {
+  min-width: 90px;
+}
+
 .croix-rails {
   display: grid;
   grid-template-columns: repeat(3, 50px);
@@ -718,9 +736,6 @@
   grid-area: bas;
 }
 
-.croix-centre {
-  grid-area: centre;
-}
 
 /* (25/10) Sur un téléphone ou un écran peu haut, la phrase d'explication sous le titre d'un
    bâtiment disparaît : la place sert au jeu (on ne doit pas défiler dans la mine). */

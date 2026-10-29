@@ -222,7 +222,7 @@ Total : 745 700 $ + 120 fer + 130 redstone + 500 or + 60 émeraude + 255 saphir 
   - Mine → Foreuse : dès que le réservoir n'est plus plein, tout le charbon du coffre ; le surplus va dans le chariot de la foreuse ;
   - Mine → Générateur : la redstone qui manque à sa réserve ;
   - Foreuse → Marché : le chariot de la foreuse (26/10 : sauf ce qui attend d'aller à un atelier, voir plus bas) ;
-  - (26/10) Mine → Fonderie et Foreuse → Fonderie : le fer et l'or choisis, sans dépasser la place de l'entrée de la fonderie (les plus chers d'abord), **et** le charbon qui manque à son four (`objetFixe`, 29/10 : même gardé 📌) ; au départ de la mine, le minerai qu'on garde 📌 reste ;
+  - (26/10) Mine → Fonderie et Foreuse → Fonderie : le fer et l'or choisis, sans dépasser la place de l'entrée de la fonderie (les plus chers d'abord), **et** le charbon qui manque à son four (`objetFixe`, 29/10 : même gardé 📌 ; pareil pour Mine → Foreuse et Mine → Générateur, seulement ce qui manque à leur réserve, jamais pour vendre) ; au départ de la mine, le minerai qu'on garde 📌 reste ;
   - (26/10) Mine → Joaillerie et Foreuse → Joaillerie : les gemmes choisies (émeraude, saphir, rubis, diamant), sans dépasser la place de l'entrée ;
   - (26/10) Fonderie → Marché et Joaillerie → Marché : la réserve de l'atelier (les lingots, les bijoux).
 - **Ce qu'un atelier refuse** (26/10, `objetsRefuses`) : la fenêtre du trajet le montre grisé (« Refusé ici ») ; on ne peut pas le choisir. À l'arrivée, l'atelier ne prend que ce qu'il accepte, tant qu'il a de la place (`livrerAtelier`) ; le reste repart au départ.

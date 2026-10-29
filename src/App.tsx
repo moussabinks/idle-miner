@@ -745,7 +745,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         <div className="rails-commandes">
           {/* (25/10) La croix des rails, comme une manette, avec des flèches toutes pareilles : en
               haut, tout droit ; à gauche et à droite, les virages ; en bas, demi-tour (la voie
-              repart dans l'autre sens) ; au milieu, poser. La poubelle retire le dernier rail. */}
+              repart dans l'autre sens). La poubelle retire le dernier rail.
+              (29/10, demandé par le propriétaire) Le bouton pour poser n'est plus au milieu de la
+              croix : c'est un gros bouton vert « Placer » à droite, au-dessus de « Retour » (blanc,
+              avant « Terminé ») : des joueurs touchaient « Terminé » pour poser, et sortaient. */}
           {tr && (
             <div className="croix-rails">
               <button className={`btn croix-haut ${virage === 'droit' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droit')} aria-label={t('Tout droit')}>
@@ -753,9 +756,6 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
               </button>
               <button className={`btn croix-gauche ${virage === 'gauche' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('gauche')} aria-label={t('Gauche')}>
                 <FlecheCroix sorte="gauche" />
-              </button>
-              <button className="btn btn-vert croix-centre" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
-                ✔️
               </button>
               <button className={`btn croix-droite ${virage === 'droite' ? 'btn-jaune' : 'btn-blanc'}`} disabled={!dernier} onClick={() => tournerRail('droite')} aria-label={t('Droite')}>
                 <FlecheCroix sorte="droite" />
@@ -767,13 +767,20 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           )}
           <div className="rails-cote">
             {tr && (
-              <button className="btn btn-rose btn-petit" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
-                🗑️ {t('Retirer')}
+              <button className="btn btn-vert btn-grand rails-placer" disabled={!okPropose} onClick={poserRailPropose} aria-label={t('Poser ce rail')}>
+                🛤️ {t('Placer')}
               </button>
             )}
-            <button className="btn btn-jaune btn-petit" onClick={() => setPinceau(null)}>
-              ✔️ {t('Terminé')}
-            </button>
+            <div className="rails-cote-bas">
+              {tr && (
+                <button className="btn btn-rose btn-petit" disabled={!dernier} onClick={retirerDernierRail} aria-label={t('Retirer le dernier')}>
+                  🗑️ {t('Retirer')}
+                </button>
+              )}
+              <button className="btn btn-blanc btn-petit rails-retour" onClick={() => setPinceau(null)}>
+                ← {t('Retour')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

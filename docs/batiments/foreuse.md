@@ -55,7 +55,7 @@ Le chariot est **petit exprès** : il est plein en moins d'une minute. Il faut d
 
 Quatre trajets de wagonnets touchent la foreuse (deux avant le 26/10 ; voir [mine.md](mine.md#les-wagonnets) et [../jeu/village.md](../jeu/village.md#4-les-rails-et-les-trajets-de-wagonnets)) :
 
-- **Mine → Foreuse** (il part de la mine) : dès que le réservoir n'est plus plein, le wagonnet emporte **tout le charbon du coffre de la mine**. À l'arrivée, il remplit le réservoir, et **le surplus va dans le chariot** (tant qu'il y a de la place ; le reste revient au coffre). Le wagonnet du marché laisse dans le coffre le charbon qui manque au réservoir (si ce trajet a un pousseur).
+- **Mine → Foreuse** (il part de la mine) : dès que le réservoir n'est plus plein, le wagonnet emporte **tout le charbon du coffre de la mine** (sauf le charbon gardé 📌 ; 29/10 : du charbon gardé, il prend seulement ce qui manque au réservoir). À l'arrivée, il remplit le réservoir, et **le surplus va dans le chariot** (tant qu'il y a de la place ; le reste revient au coffre). Le wagonnet du marché laisse dans le coffre le charbon qui manque au réservoir (si ce trajet a un pousseur).
 - **Foreuse → Marché** (il part d'ici) : le wagonnet emporte le chariot et le vend au marché. Depuis le 26/10, il y laisse ce qu'un trajet automatique vers un atelier doit emporter, tant que l'atelier a de la place.
 - (26/10) **Foreuse → Fonderie** (il part d'ici) : le wagonnet apporte à la [fonderie](fonderie.md) le fer et l'or du chariot (sans dépasser la place de son entrée) et le charbon qui manque à son four.
 - (26/10) **Foreuse → Joaillerie** (il part d'ici) : le wagonnet apporte à la [joaillerie](joaillerie.md) les gemmes du chariot (émeraude, saphir, rubis, diamant).
