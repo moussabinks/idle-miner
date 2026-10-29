@@ -204,6 +204,14 @@
     padding: 6px;
   }
 
+  /* (29/10, demandé par le propriétaire) Sous le bloc, la jauge du combo (et du bonus en cours)
+     et celle de la pioche prennent toute la largeur : centrées, elles n'étaient pas plus
+     larges que leur texte. */
+  .zone-bloc > .combo-barre,
+  .zone-bloc > .pioche {
+    align-self: stretch;
+  }
+
   .bloc-a-cliquer {
     height: 128px;
   }
