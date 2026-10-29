@@ -1058,8 +1058,9 @@
   }
 
   /* Les langues dans les réglages : elles vont à la ligne. */
+  /* (29/10) Au doigt, la fenêtre est large : les 4 langues tiennent sur une ligne. */
   .reglages-langues {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
