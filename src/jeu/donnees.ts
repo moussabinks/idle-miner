@@ -346,6 +346,8 @@ export const CAPACITE_ECHELLE = 20
 export const NOMS_EMPLOYES = [
   'Raphaël', 'Moussa', 'Tom', 'Noah', 'Samy', 'Valou', 'Marion', 'Enya', 'Kaïnae',
   'Teo', 'Fredo', 'Satine', 'Nils', 'Arthur', 'Sasha', 'Florian', 'Khalil', 'Margot', 'Romain', 'Dodo', 'Guewen',
+  // (29/10, demandé par le propriétaire)
+  'Alexis', 'Leyhan', 'Maïane',
 ]
 // (25/10) En anglais, les mêmes employés portent des prénoms anglais parmi les plus donnés à la
 // génération Z (au même rang que leur prénom français : Raphaël → Liam, Moussa → Olivia...). La
@@ -353,6 +355,8 @@ export const NOMS_EMPLOYES = [
 export const NOMS_EMPLOYES_EN = [
   'Liam', 'Olivia', 'Jacob', 'Emma', 'Ethan', 'Ava', 'Mason', 'Sophia', 'Chloe',
   'Logan', 'Jayden', 'Madison', 'Aiden', 'Tyler', 'Mia', 'Caleb', 'Josh', 'Abigail', 'Dylan', 'Harper', 'Brandon',
+  // (29/10) Alexis → Ryan, Leyhan → Owen, Maïane → Ella
+  'Ryan', 'Owen', 'Ella',
 ]
 
 // Le salaire de 5 minutes d'un mineur, selon sa pioche (bois, pierre, fer, or, émeraude, diamant) :
