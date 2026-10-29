@@ -281,7 +281,8 @@ function CoucheForet({ tuiles, vue, classe, extra = '', children }: { tuiles: Tu
       // (28/10) Sur téléphone, une tuile déjà plus nette que voulu n'est pas redessinée (après un
       // dézoom, le téléphone redessinait toutes les tuiles en moins net : c'était la grosse
       // saccade). Elle n'est redessinée que pour devenir plus nette.
-      const dejaAssez = SUR_TELEPHONE && densites.current[i] >= densite
+      // (29/10 : sur tous les appareils)
+      const dejaAssez = densites.current[i] >= densite
       if (densites.current[i] !== densite && !dejaAssez) aFaire.push({ i, densite, visible })
     })
     aFaire.sort((a, b) => Number(b.visible) - Number(a.visible))
