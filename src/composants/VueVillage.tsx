@@ -985,28 +985,39 @@ export function VueVillage({
 }
 
 // (29/10) Les animations retirées pendant un geste (voir surGeste dans VueVillage) : pour chaque
-// élément, le nom de son animation, où elle en était, et le style qu'on lui a figé.
-type AnimationRetiree = { element: HTMLElement | SVGElement; nom: string; temps: number; fige: [string, string][] }
-type AnimationsRetirees = { liste: AnimationRetiree[] }
+// élément, ses animations (leur nom et où elles en étaient) et le style qu'on lui a figé.
+type ElementFige = { element: HTMLElement | SVGElement; animations: { nom: string; temps: number }[]; fige: [string, string][] }
+type AnimationsRetirees = { liste: ElementFige[] }
+
+const nomAnimation = (a: Animation) => ('animationName' in a ? String((a as CSSAnimation).animationName) : null)
+// Une animation CSS de l'élément lui-même (pas de son ::before ou ::after : « sans-animation »
+// ne les touche pas, elles continuent).
+const animationDeLElement = (a: Animation) => nomAnimation(a) !== null && !(a.effect as KeyframeEffect | null)?.pseudoElement
 
 // Le geste commence : les éléments animés de la carte reçoivent « sans-animation » (village.css),
 // qui leur retire leur couche à part (le navigateur n'a plus qu'une image à déplacer).
 // (29/10, demandé par le propriétaire) Sans animation, un élément revenait d'un coup à sa place
 // de départ : les oiseaux et les crabes se téléportaient, l'ombre d'un nuage sautait (on aurait
-// dit que la lumière changeait). On le fige donc d'abord là où il en est : on lit ce que
-// l'animation lui donne (position, transparence...) et on l'écrit dans son style.
+// dit que la lumière changeait). On le fige donc d'abord là où il en est : on lit ce que ses
+// animations lui donnent (position, taille, transparence...) et on l'écrit dans son style.
+// (29/10) Pour chaque élément, toutes ses animations ensemble, même celles qui sont finies (sinon,
+// en revenant, l'arrivée d'une bulle se rejouait à chaque geste : bulle aplatie, puis disparue),
+// et jamais celles de ses ::before / ::after (l'onde d'une alerte agrandissait toute la bulle).
 function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetirees): void {
   if (retirees.liste.length > 0 || !monde) return
+  const elements = new Set<HTMLElement | SVGElement>()
   for (const a of monde.getAnimations?.({ subtree: true }) ?? []) {
-    const effet = a.effect as KeyframeEffect | null
-    const cible = effet?.target
-    if (!(cible instanceof HTMLElement || cible instanceof SVGElement) || (a.playState !== 'running' && a.playState !== 'paused') || !('animationName' in a)) continue
-    // Les propriétés que l'animation fait bouger, et leur valeur à cet instant.
-    const proprietes = new Set(effet!.getKeyframes().flatMap((image) => Object.keys(image)))
+    const cible = (a.effect as KeyframeEffect | null)?.target
+    if ((cible instanceof HTMLElement || cible instanceof SVGElement) && animationDeLElement(a) && (a.playState === 'running' || a.playState === 'paused')) elements.add(cible)
+  }
+  for (const element of elements) {
+    const animations = element.getAnimations().filter(animationDeLElement)
+    // Les propriétés que ses animations font bouger, et leur valeur à cet instant.
+    const proprietes = new Set(animations.flatMap((a) => (a.effect as KeyframeEffect).getKeyframes().flatMap((image) => Object.keys(image))))
     for (const technique of ['offset', 'easing', 'composite', 'computedOffset']) proprietes.delete(technique)
-    const calcule = getComputedStyle(cible)
+    const calcule = getComputedStyle(element)
     const fige = [...proprietes].map((p) => p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)).map((p): [string, string] => [p, calcule.getPropertyValue(p)])
-    retirees.liste.push({ element: cible, nom: String((a as CSSAnimation).animationName), temps: typeof a.currentTime === 'number' ? a.currentTime : 0, fige })
+    retirees.liste.push({ element, animations: animations.map((a) => ({ nom: nomAnimation(a)!, temps: typeof a.currentTime === 'number' ? a.currentTime : 0 })), fige })
   }
   // Toutes les lectures d'abord, puis toutes les écritures : un seul calcul du style.
   for (const r of retirees.liste) {
@@ -1019,7 +1030,8 @@ function retirerAnimations(monde: HTMLElement | null, retirees: AnimationsRetire
   }
 }
 
-// Le geste est fini : chaque animation reprend exactement là où on l'avait figée.
+// Le geste est fini : chaque animation reprend exactement là où on l'avait figée (une animation
+// finie reste finie).
 function reprendreAnimations(retirees: AnimationsRetirees): void {
   const liste = retirees.liste
   retirees.liste = []
@@ -1027,9 +1039,12 @@ function reprendreAnimations(retirees: AnimationsRetirees): void {
     element.classList.remove('sans-animation')
     for (const [p, avant] of fige) element.style.setProperty(p, avant)
   }
-  for (const { element, nom, temps } of liste) {
-    const reprise = element.getAnimations().find((a) => 'animationName' in a && (a as CSSAnimation).animationName === nom)
-    if (reprise) reprise.currentTime = temps
+  for (const { element, animations } of liste) {
+    const reprises = element.getAnimations().filter(animationDeLElement)
+    for (const { nom, temps } of animations) {
+      const reprise = reprises.find((a) => nomAnimation(a) === nom)
+      if (reprise) reprise.currentTime = temps
+    }
   }
 }
 

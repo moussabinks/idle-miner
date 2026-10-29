@@ -132,7 +132,7 @@ L'image `mine.svg` ne bouge pas ; `DessinEvolutionMine` (`DessinsVillage.tsx`) d
 
 ### Les bulles et les jauges du village
 
-- **Les bulles de notification** : une médaille ronde à plat au gros contour d'encre et à l'ombre d'encre, un petit reflet blanc, l'icône en grand qui se dandine, un ruban de couleur avec deux mots, une pointe qui montre le bâtiment, et « +2 » s'il y a d'autres choses à faire là-bas. Elle arrive en rebondissant et flotte. La couleur dit l'urgence : **rouge** alerte (elle tremble, avec une onde qui s'élargit), **rose** prêt, **bleu** nouveau, **vert** achetable (avec des étincelles), **jaune** trajet à créer (la bulle « 🛤️ » au milieu des rails).
+- **Les bulles de notification** : une médaille ronde à plat au gros contour d'encre et à l'ombre d'encre, un petit reflet blanc, l'icône en grand qui se dandine, un ruban de couleur avec deux mots, une pointe qui montre le bâtiment, et « +2 » s'il y a d'autres choses à faire là-bas. Elle arrive en grossissant, toujours ronde, et reste à sa place (29/10 : elle ne flotte plus et ne s'écrase plus). La couleur dit l'urgence : **rouge** alerte (elle tremble, avec une onde qui s'élargit), **rose** prêt, **bleu** nouveau, **vert** achetable (avec des étincelles), **jaune** trajet à créer (la bulle « 🛤️ » au milieu des rails).
 - **Les mini-jauges** (`MiniJauge`, `.mini-jauge`) : une petite carte crème au contour d'encre au-dessus de ce qui travaille (la forge, la foreuse, le générateur, la caisse de l'ascenseur). (27/10) Plus de jauge « Vente » au-dessus d'un wagonnet au marché : le « +X $ » de la vente suffit.
 
 ## 5. Les personnages : des taupes
