@@ -534,7 +534,6 @@ export const TRADUCTIONS_ES: Record<string, string> = {
 
   // src/jeu/batiments.ts
   '🏗️ {nom} construit !': '🏗️ ¡{nom} construido!',
-  '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.': '🔁 Sin bucles: los rieles van de un edificio a otro.',
   '🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.': '🚧 No hay sitio: la vía sobresale media casilla a cada lado del riel.',
   '🔩 Plus de fer : un rail coûte {fer} fer (dans le coffre de la mine). Va creuser !': '🔩 Sin hierro: un riel cuesta {fer} de hierro (del cofre de la mina). ¡Ve a cavar!',
   "💵 Pas assez d'argent : un chemin coûte {argent} $.": '💵 No hay dinero suficiente: un camino cuesta {argent} $.',
@@ -1111,4 +1110,5 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   "Retour": "Volver",
   "Fer : {n}": "Hierro: {n}",
   "de quoi poser {n} rail(s)": "para {n} raíl(es)",
+  "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 Nada de cuadradito: 4 raíles no pueden formar un cuadrado de 2 × 2.",
 }

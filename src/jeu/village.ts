@@ -497,35 +497,28 @@ export function raccordsRail(village: Village, x: number, y: number): { n: boole
   return r
 }
 
-// Poser un rail sur cette case ferait-il une boucle ? Les rails ne doivent jamais tourner en rond
-// (24/10) : un wagonnet va d'un bâtiment à un autre, par une seule route. Il y a boucle si deux
-// des rails voisins de la case sont déjà reliés entre eux par d'autres rails.
+// Poser un rail sur cette case fermerait-il un petit carré de 2 × 2 rails ?
+// (24/10) Avant, aucune boucle n'était permise. (29/10, demandé par le propriétaire) Les boucles
+// sont permises (faire le tour de la mine, par exemple) : un wagonnet prend toujours le chemin le
+// plus court (railsEntre). Seul le carré de 2 × 2 reste interdit : il ne sert à rien et se dessine
+// mal (un petit rond de rails collés).
 // « sans » : une case de rails à ne pas compter (celle qu'on est en train de déplacer).
-export function feraitUneBoucle(village: Village, x: number, y: number, sans: string | null = null): boolean {
+export function formeraitUnCarre(village: Village, x: number, y: number, sans: string | null = null): boolean {
   const rails = new Set(village.rails)
   if (sans !== null) rails.delete(sans)
-  rails.delete(cleCase(x, y))
-  const voisins = DIRECTIONS_RAILS.map((d) => cleCase(x + d.x, y + d.y)).filter((cle) => rails.has(cle))
-  if (voisins.length < 2) return false
-  // On colore les rails par groupes reliés : deux voisins du même groupe ferment une boucle.
-  const groupe = new Map<string, number>()
-  voisins.forEach((depart, numero) => {
-    if (groupe.has(depart)) return
-    const file = [depart]
-    groupe.set(depart, numero)
-    while (file.length > 0) {
-      const c = lireCle(file.pop() as string)
-      for (const d of DIRECTIONS_RAILS) {
-        const v = cleCase(c.x + d.x, c.y + d.y)
-        if (rails.has(v) && !groupe.has(v)) {
-          groupe.set(v, numero)
-          file.push(v)
-        }
-      }
-    }
-  })
-  const groupes = voisins.map((cle) => groupe.get(cle))
-  return new Set(groupes).size < groupes.length
+  // Les 4 carrés de 2 × 2 qui contiennent cette case : il y a un problème si les 3 autres cases
+  // d'un de ces carrés ont déjà un rail.
+  for (const [dx, dy] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) {
+    const coin = { x: x + dx, y: y + dy }
+    const autres = [
+      [coin.x, coin.y],
+      [coin.x + 1, coin.y],
+      [coin.x, coin.y + 1],
+      [coin.x + 1, coin.y + 1],
+    ].filter(([cx, cy]) => cx !== x || cy !== y)
+    if (autres.every(([cx, cy]) => rails.has(cleCase(cx, cy)))) return true
+  }
+  return false
 }
 
 function occupe(emprise: Emprise, x: number, y: number): boolean {

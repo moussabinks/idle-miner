@@ -12,9 +12,9 @@
 //     four) ; Mine → Joaillerie et Foreuse → Joaillerie : les gemmes ; Fonderie → Marché et
 //     Joaillerie → Marché : il vend les lingots et les bijoux. Le joueur choisit quels minerais
 //     partent sur chaque trajet ; un atelier n'accepte que ce qu'il sait transformer.
-// Les rails ne font jamais de boucle (voir batiments.ts) : entre deux bâtiments, il n'y a donc
-// qu'une seule route. Plusieurs wagonnets peuvent rouler sur les mêmes rails : ils se croisent
-// sans se gêner.
+// (29/10) Les rails peuvent faire des boucles (sauf un carré de 2 × 2, voir batiments.ts) : entre
+// deux bâtiments, le wagonnet prend toujours la route la plus courte (railsEntre). Plusieurs
+// wagonnets peuvent rouler sur les mêmes rails : ils se croisent sans se gêner.
 //
 // Un wagonnet ne roule pas tout seul :
 //   - le joueur peut le pousser (bouton dans le panneau du départ) : il fait l'aller-retour avec lui ;

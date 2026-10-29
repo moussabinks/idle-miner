@@ -534,7 +534,6 @@ export const TRADUCTIONS_EN: Record<string, string> = {
 
   // src/jeu/batiments.ts
   '🏗️ {nom} construit !': '🏗️ {nom} built!',
-  '🔁 Pas de boucle : les rails vont d’un bâtiment à un autre.': '🔁 No loops: rails go from one building to another.',
   '🚧 Pas la place : la voie déborde d’une demi-case de chaque côté du rail.': '🚧 No room: the track sticks out half a tile on each side of the rail.',
   '🔩 Plus de fer : un rail coûte {fer} fer (dans le coffre de la mine). Va creuser !': '🔩 Out of iron: a rail costs {fer} iron (from the mine chest). Go dig!',
   "💵 Pas assez d'argent : un chemin coûte {argent} $.": '💵 Not enough money: a path costs {argent} $.',
@@ -1111,4 +1110,5 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   "Retour": "Back",
   "Fer : {n}": "Iron: {n}",
   "de quoi poser {n} rail(s)": "enough for {n} rail(s)",
+  "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 No tiny square: 4 rails can’t form a 2 × 2 square.",
 }
