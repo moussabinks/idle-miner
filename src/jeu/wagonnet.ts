@@ -476,7 +476,9 @@ function reservePourLesAteliers(etat: EtatJeu, depart: IdBatiment, bloc: IdBloc)
 
 // (26/10) Ce que le wagonnet d'un trajet vers un atelier emporte : le minerai choisi qu'il
 // accepte, sans dépasser la place de son entrée (les plus chers d'abord), et, pour la fonderie, le
-// charbon qui manque à son four. Au départ de la mine, ce que le joueur garde (📌) reste.
+// charbon qui manque à son four. Au départ de la mine, le minerai que le joueur garde (📌) reste.
+// (29/10, demandé par le propriétaire) Le charbon du four, lui, est pris même gardé 📌 (seulement
+// ce qui manque au four) : avec le charbon gardé, la fonderie ne recevait plus rien.
 function aEmporterVersAtelier(etat: EtatJeu, liaison: IdLiaison, atelier: IdAtelier, exclus: IdBloc[]): [IdBloc, number][] {
   const stock = stockDuDepart(etat, liaison)
   const depuisLaMine = LIAISONS[liaison].depart === 'puits'
@@ -490,8 +492,7 @@ function aEmporterVersAtelier(etat: EtatJeu, liaison: IdLiaison, atelier: IdAtel
     place -= pris
   }
   if (atelier === 'fonderie') {
-    const libre = Math.max(0, (stock.charbon ?? 0) - (depuisLaMine ? (etat.coffre.garder?.charbon ?? 0) : 0))
-    const charbon = Math.min(libre, placeCharbonFonderie(etat))
+    const charbon = Math.min(stock.charbon ?? 0, placeCharbonFonderie(etat))
     if (charbon > 0) liste.push(['charbon', charbon])
   }
   return liste
@@ -508,11 +509,15 @@ function aEmporter(etat: EtatJeu, liaison: IdLiaison, exclusAutres?: IdBloc[]): 
       // Dès que le réservoir n'est plus plein, il emporte tout le charbon du coffre : le surplus
       // ira dans le chariot de la foreuse (28/10). (26/10) Sauf ce que le joueur garde 📌 : avant,
       // le charbon gardé pour une amélioration partait quand même à la foreuse.
+      // (Ce trajet garde cette règle : son surplus part dans le chariot, vendu. Seuls le four de la
+      // fonderie et le générateur prennent leur combustible gardé, 29/10.)
       const nombre = besoinCharbon(etat) > 0 ? Math.max(0, (etat.coffre.contenu.charbon ?? 0) - (etat.coffre.garder?.charbon ?? 0)) : 0
       return nombre > 0 ? [['charbon', nombre]] : []
     }
     case 'mine-generateur': {
-      const nombre = Math.min(Math.max(0, (etat.coffre.contenu.redstone ?? 0) - (etat.coffre.garder?.redstone ?? 0)), besoinRedstone(etat))
+      // (29/10, demandé par le propriétaire) La redstone qui manque au générateur est prise même
+      // gardée 📌 (seulement ce qui manque) : avec sa redstone gardée, il ne recevait plus rien.
+      const nombre = Math.min(etat.coffre.contenu.redstone ?? 0, besoinRedstone(etat))
       return nombre > 0 ? [['redstone', nombre]] : []
     }
     case 'foreuse-marche': {
