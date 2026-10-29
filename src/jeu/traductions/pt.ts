@@ -1115,4 +1115,5 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   "Plein écran : oui": "Tela cheia: sim",
   "Plein écran : non": "Tela cheia: não",
   "Jouer en plein écran": "Jogar em tela cheia",
+  "Recruter un pousseur": "Contratar um empurrador",
 }

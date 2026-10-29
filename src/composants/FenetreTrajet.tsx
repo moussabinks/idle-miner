@@ -37,6 +37,9 @@ type Props = {
   actionsRail?: { onDeplacer: () => void; onRetirer: () => void } | null
   // (26/10) Ouvrir le Personnel (pour agrandir le chariot d'un pousseur qui ne suit pas)
   onAllerAuPersonnel?: () => void
+  // (29/10) « Recruter un pousseur » : les réglages sont validés, puis le Personnel s'ouvre avec ce
+  // trajet déjà choisi pour le pousseur.
+  onRecruterPousseur?: (reglages: Partial<Record<IdLiaison, ReglageTrajet>>, liaison: IdLiaison) => void
 }
 
 // « 45 s », « 2 min 05 »
@@ -93,7 +96,7 @@ function Reserve({ etat, liaison }: { etat: EtatJeu; liaison: IdLiaison }) {
   )
 }
 
-export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail = null, onAllerAuPersonnel }: Props) {
+export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail = null, onAllerAuPersonnel, onRecruterPousseur }: Props) {
   // Les réglages en cours (pas encore validés), un par trajet. Un trajet pas encore créé est
   // proposé activé : c'est pour ça qu'on a posé les rails.
   const [reglages, setReglages] = useState<Partial<Record<IdLiaison, ReglageTrajet>>>(() =>
@@ -251,7 +254,15 @@ export function FenetreTrajet({ etat, liaisons, onValider, onFermer, actionsRail
           {apercu.moteur !== 'toi' ? (
             <p className="texte-ok">👷 {t('{nom} le pousse.', { nom: pousseur?.nom ?? '' })}</p>
           ) : (
-            <p className="texte-alerte">👷 {t('Pas de pousseur : embauche-en un au Personnel pour faire rouler ce wagonnet.')}</p>
+            // (29/10, demandé par le propriétaire) Un bouton qui mène tout droit au Personnel.
+            <div className="trajet-sans-pousseur">
+              <p className="texte-alerte">👷 {t('Pas de pousseur : embauche-en un au Personnel pour faire rouler ce wagonnet.')}</p>
+              {onRecruterPousseur && (
+                <button className="btn btn-vert" onClick={() => onRecruterPousseur(reglages, liaison)}>
+                  👷 {t('Recruter un pousseur')}
+                </button>
+              )}
+            </div>
           )}
         </>
       )}

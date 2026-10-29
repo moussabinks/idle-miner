@@ -167,6 +167,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   const [modifier, setModifier] = useState(false)
   // Le trajet qu'on regarde en embauchant un pousseur (au Personnel) : il brille sur la carte.
   const [apercuTrajet, setApercuTrajet] = useState<IdLiaison | null>(null)
+  // (29/10) Le trajet pour lequel on vient recruter un pousseur (depuis la fenêtre d'un trajet).
+  const [pousseurPour, setPousseurPour] = useState<IdLiaison | null>(null)
   // (26/10) Pendant une réorganisation du village (façon Clash of Clans), on reste en édition.
   const reorganisation = enReorganisation(etat)
   const edition = fantome !== null || pinceau !== null || modifier || reorganisation
@@ -410,6 +412,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
     (id: IdBatiment) => {
       const b = batimentPose(etat.village, id)
       if (!b) return
+      if (id !== 'employes') setPousseurPour(null)
       setBatimentOuvert(id)
       // Le personnage y va quand même (pour le plaisir de le voir marcher).
       if (!pousse) village.allerVers(caseAccesProche(etat.village, b, joueur))
@@ -635,7 +638,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         couleur={COULEURS_BATIMENTS[batimentActif]}
         taille={batimentActif === 'puits' || batimentActif === 'employes' ? 'grande' : 'moyenne'}
         voile="clair"
-        onFermer={() => setBatimentOuvert(null)}
+        onFermer={() => {
+          setBatimentOuvert(null)
+          setPousseurPour(null)
+        }}
         classe={`fenetre-batiment fenetre-${batimentActif}`}
       >
         <p className="description-batiment discret">{t(info.description)}</p>
@@ -656,7 +662,7 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
         {batimentActif === 'generateur' && <PanneauGenerateur etat={etat} jouer={jouer} />}
         {batimentActif === 'fonderie' && <PanneauFonderie etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
         {batimentActif === 'joaillerie' && <PanneauJoaillerie etat={etat} jouer={jouer} onReglerTrajet={setTrajetsOuverts} onAllerAuPersonnel={surLePersonnel} />}
-        {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} />}
+        {batimentActif === 'employes' && <PanneauEmployes etat={etat} jouer={jouer} onApercuTrajet={setApercuTrajet} pousseurPour={pousseurPour} />}
       </Fenetre>
     )
   }
@@ -985,6 +991,17 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
               batimentPose(etat.village, 'employes')
                 ? () => {
                     fermerTrajets()
+                    ouvrirBatiment('employes')
+                  }
+                : undefined
+            }
+            // (29/10) « Recruter un pousseur » : on garde les réglages du trajet, puis on ouvre le
+            // Personnel avec ce trajet déjà choisi.
+            onRecruterPousseur={
+              batimentPose(etat.village, 'employes')
+                ? (reglages, liaison) => {
+                    validerTrajets(reglages)
+                    setPousseurPour(liaison)
                     ouvrirBatiment('employes')
                   }
                 : undefined

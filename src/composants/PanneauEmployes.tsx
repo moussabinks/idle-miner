@@ -108,7 +108,9 @@ import { cheminPublic } from '../chemins'
 import { analyseWagonnet, chariotTropPetit } from '../jeu/production'
 
 type Props = { etat: EtatJeu; jouer: (action: Action) => EtatJeu }
-type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void }
+// (29/10) pousseurPour : on arrive de la fenêtre d'un trajet sans pousseur (« Recruter un
+// pousseur ») : ce trajet est déjà choisi, et la section des pousseurs se montre.
+type PropsPanneau = Props & { onApercuTrajet?: (liaison: IdLiaison | null) => void; pousseurPour?: IdLiaison | null }
 
 // « 1 h 05 », « 12 min », « 45 s ». Les minutes sont arrondies au-dessus : un salaire de 5 minutes
 // qui vient de commencer affiche « 5 min ».
@@ -451,11 +453,11 @@ function EmbaucheMineur({ etat }: { etat: EtatJeu }) {
 }
 
 // L'embauche d'un pousseur (26/10) : on choisit son trajet (il brille sur la carte), puis on paie.
-function EmbauchePousseur({ etat, onApercuTrajet }: { etat: EtatJeu; onApercuTrajet?: (liaison: IdLiaison | null) => void }) {
+function EmbauchePousseur({ etat, onApercuTrajet, pousseurPour = null }: { etat: EtatJeu; onApercuTrajet?: (liaison: IdLiaison | null) => void; pousseurPour?: IdLiaison | null }) {
   // Tous les trajets dont les deux bâtiments sont construits.
   const trajets = LISTE_LIAISONS.filter((l) => batimentPose(etat.village, LIAISONS[l].depart) && batimentPose(etat.village, LIAISONS[l].arrivee))
   const libres = trajets.filter((l) => ligneDe(etat, l) !== null && !trajetPris(etat, l))
-  const [liaison, setLiaison] = useState<IdLiaison | null>(libres.length === 1 ? libres[0] : null)
+  const [liaison, setLiaison] = useState<IdLiaison | null>(pousseurPour && libres.includes(pousseurPour) ? pousseurPour : libres.length === 1 ? libres[0] : null)
   const choisie = liaison && libres.includes(liaison) ? liaison : null
   // Le trajet choisi brille sur la carte (et plus rien quand on ferme le panneau).
   useEffect(() => {
@@ -692,13 +694,18 @@ function Recruteur({ etat }: { etat: EtatJeu }) {
 // (25/10) Un seul onglet « Personnel » : l'équipe et les embauches ensemble ; puis les chefs.
 type OngletPersonnel = 'personnel' | 'chefs'
 
-export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
+export function PanneauEmployes({ onApercuTrajet, pousseurPour = null }: PropsPanneau) {
   const { etat, jouer } = useJeu()
   // Le mineur qu'on vient de recruter (avec le recruteur) : on dévoile sa rareté en grand.
   const [recrue, setRecrue] = useState<Employe | null>(null)
   // Le mineur qu'on veut licencier : on demande d'abord confirmation.
   const [aLicencier, setALicencier] = useState<number | null>(null)
   const [onglet, setOnglet] = useState<OngletPersonnel>('personnel')
+  // (29/10) Venu recruter un pousseur pour un trajet : la section des pousseurs défile en vue.
+  const racine = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (pousseurPour) racine.current?.querySelector('.section-pousseur')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [pousseurPour])
 
   // Une nouvelle recrue (embauche ou remplacement, en argent ou en gemmes) : avec le recruteur,
   // on la dévoile en grand. On compare les noms de l'équipe avant et après.
@@ -724,7 +731,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
   const chefAmeliorable = peutAmeliorerManager(etat) || peutAmeliorerRecruteur(etat)
 
   return (
-    <div className="panneau-bat panneau-personnel">
+    <div ref={racine} className="panneau-bat panneau-personnel">
       <OngletsPanneau
         onglets={[
           // (26/10) « ! » aussi dès qu'une place de mineur est libre (la mine vient de descendre d'un
@@ -769,7 +776,7 @@ export function PanneauEmployes({ onApercuTrajet }: PropsPanneau) {
           return (
             <section key={role} className={`section-employes section-${role}`}>
               <h3 className="section-employes-titre">{titre}</h3>
-              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : role === 'pousseur' ? <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} /> : <EmbaucheJoaillier etat={etat} />}
+              {role === 'mineur' ? <EmbaucheMineur etat={etat} /> : role === 'pousseur' ? <EmbauchePousseur etat={etat} onApercuTrajet={onApercuTrajet} pousseurPour={pousseurPour} /> : <EmbaucheJoaillier etat={etat} />}
               {liste.length > 0 && (
                 <div className="grille-employes">
                   {liste.map(({ e, index }) => (
