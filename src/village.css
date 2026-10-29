@@ -809,7 +809,7 @@
 }
 
 /* =========================================================================
-   La vie du village (23/10) : papillons, oiseaux, ombres des nuages
+   La vie du village (23/10) : oiseaux, ombres des nuages (29/10 : plus de papillons)
    (src/composants/AmbianceVillage.tsx).
    ========================================================================= */
 
@@ -833,51 +833,6 @@
 @keyframes traverse {
   from { transform: translateX(-500px); }
   to { transform: translateX(calc(var(--largeur-monde) + 200px)); }
-}
-
-/* Un papillon : il fait des boucles au-dessus de l'herbe, et bat des ailes. */
-.papillon {
-  position: absolute;
-  width: 12px;
-  height: 10px;
-  animation: papillon-boucle ease-in-out infinite;
-}
-
-@keyframes papillon-boucle {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  20% { transform: translate(38px, -16px) rotate(25deg); }
-  40% { transform: translate(70px, 8px) rotate(-10deg); }
-  60% { transform: translate(40px, 26px) rotate(-35deg); }
-  80% { transform: translate(-14px, 12px) rotate(15deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-.papillon-dessin {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 12px;
-  height: 10px;
-}
-
-/* (27/10) Les deux ailes et le corps : trois petits dessins posés l'un sur l'autre. Une aile
-   bat autour du milieu du papillon (le point 0, 0 de son dessin : 6 px, 5 px). */
-.papillon-dessin svg {
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: visible;
-}
-
-.papillon-dessin .aile-gauche,
-.papillon-dessin .aile-droite {
-  transform-origin: 6px 5px;
-  animation: bat-des-ailes 0.22s ease-in-out infinite alternate;
-}
-
-@keyframes bat-des-ailes {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0.25); }
 }
 
 /* Un vol d'oiseaux qui traverse le ciel de gauche à droite. */
@@ -916,9 +871,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ombre-nuage,
-  .papillon,
-  .papillon-dessin .aile-gauche,
-  .papillon-dessin .aile-droite,
   .vol-oiseaux,
   .oiseau {
     animation: none;
@@ -976,24 +928,7 @@ g.grille-construction {
   to { opacity: 0.28; }
 }
 
-/* Les crabes de la plage (24/10) : ils marchent de côté, s'arrêtent, repartent. */
-.objets-plage .crabe {
-  animation: crabe 9s ease-in-out infinite;
-}
-
-@keyframes crabe {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(14px); }
-  30% { transform: translateX(14px); }
-  55% { transform: translateX(-10px); }
-  70% { transform: translateX(-10px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .objets-plage .crabe {
-    animation: none;
-  }
-}
+/* Les crabes de la plage (24/10). (29/10, demandé par le propriétaire) Ils ne bougent plus. */
 
 /* Les cases au bord des voies (25/10) : interdites aux bâtiments, aux décorations et aux chemins
    (la voie y déborde). On les montre en rouge pendant qu'on pose quelque chose. */
@@ -1689,14 +1624,11 @@ g.grille-construction {
 
 @media (pointer: coarse) {
   /* Le petit décor dessiné en SVG ne bouge plus : chaque image, le téléphone devait le redessiner
-     (les ailes des papillons, les reflets et l'écume de la mer, les lueurs, la flamme, les crabes).
-     Les papillons, les oiseaux et les nuages se déplacent toujours. */
-  .papillon-dessin .aile-gauche,
-  .papillon-dessin .aile-droite,
+     (les reflets et l'écume de la mer, les lueurs, la flamme, les ailes des oiseaux).
+     Les oiseaux et les nuages se déplacent toujours. */
   .eau-plage .reflet-mer,
   .objets-plage .ecume-rocher,
   .objets-plage .flamme,
-  .objets-plage .crabe,
   .objets-plage .lueur-lanterne,
   .objets-plage .lueur-feu,
   .oiseau {
