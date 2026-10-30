@@ -1110,4 +1110,5 @@ export const TRADUCTIONS_ES: Record<string, string> = {
   "Retour": "Volver",
   "Fer : {n}": "Hierro: {n}",
   "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 Nada de cuadradito: 4 raíles no pueden formar un cuadrado de 2 × 2.",
+  "Nouveau serveur ! Recrée ton compte (même pseudo) : ta partie est gardée.": "¡Nuevo servidor! Vuelve a crear tu cuenta (mismo nombre): tu partida se conserva.",
 }

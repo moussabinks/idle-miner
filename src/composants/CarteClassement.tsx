@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from 'react'
 import type { LigneClassement } from '../jeu/classement'
+import { annoncerNouveauServeur } from '../jeu/compte'
 import { t } from '../jeu/langue'
 import { lireClassement, lireVillage, placeDuScore } from '../enLigne'
 import type { EtatJeu } from '../jeu/mineur'
@@ -137,6 +138,8 @@ export function CarteClassement({ joueur, dernierEnvoi, monArgent, onSeConnecter
       </div>
       <div className="classement-defile">{contenu}</div>
       {erreurVisite && <p className="classement-message discret">{erreurVisite}</p>}
+      {/* (30/10) Nouveau serveur : les anciens comptes sont perdus, pas les mondes. */}
+      {!joueur && annoncerNouveauServeur() && <p className="classement-annonce">✨ {t('Nouveau serveur ! Recrée ton compte (même pseudo) : ta partie est gardée.')}</p>}
 
       <div className="classement-toi">
         <span className="classement-toi-rang">{rang === null ? '?' : `#${rang}`}</span>

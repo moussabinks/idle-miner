@@ -2,7 +2,7 @@
 // créer un compte avec un pseudo, pour retrouver ses mondes sur n'importe quel appareil.
 
 import { useState } from 'react'
-import { PSEUDO_MAX } from '../jeu/compte'
+import { annoncerNouveauServeur, PSEUDO_MAX } from '../jeu/compte'
 import { formatLangue, t } from '../jeu/langue'
 import type { Compte } from '../useCompte'
 
@@ -71,6 +71,8 @@ export function CarteCompte({ compte }: { compte: Compte }) {
       }}
     >
       <p className="discret">{t('Facultatif : pour retrouver tes mondes sur un autre appareil, et entrer au classement.')}</p>
+      {/* (30/10) Nouveau serveur : les anciens comptes sont perdus, pas les mondes. */}
+      {annoncerNouveauServeur() && <p className="classement-annonce">✨ {t('Nouveau serveur ! Recrée ton compte (même pseudo) : ta partie est gardée.')}</p>}
       <input
         className="champ"
         value={pseudo}
