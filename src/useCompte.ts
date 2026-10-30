@@ -29,10 +29,10 @@ import {
 import { AVEC_COMPTES } from './portail'
 import { stockage } from './stockage'
 
-// Toutes les 5 minutes, on envoie les mondes s'ils ont changé (30/10 : avant toutes les 20 s, ce
+// Toutes les 10 minutes, on envoie les mondes s'ils ont changé (30/10 : avant toutes les 20 s, ce
 // qui remplissait la base gratuite de Supabase avec quelques joueurs). On envoie aussi en quittant
-// la page ou en changeant d'onglet : au pire, on perd 5 minutes en ligne, jamais dans le navigateur.
-const INTERVALLE_ENVOI = 5 * 60 * 1000 // ms
+// la page ou en changeant d'onglet : au pire, on perd 10 minutes en ligne, jamais dans le navigateur.
+const INTERVALLE_ENVOI = 10 * 60 * 1000 // ms
 // (23/10) Le score (l'argent en poche change tout le temps) ne part qu'une fois toutes les 5 minutes.
 const INTERVALLE_SCORE = 5 * 60 * 1000 // ms
 

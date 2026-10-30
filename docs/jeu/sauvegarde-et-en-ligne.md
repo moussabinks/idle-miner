@@ -274,7 +274,7 @@ Pendant `chargement` et `synchro`, les boutons pour lancer une partie sur l'accu
 
 - **Au lancement** : si une session est ouverte (`joueurConnecte`), premier échange (`synchroniser`). Sinon `deconnecte`.
 - **À la connexion / création de compte** (`connecter`) : vérification locale du pseudo et du mot de passe, appel Supabase, puis premier échange.
-- **Toutes les 5 minutes** (`INTERVALLE_ENVOI` ; 30/10 : avant 20 s, trop d'écritures pour la base gratuite) tant qu'on est connecté : envoi des mondes **seulement s'ils ont changé** (comparaison avec le texte du dernier envoi). Si le premier échange n'a pas encore réussi, il est retenté à la place.
+- **Toutes les 10 minutes** (`INTERVALLE_ENVOI` ; 30/10 : avant 20 s, trop d'écritures pour la base gratuite) tant qu'on est connecté : envoi des mondes **seulement s'ils ont changé** (comparaison avec le texte du dernier envoi). Si le premier échange n'a pas encore réussi, il est retenté à la place.
 - **Quand la page passe en arrière-plan** (`visibilitychange` → `hidden`) : un envoi.
 - **En quittant un monde** (bouton du monde, retour à l'accueil) : `envoyerMaintenant()`.
 - **À la déconnexion** : un dernier envoi, puis `signOut` et remise à zéro de l'état du hook.
