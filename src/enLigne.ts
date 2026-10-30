@@ -13,12 +13,12 @@ import { t } from './jeu/langue'
 import type { EtatJeu } from './jeu/mineur'
 import type { SauvegardeComplete } from './jeu/sauvegarde'
 
-// L'adresse du projet et sa clé « publishable ». Cette clé est faite pour être publique
+// L'adresse du projet et sa clé « publishable » (30/10 : le projet du propriétaire, avant celui d'un ami). Cette clé est faite pour être publique
 // (elle est de toute façon visible dans le navigateur) : ce sont les règles de la base qui
 // empêchent un joueur de lire ou modifier les mondes d'un autre.
 // On peut les remplacer avec un fichier .env (VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY).
-const URL_SUPABASE = import.meta.env.VITE_SUPABASE_URL ?? 'https://peumwxcvqncynobwejmk.supabase.co'
-const CLE_PUBLIQUE = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'sb_publishable_wi7fi0nWBo63KeldySUs3g_SV5iP3dF'
+const URL_SUPABASE = import.meta.env.VITE_SUPABASE_URL ?? 'https://zxioohnbdzryketcfoiv.supabase.co'
+const CLE_PUBLIQUE = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'sb_publishable_gFNOZ0j5OEZBkdWYIdcgbQ_tQf2nW4W'
 
 const supabase = createClient(URL_SUPABASE, CLE_PUBLIQUE)
 
