@@ -106,6 +106,9 @@ type Props = {
 type Camera = { z: number; cx: number; cy: number; douce: boolean }
 
 const ZOOM_MAX = 2.6
+// (30/10) Après un dézoom de plus de ce rapport (depuis le dernier dessin net de la carte), la carte
+// est redessinée à sa nouvelle taille (voir zoomDessineRef).
+const RAPPORT_DEZOOM_REDESSIN = 1.6
 // La force du zoom à la molette (par pixel de défilement) et au pincement. (29/10 : un cran de
 // molette zoomait trop d'un coup ; maintenant, un cran change le zoom d'environ 15 %.)
 const FORCE_MOLETTE = 0.0016
@@ -932,9 +935,15 @@ export function VueVillage({
   // simplement plus petite) : on ne la redessine que si on a zoomé plus près qu'à la dernière fois
   // (29/10 : sur tous les appareils, avec une marge de 10 %, et seulement une fois le zoom bien
   // arrêté, 400 ms : en zoomant et dézoomant vite, elle était redessinée en entier sans arrêt).
+  // (30/10, demandé par le propriétaire : des flashs sur les bâtiments et le décor au dézoom
+  // maximum) Mais après un gros dézoom, on la redessine aussi : sinon, toute la carte est à
+  // l'écran, encore dessinée à la taille du zoom le plus proche ; la carte graphique manque alors
+  // de mémoire, jette des morceaux de l'image et les redessine sans arrêt (les flashs).
   const zoomDessineRef = useRef(zoomArrondi)
   useEffect(() => {
-    if (zoomArrondi <= zoomDessineRef.current * 1.1) return
+    const zoomAvant = zoomArrondi > zoomDessineRef.current * 1.1
+    const grosDezoom = zoomArrondi < zoomDessineRef.current / RAPPORT_DEZOOM_REDESSIN
+    if (!zoomAvant && !grosDezoom) return
     let image = 0
     const minuteur = window.setTimeout(() => {
       zoomDessineRef.current = zoomArrondi
