@@ -30,6 +30,9 @@ export const AVEC_PLUSIEURS_MONDES = PORTAIL === null
 // (27/10) Les packs de gemmes contre de l'argent réel : seulement hors portail (sur CrazyGames,
 // la boutique dit « Bientôt disponible » à leur place, en attendant leur système de paiement).
 export const AVEC_PACKS = PORTAIL === null
+// (30/10, demandé par le propriétaire) Compter les visiteurs avec Vercel Web Analytics : seulement
+// hors portail (CrazyGames a ses propres chiffres). Voir src/statistiques.ts.
+export const AVEC_STATISTIQUES = PORTAIL === null
 
 // Le strict nécessaire du SDK de CrazyGames dont on se sert.
 type SdkCrazyGames = {

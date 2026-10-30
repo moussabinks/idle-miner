@@ -19,6 +19,7 @@ import { initialiserEchelle } from './echelle'
 import { initialiserLangue } from './langueNavigateur'
 import { initialiserPortail } from './portail'
 import { initialiserPleinEcran } from './pleinEcran'
+import { initialiserStatistiques } from './statistiques'
 
 // (27/10) On attend d'abord le SDK de CrazyGames (seulement dans la version portail : ailleurs,
 // c'est immédiat), parce qu'il branche la sauvegarde sur le compte CrazyGames du joueur. Le jeu
@@ -40,3 +41,5 @@ void demarrer()
 
 // Le jeu marche aussi hors ligne et s'installe comme une application (voir public/sw.js).
 enregistrerServiceWorker()
+// (30/10) Le nombre de visiteurs, sur Vercel (voir src/statistiques.ts).
+initialiserStatistiques()
