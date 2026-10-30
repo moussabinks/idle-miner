@@ -481,6 +481,17 @@
   }
 }
 
+.classement-annonce {
+  margin: 0;
+  padding: 6px 10px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 10px;
+  background: #ffe9a8;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .classement-message {
   padding: 14px;
   border: var(--trait-fin) dashed var(--encre-douce);

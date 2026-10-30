@@ -12,6 +12,14 @@ export const PSEUDO_MIN = 3
 export const PSEUDO_MAX = 16
 export const MOT_DE_PASSE_MIN = 6
 
+// (30/10) Le jeu a changé de serveur Supabase : les anciens comptes sont perdus (pas les mondes,
+// gardés dans le navigateur). Jusqu'à cette date, l'accueil dit aux joueurs de recréer leur compte.
+export const FIN_ANNONCE_NOUVEAU_SERVEUR = new Date('2026-12-31T23:59:59Z').getTime()
+
+export function annoncerNouveauServeur(maintenant = Date.now()): boolean {
+  return maintenant <= FIN_ANNONCE_NOUVEAU_SERVEUR
+}
+
 // Supabase range les comptes par adresse email. Le joueur ne choisit qu'un pseudo :
 // on lui fabrique une adresse qui n'existe pas (aucun email n'est jamais envoyé).
 export const DOMAINE_COMPTES = 'joueurs.idle-miner.app'

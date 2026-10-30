@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { aleatoireAvecGraine } from './aleatoire'
 import {
   DOMAINE_COMPTES,
+  annoncerNouveauServeur,
   choisirSynchro,
   ecrireDerniereSynchro,
   emailDuPseudo,
@@ -90,5 +91,12 @@ describe('synchronisation à la connexion', () => {
     expect(lireDerniereSynchro(stockage)).toBeNull()
     ecrireDerniereSynchro(stockage, { joueur: 'joueur', envoyeeLe: 1234 })
     expect(lireDerniereSynchro(stockage)).toEqual({ joueur: 'joueur', envoyeeLe: 1234 })
+  })
+})
+
+describe('annonce du nouveau serveur (30/10)', () => {
+  it('s’affiche jusqu’à la fin de l’année, plus après', () => {
+    expect(annoncerNouveauServeur(new Date('2026-10-30T12:00:00Z').getTime())).toBe(true)
+    expect(annoncerNouveauServeur(new Date('2027-01-02T12:00:00Z').getTime())).toBe(false)
   })
 })
