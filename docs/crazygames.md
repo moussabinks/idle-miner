@@ -9,6 +9,7 @@ Le même code fabrique deux versions du jeu :
 | Commande | `npm run build` (Vercel la lance tout seul) | `npm run build:crazygames` |
 | Dossier | `dist/` | `dist-crazygames/`, et le ZIP `mega-digger-crazygames.zip` à la racine du projet |
 | Comptes, classement, visites (Supabase) | oui | non : le jeu ne parle jamais à Supabase (`AVEC_COMPTES`), et (27/10) la bibliothèque de Supabase n'est même pas dans le jeu : `vite.config.ts` met `src/enLigneAbsent.ts` (les mêmes fonctions, vides) à la place de `src/enLigne.ts` |
+| Statistiques de visites (Vercel Web Analytics, 30/10) | oui | non : `vite.config.ts` met `src/statistiquesAbsentes.ts` à la place de `src/statistiques.ts` (le script de Vercel n'est pas dans le jeu) |
 | Packs de gemmes payants | montrés, « Bientôt disponible » au paiement | retirés : une carte « Bientôt disponible » à leur place (`AVEC_PACKS`) |
 | Application à installer (PWA) | oui | non : ni service worker, ni manifeste, ni icônes d'application |
 | Publicités | la fausse publicité de 30 s | leur publicité récompensée (SDK v3) |

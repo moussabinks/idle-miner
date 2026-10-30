@@ -49,8 +49,16 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: crazygames ? [react(), sansApplication(dossier)] : [react()],
     // (27/10) Sur CrazyGames, pas de comptes : enLigneAbsent.ts remplace enLigne.ts, et la
-    // bibliothèque de Supabase n'est pas copiée dans le jeu.
-    resolve: crazygames ? { alias: [{ find: /^(\.\.?\/)+enLigne$/, replacement: fileURLToPath(new URL('./src/enLigneAbsent.ts', import.meta.url)) }] } : {},
+    // bibliothèque de Supabase n'est pas copiée dans le jeu. (30/10) Pareil pour les statistiques
+    // de Vercel : statistiquesAbsentes.ts remplace statistiques.ts.
+    resolve: crazygames
+      ? {
+          alias: [
+            { find: /^(\.\.?\/)+enLigne$/, replacement: fileURLToPath(new URL('./src/enLigneAbsent.ts', import.meta.url)) },
+            { find: /^(\.\.?\/)+statistiques$/, replacement: fileURLToPath(new URL('./src/statistiquesAbsentes.ts', import.meta.url)) },
+          ],
+        }
+      : {},
     // (25/10) Des chemins relatifs : le jeu marche aussi servi dans un sous-dossier (CrazyGames).
     base: './',
     build: { outDir: dossier },
