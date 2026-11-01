@@ -502,10 +502,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   'Embauche !': 'Hire!',
   'Ouvre le Personnel': 'Open the Staff',
   'Touche le Personnel, sur la carte.': 'Tap the Staff on the map.',
-  'Bienvenue, mineur !': 'Welcome, miner!',
-  'C’est parti !': 'Let’s go!',
   'Passer le tutoriel': 'Skip tutorial',
-  'Moi, c’est Pépite ! Creusons ensemble jusqu’au cœur de diamant.': 'I’m Nugget! Let’s dig together all the way to the Diamond Heart.',
   'Bravo, ta mine tourne !': 'Well done, your mine is running!',
   'À moi de jouer !': 'My turn to play!',
   'Ton mineur creuse pour toi, même quand tu ne joues pas. Maintenant, tu es libre !': 'Your miner digs for you, even when you’re not playing. Now you’re free!',
@@ -1111,4 +1108,7 @@ export const TRADUCTIONS_EN: Record<string, string> = {
   "Fer : {n}": "Iron: {n}",
   "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 No tiny square: 4 rails can’t form a 2 × 2 square.",
   "Nouveau serveur ! Recrée ton compte (même pseudo) : ta partie est gardée.": "New server! Create your account again (same name): your game is kept.",
+  "Demain !": "Tomorrow!",
+  "Demain, jour {n} :": "Tomorrow, day {n}:",
+  "dans {duree}": "in {duree}",
 }

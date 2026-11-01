@@ -248,6 +248,30 @@
   animation: btn-respire 1.6s ease-in-out infinite;
 }
 
+/* (01/11) La case de demain : entourée en vert, avec son étiquette « Demain ! ». */
+.quotidien-jour {
+  position: relative;
+}
+
+.quotidien-jour.demain {
+  border-style: dashed;
+  background: #e4f8e4;
+}
+
+.quotidien-demain {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 8px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--vert);
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .quotidien-jour.gros-lot {
   grid-column: span 2;
   background: #efe8ff;
@@ -321,6 +345,23 @@
 .quotidien-revenir {
   font-size: 1rem;
   text-align: center;
+}
+
+/* (01/11) Le cadeau de demain, en une ligne, et dans combien de temps. */
+.quotidien-apercu-demain {
+  margin: 8px auto 0;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 14px;
+  background: #e4f8e4;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.quotidien-minuteur {
+  display: block;
+  font-weight: 900;
 }
 
 /* La série en cours, en haut de la fenêtre. */

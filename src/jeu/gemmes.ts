@@ -240,6 +240,19 @@ export function etatQuotidien(etat: EtatJeu, aujourdhui: string): { jour: number
   return { jour: continue_ ? (q.serie % RECOMPENSES_QUOTIDIENNES.length) + 1 : 1, disponible: true }
 }
 
+// (01/11) Le cadeau de demain (si on revient demain) : pour donner envie de revenir.
+export function cadeauDeDemain(etat: EtatJeu, aujourdhui: string): { jour: number; recompense: Recompense } {
+  const { jour } = etatQuotidien(etat, aujourdhui)
+  const demain = (jour % RECOMPENSES_QUOTIDIENNES.length) + 1
+  return { jour: demain, recompense: RECOMPENSES_QUOTIDIENNES[demain - 1] }
+}
+
+// (01/11) Les secondes avant minuit (heure du joueur) : le prochain cadeau du jour.
+export function secondesAvantDemain(maintenant: Date): number {
+  const minuit = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate() + 1)
+  return Math.max(0, Math.ceil((minuit.getTime() - maintenant.getTime()) / 1000))
+}
+
 export function recupererQuotidien(etat: EtatJeu, aujourdhui: string): string[] {
   const { jour, disponible } = etatQuotidien(etat, aujourdhui)
   if (!disponible) return []

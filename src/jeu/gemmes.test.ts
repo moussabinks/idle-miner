@@ -25,6 +25,8 @@ import {
   recupererQuotidien,
   secondesBoost,
   veille,
+  cadeauDeDemain,
+  secondesAvantDemain,
 } from './gemmes'
 import { bornesGemmes, prixEnGemmesPour } from './prixGemmes'
 import {
@@ -380,5 +382,21 @@ describe('(27/10) la publicité « Ventes × 2 » du bouton en bas', () => {
     etat.stats.tempsDeJeu += MINUTES_VENTES_PUB * 60
     expect(multiplicateurVentes(etat)).toBe(1)
     expect(peutRegarderPubVentes(etat)).toBe(true)
+  })
+})
+
+describe('(01/11) le cadeau de demain', () => {
+  it('montre le jour suivant de la série (et le jour 1 après le gros lot)', () => {
+    const etat = partieDeTest(aleatoireAvecGraine(1))
+    expect(cadeauDeDemain(etat, '2026-11-01').jour).toBe(2)
+    recupererQuotidien(etat, '2026-11-01')
+    expect(cadeauDeDemain(etat, '2026-11-01')).toEqual({ jour: 2, recompense: RECOMPENSES_QUOTIDIENNES[1] })
+    etat.quotidien = { dernierJour: '2026-11-01', serie: 7 }
+    expect(cadeauDeDemain(etat, '2026-11-01').jour).toBe(1)
+  })
+
+  it('compte les secondes jusqu’à minuit', () => {
+    expect(secondesAvantDemain(new Date(2026, 10, 1, 22, 0, 0))).toBe(2 * 3600)
+    expect(secondesAvantDemain(new Date(2026, 10, 1, 0, 0, 0))).toBe(24 * 3600)
   })
 })

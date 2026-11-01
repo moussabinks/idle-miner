@@ -16,7 +16,8 @@
 // ⚠️ Les noms des fonctions du SDK (window.CrazyGames.SDK...) sont ceux de la version 3 de leur
 // documentation (docs.crazygames.com) : à revérifier au moment de publier.
 
-import { brancherStockage } from './stockage'
+import { CLE_MONDES, cleMonde, fusionnerSauvegardes, mondesDeLaCopie, sourcePlusAvancee } from './jeu/sauvegarde'
+import { brancherStockage, clesDuJeu, stockageDouble, stockageDuNavigateur } from './stockage'
 
 export const PORTAIL: 'crazygames' | null = import.meta.env.VITE_PORTAIL === 'crazygames' ? 'crazygames' : null
 
@@ -27,6 +28,11 @@ export const AVEC_INSTALLATION = PORTAIL === null
 // (27/10, demandé par le propriétaire) Plusieurs mondes (jusqu'à 5) : seulement hors portail. Sur
 // CrazyGames, un seul monde, et l'accueil n'a qu'un très gros bouton « Jouer ».
 export const AVEC_PLUSIEURS_MONDES = PORTAIL === null
+// (01/11, CrazyGames) L'écran d'accueil : seulement hors portail. Sur CrazyGames, le joueur arrive
+// directement dans sa partie (la moitié des joueurs partaient avant la 1re minute, et chaque
+// écran avant le premier bloc en fait partir) : la langue et « Recommencer à zéro » sont dans
+// les réglages ⚙️.
+export const AVEC_ACCUEIL = PORTAIL === null
 // (27/10) Les packs de gemmes contre de l'argent réel : seulement hors portail (sur CrazyGames,
 // la boutique dit « Bientôt disponible » à leur place, en attendant leur système de paiement).
 export const AVEC_PACKS = PORTAIL === null
@@ -89,13 +95,35 @@ async function chargerSdk(): Promise<void> {
   // Hors de CrazyGames (le fichier ouvert sur un autre site), le SDK est « disabled » : on garde
   // le stockage du navigateur. Et on essaie d'abord le module Data : il ne marche que si la case
   // « Le jeu sauvegarde la progression » est cochée sur leur portail (voir docs/crazygames.md).
-  if (!attenteFinie && sdk.data && sdk.environment !== 'disabled' && moduleDataMarche(sdk.data)) {
-    brancherStockage(sdk.data)
-    console.info('[Mega Digger] Sauvegarde : module Data de CrazyGames')
-  }
+  if (sdk.data && sdk.environment !== 'disabled' && moduleDataMarche(sdk.data)) brancherModuleData(sdk.data)
   // (27/10) Le jeu a peut-être déjà dit « le joueur joue » avant que le SDK soit prêt : on le
   // redit maintenant (sinon CrazyGames ne voyait jamais le premier gameplayStart).
   if (etatVoulu === 'jeu') sdk.game.gameplayStart()
+}
+
+// (01/11) Brancher la sauvegarde sur le module Data, sans jamais perdre la partie du navigateur.
+// Avant, si le SDK arrivait après l'attente, la partie du jour restait dans le navigateur ; le
+// lendemain, le SDK (rapide cette fois) lisait le module Data, vide : le joueur repartait de zéro.
+// Maintenant :
+//   - on recopie dans le module Data les parties du navigateur plus avancées que les siennes ;
+//   - puis on écrit dans les deux (le navigateur garde une copie à jour pour la prochaine fois).
+// SDK en retard (la partie est déjà lancée depuis le navigateur) : on ne branche que si le module
+// Data n'a rien de plus avancé (sinon, la partie en cours, moins avancée, l'écraserait : il la
+// retrouvera à la prochaine visite).
+function brancherModuleData(data: NonNullable<SdkCrazyGames['data']>): void {
+  const navigateur = stockageDuNavigateur()
+  if (navigateur === null) {
+    if (!attenteFinie) brancherStockage(data)
+    return
+  }
+  const cles = clesDuJeu()
+  if (attenteFinie && sourcePlusAvancee(navigateur, data, [...cles, ...mondesDeLaCopie({ [CLE_MONDES]: data.getItem(CLE_MONDES) ?? '[]' }).map((m) => cleMonde(m.id))])) {
+    console.info('[Mega Digger] SDK en retard : le module Data a une partie plus avancée, gardée pour la prochaine visite')
+    return
+  }
+  const recopiees = fusionnerSauvegardes(data, navigateur, cles)
+  brancherStockage(stockageDouble(data, navigateur))
+  console.info('[Mega Digger] Sauvegarde : module Data de CrazyGames', recopiees > 0 ? `(${recopiees} clés recopiées du navigateur)` : '')
 }
 
 function moduleDataMarche(data: NonNullable<SdkCrazyGames['data']>): boolean {

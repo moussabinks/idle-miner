@@ -71,6 +71,25 @@
   position: relative;
 }
 
+/* (01/11) Sous le 🎁, une fois le cadeau pris : le temps avant le prochain (« 14 h 05 »). */
+.minuteur-cadeau {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 5px;
+  border: var(--trait-fin) solid var(--encre);
+  border-radius: 999px;
+  background: var(--creme);
+  color: var(--encre);
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* =========================================================================
    Le bandeau (Hud.tsx) : des pastilles bleu nuit au gros contour crème
    ========================================================================= */

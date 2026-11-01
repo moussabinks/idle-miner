@@ -4,9 +4,13 @@
 // Les règles sont dans src/jeu/gemmes.ts.
 // Ouvrir le cadeau (25/10) : le paquet tremble, s'ouvre dans des rayons, et ce qu'il contient
 // saute dehors, une chose après l'autre, avec une fanfare.
+// (01/11) Pour donner envie de revenir : la case de demain est entourée (« Demain ! »), et une
+// fois le cadeau pris, on montre ce qu'il y aura demain et dans combien de temps.
 
 import { useState } from 'react'
-import { BOOSTS, LISTE_BOOSTS, RECOMPENSES_QUOTIDIENNES, etatQuotidien, jourDe, recupererQuotidien, type BonusCadeau, type Recompense } from '../jeu/gemmes'
+import { BOOSTS, LISTE_BOOSTS, RECOMPENSES_QUOTIDIENNES, etatQuotidien, jourDe, recupererQuotidien, secondesAvantDemain, type BonusCadeau, type Recompense } from '../jeu/gemmes'
+import { heuresMinutes } from '../nombres'
+import { useMaintenant } from '../useMaintenant'
 import { t } from '../jeu/langue'
 import { sons } from '../sons'
 import { useJeu } from './contexteJeu'
@@ -19,6 +23,8 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
   const { jour, disponible } = etatQuotidien(etat, aujourdhui)
   // Les jours de suite déjà pris (le cadeau du jour compte s'il est pris).
   const serie = disponible ? jour - 1 : jour
+  // (01/11) Le cadeau de demain : le jour suivant de la série (le jour 1 après le gros lot).
+  const demain = (jour % RECOMPENSES_QUOTIDIENNES.length) + 1
   // Le cadeau qu'on vient d'ouvrir (null : pas encore ouvert).
   const [ouvert, setOuvert] = useState<{ jour: number; recompense: Recompense } | null>(null)
 
@@ -44,8 +50,10 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
           const numero = i + 1
           const pris = numero < jour || (numero === jour && !disponible)
           const actuel = numero === jour && disponible
+          const estDemain = numero === demain && !actuel
           return (
-            <li key={numero} className={`quotidien-jour ${pris ? 'pris' : ''} ${actuel ? 'actuel' : ''} ${numero === 7 ? 'gros-lot' : ''}`}>
+            <li key={numero} className={`quotidien-jour ${pris ? 'pris' : ''} ${actuel ? 'actuel' : ''} ${estDemain ? 'demain' : ''} ${numero === 7 ? 'gros-lot' : ''}`}>
+              {estDemain && <span className="quotidien-demain">{t('Demain !')}</span>}
               {/* En haut, petit : le jour et son paquet (✔ s'il est pris). */}
               <span className="quotidien-numero">
                 <span aria-hidden="true">{pris ? '✔️' : numero === 7 ? '🏆' : '🎁'}</span> {t('Jour {n}', { n: numero })}
@@ -80,10 +88,25 @@ export function RecompensesQuotidiennes({ onFermer }: { onFermer: () => void }) 
             🎁 {t('Ouvrir le cadeau du jour {n}', { n: jour })}
           </button>
         ) : (
-          <p className="quotidien-revenir">✔ {t('Cadeau pris ! Reviens demain pour le jour {n}.', { n: (jour % 7) + 1 })}</p>
+          <div className="quotidien-revenir">
+            <p>✔ {t('Cadeau pris ! Reviens demain pour le jour {n}.', { n: demain })}</p>
+            <ApercuDemain jour={demain} />
+          </div>
         )}
       </div>
     </Fenetre>
+  )
+}
+
+// (01/11) Le cadeau de demain, en une ligne, avec le temps qu'il reste avant minuit.
+function ApercuDemain({ jour }: { jour: number }) {
+  const maintenant = useMaintenant()
+  const recompense = RECOMPENSES_QUOTIDIENNES[jour - 1]
+  return (
+    <p className="quotidien-apercu-demain">
+      <strong>{jour === 7 ? '🏆' : '🎁'} {t('Demain, jour {n} :', { n: jour })}</strong> {[`💎 ${recompense.gemmes}`, ...recompense.bonus.map(texteBonus)].join(' · ')}
+      <span className="quotidien-minuteur">⏳ {t('dans {duree}', { duree: heuresMinutes(secondesAvantDemain(maintenant)) })}</span>
+    </p>
   )
 }
 
@@ -123,6 +146,8 @@ function CadeauOuvert({ jour, recompense, onFermer }: { jour: number; recompense
           ))}
         </ul>
       </div>
+      {/* (01/11) Et demain ? (le joueur sait ce qui l'attend s'il revient) */}
+      <ApercuDemain jour={(jour % RECOMPENSES_QUOTIDIENNES.length) + 1} />
     </Fenetre>
   )
 }

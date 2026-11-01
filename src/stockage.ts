@@ -59,6 +59,50 @@ export function brancherStockage(nouveau: Stockage): void {
   stockagePersistant = true
 }
 
+// (01/11) Le stockage du navigateur lui-même (null s'il est interdit), et ses clés du jeu : pour
+// le rassembler avec celui de CrazyGames (voir src/portail.ts).
+export function stockageDuNavigateur(): Stockage | null {
+  return choix.persistant ? choix.stockage : null
+}
+
+export function clesDuJeu(): string[] {
+  const cles: string[] = []
+  try {
+    const local = window.localStorage
+    for (let i = 0; i < local.length; i++) {
+      const cle = local.key(i)
+      if (cle !== null && cle.startsWith('idle-miner')) cles.push(cle)
+    }
+  } catch {
+    // stockage interdit : aucune clé
+  }
+  return cles
+}
+
+// (01/11) Un stockage qui lit dans « principal » et écrit dans les deux : le navigateur garde
+// toujours une copie à jour, au cas où le SDK de CrazyGames serait en retard la prochaine fois.
+export function stockageDouble(principal: Stockage, copie: Stockage): Stockage {
+  return {
+    getItem: (cle) => principal.getItem(cle),
+    setItem: (cle, valeur) => {
+      principal.setItem(cle, valeur)
+      try {
+        copie.setItem(cle, valeur)
+      } catch {
+        // la copie est pleine : tant pis, le principal est à jour
+      }
+    },
+    removeItem: (cle) => {
+      principal.removeItem(cle)
+      try {
+        copie.removeItem(cle)
+      } catch {
+        // rien à faire
+      }
+    },
+  }
+}
+
 // Lire et écrire une petite valeur (un réglage), sans jamais lever d'erreur.
 export function lireReglage(cle: string): string | null {
   try {

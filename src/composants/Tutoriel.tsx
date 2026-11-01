@@ -1,6 +1,7 @@
 // Le tutoriel (25/10, nouveau style). Pépite, une taupe mineuse, accompagne le joueur :
-//   - au début, une fenêtre se présente avec le jeu en 4 étapes (les mêmes que dans l'aide et
-//     sur l'accueil : une seule promesse partout) ;
+//   - (01/11) plus de fenêtre au début : le joueur arrive devant le bloc de la mine, déjà
+//     ouverte, et la première carte lui dit de cliquer (chaque écran avant le premier bloc
+//     faisait partir des joueurs) ;
 //   - à chaque étape, une petite carte dit quoi faire (en haut de l'écran, ou en bas si ce qu'il
 //     faut toucher est en haut). Le reste de l'écran s'assombrit ; ce qu'il faut toucher est
 //     entouré d'un anneau doré, avec une grosse flèche qui rebondit et une étiquette
@@ -19,7 +20,6 @@ import { t } from '../jeu/langue'
 import type { EtatJeu } from '../jeu/mineur'
 import { BLOCS_TUTORIEL, ETAPES_TUTORIEL, etapeTutoriel, type IdEtapeTutoriel } from '../jeu/tutoriel'
 import { sons } from '../sons'
-import { ETAPES_DU_JEU } from './etapesDuJeu'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 import { cheminPublic } from '../chemins'
@@ -548,48 +548,6 @@ function Pepite({ children }: { children: React.ReactNode }) {
   )
 }
 
-// La fenêtre du début : Pépite se présente, et le jeu en 4 étapes.
-function Bienvenue({ onSuivant, onPasser }: { onSuivant: () => void; onPasser: () => void }) {
-  return (
-    <Fenetre
-      titre={t('Bienvenue, mineur !')}
-      icone="⛏️"
-      couleur="jaune"
-      taille="petite"
-      devant
-      fermable={false}
-      onFermer={onSuivant}
-      classe="tuto-fenetre"
-      pied={
-        <>
-          <button className="btn btn-jaune btn-grand btn-large" onClick={onSuivant} autoFocus>
-            {t('C’est parti !')}
-          </button>
-          <button className="btn btn-blanc btn-petit" onClick={onPasser}>
-            {t('Passer le tutoriel')}
-          </button>
-        </>
-      }
-    >
-      <Pepite>{t('Moi, c’est Pépite ! Creusons ensemble jusqu’au cœur de diamant.')}</Pepite>
-      <ol className="tuto-etapes-jeu">
-        {ETAPES_DU_JEU.map((e, i) => (
-          <li key={e.titre} className="carte" style={{ animationDelay: `${150 + i * 110}ms` }}>
-            <span className="tuto-etape-numero">{i + 1}</span>
-            <span className="tuto-etape-icone" aria-hidden="true">
-              {e.icone}
-            </span>
-            <span className="tuto-etape-texte">
-              <strong>{t(e.titre)}</strong>
-              <span className="discret">{t(e.texte)}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    </Fenetre>
-  )
-}
-
 // La fenêtre de la fin : bravo, et la suite.
 function Felicitations({ onSuivant }: { onSuivant: () => void }) {
   return (
@@ -667,14 +625,8 @@ export function Tutoriel({ etat, ui, onSuivant, onPasser }: Props) {
     </Confirmation>
   )
 
-  if (etape === 'bonjour') {
-    return (
-      <>
-        <Bienvenue onSuivant={onSuivant} onPasser={() => setConfirmer(true)} />
-        {fenetrePasser}
-      </>
-    )
-  }
+  // (01/11) Plus de fenêtre de bienvenue : le bonjour se passe tout seul (voir src/jeu/tutoriel.ts).
+  if (etape === 'bonjour') return null
   if (etape === 'bravo') return <Felicitations onSuivant={onSuivant} />
 
   // Les étapes avec une action (sans le bonjour ni le bravo).

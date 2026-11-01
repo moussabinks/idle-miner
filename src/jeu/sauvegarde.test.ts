@@ -7,6 +7,10 @@ import { embaucher } from './employes'
 import { partieDeTest } from './partieDeTest'
 import { POSITION_MINE, railsMineMarche } from './village'
 import {
+  CLE_MONDES,
+  fusionnerSauvegardes,
+  partiePlusAvancee,
+  sourcePlusAvancee,
   ANCIENNE_CLE_SAUVEGARDE,
   NB_MONDES_MAX,
   charger,
@@ -440,5 +444,49 @@ describe('une partie de la version 29 (avant le saphir et le rubis)', () => {
     const actuelle = creerPartie(aleatoireAvecGraine(1))
     expect(convertirVersion29(actuelle)).toBe(actuelle)
     expect(convertirVersion29(null)).toBeNull()
+  })
+})
+
+// (01/11) Sur CrazyGames : le stockage du navigateur et le module Data du SDK, rassemblés.
+describe('fusionnerSauvegardes (le navigateur et le module Data de CrazyGames)', () => {
+  function stockageDe(valeurs: Record<string, string>): Stockage & { donnees: Map<string, string> } {
+    const donnees = new Map(Object.entries(valeurs))
+    return {
+      donnees,
+      getItem: (cle) => donnees.get(cle) ?? null,
+      setItem: (cle, valeur) => void donnees.set(cle, valeur),
+      removeItem: (cle) => void donnees.delete(cle),
+    }
+  }
+  const partie = (argentGagne: number, tempsDeJeu = 0) => JSON.stringify({ stats: { argentGagne, tempsDeJeu } })
+  const liste = (...ids: string[]) => JSON.stringify(ids.map((id) => ({ id, nom: id, couleur: 0, creeLe: 0, joueLe: 0 })))
+
+  it('recopie la partie du navigateur quand le module Data est vide (le SDK était en retard la veille)', () => {
+    const navigateur = stockageDe({ [CLE_MONDES]: liste('1'), [cleMonde('1')]: partie(500), 'idle-miner-monde-1-horodatage': '123', 'idle-miner-son': 'non' })
+    const data = stockageDe({})
+    const cles = [...navigateur.donnees.keys()]
+    expect(fusionnerSauvegardes(data, navigateur, cles)).toBe(3)
+    expect(data.getItem(cleMonde('1'))).toBe(partie(500))
+    expect(data.getItem('idle-miner-monde-1-horodatage')).toBe('123')
+    expect(data.getItem('idle-miner-son')).toBe('non')
+    expect(listerMondes(data).map((m) => m.id)).toEqual(['1'])
+  })
+
+  it('garde la partie la plus avancée, et les réglages déjà là', () => {
+    const navigateur = stockageDe({ [cleMonde('1')]: partie(100), 'idle-miner-son': 'non' })
+    const data = stockageDe({ [cleMonde('1')]: partie(900), 'idle-miner-son': 'oui' })
+    expect(fusionnerSauvegardes(data, navigateur, [...navigateur.donnees.keys()])).toBe(0)
+    expect(data.getItem(cleMonde('1'))).toBe(partie(900))
+    expect(data.getItem('idle-miner-son')).toBe('oui')
+    // à argent égal, le temps de jeu départage
+    expect(partiePlusAvancee(partie(100, 60), partie(100, 30))).toBe(true)
+    expect(partiePlusAvancee('abîmée', partie(0))).toBe(false)
+  })
+
+  it('sait si l’autre stockage a une partie plus avancée', () => {
+    const navigateur = stockageDe({ [cleMonde('1')]: partie(10) })
+    const data = stockageDe({ [cleMonde('1')]: partie(900) })
+    expect(sourcePlusAvancee(navigateur, data, [cleMonde('1')])).toBe(true)
+    expect(sourcePlusAvancee(data, navigateur, [cleMonde('1')])).toBe(false)
   })
 })

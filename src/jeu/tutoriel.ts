@@ -1,8 +1,10 @@
 // Le tutoriel (27/10) : quand on commence un nouveau monde, Pépite (une taupe mineuse) montre
 // les bases, étape par étape, avec une flèche sur ce qu'il faut toucher. On ne passe à l'étape
-// suivante qu'en faisant l'action demandée (sauf le bonjour et le bravo, avec un bouton).
+// suivante qu'en faisant l'action demandée (sauf le bravo, avec un bouton).
 // (25/10) Plus court, et jusqu'au moment fort : le premier mineur qui creuse tout seul.
-//   1. bonjour ;
+//   1. bonjour (01/11 : plus de fenêtre, passé tout seul : le joueur arrive devant le bloc de
+//      la mine, déjà ouverte, et la carte de Pépite lui dit de cliquer ; seules les vieilles
+//      parties arrêtées au bonjour passent encore par cette étape, sans la voir) ;
 //   2. casser 10 blocs à la mine (tout va dans le coffre) ;
 //   3. vendre le coffre (depuis la mine, d'un clic) ;
 //   4. construire le Personnel ;
@@ -22,7 +24,7 @@ export const ETAPES_TUTORIEL: IdEtapeTutoriel[] = ['bonjour', 'creuser', 'vendre
 export const BLOCS_TUTORIEL = 10
 
 // Les étapes qui se passent avec un bouton (pas d'action à faire dans le jeu).
-const AVEC_BOUTON: IdEtapeTutoriel[] = ['bonjour', 'bravo']
+const AVEC_BOUTON: IdEtapeTutoriel[] = ['bravo']
 
 // L'étape en cours (null : pas de tutoriel, ou il est fini). Une vieille partie n'a pas le
 // champ : pas de tutoriel pour elle.
@@ -38,6 +40,8 @@ export function avecBouton(etape: IdEtapeTutoriel): boolean {
 // L'action de cette étape est-elle faite ?
 export function etapeFaite(etat: EtatJeu, etape: IdEtapeTutoriel): boolean {
   switch (etape) {
+    case 'bonjour':
+      return true // (01/11) plus de fenêtre de bienvenue : on passe directement à « creuser »
     case 'creuser':
       return etat.stats.blocsCasses >= BLOCS_TUTORIEL
     case 'vendre':
@@ -61,7 +65,7 @@ export function avancerTutoriel(etat: EtatJeu): string[] {
   return []
 }
 
-// Le bouton d'une étape (« C'est parti ! », « Terminer »).
+// Le bouton d'une étape (« À moi de jouer ! », au bravo).
 export function etapeSuivante(etat: EtatJeu): string[] {
   const etape = etapeTutoriel(etat)
   if (etape === null || !avecBouton(etape)) return []

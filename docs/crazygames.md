@@ -17,12 +17,14 @@ Le même code fabrique deux versions du jeu :
 | Mondes | jusqu'à 5 | **un seul** (`AVEC_PLUSIEURS_MONDES`) : pas de liste de mondes ; dans ⚙️, « Menu principal » au lieu de « Changer de monde » |
 | Menu principal | classement à droite, numéro de version en bas | un **très gros bouton « Jouer »** (ou « Commencer ») qui respire sans dépasser de sa carte, en premier, avec dessous 3 cases « Creuse, Embauche, Automatise » et un petit « Recommencer à zéro » (joueur qui revient), bandeau aligné dessus, pas de numéro de version ; (27/10) dans un cadre bas (moins de 760 px), les 4 étapes en petit pour que tout tienne |
 
-Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_COMPTES`, `AVEC_PACKS`, `AVEC_PLUSIEURS_MONDES`, `AVEC_INSTALLATION`). **Ne pas copier le jeu** dans un autre dépôt : une modification propre à CrazyGames s'écrit dans le même code, sous `if (PORTAIL === 'crazygames')`.
+Tout ce qui diffère passe par `src/portail.ts` (`PORTAIL`, `AVEC_ACCUEIL`, `AVEC_COMPTES`, `AVEC_PACKS`, `AVEC_PLUSIEURS_MONDES`, `AVEC_INSTALLATION`). **Ne pas copier le jeu** dans un autre dépôt : une modification propre à CrazyGames s'écrit dans le même code, sous `if (PORTAIL === 'crazygames')`.
 
 ## Comment ça marche
 
 - `npm run build:crazygames` lance `vite build --mode crazygames` : Vite lit `.env.crazygames` (`VITE_PORTAIL=crazygames`), écrit dans `dist-crazygames/` et retire les fichiers de l'application à installer (`vite.config.ts`, `sansApplication`). Puis `outils/crazygames/zipper.mjs` fait le ZIP, avec `index.html` à la racine.
 - Au démarrage (`src/main.tsx`), le jeu attend le SDK (6 s au plus), qui prépare la sauvegarde du joueur. Si le module Data marche, `stockage` (`src/stockage.ts`) est branché dessus (`brancherStockage`), puis le jeu est chargé. Sans SDK (bloqueur de pubs, hors de CrazyGames), le jeu démarre quand même, avec le stockage du navigateur.
+- (01/11) **La partie n'est jamais perdue entre les deux stockages** : avant, si le SDK arrivait après les 6 s, la partie du jour restait dans le navigateur, et le lendemain (SDK rapide) le jeu lisait le module Data, vide : le joueur repartait de zéro (une cause possible de la rétention J1 très basse). Maintenant, en branchant le module Data, on y recopie les parties du navigateur **plus avancées** (`fusionnerSauvegardes` dans `src/jeu/sauvegarde.ts` : l'argent gagné en tout, puis le temps de jeu), puis on écrit **dans les deux** (`stockageDouble` dans `src/stockage.ts`) : le navigateur garde toujours une copie à jour. Un SDK en retard est branché aussi, sauf si le module Data a une partie plus avancée (celle d'un autre appareil) : elle est gardée pour la prochaine visite.
+- (01/11) **Pas d'écran d'accueil** (`AVEC_ACCUEIL`) : la moitié des joueurs partaient avant la première minute. Le joueur arrive directement dans sa partie (créée la première fois), devant le bloc de la mine. La langue et « Recommencer à zéro » sont dans les réglages ⚙️ (sans « Menu principal »).
 
 ## Publier (à faire par le propriétaire)
 
