@@ -70,7 +70,7 @@ Dépendances de production : `react`, `react-dom`, `@supabase/supabase-js`, `@fo
 | `batiments.ts` | Les actions du village : construire (`batimentDebloque`, `construireBatiment`), déplacer, retourner, poser / déplacer / enlever des rails et des chemins (26/10 : ils vont dans le stock, `stockSol`), `raisonSolImpossible` |
 | `reorganiser.ts` | (26/10) Réorganiser le village façon Clash of Clans : tout ranger dans une barre, reposer, ranger, terminer, annuler ; le jeu est en pause pendant ce temps |
 | `niveaux.ts` | Le niveau du joueur (XP sur les « records » des compteurs, `mettreAJourXp`, 1 gemme par niveau gagné) et **les paliers** (25/10 : `palierRequis`, `debloque`, `verrou` « 🕳️ Mine N », `verrouNiveau` « ⭐ N »), ce qu'apporte un niveau (`deblocagesDuNiveau`, `prochainDeblocage`). Voir [niveaux.md](niveaux.md) |
-| `tutoriel.ts` | Les étapes du tutoriel (25/10 : bonjour, casser 10 blocs, vendre le coffre, construire le Personnel, embaucher le premier mineur, bravo) : `etapeTutoriel`, `etapeFaite`, `avancerTutoriel` |
+| `tutoriel.ts` | Les étapes du tutoriel (25/10 : bonjour — 01/11 : passé tout seul, sans fenêtre —, casser 10 blocs, vendre le coffre, construire le Personnel, embaucher le premier mineur, bravo) : `etapeTutoriel`, `etapeFaite`, `avancerTutoriel` |
 | `missions.ts` | `missions(etat, avant)` : une à trois missions (urgences, premiers pas, prochain bâtiment, automatisation, améliorations les plus proches ; 25/10 : plus de « Niveau X ») ; une mission affichée garde sa place |
 | `objectifs.ts` | Les achats possibles (`achatsPossibles`) et les bâtiments où une amélioration est achetable |
 | `notifications.ts` | Les bulles au-dessus des bâtiments (salaires, rails coupés, pousseurs sans trajet, chariot d'un wagonnet trop petit, chariot plein, plus de charbon, plus de redstone, pioche cassée, coffre plein, réserve d'un atelier pleine, pas de joaillier, nouveauté, achetable pendant le tutoriel) |
@@ -264,7 +264,7 @@ La sauvegarde se fait au plus une fois par seconde, et en quittant la page (`pag
 
 ### 4.5 Les écrans
 
-- `App` affiche l'accueil tant qu'aucun monde n'est choisi, puis `<Jeu key={monde.id}>`. Le hook `useCompte` vit dans `App` (hors portail).
+- `App` affiche l'accueil tant qu'aucun monde n'est choisi, puis `<Jeu key={monde.id}>`. (01/11) Sur CrazyGames (`AVEC_ACCUEIL` faux), pas d'accueil : `mondeDirect()` prend le dernier monde, ou en crée un. Le hook `useCompte` vit dans `App` (hors portail).
 - `Jeu` : le village vu du ciel, le bandeau, les tâches, les gros boutons ronds du bas, le panneau du bâtiment ouvert (une `Fenetre`), et les fenêtres du haut. Quand une fenêtre est ouverte, la fête du niveau attend, et le portail est prévenu (`jeuEnPause`).
 
 ## 5. L'aléatoire injectable

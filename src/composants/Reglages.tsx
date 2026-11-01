@@ -1,6 +1,7 @@
 // Les réglages (25/10) : une fenêtre (le bouton ⚙️ en haut à droite). Le monde en cours, le son,
 // la musique, la langue, l'aide, changer de monde, et recommencer à zéro (avec confirmation).
-// (27/10) Sur CrazyGames (un seul monde) : pas de nom de monde, et « Menu principal ».
+// (27/10) Sur CrazyGames (un seul monde) : pas de nom de monde. (01/11) Ni « Menu principal » :
+// il n'y a plus d'accueil, la langue et « Recommencer à zéro » sont ici.
 // (28/10) Le plein écran (📲), quand le navigateur sait le faire (voir src/pleinEcran.ts).
 
 import { useEffect, useState } from 'react'
@@ -11,7 +12,7 @@ import { basculerSon, sonActif } from '../sons'
 import { Confirmation } from './Confirmation'
 import { Fenetre } from './Fenetre'
 import { Drapeau } from './Drapeau'
-import { AVEC_PLUSIEURS_MONDES } from '../portail'
+import { AVEC_ACCUEIL, AVEC_PLUSIEURS_MONDES } from '../portail'
 import { basculerPleinEcran, estEnPleinEcran, pleinEcranPossible, surChangementPleinEcran } from '../pleinEcran'
 
 type Props = {
@@ -66,9 +67,12 @@ export function Reglages({ nomMonde, onFermer, onChangerDeMonde, onRecommencer, 
         <button className="btn btn-bleu btn-large" onClick={onAide}>
           ❔ {t('Comment jouer')}
         </button>
-        <button className="btn btn-bleu btn-large" onClick={onChangerDeMonde}>
-          {AVEC_PLUSIEURS_MONDES ? `🌍 ${t('Changer de monde')}` : `🏡 ${t('Menu principal')}`}
-        </button>
+        {/* (01/11) Sans accueil (CrazyGames), pas de « Menu principal » : on reste dans la partie. */}
+        {AVEC_ACCUEIL && (
+          <button className="btn btn-bleu btn-large" onClick={onChangerDeMonde}>
+            {AVEC_PLUSIEURS_MONDES ? `🌍 ${t('Changer de monde')}` : `🏡 ${t('Menu principal')}`}
+          </button>
+        )}
         <button className="btn btn-rose btn-large" onClick={() => setConfirmer(true)}>
           🔄 {t('Recommencer à zéro')}
         </button>

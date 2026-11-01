@@ -33,7 +33,7 @@ Tout le texte du jeu tutoie le joueur, en français ou en anglais (voir § 15). 
 
 | Écran | Quand | Composant |
 |---|---|---|
-| **Accueil** | au lancement, et après « 🌍 Changer de monde » dans les réglages | `Accueil` |
+| **Accueil** | au lancement, et après « 🌍 Changer de monde » dans les réglages (01/11 : **jamais sur CrazyGames**, `AVEC_ACCUEIL` : on entre directement dans la partie) | `Accueil` |
 | **Jeu** | après avoir choisi (ou créé) un monde | `Jeu` (dans `App.tsx`) |
 
 - Le compte (`useCompte`) reste ouvert pendant la partie. En quittant le jeu, la partie part tout de suite en ligne (`envoyerMaintenant`).
@@ -293,14 +293,14 @@ Les briques CSS (`src/styles/theme.css`) : `.btn` (§ 14), `.fenetre`, `.carte` 
 | **📊 Statistiques** (`Statistiques.tsx`, bleue, grande) | 📊 | 4 tuiles (argent gagné, blocs cassés, mine, temps de jeu) ; « D'où vient ton argent » (tes ventes, wagonnet, foreuse) ; tes blocs cassés à la main ; six petits chiffres |
 | **🏅 Succès** (`PanneauSucces`, jaune) | 🏅 | la jauge *n* / max, puis une tuile par succès (🔒 tant qu'il n'est pas obtenu) |
 | **💰 Mon bilan** (`FenetreBilan.tsx`, verte) | la case 💵 | le solde par minute avec une mascotte (🤑 Rentable !, ⭐, ⚠️, 💤), la part des gains qui part en salaires, deux colonnes (ce que tu gagnes, ce que tu paies ; 26/10 : avec 🏭 La fonderie, 💍 La joaillerie et 💍 Salaires des joailliers une fois les ateliers construits) et un conseil |
-| **⚙️ Réglages** (`Reglages.tsx`, bleue, petite) | ⚙️ | 🌍 le monde ; **🔊 Son : oui/non**, **🎵 Musique : oui/non** (blancs) ; **Français / English** (la langue choisie en jaune) ; **❔ Comment jouer** et **🌍 Changer de monde** (bleus) ; **🔄 Recommencer à zéro** (rose, avec confirmation « Tout effacer ») |
+| **⚙️ Réglages** (`Reglages.tsx`, bleue, petite) | ⚙️ | 🌍 le monde ; **🔊 Son : oui/non**, **🎵 Musique : oui/non** (blancs) ; **Français / English** (la langue choisie en jaune) ; **❔ Comment jouer** et **🌍 Changer de monde** (bleus ; 01/11 : absent sur CrazyGames, où il n'y a plus d'accueil) ; **🔄 Recommencer à zéro** (rose, avec confirmation « Tout effacer ») |
 | **❔ Comment jouer** (`Aide.tsx`, bleue) | Réglages | les 4 étapes du jeu, et les gestes de la carte et du clavier |
 | **☀️ Bon retour, mineur !** (`FenetreAbsence.tsx`, jaune) | le retour sur un monde | ce que l'absence a fait (mineurs, mine, foreuse), l'argent ligne par ligne (wagonnets, coffre et réserve des ateliers vendus au retour, autres ventes, − salaires), le **bénéfice net** en grand, les salaires en retard, la durée couverte (manager) ; **📺 Doubler · +… $** (violet, une pub) et **Continuer** (jaune) |
 | **⭐ Niveau supérieur !** (`FeteNiveau.tsx`, jaune, petite) | un niveau du joueur gagné | elle attend que les autres fenêtres soient fermées ; l'étoile et le chiffre qui monte, des confettis, « 💎 Gemmes gagnées », chaque chose débloquée (« Nouveau ! »), ce qui attend au niveau suivant ; **🎉 Génial !** (ne se ferme pas pendant la première seconde) |
 
 **Le tutoriel** (`Tutoriel.tsx`) : Pépite la taupe guide le joueur jusqu'au premier mineur embauché.
-- Au début, la fenêtre « Bienvenue, mineur ! » : les 4 étapes, **C'est parti !** (jaune) et **Passer le tutoriel** (blanc, avec confirmation).
-- Puis, à chaque étape, une petite carte (Pépite, des points de progression, la consigne, ✖ pour passer) en haut de l'écran, ou en bas si la cible est en haut. Le reste s'assombrit ; la cible est entourée d'un anneau doré, avec une flèche qui rebondit (« Touche ici ! », « Clique vite ! », « Vends ! »…). Étapes : ouvrir la mine, casser des blocs, tout vendre, construire le Personnel (Bâtiments → Personnel → toucher la carte → Construire ici), l'ouvrir, embaucher un mineur. Chaque étape réussie fait jaillir « ✔ Bravo ! ».
+- (01/11) **Plus de fenêtre de bienvenue** : un nouveau monde s'ouvre **directement sur la fenêtre de la mine**, et la première carte dit de casser 10 blocs (chaque écran avant le premier bloc faisait partir des joueurs). Une vieille partie arrêtée au bonjour passe toute seule à « creuser ».
+- À chaque étape, une petite carte (Pépite, des points de progression, la consigne, ✖ pour passer) en haut de l'écran, ou en bas si la cible est en haut. Le reste s'assombrit ; la cible est entourée d'un anneau doré, avec une flèche qui rebondit (« Touche ici ! », « Clique vite ! », « Vends ! »…). Étapes : ouvrir la mine, casser des blocs, tout vendre, construire le Personnel (Bâtiments → Personnel → toucher la carte → Construire ici), l'ouvrir, embaucher un mineur. Chaque étape réussie fait jaillir « ✔ Bravo ! ».
 - À la fin, « Bravo, ta mine tourne ! » et **À moi de jouer !** ; la liste des tâches prend le relais.
 
 ---

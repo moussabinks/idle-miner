@@ -502,10 +502,7 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   'Embauche !': 'Contrate!',
   'Ouvre le Personnel': 'Abra a Equipe',
   'Touche le Personnel, sur la carte.': 'Toque na Equipe, no mapa.',
-  'Bienvenue, mineur !': 'Bem-vindo, minerador!',
-  'C’est parti !': 'Bora!',
   'Passer le tutoriel': 'Pular o tutorial',
-  'Moi, c’est Pépite ! Creusons ensemble jusqu’au cœur de diamant.': 'Eu sou a Pepita! Vamos cavar juntos até o Coração de Diamante.',
   'Bravo, ta mine tourne !': 'Muito bem, sua mina está rodando!',
   'À moi de jouer !': 'Minha vez de jogar!',
   'Ton mineur creuse pour toi, même quand tu ne joues pas. Maintenant, tu es libre !': 'Seu minerador cava por você, mesmo quando você não está jogando. Agora você está livre!',
@@ -1111,4 +1108,7 @@ export const TRADUCTIONS_PT: Record<string, string> = {
   "Fer : {n}": "Ferro: {n}",
   "🔁 Pas de petit carré : 4 rails ne peuvent pas former un carré de 2 × 2.": "🔁 Nada de quadradinho: 4 trilhos não podem formar um quadrado de 2 × 2.",
   "Nouveau serveur ! Recrée ton compte (même pseudo) : ta partie est gardée.": "Novo servidor! Crie sua conta de novo (mesmo nome): seu jogo está salvo.",
+  "Demain !": "Amanhã!",
+  "Demain, jour {n} :": "Amanhã, dia {n}:",
+  "dans {duree}": "em {duree}",
 }

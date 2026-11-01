@@ -308,7 +308,7 @@ export function creerPartie(aleatoire: Aleatoire): EtatJeu {
     prochainBloc: tirerBloc(1, aleatoire),
     clics: 0,
     progressionMine: 0,
-    tutoriel: 0, // un nouveau monde commence par le tutoriel
+    tutoriel: 1, // un nouveau monde commence par le tutoriel, directement à « creuser » (01/11 : plus de bonjour)
     pioches: { 0: 0 }, // la pioche en pierre est offerte
     niveauPioche: 0,
     meilleure: 0,

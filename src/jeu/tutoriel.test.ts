@@ -13,14 +13,10 @@ describe('le tutoriel (27/10, plus court le 25/10)', () => {
   it('un nouveau monde le suit étape par étape, en faisant les actions', () => {
     const hasard = aleatoireAvecGraine(1)
     const etat = creerPartie(hasard)
-    expect(etapeTutoriel(etat)).toBe('bonjour')
+    // (01/11) plus de fenêtre de bienvenue : on commence directement à casser des blocs
+    expect(etapeTutoriel(etat)).toBe('creuser')
     // (25/10) de l'argent de poche au départ : de quoi poser le Personnel et embaucher
     expect(etat.argent).toBe(80)
-    // Sans le bouton, on ne passe pas le bonjour.
-    avancerTutoriel(etat)
-    expect(etapeTutoriel(etat)).toBe('bonjour')
-    etapeSuivante(etat)
-    expect(etapeTutoriel(etat)).toBe('creuser')
     for (let i = 0; i < 10; i++) cliquerMine(etat, hasard)
     avancerTutoriel(etat)
     expect(etapeTutoriel(etat)).toBe('vendre')
@@ -36,6 +32,14 @@ describe('le tutoriel (27/10, plus court le 25/10)', () => {
     expect(etapeTutoriel(etat)).toBe('bravo')
     etapeSuivante(etat)
     expect(etapeTutoriel(etat)).toBeNull()
+  })
+
+  it('(01/11) une vieille partie arrêtée au bonjour passe toute seule à « creuser »', () => {
+    const etat = creerPartie(aleatoireAvecGraine(3))
+    etat.tutoriel = 0
+    expect(etapeTutoriel(etat)).toBe('bonjour')
+    avancerTutoriel(etat)
+    expect(etapeTutoriel(etat)).toBe('creuser')
   })
 
   it('on peut le passer, et les vieilles parties n’en ont pas', () => {

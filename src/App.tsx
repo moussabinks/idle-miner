@@ -68,15 +68,19 @@ import {
 import { annulerReorganisation, batimentsRanges, commencerReorganisation, enReorganisation, peutTerminerReorganisation, rangerBatiment, reposerBatiment, terminerReorganisation } from './jeu/reorganiser'
 import { DECOUVERTES, decouvertesAMontrer, marquerDecouvert } from './jeu/decouvertes'
 import { BATIMENTS, COUT_CHEMIN, COUT_RAIL, DECORATIONS, TAILLE_GRILLE, type IdBatiment, type IdDecoration, type IdLiaison } from './jeu/donnees'
-import { etatQuotidien, jourDe } from './jeu/gemmes'
+import { etatQuotidien, jourDe, secondesAvantDemain } from './jeu/gemmes'
+import { heuresMinutes } from './nombres'
+import { useMaintenant } from './useMaintenant'
 import { nombre, t, type Langue } from './jeu/langue'
 import { notificationsBatiments } from './jeu/notifications'
-import type { InfoMonde } from './jeu/sauvegarde'
+import { creerMonde, listerMondes, type InfoMonde } from './jeu/sauvegarde'
+import { aleatoireNavigateur } from './jeu/aleatoire'
+import { stockage } from './stockage'
 import { SUCCES } from './jeu/succes'
 import { MARGE_CLIC_BATIMENT, batimentProcheDe, batimentPose, caseAccesProche, cleCase, empriseBatiment, empriseLibre, type Case, type Occupant } from './jeu/village'
-import { capaciteCoffre, coffrePlein, disponible, nbDansCoffre, type EtatJeu } from './jeu/mineur'
+import { capaciteCoffre, coffrePlein, creerPartie, disponible, nbDansCoffre, type EtatJeu } from './jeu/mineur'
 import { joueurPousse, liaisonsSurLaCase, reglerTrajet, trajetsAProposer, type ReglageTrajet } from './jeu/wagonnet'
-import { grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
+import { AVEC_ACCUEIL, grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
@@ -404,7 +408,11 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   }
 
   // --- Les bâtiments : on les touche, leur fenêtre s'ouvre tout de suite (25/10) ---------------
-  const [batimentOuvert, setBatimentOuvert] = useState<IdBatiment | null>(null)
+  // (01/11) Un nouveau joueur arrive devant le bloc de la mine, déjà ouverte : son premier clic
+  // casse un bloc (avant : une fenêtre de bienvenue, puis « Ouvre ta mine »).
+  const [batimentOuvert, setBatimentOuvert] = useState<IdBatiment | null>(() =>
+    (etapeTutoriel(etat) === 'creuser' || etapeTutoriel(etat) === 'bonjour') && etat.stats.blocsCasses === 0 ? 'puits' : null,
+  )
   const batimentActif = !edition && batimentOuvert && batimentPose(etat.village, batimentOuvert) ? batimentOuvert : null
 
   const ouvrirBatiment = useCallback(
@@ -598,8 +606,10 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   })
 
   // --- Le cadeau du jour : il s'ouvre tout seul une fois, au retour, après le tutoriel ----------
-  // (le jour est lu au début de la partie : passé minuit, il faut rouvrir le monde)
-  const [aujourdhui] = useState(() => jourDe(new Date()))
+  // (01/11 : le jour est relu à chaque image, avant au début de la partie : sans accueil, sur
+  // CrazyGames, passé minuit, le cadeau n'aurait jamais été proposé sans recharger la page)
+  const maintenant = useMaintenant()
+  const aujourdhui = jourDe(maintenant)
   const cadeauDisponible = etatQuotidien(etat, aujourdhui).disponible
   const [cadeauPropose, setCadeauPropose] = useState(false)
   if (!cadeauPropose && cadeauDisponible && etapeTuto === null && !resumeAbsence) {
@@ -934,6 +944,8 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
                 {etapeTuto === null && (
                   <button className={`btn btn-rond btn-jaune ${cadeauDisponible ? 'btn-attention' : ''}`} onClick={() => setFenetreHaut('quotidien')} title={t('Cadeau du jour')}>
                     🎁{cadeauDisponible && <span className="pastille">1</span>}
+                    {/* (01/11) Cadeau pris : dans combien de temps le prochain (pour donner envie de revenir). */}
+                    {!cadeauDisponible && <span className="minuteur-cadeau">{heuresMinutes(secondesAvantDemain(maintenant))}</span>}
                   </button>
                 )}
                 <button className="btn btn-rond btn-blanc" onClick={() => setFenetreHaut('stats')} title={t('Statistiques')}>
@@ -1072,9 +1084,17 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
   )
 }
 
+// (01/11) Le monde où l'on entre sans passer par l'accueil : le dernier joué, ou un tout nouveau.
+function mondeDirect(): InfoMonde | null {
+  const dernier = listerMondes(stockage)[0]
+  if (dernier) return dernier
+  return creerMonde(stockage, t('Monde {n}', { n: 1 }), creerPartie(aleatoireNavigateur))
+}
+
 // L'application : l'écran d'accueil (choix du monde et compte), puis le jeu.
 function App() {
-  const [monde, setMonde] = useState<InfoMonde | null>(null)
+  // (01/11) Sans accueil (CrazyGames) : on entre tout de suite dans la partie (créée la 1re fois).
+  const [monde, setMonde] = useState<InfoMonde | null>(() => (AVEC_ACCUEIL ? null : mondeDirect()))
   // (26/10) Le village d'un joueur du classement qu'on visite (depuis l'accueil).
   const [visite, setVisite] = useState<{ pseudo: string; partie: EtatJeu } | null>(null)
   // (25/10) Changer de langue redessine tout le jeu.

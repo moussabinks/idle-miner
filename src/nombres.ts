@@ -15,3 +15,10 @@ export function minutesSecondes(secondes: number): string {
   const s = Math.max(0, Math.ceil(secondes))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
+
+// (01/11) Une durée en heures, courte : « 14 h 05 » (ou « 12:30 » sous une heure).
+export function heuresMinutes(secondes: number): string {
+  const s = Math.max(0, Math.ceil(secondes))
+  if (s < 3600) return minutesSecondes(s)
+  return `${Math.floor(s / 3600)} h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}`
+}

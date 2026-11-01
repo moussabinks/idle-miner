@@ -172,6 +172,86 @@ export function importerTout(stockage: Stockage, copie: SauvegardeComplete): voi
   }
 }
 
+// ---------------------------------------------------------------------------
+// (01/11) Deux endroits de sauvegarde : garder la partie la plus avancée
+// ---------------------------------------------------------------------------
+// Sur CrazyGames, la partie est gardée par leur SDK (le module « Data »). Mais si le SDK met trop
+// longtemps à démarrer, le jeu commence sans lui, dans le stockage du navigateur. Le lendemain,
+// avec un SDK rapide, le jeu lisait le module Data, n'y trouvait rien, et le joueur repartait de
+// zéro sans comprendre. Ici, on rassemble les deux : chaque monde garde sa partie la plus avancée.
+
+// Le texte d'une partie est-il plus avancé que l'autre ? (l'argent gagné en tout, puis le temps
+// de jeu ; une partie abîmée ou absente compte comme rien)
+export function partiePlusAvancee(texte: string | null, autre: string | null): boolean {
+  const mesure = (t: string | null): [number, number] => {
+    if (t === null) return [-1, -1]
+    try {
+      const stats = (JSON.parse(t) as { stats?: { argentGagne?: unknown; tempsDeJeu?: unknown } }).stats
+      const argent = typeof stats?.argentGagne === 'number' ? stats.argentGagne : 0
+      const temps = typeof stats?.tempsDeJeu === 'number' ? stats.tempsDeJeu : 0
+      return [argent, temps]
+    } catch {
+      return [-1, -1]
+    }
+  }
+  const [a1, t1] = mesure(texte)
+  const [a2, t2] = mesure(autre)
+  return a1 > a2 || (a1 === a2 && t1 > t2)
+}
+
+// Est-ce la clé de la partie d'un monde (et pas son horodatage) ? Renvoie son id, ou null.
+function idDeCleMonde(cle: string): string | null {
+  const trouve = /^idle-miner-monde-(.+)$/.exec(cle)
+  if (!trouve || cle.endsWith('-horodatage')) return null
+  return trouve[1]
+}
+
+// « source » a-t-elle une partie plus avancée que « cible » pour l'un des mondes ?
+export function sourcePlusAvancee(cible: Stockage, source: Stockage, cles: string[]): boolean {
+  try {
+    return cles.some((cle) => idDeCleMonde(cle) !== null && partiePlusAvancee(source.getItem(cle), cible.getItem(cle)))
+  } catch {
+    return false
+  }
+}
+
+// Recopie dans « cible » ce que « source » a de mieux (« cles » : les clés de la source) :
+//   - la partie d'un monde (et son horodatage), si celle de la source est plus avancée ;
+//   - la liste des mondes : les deux réunies ;
+//   - le reste (les réglages), seulement s'il manque dans la cible.
+// Renvoie le nombre de clés recopiées.
+export function fusionnerSauvegardes(cible: Stockage, source: Stockage, cles: string[]): number {
+  let copiees = 0
+  try {
+    for (const cle of cles) {
+      const texte = source.getItem(cle)
+      if (texte === null || cle.endsWith('-horodatage')) continue
+      const id = idDeCleMonde(cle)
+      if (cle === CLE_MONDES) {
+        const dansCible = lireListe(cible) ?? []
+        const ajouts = (lireListe(source) ?? []).filter((m) => !dansCible.some((c) => c.id === m.id))
+        if (ajouts.length > 0) {
+          ecrireListe(cible, [...dansCible, ...ajouts])
+          copiees++
+        }
+      } else if (id !== null) {
+        if (partiePlusAvancee(texte, cible.getItem(cle))) {
+          cible.setItem(cle, texte)
+          const horodatage = source.getItem(cleHorodatage(id))
+          if (horodatage !== null) cible.setItem(cleHorodatage(id), horodatage)
+          copiees++
+        }
+      } else if (cible.getItem(cle) === null) {
+        cible.setItem(cle, texte)
+        copiees++
+      }
+    }
+  } catch {
+    // Stockage plein ou interdit : on garde ce qu'on a pu recopier.
+  }
+  return copiees
+}
+
 // Les mondes rangés dans une copie (liste vide si elle n'en a pas ou si elle est abîmée).
 export function mondesDeLaCopie(copie: SauvegardeComplete): InfoMonde[] {
   try {
