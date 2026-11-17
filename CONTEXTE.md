@@ -114,6 +114,7 @@ L'historique détaillé de l'ancien jeu (mine en coupe, profondeur, prestige, en
 
 ## 7. Journal
 
+- **2026-11-17** : **version Poki** (après le refus de CrazyGames) : `npm run build:poki` fabrique `mega-digger-poki.zip` (voir [docs/poki.md](docs/poki.md)). Le SDK de Poki (gameplayStart au premier geste, gameplayStop pendant les publicités, rewardedBreak), aucune interface d'achat, pas de fausse publicité sans SDK. Selon leurs règles : un clap de cinéma 🎬 dessiné sur chaque bouton de publicité (partout), « Continuer » d'abord et aussi large que « Doubler » au retour d'absence, pas de bouton de pub qui clignote, les flèches et la molette ne font plus défiler la page. Reste au propriétaire : l'Inspector de Poki, les miniatures, l'envoi.
 - **2026-10-15** : choix de la stack, installation des outils sur le Mac, création du squelette et du dépôt GitHub privé. Ajout du collaborateur `N04H2004`.
 - **2026-10-16** : ajout de ce fichier `CONTEXTE.md` au dépôt.
 - **2026-10-16** : première version complète du jeu (logique, bot d'équilibrage, interface React, sauvegarde).

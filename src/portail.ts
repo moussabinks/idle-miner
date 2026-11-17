@@ -15,11 +15,20 @@
 //
 // ⚠️ Les noms des fonctions du SDK (window.CrazyGames.SDK...) sont ceux de la version 3 de leur
 // documentation (docs.crazygames.com) : à revérifier au moment de publier.
+//
+// (17/11) Et la version Poki :   npm run build:poki   (VITE_PORTAIL=poki, voir docs/poki.md).
+// Les mêmes retraits que pour CrazyGames (pas de comptes, de packs, d'application, d'accueil), et :
+//   - le SDK de Poki (v2) : gameLoadingFinished une fois le jeu affiché, gameplayStart au premier
+//     geste du joueur (pas au chargement), gameplayStop pendant une publicité ; rewardedBreak pour
+//     les publicités récompensées ; pas de sauvegarde en ligne (le stockage du navigateur) ;
+//   - sans SDK (bloqueur de pubs) : ni fausse publicité, ni récompense, ni message (Poki s'en charge) ;
+//   - aucune interface d'achat de gemmes, et « Continuer » avant « Doubler » au retour d'absence.
 
 import { CLE_MONDES, cleMonde, fusionnerSauvegardes, mondesDeLaCopie, sourcePlusAvancee } from './jeu/sauvegarde'
 import { brancherStockage, clesDuJeu, stockageDouble, stockageDuNavigateur } from './stockage'
 
-export const PORTAIL: 'crazygames' | null = import.meta.env.VITE_PORTAIL === 'crazygames' ? 'crazygames' : null
+export const PORTAIL: 'crazygames' | 'poki' | null =
+  import.meta.env.VITE_PORTAIL === 'crazygames' ? 'crazygames' : import.meta.env.VITE_PORTAIL === 'poki' ? 'poki' : null
 
 // Les comptes et le classement en ligne (Supabase) : seulement hors portail.
 export const AVEC_COMPTES = PORTAIL === null
@@ -50,13 +59,25 @@ type SdkCrazyGames = {
   game: { gameplayStart: () => void; gameplayStop: () => void; happytime: () => void; loadingStart?: () => void; loadingStop?: () => void }
 }
 
+// (17/11) Le strict nécessaire du SDK de Poki (v2, developers.poki.com, « PokiSDK: HTML5 »).
+type SdkPoki = {
+  init: () => Promise<void>
+  gameLoadingFinished: () => void
+  gameplayStart: () => void
+  gameplayStop: () => void
+  // La promesse dit si la publicité a été vue jusqu'au bout (sinon : pas de récompense).
+  rewardedBreak: (quandElleCommence?: () => void) => Promise<boolean>
+}
+
 declare global {
   interface Window {
     CrazyGames?: { SDK: SdkCrazyGames }
+    PokiSDK?: SdkPoki
   }
 }
 
 let sdk: SdkCrazyGames | null = null
+let poki: SdkPoki | null = null
 
 // Au plus tant de temps d'attente du SDK au démarrage (ms) : au-delà, le jeu démarre sans lui.
 const ATTENTE_SDK_MAX = 6000
@@ -69,6 +90,10 @@ const ATTENTE_SDK_MAX = 6000
 let attenteFinie = false
 
 export async function initialiserPortail(): Promise<void> {
+  if (PORTAIL === 'poki') {
+    await initialiserPoki()
+    return
+  }
   if (PORTAIL !== 'crazygames') return
   const tropLong = new Promise<void>((_, reject) => setTimeout(() => reject(new Error('SDK trop long')), ATTENTE_SDK_MAX))
   try {
@@ -138,13 +163,114 @@ function moduleDataMarche(data: NonNullable<SdkCrazyGames['data']>): boolean {
   }
 }
 
+// --- (17/11) Poki ---
+
+// Le joueur a-t-il déjà touché le jeu ? Poki veut le premier gameplayStart au premier geste, pas
+// au chargement.
+let premierGeste = false
+// Ce qu'on a dit à Poki en dernier : il refuse deux « start » ou deux « stop » de suite.
+let ditAPoki: 'jeu' | 'pause' = 'pause'
+
+async function initialiserPoki(): Promise<void> {
+  const premier = () => {
+    premierGeste = true
+    window.removeEventListener('pointerdown', premier, true)
+    window.removeEventListener('keydown', premier, true)
+    direAPoki()
+  }
+  window.addEventListener('pointerdown', premier, true)
+  window.addEventListener('keydown', premier, true)
+  empecherDefilementDeLaPage()
+  const tropLong = new Promise<void>((_, reject) => setTimeout(() => reject(new Error('SDK trop long')), ATTENTE_SDK_MAX))
+  try {
+    await Promise.race([chargerPoki(), tropLong])
+  } catch (erreur) {
+    // Sans SDK (bloqueur de pubs), le jeu marche quand même, sans publicités.
+    console.warn('[Mega Digger] SDK Poki pas prêt au démarrage :', erreur)
+  }
+}
+
+async function chargerPoki(): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('SDK Poki introuvable'))
+    document.head.appendChild(script)
+  })
+  if (!window.PokiSDK) return
+  // (Poki : continuer le jeu même si init échoue ; on n'utilise alors pas le SDK)
+  await window.PokiSDK.init()
+  poki = window.PokiSDK
+  console.info('[Mega Digger] SDK Poki prêt')
+  if (chargementTermine) poki.gameLoadingFinished()
+  direAPoki()
+}
+
+// (17/11) Règle de Poki : les flèches, Espace et la molette ne doivent jamais faire défiler la page
+// qui contient le jeu. On les bloque, sauf là où elles servent : Espace sur un bouton ou dans un
+// champ, la molette dans une fenêtre qui défile (la carte, elle, gère sa molette elle-même).
+function empecherDefilementDeLaPage(): void {
+  const FLECHES = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+  window.addEventListener('keydown', (e) => {
+    const cible = e.target instanceof Element ? e.target : null
+    if (cible?.closest('input, textarea, select')) return
+    if (FLECHES.includes(e.key) || (e.key === ' ' && !cible?.closest('button'))) e.preventDefault()
+  })
+  window.addEventListener(
+    'wheel',
+    (e) => {
+      let element = e.target instanceof Element ? e.target : null
+      while (element && element !== document.body) {
+        const style = getComputedStyle(element)
+        if (/(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight) return
+        element = element.parentElement
+      }
+      e.preventDefault()
+    },
+    { passive: false },
+  )
+  document.documentElement.style.overscrollBehavior = 'none'
+}
+
+// Dire à Poki ce que fait le joueur, seulement si ça a changé (et pas avant son premier geste).
+function direAPoki(): void {
+  if (!poki) return
+  const voulu = etatVoulu === 'jeu' && premierGeste ? 'jeu' : 'pause'
+  if (voulu === ditAPoki) return
+  ditAPoki = voulu
+  console.info('[Mega Digger] Poki :', voulu === 'jeu' ? 'gameplayStart' : 'gameplayStop')
+  if (voulu === 'jeu') poki.gameplayStart()
+  else poki.gameplayStop()
+}
+
+// (17/11) Le jeu est affiché : la fin du chargement (Poki s'en sert pour mesurer combien de
+// visiteurs se mettent à jouer).
+let chargementTermine = false
+export function chargementFini(): void {
+  if (chargementTermine) return
+  chargementTermine = true
+  poki?.gameLoadingFinished()
+}
+
 // Le SDK est-il là ? (sinon, on montre la fausse publicité)
 export function sdkDisponible(): boolean {
-  return sdk !== null
+  return sdk !== null || poki !== null
 }
+
+// (17/11) Sur Poki sans SDK (bloqueur de pubs) : pas de fausse publicité, pas de récompense, et
+// pas de message (Poki affiche le sien).
+export const SANS_FAUSSE_PUB = PORTAIL === 'poki'
 
 // Une publicité récompensée par le SDK. « quandFinie » seulement si elle a été vue jusqu'au bout.
 export function pubRecompensee(quandFinie: () => void, quandRatee: () => void): void {
+  if (poki) {
+    poki.rewardedBreak().then(
+      (vue) => (vue ? quandFinie() : quandRatee()),
+      () => quandRatee(),
+    )
+    return
+  }
   if (!sdk) {
     quandRatee()
     return
@@ -159,6 +285,10 @@ let etatVoulu: 'jeu' | 'pause' | null = null
 export function jeuEnCours(): void {
   if (etatVoulu === 'jeu') return
   etatVoulu = 'jeu'
+  if (PORTAIL === 'poki') {
+    direAPoki()
+    return
+  }
   if (PORTAIL) console.info('[Mega Digger] gameplayStart', sdk ? '' : '(SDK pas encore prêt : envoyé dès qu’il arrive)')
   sdk?.game.gameplayStart()
 }
@@ -169,6 +299,10 @@ export function jeuEnPause(): void {
     return // (rien à arrêter : le jeu n'avait pas encore commencé, ou c'est déjà dit)
   }
   etatVoulu = 'pause'
+  if (PORTAIL === 'poki') {
+    direAPoki()
+    return
+  }
   if (PORTAIL) console.info('[Mega Digger] gameplayStop')
   sdk?.game.gameplayStop()
 }

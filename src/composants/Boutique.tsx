@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { BOOSTS, GEMMES_PAR_PUB, LISTE_BOOSTS, PACKS_GEMMES, acheterBoost, bonusPack, crediterPack, peutAcheterBoost, recompenserPub, secondesBoost, type PackGemmes } from '../jeu/gemmes'
 import { nombre, prixEuros, t } from '../jeu/langue'
 import { minutesSecondes } from '../nombres'
-import { AVEC_PACKS } from '../portail'
+import { AVEC_PACKS, PORTAIL } from '../portail'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 import { Paiement } from './Paiement'
@@ -28,21 +28,23 @@ export function Boutique({ onFermer }: { onFermer: () => void }) {
       {/* Gagner des gemmes : une publicité. */}
       <div className="boutique-video carte">
         <span className="boutique-video-icone" aria-hidden="true">
-          📺
+          🎬
         </span>
         <span className="boutique-ligne-texte">
           <strong>{t('Regarde une publicité')}</strong>
           <span className="discret">{t('30 secondes, et +{n} gemme pour toi !', { n: GEMMES_PAR_PUB })}</span>
         </span>
         <button className="btn btn-violet" onClick={() => regarderPub(() => jouer(recompenserPub))}>
-          ▶ +{GEMMES_PAR_PUB} 💎
+          🎬 +{GEMMES_PAR_PUB} 💎
         </button>
       </div>
 
       {/* (25/10) Acheter des gemmes. (27/10) Montré partout, mais pas encore payable en ligne :
           voir PAIEMENT_SIMULE dans src/portail.ts et Paiement.tsx. */}
-      <h3 className="titre-section">{t('Acheter des gemmes')}</h3>
-      {!AVEC_PACKS && (
+      {/* (17/11) Sur Poki, aucun achat possible : ni packs, ni « Bientôt disponible » (leur règle :
+          pas d'interface pour acheter de la monnaie). */}
+      {PORTAIL !== 'poki' && <h3 className="titre-section">{t('Acheter des gemmes')}</h3>}
+      {!AVEC_PACKS && PORTAIL !== 'poki' && (
         <div className="boutique-bientot carte">
           <span className="boutique-video-icone" aria-hidden="true">
             🔒

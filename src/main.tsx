@@ -17,7 +17,7 @@ import './styles/paysage.css' // (27/10) le téléphone couché : fenêtres en p
 import { enregistrerServiceWorker } from './installation'
 import { initialiserEchelle } from './echelle'
 import { initialiserLangue } from './langueNavigateur'
-import { initialiserPortail } from './portail'
+import { chargementFini, initialiserPortail } from './portail'
 import { initialiserPleinEcran } from './pleinEcran'
 import { initialiserStatistiques } from './statistiques'
 
@@ -35,6 +35,8 @@ async function demarrer() {
       <App />
     </StrictMode>,
   )
+  // (17/11) Le jeu est à l'écran : la fin du chargement, pour Poki (après le premier dessin).
+  requestAnimationFrame(() => requestAnimationFrame(chargementFini))
 }
 
 void demarrer()

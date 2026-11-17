@@ -11,6 +11,7 @@ import { MINUTES_VENTES_PUB, peutRegarderPubVentes, recompenserPubVentes, second
 import { t } from '../jeu/langue'
 import { offrirAmelioration, refuserPropositionPub } from '../jeu/mineur'
 import { minutesSecondes } from '../nombres'
+import { PORTAIL } from '../portail'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 
@@ -31,7 +32,7 @@ export function PropositionPub() {
             {t('Non merci')}
           </button>
           <button className="btn btn-violet" onClick={() => regarderPub(() => jouer(offrirAmelioration))} autoFocus>
-            ▶ {t('Regarder une pub')}
+            🎬 {t('Regarder une pub')}
           </button>
         </>
       }
@@ -52,7 +53,8 @@ export function BoutonPubVentes() {
   const reste = secondesBoost(etat, 'ventes')
   return (
     <button
-      className={`gros-rond gros-rond-petit gros-rond-pub ${libre ? 'btn-attention' : 'gros-rond-pub-actif'}`}
+      // (17/11) Sur Poki, le rond ne clignote pas (leur règle : pas de bouton de pub insistant).
+      className={`gros-rond gros-rond-petit gros-rond-pub ${libre ? (PORTAIL === 'poki' ? '' : 'btn-attention') : 'gros-rond-pub-actif'}`}
       disabled={!libre}
       onClick={() => regarderPub(() => jouer(recompenserPubVentes))}
       aria-label={libre ? t('Regarder une pub : ventes × 2 pendant {minutes} min', { minutes: MINUTES_VENTES_PUB }) : t('Ventes × 2 : encore {temps}', { temps: minutesSecondes(reste) })}
@@ -62,7 +64,7 @@ export function BoutonPubVentes() {
       </span>
       {libre && (
         <span className="gros-rond-pub-video" aria-hidden="true">
-          ▶
+          🎬
         </span>
       )}
       <span className="gros-rond-texte">{libre ? t('Ventes × 2') : minutesSecondes(reste)}</span>
