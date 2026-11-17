@@ -555,3 +555,9 @@
   font-size: 1rem;
   line-height: 1.35;
 }
+
+/* (17/11) Sur Poki : « Continuer » et « Doubler » de la même largeur (leur règle : le bouton normal
+   est au moins aussi gros que celui de la publicité). */
+.absence-pied-egal {
+  flex: 1 1 0;
+}

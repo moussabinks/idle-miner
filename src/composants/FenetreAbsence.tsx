@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { doublerAbsence, type ResumeAbsence } from '../jeu/absence'
 import { nombre, t } from '../jeu/langue'
+import { PORTAIL } from '../portail'
 import { useJeu } from './contexteJeu'
 import { Fenetre } from './Fenetre'
 
@@ -40,6 +41,12 @@ export function FenetreAbsence({ resume, onFermer }: Props) {
   ].filter((l): l is { icone: string; texte: string; valeur: string; classe: string } => Boolean(l))
   const net = double ? resume.net + resume.gains : resume.net
 
+  const boutonContinuer = (
+    <button className={`btn btn-jaune btn-grand ${PORTAIL === 'poki' ? 'absence-pied-egal' : ''}`} onClick={onFermer} autoFocus>
+      {t('Continuer')}
+    </button>
+  )
+
   function doubler() {
     regarderPub(() => {
       jouer((e) => doublerAbsence(e, resume))
@@ -57,14 +64,15 @@ export function FenetreAbsence({ resume, onFermer }: Props) {
       onFermer={onFermer}
       pied={
         <>
+          {/* (17/11) Sur Poki : « Continuer » d'abord, et la publicité sans clignoter à côté (leur règle :
+              le bouton normal est au moins aussi gros que celui de la pub, à côté ou au-dessus). */}
+          {PORTAIL === 'poki' && boutonContinuer}
           {resume.gains > 0 && !double && (
-            <button className="btn btn-violet btn-grand btn-attention" onClick={doubler}>
-              📺 {t('Doubler')} · +{nombre(resume.gains)} $
+            <button className={`btn btn-violet btn-grand ${PORTAIL === 'poki' ? 'absence-pied-egal' : 'btn-attention'}`} onClick={doubler}>
+              🎬 {t('Doubler')} · +{nombre(resume.gains)} $
             </button>
           )}
-          <button className="btn btn-jaune btn-grand" onClick={onFermer} autoFocus>
-            {t('Continuer')}
-          </button>
+          {PORTAIL !== 'poki' && boutonContinuer}
         </>
       }
     >

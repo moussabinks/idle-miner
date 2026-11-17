@@ -80,7 +80,7 @@ import { SUCCES } from './jeu/succes'
 import { MARGE_CLIC_BATIMENT, batimentProcheDe, batimentPose, caseAccesProche, cleCase, empriseBatiment, empriseLibre, type Case, type Occupant } from './jeu/village'
 import { capaciteCoffre, coffrePlein, creerPartie, disponible, nbDansCoffre, type EtatJeu } from './jeu/mineur'
 import { joueurPousse, liaisonsSurLaCase, reglerTrajet, trajetsAProposer, type ReglageTrajet } from './jeu/wagonnet'
-import { AVEC_ACCUEIL, grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
+import { AVEC_ACCUEIL, SANS_FAUSSE_PUB, grandMoment, jeuEnCours, jeuEnPause, pubRecompensee, sdkDisponible } from './portail'
 import { useCompte } from './useCompte'
 import { useJoueurVillage, type DirectionFleche } from './useJoueurVillage'
 import { usePartie } from './usePartie'
@@ -126,6 +126,11 @@ function Jeu({ monde, onQuitter, onLangue }: { monde: InfoMonde; onQuitter: () =
           setPubSdkEnCours(false)
         },
       )
+      return
+    }
+    // (17/11) Sur Poki sans leur SDK (bloqueur de pubs) : ni fausse publicité, ni récompense.
+    if (SANS_FAUSSE_PUB) {
+      couperPourPub(false)
       return
     }
     setPubEnCours({ quandFinie })

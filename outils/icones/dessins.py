@@ -1531,6 +1531,25 @@ def television():
     return [(FONCE, antenne)] + r(caisse, VIOLET, brillance=False) + [('#2f2a48', ecran), ('#8cc8f5', rect(21, 35, 44, 36, 4)), (BLANC_PUR, poly((38, 44), (38, 62), (52, 53), arrondi=2)), (OR[0], cercle(80, 40, 5)), (OR[0], cercle(80, 58, 5))]
 
 
+@icone('🎬')
+def clap():
+    # (17/11) Le clap de cinéma : sur chaque bouton « regarder une publicité » (Poki demande une
+    # icône 🎬 bien visible). L'ardoise noire, la claquette rayée ouverte au-dessus, la charnière
+    # dorée, et une étoile dorée sur l'ardoise.
+    ardoise = rect(8, 40, 84, 50, 8)
+    barre_basse = rect(8, 32, 84, 13, 4)
+    rayures_basses = union(*[poly((x, 32), (x + 12, 32), (x + 4, 45), (x - 8, 45)) for x in (20, 44, 68, 92)])
+    claquette = tourne(rect(8, 12, 84, 14, 4), -14, cx=12, cy=30)
+    rayures_hautes = tourne(union(*[poly((x, 12), (x + 12, 12), (x + 4, 26), (x - 8, 26)) for x in (20, 44, 68, 92)]), -14, cx=12, cy=30)
+    return (
+        r(ardoise, NOIR, brillance=False)
+        + [(BLANC[0], barre_basse), (NOIR[2], inter(rayures_basses, barre_basse))]
+        + r(claquette, BLANC, brillance=False)
+        + [(NOIR[2], inter(rayures_hautes, claquette)), (OR[0], cercle(13, 31, 6)), (OR[2], cercle(13, 31, 2.5))]
+        + r(etoile(50, 67, 15, 7), OR, brillance=True)
+    )
+
+
 @icone('📌')
 def punaise():
     tete = svg('M 30 12 Q 50 2 70 12 L 64 40 Q 50 46 36 40 Z')

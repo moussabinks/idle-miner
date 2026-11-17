@@ -11,6 +11,8 @@ node_modules
 dist
 dist-crazygames
 mega-digger-crazygames.zip
+dist-poki
+mega-digger-poki.zip
 mega-digger-web.zip
 dist-ssr
 *.local

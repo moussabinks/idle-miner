@@ -9,8 +9,11 @@ import { deflateRawSync } from 'node:zlib'
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
-const DOSSIER = 'dist-crazygames'
-const ZIP = 'mega-digger-crazygames.zip'
+// (17/11) Le même outil fait le ZIP de Poki : « node outils/crazygames/zipper.mjs poki »
+// (dist-poki/ → mega-digger-poki.zip, lancé par « npm run build:poki »).
+const PORTAIL = process.argv[2] === 'poki' ? 'poki' : 'crazygames'
+const DOSSIER = `dist-${PORTAIL}`
+const ZIP = `mega-digger-${PORTAIL}.zip`
 
 // Tous les fichiers du dossier, sous-dossiers compris.
 function lister(dossier) {

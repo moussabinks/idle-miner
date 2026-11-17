@@ -43,9 +43,12 @@ function sansApplication(dossier: string): Plugin {
 //   - npm run build             : le site megadigger.io (Vercel), dans dist/ ;
 //   - npm run build:crazygames  : la version CrazyGames (mode « crazygames », qui lit
 //     .env.crazygames : VITE_PORTAIL=crazygames), dans dist-crazygames/. Voir docs/crazygames.md.
+//   - (17/11) npm run build:poki : la version Poki (mode « poki », .env.poki : VITE_PORTAIL=poki),
+//     dans dist-poki/, avec les mêmes retraits que CrazyGames. Voir docs/poki.md.
 export default defineConfig(({ mode }) => {
-  const crazygames = mode === 'crazygames'
-  const dossier = crazygames ? 'dist-crazygames' : 'dist'
+  // « crazygames » : ici, toute version portail (CrazyGames ou Poki), sans comptes ni application.
+  const crazygames = mode === 'crazygames' || mode === 'poki'
+  const dossier = mode === 'poki' ? 'dist-poki' : crazygames ? 'dist-crazygames' : 'dist'
   return {
     plugins: crazygames ? [react(), sansApplication(dossier)] : [react()],
     // (27/10) Sur CrazyGames, pas de comptes : enLigneAbsent.ts remplace enLigne.ts, et la
